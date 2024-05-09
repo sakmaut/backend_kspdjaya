@@ -45,7 +45,7 @@ class CrprospectController extends Controller
             $check = M_CrProspect::where('id',$id)->whereNull('deleted_at')->firstOrFail();
 
             ActivityLogger::logActivity($req,"Success",200);
-            return response()->json(['message' => 'OK',"status" => 200,'response' => self::resourceDetail($check)], 200);
+            return response()->json(['message' => 'OK',"status" => 200,'response' => self::resourceDetail($req,$check)], 200);
         } catch (ModelNotFoundException $e) {
             ActivityLogger::logActivity($req,'Data Not Found',404);
             return response()->json(['message' => 'Data Not Found',"status" => 404], 404);
@@ -135,37 +135,25 @@ class CrprospectController extends Controller
         return $arrayList;
     }
 
-    private function resourceDetail($data)
+    private function resourceDetail($request,$data)
     {
         $getEmployeID =User::where('id',$data->ao_id)->first();
-        $ao = M_HrEmployee::where('ID', $getEmployeID->employee_id)->first();
         $slik_approval = M_SlikApproval::where('CR_PROSPECT_ID',$data->id)->get();
         $colData = DB::table('cr_prospect_col')->where('cr_prospect_id',$data->id )->get();
         $personData = DB::table('cr_prospect_person')->where('cr_prospect_id',$data->id )->get();
         $attachmentData = M_CrProspectAttachment::orderBy('type','asc')->where('cr_prospect_id',$data->id )->get();
-        $product = M_CreditType::where('code',$data->jenis_produk)->first();
 
         $arrayList = [
             'id' => $data->id,
             'ao_id' => $data->ao_id,
             'data_ao' =>  [
                 [
-                    'id_ao' => $ao->ID,
-                    'nama_ao' => $ao->NAMA,
+                    'id_ao' => $request->user()->id,
+                    'nama_ao' => $request->user()->username,
                 ]
             ],
             'visit_date' => date('d-m-Y',strtotime($data->visit_date)),
             'tujuan_kredit' => $data->tujuan_kredit,
-            'jenis_produk' => [
-               [
-                'code' => $product->code,
-                'name' => $product->codename,
-                'description' => $product->description,
-                'terms' => $product->terms,
-                'image_path' => $product->image_path != null ? URL::to('/').'/storage/'. $product->image_path : '',
-                'status' => $product->status
-               ]
-             ],
             'plafond' => 'IDR '.number_format($data->plafond,0,",","."),
             'tenor' => "$data->tenor",
             'nama' => $data->nama,
