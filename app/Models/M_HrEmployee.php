@@ -54,7 +54,13 @@ class M_HrEmployee extends Model
         'CUTI',
         'PHOTO_LOC',
         'SPV',
-        'STATUS_MST'
+        'STATUS_MST',
+        'CREATED_BY',
+        'CREATED_AT',
+        'UPDATED_BY',
+        'UPDATED_AT',
+        'DELETED_BY',
+        'DELETED_AT'
     ];
     
     protected $guarded = [];
