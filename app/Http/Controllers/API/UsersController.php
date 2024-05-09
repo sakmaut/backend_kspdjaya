@@ -12,10 +12,19 @@ use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\URL;
 use Ramsey\Uuid\Uuid;
 
 class UsersController extends Controller
 {
+
+    private $current_time;
+
+    public function __construct()
+    {
+        $this->current_time = Carbon::now()->format('Y-m-d H:i:s');
+    }
+
     public function index(Request $req)
     {
         try {
@@ -105,7 +114,7 @@ class UsersController extends Controller
             $users = User::findOrFail($id);
 
             $req['updated_by'] = $request->user()->id;
-            $req['updated_at'] = Carbon::now()->format('Y-m-d H:i:s');
+            $req['updated_at'] = $this->current_time;
 
             $users->update($request->all());
             DB::commit();
@@ -131,59 +140,64 @@ class UsersController extends Controller
 
             $update = [
                 'deleted_by' => $req->user()->id,
-                'deleted_at' => Carbon::now()->format('Y-m-d H:i:s')
+                'deleted_at' => $this->current_time
             ];
 
             $users->update($update);
 
             DB::commit();
-            // ActivityLogger::logActivity($req,"Success",200);
+            ActivityLogger::logActivity($req,"Success",200);
             return response()->json(['message' => 'Users deleted successfully', "status" => 200], 200);
         } catch (ModelNotFoundException $e) {
             DB::rollback();
-            // ActivityLogger::logActivity($req,'Data Not Found',404);
+            ActivityLogger::logActivity($req,'Data Not Found',404);
             return response()->json(['message' => 'Data Not Found', "status" => 404], 404);
         } catch (\Exception $e) {
             DB::rollback();
-            // ActivityLogger::logActivity($req,$e->getMessage(),500);
+            ActivityLogger::logActivity($req,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
 
-    // public function uploadImage(Request $req)
-    // {
-    //     try {
-    //         DB::beginTransaction();
+    public function uploadImage(Request $request)
+    {
+        DB::beginTransaction();
+        try {
 
-    //         $this->validate($req, [
-    //             'image' => 'required|image|mimes:jpg,png,jpeg,gif,svg',
-    //             'type' => 'required|string',
-    //             'cr_prospect_id' => 'required|string'
-    //         ]);
+            $this->validate($request, [
+                'image' => 'required|image|mimes:jpg,png,jpeg,gif,svg',
+            ]);
 
-    //         $image_path = $req->file('image')->store('Cr_Prospect');
+            $image = User::findOrFail($request->user()->id);
 
-    //         $data_array_attachment = [
-    //             'id' => Uuid::uuid4()->toString(),
-    //             'cr_prospect_id' => $req->cr_prospect_id,
-    //             'type' => $req->type,
-    //             'attachment_path' => $image_path ?? ''
-    //         ];
+            $image_path = $request->file('image')->store('employee_image');
 
-    //         M_CrProspectAttachment::create($data_array_attachment);
+            $url = URL::to('/') . '/storage/' . $image_path;
 
-    //         DB::commit();
-    //         ActivityLogger::logActivity($req, "Success", 200);
-    //         return response()->json(['message' => 'Image upload successfully', "status" => 200, 'response' => URL::to('/') . '/storage/' . $image_path], 200);
-    //     } catch (QueryException $e) {
-    //         DB::rollback();
-    //         ActivityLogger::logActivity($req, $e->getMessage(), 409);
-    //         return response()->json(['message' => $e->getMessage(), "status" => 409], 409);
-    //     } catch (\Exception $e) {
-    //         DB::rollback();
-    //         ActivityLogger::logActivity($req, $e->getMessage(), 500);
-    //         return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
-    //     }
-    // }
+            $data_array_attachment = [
+                'profile_photo_path' => $url,
+                'updated_by' => $request->user()->id,
+                'updated_at' => $this->current_time
+            ];
+
+            $image->update($data_array_attachment);
+
+            DB::commit();
+            ActivityLogger::logActivity($request, "Success", 200);
+            return response()->json(['message' => 'Image upload successfully', "status" => 200, 'response' => $url], 200);
+        } catch (QueryException $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($request, $e->getMessage(), 409);
+            return response()->json(['message' => $e->getMessage(), "status" => 409], 409);
+        } catch (ModelNotFoundException $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($request, 'User Id Not Found', 404);
+            return response()->json(['message' => 'User Id Not Found', "status" => 404], 404);
+        }catch (\Exception $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+        }
+    }
 
 }
