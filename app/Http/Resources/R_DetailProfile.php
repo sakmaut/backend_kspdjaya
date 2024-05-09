@@ -61,7 +61,8 @@ class R_DetailProfile extends JsonResource
             "CUTI" => $this->CUTI,
             "PHOTO_LOC" => $this->PHOTO_LOC,
             "SPV" => $this->SPV,
-            "STATUS_MST" => $this->STATUS_MST
+            "STATUS_MST" => $this->STATUS_MST,
+            "PHOTO_URL" => $request->user()->profile_photo_path
         ];
     }
 }
