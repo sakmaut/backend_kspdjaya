@@ -72,7 +72,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //Route Group Master Users
     Route::apiResource('users', UsersController::class);
-    Route::post('image_upload_employee', [UsersController::class, 'uploadImage']);
+    Route::post('image_upload_employee', [DetailProfileController::class, 'uploadImage']);
 
     //Route Group Master Users
     Route::apiResource('settings', SettingsController::class);
