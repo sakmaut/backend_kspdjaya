@@ -21,6 +21,7 @@ class M_CrProspectCol extends Model
     public $incrementing = false;
     protected $keyType = 'string';
     protected $primaryKey = 'id';
+    public $timestamps = false;
     protected static function boot()
     {
         parent::boot();

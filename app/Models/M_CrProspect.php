@@ -16,7 +16,6 @@ class M_CrProspect extends Model
         'ao_id',
         'visit_date',
         'tujuan_kredit',
-        'jenis_produk',
         'plafond',
         'tenor',
         'nama',
@@ -30,6 +29,11 @@ class M_CrProspect extends Model
         'coordinate',
         'accurate',
         'slik',
+        'created_by',
+        'created_at',
+        'updated_by',
+        'updated_at',
+        'deleted_by',
         'deleted_at'
     ];
     protected $guarded = [];
