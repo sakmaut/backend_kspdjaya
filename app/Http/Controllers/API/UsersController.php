@@ -164,15 +164,15 @@ class UsersController extends Controller
         DB::beginTransaction();
         try {
 
-            $this->validate($request, [
-                'image' => 'required|image|mimes:jpg,png,jpeg,gif,svg',
-            ]);
+            // $this->validate($request, [
+            //     'image' => 'required|image|mimes:jpg,png,jpeg,gif,svg',
+            // ]);
 
-            $image = User::findOrFail($request->user()->id);
+            // $image = User::findOrFail($request->user()->id);
 
-            $image_path = $request->file('image')->store('employee_image');
+            // $image_path = $request->file('image')->store('employee_image');
 
-            $url = URL::to('/') . '/storage/' . $image_path;
+            // $url = URL::to('/') . '/storage/' . $image_path;
 
             // $data_array_attachment = [
             //     'profile_photo_path' => $url,
@@ -184,7 +184,7 @@ class UsersController extends Controller
 
             DB::commit();
             ActivityLogger::logActivity($request, "Success", 200);
-            return response()->json(['message' => 'Image upload successfully', "status" => 200, 'response' => $url], 200);
+            return response()->json(['message' => 'Image upload successfully', "status" => 200, 'response' => 'test'], 200);
         } catch (QueryException $e) {
             DB::rollback();
             ActivityLogger::logActivity($request, $e->getMessage(), 409);
