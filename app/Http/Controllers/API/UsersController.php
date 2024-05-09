@@ -174,13 +174,13 @@ class UsersController extends Controller
 
             $url = URL::to('/') . '/storage/' . $image_path;
 
-            $data_array_attachment = [
-                'profile_photo_path' => $url,
-                'updated_by' => $request->user()->id,
-                'updated_at' => $this->current_time
-            ];
+            // $data_array_attachment = [
+            //     'profile_photo_path' => $url,
+            //     'updated_by' => $request->user()->id,
+            //     'updated_at' => $this->current_time
+            // ];
 
-            $image->update($data_array_attachment);
+            // $image->update($data_array_attachment);
 
             DB::commit();
             ActivityLogger::logActivity($request, "Success", 200);
