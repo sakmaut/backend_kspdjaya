@@ -358,20 +358,34 @@ class CrprospectController extends Controller
     {
         DB::beginTransaction();
         try {
-            $validator = $this->_validate($req);
+
+             $req->validate([
+                'visit_date' => 'date',
+                'tujuan_kredit' => 'string',
+                'plafond' => 'numeric',
+                'tenor' => 'numeric',
+                'nama' => 'string',
+                'ktp' => 'numeric',
+                'kk' => 'numeric',
+                'tgl_lahir' => 'date',
+                'alamat' => 'string',
+                'hp' => 'numeric',
+                'usaha' => 'string',
+                'sector' => 'string',
+                'slik' => 'numeric',
+                'collateral_value' => 'numeric'
+            ]);
 
             $prospek = M_CrProspect::findOrFail($id);
 
-            $validator = [
-                'updated_by' => $req->user()->id,
-                'updated_at' => Carbon::now()->format('Y-m-d H:i:s')
-            ];
+            $req['updated_by'] = $req->user()->id;
+            $req['updated_at'] = Carbon::now()->format('Y-m-d H:i:s');
 
-            $prospek->update($validator);
+            $prospek->update($req->all());
 
             DB::commit();
             ActivityLogger::logActivity($req,"Success",200);
-            return response()->json(['message' => 'Kunjungan updated successfully', 'status' => 200, 'response' => $prospek], 200);
+            return response()->json(['message' => 'Kunjungan updated successfully', 'status' => 200], 200);
         } catch (ModelNotFoundException $e) {
             DB::rollback();
             ActivityLogger::logActivity($req, 'Cr Prospect Id Not Found', 404);
@@ -402,7 +416,7 @@ class CrprospectController extends Controller
 
             DB::commit();
             ActivityLogger::logActivity($req,"Success",200);
-            return response()->json(['message' => 'Kunjungan deleted successfully',"status" => 200,'response' => $id], 200);
+            return response()->json(['message' => 'Kunjungan deleted successfully',"status" => 200], 200);
         } catch (ModelNotFoundException $e) {
             DB::rollback();
             ActivityLogger::logActivity($req, 'Cr Prospect Id Not Found', 404);
