@@ -6,24 +6,38 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
-class M_MasterRoleAccessMenu extends Model
+class M_CrSurvey extends Model
 {
     use HasFactory;
-    protected $table = 'master_role_access_menu';
+    protected $table = 'cr_survey';
     protected $fillable = [
-        'id',
-        'master_menu_id',
-        'master_role_id',
+        'ID', 
+        'CR_PROSPECT_ID', 
+        'MOTHER_NAME',
+        'CATEGORY', 
+        'TIN_NUMBER',
+        'TITLE', 
+        'WORK_PERIOD', 
+        'DEPENDANTS', 
+        'INCOME_PERSONAL', 
+        'INCOME_SPOUSE', 
+        'INCOME_OTHER', 
+        'EXPENSES', 
+        'CUST_CODE_REF',
+        'SURVEYOR_ID', 
+        'SURVEY_NOTE', 
+        'PAYMENT_PREFERENCE', 
         'created_by',
-        'updated_at',
-        'updated_by',
-        'deleted_by',
+        'created_at', 
+        'updated_by', 
+        'updated_at', 
+        'deleted_by', 
         'deleted_at'
     ];
     protected $guarded = [];
     public $incrementing = false;
     protected $keyType = 'string';
-    protected $primaryKey = 'id';
+    protected $primaryKey = 'ID';
     public $timestamps = false;
     protected static function boot()
     {

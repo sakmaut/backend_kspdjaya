@@ -6,14 +6,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
-class M_MasterRoleAccessMenu extends Model
+class M_MasterUserAccessMenu extends Model
 {
     use HasFactory;
-    protected $table = 'master_role_access_menu';
+    protected $table = 'master_users_access_menu';
     protected $fillable = [
         'id',
         'master_menu_id',
-        'master_role_id',
+        'users_id',
+        'created_at',
         'created_by',
         'updated_at',
         'updated_by',
