@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('id', 45)->primary();
             $table->string('user', 50)->nullable();
             $table->string('event', 20);
-            $table->unsignedTinyInteger('status');
+            $table->integer('status');
             $table->string('url_api', 255);
             $table->longText('activity_description')->nullable();
             $table->string('device_info', 255)->nullable();

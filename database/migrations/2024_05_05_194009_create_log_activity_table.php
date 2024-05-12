@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -15,7 +16,7 @@ return new class extends Migration
             $table->string('id', 45)->primary();
             $table->string('user_id', 50)->nullable();
             $table->string('method', 50);
-            $table->unsignedTinyInteger('status');
+            $table->integer('status');
             $table->string('url_api', 255);
             $table->longText('activity_description')->nullable();
             $table->string('device_info', 255)->nullable();
