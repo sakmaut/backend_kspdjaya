@@ -6,20 +6,22 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
-class M_CrProspectAttachment extends Model
+class M_CrProspectDocument extends Model
 {
     use HasFactory;
-    protected $table = 'cr_prospect_attachment';
+    protected $table = 'cr_prospect_document';
     protected $fillable = [
-        'id',
-        'cr_prospect_id',
-        'type',
-        'attachment_path'
+       'ID',
+       'CR_PROSPECT_ID',
+       'PATH',
+       'INDEX_NUM',
+       'VALID_CHECK',
+       'CREATED_AT'
     ];
     protected $guarded = [];
     public $incrementing = false;
     protected $keyType = 'string';
-    protected $primaryKey = 'id';
+    protected $primaryKey = 'ID';
     public $timestamps = false;
     protected static function boot()
     {

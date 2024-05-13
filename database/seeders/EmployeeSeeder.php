@@ -56,7 +56,7 @@ class EmployeeSeeder extends Seeder
                 "CUTI" => "0",
                 "PHOTO_LOC" => null,
                 "SPV" => null,
-                "STATUS_MST" => "Inactive",
+                "STATUS_MST" => "Active",
                 "CREATED_BY" => "SYSTEM",
                 "CREATED_AT" => Carbon::now()
             ],
