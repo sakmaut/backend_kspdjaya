@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('ONCHARGE_PERSON', 100)->nullable();
             $table->dateTime('ONCHARGE_TIME')->nullable();
             $table->string('ONCHARGE_DESCR', 450)->nullable();
-            $table->string('APPROVAL_RESULT ', 20)->nullable();
+            $table->string('APPROVAL_RESULT', 20)->nullable();
         });
     }
 
