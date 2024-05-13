@@ -13,6 +13,7 @@ class M_CrProspectDocument extends Model
     protected $fillable = [
        'ID',
        'CR_PROSPECT_ID',
+       'TYPE',
        'PATH',
        'INDEX_NUM',
        'VALID_CHECK',

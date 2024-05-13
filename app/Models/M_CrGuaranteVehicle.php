@@ -39,6 +39,7 @@ class M_CrGuaranteVehicle extends Model
     public $incrementing = false;
     protected $keyType = 'string';
     protected $primaryKey = 'ID';
+    public $timestamps = false;
     protected static function boot()
     {
         parent::boot();

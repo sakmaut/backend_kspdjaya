@@ -3,22 +3,17 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\R_CrProspect;
-use App\Models\M_CreditType;
+use App\Models\M_CrGuaranteVehicle;
 use App\Models\M_CrProspect;
-use App\Models\M_CrProspectAttachment;
-use App\Models\M_CrProspectCol;
 use App\Models\M_CrProspectDocument;
-use App\Models\M_CrProspectPerson;
-use App\Models\M_HrEmployee;
 use App\Models\M_ProspectApproval;
-use App\Models\M_SlikApproval;
-use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Ramsey\Uuid\Uuid;
 
@@ -154,49 +149,12 @@ class CrprospectController extends Controller
                 "pengeluaran" => "required|numeric"
             ]);
     
-            $data_array = [
-                'id' => $request->id,
-                'ao_id' => $request->user()->id,
-                'visit_date' => $request->visit_date,
-                'tujuan_kredit' => $request->tujuan_kredit,
-                'plafond' => $request->plafond,
-                'tenor' => $request->tenor,
-                'nama' => $request->nama,
-                'ktp' => $request->ktp,
-                'kk' => $request->kk,
-                'tgl_lahir' => $request->tgl_lahir,
-                'alamat' => $request->alamat,
-                'hp' => $request->hp,
-                'usaha' => $request->usaha,
-                'sector' => $request->sector,
-                'coordinate' => $request->coordinate,
-                'accurate' => $request->accurate,
-                'collateral_value' => $request->accurate,
-                "mother_name" => $request->nama_ibu,
-                "tin_number" => $request->npwp,
-                "title" => $request->pendidikan_terakhir,
-                "work_period" => $request->lama_bekerja,
-                "dependants" => $request->jumlah_tanggungan,
-                "income_personal" => $request->pendapatan_pribadi,
-                "income_spouse" => $request->penghasilan_pasangan,
-                "income_other" => $request->penghasilan_lainnya,
-                "expenses" => $request->pengeluaran,
-                'created_by' => $request->user()->id
-            ];
-        
-            M_CrProspect::create($data_array);
+            self::createCrProspek($request);
+            self::createCrProspekApproval($request);
 
-            $data_approval=[
-                'ID' => Uuid::uuid4()->toString(),
-                'CR_PROSPECT_ID' => $request->id,
-                'ONCHARGE_APPRVL' => '',
-                'ONCHARGE_PERSON' => '',
-                'ONCHARGE_TIME' => null,
-                'ONCHARGE_DESCR' => '',
-                'APPROVAL_RESULT' => '0:untouched'
-            ];
-
-            M_ProspectApproval::create($data_approval);
+            if (collect($request->jaminan_kendaraan)->isNotEmpty()) {
+                self::insert_cr_vehicle($request);
+            }
     
             DB::commit();
             ActivityLogger::logActivity($request,"Success",200);
@@ -209,6 +167,83 @@ class CrprospectController extends Controller
             DB::rollback();
             ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+        }
+    }
+
+    private function createCrProspek($request)
+    {
+        $data_array = [
+            'id' => $request->id,
+            'ao_id' => $request->user()->id,
+            'visit_date' => $request->visit_date,
+            'tujuan_kredit' => $request->tujuan_kredit,
+            'plafond' => $request->plafond,
+            'tenor' => $request->tenor,
+            'nama' => $request->nama,
+            'ktp' => $request->ktp,
+            'kk' => $request->kk,
+            'tgl_lahir' => $request->tgl_lahir,
+            'alamat' => $request->alamat,
+            'hp' => $request->hp,
+            'usaha' => $request->usaha,
+            'sector' => $request->sector,
+            'coordinate' => $request->coordinate,
+            'accurate' => $request->accurate,
+            'collateral_value' => $request->accurate,
+            "mother_name" => $request->nama_ibu,
+            "tin_number" => $request->npwp,
+            "title" => $request->pendidikan_terakhir,
+            "work_period" => $request->lama_bekerja,
+            "dependants" => $request->jumlah_tanggungan,
+            "income_personal" => $request->pendapatan_pribadi,
+            "income_spouse" => $request->penghasilan_pasangan,
+            "income_other" => $request->penghasilan_lainnya,
+            "expenses" => $request->pengeluaran,
+            'created_by' => $request->user()->id
+        ];
+    
+        M_CrProspect::create($data_array);
+    } 
+
+    private function createCrProspekApproval($request)
+    {
+        $data_approval=[
+            'ID' => Uuid::uuid4()->toString(),
+            'CR_PROSPECT_ID' => $request->id,
+            'ONCHARGE_APPRVL' => '',
+            'ONCHARGE_PERSON' => '',
+            'ONCHARGE_TIME' => null,
+            'ONCHARGE_DESCR' => '',
+            'APPROVAL_RESULT' => '0:untouched'
+        ];
+
+        M_ProspectApproval::create($data_approval);
+    } 
+
+    private function insert_cr_vehicle($request){
+
+        foreach ($request->jaminan_kendaraan as $result) {
+            $data_array_col = [
+                'ID' => Uuid::uuid4()->toString(),
+                'CR_PROSPECT_ID' => $request->id,
+                'HEADER_ID' => "",
+                'BRAND' => $result['merk'],
+                'TYPE' => $result['tipe_kendaraan'],
+                'PRODUCTION_YEAR' => $result['tahun'],
+                'COLOR' => $result['warna'],
+                'ON_BEHALF' => $result['atas_nama'],
+                'POLICE_NUMBER' => $result['no_polisi'],
+                'CHASIS_NUMBER' => $result['no_rangka'],
+                'ENGINE_NUMBER' => $result['no_mesin'],
+                'BPKB_NUMBER' => $result['no_bpkb'],
+                'VALUE' => $result['nilai_jaminan'],
+                'COLLATERAL_FLAG' => "",
+                'VERSION' => 1,
+                'CREATE_DATE' => Carbon::now()->format('Y-m-d'),
+                'CREATE_BY' => $request->user()->id,
+            ];
+
+            M_CrGuaranteVehicle::create($data_array_col);
         }
     }
 
@@ -290,48 +325,48 @@ class CrprospectController extends Controller
         } 
     }
 
-    // public function uploadImage(Request $req)
-    // {
-    //     try {
-    //         DB::beginTransaction();
+    public function uploadImage(Request $req)
+    {
+        try {
+            DB::beginTransaction();
 
-    //         $this->validate($req, [
-    //             'image' => 'required|image|mimes:jpg,png,jpeg,gif,svg',
-    //             'type' => 'required|string',
-    //             'cr_prospect_id' =>'required|string'
-    //         ]);
+            $this->validate($req, [
+                'image' => 'required|image|mimes:jpg,png,jpeg,gif,svg',
+                'type' => 'required|string',
+                'cr_prospect_id' =>'required|string'
+            ]);
 
-    //         M_CrProspect::findOrFail($req->cr_prospect_id);
+            M_CrProspect::findOrFail($req->cr_prospect_id);
 
-    //         $image_path = $req->file('image')->store('public/Cr_Prospect');
-    //         $image_path = str_replace('public/', '', $image_path);
+            $image_path = $req->file('image')->store('public/Cr_Prospect');
+            $image_path = str_replace('public/', '', $image_path);
 
-    //         $url= URL::to('/') . '/storage/' . $image_path;
+            $url= URL::to('/') . '/storage/' . $image_path;
 
-    //         $data_array_attachment = [
-    //             'id' => Uuid::uuid4()->toString(),
-    //             'cr_prospect_id' => $req->cr_prospect_id,
-    //             'type' => $req->type,
-    //             'attachment_path' => $url ?? ''
-    //         ];
+            $data_array_attachment = [
+                'ID' => Uuid::uuid4()->toString(),
+                'CR_PROSPECT_ID' => $req->cr_prospect_id,
+                'TYPE' => $req->type,
+                'PATH' => $url ?? ''
+            ];
 
-    //         M_CrProspectAttachment::create($data_array_attachment);
+            M_CrProspectDocument::create($data_array_attachment);
 
-    //         DB::commit();
-    //         ActivityLogger::logActivity($req,"Success",200);
-    //         return response()->json(['message' => 'Image upload successfully',"status" => 200,'response' => $url], 200);
-    //     } catch (ModelNotFoundException $e) {
-    //         DB::rollback();
-    //         ActivityLogger::logActivity($req, 'Cr Prospect Id Not Found', 404);
-    //         return response()->json(['message' => 'Cr Prospect Id Not Found', "status" => 404], 404);
-    //     } catch (QueryException $e) {
-    //         DB::rollback();
-    //         ActivityLogger::logActivity($req,$e->getMessage(),409);
-    //         return response()->json(['message' => $e->getMessage(),"status" => 409], 409);
-    //     } catch (\Exception $e) {
-    //         DB::rollback();
-    //         ActivityLogger::logActivity($req,$e->getMessage(),500);
-    //         return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
-    //     } 
-    // }
+            DB::commit();
+            // ActivityLogger::logActivity($req,"Success",200);
+            return response()->json(['message' => 'Image upload successfully',"status" => 200,'response' => $url], 200);
+        } catch (ModelNotFoundException $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($req, 'Cr Prospect Id Not Found', 404);
+            return response()->json(['message' => 'Cr Prospect Id Not Found', "status" => 404], 404);
+        } catch (QueryException $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($req,$e->getMessage(),409);
+            return response()->json(['message' => $e->getMessage(),"status" => 409], 409);
+        } catch (\Exception $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($req,$e->getMessage(),500);
+            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+        } 
+    }
 }
