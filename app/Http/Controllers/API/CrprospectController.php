@@ -8,8 +8,10 @@ use App\Models\M_CreditType;
 use App\Models\M_CrProspect;
 use App\Models\M_CrProspectAttachment;
 use App\Models\M_CrProspectCol;
+use App\Models\M_CrProspectDocument;
 use App\Models\M_CrProspectPerson;
 use App\Models\M_HrEmployee;
+use App\Models\M_ProspectApproval;
 use App\Models\M_SlikApproval;
 use App\Models\User;
 use Carbon\Carbon;
@@ -127,7 +129,7 @@ class CrprospectController extends Controller
         DB::beginTransaction();
         try {
             $request->validate([
-                'id' => 'required|string',
+                'id' => 'required|string|unique:cr_prospect',
                 'visit_date' => 'required|date',
                 'tujuan_kredit' => 'required|string',
                 'plafond' => 'required|numeric',
@@ -140,8 +142,16 @@ class CrprospectController extends Controller
                 'hp' => 'required|numeric',
                 'usaha' => 'required|string',
                 'sector' => 'required|string',
-                'slik' => 'required|numeric',
-                'collateral_value' => 'numeric'
+                'collateral_value' => 'numeric',
+                "nama_ibu" => "required",
+                "npwp" => "required",
+                "pendidikan_terakhir" => "required",
+                "lama_bekerja" => "required",
+                "jumlah_tanggungan" => "required",
+                "pendapatan_pribadi" => "required|numeric",
+                "penghasilan_pasangan" => "required|numeric",
+                "penghasilan_lainnya" => "required|numeric",
+                "pengeluaran" => "required|numeric"
             ]);
     
             $data_array = [
@@ -161,11 +171,32 @@ class CrprospectController extends Controller
                 'sector' => $request->sector,
                 'coordinate' => $request->coordinate,
                 'accurate' => $request->accurate,
-                'slik' => $request->slik,
+                'collateral_value' => $request->accurate,
+                "mother_name" => $request->nama_ibu,
+                "tin_number" => $request->npwp,
+                "title" => $request->pendidikan_terakhir,
+                "work_period" => $request->lama_bekerja,
+                "dependants" => $request->jumlah_tanggungan,
+                "income_personal" => $request->pendapatan_pribadi,
+                "income_spouse" => $request->penghasilan_pasangan,
+                "income_other" => $request->penghasilan_lainnya,
+                "expenses" => $request->pengeluaran,
                 'created_by' => $request->user()->id
             ];
         
             M_CrProspect::create($data_array);
+
+            $data_approval=[
+                'ID' => Uuid::uuid4()->toString(),
+                'CR_PROSPECT_ID' => $request->id,
+                'ONCHARGE_APPRVL' => '',
+                'ONCHARGE_PERSON' => '',
+                'ONCHARGE_TIME' => null,
+                'ONCHARGE_DESCR' => '',
+                'APPROVAL_RESULT' => '0:untouched'
+            ];
+
+            M_ProspectApproval::create($data_approval);
     
             DB::commit();
             ActivityLogger::logActivity($request,"Success",200);

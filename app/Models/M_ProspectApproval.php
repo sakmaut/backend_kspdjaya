@@ -6,23 +6,25 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
-class M_CreditType extends Model
+class M_ProspectApproval extends Model
 {
     use HasFactory;
-    protected $table = 'credit_type';
-
+    protected $table = 'prospect_approval';
     protected $fillable = [
-        'code',
-        'codename',
-        'description',
-        'terms',
-        'image',
-        'status'
+        'ID',
+        'CR_PROSPECT_ID',
+        'ONCHARGE_APPRVL',
+        'ONCHARGE_PERSON',
+        'ONCHARGE_TIME',
+        'ONCHARGE_DESCR',
+        'APPROVAL_RESULT'
     ];
     protected $guarded = [];
     public $incrementing = false;
     protected $keyType = 'string';
-    protected $primaryKey = 'code';
+    protected $primaryKey = 'ID';
+    public $timestamps = false;
+
     protected static function boot()
     {
         parent::boot();
