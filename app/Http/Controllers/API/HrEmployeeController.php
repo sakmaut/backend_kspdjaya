@@ -96,7 +96,7 @@ class HrEmployeeController extends Controller
 
             $data =[
                 'ID' => $uuid,
-                'NIK' => $generate_nik,
+                'NIK' => !empty($request->nik)?$request->nik: $generate_nik,
                 'NAMA' => $request->nama,
                 'AO_CODE' => "",
                 'BLOOD_TYPE' => $request->blood_type,
@@ -191,7 +191,7 @@ class HrEmployeeController extends Controller
 
             $data = [
                 'NAMA' => $request->nama,
-                'AO_CODE' => "",
+                'NIK' => $request->nik,
                 'BLOOD_TYPE' => $request->blood_type,
                 'GENDER' => $request->gender,
                 'PENDIDIKAN' => $request->pendidikan,
