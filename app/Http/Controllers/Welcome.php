@@ -11,7 +11,7 @@ class Welcome extends Controller
      */
     public function index()
     {
-        return response()->json(['message' => 'OK',"status" => 200,'response' => 'TAIK'], 200);
+        return response()->json(['message' => 'OK',"status" => 200,'response' => 'WELCOME CUK'], 200);
     }
 
     /**
