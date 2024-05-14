@@ -11,23 +11,30 @@ class M_Branch extends Model
     use HasFactory;
     protected $table = 'branch';
     protected $fillable = [
-        'ID',
-        'CODE',
-        'NAME',
-        'ADDRESS',
-        'LOCATION',
-        'PHONE_1',
-        'PHONE_2',
-        'PHONE_3',
-        'DESCR',
-        'STATUS',
-        'CREATE_DATE',
-        'CREATE_USER',
-        'MOD_DATE',
-        'MOD_USER',
-        'DELETED_BY',
-        'DELETED_AT',
-        'VERSION'
+       'ID',
+       'CODE',
+       'NAME',
+       'ADDRESS',
+       'RT',
+       'RW',
+       'PROVINCE',
+       'CITY',
+       'KELURAHAN',
+       'KECAMATAN',
+       'ZIP_CODE',
+       'LOCATION',
+       'PHONE_1',
+       'PHONE_2',
+       'PHONE_3',
+       'DESCR',
+       'STATUS',
+       'CREATE_DATE',
+       'CREATE_USER',
+       'MOD_DATE',
+       'MOD_USER',
+       'VERSION',
+       'DELETED_BY',
+       'DELETED_AT'
     ];
     protected $guarded = [];
     public $incrementing = false;

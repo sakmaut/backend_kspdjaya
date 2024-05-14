@@ -5,10 +5,13 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\R_DetailProfile;
 use App\Models\M_HrEmployee;
+use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\URL;
 
 class DetailProfileController extends Controller
 {
@@ -36,27 +39,28 @@ class DetailProfileController extends Controller
         DB::beginTransaction();
         try {
 
-            // $this->validate($request, [
-            //     'image' => 'required|image|mimes:jpg,png,jpeg,gif,svg',
-            // ]);
+            $this->validate($request, [
+                'image' => 'required|image|mimes:jpg,png,jpeg,gif,svg',
+            ]);
 
-            // $image = User::findOrFail($request->user()->id);
+            $image = User::findOrFail($request->user()->id);
 
-            // $image_path = $request->file('image')->store('employee_image');
+            $image_path = $request->file('image')->store('public/Employee_Image');
+            $image_path = str_replace('public/', '', $image_path);
 
-            // $url = URL::to('/') . '/storage/' . $image_path;
+            $url = URL::to('/') . '/storage/' . $image_path;
 
-            // $data_array_attachment = [
-            //     'profile_photo_path' => $url,
-            //     'updated_by' => $request->user()->id,
-            //     'updated_at' => $this->current_time
-            // ];
+            $data_array_attachment = [
+                'profile_photo_path' => $url,
+                'updated_by' => $request->user()->id,
+                'updated_at' => Carbon::now()
+            ];
 
-            // $image->update($data_array_attachment);
+            $image->update($data_array_attachment);
 
             DB::commit();
             ActivityLogger::logActivity($request, "Success", 200);
-            return response()->json(['message' => 'Image upload successfully', "status" => 200, 'response' => 'test'], 200);
+            return response()->json(['message' => 'Image upload successfully', "status" => 200, 'response' => $url], 200);
         } catch (QueryException $e) {
             DB::rollback();
             ActivityLogger::logActivity($request, $e->getMessage(), 409);

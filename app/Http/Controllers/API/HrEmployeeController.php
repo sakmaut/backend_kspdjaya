@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\R_Employee;
 use App\Models\M_HrEmployee;
 use App\Models\User;
 use Carbon\Carbon;
@@ -26,9 +27,10 @@ class HrEmployeeController extends Controller
     {
         try {
             $data =  M_HrEmployee::all();
+            $dto = R_Employee::collection($data);
 
             ActivityLogger::logActivity($request,"Success",200);
-            return response()->json(['message' => 'OK',"status" => 200,'response' => $data], 200);
+            return response()->json(['message' => 'OK',"status" => 200,'response' => $dto], 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
@@ -71,6 +73,8 @@ class HrEmployeeController extends Controller
                 'tgl_lahir' => 'date',
                 'tgl_keluar' => 'date',
                 'email' => 'email',
+                'kode_pos_ktp' => 'numeric',
+                'kode_pos' => 'numeric',
             ]);
 
             return $validation;
@@ -107,14 +111,22 @@ class HrEmployeeController extends Controller
                 'TANGGUNGAN' => $request->tanggungan,
                 'NO_KTP' => $request->no_ktp,
                 'NAMA_KTP' => $request->nama_ktp,
-                'ALAMAT_KTP' => $request->alamat_ktp,
-                'SECTOR_KTP' => $request->sector_ktp,
-                'DISTRICT_KTP' => $request->district_ktp,
-                'SUB_DISTRICT_KTP' => $request->sub_district_ktp,
-                'ALAMAT_TINGGAL' => $request->alamat_tinggal,
-                'SECTOR_TINGGAL' => $request->sector_tinggal,
-                'DISTRICT_TINGGAL' => $request->district_tinggal,
-                'SUB_DISTRICT_TINGGAL' => $request->sub_district_tinggal,
+                'ADDRESS_KTP' => $request->alamat_ktp,
+                'RT_KTP' => $request->rt_ktp,
+                'RW_KTP' => $request->rw_ktp,
+                'PROVINCE_KTP' => $request->provinsi_ktp,
+                'CITY_KTP' => $request->kota_ktp,
+                'KELURAHAN_KTP' => $request->kelurahan_ktp,
+                'KECAMATAN_KTP' => $request->kecamatan_ktp,
+                'ZIP_CODE_KTP' => $request->kode_pos_ktp,
+                'ADDRESS' => $request->alamat_tinggal,
+                'RT' => $request->rt,
+                'RW' => $request->rw,
+                'PROVINCE' => $request->provinsi,
+                'CITY' => $request->kota,
+                'KELURAHAN' => $request->kelurahan,
+                'KECAMATAN' => $request->kecamatan,
+                'ZIP_CODE' => $request->kode_pos,
                 'TGL_LAHIR' => $request->tgl_lahir,
                 'TEMPAT_LAHIR' => $request->tempat_lahir,
                 'AGAMA' => $request->agama,
@@ -192,14 +204,22 @@ class HrEmployeeController extends Controller
                 'TANGGUNGAN' => $request->tanggungan,
                 'NO_KTP' => $request->no_ktp,
                 'NAMA_KTP' => $request->nama_ktp,
-                'ALAMAT_KTP' => $request->alamat_ktp,
-                'SECTOR_KTP' => $request->sector_ktp,
-                'DISTRICT_KTP' => $request->district_ktp,
-                'SUB_DISTRICT_KTP' => $request->sub_district_ktp,
-                'ALAMAT_TINGGAL' => $request->alamat_tinggal,
-                'SECTOR_TINGGAL' => $request->sector_tinggal,
-                'DISTRICT_TINGGAL' => $request->district_tinggal,
-                'SUB_DISTRICT_TINGGAL' => $request->sub_district_tinggal,
+                'ADDRESS_KTP' => $request->alamat_ktp,
+                'RT_KTP' => $request->rt_ktp,
+                'RW_KTP' => $request->rw_ktp,
+                'PROVINCE_KTP' => $request->provinsi_ktp,
+                'CITY_KTP' => $request->kota_ktp,
+                'KELURAHAN_KTP' => $request->kelurahan_ktp,
+                'KECAMATAN_KTP' => $request->kecamatan_ktp,
+                'ZIP_CODE_KTP' => $request->kode_pos_ktp,
+                'ADDRESS' => $request->alamat_tinggal,
+                'RT' => $request->rt,
+                'RW' => $request->rw,
+                'PROVINCE' => $request->provinsi,
+                'CITY' => $request->kota,
+                'KELURAHAN' => $request->kelurahan,
+                'KECAMATAN' => $request->kecamatan,
+                'ZIP_CODE' => $request->kode_pos,
                 'TGL_LAHIR' => $request->tgl_lahir,
                 'TEMPAT_LAHIR' => $request->tempat_lahir,
                 'AGAMA' => $request->agama,

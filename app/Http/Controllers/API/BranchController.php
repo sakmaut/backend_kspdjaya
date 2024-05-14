@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\R_Branch;
 use App\Models\M_Branch;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -16,9 +17,10 @@ class BranchController extends Controller
     {
         try {
             $data =  M_Branch::all();
+            $dto = R_Branch::collection($data);
 
             ActivityLogger::logActivity($request,"Success",200);
-            return response()->json(['message' => 'OK',"status" => 200,'response' => $data], 200);
+            return response()->json(['message' => 'OK',"status" => 200,'response' => $dto], 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
@@ -49,7 +51,8 @@ class BranchController extends Controller
             $request->validate([
                 'code' => 'required|string|unique:branch',
                 'name' => 'required|string|unique:branch',
-                'address' => 'required|string'
+                'address' => 'required|string',
+                'zip_code' => 'numeric'
             ]);
 
             $request['CREATE_DATE'] = Carbon::now()->format('Y-m-d');
@@ -80,6 +83,8 @@ class BranchController extends Controller
             $request->validate([
                 'code' => 'unique:branch,code,'.$id,
                 'name' => 'unique:branch,name,'.$id,
+                'address' => 'required|string',
+                'zip_code' => 'numeric'
             ]);
 
             $users = M_Branch::findOrFail($id);
