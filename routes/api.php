@@ -5,45 +5,29 @@ use App\Http\Controllers\API\{
     AuthController,
     BranchController,
     CrAppilcationController,
-    CreditTypeController,
     CrprospectController,
-    CustomerAccountController,
     DetailProfileController,
     HrEmployeeController,
     LogSendOutController,
     LogTemporaryLinkController,
+    MasterMenuController,
     SettingsController,
-    SlikApprovalController,
-    SubordinateListController,
     TaskController,
-    TextFileReader,
     UsersController
 };
-use App\Http\Controllers\API\Menu\MasterMenuController;
-use App\Http\Controllers\API\Menu\MasterRoleController;
-use App\Http\Controllers\Laporan\HistoryAccController;
-use App\Http\Controllers\Laporan\PaymentDumpController;
+
 use App\Http\Controllers\Welcome;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-//ini dibuah dari luar
+
 //Login Authenticate
 Route::post('auth/login', [AuthController::class, 'login'])->name('login');
 Route::get('auth/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
-
-Route::post('payment', [PaymentDumpController::class, 'index']);
-Route::post('historyAcc', [HistoryAccController::class, 'index']);
 
 Route::get('waweb/logs', [LogSendOutController::class, 'index']);
 Route::post('waweb/logs', [LogSendOutController::class, 'store']);
 Route::put('waweb/logs/{id}', [LogSendOutController::class, 'update']);
 Route::get('waweb/task', [LogSendOutController::class, 'filter']);
-
-Route::get('customerAccount', [CustomerAccountController::class, 'index']);
-
-Route::post('createurl', [SlikApprovalController::class, 'creaturl']);
-//? check incoming url signed
 
 Route::get('getExpiredLink/{id}', [LogTemporaryLinkController::class, 'index']);
 
@@ -52,16 +36,9 @@ Route::get('kunjungan/detailApproval/{id}', [CrprospectController::class, 'detai
     ->name('approve_slik')
     ->middleware('signed');
 
-//! update approval by action user
-Route::put('approval', [SlikApprovalController::class, 'approveCustomer']);
-
 Route::put('editusers', [UsersController::class, 'update']);
 
 Route::post('createUser', [UsersController::class, 'store']);
-
-Route::get('approval/{id}', [SlikApprovalController::class, 'index']);
-
-Route::post('text_file', [TextFileReader::class, 'uploadText']);
 
 Route::apiResource('welcome', Welcome::class);
 
@@ -92,24 +69,11 @@ Route::middleware('auth:sanctum')->group(function () {
     //Detail Profile
     Route::get('me', [DetailProfileController::class, 'index']);
 
-    //Route Group Credit Type
-    Route::get('credit_type/{status}', [CreditTypeController::class, 'index']);
-    Route::get('credit_type', [CreditTypeController::class, 'index']);
-
     //Route Group Cr Prospek (Kunjungan)
     Route::apiResource('kunjungan', CrprospectController::class);
     Route::post('image_upload_prospect', [CrprospectController::class, 'uploadImage']);
-    Route::post('multi-upload-images', [CrprospectController::class, 'multiImage']);
-
-    Route::post('getSpv', [SubordinateListController::class, 'spvSearch']);
-    Route::post('getHierarchy', [SubordinateListController::class, 'getHierarchy']);
-
-    Route::put('slikSpv', [SlikApprovalController::class, 'approveSpv']);
-
-    // Route::post('text_file', [TextFileReader::class, 'uploadText']);
 });
 
-Route::post('assets', [AssetsController::class, 'storeAsset']);
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\API\Menu;
+namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\API\ActivityLogger;
 use App\Http\Controllers\Controller;
