@@ -146,7 +146,7 @@ class MasterMenuController extends Controller
     public function menuSubList(Request $req)
     {
         try {
-            $data = M_MasterMenu::orderBy('order', 'asc')->whereNull('deleted_by')->get();
+            $data = M_MasterMenu::orderBy('order', 'asc')->where('status','inactive')->whereNull('deleted_by')->get();
         
             return response()->json(['message' => 'OK', "status" => 200, 'response' => M_MasterMenu::buildMenuArray($data)], 200);
         } catch (\Exception $e) {
