@@ -57,24 +57,24 @@ class M_MasterMenu extends Model
     static function buildMenuArray($menuItems)
     {
         $menuArray = [];
-        foreach ($menuItems as $menuItem) {
-            if ($menuItem['parent'] === '0' && $menuItem['status'] === 'active') {
-                $menuArray[$menuItem['id']] = [
-                    'menuid' => $menuItem['id'],
-                    'menuitem' => [
-                        'labelmenu' => $menuItem['menu_name'],
-                        'routename' => $menuItem['route'],
-                        'leading' => explode(',', $menuItem['leading']),
-                        'action' => $menuItem['action'],
-                        'ability' => $menuItem['ability'],
-                        'submenu' => []
-                    ]
-                ];
-            }
-        }
+        // foreach ($menuItems as $menuItem) {
+        //     if ($menuItem['parent'] === '0' && $menuItem['parent'] === null && $menuItem['status'] === 'active') {
+        //         $menuArray[$menuItem['id']] = [
+        //             'menuid' => $menuItem['id'],
+        //             'menuitem' => [
+        //                 'labelmenu' => $menuItem['menu_name'],
+        //                 'routename' => $menuItem['route'],
+        //                 'leading' => explode(',', $menuItem['leading']),
+        //                 'action' => $menuItem['action'],
+        //                 'ability' => $menuItem['ability'],
+        //                 'submenu' => []
+        //             ]
+        //         ];
+        //     }
+        // }
 
         foreach ($menuItems as $menuItem) {
-            if (!isset($menuArray[$menuItem['parent']])) {
+            if ($menuItem['parent'] === null && !isset($menuArray[$menuItem['parent']])) {
                 $menuArray[$menuItem['id']] = [
                     'menuid' => $menuItem['id'],
                     'menuitem' => [
