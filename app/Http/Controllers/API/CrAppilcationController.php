@@ -3,14 +3,6 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\R_CrApplication;
-use App\Models\CrApplication\M_CrApplication;
-use App\Models\CrApplication\M_CrBusiness;
-use App\Models\CrApplication\M_CrGuarantor;
-use App\Models\CrApplication\M_CrInfo;
-use App\Models\CrApplication\M_CrPersonal;
-use App\Models\CrApplication\M_CrReferral;
-use App\Models\CrApplication\M_CrSpouse;
 use Carbon\Carbon;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
@@ -34,13 +26,13 @@ class CrAppilcationController extends Controller
     {
         DB::beginTransaction();
         try {
-            $set_uuid = Uuid::uuid4()->toString();
+            $uuid = Uuid::uuid4()->toString();
 
-            $last_id = self::insert_cr_application($request,$set_uuid);
+            self::insert_cr_application($request,$uuid);
     
             DB::commit();
             // ActivityLogger::logActivity($request,"Success",200); 
-            return response()->json(['message' => 'Cabang created successfully',"status" => 200,'response' => $last_id], 200);
+            return response()->json(['message' => 'Cabang created successfully',"status" => 200], 200);
         }catch (QueryException $e) {
             DB::rollback();
             ActivityLogger::logActivity($request,$e->getMessage(),409);
@@ -52,12 +44,11 @@ class CrAppilcationController extends Controller
         }
     }
 
-    private function insert_cr_application($request,$set_uuid){
+    private function insert_cr_application($request,$uuid){
         $data_cr_application =[
-            'ID' => $set_uuid,
+            'ID' => $uuid,
             'CR_PROSPECT_ID' => "",
             'CLEAR_FLAG'  => "",
-            
             'APPLICATION_NUMBER'  => "",
             'CUST_CODE' => "",
             'ACCOUNT_NUMBER'  => "",
