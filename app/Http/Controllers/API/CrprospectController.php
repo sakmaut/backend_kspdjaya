@@ -133,7 +133,8 @@ class CrprospectController extends Controller
                 "data_survey.penghasilan.pribadi" => "numeric",
                 "data_survey.penghasilan.pasangan" => "numeric",
                 "data_survey.penghasilan.lainnya" => "numeric",
-                "data_survey.pengeluaran" => "numeric"
+                "data_survey.pengeluaran" => "numeric",
+                "data_survey.tgl_survey" => "date"
             ]);
 
             self::createCrProspek($request);
@@ -163,7 +164,7 @@ class CrprospectController extends Controller
             'id' => $request->id,
             'ao_id' => $request->user()->id,
             'branch_code' => M_HrEmployee::where('ID',$request->user()->employee_id)->first()->BRANCH_CODE,
-            'visit_date' => Carbon::now(),
+            'visit_date' => isset($request->data_survey['catatan_survey']) && !empty($request->data_survey['catatan_survey'])?$request->data_survey['catatan_survey']:null,
             'tujuan_kredit' => $request->order['tujuan_kredit'],
             'plafond' => $request->order['plafond'],
             'tenor' => $request->order['tenor'],
