@@ -125,16 +125,16 @@ class CrprospectController extends Controller
         try {
             $request->validate([
                 'id' => 'required|string|unique:cr_prospect',
-                'order.plafond' => 'numeric',
-                'order.tenor' => 'numeric',
-                'data_nasabah.no_ktp' => 'numeric',
-                'data_nasabah.tgl_lahir' => 'date',
-                'data_nasabah.no_hp' => 'numeric',
-                "data_survey.penghasilan.pribadi" => "numeric",
-                "data_survey.penghasilan.pasangan" => "numeric",
-                "data_survey.penghasilan.lainnya" => "numeric",
-                "data_survey.pengeluaran" => "numeric",
-                "data_survey.tgl_survey" => "date"
+                // 'order.plafond' => 'numeric',
+                // 'order.tenor' => 'numeric',
+                // 'data_nasabah.no_ktp' => 'numeric',
+                // 'data_nasabah.tgl_lahir' => 'date',
+                // 'data_nasabah.no_hp' => 'numeric',
+                // "data_survey.penghasilan.pribadi" => "numeric",
+                // "data_survey.penghasilan.pasangan" => "numeric",
+                // "data_survey.penghasilan.lainnya" => "numeric",
+                // "data_survey.pengeluaran" => "numeric",
+                // "data_survey.tgl_survey" => "date"
             ]);
 
             self::createCrProspek($request);
