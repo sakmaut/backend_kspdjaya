@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Models\M_Branch;
 use App\Models\M_CrGuaranteVehicle;
 use App\Models\M_CrProspect;
 use App\Models\M_CrProspectDocument;
+use App\Models\M_HrEmployee;
 use App\Models\M_ProspectApproval;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
@@ -53,68 +56,65 @@ class CrprospectController extends Controller
 
     private function resourceDetail($request,$data)
     {
-        // $attachmentData = M_CrProspectAttachment::orderBy('type','asc')->where('cr_prospect_id',$data->id )->get();
-
+        $prospect_id = $data->id;
+        $guarente_vehicle = M_CrGuaranteVehicle::where('CR_PROSPECT_ID',$prospect_id)->get(); 
+        $approval_detail = M_ProspectApproval::where('CR_PROSPECT_ID',$prospect_id)->first();
+        $attachment_data = M_CrProspectDocument::where('CR_PROSPECT_ID',$prospect_id )->get();
+        
         $arrayList = [
-            'id' => $data->id,
-            'ao_id' => $data->ao_id,
-            'data_ao' =>  [
-                [
-                    'id_ao' => $request->user()->id,
-                    'nama_ao' => $request->user()->username,
+            'id' => $prospect_id,
+            'visit_date' => date('d-m-Y',strtotime($data->visit_date)),
+            'cust_code_ref' => $data->cust_code_ref,
+            'data_ao' =>[
+                'ao_id' => $request->user()->id,
+                'nama_ao' => M_HrEmployee::findEmployee($request->user()->employee_id)->NAMA,
+            ],
+            'data_order' =>[
+                'tujuan_kredit' => $data->tujuan_kredit,
+                'plafond' => 'IDR '.number_format($data->plafond,0,",","."),
+                'tenor' => $data->tenor, 
+                'kategory' => $data->category 
+            ],
+            'data_nasabah' => [
+                'nama' => $data->nama,
+                'tgl_lahir' => date('d-m-Y',strtotime($data->tgl_lahir)),
+                'no_hp' => $data->hp,
+                'no_ktp' => $data->ktp,
+                'data_alamat' => [
+                    'alamat' => $data->alamat,
+                    'rt' => $data->rt,
+                    'rw' => $data->rw,
+                    'provinsi' => $data->province,
+                    'kota' => $data->city,
+                    'kelurahan' => $data->kelurahan,
+                    'kecamatan' => $data->kecamatan,
+                    'kode_pos' => $data->zip_code
+                ],
+            ], 
+            'data_survey' =>[
+                'usaha' => $data->usaha,
+                'sektor' => $data->sector,
+                'lama_bekerja' => $data->work_period,
+                'tanggungan' => $data->dependants,
+                'pengeluaran' => $data->expenses,
+                'penghasilan' => [
+                    'pribadi' => $data->income_personal,
+                    'pasangan' => $data->income_spouse,
+                    'lainnya' => $data->income_other,
                 ]
             ],
-            'visit_date' => date('d-m-Y',strtotime($data->visit_date)),
-            'tujuan_kredit' => $data->tujuan_kredit,
-            'plafond' => 'IDR '.number_format($data->plafond,0,",","."),
-            'tenor' => "$data->tenor",
-            'nama' => $data->nama,
-            'ktp' => $data->ktp,
-            'kk' => $data->kk,
-            'tgl_lahir' => date('d-m-Y',strtotime($data->tgl_lahir)),
-            'alamat' => $data->alamat,
-            'hp' => $data->hp,
-            'usaha' => $data->usaha,
-            'sector' => $data->sector,
-            'coordinate' => $data->coordinate,
-            'accurate' => $data->accurate,
-            'slik' => $data->slik == "1" ? 'ya':"tidak",
-            'ktp_attachment' => [],
-            'kk_attachment' => [],
-            'buku_nikah' => [],
-            'prospek_jaminan' => [],
-            'prospek_penjamin' => [],
-            'prospek_attachment' => [],
-            'slik_approval' => ''
+            "lokasi" => [ 
+                'coordinate' => $data->coordinate,
+                'accurate' => $data->accurate
+            ],         
+            'jaminan_kendaraan' => $guarente_vehicle,
+            'prospect_approval' => [
+                'flag_approval' => $approval_detail->ONCHARGE_APPRVL,
+                'keterangan' => $approval_detail->ONCHARGE_DESCR,
+                'status' => $approval_detail->APPROVAL_RESULT
+            ],
+            "attachment" =>$attachment_data
         ];
-
-        // foreach ($attachmentData as $list) {
-        //     if(strtolower($list->type) == 'ktp'){
-        //         $arrayList['ktp_attachment'] = URL::to('/').'/storage/'.$list->attachment_path;
-        //     }
-        // }
-
-        // foreach ($attachmentData as $list) {
-        //     if(strtolower($list->type) == 'kk'){
-        //         $arrayList['kk_attachment'] = URL::to('/').'/storage/'.$list->attachment_path;;
-        //     }
-        // }
-
-        // foreach ($attachmentData as $list) {
-        //     if(strtolower($list->type) == 'buku nikah'){
-        //         $arrayList['buku_nikah'] = URL::to('/').'/storage/'.$list->attachment_path;;
-        //     }
-        // }
-
-        // foreach ($attachmentData as $list) {
-        //     if(str_contains($list->type, 'attachment')){
-        //         $arrayList['prospek_attachment'][] = [
-        //             'id' => $list->id,
-        //             'type' => $list->type,
-        //             'path' => URL::to('/').'/storage/'.$list->attachment_path,
-        //         ];
-        //     }
-        // }
         
         return $arrayList;
     }
@@ -125,23 +125,17 @@ class CrprospectController extends Controller
         try {
             $request->validate([
                 'id' => 'required|string|unique:cr_prospect',
-                'tujuan_kredit' => 'string',
-                'plafond' => 'numeric',
-                'tenor' => 'numeric',
-                'nama' => 'string',
-                'ktp' => 'numeric',
-                'kk' => 'numeric',
-                'tgl_lahir' => 'date',
-                'alamat' => 'string',
-                'hp' => 'numeric',
-                'usaha' => 'string',
-                'sector' => 'string',
-                "penghasilan_pribadi" => "numeric",
-                "penghasilan_pasangan" => "numeric",
-                "penghasilan_lainnya" => "numeric",
-                "pengeluaran" => "numeric"
+                'order.plafond' => 'numeric',
+                'order.tenor' => 'numeric',
+                'data_nasabah.no_ktp' => 'numeric',
+                'data_nasabah.tgl_lahir' => 'date',
+                'data_nasabah.no_hp' => 'numeric',
+                "data_survey.penghasilan.pribadi" => "numeric",
+                "data_survey.penghasilan.pasangan" => "numeric",
+                "data_survey.penghasilan.lainnya" => "numeric",
+                "data_survey.pengeluaran" => "numeric"
             ]);
-    
+
             self::createCrProspek($request);
             self::createCrProspekApproval($request);
 
@@ -168,40 +162,33 @@ class CrprospectController extends Controller
         $data_array = [
             'id' => $request->id,
             'ao_id' => $request->user()->id,
-            'cust_code_ref' => $request->cust_code_ref,
+            'branch_code' => M_HrEmployee::where('ID',$request->user()->employee_id)->first()->BRANCH_CODE,
             'visit_date' => Carbon::now(),
-            'nama' => $request->nama,
-            'tgl_lahir' => $request->tgl_lahir,
-            'alamat' => $request->alamat,
-            'rt' => $request->rt,
-            'rw' => $request->rw,
-            'province' => $request->provinsi,
-            'city' => $request->kota,
-            'kecamatan' => $request->kecamatan,
-            'kelurahan' => $request->kelurahan,
-            'ktp' => $request->no_ktp,
-            'hp' => $request->no_hp,
-            "tin_number" => $request->no_npwp,
-            "mother_name" => $request->nama_ibu_kandung,
-            "title" => $request->pendidikan_terakhir,
-            "work_period" => $request->lama_bekerja,
-            "dependants" => $request->tanggungan,
-            "income_personal" => $request->penghasilan_pribadi,
-            "income_spouse" => $request->penghasilan_pasangan,
-            "income_other" => $request->penghasilan_lainnya,
-            'usaha' => $request->usaha,
-            'sector' => $request->sektor,
-            "expenses" => $request->pengeluaran,
-            'tujuan_kredit' => $request->tujuan_kredit,
-            'plafond' => $request->plafond,
-            'tenor' => $request->tenor,
-            'category' => $request->category,
-            'usaha' => $request->usaha,
-            'sector' => $request->sector,
-            'coordinate' => $request->coordinate,
-            'accurate' => $request->accurate,
-            'survey_note' => $request->catatan_survey,
-            'payment_reference' => $request->ref_pembayaran,
+            'tujuan_kredit' => $request->order['tujuan_kredit'],
+            'plafond' => $request->order['plafond'],
+            'tenor' => $request->order['tenor'],
+            'category' => $request->order['category'],
+            'nama' => $request->data_nasabah['nama'],
+            'tgl_lahir' => $request->data_nasabah['tgl_lahir'],
+            'ktp' => $request->data_nasabah['no_ktp'],
+            'hp' => $request->data_nasabah['no_hp'],
+            'alamat' => $request->data_nasabah['data_alamat']['alamat'],
+            'rt' => $request->data_nasabah['data_alamat']['rt'],
+            'rw' => $request->data_nasabah['data_alamat']['rw'],
+            'province' => $request->data_nasabah['data_alamat']['provinsi'],
+            'city' => $request->data_nasabah['data_alamat']['kota'],
+            'kecamatan' => $request->data_nasabah['data_alamat']['kecamatan'],
+            'kelurahan' => $request->data_nasabah['data_alamat']['kelurahan'],
+            "work_period" => $request->data_survey['lama_bekerja'],
+            "income_personal" => $request->data_survey['penghasilan']['pribadi'],
+            "income_spouse" =>  $request->data_survey['penghasilan']['pasangan'],
+            "income_other" =>  $request->data_survey['penghasilan']['lainnya'],
+            'usaha' => $request->data_survey['usaha'],
+            'sector' => $request->data_survey['sektor'],
+            "expenses" => $request->data_survey['pengeluaran'],
+            'survey_note' => $request->data_survey['catatan_survey'],
+            'coordinate' => $request->lokasi['coordinate'],
+            'accurate' => $request->lokasi['accurate'],
             'created_by' => $request->user()->id
         ];
     
@@ -268,8 +255,10 @@ class CrprospectController extends Controller
                 'hp' => 'numeric',
                 'usaha' => 'string',
                 'sector' => 'string',
-                'slik' => 'numeric',
-                'collateral_value' => 'numeric'
+                "penghasilan_pribadi" => "numeric",
+                "penghasilan_pasangan" => "numeric",
+                "penghasilan_lainnya" => "numeric",
+                "pengeluaran" => "numeric"
             ]);
 
             $prospek = M_CrProspect::findOrFail($id);

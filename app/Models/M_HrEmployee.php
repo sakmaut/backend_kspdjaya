@@ -17,6 +17,7 @@ class M_HrEmployee extends Model
        'NIK',
        'NAMA',
        'AO_CODE',
+       'BRANCH_CODE',
        'BLOOD_TYPE',
        'GENDER',
        'PENDIDIKAN',
@@ -83,5 +84,11 @@ class M_HrEmployee extends Model
                 $model->setAttribute($model->getKeyName(), Str::uuid()->toString());
             }
         });
+    }
+
+    public static function findEmployee($employeeID){
+
+        $query =self::where('ID', $employeeID)->first();
+        return $query;
     }
 }

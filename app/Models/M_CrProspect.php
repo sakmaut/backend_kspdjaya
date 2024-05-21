@@ -14,6 +14,7 @@ class M_CrProspect extends Model
     protected $fillable = [
         'id',
         'ao_id',
+        'branch_code',
         'visit_date',
         'mother_name',
         'category',
