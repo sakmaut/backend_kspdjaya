@@ -137,7 +137,7 @@ class CrprospectController extends Controller
                 // "data_survey.tgl_survey" => "date"
             ]);
 
-            self::createCrProspek($request);
+            $data = self::createCrProspek($request);
             self::createCrProspekApproval($request);
 
             if (collect($request->jaminan_kendaraan)->isNotEmpty()) {
@@ -165,31 +165,31 @@ class CrprospectController extends Controller
             'ao_id' => $request->user()->id,
             'branch_code' => M_HrEmployee::where('ID',$request->user()->employee_id)->first()->BRANCH_CODE,
             'visit_date' => isset($request->data_survey['catatan_survey']) && !empty($request->data_survey['catatan_survey'])?$request->data_survey['catatan_survey']:null,
-            'tujuan_kredit' => $request->order['tujuan_kredit'],
-            'plafond' => $request->order['plafond'],
-            'tenor' => $request->order['tenor'],
-            'category' => $request->order['category'],
-            'nama' => $request->data_nasabah['nama'],
-            'tgl_lahir' => $request->data_nasabah['tgl_lahir'],
-            'ktp' => $request->data_nasabah['no_ktp'],
-            'hp' => $request->data_nasabah['no_hp'],
-            'alamat' => $request->data_nasabah['data_alamat']['alamat'],
-            'rt' => $request->data_nasabah['data_alamat']['rt'],
-            'rw' => $request->data_nasabah['data_alamat']['rw'],
-            'province' => $request->data_nasabah['data_alamat']['provinsi'],
-            'city' => $request->data_nasabah['data_alamat']['kota'],
-            'kecamatan' => $request->data_nasabah['data_alamat']['kecamatan'],
-            'kelurahan' => $request->data_nasabah['data_alamat']['kelurahan'],
-            "work_period" => $request->data_survey['lama_bekerja'],
-            "income_personal" => $request->data_survey['penghasilan']['pribadi'],
-            "income_spouse" =>  $request->data_survey['penghasilan']['pasangan'],
-            "income_other" =>  $request->data_survey['penghasilan']['lainnya'],
-            'usaha' => $request->data_survey['usaha'],
-            'sector' => $request->data_survey['sektor'],
-            "expenses" => $request->data_survey['pengeluaran'],
-            'survey_note' => $request->data_survey['catatan_survey'],
-            'coordinate' => $request->lokasi['coordinate'],
-            'accurate' => $request->lokasi['accurate'],
+            'tujuan_kredit' => $request->order['tujuan_kredit']?? null,
+            'plafond' => $request->order['plafond']?? null,
+            'tenor' => $request->order['tenor']?? null,
+            'category' => $request->order['category']?? null,
+            'nama' => $request->data_nasabah['nama']?? null,
+            'tgl_lahir' => $request->data_nasabah['tgl_lahir']?? null,
+            'ktp' => $request->data_nasabah['no_ktp']?? null,
+            'hp' => $request->data_nasabah['no_hp']?? null,
+            'alamat' => $request->data_nasabah['data_alamat']['alamat']?? null,
+            'rt' => $request->data_nasabah['data_alamat']['rt']?? null,
+            'rw' => $request->data_nasabah['data_alamat']['rw']?? null,
+            'province' => $request->data_nasabah['data_alamat']['provinsi']?? null,
+            'city' => $request->data_nasabah['data_alamat']['kota']?? null,
+            'kecamatan' => $request->data_nasabah['data_alamat']['kecamatan']?? null,
+            'kelurahan' => $request->data_nasabah['data_alamat']['kelurahan']?? null,
+            "work_period" => $request->data_survey['lama_bekerja']?? null,
+            "income_personal" => $request->data_survey['penghasilan']['pribadi']?? null,
+            "income_spouse" =>  $request->data_survey['penghasilan']['pasangan']?? null,
+            "income_other" =>  $request->data_survey['penghasilan']['lainnya']?? null,
+            'usaha' => $request->data_survey['usaha']?? null,
+            'sector' => $request->data_survey['sektor']?? null,
+            "expenses" => $request->data_survey['pengeluaran']?? null,
+            'survey_note' => $request->data_survey['catatan_survey']?? null,
+            'coordinate' => $request->lokasi['coordinate']?? null,
+            'accurate' => $request->lokasi['accurate']?? null,
             'created_by' => $request->user()->id
         ];
     
