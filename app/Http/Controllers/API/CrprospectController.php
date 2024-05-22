@@ -57,6 +57,23 @@ class CrprospectController extends Controller
         }
     }
 
+    public function showAdmins(Request $req){
+        try {
+            $get_branch = M_HrEmployee::where('ID',$req->user()->employee_id)->first();
+            $data =  M_CrProspect::whereNull('deleted_at')->where('branch_id', $get_branch->BRANCH_CODE)->get();
+            $dto = R_CrProspect::collection($data);
+    
+            ActivityLogger::logActivity($req,"Success",200);
+            return response()->json(['message' => 'OK',"status" => 200,'response' => $dto], 200);
+        } catch (QueryException $e) {
+            ActivityLogger::logActivity($req,$e->getMessage(),409);
+            return response()->json(['message' => $e->getMessage(),"status" => 409], 409);
+        } catch (\Exception $e) {
+            ActivityLogger::logActivity($req,$e->getMessage(),500);
+            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+        }
+    }
+
     public function show(Request $req,$id)
     {
         try {
@@ -99,16 +116,14 @@ class CrprospectController extends Controller
                 'tgl_lahir' => date('d-m-Y',strtotime($data->tgl_lahir)),
                 'no_hp' => $data->hp,
                 'no_ktp' => $data->ktp,
-                'data_alamat' => [
-                    'alamat' => $data->alamat,
-                    'rt' => $data->rt,
-                    'rw' => $data->rw,
-                    'provinsi' => $data->province,
-                    'kota' => $data->city,
-                    'kelurahan' => $data->kelurahan,
-                    'kecamatan' => $data->kecamatan,
-                    'kode_pos' => $data->zip_code
-                ],
+                'alamat' => $data->alamat,
+                'rt' => $data->rt,
+                'rw' => $data->rw,
+                'provinsi' => $data->province,
+                'kota' => $data->city,
+                'kelurahan' => $data->kelurahan,
+                'kecamatan' => $data->kecamatan,
+                'kode_pos' => $data->zip_code
             ], 
             'data_survey' =>[
                 'usaha' => $data->usaha,
@@ -116,11 +131,9 @@ class CrprospectController extends Controller
                 'lama_bekerja' => $data->work_period,
                 'tanggungan' => $data->dependants,
                 'pengeluaran' => $data->expenses,
-                'penghasilan' => [
-                    'pribadi' => $data->income_personal,
-                    'pasangan' => $data->income_spouse,
-                    'lainnya' => $data->income_other,
-                ]
+                'penghasilan_pribadi' => $data->income_personal,
+                'penghasilan_pasangan' => $data->income_spouse,
+                'penghasilan_lainnya' => $data->income_other
             ],
             "lokasi" => [ 
                 'coordinate' => $data->coordinate,
