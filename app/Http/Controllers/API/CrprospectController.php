@@ -183,7 +183,7 @@ class CrprospectController extends Controller
             'id' => $request->id,
             'ao_id' => $request->user()->id,
             'branch_code' => M_HrEmployee::where('ID',$request->user()->employee_id)->first()->BRANCH_CODE,
-            'visit_date' => isset($request->visit_date) && !empty($request->visit_date)?$request->visit_date:null,
+            'visit_date' => isset($request->data_survey['tgl_survey']) && !empty($request->data_survey['tgl_survey'])?$request->data_survey['tgl_survey']:null,
             'tujuan_kredit' => $request->order['tujuan_kredit']?? null,
             'plafond' => $request->order['plafond']?? null,
             'tenor' => $request->order['tenor']?? null,
@@ -267,7 +267,7 @@ class CrprospectController extends Controller
             ]);
 
             $data_prospect = [
-                'visit_date' => isset($request->visit_date) && !empty($request->visit_date)?$request->visit_date:null,
+                'visit_date' => isset($request->data_survey['tgl_survey']) && !empty($request->data_survey['tgl_survey'])?$request->data_survey['tgl_survey']:null,
                 'tujuan_kredit' => $request->order['tujuan_kredit']?? null,
                 'plafond' => $request->order['plafond']?? null,
                 'tenor' => $request->order['tenor']?? null,
