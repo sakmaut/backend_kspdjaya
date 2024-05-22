@@ -60,7 +60,8 @@ class CrprospectController extends Controller
     public function showAdmins(Request $req){
         try {
             $get_branch = M_HrEmployee::where('ID',$req->user()->employee_id)->first();
-            $data =  M_CrProspect::whereNull('deleted_at')->where('branch_id', $get_branch->BRANCH_CODE)->get();
+            $get_approval = M_ProspectApproval::where('APPROVAL_RESULT','1:approval')->first();
+            $data =  M_CrProspect::whereNull('deleted_at')->where(['branch_id'=>$get_branch->BRANCH_ID,'id'=>$get_approval->CR_PROSPECT_ID])->get();
             $dto = R_CrProspect::collection($data);
     
             ActivityLogger::logActivity($req,"Success",200);
