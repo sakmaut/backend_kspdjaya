@@ -30,7 +30,7 @@ class CrprospectController extends Controller
             $dto = R_CrProspect::collection($data);
     
             ActivityLogger::logActivity($req,"Success",200);
-            return response()->json(['message' => 'OK',"status" => 200,'response' => $dto], 200);
+            return response()->json(['message' => 'OK',"status" => 200,'response' => 'aaa'], 200);
         } catch (QueryException $e) {
             ActivityLogger::logActivity($req,$e->getMessage(),409);
             return response()->json(['message' => $e->getMessage(),"status" => 409], 409);
