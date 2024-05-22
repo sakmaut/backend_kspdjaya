@@ -40,6 +40,23 @@ class CrprospectController extends Controller
         }
     }
 
+    public function showKapos(Request $req){
+        try {
+            $get_branch = M_HrEmployee::where('ID',$req->user()->employee_id)->first();
+            $data =  M_CrProspect::whereNull('deleted_at')->where('branch_code', $get_branch->BRANCH_CODE)->get();
+            $dto = R_CrProspect::collection($data);
+    
+            ActivityLogger::logActivity($req,"Success",200);
+            return response()->json(['message' => 'OK',"status" => 200,'response' => $dto], 200);
+        } catch (QueryException $e) {
+            ActivityLogger::logActivity($req,$e->getMessage(),409);
+            return response()->json(['message' => $e->getMessage(),"status" => 409], 409);
+        } catch (\Exception $e) {
+            ActivityLogger::logActivity($req,$e->getMessage(),500);
+            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+        }
+    }
+
     public function show(Request $req,$id)
     {
         try {

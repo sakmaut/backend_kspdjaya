@@ -46,20 +46,19 @@ class CrAppilcationController extends Controller
 
     private function insert_cr_application($request,$uuid){
         $data_cr_application =[
-            'ID' => $uuid,
-            'CR_PROSPECT_ID' => "",
-            'CLEAR_FLAG'  => "",
-            'APPLICATION_NUMBER'  => "",
-            'CUST_CODE' => "",
-            'ACCOUNT_NUMBER'  => "",
-            'SUBMISSION_FLAG'  => "",
-            'SUBMISSION_VALUE'  => floatval(""),
-            'PERIOD' => floatval(""),
-            'CREDIT_TYPE' => "",
-            'INTENDED_FOR' => "",
-            'TERM_OF_PAYMENT' => "",
-            'INSTALLMENT_TYPE' => "",
-            'VERSION' => 1,
+            'ID' => '',
+            'BRANCH' => '',
+            'FORM_NUMBER' => '',
+            'ORDER_NUMBER' => '',
+            'CUST_CODE' => '',
+            'ENTRY_DATE' => '',
+            'SUBMISSION_VALUE' => '',
+            'CREDIT_TYPE' => '',
+            'INSTALLMENT_COUNT' => '',
+            'PERIOD' => '',
+            'INSTALLMENT' => '',
+            'RATE' => '',
+            'VERSION' => '',
             'CREATE_DATE' => Carbon::now()->format('Y-m-d'),
             'CREATE_USER' => $request->user()->id,
         ];
@@ -69,31 +68,48 @@ class CrAppilcationController extends Controller
 
     private function insert_cr_personal($request){
         $data_cr_application =[  
-            'ID' => "",
-            'CR_APPLICATION_ID' => "",
-            'PERSONAL_STATUS' => "",
-            'BPR_RELATED_FLAG' => "",
-            'NAME' => "",
-            'GENDER' => "",
-            'BIRTHPLACE' => "",
-            'BIRTHDATE' => "",
-            'EDUCATION' => "",
-            'ID_NUMBER' => "",
-            'ID_ISSUE_DATE' => "",
-            'ID_VALID_DATE' => "",
-            'RELATIONSHIP' => "",
-            'RELIGION' => "",
-            'AMENABILITY' => "",
-            'ADDRESS' => "",
-            'PROPERTY_STATUS' => "",
-            'CITY' => "",
-            'POSTAL_CODE' => "",
-            'STAY_PERIOD' => "",
-            'PHONE' => "",
-            'PERSONAL_NUMBER' => "",
-            'MOTHER' => "",
-            'TIN_NUMBER' => "",
-            'VERSION' => "",
+            'ID' => '',
+            'CUST_CODE' => '',
+            'NAME' => '',
+            'ALIAS' => '',
+            'GENDER' => '',
+            'BIRTHPLACE' => '',
+            'BIRTHDATE' => '',
+            'MARTIAL_STATUS' => '',
+            'MARTIAL_DATE' => '',
+            'ID_TYPE' => '',
+            'ID_NUMBER' => '',
+            'ID_ISSUE_DATE' => '',
+            'ID_VALID_DATE' => '',
+            'ADDRESS' => '',
+            'RT' => '',
+            'RW' => '',
+            'PROVINCE' => '',
+            'CITY' => '',
+            'KELURAHAN' => '',
+            'KECAMATAN' => '',
+            'ZIP_CODE' => '',
+            'KK' => '',
+            'CITIZEN' => '',
+            'INS_ADDRESS' => '',
+            'INS_RT' => '',
+            'INS_RW' => '',
+            'INS_PROVINCE' => '',
+            'INS_CITY' => '',
+            'INS_KELURAHAN' => '',
+            'INS_KECAMATAN' => '',
+            'INS_ZIP_CODE' => '',
+            'OCCUPATION' => '',
+            'OCCUPATION_ON_ID' => '',
+            'RELIGION' => '',
+            'EDUCATION' => '',
+            'PROPERTY_STATUS' => '',
+            'PHONE_HOUSE' => '',
+            'PHONE_PERSONAL' => '',
+            'PHONE_OFFICE' => '',
+            'EXT_1' => '',
+            'EXT_2' => '',
+            'VERSION' => '',
             'CREATE_DATE' => Carbon::now()->format('Y-m-d'),
             'CREATE_USER' => $request->user()->id,
         ];
@@ -101,116 +117,55 @@ class CrAppilcationController extends Controller
         //  M_CrPersonal::create($data_cr_application);
     }
 
-    // private function insert_cr_business($request){
-    //     $data_cr_application =[
-    //         'ID' => "",
-    //         'CR_APPLICATION_ID' => "",
-    //         'BUSINESS_STATUS' => "",
-    //         'COMPANY_NAME' => "",
-    //         'COMPANY SECTION' => "",
-    //         'BUSINESS_PERIOD' => "",
-    //         'POSITION' => "",
-    //         'ADDRESS' => "",
-    //         'OFFICE_NUMBER_1' => "",
-    //         'OFFICE_NUMBER_2' => "",
-    //         'MONTHLY_NET_INCOME' => "",
-    //         'SIDE_JOB' => "",
-    //         'MONTHLY_SIDE_INCOME' => "",
-    //         'VERSION' => "",
-    //         'CREATE_DATE' => Carbon::now()->format('Y-m-d'),
-    //         'CREATE_USER' => $request->user()->id,
-    //     ];
+    private function insert_cr_personal_extra($request){
+        $data_cr_application =[  
+            'ID' => '',
+            'APPLICATION_ID' => '',
+            'BI_NAME' => '',
+            'EMAIL' => '',
+            'INFO' => '',
+            'OTHER_OCCUPATION_1' => '',
+            'OTHER_OCCUPATION_2' => '',
+            'OTHER_OCCUPATION_3' => '',
+            'OTHER_OCCUPATION_4' => '',
+            'MAIL_ADDRESS' => '',
+            'MAIL_RT' => '',
+            'MAIL_RW' => '',
+            'MAIL_PROVINCE' => '',
+            'MAIL_CITY' => '',
+            'MAIL_KELURAHAN' => '',
+            'MAIL_KECAMATAN' => '',
+            'MAIL_ZIP_CODE' => '',
+            'EMERGENCY_NAME' => '',
+            'EMERGENCY_ADDRESS' => '',
+            'EMERGENCY_RT' => '',
+            'EMERGENCY_RW' => '',
+            'EMERGENCY_PROVINCE' => '',
+            'EMERGENCY_CITY' => '',
+            'EMERGENCY_KELURAHAN' => '',
+            'EMERGENCY_KECAMATAN' => '',
+            'EMERGENCY_ZIP_CODE' => '',
+            'EMERGENCY_PHONE_HOUSE' => '',
+            'EMERGENCY_PHONE_PERSONAL'  => '' 
+        ];
 
-    //     M_CrBusiness::create($data_cr_application);
-    // }
+        //  M_CrPersonal::create($data_cr_application);
+    }
 
-    // private function insert_cr_spouse($request){
-    //     $data_cr_application =[
-    //         'ID' => "",
-    //         'CR_APPLICATION_ID' => "",
-    //         'NAME' => "",
-    //         'GENDER' => "",
-    //         'BIRTHPLACE' => "",
-    //         'BIRTHDATE' => "",
-    //         'EDUCATION' => "",
-    //         'ID_NUMBER' => "",
-    //         'ID_ISSUE_DATE' => "",
-    //         'ID_VALID_DATE' => "",
-    //         'OCCUPATION' => "",
-    //         'COMPANY_NAME' => "",
-    //         'COMPANY_SECTION' => "",
-    //         'BUSINESS_PERIOD' => "",
-    //         'POSITION' => "",
-    //         'OFFICE_NUMBER_1' => "",
-    //         'OFFICE_NUMBER_2' => "",
-    //         'MONTHLY_NET_INCOME' => "",
-    //         'VERSION' => "",
-    //         'CREATE_DATE' => Carbon::now()->format('Y-m-d'),
-    //         'CREATE_USER' => $request->user()->id,
-    //     ];
+    private function insert_bank_account($array_data,$request){
+        foreach ($array_data as $result) {
+            $data_cr_application =[  
+                'ID' => '',
+                'APPLICATION_ID' => '',
+                'BANK_CODE' => '',
+                'BANK_NAME' => '',
+                'ACCOUNT_NUMBER' => '',
+                'ACCOUNT_NAME' => '',
+                'PREFERENCE_FLAG' => '',
+                'STATUS'    
+            ];
+        }
+    }
 
-    //     M_CrSpouse::create($data_cr_application);
-    // }
-
-    // private function insert_cr_guarantor($request){
-    //     $data_cr_application =[
-    //         'ID' => "",
-    //         'CR_APPLICATION_ID' => "",
-    //         'HEADER_ID' => "",
-    //         'NAME' => "",
-    //         'BIRTHPLACE' => "",
-    //         'BIRTHDATE' => "",
-    //         'ID_NUMBER' => "",
-    //         'ADDRESS' => "",
-    //         'CITY' => "",
-    //         'POSTAL_CODE' => "",
-    //         'STAY_PERIOD' => "",
-    //         'PHONE' => "",
-    //         'PERSONAL_NUMBER' => "",
-    //         'RELATION' => "",
-    //         'OCCUPATION' => "",
-    //         'MONTHLY_NET_INCOME' => "",
-    //         'VERSION' => "",
-    //         'CREATE_DATE' => Carbon::now()->format('Y-m-d'),
-    //         'CREATE_USER' => $request->user()->id,
-    //     ];
-
-    //     M_CrGuarantor::create($data_cr_application);
-    // }
-
-    // private function insert_cr_info($request){
-    //     $data_cr_application =[
-    //         'ID' => "",
-    //         'CR_APPLICATION_ID' => "",
-    //         'PROP_TAX_NAME' => "",
-    //         'ELECTRICITY_NAME' => "",
-    //         'WATTAGE' => "",
-    //         'PHONE_NAME' => "",
-    //         'VERSION' => "",
-    //         'CREATE_DATE' => Carbon::now()->format('Y-m-d'),
-    //         'CREATE_USER' => $request->user()->id,
-    //     ];
-
-    //     M_CrInfo::create($data_cr_application);
-    // }
-
-    // private function insert_cr_referral($request){
-    //     $data_cr_application =[
-    //         'ID' => "",
-    //         'CR_APPLICATION_ID' => "",
-    //         'NAME' => "",
-    //         'ADDRESS' => "",
-    //         'CITY' => "",
-    //         'POSTAL_CODE' => "",
-    //         'STAY_PERIOD' => "",
-    //         'PHONE' => "",
-    //         'PERSONAL_NUMBER' => "",
-    //         'RELATIONSHIP' => "",
-    //         'VERSION' => "",
-    //         'CREATE_DATE' => Carbon::now()->format('Y-m-d'),
-    //         'CREATE_USER' => $request->user()->id,
-    //     ];
-
-    //     M_CrReferral::create($data_cr_application);
-    // }
+   
 }
