@@ -139,7 +139,7 @@ class CrprospectController extends Controller
                 'coordinate' => $data->coordinate,
                 'accurate' => $data->accurate
             ],         
-            'jaminan_kendaraan' => $guarente_vehicle,
+            'jaminan_kendaraan' => [],
             'prospect_approval' => [
                 'flag_approval' => $approval_detail->ONCHARGE_APPRVL,
                 'keterangan' => $approval_detail->ONCHARGE_DESCR,
@@ -147,6 +147,23 @@ class CrprospectController extends Controller
             ],
             "attachment" =>$attachment_data
         ];
+
+        foreach ($guarente_vehicle as $list) {
+            $arrayList['jaminan_kendaraan'][] = [
+                'id' => $list->ID,
+                "tipe" => $list->TYPE,
+                "merk" => $list->BRAND,
+                "tahun" => $list->PRODUCTION_YEAR,
+                "warna" => $list->COLOR,
+                "atas_nama" => $list->ON_BEHALF,
+                "no_polisi" => $list->POLICE_NUMBER,
+                "no_rangka" => $list->CHASIS_NUMBER,
+                "no_mesin" => $list->ENGINE_NUMBER,
+                "no_stnk" => $list->BPKB_NUMBER,
+                "nilai" =>$list->VALUE
+            ];    
+        }
+        
         
         return $arrayList;
     }
