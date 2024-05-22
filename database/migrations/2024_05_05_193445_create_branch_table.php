@@ -16,6 +16,13 @@ return new class extends Migration
             $table->string('CODE', 45)->unique()->nullable();
             $table->string('NAME', 45)->nullable();
             $table->string('ADDRESS', 2000)->nullable();
+            $table->string('RT')->nullable();
+            $table->string('RW')->nullable();
+            $table->string('PROVINCE')->nullable();
+            $table->string('CITY')->nullable();
+            $table->string('KELURAHAN')->nullable();
+            $table->string('KECAMATAN')->nullable();
+            $table->string('ZIP_CODE')->nullable();
             $table->string('LOCATION', 2000)->nullable();
             $table->string('PHONE_1', 45)->nullable();
             $table->string('PHONE_2', 45)->nullable();

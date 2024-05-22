@@ -20,7 +20,7 @@ class R_CrProspect extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $stts_approval = M_ProspectApproval::where('CR_PROSPECT_ID',$this->id)->first();
+        // $stts_approval = M_ProspectApproval::where('CR_PROSPECT_ID',$this->id)->first();
 
         $data = [
             'id' => $this->id,
@@ -29,7 +29,8 @@ class R_CrProspect extends JsonResource
             'alamat' => $this->alamat,
             'hp' => $this->hp,
             'plafond' => $this->plafond,
-            'status_approval' => $stts_approval->APPROVAL_RESULT
+            'status_approval' =>""
+            // 'status_approval' => !is_null($stts_approval->APPROVAL_RESULT)?$stts_approval->APPROVAL_RESULT:''
         ];
         
         return $data;

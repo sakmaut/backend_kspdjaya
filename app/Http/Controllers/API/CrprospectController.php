@@ -156,7 +156,7 @@ class CrprospectController extends Controller
                 // "data_survey.tgl_survey" => "date"
             ]);
 
-            $data = self::createCrProspek($request);
+            self::createCrProspek($request);
             self::createCrProspekApproval($request);
 
             if (collect($request->jaminan_kendaraan)->isNotEmpty()) {
@@ -211,8 +211,9 @@ class CrprospectController extends Controller
             'accurate' => $request->lokasi['accurate']?? null,
             'created_by' => $request->user()->id
         ];
-    
+
         M_CrProspect::create($data_array);
+
     } 
 
     private function createCrProspekApproval($request)
