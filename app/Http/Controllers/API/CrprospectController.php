@@ -99,7 +99,6 @@ class CrprospectController extends Controller
         
         $arrayList = [
             'id' => $prospect_id,
-            'visit_date' => date('d-m-Y',strtotime($data->visit_date)),
             'cust_code_ref' => $data->cust_code_ref,
             'data_ao' =>[
                 'ao_id' => $request->user()->id,
@@ -133,7 +132,8 @@ class CrprospectController extends Controller
                 'pengeluaran' => $data->expenses,
                 'penghasilan_pribadi' => $data->income_personal,
                 'penghasilan_pasangan' => $data->income_spouse,
-                'penghasilan_lainnya' => $data->income_other
+                'penghasilan_lainnya' => $data->income_other,
+                'tgl_survey' => is_null($data->visit_date) ? '': date('d-m-Y',strtotime($data->visit_date)),
             ],
             "lokasi" => [ 
                 'coordinate' => $data->coordinate,
