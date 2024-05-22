@@ -17,7 +17,7 @@ class M_HrEmployee extends Model
        'NIK',
        'NAMA',
        'AO_CODE',
-       'BRANCH_CODE',
+       'BRANCH_ID',
        'BLOOD_TYPE',
        'GENDER',
        'PENDIDIKAN',
