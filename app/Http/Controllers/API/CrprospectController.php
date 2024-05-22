@@ -16,7 +16,6 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Ramsey\Uuid\Uuid;
@@ -42,8 +41,7 @@ class CrprospectController extends Controller
 
     public function showKapos(Request $req){
         try {
-            $get_branch = M_HrEmployee::where('ID',$req->user()->employee_id)->first();
-            $data =  M_CrProspect::whereNull('deleted_at')->where('branch_id', $get_branch->BRANCH_CODE)->get();
+            $data =  M_CrProspect::show_kapos(self::setEmployeeData($req)->BRANCH_ID);
             $dto = R_CrProspect::collection($data);
     
             ActivityLogger::logActivity($req,"Success",200);
@@ -59,9 +57,7 @@ class CrprospectController extends Controller
 
     public function showAdmins(Request $req){
         try {
-            $get_branch = M_HrEmployee::where('ID',$req->user()->employee_id)->first();
-            $get_approval = M_ProspectApproval::where('APPROVAL_RESULT','1:approval')->first();
-            $data =  M_CrProspect::whereNull('deleted_at')->where(['branch_id'=>$get_branch->BRANCH_ID,'id'=>$get_approval->CR_PROSPECT_ID])->get();
+            $data =  M_CrProspect::show_admin(self::setEmployeeData($req)->BRANCH_ID);
             $dto = R_CrProspect::collection($data);
     
             ActivityLogger::logActivity($req,"Success",200);
@@ -187,6 +183,12 @@ class CrprospectController extends Controller
                 // "data_survey.tgl_survey" => "date"
             ]);
 
+            $check_id_approval =  M_ProspectApproval::where('CR_PROSPECT_ID', $request->id)->get();
+
+            if ($check_id_approval->isNotEmpty()) {
+                throw new Exception("Id Approval Is Exist", 409);
+            }
+
             self::createCrProspek($request);
             self::createCrProspekApproval($request);
 
@@ -213,7 +215,7 @@ class CrprospectController extends Controller
         $data_array = [
             'id' => $request->id,
             'ao_id' => $request->user()->id,
-            'branch_code' => M_HrEmployee::where('ID',$request->user()->employee_id)->first()->BRANCH_CODE,
+            'branch_id' => M_HrEmployee::where('ID',$request->user()->employee_id)->first()->BRANCH_ID,
             'visit_date' => isset($request->data_survey['tgl_survey']) && !empty($request->data_survey['tgl_survey'])?$request->data_survey['tgl_survey']:null,
             'tujuan_kredit' => $request->order['tujuan_kredit']?? null,
             'plafond' => $request->order['plafond']?? null,
@@ -252,10 +254,6 @@ class CrprospectController extends Controller
         $data_approval=[
             'ID' => Uuid::uuid4()->toString(),
             'CR_PROSPECT_ID' => $request->id,
-            'ONCHARGE_APPRVL' => '',
-            'ONCHARGE_PERSON' => '',
-            'ONCHARGE_TIME' => null,
-            'ONCHARGE_DESCR' => '',
             'APPROVAL_RESULT' => '0:waiting kapos approval'
         ];
 

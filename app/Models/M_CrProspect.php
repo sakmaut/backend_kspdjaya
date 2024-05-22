@@ -71,11 +71,25 @@ class M_CrProspect extends Model
         });
     }
 
-    public static function slik_approval($id){
+    public static function show_kapos($branchId)
+    {
+        $query = self::select('*')
+            ->leftJoin('prospect_approval', 'prospect_approval.CR_PROSPECT_ID', '=', 'cr_prospect.id')
+            ->where('cr_prospect.branch_id', $branchId)
+            ->where('prospect_approval.APPROVAL_RESULT', '0:waiting kapos approval')
+            ->whereNull('deleted_at')
+            ->get();
 
-        $query = self::select('slik_approval.SLIK_RESULT')
-                            ->leftJoin('slik_approval', 'slik_approval.CR_PROSPECT_ID', '=', 'cr_prospect.id')
-                            ->where('cr_prospect.id', $id)
+        return $query;
+    }
+
+    public static function show_admin($branchId){
+
+        $query = self::select('*')
+                            ->leftJoin('prospect_approval', 'prospect_approval.CR_PROSPECT_ID', '=', 'cr_prospect.id')
+                            ->where('cr_prospect.branch_id', $branchId)
+                            ->where('prospect_approval.APPROVAL_RESULT', '1:approval')
+                            ->whereNull('deleted_at')
                             ->get();
 
         return $query;
