@@ -449,7 +449,7 @@ class CrprospectController extends Controller
 
             $request->validate([
                 'cr_prospect_id' => 'required|string',
-                'flag' => 'required|string'
+                'flag' => 'required|string|in:yes,no'
             ]);
 
             $data_approval=[
@@ -457,7 +457,7 @@ class CrprospectController extends Controller
                 'ONCHARGE_PERSON' => $request->user()->id,
                 'ONCHARGE_TIME' => Carbon::now(),
                 'ONCHARGE_DESCR' => $request->keterangan,
-                'APPROVAL_RESULT' => '1:approve'
+                'APPROVAL_RESULT' => $request->flag == 'yes'?'1:approve':'1:rejected'
             ];
     
             $check_approval = M_ProspectApproval::where('CR_PROSPECT_ID',$request->cr_prospect_id)->first();
