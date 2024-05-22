@@ -262,10 +262,6 @@ class CrprospectController extends Controller
         DB::beginTransaction();
         try {
 
-            $request->validate([
-                'kunjungan_approval.flag' => 'required|string'
-            ]);
-
             $data_prospect = [
                 'visit_date' => isset($request->data_survey['tgl_survey']) && !empty($request->data_survey['tgl_survey'])?$request->data_survey['tgl_survey']:null,
                 'tujuan_kredit' => $request->order['tujuan_kredit']?? null,
@@ -444,5 +440,48 @@ class CrprospectController extends Controller
             ActivityLogger::logActivity($req,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
         } 
+    }
+
+    public function approval(Request $request){
+        DB::beginTransaction();
+        try {
+
+            $request->validate([
+                'cr_prospect_id' => 'required|string',
+                'flag' => 'required|string'
+            ]);
+
+            $data_approval=[
+                'ONCHARGE_APPRVL' => $request->flag,
+                'ONCHARGE_PERSON' => $request->user()->id,
+                'ONCHARGE_TIME' => Carbon::now(),
+                'ONCHARGE_DESCR' => $request->keterangan,
+                'APPROVAL_RESULT' => '1:approve'
+            ];
+    
+            $check_approval = M_ProspectApproval::where('CR_PROSPECT_ID',$request->cr_prospect_id)->first();
+
+            if (!$check_approval) {
+                throw new Exception("Id kunjungan Not Found",404);
+            }
+
+            $check_approval->update($data_approval);
+
+            DB::commit();
+            ActivityLogger::logActivity($request,"Success",200);
+            return response()->json(['message' => 'Kunjungan updated successfully', 'status' => 200], 200);
+        } catch (ModelNotFoundException $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($request, 'Cr Prospect Id Not Found', 404);
+            return response()->json(['message' => 'Cr Prospect Id Not Found', "status" => 404], 404);
+        } catch (QueryException $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($request,$e->getMessage(),409);
+            return response()->json(['message' => $e->getMessage(), 'status' => 409], 409);
+        } catch (\Exception $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($request,$e->getMessage(),500);
+            return response()->json(['message' => $e->getMessage(), 'status' => 500], 500);
+        }
     }
 }

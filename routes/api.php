@@ -72,6 +72,7 @@ Route::middleware('auth:sanctum')->group(function () {
     //Route Group Cr Prospek (Kunjungan)
     Route::apiResource('kunjungan', CrprospectController::class);
     Route::get('kunjungan_kapos', [CrprospectController::class, 'showKapos']);
+    Route::post('kunjungan_approval', [CrprospectController::class, 'approval']);
     Route::post('image_upload_prospect', [CrprospectController::class, 'uploadImage']);
 });
 
