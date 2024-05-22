@@ -16,7 +16,7 @@ return new class extends Migration
             $table->char('id', 100)->primary();
             $table->string('ao_id', 10)->nullable(false);
             $table->string('branch_id',100)->nullable();
-            $table->datetime('visit_date')->default(null);
+            $table->datetime('visit_date')->nullable()->default(null);
             $table->string('mother_name', 45)->nullable();
             $table->string('category', 45)->nullable();
             $table->string('tin_number', 45)->nullable();
@@ -30,12 +30,12 @@ return new class extends Migration
             $table->string('cust_code_ref', 100)->nullable();
             $table->string('tujuan_kredit', 255)->charset('utf8')->nullable();
             $table->string('jenis_produk', 255)->nullable();
-            $table->double('plafond');
-            $table->double('tenor');
+            $table->double('plafond')->nullable();
+            $table->double('tenor')->nullable();
             $table->string('nama', 255)->nullable();
             $table->string('ktp', 25)->nullable();
             $table->string('kk', 25)->nullable();
-            $table->date('tgl_lahir')->default(null);
+            $table->date('tgl_lahir')->nullable()->default(null);
             $table->longtext('alamat')->nullable();
             $table->string('rt')->nullable();
             $table->string('rw')->nullable();
