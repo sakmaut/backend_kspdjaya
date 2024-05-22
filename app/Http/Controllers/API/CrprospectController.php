@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\R_CrProspect;
 use App\Models\M_Branch;
 use App\Models\M_CrGuaranteVehicle;
 use App\Models\M_CrProspect;
@@ -26,9 +27,10 @@ class CrprospectController extends Controller
         try {
             $ao_id = $req->user()->id;
             $data =  M_CrProspect::whereNull('deleted_at')->where('ao_id', $ao_id)->get();
+            $dto = R_CrProspect::collection($data);
     
             ActivityLogger::logActivity($req,"Success",200);
-            return response()->json(['message' => 'OK',"status" => 200,'response' => $data], 200);
+            return response()->json(['message' => 'OK',"status" => 200,'response' => $dto], 200);
         } catch (QueryException $e) {
             ActivityLogger::logActivity($req,$e->getMessage(),409);
             return response()->json(['message' => $e->getMessage(),"status" => 409], 409);
@@ -164,7 +166,7 @@ class CrprospectController extends Controller
             'id' => $request->id,
             'ao_id' => $request->user()->id,
             'branch_code' => M_HrEmployee::where('ID',$request->user()->employee_id)->first()->BRANCH_CODE,
-            'visit_date' => isset($request->data_survey['catatan_survey']) && !empty($request->data_survey['catatan_survey'])?$request->data_survey['catatan_survey']:null,
+            'visit_date' => isset($request->visit_date) && !empty($request->visit_date)?$request->visit_date:null,
             'tujuan_kredit' => $request->order['tujuan_kredit']?? null,
             'plafond' => $request->order['plafond']?? null,
             'tenor' => $request->order['tenor']?? null,
@@ -205,7 +207,7 @@ class CrprospectController extends Controller
             'ONCHARGE_PERSON' => '',
             'ONCHARGE_TIME' => null,
             'ONCHARGE_DESCR' => '',
-            'APPROVAL_RESULT' => '0:untouched'
+            'APPROVAL_RESULT' => '0:waiting kapos approval'
         ];
 
         M_ProspectApproval::create($data_approval);
@@ -238,51 +240,115 @@ class CrprospectController extends Controller
         }
     }
 
-    public function update(Request $req, $id)
+    public function update(Request $request, $id)
     {
         DB::beginTransaction();
         try {
 
-             $req->validate([
-                'visit_date' => 'date',
-                'tujuan_kredit' => 'string',
-                'plafond' => 'numeric',
-                'tenor' => 'numeric',
-                'nama' => 'string',
-                'ktp' => 'numeric',
-                'kk' => 'numeric',
-                'tgl_lahir' => 'date',
-                'alamat' => 'string',
-                'hp' => 'numeric',
-                'usaha' => 'string',
-                'sector' => 'string',
-                "penghasilan_pribadi" => "numeric",
-                "penghasilan_pasangan" => "numeric",
-                "penghasilan_lainnya" => "numeric",
-                "pengeluaran" => "numeric"
+            $request->validate([
+                'kunjungan_approval.flag' => 'required|string'
             ]);
 
-            $prospek = M_CrProspect::findOrFail($id);
+            $data_prospect = [
+                'visit_date' => isset($request->visit_date) && !empty($request->visit_date)?$request->visit_date:null,
+                'tujuan_kredit' => $request->order['tujuan_kredit']?? null,
+                'plafond' => $request->order['plafond']?? null,
+                'tenor' => $request->order['tenor']?? null,
+                'category' => $request->order['category']?? null,
+                'nama' => $request->data_nasabah['nama']?? null,
+                'tgl_lahir' => $request->data_nasabah['tgl_lahir']?? null,
+                'ktp' => $request->data_nasabah['no_ktp']?? null,
+                'hp' => $request->data_nasabah['no_hp']?? null,
+                'alamat' => $request->data_nasabah['data_alamat']['alamat']?? null,
+                'rt' => $request->data_nasabah['data_alamat']['rt']?? null,
+                'rw' => $request->data_nasabah['data_alamat']['rw']?? null,
+                'province' => $request->data_nasabah['data_alamat']['provinsi']?? null,
+                'city' => $request->data_nasabah['data_alamat']['kota']?? null,
+                'kecamatan' => $request->data_nasabah['data_alamat']['kecamatan']?? null,
+                'kelurahan' => $request->data_nasabah['data_alamat']['kelurahan']?? null,
+                "work_period" => $request->data_survey['lama_bekerja']?? null,
+                "income_personal" => $request->data_survey['penghasilan']['pribadi']?? null,
+                "income_spouse" =>  $request->data_survey['penghasilan']['pasangan']?? null,
+                "income_other" =>  $request->data_survey['penghasilan']['lainnya']?? null,
+                'usaha' => $request->data_survey['usaha']?? null,
+                'sector' => $request->data_survey['sektor']?? null,
+                "expenses" => $request->data_survey['pengeluaran']?? null,
+                'survey_note' => $request->data_survey['catatan_survey']?? null,
+                'coordinate' => $request->lokasi['coordinate']?? null,
+                'accurate' => $request->lokasi['accurate']?? null,
+                'updated_by' => $request->user()->id,
+                'updated_at' => Carbon::now()->format('Y-m-d H:i:s')
+            ];
 
-            $req['updated_by'] = $req->user()->id;
-            $req['updated_at'] = Carbon::now()->format('Y-m-d H:i:s');
+            $prospek_check = M_CrProspect::where('id',$id)->whereNull('deleted_at')->first();
 
-            $prospek->update($req->all());
+            if (!$prospek_check) {
+                throw new Exception("Cr Prospect Id Not Found",404);
+            }
+
+            $prospek_check->update($data_prospect);
+
+            if (collect($request->jaminan_kendaraan)->isNotEmpty()) {
+                foreach ($request->jaminan_kendaraan as $result) {
+
+                    $jaminan_check = M_CrGuaranteVehicle::where('id',$result['id'])->whereNull('DELETED_AT')->first();
+
+                    if (!$jaminan_check) {
+                        throw new Exception("Id Jaminan Not Found",404);
+                    }
+
+                    $data_jaminan = [
+                        'HEADER_ID' => "",
+                        'TYPE' => $result['tipe'],
+                        'BRAND' => $result['merk'],
+                        'PRODUCTION_YEAR' => $result['tahun'],
+                        'COLOR' => $result['warna'],
+                        'ON_BEHALF' => $result['atas_nama'],
+                        'POLICE_NUMBER' => $result['no_polisi'],
+                        'CHASIS_NUMBER' => $result['no_rangka'],
+                        'ENGINE_NUMBER' => $result['no_mesin'],
+                        'BPKB_NUMBER' => $result['no_bpkb'],
+                        'VALUE' => $result['nilai'],
+                        'COLLATERAL_FLAG' => "",
+                        'VERSION' => 1,
+                        'MOD_DATE' => Carbon::now()->format('Y-m-d'),
+                        'MOD_BY' => $request->user()->id,
+                    ];
+        
+                   $jaminan_check->update($data_jaminan);
+                }
+            }
+
+            $data_approval=[
+                'ONCHARGE_APPRVL' => $request->kunjungan_approval['flag']?? null,
+                'ONCHARGE_PERSON' => $request->user()->id,
+                'ONCHARGE_TIME' => Carbon::now(),
+                'ONCHARGE_DESCR' => $request->kunjungan_approval['keterangan']?? null,
+                'APPROVAL_RESULT' => '1:approve'
+            ];
+    
+            $check_approval = M_ProspectApproval::where('CR_PROSPECT_ID',$id)->first();
+
+            if (!$check_approval) {
+                throw new Exception("Id Approval Not Found",404);
+            }
+
+            $check_approval->update($data_approval);
 
             DB::commit();
-            ActivityLogger::logActivity($req,"Success",200);
+            ActivityLogger::logActivity($request,"Success",200);
             return response()->json(['message' => 'Kunjungan updated successfully', 'status' => 200], 200);
         } catch (ModelNotFoundException $e) {
             DB::rollback();
-            ActivityLogger::logActivity($req, 'Cr Prospect Id Not Found', 404);
+            ActivityLogger::logActivity($request, 'Cr Prospect Id Not Found', 404);
             return response()->json(['message' => 'Cr Prospect Id Not Found', "status" => 404], 404);
         } catch (QueryException $e) {
             DB::rollback();
-            ActivityLogger::logActivity($req,$e->getMessage(),409);
+            ActivityLogger::logActivity($request,$e->getMessage(),409);
             return response()->json(['message' => $e->getMessage(), 'status' => 409], 409);
         } catch (\Exception $e) {
             DB::rollback();
-            ActivityLogger::logActivity($req,$e->getMessage(),500);
+            ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(), 'status' => 500], 500);
         }
     }
