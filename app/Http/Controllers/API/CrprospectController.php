@@ -43,7 +43,7 @@ class CrprospectController extends Controller
     public function showKapos(Request $req){
         try {
             $get_branch = M_HrEmployee::where('ID',$req->user()->employee_id)->first();
-            $data =  M_CrProspect::whereNull('deleted_at')->where('branch_code', $get_branch->BRANCH_CODE)->get();
+            $data =  M_CrProspect::whereNull('deleted_at')->where('branch_id', $get_branch->BRANCH_CODE)->get();
             $dto = R_CrProspect::collection($data);
     
             ActivityLogger::logActivity($req,"Success",200);
