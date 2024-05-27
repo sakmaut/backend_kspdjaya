@@ -39,10 +39,35 @@ class DatabaseSeeder extends Seeder
            ],
         ]);
 
+        DB::table('branch')->insert([
+            [
+                'ID' => 'c9b93fe8-240f-4a58-991c-f3e42d3cc379',
+                'CODE' => 'PST',
+                'NAME' => 'Pusat',
+                'ADDRESS' => 'Jl Jend Sudirman No.08 Ds.Cipancuh Kec.Haurgeulis, Kab.Indramayu',
+                'RT' => '010',
+                'RW' => '011',
+                'PROVINCE' => 'Jawa Barat',
+                'CITY' => 'Indramayu',
+                'KELURAHAN' => 'Cipancuh',
+                'KECAMATAN' => 'Haurgeulis',
+                'ZIP_CODE' =>'45266',
+                'LOCATION' => 'Indramayu',
+                'PHONE_1' => '+6289651866669',
+                'PHONE_2' => '',
+                'PHONE_3' => '',
+                'DESCR' =>'Kantor Pusat',
+                'STATUS' => 'active',
+                "CREATE_USER" => "SYSTEM",
+                "CREATE_DATE" => Carbon::now()
+            ]
+        ]);
+
         DB::table('hr_employee')->insert([
             [
                 "ID" => "03bf4f5c-4eac-11e9-b250-e0d55e0ad3ad",
                 "NIK" => "1709253",
+                "BRANCH_ID" => "c9b93fe8-240f-4a58-991c-f3e42d3cc379",
                 "NAMA" => "PACQUITO",
                 "AO_CODE" => "G7",
                 "BLOOD_TYPE" => "B",

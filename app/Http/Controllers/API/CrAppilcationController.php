@@ -6,7 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\M_CrApplication;
 use App\Models\M_CrApplicationBank;
 use App\Models\M_CrPersonal;
+use App\Models\M_CrProspect;
+use App\Models\M_HrEmployee;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -31,7 +34,15 @@ class CrAppilcationController extends Controller
         try {
             $uuid = Uuid::uuid4()->toString();
 
+            $check_prospect_id = M_CrProspect::where('id',$request->data_order['cr_prospect_id'])
+                                                ->whereNull('deleted_at')->first();
+
+            if (!$check_prospect_id) {
+                throw new Exception("Id Kunjungan Is Not Exist", 404);
+            }
+
             self::insert_cr_application($request,$uuid);
+            // self::update_cr_prospect($request,$check_prospect_id);
             // self::insert_cr_personal($request,$uuid);
             // self::insert_cr_personal_extra($request,$uuid);
             // self::insert_bank_account($request,$uuid);
@@ -53,7 +64,7 @@ class CrAppilcationController extends Controller
     private function insert_cr_application($request,$uuid){
         $data_cr_application =[
             'ID' => $uuid,
-            'BRANCH' => '',
+            'BRANCH' => M_HrEmployee::findEmployee($request->user()->employee_id)->BRANCH_ID,
             'FORM_NUMBER' => '',
             'ORDER_NUMBER' => '',
             'CUST_CODE' => '',
@@ -70,6 +81,24 @@ class CrAppilcationController extends Controller
         ];
 
         M_CrApplication::create($data_cr_application);
+    }
+
+    private function update_cr_prospect($request,$check_prospect_id){
+        $data_prospect =[
+            'mother_name' =>$request->data_order['nama_ibu'],
+            'category' =>$request->data_order['kategori'],
+            'title' =>$request->data_order['gelar'],
+            'work_period'  =>$request->data_order['lama_bekerja'],
+            'dependants'  =>$request->data_order['tanggungan'],
+            'income_personal'  =>$request->data_order['pendapatan_pribadi'],
+            'income_spouse'  =>$request->data_order['pendapatan_pasangan'],
+            'income_other'  =>$request->data_order['pendapatan_lainnya'],
+            'expenses'  =>$request->data_order['biaya_bulanan'],
+            'updated_by' => $request->user()->id,
+            'updated_at' => Carbon::now()->format('Y-m-d')
+        ];
+
+       $check_prospect_id->update($data_prospect);
     }
 
     private function insert_cr_personal($request,$applicationId){
