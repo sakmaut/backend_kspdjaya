@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Models\M_CrApplication;
+use App\Models\M_CrApplicationBank;
+use App\Models\M_CrPersonal;
 use Carbon\Carbon;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
@@ -29,10 +32,13 @@ class CrAppilcationController extends Controller
             $uuid = Uuid::uuid4()->toString();
 
             self::insert_cr_application($request,$uuid);
+            // self::insert_cr_personal($request,$uuid);
+            // self::insert_cr_personal_extra($request,$uuid);
+            // self::insert_bank_account($request,$uuid);
     
             DB::commit();
             // ActivityLogger::logActivity($request,"Success",200); 
-            return response()->json(['message' => 'Cabang created successfully',"status" => 200], 200);
+            return response()->json(['message' => 'Application created successfully',"status" => 200], 200);
         }catch (QueryException $e) {
             DB::rollback();
             ActivityLogger::logActivity($request,$e->getMessage(),409);
@@ -46,124 +52,131 @@ class CrAppilcationController extends Controller
 
     private function insert_cr_application($request,$uuid){
         $data_cr_application =[
-            'ID' => '',
+            'ID' => $uuid,
             'BRANCH' => '',
             'FORM_NUMBER' => '',
             'ORDER_NUMBER' => '',
             'CUST_CODE' => '',
-            'ENTRY_DATE' => '',
-            'SUBMISSION_VALUE' => '',
+            'ENTRY_DATE' => Carbon::now()->format('Y-m-d'),
+            'SUBMISSION_VALUE' => 0.00,
             'CREDIT_TYPE' => '',
-            'INSTALLMENT_COUNT' => '',
-            'PERIOD' => '',
-            'INSTALLMENT' => '',
-            'RATE' => '',
-            'VERSION' => '',
+            'INSTALLMENT_COUNT' => 0.00,
+            'PERIOD' => 0,
+            'INSTALLMENT' => 0.00,
+            'RATE' => 0.00,
+            'VERSION' => 1,
             'CREATE_DATE' => Carbon::now()->format('Y-m-d'),
             'CREATE_USER' => $request->user()->id,
         ];
 
-        // M_CrApplication::create($data_cr_application);
+        M_CrApplication::create($data_cr_application);
     }
 
-    private function insert_cr_personal($request){
+    private function insert_cr_personal($request,$applicationId){
         $data_cr_application =[  
-            'ID' => '',
-            'CUST_CODE' => '',
-            'NAME' => '',
-            'ALIAS' => '',
-            'GENDER' => '',
-            'BIRTHPLACE' => '',
-            'BIRTHDATE' => '',
-            'MARTIAL_STATUS' => '',
-            'MARTIAL_DATE' => '',
-            'ID_TYPE' => '',
-            'ID_NUMBER' => '',
-            'ID_ISSUE_DATE' => '',
-            'ID_VALID_DATE' => '',
-            'ADDRESS' => '',
-            'RT' => '',
-            'RW' => '',
-            'PROVINCE' => '',
-            'CITY' => '',
-            'KELURAHAN' => '',
-            'KECAMATAN' => '',
-            'ZIP_CODE' => '',
-            'KK' => '',
-            'CITIZEN' => '',
-            'INS_ADDRESS' => '',
-            'INS_RT' => '',
-            'INS_RW' => '',
-            'INS_PROVINCE' => '',
-            'INS_CITY' => '',
-            'INS_KELURAHAN' => '',
-            'INS_KECAMATAN' => '',
-            'INS_ZIP_CODE' => '',
-            'OCCUPATION' => '',
-            'OCCUPATION_ON_ID' => '',
-            'RELIGION' => '',
-            'EDUCATION' => '',
-            'PROPERTY_STATUS' => '',
-            'PHONE_HOUSE' => '',
-            'PHONE_PERSONAL' => '',
-            'PHONE_OFFICE' => '',
-            'EXT_1' => '',
-            'EXT_2' => '',
-            'VERSION' => '',
+            'ID' => Uuid::uuid4()->toString(),
+            'APPLICATION_ID' => $applicationId,
+            'CUST_CODE' => $request->data_pelanggan['data_pribadi']['code'],
+            'NAME' => $request->data_pelanggan['data_pribadi']['nama'],
+            'ALIAS' => $request->data_pelanggan['data_pribadi']['nama_panggilan'],
+            'GENDER' => $request->data_pelanggan['data_pribadi']['jenis_kelamin'],
+            'BIRTHPLACE' => $request->data_pelanggan['data_pribadi']['tempat_lahir'],
+            'BIRTHDATE' => $request->data_pelanggan['data_pribadi']['tanggal_lahir'],
+            'MARTIAL_STATUS' => $request->data_pelanggan['data_pribadi']['status_kawin'],
+            'MARTIAL_DATE' => $request->data_pelanggan['data_pribadi']['tanggal_kawin'],
+            'ID_TYPE' => $request->data_pelanggan['data_pribadi']['indentitas']['tipe'],
+            'ID_NUMBER' => $request->data_pelanggan['data_pribadi']['indentitas']['no'],
+            'ID_ISSUE_DATE' => $request->data_pelanggan['data_pribadi']['indentitas']['tgl_terbit'],
+            'ID_VALID_DATE' => $request->data_pelanggan['data_pribadi']['indentitas']['masa_berlaku'],
+            'ADDRESS' => $request->data_pelanggan['data_pribadi']['indentitas']['alamat'],
+            'RT' => $request->data_pelanggan['data_pribadi']['indentitas']['rt'],
+            'RW' => $request->data_pelanggan['data_pribadi']['indentitas']['rw'],
+            'PROVINCE' => $request->data_pelanggan['data_pribadi']['indentitas']['provinsi'],
+            'CITY' => $request->data_pelanggan['data_pribadi']['indentitas']['kota'],
+            'KELURAHAN' => $request->data_pelanggan['data_pribadi']['indentitas']['kelurahan'],
+            'KECAMATAN' => $request->data_pelanggan['data_pribadi']['indentitas']['kecamatan'],
+            'ZIP_CODE' =>  $request->data_pelanggan['data_pribadi']['indentitas']['kode_pos'],
+            'KK' => $request->data_pelanggan['data_pribadi']['no_kk'],
+            'CITIZEN' => $request->data_pelanggan['data_pribadi']['warganegara'],
+            'OCCUPATION' => $request->data_pelanggan['data_pribadi']['pekerjaan'],
+            'OCCUPATION_ON_ID' => $request->data_pelanggan['data_pribadi']['id_pekerjaan'],
+            'RELIGION' => $request->data_pelanggan['data_pribadi']['agama'],
+            'EDUCATION' => $request->data_pelanggan['data_pribadi']['pendidikan'],
+            'PROPERTY_STATUS' => $request->data_pelanggan['data_pribadi']['status_rumah'],
+            'PHONE_HOUSE' => $request->data_pelanggan['data_pribadi']['telepon_rumah'],
+            'PHONE_PERSONAL' => $request->data_pelanggan['data_pribadi']['telepon_selular'],
+            'PHONE_OFFICE' => $request->data_pelanggan['data_pribadi']['telepon_kantor'],
+            'EXT_1' => $request->data_pelanggan['data_pribadi']['ext1'],
+            'EXT_2' => $request->data_pelanggan['data_pribadi']['ext2'],
+            'INS_ADDRESS' => $request->data_pelanggan['alamat_tagih']['alamat'],
+            'INS_RT' => $request->data_pelanggan['alamat_tagih']['rt'],
+            'INS_RW' => $request->data_pelanggan['alamat_tagih']['rw'],
+            'INS_PROVINCE' => $request->data_pelanggan['alamat_tagih']['provinsi'],
+            'INS_CITY' => $request->data_pelanggan['alamat_tagih']['kota'],
+            'INS_KELURAHAN' => $request->data_pelanggan['alamat_tagih']['kelurahan'],
+            'INS_KECAMATAN' => $request->data_pelanggan['alamat_tagih']['kecamatan'],
+            'INS_ZIP_CODE' => $request->data_pelanggan['alamat_tagih']['kode_pos'],
+            'VERSION' => 1,
             'CREATE_DATE' => Carbon::now()->format('Y-m-d'),
             'CREATE_USER' => $request->user()->id,
         ];
 
-        //  M_CrPersonal::create($data_cr_application);
+         M_CrPersonal::create($data_cr_application);
     }
 
-    private function insert_cr_personal_extra($request){
+    private function insert_cr_personal_extra($request,$applicationId){
         $data_cr_application =[  
-            'ID' => '',
-            'APPLICATION_ID' => '',
-            'BI_NAME' => '',
-            'EMAIL' => '',
-            'INFO' => '',
-            'OTHER_OCCUPATION_1' => '',
-            'OTHER_OCCUPATION_2' => '',
-            'OTHER_OCCUPATION_3' => '',
-            'OTHER_OCCUPATION_4' => '',
-            'MAIL_ADDRESS' => '',
-            'MAIL_RT' => '',
-            'MAIL_RW' => '',
-            'MAIL_PROVINCE' => '',
-            'MAIL_CITY' => '',
-            'MAIL_KELURAHAN' => '',
-            'MAIL_KECAMATAN' => '',
-            'MAIL_ZIP_CODE' => '',
-            'EMERGENCY_NAME' => '',
-            'EMERGENCY_ADDRESS' => '',
-            'EMERGENCY_RT' => '',
-            'EMERGENCY_RW' => '',
-            'EMERGENCY_PROVINCE' => '',
-            'EMERGENCY_CITY' => '',
-            'EMERGENCY_KELURAHAN' => '',
-            'EMERGENCY_KECAMATAN' => '',
-            'EMERGENCY_ZIP_CODE' => '',
-            'EMERGENCY_PHONE_HOUSE' => '',
-            'EMERGENCY_PHONE_PERSONAL'  => '' 
+            'ID' => Uuid::uuid4()->toString(),
+            'APPLICATION_ID' => $applicationId,
+            'BI_NAME' => $request->data_tambahan['nama_bi'],
+            'EMAIL' => $request->data_tambahan['email'],
+            'INFO' => $request->data_tambahan['info_khusus'],
+            'OTHER_OCCUPATION_1' => $request->data_tambahan['usaha_lain_1'],
+            'OTHER_OCCUPATION_2' => $request->data_tambahan['usaha_lain_2'],
+            'OTHER_OCCUPATION_3' => $request->data_tambahan['usaha_lain_3'],
+            'OTHER_OCCUPATION_4' => $request->data_tambahan['usaha_lain_4'],
+            'MAIL_ADDRESS' => $request->data_tambahan['surat']['alamat'],
+            'MAIL_RT' => $request->data_tambahan['surat']['rt'],
+            'MAIL_RW' => $request->data_tambahan['surat']['rw'],
+            'MAIL_PROVINCE' => $request->data_tambahan['surat']['provinsi'],
+            'MAIL_CITY' => $request->data_tambahan['surat']['kota'],
+            'MAIL_KELURAHAN' => $request->data_tambahan['surat']['kelurahan'],
+            'MAIL_KECAMATAN' => $request->data_tambahan['surat']['kecamatan'],
+            'MAIL_ZIP_CODE' => $request->data_tambahan['surat']['kode_pos'],
+            'EMERGENCY_NAME' => $request->data_tambahan['kerabat_dalam_kondisi_darurat']['nama'],
+            'EMERGENCY_ADDRESS' => $request->data_tambahan['kerabat_dalam_kondisi_darurat']['alamat'],
+            'EMERGENCY_RT' => $request->data_tambahan['kerabat_dalam_kondisi_darurat']['rt'],
+            'EMERGENCY_RW' => $request->data_tambahan['kerabat_dalam_kondisi_darurat']['rw'],
+            'EMERGENCY_PROVINCE' => $request->data_tambahan['kerabat_dalam_kondisi_darurat']['provinsi'],
+            'EMERGENCY_CITY' => $request->data_tambahan['kerabat_dalam_kondisi_darurat']['kota'],
+            'EMERGENCY_KELURAHAN' => $request->data_tambahan['kerabat_dalam_kondisi_darurat']['kelurahan'],
+            'EMERGENCY_KECAMATAN' => $request->data_tambahan['kerabat_dalam_kondisi_darurat']['kecamatan'],
+            'EMERGENCY_ZIP_CODE' => $request->data_tambahan['kerabat_dalam_kondisi_darurat']['kode_pos'],
+            'EMERGENCY_PHONE_HOUSE' => $request->data_tambahan['kerabat_dalam_kondisi_darurat']['no_telp'],
+            'EMERGENCY_PHONE_PERSONAL'  => $request->data_tambahan['kerabat_dalam_kondisi_darurat']['no_hp'] 
         ];
 
-        //  M_CrPersonal::create($data_cr_application);
+         M_CrPersonal::create($data_cr_application);
     }
 
-    private function insert_bank_account($array_data,$request){
-        foreach ($array_data as $result) {
-            $data_cr_application =[  
-                'ID' => '',
-                'APPLICATION_ID' => '',
-                'BANK_CODE' => '',
-                'BANK_NAME' => '',
-                'ACCOUNT_NUMBER' => '',
-                'ACCOUNT_NAME' => '',
-                'PREFERENCE_FLAG' => '',
-                'STATUS'    
-            ];
+    private function insert_bank_account($request,$applicationId){
+
+        if (isset($request->data_tambahan['bank']) && is_array($request->data_tambahan['bank'])) {
+            foreach ($request->data_tambahan['bank'] as $result) {
+                $data_cr_application_bank =[  
+                    'ID' => Uuid::uuid4()->toString(),
+                    'APPLICATION_ID' => $applicationId,
+                    'BANK_CODE' => $result['kode_bank'],
+                    'BANK_NAME' => $result['nama_bank'],
+                    'ACCOUNT_NUMBER' => $result['no_rekening'],
+                    'ACCOUNT_NAME' => $result['nama_di_rekening'],
+                    'PREFERENCE_FLAG' => '',
+                    'STATUS' => $result['status']   
+                ];
+
+                M_CrApplicationBank::create($data_cr_application_bank);
+
+            }
         }
     }
 
