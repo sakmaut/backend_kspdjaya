@@ -42,10 +42,10 @@ class CrAppilcationController extends Controller
             }
 
             self::insert_cr_application($request,$uuid);
-            // self::update_cr_prospect($request,$check_prospect_id);
-            // self::insert_cr_personal($request,$uuid);
-            // self::insert_cr_personal_extra($request,$uuid);
-            // self::insert_bank_account($request,$uuid);
+            self::update_cr_prospect($request,$check_prospect_id);
+            self::insert_cr_personal($request,$uuid);
+            self::insert_cr_personal_extra($request,$uuid);
+            self::insert_bank_account($request,$uuid);
     
             DB::commit();
             // ActivityLogger::logActivity($request,"Success",200); 
