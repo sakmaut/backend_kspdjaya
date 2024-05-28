@@ -5,9 +5,12 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Models\M_CrApplication;
 use App\Models\M_CrApplicationBank;
+use App\Models\M_CrGuaranteVehicle;
 use App\Models\M_CrPersonal;
 use App\Models\M_CrProspect;
+use App\Models\M_CrProspectDocument;
 use App\Models\M_HrEmployee;
+use App\Models\M_ProspectApproval;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\QueryException;
@@ -22,6 +25,24 @@ class CrAppilcationController extends Controller
         try {
             $data = "";
             return response()->json(['message' => 'OK',"status" => 200,'response' => $data], 200);
+        } catch (\Exception $e) {
+            ActivityLogger::logActivity($request,$e->getMessage(),500);
+            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+        }
+    }
+
+    public function show(Request $request,$id)
+    {
+        try {
+            $check_application_id = M_CrApplication::where('ID',$id)->whereNull('deleted_at')->first();
+
+            if (!$check_application_id) {
+                throw new Exception("Id FPK Is Not Exist", 404);
+            }
+
+            $detail_prospect = M_CrProspect::where('id',$check_application_id->CR_PROSPECT_ID)->first();
+
+            return response()->json(['message' => 'OK',"status" => 200,'response' => self::resourceDetail($detail_prospect,$check_application_id)], 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
@@ -209,5 +230,166 @@ class CrAppilcationController extends Controller
         }
     }
 
-   
+    public function generateUuidFPK(Request $request)
+    {
+        try {
+            $check_prospect_id = M_CrProspect::where('id',$request->cr_prospect_id)
+                                ->whereNull('deleted_at')->first();
+
+            if (!$check_prospect_id) {
+                throw new Exception("Id Kunjungan Is Not Exist", 404);
+            }
+
+            $uuid = Uuid::uuid4()->toString();
+
+            $approval_change = M_ProspectApproval::where('CR_PROSPECT_ID',$request->cr_prospect_id)->first();
+
+            $data_update_approval=[
+                'APPROVAL_RESULT' => '2:created_fpk'
+            ];
+
+            $approval_change->update($data_update_approval);
+
+            $data_cr_application =[
+                'ID' => $uuid,
+                'CR_PROSPECT_ID' => $request->cr_prospect_id,
+                'BRANCH' => M_HrEmployee::findEmployee($request->user()->employee_id)->BRANCH_ID,
+                'VERSION' => 1,
+                'CREATE_DATE' => Carbon::now()->format('Y-m-d'),
+                'CREATE_USER' => $request->user()->id,
+            ];
+    
+            M_CrApplication::create($data_cr_application);
+
+            return response()->json(['message' => 'OK',"status" => 200,'response' => ['uuid'=> $uuid]], 200);
+        } catch (\Exception $e) {
+            ActivityLogger::logActivity($request,$e->getMessage(),500);
+            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+        }
+    }
+
+    private function resourceDetail($data,$application)
+    {
+        $prospect_id = $data->id;
+        $guarente_vehicle = M_CrGuaranteVehicle::where('CR_PROSPECT_ID',$prospect_id)->get(); 
+        $approval_detail = M_ProspectApproval::where('CR_PROSPECT_ID',$prospect_id)->first();
+        $attachment_data = M_CrProspectDocument::where('CR_PROSPECT_ID',$prospect_id )->get();
+        $cr_personal = M_CrPersonal::where('APPLICATION_ID',$application->ID)->first();
+        
+        $arrayList = [
+            'id_application' => $application->ID,
+            'data_pelanggan' =>[
+                "data_pribadi" =>
+                  [
+                      "code" => $cr_personal->CUST_CODE??null,
+                      "nama" => $cr_personal->NAME??null,
+                      "nama_panggilan" => $cr_personal->ALIAS??null,
+                      "jenis_kelamin" => $cr_personal->GENDER??null,
+                      "tempat_lahir" => $cr_personal->BIRTHPLACE??null,
+                      "tanggal_lahir" => $cr_personal->BIRTHDATE??null,
+                      "status_kawin" => $cr_personal->MARTIAL_STATUS??null,
+                      "tanggal_kawin" => $cr_personal->MARTIAL_DATE??null,
+                      "indentitas"  => [
+                        "tipe" => $cr_personal->ID_TYPE??null,
+                        "no" => $cr_personal->ID_NUMBER??null,
+                        "tgl_terbit" => $cr_personal->ID_ISSUE_DATE??null,
+                        "masa_berlaku" => $cr_personal->ID_VALID_DATE??null,
+                        "alamat" => $cr_personal->ADDRESS??null,
+                        "rt" => $cr_personal->RT??null,
+                        "rw" => $cr_personal->RW??null,
+                        "provinsi" => $cr_personal->PROVINCE??null,
+                        "kota" => $cr_personal->CITY??null,
+                        "kelurahan" => $cr_personal->KELURAHAN??null,
+                        "kecamatan" => $cr_personal->KECAMATAN??null,
+                        "kode_pos" => $cr_personal->ZIP_CODE??null
+                      ],
+                      "no_kk" => $cr_personal->KK??null,
+                      "warganegara" => $cr_personal->CITIZEN??null,
+                      "pekerjaan" => $cr_personal->OCCUPATION??null,
+                      "id_pekerjaan" => $cr_personal->OCCUPATION_ON_ID??null,
+                      "agama" => $cr_personal->RELIGION??null,
+                      "pendidikan" => $cr_personal->EDUCATION??null,
+                      "status_rumah" => $cr_personal->PROPERTY_STATUS??null,
+                      "telepon_rumah" => $cr_personal->PHONE_HOUSE??null,
+                      "telepon_selular" => $cr_personal->PHONE_PERSONAL??null,
+                      "telepon_kantor" => $cr_personal->PHONE_OFFICE??null,
+                      "ext1" => $cr_personal->EXT_1??null,
+                      "ext2" => $cr_personal->EXT_2??null
+                  ],
+                  "alamat_tagih"  => [
+                    "alamat" => "Jl.Bahagia",
+                    "rt" => "002",
+                    "rw" => "010",
+                    "provinsi" => "Jawa tenggara",
+                    "kota" => "jawa",
+                    "kelurahan" => "Pamulang",
+                    "kecamatan" => "apa?",
+                    "kode_pos" => "215458"
+                  ]
+            ],
+                
+            'id' => $prospect_id,
+            'cust_code_ref' => $data->cust_code_ref,
+            'data_order' =>[
+                'tujuan_kredit' => $data->tujuan_kredit,
+                'plafond' => 'IDR '.number_format($data->plafond,0,",","."),
+                'tenor' => $data->tenor, 
+                'kategory' => $data->category 
+            ],
+            'data_nasabah' => [
+                'nama' => $data->nama,
+                'tgl_lahir' => date('d-m-Y',strtotime($data->tgl_lahir)),
+                'no_hp' => $data->hp,
+                'no_ktp' => $data->ktp,
+                'alamat' => $data->alamat,
+                'rt' => $data->rt,
+                'rw' => $data->rw,
+                'provinsi' => $data->province,
+                'kota' => $data->city,
+                'kelurahan' => $data->kelurahan,
+                'kecamatan' => $data->kecamatan,
+                'kode_pos' => $data->zip_code
+            ], 
+            'data_survey' =>[
+                'usaha' => $data->usaha,
+                'sektor' => $data->sector,
+                'lama_bekerja' => $data->work_period,
+                'tanggungan' => $data->dependants,
+                'pengeluaran' => $data->expenses,
+                'penghasilan_pribadi' => $data->income_personal,
+                'penghasilan_pasangan' => $data->income_spouse,
+                'penghasilan_lainnya' => $data->income_other,
+                'tgl_survey' => is_null($data->visit_date) ? '': date('d-m-Y',strtotime($data->visit_date)),
+            ],
+            "lokasi" => [ 
+                'coordinate' => $data->coordinate,
+                'accurate' => $data->accurate
+            ],         
+            'jaminan_kendaraan' => [],
+            'prospect_approval' => [
+                'flag_approval' => $approval_detail->ONCHARGE_APPRVL,
+                'keterangan' => $approval_detail->ONCHARGE_DESCR,
+                'status' => $approval_detail->APPROVAL_RESULT
+            ],
+            "attachment" =>$attachment_data
+        ];
+
+        foreach ($guarente_vehicle as $list) {
+            $arrayList['jaminan_kendaraan'][] = [
+                'id' => $list->ID,
+                "tipe" => $list->TYPE,
+                "merk" => $list->BRAND,
+                "tahun" => $list->PRODUCTION_YEAR,
+                "warna" => $list->COLOR,
+                "atas_nama" => $list->ON_BEHALF,
+                "no_polisi" => $list->POLICE_NUMBER,
+                "no_rangka" => $list->CHASIS_NUMBER,
+                "no_mesin" => $list->ENGINE_NUMBER,
+                "no_stnk" => $list->BPKB_NUMBER,
+                "nilai" =>$list->VALUE
+            ];    
+        }  
+        
+        return $arrayList;
+    }
 }
