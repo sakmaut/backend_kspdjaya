@@ -13,6 +13,7 @@ use App\Http\Controllers\API\{
     MasterMenuController,
     SettingsController,
     TaskController,
+    UserAccessMenuController,
     UsersController
 };
 
@@ -46,6 +47,7 @@ Route::middleware('auth:sanctum')->group(function () {
     //Route Group Master Menu
     Route::apiResource('menu', MasterMenuController::class);
     Route::get('menu-sub-list', [MasterMenuController::class, 'menuSubList']);
+    Route::apiResource('user_access_menu', UserAccessMenuController::class);
 
     //Route Group Master Users
     Route::apiResource('users', UsersController::class);
