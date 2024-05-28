@@ -243,6 +243,25 @@ class CrAppilcationController extends Controller
 
             $uuid = Uuid::uuid4()->toString();
 
+            $check_prospect_id = M_CrApplication::where('CR_PROSPECT_ID',$request->cr_prospect_id)->first();
+
+            if(!$check_prospect_id){
+                $generate_uuid = $uuid;
+
+                $data_cr_application =[
+                    'ID' => $uuid,
+                    'CR_PROSPECT_ID' => $request->cr_prospect_id,
+                    'BRANCH' => M_HrEmployee::findEmployee($request->user()->employee_id)->BRANCH_ID,
+                    'VERSION' => 1,
+                    'CREATE_DATE' => Carbon::now()->format('Y-m-d'),
+                    'CREATE_USER' => $request->user()->id,
+                ];
+        
+                M_CrApplication::create($data_cr_application);
+            }else{
+                $generate_uuid = $check_prospect_id->ID;
+            }
+
             $approval_change = M_ProspectApproval::where('CR_PROSPECT_ID',$request->cr_prospect_id)->first();
 
             $data_update_approval=[
@@ -251,18 +270,7 @@ class CrAppilcationController extends Controller
 
             $approval_change->update($data_update_approval);
 
-            $data_cr_application =[
-                'ID' => $uuid,
-                'CR_PROSPECT_ID' => $request->cr_prospect_id,
-                'BRANCH' => M_HrEmployee::findEmployee($request->user()->employee_id)->BRANCH_ID,
-                'VERSION' => 1,
-                'CREATE_DATE' => Carbon::now()->format('Y-m-d'),
-                'CREATE_USER' => $request->user()->id,
-            ];
-    
-            M_CrApplication::create($data_cr_application);
-
-            return response()->json(['message' => 'OK',"status" => 200,'response' => ['uuid'=> $uuid]], 200);
+            return response()->json(['message' => 'OK',"status" => 200,'response' => ['uuid'=>$generate_uuid]], 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
