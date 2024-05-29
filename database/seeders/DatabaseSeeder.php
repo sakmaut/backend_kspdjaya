@@ -120,7 +120,7 @@ class DatabaseSeeder extends Seeder
             ]
         ]);
 
-        $menus = [
+        DB::table('master_menu')->insert([
             [
                 "id"=> "2e7c4719-026a-48af-9662-fe33237da116",
                 "menu_name"=> "home",
@@ -301,10 +301,6 @@ class DatabaseSeeder extends Seeder
                 "deleted_by"=> null,
                 "deleted_at"=> null
             ]
-        ];
-
-        foreach ($menus as $menu) {
-            DB::table('master_menu')->insert($menu);
-        }
+        ]);
     }
 }

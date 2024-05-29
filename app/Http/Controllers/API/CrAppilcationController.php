@@ -144,18 +144,18 @@ class CrAppilcationController extends Controller
             'BIRTHDATE' => $request->data_pelanggan['data_pribadi']['tanggal_lahir'],
             'MARTIAL_STATUS' => $request->data_pelanggan['data_pribadi']['status_kawin'],
             'MARTIAL_DATE' => $request->data_pelanggan['data_pribadi']['tanggal_kawin'],
-            'ID_TYPE' => $request->data_pelanggan['data_pribadi']['indentitas']['tipe'],
-            'ID_NUMBER' => $request->data_pelanggan['data_pribadi']['indentitas']['no'],
-            'ID_ISSUE_DATE' => $request->data_pelanggan['data_pribadi']['indentitas']['tgl_terbit'],
-            'ID_VALID_DATE' => $request->data_pelanggan['data_pribadi']['indentitas']['masa_berlaku'],
-            'ADDRESS' => $request->data_pelanggan['data_pribadi']['indentitas']['alamat'],
-            'RT' => $request->data_pelanggan['data_pribadi']['indentitas']['rt'],
-            'RW' => $request->data_pelanggan['data_pribadi']['indentitas']['rw'],
-            'PROVINCE' => $request->data_pelanggan['data_pribadi']['indentitas']['provinsi'],
-            'CITY' => $request->data_pelanggan['data_pribadi']['indentitas']['kota'],
-            'KELURAHAN' => $request->data_pelanggan['data_pribadi']['indentitas']['kelurahan'],
-            'KECAMATAN' => $request->data_pelanggan['data_pribadi']['indentitas']['kecamatan'],
-            'ZIP_CODE' =>  $request->data_pelanggan['data_pribadi']['indentitas']['kode_pos'],
+            'ID_TYPE' => $request->data_pelanggan['data_pribadi']['tipe'],
+            'ID_NUMBER' => $request->data_pelanggan['data_pribadi']['no'],
+            'ID_ISSUE_DATE' => $request->data_pelanggan['data_pribadi']['tgl_terbit'],
+            'ID_VALID_DATE' => $request->data_pelanggan['data_pribadi']['masa_berlaku'],
+            'ADDRESS' => $request->data_pelanggan['data_pribadi']['alamat'],
+            'RT' => $request->data_pelanggan['data_pribadi']['rt'],
+            'RW' => $request->data_pelanggan['data_pribadi']['rw'],
+            'PROVINCE' => $request->data_pelanggan['data_pribadi']['provinsi'],
+            'CITY' => $request->data_pelanggan['data_pribadi']['kota'],
+            'KELURAHAN' => $request->data_pelanggan['data_pribadi']['kelurahan'],
+            'KECAMATAN' => $request->data_pelanggan['data_pribadi']['kecamatan'],
+            'ZIP_CODE' =>  $request->data_pelanggan['data_pribadi']['kode_pos'],
             'KK' => $request->data_pelanggan['data_pribadi']['no_kk'],
             'CITIZEN' => $request->data_pelanggan['data_pribadi']['warganegara'],
             'OCCUPATION' => $request->data_pelanggan['data_pribadi']['pekerjaan'],
@@ -445,5 +445,25 @@ class CrAppilcationController extends Controller
         }  
         
         return $arrayList;
+    }
+
+    public function update(Request $request,$id)
+    {
+        try {
+            $check_application_id = M_CrApplication::where('ID',$id)->first();
+
+            if (!$check_application_id) {
+                throw new Exception("Id FPK Is Not Exist", 404);
+            }
+
+            self::insert_cr_personal($request,$id);
+            self::insert_cr_personal_extra($request,$id);
+            self::insert_bank_account($request,$id);
+
+            return response()->json(['message' => 'Updated Successfully',"status" => 200], 200);
+        } catch (\Exception $e) {
+            ActivityLogger::logActivity($request,$e->getMessage(),500);
+            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+        }
     }
 }

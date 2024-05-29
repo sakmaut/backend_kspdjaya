@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\API\{
-    AssetsController,
     AuthController,
     BranchController,
     CrAppilcationController,
@@ -9,7 +8,6 @@ use App\Http\Controllers\API\{
     DetailProfileController,
     HrEmployeeController,
     LogSendOutController,
-    LogTemporaryLinkController,
     MasterMenuController,
     SettingsController,
     TaskController,
@@ -25,22 +23,6 @@ use Illuminate\Support\Facades\Route;
 Route::post('auth/login', [AuthController::class, 'login'])->name('login');
 Route::get('auth/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 
-Route::get('waweb/logs', [LogSendOutController::class, 'index']);
-Route::post('waweb/logs', [LogSendOutController::class, 'store']);
-Route::put('waweb/logs/{id}', [LogSendOutController::class, 'update']);
-Route::get('waweb/task', [LogSendOutController::class, 'filter']);
-
-Route::get('getExpiredLink/{id}', [LogTemporaryLinkController::class, 'index']);
-
-// return cr_prospect data
-Route::get('kunjungan/detailApproval/{id}', [CrprospectController::class, 'detailApproval'])
-    ->name('approve_slik')
-    ->middleware('signed');
-
-Route::put('editusers', [UsersController::class, 'update']);
-
-Route::post('createUser', [UsersController::class, 'store']);
-
 Route::apiResource('welcome', Welcome::class);
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -53,9 +35,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('users', UsersController::class);
     Route::post('image_upload_employee', [DetailProfileController::class, 'uploadImage']);
 
-    //Route Group Master Users
-    Route::apiResource('settings', SettingsController::class);
-
     //Route Group Master Branch
     Route::apiResource('cabang', BranchController::class);
 
@@ -63,8 +42,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('karyawan', HrEmployeeController::class);
 
     //Route Group Master Cr Application
-    Route::get('cr_application', [CrAppilcationController::class, 'index']);
-    Route::post('cr_application', [CrAppilcationController::class, 'store']);
+    Route::apiResource('cr_application', CrAppilcationController::class);
+
     Route::post('cr_applications', [CrAppilcationController::class, 'show']);
     Route::post('cr_application_generate', [CrAppilcationController::class, 'generateUuidFPK']);
 
