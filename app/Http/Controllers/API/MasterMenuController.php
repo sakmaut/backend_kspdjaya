@@ -153,6 +153,7 @@ class MasterMenuController extends Controller
                         ->leftJoin('master_menu as t3', 't3.id', '=', 't1.master_menu_id')
                         ->select('t3.*')
                         ->where('t1.users_id', $req->user()->id)
+                        ->whereNull('t1.deleted_at')
                         ->get();
         
             return response()->json(['message' => 'OK', "status" => 200, 'response' => M_MasterMenu::buildMenuArray($data)], 200);

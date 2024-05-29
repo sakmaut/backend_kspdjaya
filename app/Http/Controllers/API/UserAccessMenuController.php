@@ -111,67 +111,82 @@ class UserAccessMenuController extends Controller
         }
     }
 
-    // public function update(Request $request,$id)
-    // {
-    //     DB::beginTransaction();
-    //     try {
-    //         $request->validate([
-    //             'code' => 'unique:branch,code,'.$id,
-    //             'name' => 'unique:branch,name,'.$id,
-    //             'address' => 'required|string',
-    //             'zip_code' => 'numeric'
-    //         ]);
+    public function update(Request $request,$id)
+    {
+        DB::beginTransaction();
+        try {
+            M_MasterUserAccessMenu::findOrFail($id);
 
-    //         $users = M_Branch::findOrFail($id);
+            $checks = M_MasterUserAccessMenu::where('users_id', $id)->get();
 
-    //         $request['MOD_USER'] = $request->user()->id;
-    //         $request['MOD_DATE'] = Carbon::now()->format('Y-m-d');
+            if($checks->isEmpty()){
+                throw new Exception("Users Id Not Found",404);
+            }
 
-    //         $data = array_change_key_case($request->all(), CASE_UPPER);
+            foreach ($checks as $check) {
+                $check->update([
+                    'deleted_by' => $request->user()->id,
+                    'deleted_at' => Carbon::now()
+                ]);
+            }
 
-    //         $users->update($data);
+            foreach ($request->menu_list as $value) {
 
-    //         DB::commit();
-    //         ActivityLogger::logActivity($request,"Success",200);
-    //         return response()->json(['message' => 'Cabang updated successfully', "status" => 200], 200);
-    //     } catch (ModelNotFoundException $e) {
-    //         DB::rollback();
-    //         ActivityLogger::logActivity($request,'Data Not Found',404);
-    //         return response()->json(['message' => 'Data Not Found', "status" => 404], 404);
-    //     } catch (\Exception $e) {
-    //         DB::rollback();
-    //         ActivityLogger::logActivity($request,$e->getMessage(),500);
-    //         return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
-    //     }
-    // }
+                $menu_check = M_MasterMenu::where('id',$value)->whereNull('deleted_at')->first();
 
-    // public function destroy(Request $req,$id)
-    // { 
-    //     DB::beginTransaction();
-    //     try {
+                if (!$menu_check) {
+                    throw new Exception("Menu Id Not Found",404);
+                }
+
+                $data_insert = [
+                    'master_menu_id' => $value['menu_id'],
+                    'users_id'=> $id,
+                    'created_by' => $request->user()->id,
+                    'created_at' => Carbon::now()->format('Y-m-d H:i:s')
+                ];
+
+                 M_MasterUserAccessMenu::create($data_insert);
+            }
+
+            DB::commit();
+            ActivityLogger::logActivity($request,"Success",200);
+            return response()->json(['message' => 'User Access Menu updated successfully', "status" => 200], 200);
+        } catch (ModelNotFoundException $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($request,'User Access Menu Id Data Not Found',404);
+            return response()->json(['message' => 'User Access Menu Id Data Not Found', "status" => 404], 404);
+        } catch (\Exception $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($request,$e->getMessage(),500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+        }
+    }
+
+    public function destroy(Request $req,$id)
+    { 
+        DB::beginTransaction();
+        try {
             
-    //         $users = M_Branch::findOrFail($id);
+            $userAccessMenu = M_MasterUserAccessMenu::findOrFail($id);
 
-    //         $update = [
-    //             'deleted_by' => $req->user()->id,
-    //             'deleted_at' => Carbon::now()->format('Y-m-d H:i:s')
-    //         ];
+            $update = [
+                'deleted_by' => $req->user()->id,
+                'deleted_at' => Carbon::now()->format('Y-m-d H:i:s')
+            ];
 
-    //         $data = array_change_key_case($update, CASE_UPPER);
+            $userAccessMenu->update($update);
 
-    //         $users->update($data);
-
-    //         DB::commit();
-    //         ActivityLogger::logActivity($req,"Success",200);
-    //         return response()->json(['message' => 'Users deleted successfully', "status" => 200], 200);
-    //     } catch (ModelNotFoundException $e) {
-    //         DB::rollback();
-    //         ActivityLogger::logActivity($req,'Data Not Found',404);
-    //         return response()->json(['message' => 'Data Not Found', "status" => 404], 404);
-    //     } catch (\Exception $e) {
-    //         DB::rollback();
-    //         ActivityLogger::logActivity($req,$e->getMessage(),500);
-    //         return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
-    //     }
-    // }
+            DB::commit();
+            ActivityLogger::logActivity($req,"Success",200);
+            return response()->json(['message' => 'User Access Menu deleted successfully', "status" => 200], 200);
+        } catch (ModelNotFoundException $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($req,'User Access Menu Id Data Not Found',404);
+            return response()->json(['message' => 'User Access Menu Id Data Not Found', "status" => 404], 404);
+        } catch (\Exception $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($req,$e->getMessage(),500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+        }
+    }
 }
