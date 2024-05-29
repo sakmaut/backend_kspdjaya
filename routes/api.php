@@ -63,7 +63,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('karyawan', HrEmployeeController::class);
 
     //Route Group Master Cr Application
-    Route::apiResource('cr_application', CrAppilcationController::class);
+    Route::get('cr_application', [CrAppilcationController::class, 'index']);
+    Route::post('cr_application', [CrAppilcationController::class, 'store']);
+    Route::post('cr_applications', [CrAppilcationController::class, 'show']);
     Route::post('cr_application_generate', [CrAppilcationController::class, 'generateUuidFPK']);
 
     //Route Group Master Pusher Notify

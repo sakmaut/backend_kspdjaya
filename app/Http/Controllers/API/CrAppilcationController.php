@@ -32,13 +32,22 @@ class CrAppilcationController extends Controller
         }
     }
 
-    public function show(Request $request,$id)
+    public function show(Request $request)
     {
         try {
-            $check_application_id = M_CrApplication::where('ID',$id)->whereNull('deleted_at')->first();
+            if(!empty($request->cr_prospect_id)){
+                $check_application_id = M_CrApplication::where('CR_PROSPECT_ID',$request->cr_prospect_id)->whereNull('deleted_at')->first();
 
-            if (!$check_application_id) {
-                throw new Exception("Id FPK Is Not Exist", 404);
+                if (!$check_application_id) {
+                    throw new Exception("Id Prospeck Is Not Exist", 404);
+                }
+
+            }elseif(!empty($request->cr_application_id)) {
+                $check_application_id = M_CrApplication::where('ID',$request->cr_application_id)->whereNull('deleted_at')->first();
+
+                if (!$check_application_id) {
+                    throw new Exception("Id FPK Is Not Exist", 404);
+                }
             }
 
             $detail_prospect = M_CrProspect::where('id',$check_application_id->CR_PROSPECT_ID)->first();
