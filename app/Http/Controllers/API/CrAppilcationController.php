@@ -314,7 +314,7 @@ class CrAppilcationController extends Controller
                 "nama_panggilan" => $cr_personal->ALIAS??null,
                 "jenis_kelamin" => $cr_personal->GENDER??null,
                 "tempat_lahir" => $cr_personal->BIRTHPLACE??null,
-                "tanggal_lahir" => date('d-m-Y',strtotime($data->tgl_lahir)),
+                "tanggal_lahir" => $data->tgl_lahir == null ? null:date('Y-m-d',strtotime($data->tgl_lahir)),
                 "status_kawin" => $cr_personal->MARTIAL_STATUS??null,
                 "tanggal_kawin" => $cr_personal->MARTIAL_DATE??null,
                 "tipe" => $cr_personal->ID_TYPE??null,
@@ -463,6 +463,7 @@ class CrAppilcationController extends Controller
             if ($request->flag_pengajuan == "yes") {
                 self::insert_application_approval($id);
             }
+
 
             if (collect($request->data_pelanggan)->isNotEmpty()) {
                 self::insert_cr_personal($request,$id);
