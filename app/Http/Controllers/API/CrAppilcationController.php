@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Models\M_ApplicationApproval;
 use App\Models\M_CrApplication;
 use App\Models\M_CrApplicationBank;
 use App\Models\M_CrGuaranteVehicle;
@@ -239,6 +240,16 @@ class CrAppilcationController extends Controller
         }
     }
 
+    private function insert_application_approval($applicationId){
+        $data_approval =[  
+            'ID' => Uuid::uuid4()->toString(),
+            'cr_application_id' => $applicationId ,
+            'application_result' => "0:untouched"
+        ];
+
+        M_ApplicationApproval::create($data_approval);
+    }
+
     public function generateUuidFPK(Request $request)
     {
         try {
@@ -438,15 +449,32 @@ class CrAppilcationController extends Controller
     public function update(Request $request,$id)
     {
         try {
+
+            $request->validate([
+                'flag_pengajuan' => 'required|string',
+            ]);
+
             $check_application_id = M_CrApplication::where('ID',$id)->first();
 
             if (!$check_application_id) {
                 throw new Exception("Id FPK Is Not Exist", 404);
             }
 
-            self::insert_cr_personal($request,$id);
-            self::insert_cr_personal_extra($request,$id);
-            self::insert_bank_account($request,$id);
+            if ($request->flag_pengajuan == "yes") {
+                self::insert_application_approval($id);
+            }
+
+            if (collect($request->data_pelanggan)->isNotEmpty()) {
+                self::insert_cr_personal($request,$id);
+            }
+
+            if (collect($request->data_tambahan)->isNotEmpty()) {
+                self::insert_cr_personal_extra($request,$id);
+            }
+
+            if (collect($request->bank)->isNotEmpty()) {
+                self::insert_bank_account($request,$id);
+            }
 
             return response()->json(['message' => 'Updated Successfully',"status" => 200], 200);
         } catch (\Exception $e) {
