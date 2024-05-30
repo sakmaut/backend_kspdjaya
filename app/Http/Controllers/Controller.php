@@ -19,5 +19,4 @@ class Controller extends BaseController
 
         return $data_employee;
     }
-
 }
