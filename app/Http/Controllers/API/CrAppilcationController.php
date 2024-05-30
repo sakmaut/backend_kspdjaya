@@ -216,12 +216,12 @@ class CrAppilcationController extends Controller
             'EMERGENCY_PHONE_PERSONAL'  => $request->data_tambahan['no_hp_kerabat_darurat'] 
         ];
 
-         M_CrPersonal::create($data_cr_application);
+         M_CrPersonalExtra::create($data_cr_application);
     }
 
     private function insert_bank_account($request,$applicationId){
-        if (isset($request->data_tambahan['bank']) && is_array($request->data_tambahan['bank'])) {
-            foreach ($request->data_tambahan['bank'] as $result) {
+        if (isset($request->bank) && is_array($request->bank)) {
+            foreach ($request->bank as $result) {
                 $data_cr_application_bank =[  
                     'ID' => Uuid::uuid4()->toString(),
                     'APPLICATION_ID' => $applicationId,
