@@ -402,8 +402,8 @@ class CrAppilcationController extends Controller
             ],
             "bank" =>[],
             "struktur_kredit" =>[
-                "pokok_pembayaran" => $data->plafond,
-                "period" => $data->tenor
+                "plafond" => $data->plafond,
+                "tenor" => $data->tenor
             ],
             "jaminan_kendaraan" => [],
             "lokasi" => [ 
