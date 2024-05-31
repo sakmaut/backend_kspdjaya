@@ -453,7 +453,6 @@ class CrAppilcationController extends Controller
     public function update(Request $request,$id)
     {
         try {
-
             $request->validate([
                 'flag_pengajuan' => 'required|string',
             ]);
@@ -464,22 +463,27 @@ class CrAppilcationController extends Controller
                 throw new Exception("Id FPK Is Not Exist", 404);
             }
 
-            if ($request->flag_pengajuan == "yes") {
-                self::insert_application_approval($id);
-            }
+            $data_application = [
+                'ORDER_NUMBER' => createAutoCode(M_CrApplication::class,'ORDER_NUMBER','FPK')
+            ];
 
+            $check_application_id->update($data_application);
 
-            if (collect($request->data_pelanggan)->isNotEmpty()) {
-                self::insert_cr_personal($request,$id);
-            }
+            // if ($request->flag_pengajuan == "yes") {
+            //     self::insert_application_approval($id);
+            // }
 
-            if (collect($request->data_tambahan)->isNotEmpty()) {
-                self::insert_cr_personal_extra($request,$id);
-            }
+            // if (collect($request->data_pelanggan)->isNotEmpty()) {
+            //     self::insert_cr_personal($request,$id);
+            // }
 
-            if (collect($request->bank)->isNotEmpty()) {
-                self::insert_bank_account($request,$id);
-            }
+            // if (collect($request->data_tambahan)->isNotEmpty()) {
+            //     self::insert_cr_personal_extra($request,$id);
+            // }
+
+            // if (collect($request->bank)->isNotEmpty()) {
+            //     self::insert_bank_account($request,$id);
+            // }
 
             return response()->json(['message' => 'Updated Successfully',"status" => 200], 200);
         } catch (\Exception $e) {
