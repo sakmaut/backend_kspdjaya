@@ -74,7 +74,7 @@ class CrAppilcationController extends Controller
             }
 
             self::insert_cr_application($request,$uuid);
-            self::update_cr_prospect($request,$check_prospect_id);
+            // self::update_cr_prospect($request,$check_prospect_id);
             self::insert_cr_personal($request,$uuid);
             self::insert_cr_personal_extra($request,$uuid);
             self::insert_bank_account($request,$uuid);
@@ -122,6 +122,26 @@ class CrAppilcationController extends Controller
                 self::insert_cr_personal($request,$id);
             }
 
+            $check_survey_id = M_CrProspect::where('id',$check_application_id->CR_PROSPECT_ID)->first();
+
+            if (!$check_survey_id) {
+                throw new Exception("Id Survey Is Not Exist", 404);
+            }else{
+                $data_prospect =[
+                    'mother_name' =>$request->data_order['nama_ibu'],
+                    'category' =>$request->data_order['kategori'],
+                    'title' =>$request->data_order['gelar'],
+                    'work_period'  =>$request->data_order['lama_bekerja'],
+                    'dependants'  =>$request->data_order['tanggungan'],
+                    'income_personal'  =>$request->data_order['pendapatan_pribadi'],
+                    'income_spouse'  =>$request->data_order['pendapatan_pasangan'],
+                    'income_other'  =>$request->data_order['pendapatan_lainnya'],
+                    'expenses'  =>$request->data_order['biaya_bulanan']
+                ];
+
+                $check_survey_id->update($data_prospect);
+            }
+
             if (collect($request->data_tambahan)->isNotEmpty()) {
                 self::insert_cr_personal_extra($request,$id);
             }
@@ -157,24 +177,6 @@ class CrAppilcationController extends Controller
         ];
 
         M_CrApplication::create($data_cr_application);
-    }
-
-    private function update_cr_prospect($request,$check_prospect_id){
-        $data_prospect =[
-            'mother_name' =>$request->data_order['nama_ibu'],
-            'category' =>$request->data_order['kategori'],
-            'title' =>$request->data_order['gelar'],
-            'work_period'  =>$request->data_order['lama_bekerja'],
-            'dependants'  =>$request->data_order['tanggungan'],
-            'income_personal'  =>$request->data_order['pendapatan_pribadi'],
-            'income_spouse'  =>$request->data_order['pendapatan_pasangan'],
-            'income_other'  =>$request->data_order['pendapatan_lainnya'],
-            'expenses'  =>$request->data_order['biaya_bulanan'],
-            'updated_by' => $request->user()->id,
-            'updated_at' => Carbon::now()->format('Y-m-d')
-        ];
-
-       $check_prospect_id->update($data_prospect);
     }
 
     private function insert_cr_personal($request,$applicationId){
