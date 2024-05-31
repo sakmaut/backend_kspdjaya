@@ -17,7 +17,6 @@ class Welcome extends Controller
      */
     public function index(Request $request)
     {
-
         return response()->json(['message' => 'OK',"status" => 200,'response' => 'APA?'], 200);
     }
 
