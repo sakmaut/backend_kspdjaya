@@ -25,7 +25,7 @@ class CrAppilcationController extends Controller
     public function index(Request $request)
     {
         try {
-            $data = "";
+            $data = M_CrApplication::all();
             return response()->json(['message' => 'OK',"status" => 200,'response' => $data], 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
