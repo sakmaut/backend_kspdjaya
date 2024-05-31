@@ -13,7 +13,7 @@ if (!function_exists('createAutoCode')) {
         $query = $table::max($field);
 		$_trans = date("Ymd");
 
-        $noUrut = (int) substr(!empty($query->field) ? $query->field : 0, 17, 5);
+        $noUrut = (int) substr(!empty($query) ? $query : 0, 17, 5);
 
 		$noUrut++;
 		$generateCode = $prefix . '/' . $_trans . '/' . sprintf("%05s", $noUrut);

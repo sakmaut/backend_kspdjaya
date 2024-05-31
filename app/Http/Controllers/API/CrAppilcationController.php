@@ -93,6 +93,50 @@ class CrAppilcationController extends Controller
         }
     }
 
+    public function update(Request $request,$id)
+    {
+        try {
+            $request->validate([
+                'flag_pengajuan' => 'required|string',
+            ]);
+
+            $check_application_id = M_CrApplication::where('ID',$id)->first();
+
+            if (!$check_application_id) {
+                throw new Exception("Id FPK Is Not Exist", 404);
+            }
+
+            $check_order_number = M_CrApplication::where('ID',$id)->where('ORDER_NUMBER','')->first();
+
+            if($check_order_number){
+                $data_application['ORDER_NUMBER'] =createAutoCode(M_CrApplication::class,'ORDER_NUMBER','FPK');
+            }
+
+            $check_application_id->update($data_application);
+
+            if ($request->flag_pengajuan == "yes") {
+                self::insert_application_approval($id);
+            }
+
+            if (collect($request->data_pelanggan)->isNotEmpty()) {
+                self::insert_cr_personal($request,$id);
+            }
+
+            if (collect($request->data_tambahan)->isNotEmpty()) {
+                self::insert_cr_personal_extra($request,$id);
+            }
+
+            if (collect($request->bank)->isNotEmpty()) {
+                self::insert_bank_account($request,$id);
+            }
+
+            return response()->json(['message' => 'Updated Successfully',"status" => 200], 200);
+        } catch (\Exception $e) {
+            ActivityLogger::logActivity($request,$e->getMessage(),500);
+            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+        }
+    }
+
     private function insert_cr_application($request,$uuid){
         $data_cr_application =[
             'ID' => $uuid,
@@ -134,9 +178,10 @@ class CrAppilcationController extends Controller
     }
 
     private function insert_cr_personal($request,$applicationId){
+
+        $check = M_CrPersonal::where('APPLICATION_ID',$applicationId)->first();
+
         $data_cr_application =[  
-            'ID' => Uuid::uuid4()->toString(),
-            'APPLICATION_ID' => $applicationId,
             'CUST_CODE' => $request->data_pelanggan['code'],
             'NAME' => $request->data_pelanggan['nama'],
             'ALIAS' => $request->data_pelanggan['nama_panggilan'],
@@ -182,13 +227,23 @@ class CrAppilcationController extends Controller
             'CREATE_USER' => $request->user()->id,
         ];
 
-         M_CrPersonal::create($data_cr_application);
+        if(!$check){
+            $data_cr_application['ID'] = Uuid::uuid4()->toString();
+            $data_cr_application['APPLICATION_ID'] = $applicationId;
+
+            M_CrPersonal::create($data_cr_application);
+        }else{
+            $check->update($data_cr_application);
+        }
+
+         
     }
 
     private function insert_cr_personal_extra($request,$applicationId){
+
+        $check = M_CrPersonalExtra::where('APPLICATION_ID',$applicationId)->first();
+
         $data_cr_application =[  
-            'ID' => Uuid::uuid4()->toString(),
-            'APPLICATION_ID' => $applicationId,
             'BI_NAME' => $request->data_tambahan['nama_bi'],
             'EMAIL' => $request->data_tambahan['email'],
             'INFO' => $request->data_tambahan['info_khusus'],
@@ -217,10 +272,24 @@ class CrAppilcationController extends Controller
             'EMERGENCY_PHONE_PERSONAL'  => $request->data_tambahan['no_hp_kerabat_darurat'] 
         ];
 
-         M_CrPersonalExtra::create($data_cr_application);
+        if(!$check){
+            $data_cr_application['ID'] = Uuid::uuid4()->toString();
+            $data_cr_application['APPLICATION_ID'] = $applicationId;
+
+            M_CrPersonalExtra::create($data_cr_application);
+        }else{
+            $check->update($data_cr_application);
+        }
     }
 
     private function insert_bank_account($request,$applicationId){
+
+        $check = M_CrApplicationBank::where('APPLICATION_ID',$applicationId)->get();
+
+        if ($check->isNotEmpty()) {
+            M_CrApplicationBank::where('APPLICATION_ID', $applicationId)->delete();
+        }
+
         if (isset($request->bank) && is_array($request->bank)) {
             foreach ($request->bank as $result) {
                 $data_cr_application_bank =[  
@@ -235,7 +304,6 @@ class CrAppilcationController extends Controller
                 ];
 
                 M_CrApplicationBank::create($data_cr_application_bank);
-
             }
         }
     }
@@ -448,47 +516,5 @@ class CrAppilcationController extends Controller
         }  
         
         return $arrayList;
-    }
-
-    public function update(Request $request,$id)
-    {
-        try {
-            $request->validate([
-                'flag_pengajuan' => 'required|string',
-            ]);
-
-            $check_application_id = M_CrApplication::where('ID',$id)->first();
-
-            if (!$check_application_id) {
-                throw new Exception("Id FPK Is Not Exist", 404);
-            }
-
-            $data_application = [
-                'ORDER_NUMBER' => createAutoCode(M_CrApplication::class,'ORDER_NUMBER','FPK')
-            ];
-
-            $check_application_id->update($data_application);
-
-            // if ($request->flag_pengajuan == "yes") {
-            //     self::insert_application_approval($id);
-            // }
-
-            // if (collect($request->data_pelanggan)->isNotEmpty()) {
-            //     self::insert_cr_personal($request,$id);
-            // }
-
-            // if (collect($request->data_tambahan)->isNotEmpty()) {
-            //     self::insert_cr_personal_extra($request,$id);
-            // }
-
-            // if (collect($request->bank)->isNotEmpty()) {
-            //     self::insert_bank_account($request,$id);
-            // }
-
-            return response()->json(['message' => 'Updated Successfully',"status" => 200], 200);
-        } catch (\Exception $e) {
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
-        }
     }
 }
