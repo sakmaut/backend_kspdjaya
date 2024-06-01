@@ -6,22 +6,20 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
-class M_Role extends Model
+class M_DeuteronomyTransactionLog extends Model
 {
     use HasFactory;
-    protected $table = 'master_role';
-
+    protected $table = 'deuteronomy_transaction_log';
     protected $fillable = [
         'id',
-        'role_name',
-        'status',
-        'created_by',
-        'updated_by',
-        'updated_at',
-        'deleted_by',
-        'deleted_at'
+        'table_name',
+        'table_id',
+        'field_name',
+        'old_value',
+        'new_value',
+        'altered_by',
+        'altered_time'
     ];
-    
     protected $guarded = [];
     public $incrementing = false;
     protected $keyType = 'string';

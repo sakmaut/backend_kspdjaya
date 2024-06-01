@@ -76,7 +76,6 @@ class M_CrProspect extends Model
         $query = self::select('*')
             ->leftJoin('prospect_approval', 'prospect_approval.CR_PROSPECT_ID', '=', 'cr_prospect.id')
             ->where('cr_prospect.branch_id', $branchId)
-            ->where('prospect_approval.APPROVAL_RESULT', '0:waiting kapos approval')
             ->whereNull('deleted_at')
             ->get();
 
@@ -89,6 +88,7 @@ class M_CrProspect extends Model
                             ->leftJoin('prospect_approval', 'prospect_approval.CR_PROSPECT_ID', '=', 'cr_prospect.id')
                             ->where('cr_prospect.branch_id', $branchId)
                             ->where('prospect_approval.APPROVAL_RESULT', '1:approve')
+                            ->orWhere('prospect_approval.APPROVAL_RESULT', '2:created_fpk')
                             ->whereNull('deleted_at')
                             ->get();
 

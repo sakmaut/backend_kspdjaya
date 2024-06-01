@@ -12,6 +12,7 @@ class M_CrApplication extends Model
     protected $table = 'cr_application';
     protected $fillable = [
         'ID',
+        'CR_PROSPECT_ID',
         'BRANCH',
         'FORM_NUMBER',
         'ORDER_NUMBER',
@@ -22,7 +23,8 @@ class M_CrApplication extends Model
         'INSTALLMENT_COUNT',
         'PERIOD',
         'INSTALLMENT',
-        'RATE',
+        'FLAT_RATE',
+        'EFF_RATE',
         'VERSION',
         'CREATE_DATE',
         'CREATE_BY',

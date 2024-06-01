@@ -6,21 +6,30 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
-class M_LogSendOut extends Model
+
+class M_ApplicationApproval extends Model
 {
     use HasFactory;
-    protected $table = 'log_sendout';
+    protected $table = 'application_approval';
     protected $fillable = [
-        'id',
-        'phone_number',
-        'message',
-        'status'
+        'ID',
+        'cr_prospect_id' ,
+        'cr_application_id' ,
+        'cr_prospect_kapos',
+        'cr_prospect_kapos_time',
+        'cr_prospect_kapos_note',
+        'cr_application_kapos',
+        'cr_application_kapos_time',
+        'cr_application_kapos_note',
+        'cr_application_ho',
+        'cr_application_ho_time',
+        'cr_application_ho_note',
+        'application_result'
     ];
-
     protected $guarded = [];
     public $incrementing = false;
     protected $keyType = 'string';
-    protected $primaryKey = 'id';
+    protected $primaryKey = 'ID';
     public $timestamps = false;
     protected static function boot()
     {

@@ -29,7 +29,7 @@ class R_CrProspect extends JsonResource
             'alamat' => $this->alamat,
             'hp' => $this->hp,
             'plafond' => $this->plafond,
-            'status_approval' => !is_null($stts_approval->APPROVAL_RESULT)?$stts_approval->APPROVAL_RESULT:''
+            'status' => !is_null($stts_approval->APPROVAL_RESULT)?$stts_approval->APPROVAL_RESULT:''
         ];
         
         return $data;

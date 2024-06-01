@@ -35,4 +35,9 @@ class M_MasterUserAccessMenu extends Model
             }
         });
     }
+
+    public function masterMenu()
+    {
+        return $this->belongsTo(M_MasterMenu::class, 'master_menu_id');
+    }
 }

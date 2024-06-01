@@ -73,34 +73,63 @@ class M_MasterMenu extends Model
         //     }
         // }
 
-        foreach ($menuItems as $menuItem) {
-            if ($menuItem['parent'] === null && !isset($menuArray[$menuItem['parent']])) {
-                $menuArray[$menuItem['id']] = [
-                    'menuid' => $menuItem['id'],
-                    'menuitem' => [
-                        'labelmenu' => $menuItem['menu_name'],
-                        'routename' => $menuItem['route'],
-                        'leading' => explode(',', $menuItem['leading']),
-                        'action' => $menuItem['action'],
-                        'ability' => $menuItem['ability'],
-                        'submenu' => []
-                    ]
-                ];
-            }
-        }
+        // foreach ($menuItems as $menuItem) {
+        //     if ($menuItem['parent'] === null && !isset($menuArray[$menuItem['parent']])) {
+        //         $menuArray[$menuItem['id']] = [
+        //             'menuid' => $menuItem['id'],
+        //             'menuitem' => [
+        //                 'labelmenu' => $menuItem['menu_name'],
+        //                 'routename' => $menuItem['route'],
+        //                 'leading' => explode(',', $menuItem['leading']),
+        //                 'action' => $menuItem['action'],
+        //                 'ability' => $menuItem['ability'],
+        //                 'submenu' => []
+        //             ]
+        //         ];
+        //     }
+        // }
+
+        // foreach ($menuItems as $menuItem) {
+        //     if ($menuItem['parent'] !== '0' && isset($menuArray[$menuItem['parent']])) {
+        //         $menuArray[$menuItem['parent']]['menuitem']['submenu'][] = [
+        //             'subid' => $menuItem['id'],
+        //             'sublabel' => $menuItem['menu_name'],
+        //             'subroute' => $menuItem['route'],
+        //             'leading' => explode(',', $menuItem['leading']),
+        //             'action' => $menuItem['action'],
+        //             'ability' => $menuItem['ability']
+        //         ];
+        //     }
+        // }
 
         foreach ($menuItems as $menuItem) {
-            if ($menuItem['parent'] !== '0' && isset($menuArray[$menuItem['parent']])) {
-                $menuArray[$menuItem['parent']]['menuitem']['submenu'][] = [
-                    'subid' => $menuItem['id'],
-                    'sublabel' => $menuItem['menu_name'],
-                    'subroute' => $menuItem['route'],
-                    'leading' => explode(',', $menuItem['leading']),
-                    'action' => $menuItem['action'],
-                    'ability' => $menuItem['ability']
-                ];
+                if ($menuItem->parent === null && !isset($menuArray[$menuItem->parent])) {
+                    $menuArray[$menuItem->id] = [
+                        'menuid' => $menuItem->id,
+                        'menuitem' => [
+                            'labelmenu' => $menuItem->menu_name,
+                            'routename' => $menuItem->route,
+                            'leading' => explode(',', $menuItem->leading),
+                            'action' => $menuItem->action,
+                            'ability' => $menuItem->ability,
+                            'submenu' => []
+                        ]
+                    ];
+                }
             }
-        }
+    
+            foreach ($menuItems as $menuItem) {
+                if ($menuItem->parent !== '0' && isset($menuArray[$menuItem->parent])) {
+                    $menuArray[$menuItem->parent]['menuitem']['submenu'][] = [
+                        'subid' => $menuItem->id,
+                        'sublabel' => $menuItem->menu_name,
+                        'subroute' => $menuItem->route,
+                        'leading' => explode(',', $menuItem->leading),
+                        'action' => $menuItem->action,
+                        'ability' => $menuItem->ability
+                    ];
+                }
+            }
 
         return array_values($menuArray);
     }
