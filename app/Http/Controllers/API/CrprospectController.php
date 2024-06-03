@@ -254,7 +254,7 @@ class CrprospectController extends Controller
         $data_approval=[
             'ID' => Uuid::uuid4()->toString(),
             'CR_PROSPECT_ID' => $request->id,
-            'APPROVAL_RESULT' => '0:waiting kapos approval'
+            'APPROVAL_RESULT' => '1:approved'
         ];
 
         M_ProspectApproval::create($data_approval);
