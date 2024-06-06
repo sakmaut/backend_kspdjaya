@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Ramsey\Uuid\Uuid;
 use Image;
+use Illuminate\Support\Facades\URL;
 
 class Welcome extends Controller
 {
@@ -135,4 +136,24 @@ class Welcome extends Controller
 //         M_DeuteronomyTransactionLog::create($dataLog);
 //     }
 //    }
+
+    public function uploadImage(Request $req)
+    {
+        try {
+            $this->validate($req, [
+                'image' => 'required|image|mimes:jpg,png,jpeg,gif,svg'
+            ]);
+
+            M_CrProspect::findOrFail($req->cr_prospect_id);
+
+            $image_path = $req->file('image')->store('public/testing');
+            $image_path = str_replace('public/', '', $image_path);
+
+            $url= URL::to('/') . '/storage/' . $image_path;
+            
+            return response()->json(['message' => 'Image upload successfully',"status" => 200,'response' => $url], 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+        } 
+    }
 }
