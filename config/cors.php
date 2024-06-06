@@ -19,7 +19,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['http://localhost:8080', 'https://api.kspdjaya.id'],
+    'allowed_origins' => ['http://localhost:8080/', 'https://api.kspdjaya.id/'],
 
     'allowed_origins_patterns' => [],
 
