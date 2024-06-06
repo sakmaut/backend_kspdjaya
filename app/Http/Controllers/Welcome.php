@@ -144,8 +144,6 @@ class Welcome extends Controller
                 'image' => 'required|image|mimes:jpg,png,jpeg,gif,svg'
             ]);
 
-            M_CrProspect::findOrFail($req->cr_prospect_id);
-
             $image_path = $req->file('image')->store('public/testing');
             $image_path = str_replace('public/', '', $image_path);
 
