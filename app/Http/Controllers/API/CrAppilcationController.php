@@ -553,10 +553,16 @@ class CrAppilcationController extends Controller
                 'ID' => Uuid::uuid4()->toString(),
                 'cr_application_kapos' => $request->user()->id,
                 'cr_application_kapos_time' => Carbon::now()->format('Y-m-d'),
-                'cr_application_kapos_note' => $request->flag,
-                'cr_application_kapos_desc' => $request->keterangan,
-                'application_result' => '2:waiting ho'
+                'cr_application_kapos_desc' => $request->keterangan
             ];
+
+            if($request->flag === 'yes'){
+                $data_approval['cr_application_kapos_note'] = $request->flag;
+                $data_approval['application_result'] = '2:waiting ho';
+            }else{
+                $data_approval['cr_application_kapos_note'] = $request->flag;
+                $data_approval['application_result'] = '6:closed kapos';
+            }
     
             $check_application_id->update($data_approval);
 
