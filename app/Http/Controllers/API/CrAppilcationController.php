@@ -327,7 +327,7 @@ class CrAppilcationController extends Controller
         ];
 
         if($flag === 'yes'){
-            $data_approval['application_result'] = '1:untouched';
+            $data_approval['application_result'] = '1:waiting kapos';
         }else{
             $data_approval['application_result'] = '0:draft';
         }
