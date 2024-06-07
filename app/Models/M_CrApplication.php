@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class M_CrApplication extends Model
@@ -46,5 +47,31 @@ class M_CrApplication extends Model
                 $model->setAttribute($model->getKeyName(), Str::uuid()->toString());
             }
         });
+    }
+
+    public static function fpkListData($param = null){
+
+        $query =  DB::table('cr_application as t1')
+                    ->select(
+                        't1.id',
+                        't3.NAME as cabang',
+                        't5.NAMA as nama_ao',
+                        't2.nama as nama_debitur',
+                        't2.plafond',
+                        't2.tenor',
+                        't6.application_result as status'
+                    )
+                    ->join('cr_prospect as t2', 't2.id', '=', 't1.CR_PROSPECT_ID')
+                    ->join('branch as t3', 't3.ID', '=', 't1.BRANCH')
+                    ->join('users as t4', 't4.id', '=', 't2.ao_id')
+                    ->join('hr_employee as t5', 't5.ID', '=', 't4.employee_id')
+                    ->join('application_approval as t6', 't6.cr_application_id', '=', 't1.ID');
+
+        if ($param !== null) {
+            $query->where('t6.application_result','!=', $param);
+        }
+    
+        $results = $query->get();
+        return $results;
     }
 }

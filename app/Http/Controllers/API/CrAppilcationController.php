@@ -25,7 +25,18 @@ class CrAppilcationController extends Controller
     public function index(Request $request)
     {
         try {
-            $data = M_CrApplication::all();
+            $data = M_CrApplication::fpkListData();
+            return response()->json(['message' => 'OK',"status" => 200,'response' => $data], 200);
+        } catch (\Exception $e) {
+            ActivityLogger::logActivity($request,$e->getMessage(),500);
+            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+        }
+    }
+
+    public function showKapos(Request $request)
+    {
+        try {
+            $data = M_CrApplication::fpkListData('0:draft');
             return response()->json(['message' => 'OK',"status" => 200,'response' => $data], 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
@@ -112,11 +123,7 @@ class CrAppilcationController extends Controller
                 $data_application['ORDER_NUMBER'] =createAutoCode(M_CrApplication::class,'ORDER_NUMBER','FPK');
             }
 
-            $check_application_id->update($data_application);
-
-            if ($request->flag_pengajuan == "yes") {
-                self::insert_application_approval($id);
-            }
+            $check_application_id->update($data_application);        
 
             if (collect($request->data_pelanggan)->isNotEmpty()) {
                 self::insert_cr_personal($request,$id);
@@ -149,6 +156,8 @@ class CrAppilcationController extends Controller
             if (collect($request->bank)->isNotEmpty()) {
                 self::insert_bank_account($request,$id);
             }
+
+            self::insert_application_approval($id,$request->flag_pengajuan);
 
             return response()->json(['message' => 'Updated Successfully',"status" => 200], 200);
         } catch (\Exception $e) {
@@ -310,12 +319,18 @@ class CrAppilcationController extends Controller
         }
     }
 
-    private function insert_application_approval($applicationId){
+    private function insert_application_approval($applicationId,$flag){
+
         $data_approval =[  
             'ID' => Uuid::uuid4()->toString(),
-            'cr_application_id' => $applicationId ,
-            'application_result' => "0:untouched"
+            'cr_application_id' => $applicationId
         ];
+
+        if($flag === 'yes'){
+            $data_approval['application_result'] = '1:untouched';
+        }else{
+            $data_approval['application_result'] = '0:draft';
+        }
 
         M_ApplicationApproval::create($data_approval);
     }

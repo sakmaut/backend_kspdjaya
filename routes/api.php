@@ -47,6 +47,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('cr_applications', [CrAppilcationController::class, 'show']);
     Route::post('cr_application_generate', [CrAppilcationController::class, 'generateUuidFPK']);
+    Route::get('fpk_kapos', [CrAppilcationController::class, 'showKapos']);
+    Route::get('fpk_ho', [CrAppilcationController::class, 'showHo']);
 
     //Route Group Master Pusher Notify
     Route::apiResource('task', TaskController::class);
@@ -56,9 +58,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //Route Group Cr Prospek (Kunjungan)
     Route::apiResource('kunjungan', CrprospectController::class);
-    Route::get('kunjungan_kapos', [CrprospectController::class, 'showKapos']);
     Route::get('kunjungan_admin', [CrprospectController::class, 'showAdmins']);
-    Route::post('kunjungan_approval', [CrprospectController::class, 'approval']);
     Route::post('image_upload_prospect', [CrprospectController::class, 'uploadImage']);
 });
 
