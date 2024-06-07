@@ -534,4 +534,36 @@ class CrAppilcationController extends Controller
         
         return $arrayList;
     }
+
+    public function approvalKapos(Request $request)
+    {
+        try {
+            $request->validate([
+                'cr_application_id' => 'required|string',
+                'flag' => 'required|string',
+            ]);
+
+            $check_application_id = M_ApplicationApproval::where('cr_application_id',$request->cr_application_id)->first();
+
+            if (!$check_application_id) {
+                throw new Exception("Id FPK Is Not Exist", 404);
+            }
+
+            $data_approval=[
+                'ID' => Uuid::uuid4()->toString(),
+                'cr_application_kapos' => $request->user()->id,
+                'cr_application_kapos_time' => Carbon::now()->format('Y-m-d'),
+                'cr_application_kapos_note' => $request->flag,
+                'cr_application_kapos_desc' => $request->keterangan,
+                'application_result' => '2:waiting ho'
+            ];
+    
+            $check_application_id->update($data_approval);
+
+            return response()->json(['message' => 'Approval Kapos Successfully',"status" => 200], 200);
+        } catch (\Exception $e) {
+            ActivityLogger::logActivity($request,$e->getMessage(),500);
+            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+        }
+    } 
 }

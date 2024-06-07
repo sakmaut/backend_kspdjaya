@@ -21,9 +21,11 @@ class M_ApplicationApproval extends Model
         'cr_application_kapos',
         'cr_application_kapos_time',
         'cr_application_kapos_note',
+        'cr_application_kapos_desc',
         'cr_application_ho',
         'cr_application_ho_time',
         'cr_application_ho_note',
+        'cr_application_ho_desc',
         'application_result'
     ];
     protected $guarded = [];
