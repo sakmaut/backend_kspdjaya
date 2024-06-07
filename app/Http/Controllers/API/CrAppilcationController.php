@@ -117,13 +117,13 @@ class CrAppilcationController extends Controller
                 throw new Exception("Id FPK Is Not Exist", 404);
             }
 
-            $check_order_number = M_CrApplication::where('ID',$id)->where('ORDER_NUMBER','')->first();
+            $check_order_number = M_CrApplication::where('ID',$id)->where('ORDER_NUMBER','')->orWhere('ORDER_NUMBER',null)->first();
 
             if($check_order_number){
                 $data_application['ORDER_NUMBER'] =createAutoCode(M_CrApplication::class,'ORDER_NUMBER','FPK');
             }
 
-            $check_application_id->update($data_application);        
+            $check_application_id->update($data_application); 
 
             if (collect($request->data_pelanggan)->isNotEmpty()) {
                 self::insert_cr_personal($request,$id);
