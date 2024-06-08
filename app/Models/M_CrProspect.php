@@ -71,17 +71,6 @@ class M_CrProspect extends Model
         });
     }
 
-    public static function show_kapos($branchId)
-    {
-        $query = self::select('*')
-            ->leftJoin('prospect_approval', 'prospect_approval.CR_PROSPECT_ID', '=', 'cr_prospect.id')
-            ->where('cr_prospect.branch_id', $branchId)
-            ->whereNull('deleted_at')
-            ->get();
-
-        return $query;
-    }
-
     public static function show_admin($branchId){
 
         $query = self::select('*')

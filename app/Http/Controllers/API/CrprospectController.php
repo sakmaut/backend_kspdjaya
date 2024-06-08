@@ -39,22 +39,6 @@ class CrprospectController extends Controller
         }
     }
 
-    public function showKapos(Request $req){
-        try {
-            $data =  M_CrProspect::show_kapos(self::setEmployeeData($req)->BRANCH_ID);
-            $dto = R_CrProspect::collection($data);
-    
-            ActivityLogger::logActivity($req,"Success",200);
-            return response()->json(['message' => 'OK',"status" => 200,'response' => $dto], 200);
-        } catch (QueryException $e) {
-            ActivityLogger::logActivity($req,$e->getMessage(),409);
-            return response()->json(['message' => $e->getMessage(),"status" => 409], 409);
-        } catch (\Exception $e) {
-            ActivityLogger::logActivity($req,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
-        }
-    }
-
     public function showAdmins(Request $req){
         try {
             $data =  M_CrProspect::show_admin(self::setEmployeeData($req)->BRANCH_ID);
@@ -130,6 +114,7 @@ class CrprospectController extends Controller
                 'penghasilan_pasangan' => $data->income_spouse,
                 'penghasilan_lainnya' => $data->income_other,
                 'tgl_survey' => is_null($data->visit_date) ? '': date('d-m-Y',strtotime($data->visit_date)),
+                'catatan_survey' => $data->survey_note,
             ],
             "lokasi" => [ 
                 'coordinate' => $data->coordinate,
