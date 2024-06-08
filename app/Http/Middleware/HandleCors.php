@@ -14,8 +14,9 @@ class HandleCors
 
         $response->header('Access-Control-Allow-Origin', '*');
         $response->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-        $response->header('Access-Control-Allow-Headers', 'Content-Type, Accept, Origin, X-Requested-With, Authorization');
+        $response->header('Access-Control-Allow-Headers', 'Content-Type, Accept, Origin, X-Requested-With, Authorization,multipart/form-data');
         $response->header('Access-Control-Allow-Credentials', 'true');
+        $response->header('Access-Control-Max-Age', '86400');
 
         return $response;
     }
