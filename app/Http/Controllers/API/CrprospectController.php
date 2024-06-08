@@ -92,7 +92,6 @@ class CrprospectController extends Controller
         $prospect_id = $data->id;
         $guarente_vehicle = M_CrGuaranteVehicle::where('CR_PROSPECT_ID',$prospect_id)->get(); 
         $approval_detail = M_ProspectApproval::where('CR_PROSPECT_ID',$prospect_id)->first();
-        $attachment_data = M_CrProspectDocument::where('CR_PROSPECT_ID',$prospect_id )->get();
         
         $arrayList = [
             'id' => $prospect_id,
@@ -142,7 +141,9 @@ class CrprospectController extends Controller
                 'keterangan' => $approval_detail->ONCHARGE_DESCR,
                 'status' => $approval_detail->APPROVAL_RESULT
             ],
-            "attachment" =>$attachment_data
+            "dokumen_indentitas" => M_CrProspectDocument::attachment($prospect_id, ['ktp', 'kk', 'ktp_pasangan']),
+            "dokumen_jaminan" => '',
+            "dokumen_pendukung" => '',
         ];
 
         foreach ($guarente_vehicle as $list) {

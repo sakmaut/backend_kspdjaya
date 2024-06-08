@@ -33,4 +33,12 @@ class M_CrProspectDocument extends Model
             }
         });
     }
+
+    public static function attachment($prospect_id,$array = []){
+        $attachment = M_CrProspectDocument::where('CR_PROSPECT_ID', $prospect_id)
+            ->whereIn('TYPE', $array)
+            ->get();
+
+        return $attachment;
+    }
 }
