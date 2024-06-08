@@ -433,7 +433,7 @@ class CrprospectController extends Controller
             DB::beginTransaction();
 
             $this->validate($req, [
-                'image' => 'required|image|mimes:jpg,png,jpeg,gif,svg',
+                'image' => 'image|mimes:jpg,png,jpeg,gif,svg',
                 'type' => 'required|string',
                 'cr_prospect_id' =>'required|string'
             ]);
