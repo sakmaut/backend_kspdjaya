@@ -142,8 +142,8 @@ class CrprospectController extends Controller
                 'status' => $approval_detail->APPROVAL_RESULT
             ],
             "dokumen_indentitas" => M_CrProspectDocument::attachment($prospect_id, ['ktp', 'kk', 'ktp_pasangan']),
-            "dokumen_jaminan" => '',
-            "dokumen_pendukung" => '',
+            "dokumen_jaminan" => M_CrProspectDocument::attachment($prospect_id, ['no_rangka', 'no_mesin', 'stnk','depan','belakang','kanan','kiri']),
+            "dokumen_pendukung" => M_CrProspectDocument::attachment($prospect_id, ['pendukung']),
         ];
 
         foreach ($guarente_vehicle as $list) {
