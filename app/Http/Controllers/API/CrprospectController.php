@@ -434,8 +434,8 @@ class CrprospectController extends Controller
 
             $this->validate($req, [
                 'image' => 'image|mimes:jpg,png,jpeg,gif,svg',
-                'type' => 'required|string',
-                'cr_prospect_id' =>'required|string'
+                'type' => 'string',
+                'cr_prospect_id' =>'string'
             ]);
 
             // M_CrProspect::findOrFail($req->cr_prospect_id);
