@@ -438,7 +438,7 @@ class CrprospectController extends Controller
                 'cr_prospect_id' =>'required|string'
             ]);
 
-            M_CrProspect::findOrFail($req->cr_prospect_id);
+            // M_CrProspect::findOrFail($req->cr_prospect_id);
 
             $image_path = $req->file('image')->store('public/Cr_Prospect');
             $image_path = str_replace('public/', '', $image_path);
