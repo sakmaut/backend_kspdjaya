@@ -34,7 +34,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //Route Group Master Users
     Route::apiResource('users', UsersController::class);
-    Route::post('image_upload_employee', [DetailProfileController::class, 'uploadImage']);
+    Route::post('image_upload_employee', [HrEmployeeController::class, 'uploadImage']);
+    Route::post('image_upload_personal', [DetailProfileController::class, 'uploadImage']);
 
     //Route Group Master Branch
     Route::apiResource('cabang', BranchController::class);

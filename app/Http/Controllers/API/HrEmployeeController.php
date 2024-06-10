@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\R_Employee;
 use App\Models\M_Branch;
 use App\Models\M_HrEmployee;
+use App\Models\M_HrEmployeeDocument;
 use App\Models\User;
 use Carbon\Carbon;
 use Exception;
@@ -13,6 +14,8 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Ramsey\Uuid\Uuid;
 
 class HrEmployeeController extends Controller
@@ -90,7 +93,6 @@ class HrEmployeeController extends Controller
 
             self::_validation($request);
 
-            $uuid = Uuid::uuid4()->toString();
             $generate_nik =  self::nikCounter();
 
             if(!empty($request->spv_id)){
@@ -108,7 +110,7 @@ class HrEmployeeController extends Controller
             }
 
             $data =[
-                'ID' => $uuid,
+                'ID' => $request->employee_id,
                 'NIK' => !empty($request->nik)?$request->nik: $generate_nik,
                 'NAMA' => $request->nama,
                 'AO_CODE' => "",
@@ -167,7 +169,7 @@ class HrEmployeeController extends Controller
 
             $data_array = [
                 'username' => $generate_nik,
-                'employee_id' => $uuid,
+                'employee_id' => $request->employee_id,
                 'email' => $generate_nik.'@gmail.com',
                 'password' => bcrypt($generate_nik),
                 'status' => 'Active',
@@ -300,6 +302,53 @@ class HrEmployeeController extends Controller
         } catch (\Exception $e) {
             DB::rollback();
             ActivityLogger::logActivity($req, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+        }
+    }
+
+    public function uploadImage(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+
+            $this->validate($request, [
+                'image' => 'required|image|mimes:jpg,png,jpeg,gif,svg',
+                'type' => 'required|string',
+                'employee_id' => 'required|string'
+            ]);
+
+            $employee =  $request->employee_id;
+    
+            $folderPath = 'public/Employee_Image/' . $employee;
+
+            if (!Storage::exists($folderPath)) {
+                Storage::makeDirectory($folderPath);
+            }
+
+            $image_path = $request->file('image')->store($folderPath);
+            $image_path = str_replace('public/', '', $image_path);
+
+            $url = URL::to('/') . '/storage/' . $image_path;
+
+            $data_array_attachment = [
+                'ID' => Uuid::uuid4()->toString(),
+                'EMPLOYEE_ID' => $employee,
+                'TYPE' => $request->type,
+                'PATH' => $url ?? ''
+            ];
+
+            M_HrEmployeeDocument::create($data_array_attachment);
+
+            DB::commit();
+            ActivityLogger::logActivity($request, "Success", 200);
+            return response()->json(['message' => 'Image upload successfully', "status" => 200], 200);
+        } catch (QueryException $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($request, $e->getMessage(), 409);
+            return response()->json(['message' => $e->getMessage(), "status" => 409], 409);
+        } catch (\Exception $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
