@@ -28,7 +28,7 @@ class HrEmployeeController extends Controller
     public function index(Request $request)
     {
         try {
-            $data =  M_HrEmployee::whereNull('DELETED_BY')->orWhere('DELETED_BY','')->get();
+            $data =  M_HrEmployee::all();
             $dto = R_Employee::collection($data);
 
             ActivityLogger::logActivity($request,"Success",200);
