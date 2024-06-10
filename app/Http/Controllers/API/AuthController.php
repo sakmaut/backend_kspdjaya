@@ -37,7 +37,9 @@ class AuthController extends Controller
 
                 if ($user->status == 'Active') {
 
-                    $token = $request->user()->createToken($request->user()->id)->plainTextToken;
+                    $user->tokens()->delete();
+
+                    $token = $user->createToken($request->user()->id)->plainTextToken;
         
                     ActivityLogger::logActivityLogin($request,$this->login,"Success",200);
                     return response()->json([

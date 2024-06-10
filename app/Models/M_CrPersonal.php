@@ -19,6 +19,7 @@ class M_CrPersonal extends Model
         'GENDER',
         'BIRTHPLACE',
         'BIRTHDATE',
+        'BLOOD_TYPE',
         'MARTIAL_STATUS',
         'MARTIAL_DATE',
         'ID_TYPE',
