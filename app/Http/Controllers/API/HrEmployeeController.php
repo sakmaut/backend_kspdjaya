@@ -4,9 +4,11 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\R_Employee;
+use App\Models\M_Branch;
 use App\Models\M_HrEmployee;
 use App\Models\User;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
@@ -26,7 +28,7 @@ class HrEmployeeController extends Controller
     public function index(Request $request)
     {
         try {
-            $data =  M_HrEmployee::all();
+            $data =  M_HrEmployee::whereNull('DELETED_BY')->orWhere('DELETED_BY','')->get();
             $dto = R_Employee::collection($data);
 
             ActivityLogger::logActivity($request,"Success",200);
@@ -69,15 +71,16 @@ class HrEmployeeController extends Controller
     }
 
     private function _validation($request){
-            $validation = $request->validate([
-                'tgl_lahir' => 'date',
-                'tgl_keluar' => 'date',
-                'email' => 'email',
-                'kode_pos_ktp' => 'numeric',
-                'kode_pos' => 'numeric',
-            ]);
+        $validation = $request->validate([
+            'branch_id' => 'string|date',
+            'tgl_lahir' => 'date',
+            'tgl_keluar' => 'date',
+            'email' => 'email',
+            'kode_pos_ktp' => 'numeric',
+            'kode_pos' => 'numeric',
+        ]);
 
-            return $validation;
+        return $validation;
     }
 
     public function store(Request $request)
@@ -91,7 +94,17 @@ class HrEmployeeController extends Controller
             $generate_nik =  self::nikCounter();
 
             if(!empty($request->spv_id)){
-                M_HrEmployee::findOrFail($request->spv_id);
+                $check_spv = M_HrEmployee::where('ID',$request->spv_id)->first();
+
+                if (!$check_spv) {
+                    throw new Exception("Id SPV Not Found",404);
+                }
+            }
+
+            $check_branch = M_Branch::where('ID',$request->branch_id)->first();
+
+            if (!$check_branch) {
+                throw new Exception("Id Branch Not Found",404);
             }
 
             $data =[
@@ -99,6 +112,7 @@ class HrEmployeeController extends Controller
                 'NIK' => !empty($request->nik)?$request->nik: $generate_nik,
                 'NAMA' => $request->nama,
                 'AO_CODE' => "",
+                'BRANCH_ID' => $request->branch_id,
                 'BLOOD_TYPE' => $request->blood_type,
                 'GENDER' => $request->gender,
                 'PENDIDIKAN' => $request->pendidikan,
@@ -171,7 +185,7 @@ class HrEmployeeController extends Controller
             return response()->json(['message' => $e->getMessage(),"status" => 409], 409);
         } catch (ModelNotFoundException $e) {
             DB::rollback();
-            ActivityLogger::logActivity($request, 'Spv Id Not Found', 404);
+            ActivityLogger::logActivity($request, 'v', 404);
             return response()->json(['message' => 'Spv Id Not Found', "status" => 404], 404);
         } catch (\Exception $e) {
             DB::rollback();
@@ -192,6 +206,7 @@ class HrEmployeeController extends Controller
             $data = [
                 'NAMA' => $request->nama,
                 'NIK' => $request->nik,
+                'BRANCH_ID' => $request->branch_id,
                 'BLOOD_TYPE' => $request->blood_type,
                 'GENDER' => $request->gender,
                 'PENDIDIKAN' => $request->pendidikan,
