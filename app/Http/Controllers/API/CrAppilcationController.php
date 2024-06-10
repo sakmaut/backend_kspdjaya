@@ -393,19 +393,23 @@ class CrAppilcationController extends Controller
         
         $arrayList = [
             'id_application' => $application->ID,
-            'data_pelanggan' =>[
-                "code" => $cr_personal->CUST_CODE??null,
+            'pelanggan' =>[
                 "nama" => $data->nama,
                 "nama_panggilan" => $cr_personal->ALIAS ?? null,
                 "jenis_kelamin" => $cr_personal->GENDER ?? null,
                 "tempat_lahir" => $cr_personal->BIRTHPLACE ?? null,
-                "tanggal_lahir" => checkDateIfNull($data->tgl_lahir),
+                "tgl_lahir" => checkDateIfNull($data->tgl_lahir),
+                "gol_darah" => $cr_personal->BLOOD_TYPE??null,
                 "status_kawin" => $cr_personal->MARTIAL_STATUS??null,
-                "tanggal_kawin" => $cr_personal->MARTIAL_DATE ?? null,
-                "tipe" => $cr_personal->ID_TYPE??null,
-                "no" => $data->ktp,
-                "tgl_terbit" => $cr_personal->ID_ISSUE_DATE ??null ,
-                "masa_berlaku" => $cr_personal->ID_VALID_DATE ?? null,
+                "tgl_kawin" => $cr_personal->MARTIAL_DATE ?? null,
+                "tipe_identitas" => $cr_personal->ID_TYPE??null,
+                "no_identitas" => $data->ktp,
+                "tgl_terbit_identitas" => $cr_personal->ID_ISSUE_DATE ??null,
+                "masa_berlaku_identitas" => $cr_personal->ID_VALID_DATE ?? null,
+                "no_kk" => $cr_personal->KK??null,
+                "warganegara" => $cr_personal->CITIZEN??null
+            ],
+            'alamat_identitas' =>[
                 "alamat" => $data->alamat,
                 "rt" => $data->rt,
                 "rw" => $data->rw,
@@ -413,29 +417,31 @@ class CrAppilcationController extends Controller
                 "kota" => $data->city,
                 "kelurahan" => $data->kelurahan,
                 "kecamatan" => $data->kecamatan,
-                "kode_pos" => $data->zip_code,
-                "no_kk" => $cr_personal->KK??null,
-                "warganegara" => $cr_personal->CITIZEN??null,
+                "kode_pos" => $data->zip_code
+            ],
+            'alamat_tagih' =>[
+                "alamat" => $cr_personal->INS_ADDRESS??null,
+                "rt" => $cr_personal->INS_RT??null,
+                "rw" => $cr_personal->INS_RW??null,
+                "provinsi" => $cr_personal->INS_PROVINCE??null,
+                "kota" => $cr_personal->INS_CITY??null,
+                "kelurahan" => $cr_personal->INS_KELURAHAN??null,
+                "kecamatan" => $cr_personal->INS_KECAMATAN??null,
+                "kode_pos" => $cr_personal->INS_ZIP_CODE??null
+            ],
+            'pekerjaan' =>[
                 "pekerjaan" => $cr_personal->OCCUPATION??null,
-                "id_pekerjaan" => $cr_personal->OCCUPATION_ON_ID??null,
+                "pekerjaan_id" => $cr_personal->OCCUPATION_ON_ID??null,
                 "agama" => $cr_personal->RELIGION??null,
                 "pendidikan" => $cr_personal->EDUCATION??null,
                 "status_rumah" => $cr_personal->PROPERTY_STATUS??null,
                 "telepon_rumah" => $cr_personal->PHONE_HOUSE??null,
                 "telepon_selular" => $data->hp,
                 "telepon_kantor" => $cr_personal->PHONE_OFFICE??null,
-                "ext1" => $cr_personal->EXT_1??null,
-                "ext2" => $cr_personal->EXT_2??null,
-                "alamat_tagih_alamat" => $cr_personal->INS_ADDRESS??null,
-                "alamat_tagih_rt" => $cr_personal->INS_RT??null,
-                "alamat_tagih_rw" => $cr_personal->INS_RW??null,
-                "alamat_tagih_provinsi" => $cr_personal->INS_PROVINCE??null,
-                "alamat_tagih_kota" => $cr_personal->INS_CITY??null,
-                "alamat_tagih_kelurahan" => $cr_personal->INS_KELURAHAN??null,
-                "alamat_tagih_kecamatan" => $cr_personal->INS_KECAMATAN??null,
-                "alamat_tagih_kode_pos" => $cr_personal->INS_ZIP_CODE??null
+                "ekstra1" => $cr_personal->EXT_1??null,
+                "ekstra2" => $cr_personal->EXT_2??null
             ],
-            'data_order' =>[
+            'order' =>[
                 'cr_prospect_id' => $prospect_id,
                 "nama_ibu" => $data->work_period, 
                 "kategori" => $data->category, 
@@ -457,7 +463,7 @@ class CrAppilcationController extends Controller
                 "prog_marketing" => "",
                 "cara_bayar" => ""
             ],
-            "data_pelanggan_tambahan" => [
+            'tambahan' =>[
                 "nama_bi"  => $cr_personal_extra->BI_NAME ?? null, 
                 "email"  => $cr_personal_extra->EMAIL?? null,
                 "info_khusus"  => $cr_personal_extra->INFO?? null,
@@ -465,37 +471,36 @@ class CrAppilcationController extends Controller
                 "usaha_lain_2"  => $cr_personal_extra->OTHER_OCCUPATION_2?? null,
                 "usaha_lain_3"  => $cr_personal_extra->OTHER_OCCUPATION_3?? null,
                 "usaha_lain_4"  => $cr_personal_extra->OTHER_OCCUPATION_4?? null,
-                "surat_alamat"  => $cr_personal_extra->MAIL_ADDRESS?? null,
-                "surat_rt"  => $cr_personal_extra->MAIL_RT?? null,
-                "surat_rw"  => $cr_personal_extra->MAIL_RW?? null,
-                "surat_provinsi" => $cr_personal_extra->MAIL_PROVINCE?? null,
-                "surat_kota" => $cr_personal_extra->MAIL_CITY?? null,
-                "surat_kelurahan" => $cr_personal_extra->MAIL_KELURAHAN?? null,
-                "surat_kecamatan" => $cr_personal_extra->MAIL_KECAMATAN?? null,
-                "surat_kode_pos" => $cr_personal_extra->MAIL_ZIP_CODE?? null,
-                "nama_kerabat_darurat"  => $cr_personal_extra->EMERGENCY_NAME?? null,
-                "alamat_kerabat_darurat"  => $cr_personal_extra->EMERGENCY_ADDRESS?? null,
-                "rt_kerabat_darurat"  => $cr_personal_extra->EMERGENCY_RT?? null,
-                "rw_kerabat_darurat"  => $cr_personal_extra->EMERGENCY_RW?? null,
-                "provinsi_kerabat_darurat" =>$cr_personal_extra->EMERGENCY_PROVINCE?? null,
-                "kota_kerabat_darurat" => $cr_personal_extra->EMERGENCY_CITY?? null,
-                "kelurahan_kerabat_darurat" => $cr_personal_extra->EMERGENCY_KELURAHAN?? null,
-                "kecamatan_kerabat_darurat" => $cr_personal_extra->EMERGENCY_KECAMATAN?? null,
-                "kode_pos_kerabat_darurat" => $cr_personal_extra->EMERGENCY_ZIP_CODE?? null,
-                "no_telp_kerabat_darurat" => $cr_personal_extra->EMERGENCY_PHONE_HOUSE?? null,
-                "no_hp_kerabat_darurat" => $cr_personal_extra->EMERGENCY_PHONE_PERSONAL?? null,      
             ],
-            "bank" =>[],
+            'kerabat_darurat' =>[
+                "nama"  => $cr_personal_extra->EMERGENCY_NAME?? null,
+                "alamat"  => $cr_personal_extra->EMERGENCY_ADDRESS?? null,
+                "rt"  => $cr_personal_extra->EMERGENCY_RT?? null,
+                "rw"  => $cr_personal_extra->EMERGENCY_RW?? null,
+                "provinsi" =>$cr_personal_extra->EMERGENCY_PROVINCE?? null,
+                "kota" => $cr_personal_extra->EMERGENCY_CITY?? null,
+                "kelurahan" => $cr_personal_extra->EMERGENCY_KELURAHAN?? null,
+                "kecamatan" => $cr_personal_extra->EMERGENCY_KECAMATAN?? null,
+                "kode_pos" => $cr_personal_extra->EMERGENCY_ZIP_CODE?? null,
+                "no_telp" => $cr_personal_extra->EMERGENCY_PHONE_HOUSE?? null,
+                "no_hp" => $cr_personal_extra->EMERGENCY_PHONE_PERSONAL?? null, 
+            ],
+            "surat" => [
+                "alamat"  => $cr_personal_extra->MAIL_ADDRESS?? null,
+                "rt"  => $cr_personal_extra->MAIL_RT?? null,
+                "rw"  => $cr_personal_extra->MAIL_RW?? null,
+                "provinsi" => $cr_personal_extra->MAIL_PROVINCE?? null,
+                "kota" => $cr_personal_extra->MAIL_CITY?? null,
+                "kelurahan" => $cr_personal_extra->MAIL_KELURAHAN?? null,
+                "kecamatan" => $cr_personal_extra->MAIL_KECAMATAN?? null,
+                "kode_pos" => $cr_personal_extra->MAIL_ZIP_CODE?? null    
+            ],
+            "info_bank" =>[],
             "struktur_kredit" =>[
                 "plafond" => $data->plafond,
                 "tenor" => $data->tenor
             ],
-            "jaminan_kendaraan" => [],
-            "lokasi" => [ 
-                "coordinate" => $data->coordinate,
-                "accurate" => $data->accurate
-            ],         
-            "jaminan_kendaraan" => [],
+            "jaminan_kendaraan" => [],        
             "prospect_approval" => [
                 "flag_approval" => $approval_detail->ONCHARGE_APPRVL,
                 "keterangan" => $approval_detail->ONCHARGE_DESCR,
@@ -506,7 +511,7 @@ class CrAppilcationController extends Controller
         
         if(!empty($cr_application_bank) && is_array($cr_application_bank)){
             foreach ($cr_application_bank as $list) {
-                $arrayList['bank'][] = [
+                $arrayList['info_bank'][] = [
                     "kode_bank" => $list['BANK_CODE'] ?? null,
                     "nama_bank" => $list['BANK_NAME'] ?? null,
                     "no_rekening" => $list['ACCOUNT_NUMBER'] ?? null,
