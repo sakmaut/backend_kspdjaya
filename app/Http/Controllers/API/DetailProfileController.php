@@ -43,8 +43,7 @@ class DetailProfileController extends Controller
 
             $this->validate($request, [
                 'image' => 'required|image|mimes:jpg,png,jpeg,gif,svg',
-                'type' => 'required|string',
-                'employee_id' => 'required|string|exists:hr_employee,ID',
+                'type' => 'required|string'
             ]);
 
             $image_path = $request->file('image')->store('public/Employee_Image');
@@ -54,7 +53,7 @@ class DetailProfileController extends Controller
 
             $data_array_attachment = [
                 'ID' => Uuid::uuid4()->toString(),
-                'EMPLOYEE_ID' => $request->employee_id,
+                'EMPLOYEE_ID' => $request->user()->employee_id,
                 'TYPE' => $request->type,
                 'PATH' => $url ?? ''
             ];
