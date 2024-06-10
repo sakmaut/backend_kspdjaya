@@ -281,6 +281,7 @@ class HrEmployeeController extends Controller
             $check = M_HrEmployee::findOrFail($id);
 
             $update = [
+                'status_mst' => 'inactive',
                 'deleted_by' => $req->user()->id,
                 'deleted_at' => $this->current_time
             ];
