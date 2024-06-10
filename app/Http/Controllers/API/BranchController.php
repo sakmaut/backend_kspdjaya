@@ -16,7 +16,7 @@ class BranchController extends Controller
     public function index(Request $request)
     {
         try {
-            $data =  M_Branch::all();
+            $data =  M_Branch::where('DELETED_BY','')->whereNull('DELETED_BY');
             $dto = R_Branch::collection($data);
 
             ActivityLogger::logActivity($request,"Success",200);
