@@ -104,9 +104,9 @@ class CrAppilcationController extends Controller
     public function update(Request $request,$id)
     {
         try {
-            // $request->validate([
-            //     'flag_pengajuan' => 'required|string',
-            // ]);
+            $request->validate([
+                'flag_pengajuan' => 'required|string',
+            ]);
 
             $check_application_id = M_CrApplication::where('ID',$id)->first();
 
@@ -114,47 +114,47 @@ class CrAppilcationController extends Controller
                 throw new Exception("Id FPK Is Not Exist", 404);
             }
 
-            $check_order_number = M_CrApplication::where('ID',$id)->where('ORDER_NUMBER','')->orWhere('ORDER_NUMBER',null)->first();
+            // $check_order_number = M_CrApplication::where('ID',$id)->where('ORDER_NUMBER','')->orWhere('ORDER_NUMBER',null)->first();
 
-            if($check_order_number){
-                $data_application['ORDER_NUMBER'] =createAutoCode(M_CrApplication::class,'ORDER_NUMBER','FPK');
-            }
+            // if($check_order_number){
+            //     $data_application['ORDER_NUMBER'] =createAutoCode(M_CrApplication::class,'ORDER_NUMBER','FPK');
+            // }
 
-            $check_application_id->update($data_application); 
+            // $check_application_id->update($data_application); 
 
-            self::insert_cr_personal($request,$id);
+            // self::insert_cr_personal($request,$id);
 
-            $check_survey_id = M_CrProspect::where('id',$check_application_id->CR_PROSPECT_ID)->first();
+            // $check_survey_id = M_CrProspect::where('id',$check_application_id->CR_PROSPECT_ID)->first();
 
-            if (!$check_survey_id) {
-                throw new Exception("Id Survey Is Not Exist", 404);
-            }else{
-                $data_prospect =[
-                    'mother_name' =>$request->order['nama_ibu'],
-                    'category' =>$request->order['kategori'],
-                    'title' =>$request->order['gelar'],
-                    'work_period'  =>$request->order['lama_bekerja'],
-                    'dependants'  =>$request->order['tanggungan'],
-                    'income_personal'  =>$request->order['pendapatan_pribadi'],
-                    'income_spouse'  =>$request->order['pendapatan_pasangan'],
-                    'income_other'  =>$request->order['pendapatan_lainnya'],
-                    'expenses'  =>$request->order['biaya_bulanan']
-                ];
+            // if (!$check_survey_id) {
+            //     throw new Exception("Id Survey Is Not Exist", 404);
+            // }else{
+            //     $data_prospect =[
+            //         'mother_name' =>$request->order['nama_ibu'],
+            //         'category' =>$request->order['kategori'],
+            //         'title' =>$request->order['gelar'],
+            //         'work_period'  =>$request->order['lama_bekerja'],
+            //         'dependants'  =>$request->order['tanggungan'],
+            //         'income_personal'  =>$request->order['pendapatan_pribadi'],
+            //         'income_spouse'  =>$request->order['pendapatan_pasangan'],
+            //         'income_other'  =>$request->order['pendapatan_lainnya'],
+            //         'expenses'  =>$request->order['biaya_bulanan']
+            //     ];
 
-                $check_survey_id->update($data_prospect);
-            }
+            //     $check_survey_id->update($data_prospect);
+            // }
 
-            if (collect($request->data_tambahan)->isNotEmpty()) {
-                self::insert_cr_personal_extra($request,$id);
-            }
+            // if (collect($request->data_tambahan)->isNotEmpty()) {
+            //     self::insert_cr_personal_extra($request,$id);
+            // }
 
-            if (collect($request->bank)->isNotEmpty()) {
-                self::insert_bank_account($request,$id);
-            }
+            // if (collect($request->bank)->isNotEmpty()) {
+            //     self::insert_bank_account($request,$id);
+            // }
 
-            self::insert_application_approval($id,$request->flag_pengajuan);
+            // self::insert_application_approval($id,$request->flag_pengajuan);
 
-            return response()->json(['message' => 'Updated Successfully',"status" => 200], 200);
+            return response()->json(['message' => 'Updated Successfully',"status" => $request->all()], 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
