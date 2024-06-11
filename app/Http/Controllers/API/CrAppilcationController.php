@@ -496,9 +496,24 @@ class CrAppilcationController extends Controller
                 "kode_pos" => $cr_personal_extra->MAIL_ZIP_CODE?? null    
             ],
             "info_bank" =>[],
-            "struktur_kredit" =>[
+            "ekstra" =>[
+                "pokok_pembayaran"=> "",
+                "tipe_angsuran"=> "",
+                "cara_pembayaran"=> "",
+                "periode" => $data->tenor,
+                "angsuran"=> "",
+                "provisi"=> "",
+                "asuransi"=> "",
+                "biaya_transfer"=> "",
+                "bunga_margin_eff"=> "",
+                "bunga_margin_flat"=> "",
+                "bunga_margin"=>"",
+                "pokok_margin"=>"",
+                "angsuran_terakhir"=>"",
+                "bunga_margin_eff_actual"=>"",
+                "bunga_margin_eff_flat"=>"",
+                "nett_admin"=>"",
                 "nilai_yang_diterima" => $data->plafond,
-                "periode" => $data->tenor
             ],
             "jaminan_kendaraan" => [],        
             "prospect_approval" => [
