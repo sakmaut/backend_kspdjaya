@@ -497,8 +497,8 @@ class CrAppilcationController extends Controller
             ],
             "info_bank" =>[],
             "struktur_kredit" =>[
-                "plafond" => $data->plafond,
-                "tenor" => $data->tenor
+                "nilai_yang_diterima" => $data->plafond,
+                "periode" => $data->tenor
             ],
             "jaminan_kendaraan" => [],        
             "prospect_approval" => [
