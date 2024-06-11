@@ -104,9 +104,9 @@ class CrAppilcationController extends Controller
     public function update(Request $request,$id)
     {
         try {
-            $request->validate([
-                'flag_pengajuan' => 'required|string',
-            ]);
+            // $request->validate([
+            //     'flag_pengajuan' => 'required|string',
+            // ]);
 
             $check_application_id = M_CrApplication::where('ID',$id)->first();
 
