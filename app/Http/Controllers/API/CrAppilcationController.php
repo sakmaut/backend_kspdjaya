@@ -497,10 +497,11 @@ class CrAppilcationController extends Controller
             ],
             "info_bank" =>[],
             "ekstra" =>[
+                "nilai_yang_diterima" => $data->plafond,
+                "periode" => $data->tenor,
                 "pokok_pembayaran"=> "",
                 "tipe_angsuran"=> "",
                 "cara_pembayaran"=> "",
-                "periode" => $data->tenor,
                 "angsuran"=> "",
                 "provisi"=> "",
                 "asuransi"=> "",
@@ -513,7 +514,6 @@ class CrAppilcationController extends Controller
                 "bunga_margin_eff_actual"=>"",
                 "bunga_margin_eff_flat"=>"",
                 "nett_admin"=>"",
-                "nilai_yang_diterima" => $data->plafond,
             ],
             "jaminan_kendaraan" => [],        
             "prospect_approval" => [
