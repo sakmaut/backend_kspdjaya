@@ -130,15 +130,15 @@ class CrAppilcationController extends Controller
                 throw new Exception("Id Survey Is Not Exist", 404);
             }else{
                 $data_prospect =[
-                    'mother_name' =>$request->data_order['nama_ibu'],
-                    'category' =>$request->data_order['kategori'],
-                    'title' =>$request->data_order['gelar'],
-                    'work_period'  =>$request->data_order['lama_bekerja'],
-                    'dependants'  =>$request->data_order['tanggungan'],
-                    'income_personal'  =>$request->data_order['pendapatan_pribadi'],
-                    'income_spouse'  =>$request->data_order['pendapatan_pasangan'],
-                    'income_other'  =>$request->data_order['pendapatan_lainnya'],
-                    'expenses'  =>$request->data_order['biaya_bulanan']
+                    'mother_name' =>$request->order['nama_ibu'],
+                    'category' =>$request->order['kategori'],
+                    'title' =>$request->order['gelar'],
+                    'work_period'  =>$request->order['lama_bekerja'],
+                    'dependants'  =>$request->order['tanggungan'],
+                    'income_personal'  =>$request->order['pendapatan_pribadi'],
+                    'income_spouse'  =>$request->order['pendapatan_pasangan'],
+                    'income_other'  =>$request->order['pendapatan_lainnya'],
+                    'expenses'  =>$request->order['biaya_bulanan']
                 ];
 
                 $check_survey_id->update($data_prospect);
