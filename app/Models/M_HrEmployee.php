@@ -87,8 +87,12 @@ class M_HrEmployee extends Model
     }
 
     public static function findEmployee($employeeID){
+        
+        $query =self::where('ID', $employeeID)
+                    ->whereNull('DELETED_BY')
+                    ->orWhereNull('DELETED_AT')
+                    ->first();
 
-        $query =self::where('ID', $employeeID)->first();
         return $query;
     }
 }

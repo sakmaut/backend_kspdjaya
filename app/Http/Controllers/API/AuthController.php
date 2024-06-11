@@ -1,6 +1,8 @@
 <?php
 namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
+use App\Models\M_HrEmployee;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -27,52 +29,47 @@ class AuthController extends Controller
         try {
             $this->_validate($request);
 
-            $message = 'Invalid Credential';
-    
             $credentials = $request->only('username', 'password');
 
-            if (Auth::attempt($credentials)) {
-
-                $user = $request->user();
-
-                if ($user->status == 'Active') {
-
-                    $user->tokens()->delete();
-
-                    $token = $user->createToken($request->user()->id)->plainTextToken;
-        
-                    ActivityLogger::logActivityLogin($request,$this->login,"Success",200);
-                    return response()->json([
-                        'message' => true,
-                        'status' => 200,
-                        'response' => [
-                            'token' => $token
-                        ],
-                    ], 200);
-
-                } else {
-                    ActivityLogger::logActivityLogin($request,$this->login, 'User status is not active'.' ( user = '.$request->username. ' & pass = '.$request->password.')', 403);
-                    return response()->json([
-                        'message' => 'User status is not active',
-                        "status" => 403
-                    ], 403);
-                }
+            if (!Auth::attempt($credentials)) {
+                $this->logLoginActivity($request, 'Invalid Credential', 401);
+                return response()->json(['message' => 'Invalid Credential', 'status' => 401], 401);
             }
-    
-            ActivityLogger::logActivityLogin($request,$this->login,$message.' ( user = '.$request->username. ' & pass = '.$request->password.')',401);
 
-            return response()->json([
-                'message' => $message,
-                "status" => 401
-            ], 401);
+            $user = $request->user();
+
+            if (strtolower($user->status) !== 'active') {
+                $this->logLoginActivity($request, 'User status is not active', 401);
+                return response()->json(['message' => 'Invalid Credential', 'status' => 401], 401);
+            }
+
+            $employee = M_HrEmployee::findEmployee($user->employee_id);
+
+            if (!$employee || strtolower($employee->STATUS_MST) !== 'active') {
+                $this->logLoginActivity($request, 'Hr Employee status is not active', 401);
+                return response()->json(['message' => 'Invalid Credential', 'status' => 401], 401);
+            }
+
+            $token = $this->generateToken($user);
+
+            $this->logLoginActivity($request, 'Success', 200);
+            return response()->json(['message' => true, 'status' => 200, 'response' => ['token' => $token]], 200);
 
         } catch (\Exception $e) {
-            ActivityLogger::logActivityLogin($request,$this->login,$e,500);
-            return response()->json([
-                'message' => 'An error occurred',
-                'status' => 500
-            ], 500);
+            $this->logLoginActivity($request, $e->getMessage(), 500);
+            return response()->json(['message' => 'An error occurred', 'status' => 500], 500);
         }
+    }
+
+    private function generateToken(User $user)
+    {
+        $user->tokens()->delete();
+        return $user->createToken($user->id)->plainTextToken;
+    }
+
+    private function logLoginActivity(Request $request, string $message, int $statusCode)
+    {
+        ActivityLogger::logActivityLogin($request, $this->login, $message, $statusCode);
     }
 
     public function logout(Request $request)

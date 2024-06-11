@@ -17,18 +17,20 @@ use Ramsey\Uuid\Uuid;
 
 class DetailProfileController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request,User $user)
     {
         try {
 
             $getEmployeID = $request->user()->employee_id;
 
-            $data = M_HrEmployee::where('ID', $getEmployeID)->where('STATUS_MST', 'Active')->get();
-            $dto = R_DetailProfile::collection($data);
+            $employee = M_HrEmployee::findEmployee($getEmployeID);
 
-            if (!$data) {
-                return response()->json(['message' => 'Detail profile not found',"status" => 404], 404);
+            if (!$employee || strtolower($employee->STATUS_MST) !== 'active') {
+                $user->tokens()->delete();
+                return response()->json(['message' => 'Profile Not Found', 'status' => 404], 404);
             }
+
+            $dto = new R_DetailProfile($employee);
 
             return response()->json(['message' => 'OK', "status" => 200, 'response' => $dto], 200);
         } catch (\Exception $e) {
