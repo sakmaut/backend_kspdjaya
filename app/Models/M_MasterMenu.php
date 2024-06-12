@@ -138,7 +138,8 @@ class M_MasterMenu extends Model
                         'subroute' => $menuItem->route,
                         'leading' => explode(',', $menuItem->leading),
                         'action' => $menuItem->action,
-                        'ability' => $menuItem->ability
+                        'ability' => $menuItem->ability,
+                        'submenu' => self::buildSubMenu($menuItem->id, $listMenu)
                     ];
                 }
             }
@@ -157,7 +158,7 @@ class M_MasterMenu extends Model
         $submenuArray = [];
         foreach ($menuItems as $menuItem) {
             if ($menuItem->parent === $parentId) {
-                if (!self::menuItemExists($submenuArray, $menuItem->id, $menuItem->menu_name)) {
+                if (!self::menuItemExists($submenuArray, $menuItem->id)) {
                     $submenuArray[] = [
                         'subid' => $menuItem->id,
                         'sublabel' => $menuItem->menu_name,
@@ -175,7 +176,7 @@ class M_MasterMenu extends Model
         if (empty($submenuArray)) {
             $querySubMenu = M_MasterMenu::where('parent', $parentId)->get();
             foreach ($querySubMenu as $submenuItem) {
-                if (!self::menuItemExists($submenuArray, $submenuItem->id, $submenuItem->menu_name)) {
+                if (!self::menuItemExists($submenuArray, $submenuItem->id)) {
                     $submenuArray[] = [
                         'subid' => $submenuItem->id,
                         'sublabel' => $submenuItem->menu_name,
@@ -192,15 +193,16 @@ class M_MasterMenu extends Model
         return $submenuArray;
     }
 
-    private static function menuItemExists($menuArray, $id, $label)
+    private static function menuItemExists($menuArray, $id)
     {
         foreach ($menuArray as $menuItem) {
-            if ($menuItem['subid'] == $id || $menuItem['sublabel'] == $label) {
+            if ($menuItem['subid'] == $id) {
                 return true;
             }
         }
         return false;
     }
+
 
 
 }
