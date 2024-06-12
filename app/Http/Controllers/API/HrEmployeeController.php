@@ -7,6 +7,7 @@ use App\Http\Resources\R_Employee;
 use App\Models\M_Branch;
 use App\Models\M_HrEmployee;
 use App\Models\M_HrEmployeeDocument;
+use App\Models\M_MasterUserAccessMenu;
 use App\Models\User;
 use Carbon\Carbon;
 use Exception;
@@ -46,9 +47,10 @@ class HrEmployeeController extends Controller
     {
         try {
             $check = M_HrEmployee::where('ID',$id)->firstOrFail();
+            $dto = new R_Employee($check);
 
             ActivityLogger::logActivity($req,"Success",200);
-            return response()->json(['message' => 'OK',"status" => 200,'response' => $check], 200);
+            return response()->json(['message' => 'OK',"status" => 200,'response' => $dto], 200);
         } catch (ModelNotFoundException $e) {
             ActivityLogger::logActivity($req,'Data Not Found',404);
             return response()->json(['message' => 'Data Not Found',"status" => 404], 404);
@@ -115,6 +117,7 @@ class HrEmployeeController extends Controller
                 'NAMA' => $request->nama,
                 'AO_CODE' => "",
                 'BRANCH_ID' => $request->branch_id,
+                'JABATAN' => $request->jabatan,
                 'BLOOD_TYPE' => $request->blood_type,
                 'GENDER' => $request->gender,
                 'PENDIDIKAN' => $request->pendidikan,
@@ -177,6 +180,15 @@ class HrEmployeeController extends Controller
             ];
 
             User::create($data_array);
+
+            $data_menu = [
+                'id' => $generate_nik,
+                'master_menu_id' => $request->employee_id,
+                'users_id' => $generate_nik.'@gmail.com',
+                'created_by' => $request->user()->id
+            ];
+
+            M_MasterUserAccessMenu::create($data_array);
     
             DB::commit();
             ActivityLogger::logActivity($request,"Success",200);
@@ -207,8 +219,8 @@ class HrEmployeeController extends Controller
 
             $data = [
                 'NAMA' => $request->nama,
-                'NIK' => $request->nik,
                 'BRANCH_ID' => $request->branch_id,
+                'JABATAN' => $request->jabatan,
                 'BLOOD_TYPE' => $request->blood_type,
                 'GENDER' => $request->gender,
                 'PENDIDIKAN' => $request->pendidikan,

@@ -18,6 +18,7 @@ class M_HrEmployee extends Model
        'NAMA',
        'AO_CODE',
        'BRANCH_ID',
+       'JABATAN',
        'BLOOD_TYPE',
        'GENDER',
        'PENDIDIKAN',
