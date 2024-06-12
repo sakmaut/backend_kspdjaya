@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\R_Employee;
+use App\Http\Resources\R_EmployeeDetail;
 use App\Models\M_Branch;
 use App\Models\M_HrEmployee;
 use App\Models\M_HrEmployeeDocument;
@@ -48,7 +49,7 @@ class HrEmployeeController extends Controller
     {
         try {
             $check = M_HrEmployee::where('ID',$id)->firstOrFail();
-            $dto = new R_Employee($check);
+            $dto =  new R_EmployeeDetail($check);
 
             ActivityLogger::logActivity($req,"Success",200);
             return response()->json(['message' => 'OK',"status" => 200,'response' => $dto], 200);
