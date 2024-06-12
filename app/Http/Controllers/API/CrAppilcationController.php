@@ -108,53 +108,21 @@ class CrAppilcationController extends Controller
                 'flag_pengajuan' => 'required|string',
             ]);
 
-            $check_application_id = M_CrApplication::where('ID',$id)->first();
+            $check_application_id = M_CrApplication::find($id);
 
             if (!$check_application_id) {
                 throw new Exception("Id FPK Is Not Exist", 404);
             }
 
-            // $check_order_number = M_CrApplication::where('ID',$id)->where('ORDER_NUMBER','')->orWhere('ORDER_NUMBER',null)->first();
-
-            // if($check_order_number){
-            //     $data_application['ORDER_NUMBER'] =createAutoCode(M_CrApplication::class,'ORDER_NUMBER','FPK');
-            // }
-
             // $check_application_id->update($data_application); 
 
-            // self::insert_cr_personal($request,$id);
+            self::insert_cr_personal($request,$id);
+            self::insert_cr_order($request,$check_application_id->CR_PROSPECT_ID);
+            self::insert_cr_personal_extra($request,$id);
+            self::insert_bank_account($request,$id);
+            self::insert_application_approval($id,$request->flag_pengajuan);
 
-            // $check_survey_id = M_CrProspect::where('id',$check_application_id->CR_PROSPECT_ID)->first();
-
-            // if (!$check_survey_id) {
-            //     throw new Exception("Id Survey Is Not Exist", 404);
-            // }else{
-            //     $data_prospect =[
-            //         'mother_name' =>$request->order['nama_ibu'],
-            //         'category' =>$request->order['kategori'],
-            //         'title' =>$request->order['gelar'],
-            //         'work_period'  =>$request->order['lama_bekerja'],
-            //         'dependants'  =>$request->order['tanggungan'],
-            //         'income_personal'  =>$request->order['pendapatan_pribadi'],
-            //         'income_spouse'  =>$request->order['pendapatan_pasangan'],
-            //         'income_other'  =>$request->order['pendapatan_lainnya'],
-            //         'expenses'  =>$request->order['biaya_bulanan']
-            //     ];
-
-            //     $check_survey_id->update($data_prospect);
-            // }
-
-            // if (collect($request->data_tambahan)->isNotEmpty()) {
-            //     self::insert_cr_personal_extra($request,$id);
-            // }
-
-            // if (collect($request->bank)->isNotEmpty()) {
-            //     self::insert_bank_account($request,$id);
-            // }
-
-            // self::insert_application_approval($id,$request->flag_pengajuan);
-
-            return response()->json(['message' => 'Updated Successfully',"status" => $request->all()], 200);
+            return response()->json(['message' => 'Updated Successfully',"status" => 200], 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
@@ -183,55 +151,77 @@ class CrAppilcationController extends Controller
         M_CrApplication::create($data_cr_application);
     }
 
+    private function insert_cr_order($request,$id){
+        $check_survey_id = M_CrProspect::where('id',$id)->first();
+
+        if (!$check_survey_id) {
+            throw new Exception("Id Survey Is Not Exist", 404);
+        }
+
+        $data_prospect =[
+            'mother_name' =>$request->order['nama_ibu']??null,
+            'category' =>$request->order['kategori']??null,
+            'title' =>$request->order['gelar']??null,
+            'work_period'  =>$request->order['lama_bekerja']??null,
+            'dependants'  =>$request->order['tanggungan']??null,
+            'income_personal'  =>$request->order['pendapatan_pribadi']??null,
+            'income_spouse'  =>$request->order['pendapatan_pasangan']??null,
+            'income_other'  =>$request->order['pendapatan_lainnya']??null,
+            'expenses'  =>$request->order['biaya_bulanan']??null
+        ];
+
+        $check_survey_id->update($data_prospect);
+    }
+
     private function insert_cr_personal($request,$applicationId){
 
         $check = M_CrPersonal::where('APPLICATION_ID',$applicationId)->first();
 
         $data_cr_application =[  
             'CUST_CODE' => $request->pelanggan['code']??null,
-            'NAME' => $request->pelanggan['nama'],
-            'ALIAS' => $request->pelanggan['nama_panggilan'],
-            'GENDER' => $request->pelanggan['jenis_kelamin'],
-            'BIRTHPLACE' => $request->pelanggan['tempat_lahir'],
-            'BIRTHDATE' => $request->pelanggan['tgl_lahir'],
-            'BLOOD_TYPE' => $request->pelanggan['gol_darah'],
-            'MARTIAL_STATUS' => $request->pelanggan['status_kawin'],
-            'MARTIAL_DATE' => $request->pelanggan['tgl_kawin'],
-            'ID_TYPE' => $request->pelanggan['tipe_identitas'],
-            'ID_NUMBER' => $request->pelanggan['no_identitas'],
-            'ID_ISSUE_DATE' => $request->pelanggan['tgl_terbit'],
-            'ID_VALID_DATE' => $request->pelanggan['masa_berlaku'],
-            'KK' => $request->pelanggan['no_kk'],
-            'CITIZEN' => $request->pelanggan['warganegara'],
+            'NAME' => $request->pelanggan['nama']??null,
+            'ALIAS' => $request->pelanggan['nama_panggilan']??null,
+            'GENDER' => $request->pelanggan['jenis_kelamin']??null,
+            'BIRTHPLACE' => $request->pelanggan['tempat_lahir']??null,
+            'BIRTHDATE' => $request->pelanggan['tgl_lahir']??null,
+            'BLOOD_TYPE' => $request->pelanggan['gol_darah']??null,
+            'MARTIAL_STATUS' => $request->pelanggan['status_kawin']??null,
+            'MARTIAL_DATE' => $request->pelanggan['tgl_kawin']??null,
+            'ID_TYPE' => $request->pelanggan['tipe_identitas']??null,
+            'ID_NUMBER' => $request->pelanggan['no_identitas']??null,
+            'ID_ISSUE_DATE' => $request->pelanggan['tgl_terbit']??null,
+            'ID_VALID_DATE' => $request->pelanggan['masa_berlaku']??null,
+            'KK' => $request->pelanggan['no_kk']??null,
+            'CITIZEN' => $request->pelanggan['warganegara']??null,
             
-            'ADDRESS' => $request->alamat_identitas['alamat'],
-            'RT' => $request->alamat_identitas['rt'],
-            'RW' => $request->alamat_identitas['rw'],
-            'PROVINCE' => $request->alamat_identitas['provinsi'],
-            'CITY' => $request->alamat_identitas['kota'],
-            'KELURAHAN' => $request->alamat_identitas['kelurahan'],
+            'ADDRESS' => $request->alamat_identitas['alamat']??null,
+            'RT' => $request->alamat_identitas['rt']??null,
+            'RW' => $request->alamat_identitas['rw']??null,
+            'PROVINCE' => $request->alamat_identitas['provinsi']??null,
+            'CITY' => $request->alamat_identitas['kota']??null,
+            'KELURAHAN' => $request->alamat_identitas['kelurahan']??null,
             'KECAMATAN' => $request->alamat_identitas['kecamatan'],
             'ZIP_CODE' =>  $request->alamat_identitas['kode_pos'],
 
-            'INS_ADDRESS' => $request->alamat_tagih['alamat'],
-            'INS_RT' => $request->alamat_tagih['rt'],
-            'INS_RW' => $request->alamat_tagih['rw'],
-            'INS_PROVINCE' => $request->alamat_tagih['provinsi'],
-            'INS_CITY' => $request->alamat_tagih['kota'],
-            'INS_KELURAHAN' => $request->alamat_tagih['kelurahan'],
-            'INS_KECAMATAN' => $request->alamat_tagih['kecamatan'],
-            'INS_ZIP_CODE' => $request->alamat_tagih['kode_pos'],
+            'INS_ADDRESS' => $request->alamat_tagih['alamat']??null,
+            'INS_RT' => $request->alamat_tagih['rt']??null,
+            'INS_RW' => $request->alamat_tagih['rw']??null,
+            'INS_PROVINCE' => $request->alamat_tagih['provinsi']??null,
+            'INS_CITY' => $request->alamat_tagih['kota']??null,
+            'INS_KELURAHAN' => $request->alamat_tagih['kelurahan']??null,
+            'INS_KECAMATAN' => $request->alamat_tagih['kecamatan']??null,
+            'INS_ZIP_CODE' => $request->alamat_tagih['kode_pos']??null,
 
-            'OCCUPATION' => $request->pekerjaan['pekerjaan'],
-            'OCCUPATION_ON_ID' => $request->pekerjaan['pekerjaan_id'],
-            'RELIGION' => $request->pekerjaan['agama'],
-            'EDUCATION' => $request->pekerjaan['pendidikan'],
-            'PROPERTY_STATUS' => $request->pekerjaan['status_rumah'],
-            'PHONE_HOUSE' => $request->pekerjaan['telepon_rumah'],
-            'PHONE_PERSONAL' => $request->pekerjaan['telepon_selular'],
-            'PHONE_OFFICE' => $request->pekerjaan['telepon_kantor'],
-            'EXT_1' => $request->pekerjaan['ekstra1'],
-            'EXT_2' => $request->pekerjaan['ekstra2'],
+            'OCCUPATION' => $request->pekerjaan['pekerjaan']??null,
+            'OCCUPATION_ON_ID' => $request->pekerjaan['pekerjaan_id']??null,
+            'RELIGION' => $request->pekerjaan['agama']??null,
+            'EDUCATION' => $request->pekerjaan['pendidikan']??null,
+            'PROPERTY_STATUS' => $request->pekerjaan['status_rumah']??null,
+            'PHONE_HOUSE' => $request->pekerjaan['telepon_rumah']??null,
+            'PHONE_PERSONAL' => $request->pekerjaan['telepon_selular']??null,
+            'PHONE_OFFICE' => $request->pekerjaan['telepon_kantor']??null,
+            'EXT_1' => $request->pekerjaan['ekstra1']??null,
+            'EXT_2' => $request->pekerjaan['ekstra2']??null,
            
             'VERSION' => 1,
             'CREATE_DATE' => Carbon::now()->format('Y-m-d'),
@@ -239,15 +229,13 @@ class CrAppilcationController extends Controller
         ];
 
         if(!$check){
-            $data_cr_application['ID'] = Uuid::uuid4()->toString();
+            $data_cr_application['ID'] = Uuid::uuid7()->toString();
             $data_cr_application['APPLICATION_ID'] = $applicationId;
 
             M_CrPersonal::create($data_cr_application);
         }else{
             $check->update($data_cr_application);
         }
-
-         
     }
 
     private function insert_cr_personal_extra($request,$applicationId){
@@ -255,32 +243,32 @@ class CrAppilcationController extends Controller
         $check = M_CrPersonalExtra::where('APPLICATION_ID',$applicationId)->first();
 
         $data_cr_application =[  
-            'BI_NAME' => $request->data_tambahan['nama_bi'],
-            'EMAIL' => $request->data_tambahan['email'],
-            'INFO' => $request->data_tambahan['info_khusus'],
-            'OTHER_OCCUPATION_1' => $request->data_tambahan['usaha_lain_1'],
-            'OTHER_OCCUPATION_2' => $request->data_tambahan['usaha_lain_2'],
-            'OTHER_OCCUPATION_3' => $request->data_tambahan['usaha_lain_3'],
-            'OTHER_OCCUPATION_4' => $request->data_tambahan['usaha_lain_4'],
-            'MAIL_ADDRESS' => $request->data_tambahan['surat_alamat'],
-            'MAIL_RT' => $request->data_tambahan['surat_rt'],
-            'MAIL_RW' => $request->data_tambahan['surat_rw'],
-            'MAIL_PROVINCE' => $request->data_tambahan['surat_provinsi'],
-            'MAIL_CITY' => $request->data_tambahan['surat_kota'],
-            'MAIL_KELURAHAN' => $request->data_tambahan['surat_kelurahan'],
-            'MAIL_KECAMATAN' => $request->data_tambahan['surat_kecamatan'],
-            'MAIL_ZIP_CODE' => $request->data_tambahan['surat_kode_pos'],
-            'EMERGENCY_NAME' => $request->data_tambahan['nama_kerabat_darurat'],
-            'EMERGENCY_ADDRESS' => $request->data_tambahan['alamat_kerabat_darurat'],
-            'EMERGENCY_RT' => $request->data_tambahan['rt_kerabat_darurat'],
-            'EMERGENCY_RW' => $request->data_tambahan['rw_kerabat_darurat'],
-            'EMERGENCY_PROVINCE' => $request->data_tambahan['provinsi_kerabat_darurat'],
-            'EMERGENCY_CITY' => $request->data_tambahan['kota_kerabat_darurat'],
-            'EMERGENCY_KELURAHAN' => $request->data_tambahan['kelurahan_kerabat_darurat'],
-            'EMERGENCY_KECAMATAN' => $request->data_tambahan['kecamatan_kerabat_darurat'],
-            'EMERGENCY_ZIP_CODE' => $request->data_tambahan['kode_pos_kerabat_darurat'],
-            'EMERGENCY_PHONE_HOUSE' => $request->data_tambahan['no_telp_kerabat_darurat'],
-            'EMERGENCY_PHONE_PERSONAL'  => $request->data_tambahan['no_hp_kerabat_darurat'] 
+            'BI_NAME' => $request->tambahan['nama_bi']??null,
+            'EMAIL' => $request->tambahan['email']??null,
+            'INFO' => $request->tambahan['info_khusus']??null,
+            'OTHER_OCCUPATION_1' => $request->tambahan['usaha_lain_1']??null,
+            'OTHER_OCCUPATION_2' => $request->tambahan['usaha_lain_2']??null,
+            'OTHER_OCCUPATION_3' => $request->tambahan['usaha_lain_3']??null,
+            'OTHER_OCCUPATION_4' => $request->tambahan['usaha_lain_4']??null,
+            'MAIL_ADDRESS' => $request->surat['surat_alamat']??null,
+            'MAIL_RT' => $request->surat['surat_rt']??null,
+            'MAIL_RW' => $request->surat['surat_rw']??null,
+            'MAIL_PROVINCE' => $request->surat['surat_provinsi']??null,
+            'MAIL_CITY' => $request->surat['surat_kota']??null,
+            'MAIL_KELURAHAN' => $request->surat['surat_kelurahan']??null,
+            'MAIL_KECAMATAN' => $request->surat['surat_kecamatan']??null,
+            'MAIL_ZIP_CODE' => $request->surat['surat_kode_pos']??null,
+            'EMERGENCY_NAME' => $request->kerabat_darurat['nama_kerabat_darurat']??null,
+            'EMERGENCY_ADDRESS' => $request->kerabat_darurat['alamat_kerabat_darurat']??null,
+            'EMERGENCY_RT' => $request->kerabat_darurat['rt_kerabat_darurat']??null,
+            'EMERGENCY_RW' => $request->kerabat_darurat['rw_kerabat_darurat']??null,
+            'EMERGENCY_PROVINCE' => $request->kerabat_darurat['provinsi_kerabat_darurat']??null,
+            'EMERGENCY_CITY' => $request->kerabat_darurat['kota_kerabat_darurat']??null,
+            'EMERGENCY_KELURAHAN' => $request->kerabat_darurat['kelurahan_kerabat_darurat']??null,
+            'EMERGENCY_KECAMATAN' => $request->kerabat_darurat['kecamatan_kerabat_darurat']??null,
+            'EMERGENCY_ZIP_CODE' => $request->kerabat_darurat['kode_pos_kerabat_darurat']??null,
+            'EMERGENCY_PHONE_HOUSE' => $request->kerabat_darurat['no_telp_kerabat_darurat']??null,
+            'EMERGENCY_PHONE_PERSONAL'  => $request->kerabat_darurat['no_hp_kerabat_darurat']??null
         ];
 
         if(!$check){
@@ -301,8 +289,8 @@ class CrAppilcationController extends Controller
             M_CrApplicationBank::where('APPLICATION_ID', $applicationId)->delete();
         }
 
-        if (isset($request->bank) && is_array($request->bank)) {
-            foreach ($request->bank as $result) {
+        if (isset($request->info_bank) && is_array($request->info_bank)) {
+            foreach ($request->info_bank as $result) {
                 $data_cr_application_bank =[  
                     'ID' => Uuid::uuid4()->toString(),
                     'APPLICATION_ID' => $applicationId,
@@ -345,7 +333,7 @@ class CrAppilcationController extends Controller
                 throw new Exception("Id Kunjungan Is Not Exist", 404);
             }
 
-            $uuid = Uuid::uuid4()->toString();
+            $uuid = Uuid::uuid7()->toString();
 
             $check_prospect_id = M_CrApplication::where('CR_PROSPECT_ID',$request->cr_prospect_id)->first();
 
@@ -355,6 +343,7 @@ class CrAppilcationController extends Controller
                 $data_cr_application =[
                     'ID' => $uuid,
                     'CR_PROSPECT_ID' => $request->cr_prospect_id,
+                    'ORDER_NUMBER' => createAutoCode(M_CrApplication::class,'ORDER_NUMBER','FPK'),
                     'BRANCH' => M_HrEmployee::findEmployee($request->user()->employee_id)->BRANCH_ID,
                     'VERSION' => 1,
                     'CREATE_DATE' => Carbon::now()->format('Y-m-d'),
