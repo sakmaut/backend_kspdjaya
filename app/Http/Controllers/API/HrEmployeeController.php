@@ -181,14 +181,14 @@ class HrEmployeeController extends Controller
 
             User::create($data_array);
 
-            $data_menu = [
-                'id' => $generate_nik,
-                'master_menu_id' => $request->employee_id,
-                'users_id' => $generate_nik.'@gmail.com',
-                'created_by' => $request->user()->id
-            ];
+            // $data_menu = [
+            //     'id' => $generate_nik,
+            //     'master_menu_id' => $request->employee_id,
+            //     'users_id' => $generate_nik.'@gmail.com',
+            //     'created_by' => $request->user()->id
+            // ];
 
-            M_MasterUserAccessMenu::create($data_array);
+            // M_MasterUserAccessMenu::create($data_array);
     
             DB::commit();
             ActivityLogger::logActivity($request,"Success",200);
