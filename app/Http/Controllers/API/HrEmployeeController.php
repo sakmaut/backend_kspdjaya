@@ -79,7 +79,7 @@ class HrEmployeeController extends Controller
 
     private function _validation($request){
         $validation = $request->validate([
-            'branch_id' => 'required|string',
+            'cabang_id' => 'required|string',
             'tgl_lahir' => 'date',
             'tgl_keluar' => 'date',
             'email' => 'email',
