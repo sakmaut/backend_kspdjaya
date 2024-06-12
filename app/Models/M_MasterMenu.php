@@ -64,7 +64,6 @@ class M_MasterMenu extends Model
         
         return $menuItems;  
     }
-
     static function buildMenuArray($menuItems)
     {
         $listMenu = self::queryMenu($menuItems);
@@ -131,8 +130,8 @@ class M_MasterMenu extends Model
                 }
 
                 // Add the current item as a submenu of its parent
-                if (!isset($menuArray[$menuItem->parent]['menuitem']['submenu'][$menuItem->id])) {
-                    $menuArray[$menuItem->parent]['menuitem']['submenu'][$menuItem->id] = [
+                if (!self::menuItemExists($menuArray[$menuItem->parent]['menuitem']['submenu'], $menuItem->id)) {
+                    $menuArray[$menuItem->parent]['menuitem']['submenu'][] = [
                         'subid' => $menuItem->id,
                         'sublabel' => $menuItem->menu_name,
                         'subroute' => $menuItem->route,
@@ -171,25 +170,6 @@ class M_MasterMenu extends Model
                 }
             }
         }
-
-        // Check if the submenu array is empty and add necessary submenu items
-        if (empty($submenuArray)) {
-            $querySubMenu = M_MasterMenu::where('parent', $parentId)->get();
-            foreach ($querySubMenu as $submenuItem) {
-                if (!self::menuItemExists($submenuArray, $submenuItem->id)) {
-                    $submenuArray[] = [
-                        'subid' => $submenuItem->id,
-                        'sublabel' => $submenuItem->menu_name,
-                        'subroute' => $submenuItem->route,
-                        'leading' => explode(',', $submenuItem->leading),
-                        'action' => $submenuItem->action,
-                        'ability' => $submenuItem->ability,
-                        'submenu' => self::buildSubMenu($submenuItem->id, $menuItems)
-                    ];
-                }
-            }
-        }
-
         return $submenuArray;
     }
 
@@ -202,7 +182,6 @@ class M_MasterMenu extends Model
         }
         return false;
     }
-
 
 
 }
