@@ -7,6 +7,7 @@ use App\Http\Resources\R_Employee;
 use App\Models\M_Branch;
 use App\Models\M_HrEmployee;
 use App\Models\M_HrEmployeeDocument;
+use App\Models\M_JabaranAccessMenu;
 use App\Models\M_MasterUserAccessMenu;
 use App\Models\User;
 use Carbon\Carbon;
@@ -77,7 +78,7 @@ class HrEmployeeController extends Controller
 
     private function _validation($request){
         $validation = $request->validate([
-            'branch_id' => 'string|date',
+            'branch_id' => 'required|string',
             'tgl_lahir' => 'date',
             'tgl_keluar' => 'date',
             'email' => 'email',
@@ -168,27 +169,31 @@ class HrEmployeeController extends Controller
                 'CREATED_BY' =>  $request->user()->id
             ];
 
-            M_HrEmployee::create($data);
+            $idEmployee = M_HrEmployee::create($data);
 
             $data_array = [
                 'username' => $generate_nik,
-                'employee_id' => $request->employee_id,
+                'employee_id' => $idEmployee->ID,
                 'email' => $generate_nik.'@gmail.com',
                 'password' => bcrypt($generate_nik),
                 'status' => 'Active',
                 'created_by' => $request->user()->id
             ];
 
-            User::create($data_array);
+            $idUser = User::create($data_array);
 
-            // $data_menu = [
-            //     'id' => $generate_nik,
-            //     'master_menu_id' => $request->employee_id,
-            //     'users_id' => $generate_nik.'@gmail.com',
-            //     'created_by' => $request->user()->id
-            // ];
+            $getMenu = M_JabaranAccessMenu::where('jabatan',$request->jabatan)->get();
 
-            // M_MasterUserAccessMenu::create($data_array);
+            foreach ($getMenu as $list) {
+                $data_menu = [
+                    'id' => Uuid::uuid7()->toString(),
+                    'master_menu_id' => $list['master_menu_id'],
+                    'users_id' => $idUser->id,
+                    'created_by' => $request->user()->id
+                ];
+
+                M_MasterUserAccessMenu::create($data_menu);
+            }
     
             DB::commit();
             ActivityLogger::logActivity($request,"Success",200);
@@ -216,6 +221,24 @@ class HrEmployeeController extends Controller
             self::_validation($request);
 
             $check = M_HrEmployee::findOrFail($id);
+
+            if($check->JABATAN != $request->jabatan){
+                $getUserId = User::where('employee_id',$id)->first();
+                $getMenu = M_JabaranAccessMenu::where('jabatan',$request->jabatan)->get();
+
+                M_MasterUserAccessMenu::where('users_id', $getUserId->id)->delete();
+
+                foreach ($getMenu as $list) {
+                    $data_menu = [
+                        'id' => Uuid::uuid7()->toString(),
+                        'master_menu_id' => $list['master_menu_id'],
+                        'users_id' => $getUserId->id,
+                        'created_by' => $request->user()->id
+                    ];
+    
+                    M_MasterUserAccessMenu::create($data_menu);
+                }
+            }
 
             $data = [
                 'NAMA' => $request->nama,
@@ -275,7 +298,7 @@ class HrEmployeeController extends Controller
 
             DB::commit();
             ActivityLogger::logActivity($request, "Success", 200);
-            return response()->json(['message' => 'Karyawan updated successfully', "status" => 200], 200);
+            return response()->json(['message' => 'Karyawan updated successfully', "status" => $check->JABATAN], 200);
         } catch (ModelNotFoundException $e) {
             DB::rollback();
             ActivityLogger::logActivity($request, 'Data Not Found', 404);

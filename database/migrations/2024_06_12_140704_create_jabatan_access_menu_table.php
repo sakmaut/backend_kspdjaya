@@ -11,9 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::dropIfExists('jabatan_access_menu');
         Schema::create('jabatan_access_menu', function (Blueprint $table) {
             $table->string('id', 100)->primary();
-            $table->date('jabatan')->nullable();
+            $table->string('jabatan')->nullable();
             $table->string('master_menu_id', 100)->nullable(false);
         });
     }
