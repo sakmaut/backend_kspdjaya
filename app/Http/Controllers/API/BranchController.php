@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\R_Branch;
+use App\Http\Resources\R_BranchDetail;
 use App\Models\M_Branch;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -31,9 +32,10 @@ class BranchController extends Controller
     {
         try {
             $check = M_Branch::where('id',$id)->firstOrFail();
+            $dto = new R_BranchDetail($check);
 
             ActivityLogger::logActivity($req,"Success",200);
-            return response()->json(['message' => 'OK',"status" => 200,'response' => $check], 200);
+            return response()->json(['message' => 'OK',"status" => 200,'response' => $dto], 200);
         } catch (ModelNotFoundException $e) {
             ActivityLogger::logActivity($req,'Data Not Found',404);
             return response()->json(['message' => 'Data Not Found',"status" => 404], 404);
@@ -49,10 +51,10 @@ class BranchController extends Controller
         try {
 
             $request->validate([
-                'code' => 'required|string|unique:branch',
-                'name' => 'required|string|unique:branch',
-                'address' => 'required|string',
-                'zip_code' => 'numeric'
+                'CODE' => 'required|string|unique:branch',
+                'NAME' => 'required|string|unique:branch',
+                'ADDRESS' => 'required|string',
+                'ZIP_CODE' => 'numeric'
             ]);
 
             $request['CREATE_DATE'] = Carbon::now()->format('Y-m-d');
@@ -81,10 +83,10 @@ class BranchController extends Controller
         DB::beginTransaction();
         try {
             $request->validate([
-                'code' => 'unique:branch,code,'.$id,
-                'name' => 'unique:branch,name,'.$id,
-                'address' => 'required|string',
-                'zip_code' => 'numeric'
+                'CODE' => 'unique:branch,code,'.$id,
+                'NAME' => 'unique:branch,name,'.$id,
+                'ADDRESS' => 'required|string',
+                'ZIP_CODE' => 'numeric'
             ]);
 
             $users = M_Branch::findOrFail($id);

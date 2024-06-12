@@ -146,17 +146,9 @@ class MasterMenuController extends Controller
     public function menuSubList(Request $req)
     {
         try {
-            // $data = M_MasterMenu::orderBy('order', 'asc')->where('status','active')->whereNull('deleted_by')->get();
-
-            $data = DB::table('master_users_access_menu as t1')
-                        ->leftJoin('users as t2', 't2.id', '=', 't1.users_id')
-                        ->leftJoin('master_menu as t3', 't3.id', '=', 't1.master_menu_id')
-                        ->select('t3.*')
-                        ->where('t1.users_id', $req->user()->id)
-                        ->whereNull('t1.deleted_at')
-                        ->get();
+            $data= M_MasterMenu::buildMenuArray($req);
         
-            return response()->json(['message' => 'OK', "status" => 200, 'response' => M_MasterMenu::buildMenuArray($data)], 200);
+            return response()->json(['message' => 'OK', "status" => 200, 'response' =>$data], 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($req,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
