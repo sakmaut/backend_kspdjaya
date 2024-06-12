@@ -56,6 +56,7 @@ class M_MasterMenu extends Model
 
      static function queryMenu($req){
         $menuItems = self::query()
+                            ->select('master_menu.*')
                             ->join('master_users_access_menu as t1', 'master_menu.id', '=', 't1.master_menu_id')
                             ->where('t1.users_id', $req->user()->id)
                             ->whereNull('master_menu.deleted_by')
@@ -69,14 +70,16 @@ class M_MasterMenu extends Model
         $listMenu = self::queryMenu($menuItems);
         $menuArray = [];
         $homeParent = null;
-    
+
+        // Find the 'home' parent menu item
         foreach ($listMenu as $menuItem) {
-            if ($menuItem->menu_name == 'home' && $menuItem->parent === null) {
+            if ($menuItem->menu_name === 'home' && $menuItem->parent === null) {
                 $homeParent = $menuItem;
                 break;
             }
         }
-    
+
+        // Initialize the 'home' parent menu in the array
         if ($homeParent) {
             $menuArray[$homeParent->id] = [
                 'menuid' => $homeParent->id,
@@ -90,29 +93,12 @@ class M_MasterMenu extends Model
                 ]
             ];
         }
-    
+
+        // Process each menu item to build the menu hierarchy
         foreach ($listMenu as $menuItem) {
-            if (!isset($menuArray[$menuItem->parent])) {
-                if ($menuItem->parent !== null && $menuItem->parent !== 0) {
-                    $parentMenuItem = M_MasterMenu::find($menuItem->parent);
-                    if ($parentMenuItem && !isset($menuArray[$parentMenuItem->id])) {
-                        $menuArray[$parentMenuItem->id] = [
-                            'menuid' => $parentMenuItem->id,
-                            'menuitem' => [
-                                'labelmenu' => $parentMenuItem->menu_name,
-                                'routename' => $parentMenuItem->route,
-                                'leading' => explode(',', $parentMenuItem->leading),
-                                'action' => $parentMenuItem->action,
-                                'ability' => $parentMenuItem->ability,
-                                'submenu' => []
-                            ]
-                        ];
-                    }
-                }
-            }
-    
             if ($menuItem->parent === null || $menuItem->parent === 0) {
-                if (!self::menuItemExists($menuArray, $menuItem->id, $menuItem->menu_name)) {
+                // If the item has no parent, add it as a root item
+                if (!isset($menuArray[$menuItem->id])) {
                     $menuArray[$menuItem->id] = [
                         'menuid' => $menuItem->id,
                         'menuitem' => [
@@ -126,11 +112,26 @@ class M_MasterMenu extends Model
                     ];
                 }
             } else {
-                if (!isset($menuArray[$menuItem->parent]['menuitem']['submenu'])) {
-                    $menuArray[$menuItem->parent]['menuitem']['submenu'] = [];
+                // Initialize the parent item if not set
+                if (!isset($menuArray[$menuItem->parent])) {
+                    $parentMenuItem = M_MasterMenu::find($menuItem->parent);
+                    if ($parentMenuItem) {
+                        $menuArray[$menuItem->parent] = [
+                            'menuid' => $parentMenuItem->id,
+                            'menuitem' => [
+                                'labelmenu' => $parentMenuItem->menu_name,
+                                'routename' => $parentMenuItem->route,
+                                'leading' => explode(',', $parentMenuItem->leading),
+                                'action' => $parentMenuItem->action,
+                                'ability' => $parentMenuItem->ability,
+                                'submenu' => []
+                            ]
+                        ];
+                    }
                 }
-    
-                if (!self::menuItemExists($menuArray[$menuItem->parent]['menuitem']['submenu'], $menuItem->id, $menuItem->menu_name)) {
+
+                // Add the current item as a submenu of its parent
+                if (!isset($menuArray[$menuItem->parent]['menuitem']['submenu'][$menuItem->id])) {
                     $menuArray[$menuItem->parent]['menuitem']['submenu'][$menuItem->id] = [
                         'subid' => $menuItem->id,
                         'sublabel' => $menuItem->menu_name,
@@ -142,14 +143,15 @@ class M_MasterMenu extends Model
                 }
             }
         }
-    
+
+        // Re-index submenu arrays for each menu item
         foreach ($menuArray as $key => $menu) {
             $menuArray[$key]['menuitem']['submenu'] = array_values($menu['menuitem']['submenu']);
         }
-    
+
         return array_values($menuArray);
     }
-    
+
     private static function buildSubMenu($parentId, $menuItems)
     {
         $submenuArray = [];
@@ -168,10 +170,28 @@ class M_MasterMenu extends Model
                 }
             }
         }
-    
+
+        // Check if the submenu array is empty and add necessary submenu items
+        if (empty($submenuArray)) {
+            $querySubMenu = M_MasterMenu::where('parent', $parentId)->get();
+            foreach ($querySubMenu as $submenuItem) {
+                if (!self::menuItemExists($submenuArray, $submenuItem->id, $submenuItem->menu_name)) {
+                    $submenuArray[] = [
+                        'subid' => $submenuItem->id,
+                        'sublabel' => $submenuItem->menu_name,
+                        'subroute' => $submenuItem->route,
+                        'leading' => explode(',', $submenuItem->leading),
+                        'action' => $submenuItem->action,
+                        'ability' => $submenuItem->ability,
+                        'submenu' => self::buildSubMenu($submenuItem->id, $menuItems)
+                    ];
+                }
+            }
+        }
+
         return $submenuArray;
     }
-    
+
     private static function menuItemExists($menuArray, $id, $label)
     {
         foreach ($menuArray as $menuItem) {
@@ -181,7 +201,5 @@ class M_MasterMenu extends Model
         }
         return false;
     }
-    
 
-    
 }
