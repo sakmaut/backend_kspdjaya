@@ -171,6 +171,20 @@ class CrAppilcationController extends Controller
         ];
 
         $check_survey_id->update($data_prospect);
+
+        $data_order =[
+            'mother_name' =>$request->order['nama_ibu']??null,
+            'category' =>$request->order['kategori']??null,
+            'title' =>$request->order['gelar']??null,
+            'work_period'  =>$request->order['lama_bekerja']??null,
+            'dependants'  =>$request->order['tanggungan']??null,
+            'income_personal'  =>$request->order['pendapatan_pribadi']??null,
+            'income_spouse'  =>$request->order['pendapatan_pasangan']??null,
+            'income_other'  =>$request->order['pendapatan_lainnya']??null,
+            'expenses'  =>$request->order['biaya_bulanan']??null
+        ];
+
+        $check_survey_id->update($data_order);
     }
 
     private function insert_cr_personal($request,$applicationId){
