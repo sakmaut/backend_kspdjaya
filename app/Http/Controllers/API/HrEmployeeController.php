@@ -81,10 +81,7 @@ class HrEmployeeController extends Controller
         $validation = $request->validate([
             'cabang_id' => 'required|string',
             'tgl_lahir' => 'date',
-            'tgl_keluar' => 'date',
-            'email' => 'email',
-            'kode_pos_ktp' => 'numeric',
-            'kode_pos' => 'numeric',
+            'email' => 'email'
         ]);
 
         return $validation;
