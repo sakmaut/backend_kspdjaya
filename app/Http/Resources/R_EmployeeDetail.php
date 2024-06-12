@@ -23,7 +23,7 @@ class R_EmployeeDetail extends JsonResource
            "nik" => $this->NIK,
            "nama" => $this->NAMA,
            "cabang_id" => $branch->ID,
-           "cabang_nama" =>$branch->NAME, 
+           "cabang_nama" => $branch->NAME, 
            'jabatan' => $this->JABATAN,
            "blood_type" => $this->BLOOD_TYPE,
            "gender" => $this->GENDER,
@@ -71,7 +71,7 @@ class R_EmployeeDetail extends JsonResource
            "spv_id" => $this->SPV,
            "status_mst" =>  $this->STATUS_MST,
            "photo_personal" => M_HrEmployeeDocument::attachment($this->ID,'personal'),
-           "dokumen" =>[M_HrEmployeeDocument::attachment($this->ID,'')]
+           "dokumen" =>[M_HrEmployeeDocument::attachment($this->ID,'file_kary')]
        ];
     }
 }
