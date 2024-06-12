@@ -68,9 +68,9 @@ class M_MasterMenu extends Model
     {
 
         $listMenu = self::queryMenu($menuItems);
-
         $menuArray = [];
         $homeParent = null;
+
         foreach ($listMenu as $menuItem) {
             if ($menuItem->menu_name == 'home' && $menuItem->parent === null) {
                 $homeParent = $menuItem;
@@ -94,10 +94,9 @@ class M_MasterMenu extends Model
 
         foreach ($listMenu as $menuItem) {
             if (!isset($menuArray[$menuItem->parent])) {
-        
                 if ($menuItem->parent!== null && $menuItem->parent!== 0) {
                     $parentMenuItem = M_MasterMenu::find($menuItem->parent);
-                    if ($parentMenuItem) {
+                    if ($parentMenuItem && !isset($menuArray[$parentMenuItem->id])) {
                         $menuArray[$parentMenuItem->id] = [
                             'menuid' => $parentMenuItem->id,
                             'menuitem' => [
@@ -125,15 +124,21 @@ class M_MasterMenu extends Model
                     ]
                 ];
             } else {
-                $menuArray[$menuItem->parent]['menuitem']['submenu'][] = [
-                    'subid' => $menuItem->id,
-                    'sublabel' => $menuItem->menu_name,
-                    'subroute' => $menuItem->route,
-                    'leading' => explode(',', $menuItem->leading),
-                    'action' => $menuItem->action,
-                    'ability' => $menuItem->ability
-                ];
+                if (!isset($menuArray[$menuItem->parent]['menuitem']['submenu'][$menuItem->id])) {
+                    $menuArray[$menuItem->parent]['menuitem']['submenu'][] = [
+                        'subid' => $menuItem->id,
+                        'sublabel' => $menuItem->menu_name,
+                        'subroute' => $menuItem->route,
+                        'leading' => explode(',', $menuItem->leading),
+                        'action' => $menuItem->action,
+                        'ability' => $menuItem->ability
+                    ];
+                }
             }
+        }
+
+        foreach ($menuArray as $key => $menu) {
+            $menuArray[$key]['menuitem']['submenu'] = array_values($menu['menuitem']['submenu']);
         }
 
         return array_values($menuArray);
