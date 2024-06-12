@@ -7,6 +7,7 @@ use App\Models\M_ApplicationApproval;
 use App\Models\M_CrApplication;
 use App\Models\M_CrApplicationBank;
 use App\Models\M_CrGuaranteVehicle;
+use App\Models\M_CrOrder;
 use App\Models\M_CrPersonal;
 use App\Models\M_CrPersonalExtra;
 use App\Models\M_CrProspect;
@@ -117,7 +118,7 @@ class CrAppilcationController extends Controller
             // $check_application_id->update($data_application); 
 
             self::insert_cr_personal($request,$id);
-            self::insert_cr_order($request,$check_application_id->CR_PROSPECT_ID);
+            self::insert_cr_order($request,$check_application_id->CR_PROSPECT_ID,$id);
             self::insert_cr_personal_extra($request,$id);
             self::insert_bank_account($request,$id);
             self::insert_application_approval($id,$request->flag_pengajuan);
@@ -151,7 +152,7 @@ class CrAppilcationController extends Controller
         M_CrApplication::create($data_cr_application);
     }
 
-    private function insert_cr_order($request,$id){
+    private function insert_cr_order($request,$id,$fpkId){
         $check_survey_id = M_CrProspect::where('id',$id)->first();
 
         if (!$check_survey_id) {
@@ -173,18 +174,22 @@ class CrAppilcationController extends Controller
         $check_survey_id->update($data_prospect);
 
         $data_order =[
-            'mother_name' =>$request->order['nama_ibu']??null,
-            'category' =>$request->order['kategori']??null,
-            'title' =>$request->order['gelar']??null,
-            'work_period'  =>$request->order['lama_bekerja']??null,
-            'dependants'  =>$request->order['tanggungan']??null,
-            'income_personal'  =>$request->order['pendapatan_pribadi']??null,
-            'income_spouse'  =>$request->order['pendapatan_pasangan']??null,
-            'income_other'  =>$request->order['pendapatan_lainnya']??null,
-            'expenses'  =>$request->order['biaya_bulanan']??null
+            'APPLICATION_ID' => $fpkId,
+            'ORDER_TANGGAL' => $request->order['order_tanggal']??null,
+            'ORDER_STATUS' => $request->order['order_status']??null,
+            'ORDER_TIPE' => $request->order['order_tipe']??null,
+            'UNIT_BISNIS' => $request->order['unit_bisnis']??null,
+            'CUST_SERVICE' => $request->order['cust_service']??null,
+            'REF_PELANGGAN' => $request->order['ref_pelanggan']??null,
+            'PROG_MARKETING' => $request->order['prog_marketing']??null,
+            'CARA_BAYAR' => $request->order['cara_bayar']??null,
+            'KODE_BARANG' => $request->barang_taksasi['kode_barang']??null,
+            'ID_TIPE' => $request->barang_taksasi['id_tipe']??null,
+            'TAHUN' => $request->barang_taksasi['tahun']??null,
+            'HARGA_PASAR' => $request->barang_taksasi['harga_pasar']??null
         ];
 
-        $check_survey_id->update($data_order);
+        M_CrOrder::create($data_order);
     }
 
     private function insert_cr_personal($request,$applicationId){
