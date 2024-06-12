@@ -20,10 +20,8 @@ class R_Employee extends JsonResource
             'employee_id' => $this->ID,
             "nik" => $this->NIK,
             "nama" => $this->NAMA,
-            "cabang" => [
-                'id' => $branch->ID,
-                'nama_cabang' => $branch->NAME
-            ],
+            "cabang_id" => $branch->ID,
+            "cabang_nama" =>$branch->NAME, 
             'jabatan' => $this->JABATAN,
             "blood_type" => $this->BLOOD_TYPE,
             "gender" => $this->GENDER,
