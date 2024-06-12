@@ -243,7 +243,7 @@ class HrEmployeeController extends Controller
 
             $data = [
                 'NAMA' => $request->nama,
-                'BRANCH_ID' => $request->branch_id,
+                'BRANCH_ID' => $request->cabang_id,
                 'JABATAN' => $request->jabatan,
                 'BLOOD_TYPE' => $request->blood_type,
                 'GENDER' => $request->gender,
