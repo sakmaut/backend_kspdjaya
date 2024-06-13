@@ -71,7 +71,7 @@ class HrEmployeeController extends Controller
             $branch = M_Branch::find($result->BRANCH_ID);
             $user = $result->user;
     
-            $employeeDTOs[] = [
+            $employeeDTO = [
                 'id' => $result->ID,
                 'username' => $user ? $user->username : null,
                 'nama' => $result->NAMA,
@@ -83,6 +83,8 @@ class HrEmployeeController extends Controller
                 'status' => $result->STATUS_MST,
                 'photo_personal' => M_HrEmployeeDocument::attachment($result->ID, 'personal'),
             ];
+        
+            $employeeDTOs = array_merge($employeeDTOs, $employeeDTO);
         }
     
         return $employeeDTOs;
@@ -227,15 +229,24 @@ class HrEmployeeController extends Controller
             }
 
             $data_user = [
-                'username' => $request->username,
-                'password' => bcrypt($request->password),
-                'status' => 'active',
                 'updated_by' => $request->user()->id,
                 'updated_at' => $this->current_time
             ];
+            
+            if (isset($request->username)) {
+                $data_user['username'] = $request->username;
+            }
 
+            if (isset($request->password)) {
+                $data_user['password'] = bcrypt($request->password);
+            }
+
+            if (isset($request->status)) {
+                $data_user['status'] = $request->status;
+            }
+    
             $user->update($data_user);
-
+    
             DB::commit();
             ActivityLogger::logActivity($request, "Success", 200);
             return response()->json(['message' => 'Updated successfully', "status" => $check->JABATAN], 200);

@@ -33,7 +33,9 @@ class M_HrEmployeeDocument extends Model
     }
 
     static function attachment($employeeId,$type){
-        $query = self::where(['EMPLOYEE_ID' => $employeeId,'TYPE' => $type])->get();
+        $query = self::where(['EMPLOYEE_ID' => $employeeId,'TYPE' => $type])
+                    ->orderBy('CREATED_AT', 'desc')
+                    ->first();
 
         return $query;
     }
