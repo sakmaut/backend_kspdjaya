@@ -2,6 +2,7 @@
 namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Models\M_HrEmployee;
+use App\Models\M_MasterUserAccessMenu;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -47,6 +48,13 @@ class AuthController extends Controller
 
             if (!$employee || strtolower($employee->STATUS_MST) !== 'active') {
                 $this->logLoginActivity($request, 'Hr Employee status is not active', 401);
+                return response()->json(['message' => 'Invalid Credential', 'status' => 401], 401);
+            }
+
+            $menu = M_MasterUserAccessMenu::where(['users_id'=>$user->id])->get();
+
+            if (empty($menu) || $$menu === null) {
+                $this->logLoginActivity($request, 'Menu Not Found', 401);
                 return response()->json(['message' => 'Invalid Credential', 'status' => 401], 401);
             }
 
