@@ -52,9 +52,7 @@ class HrEmployeeController extends Controller
     {
         try {
             $data = M_HrEmployee::with('user')->where('ID',$id)->get();
-            $dto = $data->map(function ($employee) {
-                return new R_Karyawan($employee);
-            });
+            $dto =  self::resourceDetail($data);
 
             if ($data->isEmpty()) {
                 ActivityLogger::logActivity($req,'Data Not Found',404);
@@ -67,6 +65,32 @@ class HrEmployeeController extends Controller
             ActivityLogger::logActivity($req,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
         }
+    }
+
+    private function resourceDetail($data){
+
+        $employeeDTOs= [];
+        foreach ($data as $result) {
+            $branch = M_Branch::find($result->BRANCH_ID);
+            $user = $result->user;
+    
+            $employeeDTO = [
+                'id' => $result->ID,
+                'username' => $user ? $user->username : null,
+                'nama' => $result->NAMA,
+                'cabang_id' => $branch->ID ?? null,
+                'cabang_nama' => $branch->NAME ?? null,
+                'jabatan' => $result->JABATAN,
+                'gender' => $result->GENDER,
+                'no_hp' => $result->HP,
+                'status' => $result->STATUS_MST,
+                'photo_personal' => M_HrEmployeeDocument::attachment($result->ID, 'personal'),
+            ];
+        
+            $employeeDTOs = array_merge($employeeDTOs, $employeeDTO);
+        }
+    
+        return $employeeDTOs;
     }
 
     private function _validation($request){
