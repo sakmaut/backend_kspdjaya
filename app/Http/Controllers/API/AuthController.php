@@ -51,7 +51,7 @@ class AuthController extends Controller
                 return response()->json(['message' => 'Invalid Credential', 'status' => 401], 401);
             }
 
-            $menu = M_MasterUserAccessMenu::where('users_id', $user->id)->first();
+            $menu = M_MasterUserAccessMenu::where(['users_id'=>$user->id])->first();
 
             if (!$menu) {
                 $this->logLoginActivity($request, 'Menu Not Found', 401);
