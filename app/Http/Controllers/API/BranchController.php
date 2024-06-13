@@ -51,11 +51,23 @@ class BranchController extends Controller
         try {
 
             $request->validate([
-                'CODE' => 'required|string|unique:branch',
-                'NAME' => 'required|string|unique:branch',
+                'CODE' => 'required|string',
+                'NAME' => 'required|string',
                 'ADDRESS' => 'required|string',
                 'ZIP_CODE' => 'numeric'
             ]);
+
+            $checkCode = M_Branch::where('CODE',$request->CODE)->first();
+            if ($checkCode) {
+                $this->logActivity($request, 'Kode Cabang Sudah Ada', 409);
+                return response()->json(['message' => 'Kode Cabang Sudah Ada', 'status' => 409], 409);
+            }
+
+            $checkName = M_Branch::where('NAME',$request->NAME)->first();
+            if ($checkName) {
+                $this->logActivity($request, 'Nama Cabang Sudah Ada', 409);
+                return response()->json(['message' => 'Nama Cabang Sudah Ada', 'status' => 409], 409);
+            }
 
             $request['CREATE_DATE'] = Carbon::now()->format('Y-m-d');
             $request['CREATE_USER'] = $request->user()->id;
@@ -76,6 +88,11 @@ class BranchController extends Controller
             ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
         }
+    }
+
+    private function logActivity(Request $request, string $message, int $statusCode)
+    {
+        ActivityLogger::logActivity($request,$message,$statusCode);
     }
 
     public function update(Request $request,$id)
