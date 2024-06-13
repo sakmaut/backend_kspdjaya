@@ -53,8 +53,7 @@ class BranchController extends Controller
             $request->validate([
                 'CODE' => 'required|string',
                 'NAME' => 'required|string',
-                'ADDRESS' => 'required|string',
-                'ZIP_CODE' => 'numeric'
+                'ADDRESS' => 'required|string'
             ]);
 
             $checkCode = M_Branch::where('CODE',$request->CODE)->first();
