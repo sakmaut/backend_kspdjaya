@@ -231,7 +231,7 @@ class HrEmployeeController extends Controller
                 'password' => bcrypt($request->password),
                 'status' => 'active',
                 'updated_by' => $request->user()->id,
-                'updated_at' => Carbon::now()
+                'updated_at' => $this->current_time
             ];
 
             $user->update($data_user);
