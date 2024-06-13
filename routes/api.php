@@ -14,7 +14,7 @@ use App\Http\Controllers\API\{
     UserAccessMenuController,
     UsersController
 };
-
+use App\Http\Controllers\TokenValid;
 use App\Http\Controllers\Welcome;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
