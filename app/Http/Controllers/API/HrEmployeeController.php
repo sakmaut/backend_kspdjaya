@@ -95,7 +95,7 @@ class HrEmployeeController extends Controller
 
     private function _validation($request){
         $validation = $request->validate([
-            'cabang' => 'required|string'
+            'cabang_id' => 'required|string'
         ]);
 
         return $validation;
@@ -117,7 +117,7 @@ class HrEmployeeController extends Controller
             $data =[
                 'ID' => Uuid::uuid7()->toString(),
                 'NAMA' => $request->nama,
-                'BRANCH_ID' => $request->cabang,
+                'BRANCH_ID' => $request->cabang_id,
                 'JABATAN' => $request->jabatan,
                 'GENDER' => $request->gender,
                 'HP' => $request->no_hp,
@@ -199,7 +199,7 @@ class HrEmployeeController extends Controller
 
             $data = [
                 'NAMA' => $request->nama,
-                'BRANCH_ID' => $request->cabang,
+                'BRANCH_ID' => $request->cabang_id,
                 'JABATAN' => $request->jabatan,
                 'GENDER' => $request->gender,
                 'HP' => $request->no_hp,
