@@ -34,8 +34,8 @@ class HrEmployeeController extends Controller
     public function index(Request $request)
     {
         try {
-            $data =  M_HrEmployee::all();
-            $dto = R_Employee::collection($data);
+            $data = M_HrEmployee::with('user')->get();
+            $dto = self::resourceDetail($data);
 
             ActivityLogger::logActivity($request,"Success",200);
             return response()->json(['message' => 'OK',"status" => 200,'response' => $dto], 200);
@@ -48,18 +48,44 @@ class HrEmployeeController extends Controller
     public function show(Request $req,$id)
     {
         try {
-            $check = M_HrEmployee::where('ID',$id)->firstOrFail();
-            $dto =  new R_EmployeeDetail($check);
+            $data = M_HrEmployee::with('user')->where('ID',$id)->get();
+            $dto =  self::resourceDetail($data);
+
+            if ($data->isEmpty()) {
+                ActivityLogger::logActivity($req,'Data Not Found',404);
+                throw new Exception("Data Not Found",404);
+            }
 
             ActivityLogger::logActivity($req,"Success",200);
             return response()->json(['message' => 'OK',"status" => 200,'response' => $dto], 200);
-        } catch (ModelNotFoundException $e) {
-            ActivityLogger::logActivity($req,'Data Not Found',404);
-            return response()->json(['message' => 'Data Not Found',"status" => 404], 404);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($req,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
         }
+    }
+
+    private function resourceDetail($data){
+
+        $employeeDTOs= [];
+        foreach ($data as $result) {
+            $branch = M_Branch::find($result->BRANCH_ID);
+            $user = $result->user;
+    
+            $employeeDTOs[] = [
+                'id' => $result->ID,
+                'username' => $user ? $user->username : null,
+                'nama' => $result->NAMA,
+                'cabang_id' => $branch->ID ?? null,
+                'cabang_nama' => $branch->NAME ?? null,
+                'jabatan' => $result->JABATAN,
+                'gender' => $result->GENDER,
+                'no_hp' => $result->HP,
+                'status' => $result->STATUS_MST,
+                'photo_personal' => M_HrEmployeeDocument::attachment($result->ID, 'personal'),
+            ];
+        }
+    
+        return $employeeDTOs;
     }
 
     private function nikCounter()
@@ -79,9 +105,7 @@ class HrEmployeeController extends Controller
 
     private function _validation($request){
         $validation = $request->validate([
-            'cabang_id' => 'required|string',
-            'tgl_lahir' => 'date',
-            'email' => 'email'
+            'cabang' => 'required|string'
         ]);
 
         return $validation;
@@ -94,75 +118,20 @@ class HrEmployeeController extends Controller
 
             self::_validation($request);
 
-            $generate_nik =  self::nikCounter();
-
-            if(!empty($request->spv_id)){
-                $check_spv = M_HrEmployee::where('ID',$request->spv_id)->first();
-
-                if (!$check_spv) {
-                    throw new Exception("Id SPV Not Found",404);
-                }
-            }
-
-            $check_branch = M_Branch::where('ID',$request->branch_id)->first();
+            $check_branch = M_Branch::where('ID',$request->cabang)->first();
 
             if (!$check_branch) {
                 throw new Exception("Id Branch Not Found",404);
             }
 
             $data =[
-                'ID' => $request->employee_id,
-                'NIK' => !empty($request->nik)?$request->nik: $generate_nik,
+                'ID' => Uuid::uuid7()->toString(),
                 'NAMA' => $request->nama,
-                'AO_CODE' => "",
-                'BRANCH_ID' => $request->cabang_id,
+                'BRANCH_ID' => $request->cabang,
                 'JABATAN' => $request->jabatan,
-                'BLOOD_TYPE' => $request->blood_type,
                 'GENDER' => $request->gender,
-                'PENDIDIKAN' => $request->pendidikan,
-                'UNIVERSITAS' => $request->universitas,
-                'JURUSAN' => $request->jurusan,
-                'IPK' => $request->ipk,
-                'IBU_KANDUNG' => $request->ibu_kandung,
-                'STATUS_KARYAWAN' => $request->status_karyawan,
-                'NAMA_PASANGAN' => $request->nama_pasangan,
-                'TANGGUNGAN' => $request->tanggungan,
-                'NO_KTP' => $request->no_ktp,
-                'NAMA_KTP' => $request->nama_ktp,
-                'ADDRESS_KTP' => $request->alamat_ktp,
-                'RT_KTP' => $request->rt_ktp,
-                'RW_KTP' => $request->rw_ktp,
-                'PROVINCE_KTP' => $request->provinsi_ktp,
-                'CITY_KTP' => $request->kota_ktp,
-                'KELURAHAN_KTP' => $request->kelurahan_ktp,
-                'KECAMATAN_KTP' => $request->kecamatan_ktp,
-                'ZIP_CODE_KTP' => $request->kode_pos_ktp,
-                'ADDRESS' => $request->alamat_tinggal,
-                'RT' => $request->rt,
-                'RW' => $request->rw,
-                'PROVINCE' => $request->provinsi,
-                'CITY' => $request->kota,
-                'KELURAHAN' => $request->kelurahan,
-                'KECAMATAN' => $request->kecamatan,
-                'ZIP_CODE' => $request->kode_pos,
-                'TGL_LAHIR' => $request->tgl_lahir,
-                'TEMPAT_LAHIR' => $request->tempat_lahir,
-                'AGAMA' => $request->agama,
-                'TELP' => $request->telp,
-                'HP' => $request->hp,
-                'NO_REK_CF' => $request->no_rek_cf,
-                'NO_REK_TF' => $request->no_rek_tf,
-                'EMAIL' => $request->email,
-                'NPWP' => $request->npwp,
-                'SUMBER_LOKER' => $request->sumber_loker,
-                'KET_LOKER' => $request->ket_loker,
-                'INTERVIEW' => $request->interview,
-                'TGL_KELUAR' => $request->tgl_keluar,
-                'ALASAN_KELUAR' => $request->alasan_keluar,
-                'CUTI' => "",
-                'PHOTO_LOC' => "",
-                'SPV' => $request->spv_id,
-                'STATUS_MST' => $request->status_mst,
+                'HP' => $request->no_hp,
+                'STATUS_MST' => $request->status,
                 'CREATED_AT' => $this->current_time,
                 'CREATED_BY' =>  $request->user()->id
             ];
@@ -170,11 +139,11 @@ class HrEmployeeController extends Controller
             $idEmployee = M_HrEmployee::create($data);
 
             $data_array = [
-                'username' => $generate_nik,
+                'username' => $request->username,
                 'employee_id' => $idEmployee->ID,
-                'email' => $generate_nik.'@gmail.com',
-                'password' => bcrypt($generate_nik),
-                'status' => 'Active',
+                'email' => $request->username.'@gmail.com',
+                'password' => bcrypt($request->password),
+                'status' => 'active',
                 'created_by' => $request->user()->id
             ];
 
@@ -240,63 +209,36 @@ class HrEmployeeController extends Controller
 
             $data = [
                 'NAMA' => $request->nama,
-                'BRANCH_ID' => $request->cabang_id,
+                'BRANCH_ID' => $request->cabang,
                 'JABATAN' => $request->jabatan,
-                'BLOOD_TYPE' => $request->blood_type,
                 'GENDER' => $request->gender,
-                'PENDIDIKAN' => $request->pendidikan,
-                'UNIVERSITAS' => $request->universitas,
-                'JURUSAN' => $request->jurusan,
-                'IPK' => $request->ipk,
-                'IBU_KANDUNG' => $request->ibu_kandung,
-                'STATUS_KARYAWAN' => $request->status_karyawan,
-                'NAMA_PASANGAN' => $request->nama_pasangan,
-                'TANGGUNGAN' => $request->tanggungan,
-                'NO_KTP' => $request->no_ktp,
-                'NAMA_KTP' => $request->nama_ktp,
-                'ADDRESS_KTP' => $request->alamat_ktp,
-                'RT_KTP' => $request->rt_ktp,
-                'RW_KTP' => $request->rw_ktp,
-                'PROVINCE_KTP' => $request->provinsi_ktp,
-                'CITY_KTP' => $request->kota_ktp,
-                'KELURAHAN_KTP' => $request->kelurahan_ktp,
-                'KECAMATAN_KTP' => $request->kecamatan_ktp,
-                'ZIP_CODE_KTP' => $request->kode_pos_ktp,
-                'ADDRESS' => $request->alamat_tinggal,
-                'RT' => $request->rt,
-                'RW' => $request->rw,
-                'PROVINCE' => $request->provinsi,
-                'CITY' => $request->kota,
-                'KELURAHAN' => $request->kelurahan,
-                'KECAMATAN' => $request->kecamatan,
-                'ZIP_CODE' => $request->kode_pos,
-                'TGL_LAHIR' => $request->tgl_lahir,
-                'TEMPAT_LAHIR' => $request->tempat_lahir,
-                'AGAMA' => $request->agama,
-                'TELP' => $request->telp,
-                'HP' => $request->hp,
-                'NO_REK_CF' => $request->no_rek_cf,
-                'NO_REK_TF' => $request->no_rek_tf,
-                'EMAIL' => $request->email,
-                'NPWP' => $request->npwp,
-                'SUMBER_LOKER' => $request->sumber_loker,
-                'KET_LOKER' => $request->ket_loker,
-                'INTERVIEW' => $request->interview,
-                'TGL_KELUAR' => $request->tgl_keluar,
-                'ALASAN_KELUAR' => $request->alasan_keluar,
-                'CUTI' => "",
-                'PHOTO_LOC' => "",
-                'SPV' => $request->spv_id,
-                'STATUS_MST' => $request->status_mst,
+                'HP' => $request->no_hp,
+                'STATUS_MST' => $request->status,
                 'UPDATED_AT' => $this->current_time,
                 'UPDATED_BY' =>  $request->user()->id
             ];
 
             $check->update($data);
 
+            $user = User::where('employee_id',$id)->first();
+
+            if (!$user) {
+                throw new Exception("User Id Not Found",404);
+            }
+
+            $data_user = [
+                'username' => $request->username,
+                'password' => bcrypt($request->password),
+                'status' => 'active',
+                'updated_by' => $request->user()->id,
+                'updated_at' => Carbon::now()
+            ];
+
+            $user->update($data_user);
+
             DB::commit();
             ActivityLogger::logActivity($request, "Success", 200);
-            return response()->json(['message' => 'Karyawan updated successfully', "status" => $check->JABATAN], 200);
+            return response()->json(['message' => 'Updated successfully', "status" => $check->JABATAN], 200);
         } catch (ModelNotFoundException $e) {
             DB::rollback();
             ActivityLogger::logActivity($request, 'Data Not Found', 404);
