@@ -56,9 +56,9 @@ class BranchController extends Controller
                 'NAME' => 'required|string',
                 'ADDRESS' => 'required|string'
             ],[
-                'CODE.required' => 'The CODE field is required.',
-                'NAME.required' => 'The NAME field is required.',
-                'ADDRESS.required' => 'The ADDRESS field is required.'
+                'CODE.required' => 'Kode Wajib Diisi',
+                'NAME.required' => 'Nama Wajib Diisi',
+                'ADDRESS.required' => 'Alamat Wajib Diisi'
             ]);
             
             $checkCode = M_Branch::where('CODE',$request->CODE)->first();
