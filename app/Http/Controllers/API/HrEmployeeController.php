@@ -217,20 +217,14 @@ class HrEmployeeController extends Controller
             }
 
             $data_user = [
+                'username' => $request->username,
+                'status' => $request->status,
                 'updated_by' => $request->user()->id,
                 'updated_at' => $this->current_time
             ];
             
-            if (isset($request->username)) {
-                $data_user['username'] = $request->username;
-            }
-
-            if (isset($request->password)) {
+            if (isset($request->password) && !empty($request->password)) {
                 $data_user['password'] = bcrypt($request->password);
-            }
-
-            if (isset($request->status)) {
-                $data_user['status'] = $request->status;
             }
     
             $user->update($data_user);
