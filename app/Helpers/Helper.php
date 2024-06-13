@@ -21,3 +21,18 @@ if (!function_exists('createAutoCode')) {
 		return $generateCode;
     }
 }
+
+// private function nikCounter()
+//     {
+//         $checkMax = M_HrEmployee::max('NIK');
+
+//         $currentDate = Carbon::now();
+//         $year = substr($currentDate->format('Y'), -2);
+//         $month = $currentDate->format('m');
+//         $lastSequence = (int) substr($checkMax, 4, 3);
+//         $lastSequence++;
+
+//         $generateCode = $year . $month . sprintf("%03s", $lastSequence);
+
+//         return $generateCode;
+//     }
