@@ -18,11 +18,11 @@ class Welcome extends Controller
      */
     public function index(Request $request)
     {
-        $source = $_FILES["image"]['tmp_name'];
-        $destination = '../public/storage/Cr_Prospect/' . $_FILES["image"]["name"];
-        $push = self::compress($source,$destination,2);
+        // $source = $_FILES["image"]['tmp_name'];
+        // $destination = '../public/storage/Cr_Prospect/' . $_FILES["image"]["name"];
+        // $push = self::compress($source,$destination,2);
 
-        return response()->json(['message' => 'OK',"status" => 200,'response' => $push], 200);
+        return response()->json(['message' => 'OK',"status" => 200,'response' => ''], 200);
     }
 
     function compress($source, $destination, $quality) {

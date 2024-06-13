@@ -115,8 +115,7 @@ class CrAppilcationController extends Controller
                 throw new Exception("Id FPK Is Not Exist", 404);
             }
 
-            // $check_application_id->update($data_application); 
-
+            self::insert_cr_application($request,$check_application_id);
             self::insert_cr_personal($request,$id);
             self::insert_cr_order($request,$check_application_id->CR_PROSPECT_ID,$id);
             self::insert_cr_personal_extra($request,$id);
@@ -131,25 +130,41 @@ class CrAppilcationController extends Controller
     }
 
     private function insert_cr_application($request,$uuid){
+
         $data_cr_application =[
-            'ID' => $uuid,
-            'BRANCH' => M_HrEmployee::findEmployee($request->user()->employee_id)->BRANCH_ID,
             'FORM_NUMBER' => '',
-            'ORDER_NUMBER' => '',
             'CUST_CODE' => '',
             'ENTRY_DATE' => Carbon::now()->format('Y-m-d'),
-            'SUBMISSION_VALUE' => 0.00,
-            'CREDIT_TYPE' => '',
-            'INSTALLMENT_COUNT' => 0.00,
-            'PERIOD' => 0,
-            'INSTALLMENT' => 0.00,
-            'RATE' => 0.00,
+            'SUBMISSION_VALUE' => $request->ekstra['nilai_yang_diterima']??null,
+            'CREDIT_TYPE' => $request->ekstra['tipe_angsuran']??null,
+            'INSTALLMENT_COUNT' =>null,
+            'PERIOD' => $request->ekstra['periode']??null,
+            'INSTALLMENT' => $request->ekstra['angsuran']??null,
+            'OPT_PERIODE' =>$request->ekstra['opt_periode']??null,
+            'FLAT_RATE' => $request->ekstra['bunga_margin_flat']??null,
+            'EFF_RATE' => $request->ekstra['bunga_margin_eff']??null,
+            'PAYMENT_WAY'=> $request->ekstra['cara_pembayaran']??null,
+            'PROVISION'=> $request->ekstra['provisi']??null,
+            'INSURANCE'=> $request->ekstra['asuransi']??null,
+            'TRANSFER_FEE'=> $request->ekstra['biaya_transfer']??null,
+            'INTEREST_MARGIN'=> $request->ekstra['bunga_margin']??null,
+            'PRINCIPAL_MARGIN'=> $request->ekstra['pokok_margin']??null,
+            'LAST_INSTALLMENT'=> $request->ekstra['angsuran_terakhir']??null,
+            'INTEREST_MARGIN_EFF_ACTUAL'=> $request->ekstra['bunga_margin_eff_actual']??null,
+            'INTEREST_MARGIN_EFF_FLAT'=> $request->ekstra['bunga_margin_eff_flat']??null,
             'VERSION' => 1,
             'CREATE_DATE' => Carbon::now()->format('Y-m-d'),
             'CREATE_USER' => $request->user()->id,
         ];
 
-        M_CrApplication::create($data_cr_application);
+        if(!$uuid){
+            $data_cr_application['ID'] = Uuid::uuid7()->toString();
+            $data_cr_application['BRANCH'] = M_HrEmployee::findEmployee($request->user()->employee_id)->BRANCH_ID;
+            $data_cr_application['ORDER_NUMBER'] = createAutoCode(M_CrApplication::class,'ORDER_NUMBER','FPK');
+            M_CrApplication::create($data_cr_application);
+        }else{
+            $uuid->update($data_cr_application);
+        } 
     }
 
     private function insert_cr_order($request,$id,$fpkId){
