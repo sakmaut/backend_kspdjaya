@@ -52,9 +52,7 @@ class HrEmployeeController extends Controller
     {
         try {
             $data = M_HrEmployee::with('user')->where('ID',$id)->get();
-            $dto = $data->map(function ($employee) {
-                return new R_Karyawan($employee);
-            });
+            $dto =  self::resourceDetail($data);
 
             if ($data->isEmpty()) {
                 ActivityLogger::logActivity($req,'Data Not Found',404);
