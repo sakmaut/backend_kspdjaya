@@ -23,7 +23,7 @@ class DetailProfileController extends Controller
 
             $getEmployeID = $request->user()->employee_id;
 
-            $employee = M_HrEmployee::findEmployee($getEmployeID);
+            $employee = M_HrEmployee::where('ID', $getEmployeID)->first();
 
             if (!$employee || strtolower($employee->STATUS_MST) !== 'active') {
                 $user->tokens()->delete();
