@@ -54,8 +54,17 @@ class BranchController extends Controller
                 'CODE' => 'required|string',
                 'NAME' => 'required|string',
                 'ADDRESS' => 'required|string'
+            ],
+            [
+                'CODE.required' => 'The CODE field is required.',
+                'NAME.required' => 'The NAME field is required.',
+                'ADDRESS.required' => 'The ADDRESS field is required.'
             ]);
 
+            if ($validator->fails()) {
+                return response()->json(['message' => $validator->errors()], 422);
+            }
+            
             $checkCode = M_Branch::where('CODE',$request->CODE)->first();
             if ($checkCode) {
                 $this->logActivity($request, 'Kode Cabang Sudah Ada', 409);
