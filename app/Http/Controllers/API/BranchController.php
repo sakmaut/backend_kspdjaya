@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class BranchController extends Controller
 {
@@ -49,8 +50,7 @@ class BranchController extends Controller
     {
         DB::beginTransaction();
         try {
-
-            $request->validate([
+            $validator = Validator::make($request->all(), [
                 'CODE' => 'required|string',
                 'NAME' => 'required|string',
                 'ADDRESS' => 'required|string'
