@@ -413,7 +413,8 @@ class CrAppilcationController extends Controller
         $cr_personal = M_CrPersonal::where('APPLICATION_ID',$application->ID)->first();
         $cr_personal_extra = M_CrPersonalExtra::where('APPLICATION_ID',$application->ID)->first();
         $cr_application_bank = M_CrApplicationBank::where('APPLICATION_ID',$application->ID)->first();
-        
+        $cr_oder = M_CrOrder::where('APPLICATION_ID',$application->ID)->first();
+
         $arrayList = [
             'id_application' => $application->ID,
             'pelanggan' =>[
@@ -451,6 +452,12 @@ class CrAppilcationController extends Controller
                 "kelurahan" => $cr_personal->INS_KELURAHAN??null,
                 "kecamatan" => $cr_personal->INS_KECAMATAN??null,
                 "kode_pos" => $cr_personal->INS_ZIP_CODE??null
+            ],
+            "barang_taksasi"=>[
+                "kode_barang"=>$cr_oder->KODE_BARANG,
+                "id_tipe"=>$cr_oder->ID_TIPE,
+                "tahun"=>$cr_oder->TAHUN,
+                "harga_pasar"=>$cr_oder->HARGA_BARANG
             ],
             'pekerjaan' =>[
                 "pekerjaan" => $cr_personal->OCCUPATION??null,
