@@ -118,6 +118,7 @@ class BranchController extends Controller
             $data = array_change_key_case($request->all(), CASE_UPPER);
 
             $users->update($data);
+            // compareData(M_Branch::class,$id,$request);
 
             DB::commit();
             ActivityLogger::logActivity($request,"Success",200);
