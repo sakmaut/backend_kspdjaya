@@ -571,7 +571,7 @@ class CrAppilcationController extends Controller
                     "kode_bank" => $list['BANK_CODE'] ?? null,
                     "nama_bank" => $list['BANK_NAME'] ?? null,
                     "no_rekening" => $list['ACCOUNT_NUMBER'] ?? null,
-                    "nama_di_rekening" => $list['ACCOUNT_NAME'] ?? null,
+                    "atas_nama" => $list['ACCOUNT_NAME'] ?? null,
                     "status" => $list['STATUS'] ?? null
                 ];    
             }
