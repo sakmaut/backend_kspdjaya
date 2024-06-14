@@ -419,7 +419,6 @@ class CrAppilcationController extends Controller
         $attachment_data = M_CrProspectDocument::where('CR_PROSPECT_ID',$prospect_id )->get();
         $cr_personal = M_CrPersonal::where('APPLICATION_ID',$application->ID)->first();
         $cr_personal_extra = M_CrPersonalExtra::where('APPLICATION_ID',$application->ID)->first();
-        $cr_application_bank = M_CrApplicationBank::where('APPLICATION_ID',$application->ID)->first();
         $cr_oder = M_CrOrder::where('APPLICATION_ID',$application->ID)->first();
 
         $arrayList = [
@@ -562,17 +561,18 @@ class CrAppilcationController extends Controller
             "attachment" =>$attachment_data
         ];
         
-        if(!empty($cr_application_bank) && is_array($cr_application_bank)){
-            foreach ($cr_application_bank as $list) {
-                $arrayList['info_bank'][] = [
-                    "kode_bank" => $list['BANK_CODE'] ?? null,
-                    "nama_bank" => $list['BANK_NAME'] ?? null,
-                    "no_rekening" => $list['ACCOUNT_NUMBER'] ?? null,
-                    "atas_nama" => $list['ACCOUNT_NAME'] ?? null,
-                    "status" => $list['STATUS'] ?? null
-                ];    
-            }
-        }
+        $arrayList['info_bank'] = M_CrApplicationBank::where('APPLICATION_ID', $application->ID)
+                                ->get()
+                                ->map(function ($list) {
+                                    return [
+                                        "kode_bank" => $list->BANK_CODE,
+                                        "nama_bank" => $list->BANK_NAME,
+                                        "no_rekening" => $list->ACCOUNT_NUMBER,
+                                        "atas_nama" => $list->ACCOUNT_NAME,
+                                        "status" => $list->STATUS
+                                    ];
+                                })
+                                ->all();
 
         foreach ($guarente_vehicle as $list) {
             $arrayList['jaminan_kendaraan'][] = [
