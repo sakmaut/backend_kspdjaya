@@ -457,7 +457,7 @@ class CrAppilcationController extends Controller
                 "kode_barang"=>$cr_oder->KODE_BARANG,
                 "id_tipe"=>$cr_oder->ID_TIPE,
                 "tahun"=>$cr_oder->TAHUN,
-                "harga_pasar"=>$cr_oder->HARGA_BARANG
+                "harga_pasar"=>$cr_oder->HARGA_PASAR
             ],
             'pekerjaan' =>[
                 "pekerjaan" => $cr_personal->OCCUPATION??null,
