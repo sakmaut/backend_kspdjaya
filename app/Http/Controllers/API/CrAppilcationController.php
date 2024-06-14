@@ -122,7 +122,7 @@ class CrAppilcationController extends Controller
             self::insert_bank_account($request,$id);
             self::insert_application_approval($id,$request->flag_pengajuan);
 
-            return response()->json(['message' => 'Updated Successfully',"status" => 200], 200);
+            return response()->json(['message' => 'Updated Successfully',"status" => self::insert_bank_account($request,$id)], 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
@@ -342,7 +342,6 @@ class CrAppilcationController extends Controller
                     'BANK_NAME' => $result['nama_bank']??null,
                     'ACCOUNT_NUMBER' => $result['no_rekening']??null,
                     'ACCOUNT_NAME' => $result['atas_nama']??null,
-                    'PREFERENCE_FLAG' => '',
                     'STATUS' => $result['status']??null   
                 ];
 
