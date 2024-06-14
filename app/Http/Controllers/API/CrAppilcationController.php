@@ -191,6 +191,8 @@ class CrAppilcationController extends Controller
         $check = M_CrOrder::where('APPLICATION_ID',$fpkId)->first();
 
         $data_order =[
+            'NO_NPWP' => $request->order['no_npwp']??null,
+            'BIAYA' => $request->order['biaya_bulanan']??null,
             'ORDER_TANGGAL' => $request->order['order_tanggal']??null,
             'ORDER_STATUS' => $request->order['order_status']??null,
             'ORDER_TIPE' => $request->order['order_tipe']??null,
@@ -486,10 +488,11 @@ class CrAppilcationController extends Controller
                 "gelar" => $data->title??null, 
                 "lama_bekerja" => $data->mother_name??null, 
                 "tanggungan" => $data->dependants??null, 
-                "biaya_bulanan" => $data->expense??null, 
+                "biaya_bulanan" => $cr_oder->BIAYA??null, 
                 "pendapatan_pribadi" => $data->income_personal??null,
                 "pendapatan_pasangan" => $data->income_spouse??null,
                 "pendapatan_lainnya" => $data->income_other??null,
+                "no_npwp" => $cr_oder->NO_NPWP??null,
                 "order_tanggal" => null,
                 "order_status" => null,
                 "order_tipe" => null,

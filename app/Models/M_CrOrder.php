@@ -13,6 +13,8 @@ class M_CrOrder extends Model
     protected $fillable = [
         'ID',
         'APPLICATION_ID',
+        'NO_NPWP',
+        'BIAYA',
         'ORDER_TANGGAL',
         'ORDER_STATUS',
         'ORDER_TIPE',
