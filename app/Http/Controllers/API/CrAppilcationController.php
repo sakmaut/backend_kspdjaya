@@ -338,12 +338,12 @@ class CrAppilcationController extends Controller
                 $data_cr_application_bank =[  
                     'ID' => Uuid::uuid4()->toString(),
                     'APPLICATION_ID' => $applicationId,
-                    'BANK_CODE' => $result['kode_bank'],
-                    'BANK_NAME' => $result['nama_bank'],
-                    'ACCOUNT_NUMBER' => $result['no_rekening'],
-                    'ACCOUNT_NAME' => $result['atas_nama'],
+                    'BANK_CODE' => $result['kode_bank']??null,
+                    'BANK_NAME' => $result['nama_bank']??null,
+                    'ACCOUNT_NUMBER' => $result['no_rekening']??null,
+                    'ACCOUNT_NAME' => $result['atas_nama']??null,
                     'PREFERENCE_FLAG' => '',
-                    'STATUS' => $result['status']   
+                    'STATUS' => $result['status']??null   
                 ];
 
                 M_CrApplicationBank::create($data_cr_application_bank);
