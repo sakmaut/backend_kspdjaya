@@ -420,6 +420,7 @@ class CrAppilcationController extends Controller
         $cr_personal = M_CrPersonal::where('APPLICATION_ID',$application->ID)->first();
         $cr_personal_extra = M_CrPersonalExtra::where('APPLICATION_ID',$application->ID)->first();
         $cr_oder = M_CrOrder::where('APPLICATION_ID',$application->ID)->first();
+        $applicationDetail = M_CrApplication::where('ID',$application->ID)->first();
 
         $arrayList = [
             'id_application' => $application->ID,
@@ -536,21 +537,22 @@ class CrAppilcationController extends Controller
             "ekstra" =>[
                 "nilai_yang_diterima" => $data->plafond,
                 "periode" => $data->tenor,
-                // "pokok_pembayaran"=> "",
-                // "tipe_angsuran"=> "",
-                // "cara_pembayaran"=> "",
-                // "angsuran"=> "",
-                // "provisi"=> "",
-                // "asuransi"=> "",
-                // "biaya_transfer"=> "",
-                // "bunga_margin_eff"=> "",
-                // "bunga_margin_flat"=> "",
-                // "bunga_margin"=>"",
-                // "pokok_margin"=>"",
-                // "angsuran_terakhir"=>"",
-                // "bunga_margin_eff_actual"=>"",
-                // "bunga_margin_eff_flat"=>"",
-                // "nett_admin"=>"",
+                "pokok_pembayaran"=> null,
+                "tipe_angsuran"=> $applicationDetail->CREDIT_TYPE,
+                "cara_pembayaran"=> $applicationDetail->PAYMENT_WAY,
+                "angsuran"=> $applicationDetail->INSTALLMENT,
+                "opt_periode"=> $applicationDetail->OPT_PERIODE,
+                "provisi"=> $applicationDetail->PROVISION,
+                "asuransi"=> $applicationDetail->INSURANCE,
+                "biaya_transfer"=> $applicationDetail->TRANSFER_FEE,
+                "bunga_margin"=> $applicationDetail->INTEREST_MARGIN,
+                "bunga_margin_flat"=> $applicationDetail->FLAT_RATE,
+                "bunga_margin_eff"=> $applicationDetail->EFF_RATE,
+                "pokok_margin"=>$applicationDetail->PRINCIPAL_MARGIN,
+                "angsuran_terakhir"=>$applicationDetail->LAST_INSTALLMENT,
+                "bunga_margin_eff_actual"=>$applicationDetail->INTEREST_MARGIN_EFF_ACTUAL,
+                "bunga_margin_eff_flat"=>$applicationDetail->INTEREST_MARGIN_EFF_FLAT,
+                "nett_admin"=>null
             ],
             "jaminan_kendaraan" => [],        
             "prospect_approval" => [
