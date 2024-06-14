@@ -433,14 +433,14 @@ class CrAppilcationController extends Controller
                 "warganegara" => $cr_personal->CITIZEN??null
             ],
             'alamat_identitas' =>[
-                "alamat" => $data->alamat,
-                "rt" => $data->rt,
-                "rw" => $data->rw,
-                "provinsi" => $data->province,
-                "kota" => $data->city,
-                "kelurahan" => $data->kelurahan,
-                "kecamatan" => $data->kecamatan,
-                "kode_pos" => $data->zip_code
+                "alamat" => $cr_personal->ADDRESS??null,
+                "rt" => $cr_personal->RT??null,
+                "rw" => $cr_personal->RW??null,
+                "provinsi" => $cr_personal->PROVINCE??null,
+                "kota" => $cr_personal->CITY??null,
+                "kelurahan" => $cr_personal->KELURAHAN??null,
+                "kecamatan" => $cr_personal->KECAMATAN??null,
+                "kode_pos" => $cr_personal->ZIP_CODE??null
             ],
             'alamat_tagih' =>[
                 "alamat" => $cr_personal->INS_ADDRESS??null,
