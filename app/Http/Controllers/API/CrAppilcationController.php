@@ -206,8 +206,8 @@ class CrAppilcationController extends Controller
         ];
 
         if(!$check){
-            $data_cr_application['ID'] = Uuid::uuid7()->toString();
-            $data_cr_application['APPLICATION_ID'] = $fpkId;
+            $data_order['ID'] = Uuid::uuid7()->toString();
+            $data_order['APPLICATION_ID'] = $fpkId;
 
             M_CrOrder::create($data_order);
         }else{
