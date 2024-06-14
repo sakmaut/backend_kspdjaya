@@ -13,7 +13,7 @@ class Controller extends BaseController
     use AuthorizesRequests, ValidatesRequests;
 
     
-    public function setEmployeeData($request)
+    public function setEmployeeData(Request $request)
     {
         $data_employee = M_HrEmployee::where('ID', $request->user()->employee_id)->first();
 
