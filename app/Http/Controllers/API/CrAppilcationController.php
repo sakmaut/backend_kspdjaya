@@ -82,10 +82,10 @@ class CrAppilcationController extends Controller
                 throw new Exception("Id Kunjungan Is Not Exist", 404);
             }
 
-            self::insert_cr_application($request,$uuid);
-            // self::update_cr_prospect($request,$check_prospect_id);
-            self::insert_cr_personal($request,$uuid);
-            self::insert_cr_personal_extra($request,$uuid);
+            // self::insert_cr_application($request,$uuid);
+            // // self::update_cr_prospect($request,$check_prospect_id);
+            // self::insert_cr_personal($request,$uuid);
+            // self::insert_cr_personal_extra($request,$uuid);
             self::insert_bank_account($request,$uuid);
     
             DB::commit();
@@ -122,7 +122,7 @@ class CrAppilcationController extends Controller
             self::insert_bank_account($request,$id);
             self::insert_application_approval($id,$request->flag_pengajuan);
 
-            return response()->json(['message' => 'Updated Successfully',"status" => self::insert_bank_account($request,$id)], 200);
+            return response()->json(['message' => 'Updated Successfully',"status" => 200], 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
@@ -331,19 +331,20 @@ class CrAppilcationController extends Controller
 
             M_CrApplicationBank::where('APPLICATION_ID', $applicationId)->delete();
 
+            $dataToInsert = [];
             foreach ($request->info_bank as $result) {
-                $data_cr_application_bank =[  
+                $dataToInsert[] = [
                     'ID' => Uuid::uuid4()->toString(),
                     'APPLICATION_ID' => $applicationId,
-                    'BANK_CODE' => $result['kode_bank']??null,
-                    'BANK_NAME' => $result['nama_bank']??null,
-                    'ACCOUNT_NUMBER' => $result['no_rekening']??null,
-                    'ACCOUNT_NAME' => $result['atas_nama']??null,
-                    'STATUS' => $result['status']??null   
+                    'BANK_CODE' => $result['kode_bank']?? null,
+                    'BANK_NAME' => $result['nama_bank']?? null,
+                    'ACCOUNT_NUMBER' => $result['no_rekening']?? null,
+                    'ACCOUNT_NAME' => $result['atas_nama']?? null,
+                    'STATUS' => $result['status']?? null,
                 ];
-
-                M_CrApplicationBank::create($data_cr_application_bank);
             }
+
+            M_CrApplicationBank::insert($dataToInsert);
         }
     }
 
