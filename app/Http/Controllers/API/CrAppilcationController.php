@@ -462,10 +462,10 @@ class CrAppilcationController extends Controller
                 "kode_pos" => $cr_personal->INS_ZIP_CODE??null
             ],
             "barang_taksasi"=>[
-                "kode_barang"=>$cr_oder->KODE_BARANG,
-                "id_tipe"=>$cr_oder->ID_TIPE,
-                "tahun"=>$cr_oder->TAHUN,
-                "harga_pasar"=>$cr_oder->HARGA_PASAR
+                "kode_barang"=>$cr_oder->KODE_BARANG??null,
+                "id_tipe"=>$cr_oder->ID_TIPE??null,
+                "tahun"=>$cr_oder->TAHUN??null,
+                "harga_pasar"=>$cr_oder->HARGA_PASAR??null
             ],
             'pekerjaan' =>[
                 "pekerjaan" => $cr_personal->OCCUPATION??null,
