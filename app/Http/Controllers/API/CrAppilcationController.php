@@ -341,7 +341,7 @@ class CrAppilcationController extends Controller
                     'BANK_CODE' => $result['kode_bank'],
                     'BANK_NAME' => $result['nama_bank'],
                     'ACCOUNT_NUMBER' => $result['no_rekening'],
-                    'ACCOUNT_NAME' => $result['nama_di_rekening'],
+                    'ACCOUNT_NAME' => $result['atas_nama'],
                     'PREFERENCE_FLAG' => '',
                     'STATUS' => $result['status']   
                 ];
