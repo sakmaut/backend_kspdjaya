@@ -327,13 +327,12 @@ class CrAppilcationController extends Controller
 
     private function insert_bank_account($request,$applicationId){
 
-        $check = M_CrApplicationBank::where('APPLICATION_ID',$applicationId)->get();
-
-        if ($check->isNotEmpty()) {
-            M_CrApplicationBank::where('APPLICATION_ID', $applicationId)->delete();
-        }
+        M_CrApplicationBank::where('APPLICATION_ID',$applicationId)->get();
 
         if (isset($request->info_bank) && is_array($request->info_bank)) {
+            
+            M_CrApplicationBank::where('APPLICATION_ID', $applicationId)->delete();
+
             foreach ($request->info_bank as $result) {
                 $data_cr_application_bank =[  
                     'ID' => Uuid::uuid4()->toString(),
