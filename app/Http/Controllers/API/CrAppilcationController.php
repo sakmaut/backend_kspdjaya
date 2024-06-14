@@ -539,8 +539,8 @@ class CrAppilcationController extends Controller
             ],
             "info_bank" =>[],
             "ekstra" =>[
-                "nilai_yang_diterima" => $data->plafond,
-                "periode" => $data->tenor,
+                "nilai_yang_diterima" => $applicationDetail->SUBMISSION_VALUE == ''?$data->plafond:$applicationDetail->SUBMISSION_VALUE,
+                "periode" => $applicationDetail->PERIOD == ''?$data->tenor:$applicationDetail->PERIOD,
                 // "pokok_pembayaran"=> null,
                 "tipe_angsuran"=> $applicationDetail->CREDIT_TYPE,
                 "cara_pembayaran"=> $applicationDetail->PAYMENT_WAY,

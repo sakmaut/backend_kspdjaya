@@ -23,6 +23,8 @@ class M_CrApplication extends Model
         'CREDIT_TYPE',
         'INSTALLMENT_COUNT',
         'PERIOD',
+        'PLAFOND',
+        'TENOR',
         'INSTALLMENT',
         'OPT_PERIODE',
         'FLAT_RATE',
