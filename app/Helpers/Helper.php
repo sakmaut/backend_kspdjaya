@@ -43,32 +43,28 @@ if (!function_exists('compareData')) {
                 $datanew[$field] = $request->$requestField;
             }
         }
-    
-        $differingData = [];
-        foreach ($datanew as $key => $value) {
-            if (array_key_exists($key, $dataold) && $dataold[$key]!== $value) {
-                $differingData[$key] = $value;
+
+        $changes = [];
+        foreach ($datanew as $key => $newValue) {
+            if (isset($dataold[$key]) && $dataold[$key] != $newValue) {
+                $changes[$key] = $newValue;
             }
         }
-
-        print_r($differingData);
-        die;
     
-        // $modelInstance = new $modelName;
-        // foreach ($differingData as $key => $value) {
-        //     $dataLog = [
-        //         'id' => Uuid::uuid7()->toString(),
-        //         'table_name' => $modelInstance->getTable(),
-        //         'table_id' => $dataOLD->id,
-        //         'field_name' => $key,
-        //         'old_value' => $dataOLD->$key,
-        //         'new_value' => $value,
-        //         'altered_by' => $request->user()->id?? 0,
-        //         'altered_time' => Carbon::now()->format('Y-m-d H:i:s')
-        //     ];
+        foreach ($changes as $key => $value) {
+            $dataLog = [
+                'id' => Uuid::uuid7()->toString(),
+                'table_name' => $dataOLD->getTable(),
+                'table_id' => $id,
+                'field_name' => $key,
+                'old_value' => $dataOLD->$key,
+                'new_value' => $value,
+                'altered_by' => $request->user()->id?? 0,
+                'altered_time' => Carbon::now()->format('Y-m-d H:i:s')
+            ];
     
-        //     M_DeuteronomyTransactionLog::create($dataLog);
-        // }
+            M_DeuteronomyTransactionLog::create($dataLog);
+        }
     }
 }
 // private function nikCounter()
