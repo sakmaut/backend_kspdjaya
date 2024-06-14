@@ -74,11 +74,16 @@ class M_CrProspect extends Model
     public static function show_admin($branchId){
 
         $query = self::select('*')
-                            ->leftJoin('prospect_approval', 'prospect_approval.CR_PROSPECT_ID', '=', 'cr_prospect.id')
-                            ->where('cr_prospect.branch_id', $branchId)
-                            ->whereIn('prospect_approval.APPROVAL_RESULT', ['1:approve', '2:created_fpk'])
-                            ->whereNull('deleted_at')
-                            ->get();
+                        ->leftJoin('prospect_approval', 'prospect_approval.CR_PROSPECT_ID', '=', 'cr_prospect.id')
+                        ->where('cr_prospect.branch_id', $branchId)
+                        ->where(function ($query) {
+                            $values = ['1:approve', '2:created_fpk'];
+                            foreach ($values as $value) {
+                                $query->orWhere('prospect_approval.APPROVAL_RESULT', 'like', "%{$value}%");
+                            }
+                        })
+                        ->whereNull('deleted_at')
+                        ->get();
 
         return $query;
     }
