@@ -188,8 +188,9 @@ class CrAppilcationController extends Controller
 
         $check_survey_id->update($data_prospect);
 
+        $check = M_CrOrder::where('APPLICATION_ID',$fpkId)->first();
+
         $data_order =[
-            'APPLICATION_ID' => $fpkId,
             'ORDER_TANGGAL' => $request->order['order_tanggal']??null,
             'ORDER_STATUS' => $request->order['order_status']??null,
             'ORDER_TIPE' => $request->order['order_tipe']??null,
@@ -204,7 +205,14 @@ class CrAppilcationController extends Controller
             'HARGA_PASAR' => $request->barang_taksasi['harga_pasar']??null
         ];
 
-        M_CrOrder::create($data_order);
+        if(!$check){
+            $data_cr_application['ID'] = Uuid::uuid7()->toString();
+            $data_cr_application['APPLICATION_ID'] = $fpkId;
+
+            M_CrOrder::create($data_order);
+        }else{
+            $check->update($data_order);
+        }
     }
 
     private function insert_cr_personal($request,$applicationId){
