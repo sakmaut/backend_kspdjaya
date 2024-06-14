@@ -498,7 +498,7 @@ class CrAppilcationController extends Controller
                 "order_tipe" =>  $cr_oder->ORDER_TIPE??null,
                 "unit_bisnis" => $cr_oder->UNIT_BISNIS??null, 
                 "cust_service" => $cr_oder->CUST_SERVICE??null,
-                "ref_pelanggan" => $cr_oder->REFF_PELANGGAN??null,
+                "ref_pelanggan" => $cr_oder->REF_PELANGGAN??null,
                 "surveyor_id" => null,
                 "catatan_survey" => $data->survey_note??null,
                 "prog_marketing" => $cr_oder->PROG_MARKETING??null,
