@@ -650,5 +650,43 @@ class CrAppilcationController extends Controller
             ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
         }
+    }
+
+    public function approvalHo(Request $request)
+    {
+        try {
+            $request->validate([
+                'cr_application_id' => 'required|string',
+                'flag' => 'required|string',
+            ]);
+
+            $check_application_id = M_ApplicationApproval::where('cr_application_id', $request->cr_application_id)->first();
+
+            if (!$check_application_id) {
+                throw new Exception("Id FPK Is Not Exist", 404);
+            }
+
+            $data_approval = [
+                'ID' => Uuid::uuid4()->toString(),
+                'cr_application_ho' => $request->user()->id,
+                'cr_application_ho_time' => Carbon::now()->format('Y-m-d'),
+                'cr_application_ho_desc' => $request->keterangan
+            ];
+
+            if ($request->flag === 'yes') {
+                $data_approval['cr_application_ho_note'] = $request->flag;
+                $data_approval['application_result'] = '3:approved ho';
+            } else {
+                $data_approval['cr_application_ho_note'] = $request->flag;
+                $data_approval['application_result'] = '6:closed ho';
+            }
+
+            $check_application_id->update($data_approval);
+
+            return response()->json(['message' => 'Approval Kapos Successfully', "status" => 200], 200);
+        } catch (\Exception $e) {
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+        }
     } 
 }

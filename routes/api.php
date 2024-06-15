@@ -40,6 +40,7 @@ Route::middleware('auth:sanctum')->group(function () {
     //Route Group Master Cr Application
     Route::apiResource('cr_application', CrAppilcationController::class);
     Route::post('application_approval_kapos', [CrAppilcationController::class, 'approvalKapos']);
+    Route::post('application_approval_ho', [CrAppilcationController::class, 'approvalHo']);
 
     // Route::get('cr_applications', [CrAppilcationController::class, 'show']);
     Route::post('cr_application_generate', [CrAppilcationController::class, 'generateUuidFPK']);
