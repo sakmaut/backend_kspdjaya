@@ -1,7 +1,6 @@
 <?php
 namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
-use App\Models\M_HrEmployee;
 use App\Models\M_MasterUserAccessMenu;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -41,13 +40,6 @@ class AuthController extends Controller
 
             if (strtolower($user->status) !== 'active') {
                 $this->logLoginActivity($request, 'User status is not active', 401);
-                return response()->json(['message' => 'Invalid Credential', 'status' => 401], 401);
-            }
-
-            $employee = M_HrEmployee::findEmployee($user->employee_id);
-
-            if (!$employee || strtolower($employee->STATUS_MST) !== 'active') {
-                $this->logLoginActivity($request, 'Hr Employee status is not active', 401);
                 return response()->json(['message' => 'Invalid Credential', 'status' => 401], 401);
             }
 

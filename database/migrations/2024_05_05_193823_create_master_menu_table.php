@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -12,20 +13,20 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('master_menu', function (Blueprint $table) {
-            $table->string('id', 45)->primary();
+            $table->string('id')->primary();
             $table->string('menu_name')->nullable();
-            $table->string('route', 100)->nullable();
-            $table->string('parent', 45)->nullable();
+            $table->string('route')->nullable();
+            $table->string('parent')->nullable();
             $table->integer('order')->nullable();
             $table->string('leading')->nullable();
             $table->string('action')->nullable();
-            $table->string('status', 25)->nullable();
+            $table->string('status')->nullable();
             $table->string('ability')->nullable();
-            $table->string('created_by', 45)->nullable();
+            $table->string('created_by')->nullable();
             $table->timestamp('created_at')->default(DB::raw('CURRENT_TIMESTAMP'));
-            $table->string('updated_by', 45)->nullable();
+            $table->string('updated_by')->nullable();
             $table->dateTime('updated_at')->nullable();
-            $table->string('deleted_by', 45)->nullable();
+            $table->string('deleted_by')->nullable();
             $table->dateTime('deleted_at')->nullable();
         });
     }

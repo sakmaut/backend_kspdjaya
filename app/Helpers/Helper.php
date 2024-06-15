@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\M_DeuteronomyTransactionLog;
+use App\Models\M_TransactionLog;
 use Illuminate\Support\Carbon;
 use Ramsey\Uuid\Uuid;
 
@@ -11,20 +12,6 @@ if (!function_exists('checkDateIfNull')) {
     }
 }
 
-if (!function_exists('createAutoCode')) {
-    function createAutoCode($table, $field, $prefix)
-    {
-        $query = $table::max($field);
-		$_trans = date("Ymd");
-
-        $noUrut = (int) substr(!empty($query) ? $query : 0, 17, 5);
-
-		$noUrut++;
-		$generateCode = $prefix . '/' . $_trans . '/' . sprintf("%05s", $noUrut);
-
-		return $generateCode;
-    }
-}
 
 if (!function_exists('compareData')) {
     function compareData($modelName, $id, $request)
@@ -63,7 +50,7 @@ if (!function_exists('compareData')) {
                 'altered_time' => Carbon::now()->format('Y-m-d H:i:s')
             ];
     
-            M_DeuteronomyTransactionLog::create($dataLog);
+            M_TransactionLog::create($dataLog);
         }
     }
 }

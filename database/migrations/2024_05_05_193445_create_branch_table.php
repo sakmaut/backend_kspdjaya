@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('branch', function (Blueprint $table) {
             $table->string('ID', 100)->primary();
-            $table->string('CODE', 45)->unique()->nullable();
-            $table->string('NAME', 45)->nullable();
-            $table->string('ADDRESS', 2000)->nullable();
+            $table->string('CODE')->unique()->nullable();
+            $table->string('NAME')->nullable();
+            $table->string('ADDRESS')->nullable();
             $table->string('RT')->nullable();
             $table->string('RW')->nullable();
             $table->string('PROVINCE')->nullable();
@@ -23,20 +23,19 @@ return new class extends Migration
             $table->string('KELURAHAN')->nullable();
             $table->string('KECAMATAN')->nullable();
             $table->string('ZIP_CODE')->nullable();
-            $table->string('LOCATION', 2000)->nullable();
-            $table->string('PHONE_1', 45)->nullable();
-            $table->string('PHONE_2', 45)->nullable();
-            $table->string('PHONE_3', 45)->nullable();
-            $table->string('DESCR', 45)->nullable();
-            $table->string('STATUS', 45)->nullable();
+            $table->string('LOCATION')->nullable();
+            $table->string('PHONE_1')->nullable();
+            $table->string('PHONE_2')->nullable();
+            $table->string('PHONE_3')->nullable();
+            $table->string('DESCR')->nullable();
+            $table->string('STATUS')->nullable();
             $table->date('CREATE_DATE')->nullable();
-            $table->string('CREATE_USER', 45)->nullable();
+            $table->string('CREATE_USER')->nullable();
             $table->date('MOD_DATE')->nullable();
-            $table->string('MOD_USER', 45)->nullable();
+            $table->string('MOD_USER')->nullable();
             $table->integer('VERSION')->nullable();
-            $table->string('DELETED_BY', 10)->nullable();
+            $table->string('DELETED_BY')->nullable();
             $table->timestamp('DELETED_AT')->nullable();
-            $table->timestamps();
         });
     }
 

@@ -15,17 +15,16 @@ class R_DetailProfile extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $attachment = M_HrEmployeeDocument::where('EMPLOYEE_ID',$request->user()->employee_id)->get();
+        $attachment = M_HrEmployeeDocument::where('USERS_ID',$request->user()->id)->get();
 
         return [
             'USER_ID' => $request->user()->id,
-            'EMPLOYEE_ID' => $request->user()->employee_id,
             'USERNAME' => $request->user()->username,
             'EMAIL' => $request->user()->email,
-            'NAMA' => $this->NAMA,
-            "GENDER" => $this->GENDER,
-            "HP" => $this->HP,
-            "STATUS_MST" => $this->STATUS_MST,
+            'NAMA' => $request->user()->fullname,
+            "GENDER" => $request->user()->gender,
+            "HP" => $request->user()->mobile_number,
+            "STATUS" => $request->user()->status,
             "ATTACHMENT" => [$attachment]
         ];
     }

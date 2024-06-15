@@ -8,6 +8,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
 use App\Models\M_HrEmployee;
 use App\Models\M_ProspectApproval;
+use App\Models\M_SurveyApproval;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
@@ -20,7 +21,7 @@ class R_CrProspect extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $stts_approval = M_ProspectApproval::where('CR_PROSPECT_ID',$this->id)->first();
+        $stts_approval = M_SurveyApproval::where('CR_SURVEY_ID',$this->id)->first();
 
         $data = [
             'id' => $this->id,

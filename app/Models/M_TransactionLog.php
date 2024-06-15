@@ -6,14 +6,19 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
-class M_JabaranAccessMenu extends Model
+class M_TransactionLog extends Model
 {
     use HasFactory;
-    protected $table = 'jabatan_access_menu';
+    protected $table = 'transaction_log';
     protected $fillable = [
         'id',
-        'jabatan',
-        'master_menu_id'
+        'table_name',
+        'table_id',
+        'field_name',
+        'old_value',
+        'new_value',
+        'altered_by',
+        'altered_time'
     ];
     protected $guarded = [];
     public $incrementing = false;

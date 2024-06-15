@@ -3,18 +3,25 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\R_User;
+use App\Models\M_Branch;
 use App\Models\M_HrEmployee;
+use App\Models\M_HrEmployeeDocument;
+use App\Models\M_JabatanAccessMenu;
+use App\Models\M_MasterUserAccessMenu;
 use App\Models\User;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
+use Ramsey\Uuid\Uuid;
 
 class UsersController extends Controller
 {
-
     private $current_time;
 
     public function __construct()
@@ -25,10 +32,11 @@ class UsersController extends Controller
     public function index(Request $req)
     {
         try {
-            $data = User::where('status','Active')->get();
+            $data =User::where('status', 'LIKE', '%active%')->get();
+            $dto = R_User::collection($data);
 
             ActivityLogger::logActivity($req,"Success",200);
-            return response()->json(['message' => 'OK', "status" => 200, 'response' => $data], 200);
+            return response()->json(['message' => 'OK', "status" => 200, 'response' => $dto], 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($req,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
@@ -39,14 +47,15 @@ class UsersController extends Controller
     {
         try {
             $check = User::where('id',$id)->firstOrFail();
+            $dto = new R_User($check);
 
-            // ActivityLogger::logActivity($req,"Success",200);
-            return response()->json(['message' => 'OK',"status" => 200,'response' => $check], 200);
+            ActivityLogger::logActivity($req,"Success",200);
+            return response()->json(['message' => 'OK',"status" => 200,'response' => $dto], 200);
         } catch (ModelNotFoundException $e) {
-            // ActivityLogger::logActivity($req,'Data Not Found',404);
+            ActivityLogger::logActivity($req,'Data Not Found',404);
             return response()->json(['message' => 'Data Not Found',"status" => 404], 404);
         } catch (\Exception $e) {
-            // ActivityLogger::logActivity($req,$e->getMessage(),500);
+            ActivityLogger::logActivity($req,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
         }
     }
@@ -54,10 +63,7 @@ class UsersController extends Controller
     public function _validate($request){
 
         $validation = $request->validate([
-            'username' => 'required|string',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|string',
-            'employee_id' => 'required|string'
+            'cabang' => 'required|string'
         ]);
 
         return $validation;
@@ -69,22 +75,54 @@ class UsersController extends Controller
         try {
             self::_validate($request);
 
-            M_HrEmployee::findOrFail($request->employee_id);
+            $check_branch = M_Branch::where('ID', $request->cabang)->first();
+
+            if (!$check_branch) {
+                throw new Exception("Id Branch Not Found", 404);
+            }
+
+            $dataJabatan = ['ADMIN','MCF','HO','KAPOS'];
+
+            if (!in_array($request->jabatan, $dataJabatan)) {
+                throw new Exception("Jabatan Not Found", 404);
+            }
 
             $data_array = [
                 'username' => $request->username,
-                'employee_id' => $request->employee_id,
-                'email' => $request->email,
+                'email' => $request->username . '@gmail.com',
                 'password' => bcrypt($request->password),
+                'fullname' => $request->nama,
+                'branch_id' => $request->cabang,
+                'position' => $request->jabatan,
+                'gender' => $request->gender,
+                'status' => $request->status,
+                'mobile_number' => $request->no_hp,
                 'status' => $request->status,
                 'created_by' => $request->user()->id
             ];
         
-            User::create($data_array);
+            $userID = User::create($data_array);
+
+            $getMenu = M_JabatanAccessMenu::where('jabatan', $request->jabatan)->get();
+
+            if ($getMenu->isEmpty()) {
+                throw new Exception("Jabatan Access Menu Kosong", 404);
+            }
+
+            foreach ($getMenu as $list) {
+                $data_menu = [
+                    'id' => Uuid::uuid7()->toString(),
+                    'master_menu_id' => $list['master_menu_id'],
+                    'users_id' => $userID->id,
+                    'created_by' => $request->user()->id
+                ];
+
+                M_MasterUserAccessMenu::create($data_menu);
+            }
     
             DB::commit();
             ActivityLogger::logActivity($request,"Success",200);
-            return response()->json(['message' => 'User created successfully',"status" => 200], 200);
+            return response()->json(['message' => 'created successfully',"status" => 200], 200);
         } catch (ModelNotFoundException $e) {
             DB::rollback();
             ActivityLogger::logActivity($request,'Data Not Found',404);
@@ -104,16 +142,52 @@ class UsersController extends Controller
     {
         DB::beginTransaction();
         try {
-            $request->validate([
-                'email' => 'unique:users',
-            ]);
+            self::_validate($request);
 
             $users = User::findOrFail($id);
 
-            $req['updated_by'] = $request->user()->id;
-            $req['updated_at'] = $this->current_time;
+            $dataJabatan = ['ADMIN', 'MCF', 'HO', 'KAPOS'];
 
-            $users->update($request->all());
+            if (!in_array($request->jabatan, $dataJabatan)) {
+                throw new Exception("Jabatan Not Found", 404);
+            }
+
+            if ($users->position != $request->jabatan) {
+                $getMenu = M_JabatanAccessMenu::where('jabatan', $request->jabatan)->get();
+
+                M_MasterUserAccessMenu::where('users_id', $id)->delete();
+
+                foreach ($getMenu as $list) {
+                    $data_menu = [
+                        'id' => Uuid::uuid7()->toString(),
+                        'master_menu_id' => $list['master_menu_id'],
+                        'users_id' => $id,
+                        'created_by' => $request->user()->id
+                    ];
+
+                    M_MasterUserAccessMenu::create($data_menu);
+                }
+            }
+
+            $data_user = [
+                'username' => $request->username,
+                'fullname' => $request->nama,
+                'branch_id' => $request->cabang,
+                'position' => $request->jabatan,
+                'gender' => $request->gender,
+                'status' => $request->status,
+                'mobile_number' => $request->no_hp,
+                'status' => $request->status,
+                'updated_by' => $request->user()->id,
+                'updated_at' => $this->current_time
+            ];
+
+            if (isset($request->password) && !empty($request->password)) {
+                $data_user['password'] = bcrypt($request->password);
+            }
+
+            $users->update($data_user);
+
             DB::commit();
             ActivityLogger::logActivity($request,"Success",200);
             return response()->json(['message' => 'User updated successfully', "status" => 200], 200);
@@ -152,6 +226,52 @@ class UsersController extends Controller
         } catch (\Exception $e) {
             DB::rollback();
             ActivityLogger::logActivity($req,$e->getMessage(),500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+        }
+    }
+
+    public function uploadImage(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+
+            $this->validate($request, [
+                'image' => 'required|image|mimes:jpg,png,jpeg,gif,svg',
+                'type' => 'required|string'
+            ]);
+
+            $employee =  $request->employee_id;
+
+            $folderPath = 'public/Employee_Image/' . $employee;
+
+            if (!Storage::exists($folderPath)) {
+                Storage::makeDirectory($folderPath);
+            }
+
+            $image_path = $request->file('image')->store($folderPath);
+            $image_path = str_replace('public/', '', $image_path);
+
+            $url = URL::to('/') . '/storage/' . $image_path;
+
+            $data_array_attachment = [
+                'ID' => Uuid::uuid7()->toString(),
+                'USERS_ID' => '',
+                'TYPE' => $request->type,
+                'PATH' => $url ?? ''
+            ];
+
+            M_HrEmployeeDocument::create($data_array_attachment);
+
+            DB::commit();
+            ActivityLogger::logActivity($request, "Success", 200);
+            return response()->json(['message' => 'Image upload successfully', "status" => 200], 200);
+        } catch (QueryException $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($request, $e->getMessage(), 409);
+            return response()->json(['message' => $e->getMessage(), "status" => 409], 409);
+        } catch (\Exception $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }

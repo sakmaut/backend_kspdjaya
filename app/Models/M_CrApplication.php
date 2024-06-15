@@ -13,7 +13,7 @@ class M_CrApplication extends Model
     protected $table = 'cr_application';
     protected $fillable = [
         'ID',
-        'CR_PROSPECT_ID',
+        'CR_SURVEY_ID',
         'BRANCH',
         'FORM_NUMBER',
         'ORDER_NUMBER',
@@ -23,8 +23,6 @@ class M_CrApplication extends Model
         'CREDIT_TYPE',
         'INSTALLMENT_COUNT',
         'PERIOD',
-        'PLAFOND',
-        'TENOR',
         'INSTALLMENT',
         'OPT_PERIODE',
         'FLAT_RATE',
@@ -71,16 +69,15 @@ class M_CrApplication extends Model
                     ->select(
                         't1.id',
                         't3.NAME as cabang',
-                        't5.NAMA as nama_ao',
+                        't4.fullname as nama_ao',
                         't2.nama as nama_debitur',
                         't2.plafond',
                         't2.tenor',
                         't6.application_result as status'
                     )
-                    ->join('cr_prospect as t2', 't2.id', '=', 't1.CR_PROSPECT_ID')
+                    ->join('cr_survey as t2', 't2.id', '=', 't1.CR_SURVEY_ID')
                     ->join('branch as t3', 't3.ID', '=', 't1.BRANCH')
-                    ->join('users as t4', 't4.id', '=', 't2.ao_id')
-                    ->join('hr_employee as t5', 't5.ID', '=', 't4.employee_id')
+                    ->join('users as t4', 't4.id', '=', 't2.created_by')
                     ->join('application_approval as t6', 't6.cr_application_id', '=', 't1.ID');
 
         if ($param !== null) {

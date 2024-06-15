@@ -4,28 +4,37 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\R_CrProspect;
-use App\Models\M_Branch;
 use App\Models\M_CrGuaranteVehicle;
-use App\Models\M_CrProspect;
-use App\Models\M_CrProspectDocument;
-use App\Models\M_HrEmployee;
-use App\Models\M_ProspectApproval;
+use App\Models\M_CrSurvey;
+use App\Models\M_CrSurveyDocument;
+use App\Models\M_SurveyApproval;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Ramsey\Uuid\Uuid;
 
-class CrprospectController extends Controller
+class CrSurveyController extends Controller
 {
+
+    private $CrSurvey;
+    private $uuid;
+    private $timeNow;
+
+    public function __construct(M_CrSurvey $CrSurvey)
+    {
+        $this->CrSurvey = $CrSurvey;
+        $this->uuid = Uuid::uuid7()->toString();
+        $this->timeNow = Carbon::now();
+    }
+
     public function index(Request $req){
         try {
-            $ao_id = $req->user()->id;
-            $data =  M_CrProspect::whereNull('deleted_at')->where('ao_id', $ao_id)->get();
+            $mcf_id = $req->user()->id;
+            $data =  $this->CrSurvey->whereNull('deleted_at')->where('created_by', $mcf_id)->get();
             $dto = R_CrProspect::collection($data);
     
             ActivityLogger::logActivity($req,"Success",200);
@@ -41,7 +50,8 @@ class CrprospectController extends Controller
 
     public function showAdmins(Request $req){
         try {
-            $data =  M_CrProspect::show_admin(self::setEmployeeData($req)->BRANCH_ID);
+            $get_branch = $req->user()->branch_id;
+            $data =  $this->CrSurvey->show_admin($get_branch);
             $dto = R_CrProspect::collection($data);
     
             ActivityLogger::logActivity($req,"Success",200);
@@ -58,7 +68,7 @@ class CrprospectController extends Controller
     public function show(Request $req,$id)
     {
         try {
-            $check = M_CrProspect::where('id',$id)->whereNull('deleted_at')->firstOrFail();
+            $check = $this->CrSurvey->where('id',$id)->whereNull('deleted_at')->firstOrFail();
 
             ActivityLogger::logActivity($req,"Success",200);
             return response()->json(['message' => 'OK',"status" => 200,'response' => self::resourceDetail($req,$check)], 200);
@@ -73,16 +83,16 @@ class CrprospectController extends Controller
 
     private function resourceDetail($request,$data)
     {
-        $prospect_id = $data->id;
-        $guarente_vehicle = M_CrGuaranteVehicle::where('CR_PROSPECT_ID',$prospect_id)->get(); 
-        $approval_detail = M_ProspectApproval::where('CR_PROSPECT_ID',$prospect_id)->first();
+        $survey_id = $data->id;
+        $guarente_vehicle = M_CrGuaranteVehicle::where('CR_SURVEY_ID',$survey_id)->get(); 
+        $approval_detail = M_SurveyApproval::where('CR_SURVEY_ID',$survey_id)->first();
         
         $arrayList = [
-            'id' => $prospect_id,
+            'id' => $survey_id,
             'cust_code_ref' => $data->cust_code_ref,
             'data_ao' =>[
                 'ao_id' => $request->user()->id,
-                'nama_ao' => M_HrEmployee::findEmployee($request->user()->employee_id)->NAMA,
+                'nama_ao' => $request->user()->fullname,
             ],
             'data_order' =>[
                 'tujuan_kredit' => $data->tujuan_kredit,
@@ -126,9 +136,9 @@ class CrprospectController extends Controller
                 'keterangan' => $approval_detail->ONCHARGE_DESCR,
                 'status' => $approval_detail->APPROVAL_RESULT
             ],
-            "dokumen_indentitas" => M_CrProspectDocument::attachment($prospect_id, ['ktp', 'kk', 'ktp_pasangan']),
-            "dokumen_jaminan" => M_CrProspectDocument::attachment($prospect_id, ['no_rangka', 'no_mesin', 'stnk','depan','belakang','kanan','kiri']),
-            "dokumen_pendukung" => M_CrProspectDocument::attachment($prospect_id, ['pendukung']),
+            "dokumen_indentitas" => M_CrSurveyDocument::attachment($survey_id, ['ktp', 'kk', 'ktp_pasangan']),
+            "dokumen_jaminan" => M_CrSurveyDocument::attachment($survey_id, ['no_rangka', 'no_mesin', 'stnk','depan','belakang','kanan','kiri']),
+            "dokumen_pendukung" => M_CrSurveyDocument::attachment($survey_id, ['pendukung']),
         ];
 
         foreach ($guarente_vehicle as $list) {
@@ -156,20 +166,10 @@ class CrprospectController extends Controller
         DB::beginTransaction();
         try {
             $request->validate([
-                'id' => 'required|string|unique:cr_prospect',
-                // 'order.plafond' => 'numeric',
-                // 'order.tenor' => 'numeric',
-                // 'data_nasabah.no_ktp' => 'numeric',
-                // 'data_nasabah.tgl_lahir' => 'date',
-                // 'data_nasabah.no_hp' => 'numeric',
-                // "data_survey.penghasilan.pribadi" => "numeric",
-                // "data_survey.penghasilan.pasangan" => "numeric",
-                // "data_survey.penghasilan.lainnya" => "numeric",
-                // "data_survey.pengeluaran" => "numeric",
-                // "data_survey.tgl_survey" => "date"
+                'id' => 'required|string|unique:cr_survey',
             ]);
 
-            $check_id_approval =  M_ProspectApproval::where('CR_PROSPECT_ID', $request->id)->get();
+            $check_id_approval =  M_SurveyApproval::where('CR_SURVEY_ID', $request->id)->get();
 
             if ($check_id_approval->isNotEmpty()) {
                 throw new Exception("Id Approval Is Exist", 409);
@@ -184,7 +184,7 @@ class CrprospectController extends Controller
     
             DB::commit();
             ActivityLogger::logActivity($request,"Success",200);
-            return response()->json(['message' => 'Kunjungan created successfully',"status" => 200], 200);
+            return response()->json(['message' => 'created successfully',"status" => 200], 200);
         } catch (QueryException $e) {
             DB::rollback();
             ActivityLogger::logActivity($request,$e->getMessage(),409);
@@ -200,8 +200,7 @@ class CrprospectController extends Controller
     {
         $data_array = [
             'id' => $request->id,
-            'ao_id' => $request->user()->id,
-            'branch_id' => M_HrEmployee::where('ID',$request->user()->employee_id)->first()->BRANCH_ID,
+            'branch_id' => $request->user()->branch_id,
             'visit_date' => isset($request->data_survey['tgl_survey']) && !empty($request->data_survey['tgl_survey'])?$request->data_survey['tgl_survey']:null,
             'tujuan_kredit' => $request->order['tujuan_kredit']?? null,
             'plafond' => $request->order['plafond']?? null,
@@ -226,32 +225,33 @@ class CrprospectController extends Controller
             'sector' => $request->data_survey['sektor']?? null,
             "expenses" => $request->data_survey['pengeluaran']?? null,
             'survey_note' => $request->data_survey['catatan_survey']?? null,
-            'coordinate' => $request->lokasi['coordinate']?? null,
-            'accurate' => $request->lokasi['accurate']?? null,
             'created_by' => $request->user()->id
         ];
 
-        M_CrProspect::create($data_array);
+        M_CrSurvey::create($data_array);
 
     } 
 
     private function createCrProspekApproval($request)
     {
+        $approvalLog = new ApprovalLog();
+        $result = '1:approved';
         $data_approval=[
-            'ID' => Uuid::uuid4()->toString(),
-            'CR_PROSPECT_ID' => $request->id,
-            'APPROVAL_RESULT' => '1:approved'
+            'ID' => $this->uuid,
+            'CR_SURVEY_ID' => $request->id,
+            'APPROVAL_RESULT' => $result
         ];
 
-        M_ProspectApproval::create($data_approval);
+        $approval = M_SurveyApproval::create($data_approval);
+        $approvalLog->surveyApprovalLog("AUTO_APPROVED_BY_SYSTEM", $approval->ID, $result);
     } 
 
     private function insert_cr_vehicle($request){
 
         foreach ($request->jaminan_kendaraan as $result) {
             $data_array_col = [
-                'ID' => Uuid::uuid4()->toString(),
-                'CR_PROSPECT_ID' => $request->id,
+                'ID' => $this->uuid,
+                'CR_SURVEY_ID' => $request->id,
                 'HEADER_ID' => "",
                 'TYPE' => $result['tipe'],
                 'BRAND' => $result['merk'],
@@ -265,7 +265,7 @@ class CrprospectController extends Controller
                 'VALUE' => $result['nilai'],
                 'COLLATERAL_FLAG' => "",
                 'VERSION' => 1,
-                'CREATE_DATE' => Carbon::now()->format('Y-m-d'),
+                'CREATE_DATE' => $this->timeNow,
                 'CREATE_BY' => $request->user()->id,
             ];
 
@@ -306,13 +306,13 @@ class CrprospectController extends Controller
                 'coordinate' => $request->lokasi['coordinate']?? null,
                 'accurate' => $request->lokasi['accurate']?? null,
                 'updated_by' => $request->user()->id,
-                'updated_at' => Carbon::now()->format('Y-m-d H:i:s')
+                'updated_at' => $this->timeNow
             ];
 
-            $prospek_check = M_CrProspect::where('id',$id)->whereNull('deleted_at')->first();
+            $prospek_check = M_CrSurvey::where('id',$id)->whereNull('deleted_at')->first();
 
             if (!$prospek_check) {
-                throw new Exception("Cr Prospect Id Not Found",404);
+                throw new Exception("Cr Survey Id Not Found",404);
             }
 
             $prospek_check->update($data_prospect);
@@ -320,7 +320,7 @@ class CrprospectController extends Controller
             if (collect($request->jaminan_kendaraan)->isNotEmpty()) {
                 foreach ($request->jaminan_kendaraan as $result) {
 
-                    $jaminan_check = M_CrGuaranteVehicle::where('id',$result['id'])->whereNull('DELETED_AT')->first();
+                    $jaminan_check = M_CrGuaranteVehicle::where(['ID' => $result['id'],'CR_SURVEY_ID' =>$id])->whereNull('DELETED_AT')->first();
 
                     if (!$jaminan_check) {
                         throw new Exception("Id Jaminan Not Found",404);
@@ -340,7 +340,7 @@ class CrprospectController extends Controller
                         'VALUE' => $result['nilai'],
                         'COLLATERAL_FLAG' => "",
                         'VERSION' => 1,
-                        'MOD_DATE' => Carbon::now()->format('Y-m-d'),
+                        'MOD_DATE' => $this->timeNow,
                         'MOD_BY' => $request->user()->id,
                     ];
         
@@ -348,25 +348,9 @@ class CrprospectController extends Controller
                 }
             }
 
-            $data_approval=[
-                'ONCHARGE_APPRVL' => $request->kunjungan_approval['flag']?? null,
-                'ONCHARGE_PERSON' => $request->user()->id,
-                'ONCHARGE_TIME' => Carbon::now(),
-                'ONCHARGE_DESCR' => $request->kunjungan_approval['keterangan']?? null,
-                'APPROVAL_RESULT' => '1:approve'
-            ];
-    
-            $check_approval = M_ProspectApproval::where('CR_PROSPECT_ID',$id)->first();
-
-            if (!$check_approval) {
-                throw new Exception("Id Approval Not Found",404);
-            }
-
-            $check_approval->update($data_approval);
-
             DB::commit();
             ActivityLogger::logActivity($request,"Success",200);
-            return response()->json(['message' => 'Kunjungan updated successfully', 'status' => 200], 200);
+            return response()->json(['message' => 'updated successfully', 'status' => 200], 200);
         } catch (ModelNotFoundException $e) {
             DB::rollback();
             ActivityLogger::logActivity($request, 'Cr Prospect Id Not Found', 404);
@@ -386,18 +370,18 @@ class CrprospectController extends Controller
     {
         DB::beginTransaction();
         try {
-            $check = M_CrProspect::findOrFail($id);
+            $check = M_CrSurvey::findOrFail($id);
 
             $data = [
                 'deleted_by' => $req->user()->id,
-                'deleted_at' => Carbon::now()->format('Y-m-d H:i:s')
+                'deleted_at' => $this->timeNow
             ];
             
             $check->update($data);
 
             DB::commit();
             ActivityLogger::logActivity($req,"Success",200);
-            return response()->json(['message' => 'Kunjungan deleted successfully',"status" => 200], 200);
+            return response()->json(['message' => 'deleted successfully',"status" => 200], 200);
         } catch (ModelNotFoundException $e) {
             DB::rollback();
             ActivityLogger::logActivity($req, 'Cr Prospect Id Not Found', 404);
@@ -424,8 +408,6 @@ class CrprospectController extends Controller
                 'cr_prospect_id' =>'string'
             ]);
 
-            // M_CrProspect::findOrFail($req->cr_prospect_id);
-
             $image_path = $req->file('image')->store('public/Cr_Prospect');
             $image_path = str_replace('public/', '', $image_path);
 
@@ -433,12 +415,12 @@ class CrprospectController extends Controller
 
             $data_array_attachment = [
                 'ID' => Uuid::uuid4()->toString(),
-                'CR_PROSPECT_ID' => $req->cr_prospect_id,
+                'CR_SURVEY_ID' => $req->cr_prospect_id,
                 'TYPE' => $req->type,
                 'PATH' => $url ?? ''
             ];
 
-            M_CrProspectDocument::create($data_array_attachment);
+            M_CrSurveyDocument::create($data_array_attachment);
 
             DB::commit();
             // ActivityLogger::logActivity($req,"Success",200);
@@ -456,48 +438,5 @@ class CrprospectController extends Controller
             ActivityLogger::logActivity($req,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
         } 
-    }
-
-    public function approval(Request $request){
-        DB::beginTransaction();
-        try {
-
-            $request->validate([
-                'cr_prospect_id' => 'required|string',
-                'flag' => 'required|string|in:yes,no'
-            ]);
-
-            $data_approval=[
-                'ONCHARGE_APPRVL' => $request->flag,
-                'ONCHARGE_PERSON' => $request->user()->id,
-                'ONCHARGE_TIME' => Carbon::now(),
-                'ONCHARGE_DESCR' => $request->keterangan,
-                'APPROVAL_RESULT' => $request->flag == 'yes'?'1:approve':'1:rejected'
-            ];
-    
-            $check_approval = M_ProspectApproval::where('CR_PROSPECT_ID',$request->cr_prospect_id)->first();
-
-            if (!$check_approval) {
-                throw new Exception("Id kunjungan Not Found",404);
-            }
-
-            $check_approval->update($data_approval);
-
-            DB::commit();
-            ActivityLogger::logActivity($request,"Success",200);
-            return response()->json(['message' => 'Kunjungan updated successfully', 'status' => 200], 200);
-        } catch (ModelNotFoundException $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($request, 'Cr Prospect Id Not Found', 404);
-            return response()->json(['message' => 'Cr Prospect Id Not Found', "status" => 404], 404);
-        } catch (QueryException $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($request,$e->getMessage(),409);
-            return response()->json(['message' => $e->getMessage(), 'status' => 409], 409);
-        } catch (\Exception $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage(), 'status' => 500], 500);
-        }
     }
 }

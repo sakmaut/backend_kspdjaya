@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('deuteronomy_transaction_log', function (Blueprint $table) {
+        Schema::create('transaction_log', function (Blueprint $table) {
             $table->string('id', 100)->primary();
             $table->string('table_name', 100)->nullable();
             $table->string('table_id', 100)->nullable();

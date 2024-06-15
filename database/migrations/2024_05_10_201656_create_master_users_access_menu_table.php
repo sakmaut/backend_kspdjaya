@@ -12,14 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('master_users_access_menu', function (Blueprint $table) {
-            $table->char('id', 45)->primary();
-            $table->string('master_menu_id', 100);
-            $table->string('users_id', 100);
-            $table->string('created_by', 45)->nullable();
+            $table->char('id')->primary();
+            $table->string('master_menu_id');
+            $table->string('users_id');
+            $table->string('created_by')->nullable();
             $table->timestamp('created_at')->useCurrent();
-            $table->string('updated_by', 45)->nullable();
+            $table->string('updated_by')->nullable();
             $table->dateTime('updated_at')->nullable();
-            $table->string('deleted_by', 45)->nullable();
+            $table->string('deleted_by')->nullable();
             $table->dateTime('deleted_at')->nullable();
         });
     }

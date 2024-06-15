@@ -10,10 +10,9 @@ use App\Models\M_CrGuaranteVehicle;
 use App\Models\M_CrOrder;
 use App\Models\M_CrPersonal;
 use App\Models\M_CrPersonalExtra;
-use App\Models\M_CrProspect;
-use App\Models\M_CrProspectDocument;
-use App\Models\M_HrEmployee;
-use App\Models\M_ProspectApproval;
+use App\Models\M_CrSurvey;
+use App\Models\M_CrSurveyDocument;
+use App\Models\M_SurveyApproval;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\QueryException;
@@ -45,6 +44,17 @@ class CrAppilcationController extends Controller
         }
     }
 
+    public function showHo(Request $request)
+    {
+        try {
+            $data = M_CrApplication::fpkListData();
+            return response()->json(['message' => 'OK', "status" => 200, 'response' => $data], 200);
+        } catch (\Exception $e) {
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+        }
+    }
+
     public function show(Request $request,$id)
     {
         try {
@@ -60,7 +70,7 @@ class CrAppilcationController extends Controller
                 throw new Exception("Id FPK Is Not Exist", 404);
             }
 
-            $detail_prospect = M_CrProspect::where('id',$check_application_id->CR_PROSPECT_ID)->first();
+            $detail_prospect = M_CrSurvey::where('id',$check_application_id->CR_PROSPECT_ID)->first();
 
             return response()->json(['message' => 'OK',"status" => 200,'response' => self::resourceDetail($detail_prospect,$check_application_id)], 200);
         } catch (\Exception $e) {
@@ -75,7 +85,7 @@ class CrAppilcationController extends Controller
         try {
             $uuid = Uuid::uuid4()->toString();
 
-            $check_prospect_id = M_CrProspect::where('id',$request->data_order['cr_prospect_id'])
+            $check_prospect_id = M_CrSurvey::where('id',$request->data_order['cr_prospect_id'])
                                                 ->whereNull('deleted_at')->first();
 
             if (!$check_prospect_id) {
@@ -115,7 +125,7 @@ class CrAppilcationController extends Controller
                 throw new Exception("Id FPK Is Not Exist", 404);
             }
 
-            $prospectId = $check_application_id->CR_PROSPECT_ID;
+            $prospectId = $check_application_id->CR_SURVEY_ID;
 
             self::insert_cr_application($request,$check_application_id);
             self::insert_cr_personal($request,$id);
@@ -165,8 +175,8 @@ class CrAppilcationController extends Controller
 
         if(!$uuid){
             $data_cr_application['ID'] = Uuid::uuid7()->toString();
-            $data_cr_application['BRANCH'] = M_HrEmployee::findEmployee($request->user()->employee_id)->BRANCH_ID;
-            $data_cr_application['ORDER_NUMBER'] = createAutoCode(M_CrApplication::class,'ORDER_NUMBER','FPK');
+            $data_cr_application['BRANCH'] = $request->user()->branch_id;
+            $data_cr_application['ORDER_NUMBER'] = $this->createAutoCode(M_CrApplication::class,'ORDER_NUMBER','FPK');
             M_CrApplication::create($data_cr_application);
         }else{
             $uuid->update($data_cr_application);
@@ -174,25 +184,6 @@ class CrAppilcationController extends Controller
     }
 
     private function insert_cr_order($request,$id,$fpkId){
-        $check_survey_id = M_CrProspect::where('id',$id)->first();
-
-        if (!$check_survey_id) {
-            throw new Exception("Id Survey Is Not Exist", 404);
-        }
-
-        $data_prospect =[
-            'mother_name' =>$request->order['nama_ibu']??null,
-            'category' =>$request->order['kategori']??null,
-            'title' =>$request->order['gelar']??null,
-            'work_period'  =>$request->order['lama_bekerja']??null,
-            'dependants'  =>$request->order['tanggungan']??null,
-            'income_personal'  =>$request->order['pendapatan_pribadi']??null,
-            'income_spouse'  =>$request->order['pendapatan_pasangan']??null,
-            'income_other'  =>$request->order['pendapatan_lainnya']??null,
-            'expenses'  =>$request->order['biaya_bulanan']??null
-        ];
-
-        $check_survey_id->update($data_prospect);
 
         $check = M_CrOrder::where('APPLICATION_ID',$fpkId)->first();
 
@@ -210,7 +201,16 @@ class CrAppilcationController extends Controller
             'KODE_BARANG' => $request->barang_taksasi['kode_barang']??null,
             'ID_TIPE' => $request->barang_taksasi['id_tipe']??null,
             'TAHUN' => $request->barang_taksasi['tahun']??null,
-            'HARGA_PASAR' => $request->barang_taksasi['harga_pasar']??null
+            'HARGA_PASAR' => $request->barang_taksasi['harga_pasar']??null,
+            'MOTHER_NAME' => $request->order['nama_ibu'] ?? null,
+            'CATEGORY' => $request->order['kategori'] ?? null,
+            'TITLE' => $request->order['gelar'] ?? null,
+            'WORK_PERIOD'  => $request->order['lama_bekerja'] ?? null,
+            'DEPENDANTS'  => $request->order['tanggungan'] ?? null,
+            'INCOME_PERSONAL'  => $request->order['pendapatan_pribadi'] ?? null,
+            'INCOME_SPOUSE'  => $request->order['pendapatan_pasangan'] ?? null,
+            'INCOME_OTHER'  => $request->order['pendapatan_lainnya'] ?? null,
+            'EXPENSES'  => $request->order['biaya_bulanan'] ?? null
         ];
 
         if(!$check){
@@ -354,22 +354,26 @@ class CrAppilcationController extends Controller
         }
     }
 
-    private function insert_application_approval($applicationId, $prospectId,$flag){
+    private function insert_application_approval($applicationId, $surveyID,$flag){
 
         $data_approval =[  
-            'ID' => Uuid::uuid4()->toString(),
+            'ID' => Uuid::uuid7()->toString(),
             'cr_application_id' => $applicationId
         ];
 
-        $approval_change = M_ProspectApproval::where('CR_PROSPECT_ID', $prospectId)->first();
+        $approval_change = M_SurveyApproval::where('CR_SURVEY_ID', $surveyID)->first();
 
         if($flag === 'yes'){
-            $data_update_approval = [
+            $approvalLog = new ApprovalLog();
+            
+            $data_approval['application_result'] = '1:waiting kapos';
+
+            $change_approval = [
                 'APPROVAL_RESULT' => '3:waiting kapos'
             ];
 
-            $data_approval['application_result'] = '1:waiting kapos';
-            $approval_change->update($data_update_approval);
+            $approval_change->update($change_approval);
+            $approvalLog->surveyApprovalLog("AUTO_APPROVED_BY_SYSTEM", $approval_change->ID, '3:waiting kapos');
         }else{
             $data_approval['application_result'] = '0:draft';
         }
@@ -380,25 +384,25 @@ class CrAppilcationController extends Controller
     public function generateUuidFPK(Request $request)
     {
         try {
-            $check_prospect_id = M_CrProspect::where('id',$request->cr_prospect_id)
+            $check_survey_id = M_CrSurvey::where('id',$request->cr_prospect_id)
                                 ->whereNull('deleted_at')->first();
 
-            if (!$check_prospect_id) {
-                throw new Exception("Id Kunjungan Is Not Exist", 404);
+            if (!$check_survey_id) {
+                throw new Exception("Id Survey Is Not Exist", 404);
             }
 
             $uuid = Uuid::uuid7()->toString();
 
-            $check_prospect_id = M_CrApplication::where('CR_PROSPECT_ID',$request->cr_prospect_id)->first();
+            $check_prospect_id = M_CrApplication::where('CR_SURVEY_ID',$request->cr_prospect_id)->first();
 
             if(!$check_prospect_id){
                 $generate_uuid = $uuid;
 
                 $data_cr_application =[
                     'ID' => $uuid,
-                    'CR_PROSPECT_ID' => $request->cr_prospect_id,
-                    'ORDER_NUMBER' => createAutoCode(M_CrApplication::class,'ORDER_NUMBER','FPK'),
-                    'BRANCH' => M_HrEmployee::findEmployee($request->user()->employee_id)->BRANCH_ID,
+                    'CR_SURVEY_ID' => $check_survey_id->id,
+                    'ORDER_NUMBER' => $this->createAutoCode(M_CrApplication::class,'ORDER_NUMBER','FPK'),
+                    'BRANCH' => $request->user()->branch_id,
                     'VERSION' => 1,
                     'CREATE_DATE' => Carbon::now()->format('Y-m-d'),
                     'CREATE_USER' => $request->user()->id,
@@ -409,7 +413,7 @@ class CrAppilcationController extends Controller
                 $generate_uuid = $check_prospect_id->ID;
             }
 
-            $approval_change = M_ProspectApproval::where('CR_PROSPECT_ID',$request->cr_prospect_id)->first();
+            $approval_change = M_SurveyApproval::where('CR_SURVEY_ID',$request->cr_prospect_id)->first();
 
             $data_update_approval=[
                 'APPROVAL_RESULT' => '2:created_fpk'
@@ -427,9 +431,9 @@ class CrAppilcationController extends Controller
     private function resourceDetail($data,$application)
     {
         $prospect_id = $data->id;
-        $guarente_vehicle = M_CrGuaranteVehicle::where('CR_PROSPECT_ID',$prospect_id)->get(); 
-        $approval_detail = M_ProspectApproval::where('CR_PROSPECT_ID',$prospect_id)->first();
-        $attachment_data = M_CrProspectDocument::where('CR_PROSPECT_ID',$prospect_id )->get();
+        $guarente_vehicle = M_CrGuaranteVehicle::where('CR_SURVEY_ID',$prospect_id)->get(); 
+        $approval_detail = M_SurveyApproval::where('CR_SURVEY_ID',$prospect_id)->first();
+        $attachment_data = M_CrSurveyDocument::where('CR_SURVEY_ID',$prospect_id )->get();
         $cr_personal = M_CrPersonal::where('APPLICATION_ID',$application->ID)->first();
         $cr_personal_extra = M_CrPersonalExtra::where('APPLICATION_ID',$application->ID)->first();
         $cr_oder = M_CrOrder::where('APPLICATION_ID',$application->ID)->first();

@@ -7,53 +7,43 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-class M_CrProspect extends Model
+class M_CrSurvey extends Model
 {
     use HasFactory;
-    protected $table = 'cr_prospect';
+    protected $table = 'cr_survey';
     protected $fillable = [
-        'id',
-        'ao_id',
-        'branch_id',
-        'visit_date',
-        'mother_name',
-        'category',
-        'tin_number',
-        'title',
-        'work_period',
-        'dependants',
-        'income_personal',
-        'income_spouse',
-        'income_other',
-        'expenses',
-        'cust_code_ref',
-        'tujuan_kredit',
-        'jenis_produk',
-        'plafond',
-        'tenor',
-        'nama',
-        'ktp',
-        'kk',
-        'tgl_lahir',
-        'alamat',
-        'rt',
-        'rw',
-        'province',
-        'city',
-        'kecamatan',
-        'kelurahan',
-        'hp',
-        'usaha',
+        'id', 
+        'branch_id', 
+        'visit_date', 
+        'tujuan_kredit', 
+        'plafond', 
+        'tenor', 
+        'category', 
+        'nama', 
+        'tgl_lahir', 
+        'ktp', 
+        'hp', 
+        'alamat', 
+        'rt', 
+        'rw', 
+        'province', 
+        'city', 
+        'kelurahan', 
+        'kecamatan', 
+        'zip_code', 
+        'work_period', 
+        'income_personal', 
+        'income_spouse', 
+        'income_other', 
+        'usaha', 
         'sector',
-        'coordinate',
-        'accurate',
-        'survey_note',
-        'payment_reference',
-        'created_by',
-        'created_at',
-        'updated_by',
+        'expenses', 
+        'survey_note', 
+        'created_by', 
+        'created_at', 
+        'updated_by', 
         'updated_at',
-        'deleted_by',
+        'deleted_by', 
         'deleted_at'
     ];
     protected $guarded = [];
@@ -74,12 +64,12 @@ class M_CrProspect extends Model
     public static function show_admin($branchId){
 
         $query = self::select('*')
-                        ->leftJoin('prospect_approval', 'prospect_approval.CR_PROSPECT_ID', '=', 'cr_prospect.id')
-                        ->where('cr_prospect.branch_id', $branchId)
+                        ->leftJoin('survey_approval', 'survey_approval.CR_SURVEY_ID', '=', 'cr_survey.id')
+                        ->where('cr_survey.branch_id', $branchId)
                         ->where(function ($query) {
-                            $values = ['1:approve', '2:created_fpk'];
+                            $values = ['1:approve', '2:created_fpk', '3:waiting kapos'];
                             foreach ($values as $value) {
-                                $query->orWhere('prospect_approval.APPROVAL_RESULT', 'like', "%{$value}%");
+                                $query->orWhere('survey_approval.APPROVAL_RESULT', 'like', "%{$value}%");
                             }
                         })
                         ->whereNull('deleted_at')

@@ -7,7 +7,7 @@ use App\Models\M_HrEmployeeDocument;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class R_Karyawan extends JsonResource
+class R_User extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -16,18 +16,19 @@ class R_Karyawan extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $branch = M_Branch::find($this->BRANCH_ID);
+        $branch = M_Branch::find($this->branch_id);
+        
         return [
-            'id' => $this->ID,
-            'username' => $this->user ? $this->user['username'] : null,
-            'nama' => $this->NAMA,
+            'id' => $this->id,
+            'username' => $this->username,
+            'nama' => $this->fullname,
             'cabang_id' => $branch->ID ?? null,
             'cabang_nama' => $branch->NAME ?? null,
-            'jabatan' => $this->JABATAN,
-            'gender' => $this->GENDER,
-            'no_hp' => $this->HP,
-            'status' => $this->STATUS_MST,
-            'photo_personal' => M_HrEmployeeDocument::attachment($this->ID, 'personal'),
+            'jabatan' => $this->position,
+            'gender' => $this->gender,
+            'no_hp' => $this->mobile_number,
+            'status' => $this->status,
+            'photo_personal' => M_HrEmployeeDocument::attachment($this->id, 'personal'),
         ];
     }
 }

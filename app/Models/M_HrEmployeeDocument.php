@@ -12,7 +12,7 @@ class M_HrEmployeeDocument extends Model
     protected $table = 'hr_employee_document';
     protected $fillable = [
         'ID',
-        'EMPLOYEE_ID',
+        'USERS_ID',
         'TYPE',
         'PATH',
         'CREATED_AT'
@@ -33,7 +33,7 @@ class M_HrEmployeeDocument extends Model
     }
 
     static function attachment($employeeId,$type){
-        $query = self::where(['EMPLOYEE_ID' => $employeeId,'TYPE' => $type])
+        $query = self::where(['USERS_ID' => $employeeId,'TYPE' => $type])
                     ->orderBy('CREATED_AT', 'desc')
                     ->first();
 

@@ -21,16 +21,12 @@ class DetailProfileController extends Controller
     {
         try {
 
-            $getEmployeID = $request->user()->employee_id;
-
-            $employee = M_HrEmployee::where('ID', $getEmployeID)->first();
-
-            if (!$employee || strtolower($employee->STATUS_MST) !== 'active') {
+            if (strtolower($request->user()->status) !== 'active') {
                 $user->tokens()->delete();
                 return response()->json(['message' => 'Profile Not Found', 'status' => 404], 404);
             }
 
-            $dto = new R_DetailProfile($employee);
+            $dto = new R_DetailProfile($request);
 
             return response()->json(['message' => 'OK', "status" => 200, 'response' => $dto], 200);
         } catch (\Exception $e) {
@@ -55,7 +51,7 @@ class DetailProfileController extends Controller
 
             $data_array_attachment = [
                 'ID' => Uuid::uuid4()->toString(),
-                'EMPLOYEE_ID' => $request->user()->employee_id,
+                'USERS_ID' => $request->user()->id,
                 'TYPE' => $request->type,
                 'PATH' => $url ?? ''
             ];

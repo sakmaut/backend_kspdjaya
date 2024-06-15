@@ -12,9 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('cr_application_fee', function (Blueprint $table) {
-            $table->string('ID', 100)->primary();
-            $table->string('APPLICATION_ID', 100)->nullable();
-            $table->string('FEE_NAME', 45)->nullable();
+            $table->string('ID')->primary();
+            $table->string('APPLICATION_ID')->nullable();
+            $table->string('FEE_NAME')->nullable();
             $table->decimal('FEE_PCT', 6, 2)->nullable();
             $table->decimal('FEE_VALUE', 20, 2)->nullable();
 

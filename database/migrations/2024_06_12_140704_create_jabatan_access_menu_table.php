@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::dropIfExists('jabatan_access_menu');
         Schema::create('jabatan_access_menu', function (Blueprint $table) {
-            $table->string('id', 100)->primary();
+            $table->string('id')->primary();
             $table->string('jabatan')->nullable();
-            $table->string('master_menu_id', 100)->nullable(false);
+            $table->string('master_menu_id')->nullable(false);
         });
     }
 

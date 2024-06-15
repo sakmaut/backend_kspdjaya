@@ -6,24 +6,25 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
-class M_CrProspectDocument extends Model
+class M_SurveyApprovalLog extends Model
 {
     use HasFactory;
-    protected $table = 'cr_prospect_document';
+    protected $table = 'survey_approval_log';
     protected $fillable = [
-       'ID',
-       'CR_PROSPECT_ID',
-       'TYPE',
-       'PATH',
-       'INDEX_NUM',
-       'VALID_CHECK',
-       'CREATED_AT'
+        'ID',
+        'SURVEY_APPROVAL_ID',
+        'ONCHARGE_APPRVL',
+        'ONCHARGE_PERSON',
+        'ONCHARGE_TIME',
+        'ONCHARGE_DESCR',
+        'APPROVAL_RESULT'
     ];
     protected $guarded = [];
     public $incrementing = false;
     protected $keyType = 'string';
     protected $primaryKey = 'ID';
     public $timestamps = false;
+
     protected static function boot()
     {
         parent::boot();
@@ -32,13 +33,5 @@ class M_CrProspectDocument extends Model
                 $model->setAttribute($model->getKeyName(), Str::uuid()->toString());
             }
         });
-    }
-
-    public static function attachment($prospect_id,$array = []){
-        $attachment = M_CrProspectDocument::where('CR_PROSPECT_ID', $prospect_id)
-            ->whereIn('TYPE', $array)
-            ->get();
-
-        return $attachment;
     }
 }

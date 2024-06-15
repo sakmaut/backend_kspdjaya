@@ -12,9 +12,20 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('cr_order', function (Blueprint $table) {
-            $table->string('ID', 100)->primary();
-            $table->string('APPLICATION_ID', 100)->nullable(false);
-            $table->date('ORDER_TANGGAL')->nullable();
+            $table->string('ID')->primary();
+            $table->string('APPLICATION_ID')->nullable(false);
+            $table->string('NO_NPWP')->nullable();
+            $table->string('BIAYA')->nullable();
+            $table->string('MOTHER_NAME')->nullable();
+            $table->string('CATEGORY')->nullable();
+            $table->string('TITLE')->nullable();
+            $table->string('WORK_PERIOD')->nullable();
+            $table->string('DEPENDANTS')->nullable();
+            $table->string('INCOME_PERSONAL')->nullable();
+            $table->string('INCOME_SPOUSE')->nullable();
+            $table->string('INCOME_OTHER')->nullable();
+            $table->string('EXPENSES')->nullable();
+            $table->date('ORDER_TANGGAL')->nullable()->default(null);
             $table->string('ORDER_STATUS')->nullable();
             $table->string('ORDER_TIPE')->nullable();
             $table->string('UNIT_BISNIS')->nullable();

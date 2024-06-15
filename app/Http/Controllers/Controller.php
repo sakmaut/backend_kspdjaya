@@ -12,11 +12,17 @@ class Controller extends BaseController
 {
     use AuthorizesRequests, ValidatesRequests;
 
-    
-    public function setEmployeeData(Request $request)
-    {
-        $data_employee = M_HrEmployee::where('ID', $request->user()->employee_id)->first();
 
-        return $data_employee;
+    function createAutoCode($table, $field, $prefix)
+    {
+        $query = $table::max($field);
+        $_trans = date("Ymd");
+
+        $noUrut = (int) substr(!empty($query) ? $query : 0, 17, 5);
+
+        $noUrut++;
+        $generateCode = $prefix . '/' . $_trans . '/' . sprintf("%05s", $noUrut);
+
+        return $generateCode;
     }
 }

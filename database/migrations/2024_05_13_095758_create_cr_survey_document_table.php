@@ -11,13 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('cr_prospect_document', function (Blueprint $table) {
-            $table->string('ID', 100)->primary();
-            $table->string('CR_PROSPECT_ID', 100)->nullable(false);
-            $table->string('TYPE',100)->nullable();
-            $table->string('PATH', 400)->nullable();
-            $table->integer('INDEX_NUM')->nullable();
-            $table->string('VALID_CHECK', 45)->nullable();
+        Schema::create('cr_survey_document', function (Blueprint $table) {
+            $table->string('ID')->primary();
+            $table->string('CR_SURVEY_ID')->nullable(false);
+            $table->string('TYPE')->nullable();
+            $table->string('PATH')->nullable();
+            $table->string('CREATED_BY')->nullable();
             $table->timestamp('CREATED_AT')->nullable()->useCurrent();
         });
     }
