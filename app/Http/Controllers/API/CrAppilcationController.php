@@ -115,12 +115,14 @@ class CrAppilcationController extends Controller
                 throw new Exception("Id FPK Is Not Exist", 404);
             }
 
+            $prospectId = $check_application_id->CR_PROSPECT_ID;
+
             self::insert_cr_application($request,$check_application_id);
             self::insert_cr_personal($request,$id);
-            self::insert_cr_order($request,$check_application_id->CR_PROSPECT_ID,$id);
+            self::insert_cr_order($request, $prospectId,$id);
             self::insert_cr_personal_extra($request,$id);
             self::insert_bank_account($request,$id);
-            self::insert_application_approval($id,$request->flag_pengajuan);
+            self::insert_application_approval($id, $prospectId,$request->flag_pengajuan);
 
             return response()->json(['message' => 'Updated Successfully',"status" => 200], 200);
         } catch (\Exception $e) {
@@ -352,15 +354,22 @@ class CrAppilcationController extends Controller
         }
     }
 
-    private function insert_application_approval($applicationId,$flag){
+    private function insert_application_approval($applicationId, $prospectId,$flag){
 
         $data_approval =[  
             'ID' => Uuid::uuid4()->toString(),
             'cr_application_id' => $applicationId
         ];
 
+        $approval_change = M_ProspectApproval::where('CR_PROSPECT_ID', $prospectId)->first();
+
         if($flag === 'yes'){
+            $data_update_approval = [
+                'APPROVAL_RESULT' => '3:waiting kapos'
+            ];
+
             $data_approval['application_result'] = '1:waiting kapos';
+            $approval_change->update($data_update_approval);
         }else{
             $data_approval['application_result'] = '0:draft';
         }
