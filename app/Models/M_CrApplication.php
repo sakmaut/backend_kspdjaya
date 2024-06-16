@@ -71,8 +71,8 @@ class M_CrApplication extends Model
                         't3.NAME as cabang',
                         't4.fullname as nama_ao',
                         't2.nama as nama_debitur',
-                        't2.plafond',
-                        't2.tenor',
+                        DB::raw("COALESCE(t1.SUBMISSION_VALUE, t2.plafond) as plafond"),
+                        DB::raw("COALESCE(t1.PERIOD, t2.tenor) as tenor"),
                         't6.application_result as status'
                     )
                     ->join('cr_survey as t2', 't2.id', '=', 't1.CR_SURVEY_ID')

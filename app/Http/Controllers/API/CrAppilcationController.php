@@ -58,7 +58,7 @@ class CrAppilcationController extends Controller
     public function show(Request $request,$id)
     {
         try {
-            $check = M_CrApplication::where('CR_PROSPECT_ID',$id)->whereNull('deleted_at')->first();
+            $check = M_CrApplication::where('CR_SURVEY_ID',$id)->whereNull('deleted_at')->first();
 
             if (!$check) {
                 $check_application_id = M_CrApplication::where('ID',$id)->whereNull('deleted_at')->first();
@@ -66,11 +66,13 @@ class CrAppilcationController extends Controller
                 $check_application_id = $check;
             }
 
-            if (!isset($check_application_id->CR_PROSPECT_ID)  || $check_application_id->CR_PROSPECT_ID == '') {
+            $surveyID = $check_application_id->CR_SURVEY_ID;
+
+            if (!isset($surveyID)  || $surveyID == '') {
                 throw new Exception("Id FPK Is Not Exist", 404);
             }
 
-            $detail_prospect = M_CrSurvey::where('id',$check_application_id->CR_PROSPECT_ID)->first();
+            $detail_prospect = M_CrSurvey::where('id',$surveyID)->first();
 
             return response()->json(['message' => 'OK',"status" => 200,'response' => self::resourceDetail($detail_prospect,$check_application_id)], 200);
         } catch (\Exception $e) {
@@ -446,7 +448,7 @@ class CrAppilcationController extends Controller
                 "nama_panggilan" => $cr_personal->ALIAS ?? null,
                 "jenis_kelamin" => $cr_personal->GENDER ?? null,
                 "tempat_lahir" => $cr_personal->BIRTHPLACE ?? null,
-                "tgl_lahir" => checkDateIfNull($data->tgl_lahir),
+                "tgl_lahir" => $data->tgl_lahir??null,
                 "gol_darah" => $cr_personal->BLOOD_TYPE??null,
                 "status_kawin" => $cr_personal->MARTIAL_STATUS??null,
                 "tgl_kawin" => $cr_personal->MARTIAL_DATE ?? null,
@@ -497,15 +499,15 @@ class CrAppilcationController extends Controller
             ],
             'order' =>[
                 'cr_prospect_id' => $prospect_id??null,
-                "nama_ibu" => $data->work_period??null, 
-                "kategori" => $data->category??null, 
-                "gelar" => $data->title??null, 
-                "lama_bekerja" => $data->mother_name??null, 
-                "tanggungan" => $data->dependants??null, 
+                "nama_ibu" => $cr_oder->MOTHER_NAME ?? null, 
+                "kategori" => $cr_oder->CATEGORY ?? null, 
+                "gelar" => $cr_oder->TITLE ?? null, 
+                "lama_bekerja" => $cr_oder->WORK_PERIOD ?? null, 
+                "tanggungan" => $cr_oder->DEPENDANTS ?? null, 
                 "biaya_bulanan" => $cr_oder->BIAYA??null, 
-                "pendapatan_pribadi" => $data->income_personal??null,
-                "pendapatan_pasangan" => $data->income_spouse??null,
-                "pendapatan_lainnya" => $data->income_other??null,
+                "pendapatan_pribadi" => $cr_oder->INCOME_PERSONAL ?? null,
+                "pendapatan_pasangan" => $cr_oder->INCOME_SPOUSE ?? null,
+                "pendapatan_lainnya" => $cr_oder->INCOME_OTHER ?? null,
                 "no_npwp" => $cr_oder->NO_NPWP??null,
                 "order_tanggal" =>  $cr_oder->ORDER_TANGGAL??null,
                 "order_status" =>  $cr_oder->ORDER_STATUS??null,

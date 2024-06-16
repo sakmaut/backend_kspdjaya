@@ -399,8 +399,8 @@ class CrSurveyController extends Controller
 
     public function uploadImage(Request $req)
     {
+        DB::beginTransaction();
         try {
-            DB::beginTransaction();
 
             $this->validate($req, [
                 'image' => 'image|mimes:jpg,png,jpeg,gif,svg',
@@ -408,27 +408,28 @@ class CrSurveyController extends Controller
                 'cr_prospect_id' =>'string'
             ]);
 
-            $image_path = $req->file('image')->store('public/Cr_Prospect');
-            $image_path = str_replace('public/', '', $image_path);
+            if ($req->hasFile('image')) {
+                $image_path = $req->file('image')->store('public/Cr_Survey');
+                $image_path = str_replace('public/', '', $image_path);
 
-            $url= URL::to('/') . '/storage/' . $image_path;
+                $url = URL::to('/') . '/storage/' . $image_path;
 
-            $data_array_attachment = [
-                'ID' => Uuid::uuid4()->toString(),
-                'CR_SURVEY_ID' => $req->cr_prospect_id,
-                'TYPE' => $req->type,
-                'PATH' => $url ?? ''
-            ];
+                $data_array_attachment = [
+                    'ID' => Uuid::uuid4()->toString(),
+                    'CR_SURVEY_ID' => $req->cr_prospect_id,
+                    'TYPE' => $req->type,
+                    'PATH' => $url ?? ''
+                ];
 
-            M_CrSurveyDocument::create($data_array_attachment);
+                M_CrSurveyDocument::create($data_array_attachment);
 
-            DB::commit();
-            // ActivityLogger::logActivity($req,"Success",200);
-            return response()->json(['message' => 'Image upload successfully',"status" => 200,'response' => $url], 200);
-        } catch (ModelNotFoundException $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($req, 'Cr Prospect Id Not Found', 404);
-            return response()->json(['message' => 'Cr Prospect Id Not Found', "status" => 404], 404);
+                DB::commit();
+                return response()->json(['message' => 'Image upload successfully', "status" => 200, 'response' => $url], 200);
+            } else {
+                DB::rollback();
+                ActivityLogger::logActivity($req, 'No image file provided', 400);
+                return response()->json(['message' => 'No image file provided', "status" => 400], 400);
+            }
         } catch (QueryException $e) {
             DB::rollback();
             ActivityLogger::logActivity($req,$e->getMessage(),409);
