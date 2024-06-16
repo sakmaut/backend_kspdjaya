@@ -12,7 +12,7 @@ class M_ApplicationApproval extends Model
     use HasFactory;
     protected $table = 'application_approval';
     protected $fillable = [
-        'ID',
+        'id',
         'cr_prospect_id' ,
         'cr_application_id' ,
         'cr_prospect_kapos',
@@ -31,7 +31,7 @@ class M_ApplicationApproval extends Model
     protected $guarded = [];
     public $incrementing = false;
     protected $keyType = 'string';
-    protected $primaryKey = 'ID';
+    protected $primaryKey = 'id';
     public $timestamps = false;
     protected static function boot()
     {

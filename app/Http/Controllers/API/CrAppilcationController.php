@@ -358,16 +358,10 @@ class CrAppilcationController extends Controller
 
     private function insert_application_approval($applicationId, $surveyID,$flag){
 
-        $data_approval =[  
-            'ID' => Uuid::uuid7()->toString(),
-            'cr_application_id' => $applicationId
-        ];
-
         $approval_change = M_SurveyApproval::where('CR_SURVEY_ID', $surveyID)->first();
+        $approvalLog = new ApprovalLog();
 
         if($flag === 'yes'){
-            $approvalLog = new ApprovalLog();
-            
             $data_approval['application_result'] = '1:waiting kapos';
 
             $change_approval = [
@@ -380,7 +374,19 @@ class CrAppilcationController extends Controller
             $data_approval['application_result'] = '0:draft';
         }
 
-        M_ApplicationApproval::create($data_approval);
+        $checkApproval= M_ApplicationApproval::where('cr_application_id', $applicationId)->first();
+
+        if (!$checkApproval) {
+            $data_approval = [
+                'ID' => Uuid::uuid7()->toString(),
+                'cr_application_id' => $applicationId
+            ];
+            M_ApplicationApproval::create($data_approval);
+        } else {
+            $checkApproval->update($data_approval);
+        } 
+
+        
     }
 
     public function generateUuidFPK(Request $request)
@@ -631,18 +637,35 @@ class CrAppilcationController extends Controller
             }
 
             $data_approval=[
-                'ID' => Uuid::uuid4()->toString(),
                 'cr_application_kapos' => $request->user()->id,
                 'cr_application_kapos_time' => Carbon::now()->format('Y-m-d'),
                 'cr_application_kapos_desc' => $request->keterangan
             ];
 
+            $approvalLog = new ApprovalLog();
+            $checkApplication = M_CrApplication::where('ID', $request->cr_application_id)->first();
+            $approval_change = M_SurveyApproval::where('CR_SURVEY_ID', $checkApplication->CR_SURVEY_ID)->first();    
+
             if($request->flag === 'yes'){
                 $data_approval['cr_application_kapos_note'] = $request->flag;
                 $data_approval['application_result'] = '2:waiting ho';
+
+                $change_approval = [
+                    'APPROVAL_RESULT' => '2:waiting ho'
+                ];
+
+                $approval_change->update($change_approval);
+                $approvalLog->surveyApprovalLog("AUTO_APPROVED_BY_SYSTEM", $approval_change->ID, '2:waiting ho');
             }else{
                 $data_approval['cr_application_kapos_note'] = $request->flag;
                 $data_approval['application_result'] = '6:closed kapos';
+
+                $change_approval = [
+                    'APPROVAL_RESULT' => '6:closed kapos'
+                ];
+
+                $approval_change->update($change_approval);
+                $approvalLog->surveyApprovalLog("AUTO_APPROVED_BY_SYSTEM", $approval_change->ID, '6:closed kapos');
             }
     
             $check_application_id->update($data_approval);
