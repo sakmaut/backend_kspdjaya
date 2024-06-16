@@ -66,12 +66,12 @@ class M_CrSurvey extends Model
         $query = self::select('*')
                         ->leftJoin('survey_approval', 'survey_approval.CR_SURVEY_ID', '=', 'cr_survey.id')
                         ->where('cr_survey.branch_id', $branchId)
-                        ->where(function ($query) {
-                            $values = ['1:approve', '2:created_fpk', '3:waiting kapos'];
-                            foreach ($values as $value) {
-                                $query->orWhere('survey_approval.APPROVAL_RESULT', 'like', "%{$value}%");
-                            }
-                        })
+                        // ->where(function ($query) {
+                        //     $values = ['1:approve', '2:created_fpk', '3:waiting kapos', '4:waiting ho'];
+                        //     foreach ($values as $value) {
+                        //         $query->orWhere('survey_approval.APPROVAL_RESULT', 'like', "%{$value}%");
+                        //     }
+                        // })
                         ->whereNull('deleted_at')
                         ->get();
 

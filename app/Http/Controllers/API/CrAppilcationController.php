@@ -651,21 +651,21 @@ class CrAppilcationController extends Controller
                 $data_approval['application_result'] = '2:waiting ho';
 
                 $change_approval = [
-                    'APPROVAL_RESULT' => '2:waiting ho'
+                    'APPROVAL_RESULT' => '4:waiting ho'
                 ];
 
                 $approval_change->update($change_approval);
-                $approvalLog->surveyApprovalLog("AUTO_APPROVED_BY_SYSTEM", $approval_change->ID, '2:waiting ho');
+                $approvalLog->surveyApprovalLog("AUTO_APPROVED_BY_SYSTEM", $approval_change->ID, '4:waiting ho');
             }else{
                 $data_approval['cr_application_kapos_note'] = $request->flag;
                 $data_approval['application_result'] = '6:closed kapos';
 
                 $change_approval = [
-                    'APPROVAL_RESULT' => '6:closed kapos'
+                    'APPROVAL_RESULT' => '5:closed kapos'
                 ];
 
                 $approval_change->update($change_approval);
-                $approvalLog->surveyApprovalLog("AUTO_APPROVED_BY_SYSTEM", $approval_change->ID, '6:closed kapos');
+                $approvalLog->surveyApprovalLog("AUTO_APPROVED_BY_SYSTEM", $approval_change->ID, '5:closed kapos');
             }
     
             $check_application_id->update($data_approval);
