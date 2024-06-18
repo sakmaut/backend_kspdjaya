@@ -71,7 +71,7 @@ class CrSurveyController extends Controller
             $check = $this->CrSurvey->where('id',$id)->whereNull('deleted_at')->firstOrFail();
 
             ActivityLogger::logActivity($req,"Success",200);
-            return response()->json(['message' => 'OK',"status" => 200,'response' => self::resourceDetail($req,$check)], 200);
+            return response()->json(['message' => 'OK',"status" => 200,'response' => self::resourceDetail($check)], 200);
         } catch (ModelNotFoundException $e) {
             ActivityLogger::logActivity($req,'Data Not Found',404);
             return response()->json(['message' => 'Data Not Found',"status" => 404], 404);
@@ -81,7 +81,7 @@ class CrSurveyController extends Controller
         }
     }
 
-    private function resourceDetail($request,$data)
+    private function resourceDetail($data)
     {
         $survey_id = $data->id;
         $guarente_vehicle = M_CrGuaranteVehicle::where('CR_SURVEY_ID',$survey_id)->get(); 
@@ -89,11 +89,6 @@ class CrSurveyController extends Controller
         
         $arrayList = [
             'id' => $survey_id,
-            'cust_code_ref' => $data->cust_code_ref,
-            'data_ao' =>[
-                'ao_id' => $request->user()->id,
-                'nama_ao' => $request->user()->fullname,
-            ],
             'data_order' =>[
                 'tujuan_kredit' => $data->tujuan_kredit,
                 'plafond' => 'IDR '.number_format($data->plafond,0,",","."),
@@ -102,7 +97,7 @@ class CrSurveyController extends Controller
             ],
             'data_nasabah' => [
                 'nama' => $data->nama,
-                'tgl_lahir' => date('d-m-Y',strtotime($data->tgl_lahir)),
+                'tgl_lahir' => is_null($data->tgl_lahir) ? null : date('d-m-Y',strtotime($data->tgl_lahir)),
                 'no_hp' => $data->hp,
                 'no_ktp' => $data->ktp,
                 'alamat' => $data->alamat,
@@ -118,27 +113,22 @@ class CrSurveyController extends Controller
                 'usaha' => $data->usaha,
                 'sektor' => $data->sector,
                 'lama_bekerja' => $data->work_period,
-                'tanggungan' => $data->dependants,
-                'pengeluaran' => $data->expenses,
-                'penghasilan_pribadi' => $data->income_personal,
-                'penghasilan_pasangan' => $data->income_spouse,
-                'penghasilan_lainnya' => $data->income_other,
-                'tgl_survey' => is_null($data->visit_date) ? '': date('d-m-Y',strtotime($data->visit_date)),
+                'pengeluaran' => (int) $data->expenses,
+                'penghasilan_pribadi' => (int) $data->income_personal,
+                'penghasilan_pasangan' => (int) $data->income_spouse,
+                'penghasilan_lainnya' => (int) $data->income_other,
+                'tgl_survey' => is_null($data->visit_date) ? null: date('d-m-Y',strtotime($data->visit_date)),
                 'catatan_survey' => $data->survey_note,
-            ],
-            "lokasi" => [ 
-                'coordinate' => $data->coordinate,
-                'accurate' => $data->accurate
-            ],         
+            ], 
             'jaminan_kendaraan' => [],
             'prospect_approval' => [
                 'flag_approval' => $approval_detail->ONCHARGE_APPRVL,
                 'keterangan' => $approval_detail->ONCHARGE_DESCR,
                 'status' => $approval_detail->APPROVAL_RESULT
             ],
-            "dokumen_indentitas" => M_CrSurveyDocument::attachment($survey_id, ['ktp', 'kk', 'ktp_pasangan']),
-            "dokumen_jaminan" => M_CrSurveyDocument::attachment($survey_id, ['no_rangka', 'no_mesin', 'stnk','depan','belakang','kanan','kiri']),
-            "dokumen_pendukung" => M_CrSurveyDocument::attachment($survey_id, ['pendukung']),
+            "dokumen_indentitas" => M_CrSurveyDocument::attachment($survey_id, ['ktp', 'kartu keluarga', 'ktp pasangan']),
+            "dokumen_jaminan" => M_CrSurveyDocument::attachment($survey_id, ['no rangka', 'no mesin', 'stnk', 'tampak depan', 'tampak belakang', 'tampak kanan', 'tampak kiri']),
+            "dokumen_pendukung" => M_CrSurveyDocument::attachment($survey_id, ['dokumen pendukung']),
         ];
 
         foreach ($guarente_vehicle as $list) {
@@ -295,16 +285,15 @@ class CrSurveyController extends Controller
                 'city' => $request->data_nasabah['data_alamat']['kota']?? null,
                 'kecamatan' => $request->data_nasabah['data_alamat']['kecamatan']?? null,
                 'kelurahan' => $request->data_nasabah['data_alamat']['kelurahan']?? null,
+                'usaha' => $request->data_survey['usaha'] ?? null,
+                'sector' => $request->data_survey['sektor'] ?? null,
                 "work_period" => $request->data_survey['lama_bekerja']?? null,
-                "income_personal" => $request->data_survey['penghasilan']['pribadi']?? null,
-                "income_spouse" =>  $request->data_survey['penghasilan']['pasangan']?? null,
-                "income_other" =>  $request->data_survey['penghasilan']['lainnya']?? null,
-                'usaha' => $request->data_survey['usaha']?? null,
-                'sector' => $request->data_survey['sektor']?? null,
-                "expenses" => $request->data_survey['pengeluaran']?? null,
+                "expenses" => $request->data_survey['pengeluaran'] ?? null,
+                "income_personal" => $request->data_survey['penghasilan_pribadi']?? null,
+                "income_spouse" =>  $request->data_survey['penghasilan_pasangan']?? null,
+                "income_other" =>  $request->data_survey['penghasilan_lainnya']?? null,
+                'visit_date' => is_null($request->data_survey['tgl_survey']) ? null : date('d-m-Y', strtotime($request->data_survey['tgl_survey'])),
                 'survey_note' => $request->data_survey['catatan_survey']?? null,
-                'coordinate' => $request->lokasi['coordinate']?? null,
-                'accurate' => $request->lokasi['accurate']?? null,
                 'updated_by' => $request->user()->id,
                 'updated_at' => $this->timeNow
             ];
