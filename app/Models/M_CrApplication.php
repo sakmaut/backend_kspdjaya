@@ -63,28 +63,27 @@ class M_CrApplication extends Model
         });
     }
 
-    public static function fpkListData($param = null){
-
-        $query =  DB::table('cr_application as t1')
-                    ->select(
-                        't1.id',
-                        't3.NAME as cabang',
-                        't4.fullname as nama_ao',
-                        't2.nama as nama_debitur',
-                        DB::raw("COALESCE(t1.SUBMISSION_VALUE, t2.plafond) as plafond"),
-                        DB::raw("COALESCE(t1.PERIOD, t2.tenor) as tenor"),
-                        't6.application_result as status'
-                    )
-                    ->join('cr_survey as t2', 't2.id', '=', 't1.CR_SURVEY_ID')
-                    ->join('branch as t3', 't3.ID', '=', 't1.BRANCH')
-                    ->join('users as t4', 't4.id', '=', 't2.created_by')
-                    ->join('application_approval as t6', 't6.cr_application_id', '=', 't1.ID');
+    public static function fpkListData($param = null)
+    {
+        $query = DB::table('cr_application as t1')
+        ->select(
+            't1.id',
+            't3.NAME as cabang',
+            't4.fullname as nama_ao',
+            't2.nama as nama_debitur',
+            DB::raw("COALESCE(t1.SUBMISSION_VALUE, t2.plafond) as plafond"),
+            DB::raw("COALESCE(t1.PERIOD, t2.tenor) as tenor"),
+            't6.application_result as status'
+        )
+            ->join('cr_survey as t2', 't2.id', '=', 't1.CR_SURVEY_ID')
+            ->join('branch as t3', 't3.ID', '=', 't1.BRANCH')
+            ->join('users as t4', 't4.id', '=', 't2.created_by')
+            ->join('application_approval as t6', 't6.cr_application_id', '=', 't1.ID');
 
         if ($param !== null) {
-            $query->where('t6.application_result','!=', $param);
+            $query->whereNotIn('t6.application_result', [$param]);
         }
-    
-        $results = $query->get();
-        return $results;
+
+        return $query->get();
     }
 }
