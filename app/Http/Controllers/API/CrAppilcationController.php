@@ -65,7 +65,7 @@ class CrAppilcationController extends Controller
             }else {
                 $check_application_id = $check;
             }
-
+            
             $surveyID = $check_application_id->CR_SURVEY_ID;
 
             if (!isset($surveyID)  || $surveyID == '') {
@@ -74,7 +74,7 @@ class CrAppilcationController extends Controller
 
             $detail_prospect = M_CrSurvey::where('id',$surveyID)->first();
 
-            return response()->json(['message' => 'OK',"status" => 200,'response' => self::resourceDetail($detail_prospect,$check_application_id)], 200);
+            return response()->json(['message' => 'OK',"status" => 200,'response' =>  self::resourceDetail($detail_prospect,$check_application_id)], 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
@@ -424,7 +424,15 @@ class CrAppilcationController extends Controller
                     'CREATE_USER' => $request->user()->id,
                 ];
         
-                M_CrApplication::create($data_cr_application);
+                $fpkCreate =  M_CrApplication::create($data_cr_application);
+
+                $data_approval_fpk =[
+                    'id' => Uuid::uuid7()->toString(),
+                    'cr_application_id' => $fpkCreate->id,
+                    'application_result' => '0:draft'
+                ];
+
+                M_ApplicationApproval::create($data_approval_fpk);
             }else{
                 $generate_uuid = $check_prospect_id->ID;
             }
@@ -573,25 +581,25 @@ class CrAppilcationController extends Controller
             ],
             "info_bank" =>[],
             "ekstra" =>[
-                "nilai_yang_diterima" => $applicationDetail->SUBMISSION_VALUE == ''?$data->plafond:$applicationDetail->SUBMISSION_VALUE,
-                "periode" => $applicationDetail->PERIOD == ''?$data->tenor:$applicationDetail->PERIOD,
+                "nilai_yang_diterima" => $applicationDetail->SUBMISSION_VALUE == ''?$data->plafond:$applicationDetail->SUBMISSION_VALUE?? null,
+                "periode" => $applicationDetail->PERIOD == ''?$data->tenor:$applicationDetail->PERIOD?? null,
                 // "pokok_pembayaran"=> null,
-                "tipe_angsuran"=> $applicationDetail->CREDIT_TYPE,
-                "cara_pembayaran"=> $applicationDetail->PAYMENT_WAY,
-                "total_admin"=> $applicationDetail->TOTAL_ADMIN,
-                "cadangan"=> $applicationDetail->CADANGAN,
+                "tipe_angsuran"=> $applicationDetail->CREDIT_TYPE?? null,
+                "cara_pembayaran"=> $applicationDetail->PAYMENT_WAY?? null,
+                "total_admin"=> $applicationDetail->TOTAL_ADMIN?? null,
+                "cadangan"=> $applicationDetail->CADANGAN?? null,
                 // "angsuran"=> $applicationDetail->INSTALLMENT,
-                "opt_periode"=> $applicationDetail->OPT_PERIODE,
-                "provisi"=> $applicationDetail->PROVISION,
-                "asuransi"=> $applicationDetail->INSURANCE,
-                "biaya_transfer"=> $applicationDetail->TRANSFER_FEE,
+                "opt_periode"=> $applicationDetail->OPT_PERIODE?? null,
+                "provisi"=> $applicationDetail->PROVISION?? null,
+                "asuransi"=> $applicationDetail->INSURANCE?? null,
+                "biaya_transfer"=> $applicationDetail->TRANSFER_FEE?? null,
                 // "bunga_margin"=> $applicationDetail->INTEREST_MARGIN,
                 // "bunga_margin_flat"=> $applicationDetail->FLAT_RATE,
-                "bunga_eff"=> $applicationDetail->EFF_RATE,
+                "bunga_eff"=> $applicationDetail->EFF_RATE?? null,
                 // "pokok_margin"=>$applicationDetail->PRINCIPAL_MARGIN,
                 // "angsuran_terakhir"=>$applicationDetail->LAST_INSTALLMENT,
                 // "bunga_margin_eff_actual"=>$applicationDetail->INTEREST_MARGIN_EFF_ACTUAL,
-                "bunga_margin_eff_flat"=>$applicationDetail->INTEREST_MARGIN_EFF_FLAT,
+                "bunga_margin_eff_flat"=>$applicationDetail->INTEREST_MARGIN_EFF_FLAT?? null,
                 // "nett_admin"=>null
             ],
             "jaminan_kendaraan" => [],        
