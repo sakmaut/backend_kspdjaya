@@ -82,12 +82,7 @@ class M_CrApplication extends Model
 
             if ($param) {
                 $statuses = explode(',', $param);
-                $query->where(function($q) use ($statuses) {
-                    foreach ($statuses as $status) {
-                        list($code, $desc) = explode(':', $status);
-                        $q->orWhere('t6.application_result', $desc);
-                    }
-                });
+                $query->whereNotIn('t6.application_result', $statuses);
             }
 
         return $query->get();
