@@ -357,19 +357,15 @@ class CrAppilcationController extends Controller
     }
 
     private function insert_application_approval($applicationId, $surveyID,$flag){
-
-        $approval_change = M_SurveyApproval::where('CR_SURVEY_ID', $surveyID)->first();
-        $approvalLog = new ApprovalLog();
-
         if($flag === 'yes'){
             $data_approval['application_result'] = '1:waiting kapos';
 
-            $change_approval = [
-                'APPROVAL_RESULT' => '3:waiting kapos'
-            ];
-
-            $approval_change->update($change_approval);
-            $approvalLog->surveyApprovalLog("AUTO_APPROVED_BY_SYSTEM", $approval_change->ID, '3:waiting kapos');
+            $approval_change = M_SurveyApproval::where('CR_SURVEY_ID', $surveyID)->first();
+            if ($approval_change) {
+                $approval_change->update(['APPROVAL_RESULT' => '3:waiting kapos']);
+                $approvalLog = new ApprovalLog();
+                $approvalLog->surveyApprovalLog("AUTO_APPROVED_BY_SYSTEM", $approval_change->ID, '3:waiting kapos');
+            }
         }else{
             $data_approval['application_result'] = '0:draft';
         }
@@ -377,16 +373,11 @@ class CrAppilcationController extends Controller
         $checkApproval= M_ApplicationApproval::where('cr_application_id', $applicationId)->first();
 
         if (!$checkApproval) {
-            $data_approval = [
-                'ID' => Uuid::uuid7()->toString(),
-                'cr_application_id' => $applicationId
-            ];
+            $data_approval = array_merge(['ID' => Uuid::uuid7()->toString(), 'cr_application_id' => $applicationId], $data_approval);
             M_ApplicationApproval::create($data_approval);
         } else {
             $checkApproval->update($data_approval);
-        } 
-
-        
+        }
     }
 
     public function generateUuidFPK(Request $request)
