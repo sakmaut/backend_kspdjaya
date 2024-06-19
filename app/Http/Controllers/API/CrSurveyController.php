@@ -91,7 +91,7 @@ class CrSurveyController extends Controller
             'id' => $survey_id,
             'data_order' =>[
                 'tujuan_kredit' => $data->tujuan_kredit,
-                'plafond' => 'IDR '.number_format($data->plafond,0,",","."),
+                'plafond' => (int) $data->plafond,
                 'tenor' => $data->tenor, 
                 'kategory' => $data->category 
             ],
@@ -143,7 +143,7 @@ class CrSurveyController extends Controller
                 "no_rangka" => $list->CHASIS_NUMBER,
                 "no_mesin" => $list->ENGINE_NUMBER,
                 "no_stnk" => $list->BPKB_NUMBER,
-                "nilai" =>$list->VALUE
+                "nilai" => (int) $list->VALUE
             ];    
         }
         
