@@ -63,7 +63,7 @@ class M_CrApplication extends Model
         });
     }
 
-    public static function fpkListData($param = null)
+    public static function fpkListData($param = [])
     {
         $query = DB::table('cr_application as t1')
         ->select(
@@ -80,10 +80,15 @@ class M_CrApplication extends Model
             ->join('users as t4', 't4.id', '=', 't2.created_by')
             ->join('application_approval as t6', 't6.cr_application_id', '=', 't1.ID');
 
-            if ($param) {
-                $statuses = explode(',', $param);
+            if (!empty($params)) {
+                $statuses = [];
+                foreach ($params as $param) {
+                    list($code, $desc) = explode(':', $param);
+                    $statuses[] = $desc;
+                }
                 $query->whereNotIn('t6.application_result', $statuses);
             }
+        
 
         return $query->get();
     }
