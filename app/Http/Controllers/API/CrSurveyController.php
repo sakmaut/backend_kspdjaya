@@ -225,7 +225,7 @@ class CrSurveyController extends Controller
     private function createCrProspekApproval($request)
     {
         $approvalLog = new ApprovalLog();
-        $result = '1:approved';
+        $result = '1:waiting fpk';
         $data_approval=[
             'ID' => $this->uuid,
             'CR_SURVEY_ID' => $request->id,
