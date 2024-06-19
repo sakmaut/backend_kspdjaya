@@ -25,7 +25,7 @@ class CrAppilcationController extends Controller
     public function index(Request $request)
     {
         try {
-            $data = M_CrApplication::fpkListData();
+            $data = M_CrApplication::fpkListData($request);
             return response()->json(['message' => 'OK',"status" => 200,'response' => $data], 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
@@ -36,7 +36,7 @@ class CrAppilcationController extends Controller
     public function showKapos(Request $request)
     {
         try {
-            $data = M_CrApplication::fpkListData('0:draft');
+            $data = M_CrApplication::fpkListData($request,'0:draft');
             return response()->json(['message' => 'OK',"status" => 200,'response' => $data], 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
@@ -47,7 +47,7 @@ class CrAppilcationController extends Controller
     public function showHo(Request $request)
     {
         try {
-            $data = M_CrApplication::fpkListData('0:draft', '6:closed kapos');
+            $data = M_CrApplication::fpkListData($request,'0:draft', '6:closed kapos');
             return response()->json(['message' => 'OK', "status" => 200, 'response' => $data], 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
@@ -127,14 +127,30 @@ class CrAppilcationController extends Controller
                 throw new Exception("Id FPK Is Not Exist", 404);
             }
 
-            $prospectId = $check_application_id->CR_SURVEY_ID;
+            $surveyID = $check_application_id->CR_SURVEY_ID;
 
             self::insert_cr_application($request,$check_application_id);
             self::insert_cr_personal($request,$id);
-            self::insert_cr_order($request, $prospectId,$id);
+            self::insert_cr_order($request, $surveyID,$id);
             self::insert_cr_personal_extra($request,$id);
             self::insert_bank_account($request,$id);
-            self::insert_application_approval($id, $prospectId,$request->flag_pengajuan);
+            self::insert_application_approval($id, $surveyID,$request->flag_pengajuan);
+
+            if($request->user()->position === 'KAPOS'){
+                $data_approval['application_result'] = '7:resubmit kapos';
+    
+                $approval_change = M_SurveyApproval::where('CR_SURVEY_ID', $surveyID)->first();
+
+                if ($approval_change) {
+                    $approval_change->update(['APPROVAL_RESULT' => '7:resubmit kapos']);
+                    $approvalLog = new ApprovalLog();
+                    $approvalLog->surveyApprovalLog("AUTO_APPROVED_BY_SYSTEM", $approval_change->ID, '7:resubmit kapos');
+                }
+
+                $checkApproval= M_ApplicationApproval::where('cr_application_id', $id)->first();
+    
+                $checkApproval->update($data_approval);
+            }
 
             return response()->json(['message' => 'Updated Successfully',"status" => 200], 200);
         } catch (\Exception $e) {

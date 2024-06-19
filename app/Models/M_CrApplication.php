@@ -63,8 +63,11 @@ class M_CrApplication extends Model
         });
     }
 
-    public static function fpkListData(...$params)
+    public static function fpkListData($request,...$params)
     {
+        $getPosition = $request->user()->position;
+        $getBranch = $request->user()->branch_id;
+
         $query = DB::table('cr_application as t1')
         ->select(
             't1.id',
@@ -80,16 +83,17 @@ class M_CrApplication extends Model
             ->join('users as t4', 't4.id', '=', 't2.created_by')
             ->join('application_approval as t6', 't6.cr_application_id', '=', 't1.ID');
 
+            if($getPosition !== 'HO'){
+                $query->where('t1.BRANCH', $getBranch);
+            }
+
             if (!empty($params)) {
-                // Split statuses and extract the application results
                 $statuses = [];
                 foreach ($params as $param) {
-                    list($code, $desc) = explode(':', $param);
-                    $statuses[] = $desc;
+                    $statuses[] = $param;
                 }
                 $query->whereNotIn('t6.application_result', $statuses);
             }
-        
 
         return $query->get();
     }
