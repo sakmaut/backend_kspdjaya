@@ -63,7 +63,7 @@ class M_CrApplication extends Model
         });
     }
 
-    public static function fpkListData($param = [])
+    public static function fpkListData($params = null)
     {
         $query = DB::table('cr_application as t1')
         ->select(
@@ -80,7 +80,11 @@ class M_CrApplication extends Model
             ->join('users as t4', 't4.id', '=', 't2.created_by')
             ->join('application_approval as t6', 't6.cr_application_id', '=', 't1.ID');
 
-            if (!empty($params)) {
+            if ($params) {
+                if (!is_array($params)) {
+                    $params = [$params];
+                }
+        
                 $statuses = [];
                 foreach ($params as $param) {
                     list($code, $desc) = explode(':', $param);
