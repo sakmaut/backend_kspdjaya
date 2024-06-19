@@ -598,7 +598,7 @@ class CrAppilcationController extends Controller
             "prospect_approval" => [
                 // "flag_approval" => $approval_detail->ONCHARGE_APPRVL,
                 // "keterangan" => $approval_detail->ONCHARGE_DESCR,
-                "status" => !$approval_detail->application_result?$approval_detail->application_result:null
+                "status" => $approval_detail->application_result == null ?$approval_detail->application_result:""
             ],
             "attachment" =>$attachment_data
         ];
