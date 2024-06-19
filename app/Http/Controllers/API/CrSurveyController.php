@@ -274,7 +274,7 @@ class CrSurveyController extends Controller
                 'tenor' => $request->order['tenor']?? null,
                 'category' => $request->order['category']?? null,
                 'nama' => $request->data_nasabah['nama']?? null,
-                'tgl_lahir' => $request->data_nasabah['tgl_lahir']?? null,
+                'tgl_lahir' => date('Y-m-d', strtotime($request->data_nasabah['tgl_lahir']))?? null,
                 'ktp' => $request->data_nasabah['no_ktp']?? null,
                 'hp' => $request->data_nasabah['no_hp']?? null,
                 'alamat' => $request->data_nasabah['data_alamat']['alamat']?? null,
