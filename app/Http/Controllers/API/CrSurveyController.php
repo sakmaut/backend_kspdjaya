@@ -269,7 +269,6 @@ class CrSurveyController extends Controller
         try {
 
             $data_prospect = [
-                'visit_date' => isset($request->data_survey['tgl_survey']) && !empty($request->data_survey['tgl_survey'])?$request->data_survey['tgl_survey']:null,
                 'tujuan_kredit' => $request->order['tujuan_kredit']?? null,
                 'plafond' => $request->order['plafond']?? null,
                 'tenor' => $request->order['tenor']?? null,
@@ -292,7 +291,7 @@ class CrSurveyController extends Controller
                 "income_personal" => $request->data_survey['penghasilan_pribadi']?? null,
                 "income_spouse" =>  $request->data_survey['penghasilan_pasangan']?? null,
                 "income_other" =>  $request->data_survey['penghasilan_lainnya']?? null,
-                'visit_date' => is_null($request->data_survey['tgl_survey']) ? null : date('d-m-Y', strtotime($request->data_survey['tgl_survey'])),
+                'visit_date' => is_null($request->data_survey['tgl_survey']) ? null : date('Y-m-d', strtotime($request->data_survey['tgl_survey'])),
                 'survey_note' => $request->data_survey['catatan_survey']?? null,
                 'updated_by' => $request->user()->id,
                 'updated_at' => $this->timeNow
