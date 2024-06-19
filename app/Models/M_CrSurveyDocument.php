@@ -37,7 +37,7 @@ class M_CrSurveyDocument extends Model
         $attachment = self::where('CR_SURVEY_ID', $survey_id)
             ->whereIn('TYPE', $array)
             ->orderBy('CREATED_AT', 'desc')
-            ->first();
+            ->get();
 
         return $attachment;
     }
