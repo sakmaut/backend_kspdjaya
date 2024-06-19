@@ -443,16 +443,18 @@ class CrAppilcationController extends Controller
     private function resourceDetail($data,$application)
     {
         $prospect_id = $data->id;
+        $setApplicationId=  $application->ID;
+
         $guarente_vehicle = M_CrGuaranteVehicle::where('CR_SURVEY_ID',$prospect_id)->get(); 
-        $approval_detail = M_SurveyApproval::where('CR_SURVEY_ID',$prospect_id)->first();
+        $approval_detail = M_ApplicationApproval::where('cr_application_id',$setApplicationId)->first();
         $attachment_data = M_CrSurveyDocument::where('CR_SURVEY_ID',$prospect_id )->get();
-        $cr_personal = M_CrPersonal::where('APPLICATION_ID',$application->ID)->first();
-        $cr_personal_extra = M_CrPersonalExtra::where('APPLICATION_ID',$application->ID)->first();
-        $cr_oder = M_CrOrder::where('APPLICATION_ID',$application->ID)->first();
-        $applicationDetail = M_CrApplication::where('ID',$application->ID)->first();
+        $cr_personal = M_CrPersonal::where('APPLICATION_ID',$setApplicationId)->first();
+        $cr_personal_extra = M_CrPersonalExtra::where('APPLICATION_ID',$setApplicationId)->first();
+        $cr_oder = M_CrOrder::where('APPLICATION_ID',$setApplicationId)->first();
+        $applicationDetail = M_CrApplication::where('ID',$setApplicationId)->first();
 
         $arrayList = [
-            'id_application' => $application->ID,
+            'id_application' => $setApplicationId,
             'pelanggan' =>[
                 "nama" => $data->nama,
                 "nama_panggilan" => $cr_personal->ALIAS ?? null,
