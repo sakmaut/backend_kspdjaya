@@ -392,8 +392,9 @@ class CrAppilcationController extends Controller
     public function generateUuidFPK(Request $request)
     {
         try {
-            $check_survey_id = M_CrSurvey::where('id',$request->cr_prospect_id)
-                                ->whereNull('deleted_at')->first();
+            $getSurveyId = $request->cr_prospect_id;
+
+            $check_survey_id = M_CrSurvey::where('id',$getSurveyId)->whereNull('deleted_at')->first();
 
             if (!$check_survey_id) {
                 throw new Exception("Id Survey Is Not Exist", 404);
@@ -401,7 +402,7 @@ class CrAppilcationController extends Controller
 
             $uuid = Uuid::uuid7()->toString();
 
-            $check_prospect_id = M_CrApplication::where('CR_SURVEY_ID',$request->cr_prospect_id)->first();
+            $check_prospect_id = M_CrApplication::where('CR_SURVEY_ID',$getSurveyId)->first();
 
             if(!$check_prospect_id){
                 $generate_uuid = $uuid;
@@ -421,13 +422,16 @@ class CrAppilcationController extends Controller
                 $generate_uuid = $check_prospect_id->ID;
             }
 
-            $approval_change = M_SurveyApproval::where('CR_SURVEY_ID',$request->cr_prospect_id)->first();
+            $approval_change = M_SurveyApproval::where('CR_SURVEY_ID',$getSurveyId)->first();
 
             $data_update_approval=[
                 'APPROVAL_RESULT' => '2:created_fpk'
             ];
 
             $approval_change->update($data_update_approval);
+
+            $approvalLog = new ApprovalLog();
+            $approvalLog->surveyApprovalLog($request->user()->id, $getSurveyId, '2:created_fpk');
 
             return response()->json(['message' => 'OK',"status" => 200,'response' => ['uuid'=>$generate_uuid]], 200);
         } catch (\Exception $e) {
@@ -655,7 +659,7 @@ class CrAppilcationController extends Controller
                 ];
 
                 $approval_change->update($change_approval);
-                $approvalLog->surveyApprovalLog("AUTO_APPROVED_BY_SYSTEM", $approval_change->ID, '4:waiting ho');
+                $approvalLog->surveyApprovalLog($request->user()->id, $approval_change->ID, '4:waiting ho');
             }else{
                 $data_approval['cr_application_kapos_note'] = $request->flag;
                 $data_approval['application_result'] = '6:closed kapos';
@@ -665,7 +669,7 @@ class CrAppilcationController extends Controller
                 ];
 
                 $approval_change->update($change_approval);
-                $approvalLog->surveyApprovalLog("AUTO_APPROVED_BY_SYSTEM", $approval_change->ID, '5:closed kapos');
+                $approvalLog->surveyApprovalLog($request->user()->id, $approval_change->ID, '5:closed kapos');
             }
     
             $check_application_id->update($data_approval);

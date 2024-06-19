@@ -233,7 +233,7 @@ class CrSurveyController extends Controller
         ];
 
         $approval = M_SurveyApproval::create($data_approval);
-        $approvalLog->surveyApprovalLog("AUTO_APPROVED_BY_SYSTEM", $approval->ID, $result);
+        $approvalLog->surveyApprovalLog($request->user()->id, $approval->ID, $result);
     } 
 
     private function insert_cr_vehicle($request){
