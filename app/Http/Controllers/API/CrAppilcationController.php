@@ -428,7 +428,7 @@ class CrAppilcationController extends Controller
 
                 $data_approval_fpk =[
                     'id' => Uuid::uuid7()->toString(),
-                    'cr_application_id' => $fpkCreate->id,
+                    'cr_application_id' => $fpkCreate->ID,
                     'application_result' => '0:draft'
                 ];
 
