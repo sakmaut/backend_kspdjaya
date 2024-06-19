@@ -47,7 +47,7 @@ class CrAppilcationController extends Controller
     public function showHo(Request $request)
     {
         try {
-            $data = M_CrApplication::fpkListData('0:draft');
+            $data = M_CrApplication::fpkListData('0:draft', '6:closed kapos');
             return response()->json(['message' => 'OK', "status" => 200, 'response' => $data], 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
@@ -626,51 +626,52 @@ class CrAppilcationController extends Controller
                 'cr_application_id' => 'required|string',
                 'flag' => 'required|string',
             ]);
-
-            $check_application_id = M_ApplicationApproval::where('cr_application_id',$request->cr_application_id)->first();
-
+        
+            $check_application_id = M_ApplicationApproval::where('cr_application_id', $request->cr_application_id)->first();
+        
             if (!$check_application_id) {
                 throw new Exception("Id FPK Is Not Exist", 404);
             }
-
-            $data_approval=[
+        
+            $checkApplication = M_CrApplication::where('ID', $request->cr_application_id)->first();
+            $approval_change = M_SurveyApproval::where('CR_SURVEY_ID', $checkApplication->CR_SURVEY_ID)->first();
+        
+            $data_approval = [
                 'cr_application_kapos' => $request->user()->id,
                 'cr_application_kapos_time' => Carbon::now()->format('Y-m-d'),
-                'cr_application_kapos_desc' => $request->keterangan
+                'cr_application_kapos_desc' => $request->keterangan,
             ];
-
-            $approvalLog = new ApprovalLog();
-            $checkApplication = M_CrApplication::where('ID', $request->cr_application_id)->first();
-            $approval_change = M_SurveyApproval::where('CR_SURVEY_ID', $checkApplication->CR_SURVEY_ID)->first();    
-
-            if($request->flag === 'yes'){
+        
+            if ($request->flag === 'yes') {
                 $data_approval['cr_application_kapos_note'] = $request->flag;
                 $data_approval['application_result'] = '2:waiting ho';
-
+        
                 $change_approval = [
                     'APPROVAL_RESULT' => '4:waiting ho'
                 ];
-
-                $approval_change->update($change_approval);
-                $approvalLog->surveyApprovalLog($request->user()->id, $approval_change->ID, '4:waiting ho');
-            }else{
+        
+                $approvalLogMessage = '4:waiting ho';
+            } else {
                 $data_approval['cr_application_kapos_note'] = $request->flag;
                 $data_approval['application_result'] = '6:closed kapos';
-
+        
                 $change_approval = [
                     'APPROVAL_RESULT' => '5:closed kapos'
                 ];
-
-                $approval_change->update($change_approval);
-                $approvalLog->surveyApprovalLog($request->user()->id, $approval_change->ID, '5:closed kapos');
+        
+                $approvalLogMessage = '5:closed kapos';
             }
-    
+        
+            $approval_change->update($change_approval);
+            $approvalLog = new ApprovalLog();
+            $approvalLog->surveyApprovalLog($request->user()->id, $approval_change->ID, $approvalLogMessage);
+        
             $check_application_id->update($data_approval);
-
-            return response()->json(['message' => 'Approval Kapos Successfully',"status" => 200], 200);
+        
+            return response()->json(['message' => 'Approval Kapos Successfully', "status" => 200], 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
 
@@ -681,30 +682,57 @@ class CrAppilcationController extends Controller
                 'cr_application_id' => 'required|string',
                 'flag' => 'required|string',
             ]);
-
+        
             $check_application_id = M_ApplicationApproval::where('cr_application_id', $request->cr_application_id)->first();
-
+        
             if (!$check_application_id) {
                 throw new Exception("Id FPK Is Not Exist", 404);
             }
-
+        
+            $checkApplication = M_CrApplication::where('ID', $request->cr_application_id)->first();
+            $approval_change = M_SurveyApproval::where('CR_SURVEY_ID', $checkApplication->CR_SURVEY_ID)->first();
+        
             $data_approval = [
-                'ID' => Uuid::uuid4()->toString(),
                 'cr_application_ho' => $request->user()->id,
                 'cr_application_ho_time' => Carbon::now()->format('Y-m-d'),
-                'cr_application_ho_desc' => $request->keterangan
+                'cr_application_ho_desc' => $request->keterangan,
             ];
-
+        
             if ($request->flag === 'yes') {
                 $data_approval['cr_application_ho_note'] = $request->flag;
                 $data_approval['application_result'] = '3:approved ho';
+        
+                $change_approval = [
+                    'APPROVAL_RESULT' => '6:approved ho'
+                ];
+        
+                $approvalLogMessage = '6:approved ho';
+            }elseif ($request->flag === 'no') {
+                $data_approval['cr_application_ho_note'] = $request->flag;
+                $data_approval['application_result'] = '4:reject ho';
+        
+                $change_approval = [
+                    'APPROVAL_RESULT' => '7:reject ho'
+                ];
+        
+                $approvalLogMessage = '7:reject ho';
             } else {
                 $data_approval['cr_application_ho_note'] = $request->flag;
-                $data_approval['application_result'] = '6:closed ho';
+                $data_approval['application_result'] = '5:closed ho';
+        
+                $change_approval = [
+                    'APPROVAL_RESULT' => '8:closed ho'
+                ];
+        
+                $approvalLogMessage = '8:closed ho';
             }
-
+        
+            $approval_change->update($change_approval);
+            $approvalLog = new ApprovalLog();
+            $approvalLog->surveyApprovalLog($request->user()->id, $approval_change->ID, $approvalLogMessage);
+        
             $check_application_id->update($data_approval);
-
+        
             return response()->json(['message' => 'Approval Kapos Successfully', "status" => 200], 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request, $e->getMessage(), 500);

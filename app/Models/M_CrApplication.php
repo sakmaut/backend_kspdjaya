@@ -80,9 +80,15 @@ class M_CrApplication extends Model
             ->join('users as t4', 't4.id', '=', 't2.created_by')
             ->join('application_approval as t6', 't6.cr_application_id', '=', 't1.ID');
 
-        if ($param !== null) {
-            $query->whereNotIn('t6.application_result', [$param]);
-        }
+            if ($param) {
+                $statuses = explode(',', $param);
+                $query->where(function($q) use ($statuses) {
+                    foreach ($statuses as $status) {
+                        list($code, $desc) = explode(':', $status);
+                        $q->orWhere('t6.application_result', $desc);
+                    }
+                });
+            }
 
         return $query->get();
     }
