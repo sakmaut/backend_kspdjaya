@@ -443,7 +443,7 @@ class CrAppilcationController extends Controller
     private function resourceDetail($data,$application)
     {
         $prospect_id = $data->id;
-        $setApplicationId=  $application->ID;
+        $setApplicationId = $application->ID;
 
         $guarente_vehicle = M_CrGuaranteVehicle::where('CR_SURVEY_ID',$prospect_id)->get(); 
         $approval_detail = M_ApplicationApproval::where('cr_application_id',$setApplicationId)->first();
@@ -589,9 +589,9 @@ class CrAppilcationController extends Controller
             ],
             "jaminan_kendaraan" => [],        
             "prospect_approval" => [
-                "flag_approval" => $approval_detail->ONCHARGE_APPRVL,
-                "keterangan" => $approval_detail->ONCHARGE_DESCR,
-                "status" => $approval_detail->APPROVAL_RESULT
+                // "flag_approval" => $approval_detail->ONCHARGE_APPRVL,
+                // "keterangan" => $approval_detail->ONCHARGE_DESCR,
+                "status" => $approval_detail->application_result
             ],
             "attachment" =>$attachment_data
         ];
