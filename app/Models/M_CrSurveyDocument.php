@@ -40,7 +40,7 @@ class M_CrSurveyDocument extends Model
                         ->get()
                         ->groupBy('TYPE')
                         ->map(function($items) {
-                            return $items->first();
+                            return $items->first()->toArray();
                         });
 
         return $attachment;
