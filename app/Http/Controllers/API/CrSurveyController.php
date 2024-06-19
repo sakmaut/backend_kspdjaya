@@ -272,7 +272,7 @@ class CrSurveyController extends Controller
                 'tujuan_kredit' => $request->order['tujuan_kredit']?? null,
                 'plafond' => $request->order['plafond']?? null,
                 'tenor' => $request->order['tenor']?? null,
-                'category' => $request->order['category']?? null,
+                'category' => $request->order['kategory']?? null,
                 'nama' => $request->data_nasabah['nama']?? null,
                 'tgl_lahir' => date('Y-m-d', strtotime($request->data_nasabah['tgl_lahir']))?? null,
                 'ktp' => $request->data_nasabah['no_ktp']?? null,
