@@ -473,7 +473,7 @@ class CrAppilcationController extends Controller
         $arrayList = [
             'id_application' => $setApplicationId,
             'pelanggan' =>[
-                "nama" => $data->nama ?? ($cr_personal->NAME ?? ''),
+                "nama" => $cr_personal->NAME ?? ( $data->nama?? ''),
                 "nama_panggilan" => $cr_personal->ALIAS ?? null,
                 "jenis_kelamin" => $cr_personal->GENDER ?? null,
                 "tempat_lahir" => $cr_personal->BIRTHPLACE ?? null,
