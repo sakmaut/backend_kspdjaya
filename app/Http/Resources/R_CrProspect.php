@@ -26,7 +26,7 @@ class R_CrProspect extends JsonResource
         $data = [
             'id' => $this->id,
             'visit_date' => $this->visit_date  == null ? null :date('Y-m-d', strtotime($this->visit_date)),
-            'nama_debitur' => $this->nama,
+            'nama_debitur' => $this->nama_debitur,
             'alamat' => $this->alamat,
             'hp' => $this->hp,
             'plafond' => $this->plafond,

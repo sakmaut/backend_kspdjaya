@@ -63,8 +63,15 @@ class M_CrSurvey extends Model
 
     public static function show_admin($branchId){
 
-        $query = self::select('*')
+        $query = self::select(  'cr_survey.id as id',
+                                'cr_survey.visit_date',
+                                DB::raw("COALESCE(cr_personal.NAME, cr_survey.nama) as nama_debitur"),
+                                'cr_survey.alamat',
+                                'cr_survey.hp',
+                                'cr_survey.plafond',)
                         ->leftJoin('survey_approval', 'survey_approval.CR_SURVEY_ID', '=', 'cr_survey.id')
+                        ->leftJoin('cr_application', 'cr_application.CR_SURVEY_ID', '=', 'cr_survey.id')
+                        ->leftJoin('cr_personal', 'cr_personal.APPLICATIOn_ID', '=', 'cr_application.ID')
                         ->where('cr_survey.branch_id', $branchId)
                         // ->where(function ($query) {
                         //     $values = ['1:approve', '2:created_fpk', '3:waiting kapos', '4:waiting ho'];
@@ -72,7 +79,7 @@ class M_CrSurvey extends Model
                         //         $query->orWhere('survey_approval.APPROVAL_RESULT', 'like', "%{$value}%");
                         //     }
                         // })
-                        ->whereNull('deleted_at')
+                        ->whereNull('cr_survey.deleted_at')
                         ->get();
 
         return $query;
