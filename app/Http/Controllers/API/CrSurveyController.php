@@ -34,7 +34,7 @@ class CrSurveyController extends Controller
     public function index(Request $req){
         try {
             $mcf_id = $req->user()->id;
-            $data =  $this->CrSurvey->whereNull('deleted_at')->where('created_by', $mcf_id)->get();
+            $data =  $this->CrSurvey->show_mcf($mcf_id);
             $dto = R_CrProspect::collection($data);
     
             ActivityLogger::logActivity($req,"Success",200);

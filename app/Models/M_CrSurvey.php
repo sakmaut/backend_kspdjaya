@@ -61,6 +61,24 @@ class M_CrSurvey extends Model
         });
     }
 
+    public static function show_mcf($mcfId){
+
+        $query = self::select(  'cr_survey.id as id',
+                                'cr_survey.visit_date',
+                                DB::raw("COALESCE(cr_personal.NAME, cr_survey.nama) as nama_debitur"),
+                                'cr_survey.alamat',
+                                'cr_survey.hp',
+                                DB::raw("COALESCE(cr_application.SUBMISSION_VALUE, cr_survey.plafond) as plafond"))
+                        ->leftJoin('survey_approval', 'survey_approval.CR_SURVEY_ID', '=', 'cr_survey.id')
+                        ->leftJoin('cr_application', 'cr_application.CR_SURVEY_ID', '=', 'cr_survey.id')
+                        ->leftJoin('cr_personal', 'cr_personal.APPLICATIOn_ID', '=', 'cr_application.ID')
+                        ->where('cr_survey.created_by', $mcfId)
+                        ->whereNull('cr_survey.deleted_at')
+                        ->get();
+
+        return $query;
+    }
+
     public static function show_admin($branchId){
 
         $query = self::select(  'cr_survey.id as id',
@@ -73,12 +91,6 @@ class M_CrSurvey extends Model
                         ->leftJoin('cr_application', 'cr_application.CR_SURVEY_ID', '=', 'cr_survey.id')
                         ->leftJoin('cr_personal', 'cr_personal.APPLICATIOn_ID', '=', 'cr_application.ID')
                         ->where('cr_survey.branch_id', $branchId)
-                        // ->where(function ($query) {
-                        //     $values = ['1:approve', '2:created_fpk', '3:waiting kapos', '4:waiting ho'];
-                        //     foreach ($values as $value) {
-                        //         $query->orWhere('survey_approval.APPROVAL_RESULT', 'like', "%{$value}%");
-                        //     }
-                        // })
                         ->whereNull('cr_survey.deleted_at')
                         ->get();
 
