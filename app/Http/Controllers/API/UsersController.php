@@ -95,9 +95,8 @@ class UsersController extends Controller
                 'branch_id' => $request->cabang_id,
                 'position' => $request->jabatan,
                 'gender' => $request->gender,
-                'status' => $request->status,
                 'mobile_number' => $request->no_hp,
-                'status' => $request->status,
+                'status' => $request->status == ''?'Active':$request->status,
                 'created_by' => $request->user()->id
             ];
         
