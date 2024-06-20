@@ -73,7 +73,7 @@ class UsersController extends Controller
     {
         DB::beginTransaction();
         try {
-            self::_validate($request);
+            // self::_validate($request);
 
             $check_branch = M_Branch::where('ID', $request->cabang)->first();
 
@@ -142,7 +142,7 @@ class UsersController extends Controller
     {
         DB::beginTransaction();
         try {
-            self::_validate($request);
+            // self::_validate($request);
 
             $users = User::findOrFail($id);
 
