@@ -13,6 +13,7 @@ use App\Models\M_CrPersonalExtra;
 use App\Models\M_CrSurvey;
 use App\Models\M_CrSurveyDocument;
 use App\Models\M_SurveyApproval;
+use App\Models\User;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\QueryException;
@@ -457,16 +458,17 @@ class CrAppilcationController extends Controller
 
     private function resourceDetail($data,$application)
     {
-        $prospect_id = $data->id;
+        $surveyId = $data->id;
         $setApplicationId = $application->ID;
 
-        $guarente_vehicle = M_CrGuaranteVehicle::where('CR_SURVEY_ID',$prospect_id)->get(); 
+        $guarente_vehicle = M_CrGuaranteVehicle::where('CR_SURVEY_ID',$surveyId)->get(); 
         $approval_detail = M_ApplicationApproval::where('cr_application_id',$setApplicationId)->first();
-        $attachment_data = M_CrSurveyDocument::where('CR_SURVEY_ID',$prospect_id )->get();
+        $attachment_data = M_CrSurveyDocument::where('CR_SURVEY_ID',$surveyId )->get();
         $cr_personal = M_CrPersonal::where('APPLICATION_ID',$setApplicationId)->first();
         $cr_personal_extra = M_CrPersonalExtra::where('APPLICATION_ID',$setApplicationId)->first();
         $cr_oder = M_CrOrder::where('APPLICATION_ID',$setApplicationId)->first();
         $applicationDetail = M_CrApplication::where('ID',$setApplicationId)->first();
+        $cr_survey= M_CrSurvey::where('id',$surveyId)->first();
 
         $arrayList = [
             'id_application' => $setApplicationId,
@@ -542,7 +544,7 @@ class CrAppilcationController extends Controller
                 "unit_bisnis" => $cr_oder->UNIT_BISNIS??null, 
                 "cust_service" => $cr_oder->CUST_SERVICE??null,
                 "ref_pelanggan" => $cr_oder->REF_PELANGGAN??null,
-                "surveyor_id" => null,
+                "surveyor_name" => User::find($cr_survey->created_by)->fullname,
                 "catatan_survey" => $data->survey_note??null,
                 "prog_marketing" => $cr_oder->PROG_MARKETING??null,
                 "cara_bayar" => $cr_oder->CARA_BAYAR??null
