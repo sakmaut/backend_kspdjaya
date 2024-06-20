@@ -68,7 +68,7 @@ class M_CrSurvey extends Model
                                 DB::raw("COALESCE(cr_personal.NAME, cr_survey.nama) as nama_debitur"),
                                 'cr_survey.alamat',
                                 'cr_survey.hp',
-                                'cr_survey.plafond',)
+                                DB::raw("COALESCE(cr_application.SUBMISSION_VALUE, cr_survey.plafond) as plafond"))
                         ->leftJoin('survey_approval', 'survey_approval.CR_SURVEY_ID', '=', 'cr_survey.id')
                         ->leftJoin('cr_application', 'cr_application.CR_SURVEY_ID', '=', 'cr_survey.id')
                         ->leftJoin('cr_personal', 'cr_personal.APPLICATIOn_ID', '=', 'cr_application.ID')
