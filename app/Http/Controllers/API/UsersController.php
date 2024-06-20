@@ -63,7 +63,7 @@ class UsersController extends Controller
     public function _validate($request){
 
         $validation = $request->validate([
-            'cabang' => 'required|string'
+            'cabang_id' => 'required|string'
         ]);
 
         return $validation;
@@ -73,7 +73,7 @@ class UsersController extends Controller
     {
         DB::beginTransaction();
         try {
-            // self::_validate($request);
+            self::_validate($request);
 
             $check_branch = M_Branch::where('ID', $request->cabang)->first();
 
@@ -92,7 +92,7 @@ class UsersController extends Controller
                 'email' => $request->username . '@gmail.com',
                 'password' => bcrypt($request->password),
                 'fullname' => $request->nama,
-                'branch_id' => $request->cabang,
+                'branch_id' => $request->cabang_id,
                 'position' => $request->jabatan,
                 'gender' => $request->gender,
                 'status' => $request->status,
@@ -142,7 +142,7 @@ class UsersController extends Controller
     {
         DB::beginTransaction();
         try {
-            // self::_validate($request);
+            self::_validate($request);
 
             $users = User::findOrFail($id);
 
@@ -172,7 +172,7 @@ class UsersController extends Controller
             $data_user = [
                 'username' => $request->username,
                 'fullname' => $request->nama,
-                'branch_id' => $request->cabang,
+                'branch_id' => $request->cabang_id,
                 'position' => $request->jabatan,
                 'gender' => $request->gender,
                 'status' => $request->status,
