@@ -588,7 +588,7 @@ class CrAppilcationController extends Controller
                 // "pokok_pembayaran"=> null,
                 "tipe_angsuran"=> $applicationDetail->CREDIT_TYPE?? null,
                 "cara_pembayaran"=> $applicationDetail->PAYMENT_WAY?? null,
-                "total_admin"=> $applicationDetail->TOTAL_ADMIN?? null,
+                "total_admin"=> (int)$applicationDetail->TOTAL_ADMIN?? null,
                 "cadangan"=> $applicationDetail->CADANGAN?? null,
                 // "angsuran"=> $applicationDetail->INSTALLMENT,
                 "opt_periode"=> $applicationDetail->OPT_PERIODE?? null,
