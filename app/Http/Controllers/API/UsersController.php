@@ -75,7 +75,7 @@ class UsersController extends Controller
         try {
             self::_validate($request);
 
-            $check_branch = M_Branch::where('ID', $request->cabang)->first();
+            $check_branch = M_Branch::where('ID', $request->cabang_id)->first();
 
             if (!$check_branch) {
                 throw new Exception("Id Branch Not Found", 404);
