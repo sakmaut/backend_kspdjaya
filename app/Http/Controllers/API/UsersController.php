@@ -174,7 +174,6 @@ class UsersController extends Controller
                 'branch_id' => $request->cabang_id,
                 'position' => $request->jabatan,
                 'gender' => $request->gender,
-                'status' => $request->status,
                 'mobile_number' => $request->no_hp,
                 'status' => $request->status,
                 'updated_by' => $request->user()->id,
