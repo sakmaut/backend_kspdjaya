@@ -5,8 +5,8 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\R_User;
 use App\Models\M_Branch;
-use App\Models\M_HrEmployee;
 use App\Models\M_HrEmployeeDocument;
+use App\Models\M_HrRolling;
 use App\Models\M_JabatanAccessMenu;
 use App\Models\M_MasterUserAccessMenu;
 use App\Models\User;
@@ -118,6 +118,16 @@ class UsersController extends Controller
 
                 M_MasterUserAccessMenu::create($data_menu);
             }
+
+            $data_rolling = [
+                'id' => Uuid::uuid7()->toString(),
+                'users_id' => $userID->id,
+                'position' => $request->jabatan,
+                'branch' => $request->cabang_id,
+                'created_by' => $request->user()->id
+            ];
+
+            M_HrRolling::create($data_rolling);
     
             DB::commit();
             ActivityLogger::logActivity($request,"Success",200);
@@ -157,14 +167,12 @@ class UsersController extends Controller
                 M_MasterUserAccessMenu::where('users_id', $id)->delete();
 
                 foreach ($getMenu as $list) {
-                    $data_menu = [
+                    M_MasterUserAccessMenu::create([
                         'id' => Uuid::uuid7()->toString(),
                         'master_menu_id' => $list['master_menu_id'],
                         'users_id' => $id,
                         'created_by' => $request->user()->id
-                    ];
-
-                    M_MasterUserAccessMenu::create($data_menu);
+                    ]);
                 }
             }
 
@@ -180,8 +188,20 @@ class UsersController extends Controller
                 'updated_at' => $this->current_time
             ];
 
+            compareData(User::class,$id,$data_user,$request);
+
             if (isset($request->password) && !empty($request->password)) {
                 $data_user['password'] = bcrypt($request->password);
+            }
+
+            if ($users->position != $request->jabatan || $users->branch_id != $request->cabang_id) {
+                M_HrRolling::create([
+                    'id' => Uuid::uuid7()->toString(),
+                    'users_id' => $id,
+                    'position' => $request->jabatan,
+                    'branch' => $request->cabang_id,
+                    'created_by' => $request->user()->id
+                ]);
             }
 
             $users->update($data_user);

@@ -303,6 +303,8 @@ class CrSurveyController extends Controller
                 throw new Exception("Cr Survey Id Not Found",404);
             }
 
+            compareData(M_CrSurvey::class,$id,$data_prospect,$request);
+
             $prospek_check->update($data_prospect);
 
             if (collect($request->jaminan_kendaraan)->isNotEmpty()) {
@@ -332,6 +334,8 @@ class CrSurveyController extends Controller
                         'MOD_BY' => $request->user()->id,
                     ];
         
+                    compareData(M_CrGuaranteVehicle::class,$result['id'],$data_jaminan,$request);
+
                    $jaminan_check->update($data_jaminan);
                 }
             }

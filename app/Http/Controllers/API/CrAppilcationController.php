@@ -160,7 +160,7 @@ class CrAppilcationController extends Controller
         }
     }
 
-    private function insert_cr_application($request,$uuid){
+    private function insert_cr_application($request,$applicationModel){
 
         $data_cr_application =[
             'FORM_NUMBER' => '',
@@ -192,13 +192,14 @@ class CrAppilcationController extends Controller
             'CREATE_USER' => $request->user()->id,
         ];
 
-        if(!$uuid){
+        if(!$applicationModel){
             $data_cr_application['ID'] = Uuid::uuid7()->toString();
             $data_cr_application['BRANCH'] = $request->user()->branch_id;
             $data_cr_application['ORDER_NUMBER'] = $this->createAutoCode(M_CrApplication::class,'ORDER_NUMBER','FPK');
             M_CrApplication::create($data_cr_application);
         }else{
-            $uuid->update($data_cr_application);
+            // compareData(M_CrApplication::class,$id,$data_cr_application,$request);
+            $applicationModel->update($data_cr_application);
         } 
     }
 

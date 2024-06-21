@@ -110,15 +110,16 @@ class BranchController extends Controller
                 'ZIP_CODE' => 'numeric'
             ]);
 
-            $users = M_Branch::findOrFail($id);
+            $branch = M_Branch::findOrFail($id);
 
             $request['MOD_USER'] = $request->user()->id;
             $request['MOD_DATE'] = Carbon::now()->format('Y-m-d');
 
             $data = array_change_key_case($request->all(), CASE_UPPER);
 
-            $users->update($data);
-            compareData(M_Branch::class,$id,$request);
+            compareData(M_Branch::class,$id,$data,$request);
+
+            $branch->update($data);
 
             DB::commit();
             ActivityLogger::logActivity($request,"Success",200);
