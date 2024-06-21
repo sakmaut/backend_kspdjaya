@@ -74,6 +74,7 @@ class M_CrSurvey extends Model
                         ->leftJoin('cr_personal', 'cr_personal.APPLICATIOn_ID', '=', 'cr_application.ID')
                         ->where('cr_survey.created_by', $mcfId)
                         ->whereNull('cr_survey.deleted_at')
+                        ->orderBy('cr_survey.deleted_at', 'desc')
                         ->get();
 
         return $query;
@@ -92,6 +93,7 @@ class M_CrSurvey extends Model
                         ->leftJoin('cr_personal', 'cr_personal.APPLICATIOn_ID', '=', 'cr_application.ID')
                         ->where('cr_survey.branch_id', $branchId)
                         ->whereNull('cr_survey.deleted_at')
+                        ->orderBy('cr_survey.deleted_at', 'desc')
                         ->get();
 
         return $query;

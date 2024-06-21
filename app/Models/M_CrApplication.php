@@ -82,7 +82,8 @@ class M_CrApplication extends Model
             ->join('branch as t3', 't3.ID', '=', 't1.BRANCH')
             ->join('users as t4', 't4.id', '=', 't2.created_by')
             ->join('application_approval as t6', 't6.cr_application_id', '=', 't1.ID')
-            ->join('cr_personal as t7', 't7.APPLICATION_ID', '=', 't1.ID');
+            ->join('cr_personal as t7', 't7.APPLICATION_ID', '=', 't1.ID')
+            ->orderBy('t1.CREATE_DATE', 'desc');
 
             if($getPosition !== 'HO'){
                 $query->where('t1.BRANCH', $getBranch);
@@ -95,6 +96,7 @@ class M_CrApplication extends Model
                 }
                 $query->whereNotIn('t6.application_result', $statuses);
             }
+            
 
         return $query->get();
     }
