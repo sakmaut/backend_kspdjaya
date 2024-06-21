@@ -121,7 +121,9 @@ class UserAccessMenuController extends Controller
                 throw new Exception("Users Id Not Found",404);
             }
 
-            $checks->delete();
+            foreach ($checks as $check) {
+                $check->delete();
+            }
 
             foreach ($request->menu_list as $value) {
 
