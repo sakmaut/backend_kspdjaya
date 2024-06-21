@@ -18,11 +18,14 @@ class MasterMenuController extends Controller
     public function index(Request $req)
     {
         try {
-            $data = M_MasterMenu::orderBy('order', 'asc')
-                                ->where(function($query) {
-                                    $query->whereNull('deleted_by')
-                                        ->orWhere('deleted_by', '');
-                                })->get();
+            $data = M_MasterMenu::where(function($query) {
+                                        $query->whereNull('deleted_by')
+                                            ->orWhere('deleted_by', '');
+                                    })
+                                    ->whereNotNull('parent')
+                                    ->where('parent', '!=', '')
+                                    ->orderBy('order', 'asc')
+                                    ->get();
 
             $dto = R_MasterMenu::collection($data);
 
