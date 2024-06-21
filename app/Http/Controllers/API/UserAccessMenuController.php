@@ -115,8 +115,6 @@ class UserAccessMenuController extends Controller
     {
         DB::beginTransaction();
         try {
-            M_MasterUserAccessMenu::findOrFail($id);
-
             $checks = M_MasterUserAccessMenu::where('users_id', $id)->get();
 
             if($checks->isEmpty()){
@@ -132,11 +130,11 @@ class UserAccessMenuController extends Controller
 
             foreach ($request->menu_list as $value) {
 
-                // $menu_check = M_MasterMenu::where('id',$value)->first();
+                $menu_check = M_MasterMenu::where('id',$value)->first();
 
-                // if (!$menu_check) {
-                //     throw new Exception("Menu Id Not Found",404);
-                // }
+                if (!$menu_check) {
+                    throw new Exception("Menu Id Not Found",404);
+                }
 
                 $data_insert = [
                     'master_menu_id' => $value['menu_id'],
@@ -151,10 +149,6 @@ class UserAccessMenuController extends Controller
             DB::commit();
             ActivityLogger::logActivity($request,"Success",200);
             return response()->json(['message' => 'User Access Menu updated successfully', "status" => 200], 200);
-        } catch (ModelNotFoundException $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($request,'User Access Menu Id Data Not Found',404);
-            return response()->json(['message' => 'User Access Menu Id Data Not Found', "status" => 404], 404);
         } catch (\Exception $e) {
             DB::rollback();
             ActivityLogger::logActivity($request,$e->getMessage(),500);
