@@ -121,12 +121,7 @@ class UserAccessMenuController extends Controller
                 throw new Exception("Users Id Not Found",404);
             }
 
-            foreach ($checks as $check) {
-                $check->update([
-                    'deleted_by' => $request->user()->id,
-                    'deleted_at' => Carbon::now()
-                ]);
-            }
+            $checks->delete();
 
             foreach ($request->menu_list as $value) {
 
