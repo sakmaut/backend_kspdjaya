@@ -132,11 +132,11 @@ class UserAccessMenuController extends Controller
 
             foreach ($request->menu_list as $value) {
 
-                $menu_check = M_MasterMenu::where('id',$value)->whereNull('deleted_at')->first();
+                // $menu_check = M_MasterMenu::where('id',$value)->first();
 
-                if (!$menu_check) {
-                    throw new Exception("Menu Id Not Found",404);
-                }
+                // if (!$menu_check) {
+                //     throw new Exception("Menu Id Not Found",404);
+                // }
 
                 $data_insert = [
                     'master_menu_id' => $value['menu_id'],
