@@ -6,9 +6,7 @@ use App\Http\Controllers\API\{
     CrAppilcationController,
     CrSurveyController,
     DetailProfileController,
-    HrEmployeeController,
     MasterMenuController,
-    TaskController,
     UserAccessMenuController,
     UsersController
 };
@@ -21,7 +19,6 @@ Route::post('auth/login', [AuthController::class, 'login'])->name('login');
 Route::get('auth/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 
 Route::post('welcome', [Welcome::class, 'index']);
-Route::post('image', [Welcome::class, 'uploadImage']);
 
 Route::middleware('auth:sanctum')->group(function () {
     //Route Group Master Menu

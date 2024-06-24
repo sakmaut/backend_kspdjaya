@@ -6,36 +6,17 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
-class M_Branch extends Model
+class M_Credit extends Model
 {
     use HasFactory;
-    protected $table = 'branch';
+    protected $table = 'credit';
     protected $fillable = [
-       'ID',
-       'CODE',
-       'CODE_NUMBER',
-       'NAME',
-       'ADDRESS',
-       'RT',
-       'RW',
-       'PROVINCE',
-       'CITY',
-       'KELURAHAN',
-       'KECAMATAN',
-       'ZIP_CODE',
-       'LOCATION',
-       'PHONE_1',
-       'PHONE_2',
-       'PHONE_3',
-       'DESCR',
-       'STATUS',
-       'CREATE_DATE',
-       'CREATE_USER',
-       'MOD_DATE',
-       'MOD_USER',
-       'VERSION',
-       'DELETED_BY',
-       'DELETED_AT'
+        'ID',
+        'LOAN_NUMBER',
+        'CREATED_BY',
+        'CREATED_AT',
+        'DELETED_BY',
+        'DELETED_AT'
     ];
     protected $guarded = [];
     public $incrementing = false;

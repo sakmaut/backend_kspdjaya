@@ -4,6 +4,7 @@ use App\Models\M_DeuteronomyTransactionLog;
 use App\Models\M_TransactionLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Ramsey\Uuid\Uuid;
 
 if (!function_exists('checkDateIfNull')) {
@@ -56,6 +57,7 @@ if (!function_exists('compareData')) {
         }
     }
 }
+
 // private function nikCounter()
 //     {
 //         $checkMax = M_HrEmployee::max('NIK');

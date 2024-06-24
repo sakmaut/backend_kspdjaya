@@ -51,6 +51,29 @@ class BranchController extends Controller
         DB::beginTransaction();
         try {
 
+            // $validator = Validator::make($request->all(), [
+            //     'CODE' => 'required|string',
+            //     'NAME' => 'required|string',
+            //     'ADDRESS' => 'required|string'
+            // ], [
+            //     'CODE.required' => 'Kode Wajib Diisi',
+            //     'NAME.required' => 'Nama Wajib Diisi',
+            //     'ADDRESS.required' => 'Alamat Wajib Diisi'
+            // ]);
+
+            // if ($validator->fails()) {
+            //     $errors = $validator->errors()->toArray();
+            //     $formattedErrors = [];
+                
+            //     foreach ($errors as $key => $messages) {
+            //         $formattedErrors[$key] = $messages[0];
+            //     }
+            
+            //     return response()->json([
+            //         'errors' => $formattedErrors
+            //     ]);
+            // }
+
             $this->validate($request, [
                 'CODE' => 'required|string',
                 'NAME' => 'required|string',
@@ -73,11 +96,14 @@ class BranchController extends Controller
                 return response()->json(['message' => 'Nama Cabang Sudah Ada', 'status' => 409], 409);
             }
 
-            $request['CREATE_DATE'] = Carbon::now()->format('Y-m-d');
-            $request['CREATE_USER'] = $request->user()->id;
-
             $data = $request->all();
             $data = array_change_key_case($data, CASE_UPPER);
+            
+            $data['CODE'] = strtoupper($data['CODE']);
+            $data['CODE_NUMBER'] = self::generateBranchCodeNumber();
+            $data['CREATE_DATE'] = Carbon::now()->format('Y-m-d');
+            $data['CREATE_USER'] = $request->user()->id;
+
             M_Branch::create($data);
     
             DB::commit();
@@ -163,5 +189,22 @@ class BranchController extends Controller
             ActivityLogger::logActivity($req,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
+    }
+
+    function generateBranchCodeNumber()
+    {
+        $lastCode = DB::table('branch')
+                    ->orderBy('CODE_NUMBER', 'desc')
+                    ->first();
+
+        if ($lastCode) {
+            $lastCodeNumber = (int) substr($lastCode->CODE_NUMBER, 1);
+            $newCodeNumber = $lastCodeNumber + 1;
+            $newCode = str_pad($newCodeNumber, 3, '0', STR_PAD_LEFT);
+        } else {
+            $newCode = '001';
+        }
+
+        return $newCode;
     }
 }
