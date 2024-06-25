@@ -30,35 +30,12 @@ class Credit extends Controller
         }
     }
 
-    function generatePkNumber($request) {
-        $branchId = $request->user()->branch_id;
-        $branch = M_Branch::find($branchId);
-    
-        if (!$branch) {
-            throw new Exception("Branch not found.");
-        }
-    
-        $branchCodeNumber = $branch->CODE_NUMBER;
-    
-        $latestCredit = DB::table('credit')->latest('LOAN_NUMBER')->first();
-        $lastSequence = $latestCredit ? (int) substr($latestCredit->LOAN_NUMBER, 7, 5) + 1 : 1;
-    
-        $currentDate = Carbon::now();
-        $year = $currentDate->format('Y');
-        $month = $currentDate->format('m');
-    
-        $generateCode = sprintf("%s%s%s%05d", $branchCodeNumber, $year, $month, $lastSequence);
-
-        return $generateCode;
-    }
-
     function buildData($request,$data){
-        $setPkNumber = self::generatePkNumber($request);
         $cr_personal = M_CrPersonal::where('APPLICATION_ID',$data->ID)->first();
         $cr_guarante_vehicle = M_CrGuaranteVehicle::where('CR_SURVEY_ID',$data->CR_SURVEY_ID)->first();
 
         $data = [
-            "no_perjanjian" => $setPkNumber,
+            "no_perjanjian" => generateCode($request, 'credit', 'LOAN_NUMBER'),
              "pihak_1" => [
                 "nama" => "",
                 "jabatan" => "",

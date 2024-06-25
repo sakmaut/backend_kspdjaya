@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\M_Branch;
 use App\Models\M_DeuteronomyTransactionLog;
 use App\Models\M_TransactionLog;
 use Illuminate\Http\Request;
@@ -13,7 +14,6 @@ if (!function_exists('checkDateIfNull')) {
         return $param == null ? null:date('Y-m-d',strtotime($param));
     }
 }
-
 
 if (!function_exists('compareData')) {
     function compareData($modelName, $id, $newData,$request)
@@ -55,6 +55,30 @@ if (!function_exists('compareData')) {
                 M_TransactionLog::create($dataLog);
             }
         }
+    }
+}
+
+if (!function_exists('generateCode')) {
+    function generateCode($request, $table, $column) {
+        $branchId = $request->user()->branch_id;
+        $branch = M_Branch::find($branchId);
+    
+        if (!$branch) {
+            throw new Exception("Branch not found.");
+        }
+    
+        $branchCodeNumber = $branch->CODE_NUMBER;
+    
+        $latestRecord = DB::table($table)->latest($column)->first();
+        $lastSequence = $latestRecord ? (int) substr($latestRecord->$column, 7, 5) + 1 : 1;
+    
+        $currentDate = Carbon::now();
+        $year = $currentDate->format('y');
+        $month = $currentDate->format('m');
+    
+        $generateCode = sprintf("%s%s%s%05d", $branchCodeNumber, $year, $month, $lastSequence);
+    
+        return $generateCode;
     }
 }
 

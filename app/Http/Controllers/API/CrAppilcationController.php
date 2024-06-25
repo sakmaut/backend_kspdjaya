@@ -248,7 +248,6 @@ class CrAppilcationController extends Controller
         $check = M_CrPersonal::where('APPLICATION_ID',$applicationId)->first();
 
         $data_cr_application =[  
-            'CUST_CODE' => $request->pelanggan['code']??null,
             'NAME' => $request->pelanggan['nama']??null,
             'ALIAS' => $request->pelanggan['nama_panggilan']??null,
             'GENDER' => $request->pelanggan['jenis_kelamin']??null,
@@ -301,7 +300,8 @@ class CrAppilcationController extends Controller
         if(!$check){
             $data_cr_application['ID'] = Uuid::uuid7()->toString();
             $data_cr_application['APPLICATION_ID'] = $applicationId;
-
+            $data_cr_application['CUST_CODE'] = generateCode($request, 'cr_personal', 'CUST_CODE');
+    
             M_CrPersonal::create($data_cr_application);
         }else{
             $check->update($data_cr_application);
@@ -765,5 +765,5 @@ class CrAppilcationController extends Controller
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
-    } 
+    }
 }
