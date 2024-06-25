@@ -22,11 +22,6 @@ Route::get('auth/logout', [AuthController::class, 'logout'])->middleware('auth:s
 Route::post('welcome', [Welcome::class, 'index']);
 
 Route::middleware(['auth:sanctum', 'check.access'])->group(function () {
-    //Route Group Master Menu
-    Route::apiResource('menu', MasterMenuController::class);
-    Route::get('menu-sub-list', [MasterMenuController::class, 'menuSubList']);
-    Route::apiResource('user_access_menu', UserAccessMenuController::class);
-
     //Route Group Master Users
     Route::apiResource('users', UsersController::class);
     Route::post('image_upload_employee', [UsersController::class, 'uploadImage']);
@@ -54,6 +49,12 @@ Route::middleware(['auth:sanctum', 'check.access'])->group(function () {
     Route::post('image_upload_prospect', [CrSurveyController::class, 'uploadImage']);
 
     Route::get('pk_number/{id}', [Credit::class, 'index']);
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::apiResource('menu', MasterMenuController::class);
+    Route::get('menu-sub-list', [MasterMenuController::class, 'menuSubList']);
+    Route::apiResource('user_access_menu', UserAccessMenuController::class);
 });
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
