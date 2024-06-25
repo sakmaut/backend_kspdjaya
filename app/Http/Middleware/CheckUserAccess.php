@@ -23,7 +23,7 @@ class CheckUserAccess
                     ->join('master_menu as t2', 't2.id', '=', 't1.master_menu_id')
                     ->select('t1.users_id', 't2.route')
                     ->where('t1.users_id', $user->id)
-                    ->where('t2.route', $path)
+                    ->where('t2.endpoint', $path)
                     ->exists();
 
         if (!$hasAccess) {
