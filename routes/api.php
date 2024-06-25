@@ -26,7 +26,7 @@ Route::middleware(['auth:sanctum', 'check.access'])->group(function () {
     Route::apiResource('users', UsersController::class);
 
     //Route Group Master Branch
-    Route::apiResource('cabang', BranchController::class);
+    Route::get('cabang', [BranchController::class, 'index']);
 
     //Route Group Master Cr Application
     Route::apiResource('cr_application', CrAppilcationController::class);
@@ -34,7 +34,6 @@ Route::middleware(['auth:sanctum', 'check.access'])->group(function () {
     //Route Group Cr Prospek (Kunjungan)
     Route::apiResource('kunjungan', CrSurveyController::class);
     Route::get('kunjungan_admin', [CrSurveyController::class, 'showAdmins']);
-    Route::post('image_upload_prospect', [CrSurveyController::class, 'uploadImage']);
 
     Route::get('pk_number/{id}', [Credit::class, 'index']);
 
@@ -47,6 +46,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('menu-sub-list', [MasterMenuController::class, 'menuSubList']);
     Route::apiResource('user_access_menu', UserAccessMenuController::class);
 
+    Route::get('cabang/{id}', [BranchController::class, 'show']); // GET a single branch
+    Route::post('cabang', [BranchController::class, 'store']); // POST a new branch
+    Route::put('cabang/{id}', [BranchController::class, 'update']); // PUT to update a branch
+    Route::delete('cabang/{id}', [BranchController::class, 'destroy']); 
+
     //Detail Profile
     Route::get('me', [DetailProfileController::class, 'index']);
 
@@ -58,6 +62,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
      // Route::get('cr_applications', [CrAppilcationController::class, 'show']);
      Route::post('cr_application_generate', [CrAppilcationController::class, 'generateUuidFPK']);
+     Route::post('image_upload_prospect', [CrSurveyController::class, 'uploadImage']);
 });
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
