@@ -4,6 +4,7 @@ use App\Http\Controllers\API\{
     AuthController,
     BranchController,
     CrAppilcationController,
+    Credit,
     CrSurveyController,
     DetailProfileController,
     MasterMenuController,
@@ -20,7 +21,7 @@ Route::get('auth/logout', [AuthController::class, 'logout'])->middleware('auth:s
 
 Route::post('welcome', [Welcome::class, 'index']);
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'check.access'])->group(function () {
     //Route Group Master Menu
     Route::apiResource('menu', MasterMenuController::class);
     Route::get('menu-sub-list', [MasterMenuController::class, 'menuSubList']);
@@ -51,6 +52,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('kunjungan', CrSurveyController::class);
     Route::get('kunjungan_admin', [CrSurveyController::class, 'showAdmins']);
     Route::post('image_upload_prospect', [CrSurveyController::class, 'uploadImage']);
+
+    Route::get('pk_number/{id}', [Credit::class, 'index']);
 });
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {

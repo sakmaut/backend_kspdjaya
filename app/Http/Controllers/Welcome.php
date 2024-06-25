@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\M_Branch;
 use App\Models\M_CrPersonal;
 use App\Models\M_CrProspect;
 use App\Models\M_DeuteronomyTransactionLog;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Ramsey\Uuid\Uuid;
 use Image;
 use Illuminate\Support\Facades\URL;
@@ -22,7 +25,7 @@ class Welcome extends Controller
         // $destination = '../public/storage/Cr_Prospect/' . $_FILES["image"]["name"];
         // $push = self::compress($source,$destination,2);
 
-        return response()->json(['message' => 'OK',"status" => 200,'response' => ''], 200);
+        return response()->json(['message' => 'OK',"status" => 200,'response' =>'WELCOME'], 200);
     }
 
     function compress($source, $destination, $quality) {
@@ -154,4 +157,6 @@ class Welcome extends Controller
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
         } 
     }
+
+   
 }
