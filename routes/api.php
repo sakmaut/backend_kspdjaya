@@ -23,16 +23,16 @@ Route::post('welcome', [Welcome::class, 'index']);
 
 Route::middleware(['auth:sanctum', 'check.access'])->group(function () {
     //Route Group Master Users
-    Route::apiResource('users', UsersController::class);
+    Route::get('users', [UsersController::class, 'index']);
 
     //Route Group Master Branch
     Route::get('cabang', [BranchController::class, 'index']);
 
     //Route Group Master Cr Application
-    Route::apiResource('cr_application', CrAppilcationController::class);
+    Route::get('cr_application', [CrAppilcationController::class, 'index']);
 
     //Route Group Cr Prospek (Kunjungan)
-    Route::apiResource('kunjungan', CrSurveyController::class);
+    Route::get('kunjungan', [CrSurveyController::class, 'index']);
     Route::get('kunjungan_admin', [CrSurveyController::class, 'showAdmins']);
 
     Route::get('pk_number/{id}', [Credit::class, 'index']);
@@ -46,10 +46,25 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('menu-sub-list', [MasterMenuController::class, 'menuSubList']);
     Route::apiResource('user_access_menu', UserAccessMenuController::class);
 
-    Route::get('cabang/{id}', [BranchController::class, 'show']); // GET a single branch
-    Route::post('cabang', [BranchController::class, 'store']); // POST a new branch
-    Route::put('cabang/{id}', [BranchController::class, 'update']); // PUT to update a branch
+    Route::get('users/{id}', [UsersController::class, 'show']);
+    Route::post('users', [UsersController::class, 'store']);
+    Route::put('users/{id}', [UsersController::class, 'update']);
+    Route::delete('users/{id}', [UsersController::class, 'destroy']); 
+
+    Route::get('cabang/{id}', [BranchController::class, 'show']);
+    Route::post('cabang', [BranchController::class, 'store']);
+    Route::put('cabang/{id}', [BranchController::class, 'update']);
     Route::delete('cabang/{id}', [BranchController::class, 'destroy']); 
+
+    Route::get('cr_application/{id}', [CrAppilcationController::class, 'show']);
+    Route::post('cr_application', [CrAppilcationController::class, 'store']);
+    Route::put('cr_application/{id}', [CrAppilcationController::class, 'update']);
+    Route::delete('cr_application/{id}', [CrAppilcationController::class, 'destroy']); 
+
+    Route::get('kunjungan/{id}', [CrSurveyController::class, 'show']);
+    Route::post('kunjungan', [CrSurveyController::class, 'store']);
+    Route::put('kunjungan/{id}', [CrSurveyController::class, 'update']);
+    Route::delete('kunjungan/{id}', [CrSurveyController::class, 'destroy']); 
 
     //Detail Profile
     Route::get('me', [DetailProfileController::class, 'index']);
