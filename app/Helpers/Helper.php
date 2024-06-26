@@ -137,27 +137,42 @@ if (!function_exists('calculateRate')) {
 }
 
 if (!function_exists('generateAmortizationSchedule')) {
-   function generateAmortizationSchedule($principal, $annualInterestRate, $loanTerm) {
+   function generateAmortizationSchedule($principal,$angsuran,$annualInterestRate, $loanTerm) {
         $monthlyInterestRate = ($annualInterestRate / 100) / 12;
-        $angsuran_pokok_bunga = round(($principal / $loanTerm) + ($principal * $monthlyInterestRate), 2);
-        $total_bunga = round(($principal * $monthlyInterestRate)*$loanTerm,2);
+        // $angsuran_pokok_bunga = round(($principal / $loanTerm) + ($principal * $monthlyInterestRate), 2);
+        $angsuran_pokok_bunga =$angsuran;
+        $total_bunga = ($principal * $monthlyInterestRate)*$loanTerm;
         $rate = calculateRate($loanTerm, $angsuran_pokok_bunga, $principal);
-        $suku_bunga_konversi = round($rate, 9);
+        $suku_bunga_konversi = number_format($rate, 8);
 
         $schedule = [];
         $setDebet = $principal;
+        $totalInterest = 0;
+        $interestValues = [];
 
         for ($i = 1; $i <= $loanTerm; $i++) {
             $interest = $setDebet * $suku_bunga_konversi;
             $principalPayment = $angsuran_pokok_bunga - $interest;
             $setDebet -= $principalPayment;
+            $pokok = $principalPayment;
+
+            $interestValues[] = $interest;
+
+            if($i == $loanTerm){
+                $totalInterest = array_sum(array_slice($interestValues, 0, -1));
+                $bnga = round($total_bunga - $totalInterest, 2);
+                $angsuran = $pokok + $bnga;
+            }else{
+                $bnga = round($interest, 2);
+                $angsuran = $angsuran_pokok_bunga;
+            }
         
             $schedule[] = [
                 'angsuran_ke' => $i,
-                'pokok' => round($principalPayment, 2),
-                'bunga' => round($interest, 2),
-                'total_angsuran' => round($angsuran_pokok_bunga, 2),
-                'baki_debet' => round($setDebet, 2)
+                'pokok' => $pokok,
+                'bunga' => $bnga,
+                'total_angsuran' => $angsuran,
+                'baki_debet' => $setDebet
             ];
         }
 

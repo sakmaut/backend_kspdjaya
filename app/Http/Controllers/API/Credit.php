@@ -37,8 +37,9 @@ class Credit extends Controller
         $principal = $request->pokok_pinjaman;
         $annualInterestRate = 40;
         $loanTerm = $request->tenor;
+        $angsuran = $request->angsuran;
 
-        $amortization = generateAmortizationSchedule($principal, $annualInterestRate, $loanTerm);
+        $amortization = generateAmortizationSchedule($principal,$angsuran, $annualInterestRate, $loanTerm);
 
         // $data = [
         //     "no_perjanjian" => generateCode($request, 'credit', 'LOAN_NUMBER'),
