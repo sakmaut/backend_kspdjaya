@@ -14,10 +14,10 @@ use Illuminate\Support\Facades\DB;
 
 class Credit extends Controller
 {
-    public function index(Request $request,$id)
+    public function index(Request $request)
     {
         try {
-            $check = M_CrApplication::find($id);
+            $check = M_CrApplication::find($request->application_id);
 
             if (!$check) {
                 throw new Exception("Id FPK Is Not Exist", 404);
@@ -66,5 +66,4 @@ class Credit extends Controller
 
         return $data;
     }
-    
 }

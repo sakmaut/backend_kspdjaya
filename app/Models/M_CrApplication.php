@@ -71,6 +71,7 @@ class M_CrApplication extends Model
         $query = DB::table('cr_application as t1')
         ->select(
             't1.id',
+            't1.ORDER_NUMBER as order_number',
             't3.NAME as cabang',
             't4.fullname as nama_ao',
             DB::raw("COALESCE(t7.NAME, t2.nama) as nama_debitur"),
