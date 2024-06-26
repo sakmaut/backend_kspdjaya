@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Route;
 Route::post('auth/login', [AuthController::class, 'login'])->name('login');
 Route::get('auth/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 
-Route::post('welcome', [Welcome::class, 'index']);
+Route::post('welcome', [Credit::class, 'index']);
 
 Route::middleware(['auth:sanctum', 'check.access'])->group(function () {
     Route::resource('users', UsersController::class)->only(['index']);
@@ -59,10 +59,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('image_upload_personal', [DetailProfileController::class, 'uploadImage']);
 
     // Credit
-   
+    // Route::post('pk', [Credit::class, 'index']);
 });
 
-Route::post('pk', [Credit::class, 'index']);
+
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
