@@ -82,6 +82,91 @@ if (!function_exists('generateCode')) {
     }
 }
 
+if (!function_exists('terbilang')) {
+    function angkaKeKata($angka) {
+        $angka = abs($angka);
+        $kata = array("", "satu", "dua", "tiga", "empat", "lima", "enam", "tujuh", "delapan", "sembilan", "sepuluh", "sebelas");
+        $hasil = "";
+    
+        if ($angka < 12) {
+            $hasil = " " . $kata[$angka];
+        } else if ($angka < 20) {
+            $hasil = angkaKeKata($angka - 10) . " belas";
+        } else if ($angka < 100) {
+            $hasil = angkaKeKata(floor($angka / 10)) . " puluh" . angkaKeKata($angka % 10);
+        } else if ($angka < 200) {
+            $hasil = " seratus" . angkaKeKata($angka - 100);
+        } else if ($angka < 1000) {
+            $hasil = angkaKeKata(floor($angka / 100)) . " ratus" . angkaKeKata($angka % 100);
+        } else if ($angka < 2000) {
+            $hasil = " seribu" . angkaKeKata($angka - 1000);
+        } else if ($angka < 1000000) {
+            $hasil = angkaKeKata(floor($angka / 1000)) . " ribu" . angkaKeKata($angka % 1000);
+        } else if ($angka < 1000000000) {
+            $hasil = angkaKeKata(floor($angka / 1000000)) . " juta" . angkaKeKata($angka % 1000000);
+        } else if ($angka < 1000000000000) {
+            $hasil = angkaKeKata(floor($angka / 1000000000)) . " milyar" . angkaKeKata($angka % 1000000000);
+        } else if ($angka < 1000000000000000) {
+            $hasil = angkaKeKata(floor($angka / 1000000000000)) . " triliun" . angkaKeKata($angka % 1000000000000);
+        }
+
+        $final_result = str_replace("rupiah", "", $hasil) . " rupiah";
+        $cleaned = preg_replace('/\s+/', ' ', $final_result);
+        return $cleaned;
+    }
+}
+
+if (!function_exists('calculateRate')) {
+    function calculateRate($nprest, $vlrparc, $vp, $guess = 0.25) {
+        $maxit = 100;
+        $precision = 14;
+        $guess = round($guess,$precision);
+        for ($i=0 ; $i<$maxit ; $i++) {
+            $divdnd = $vlrparc - ( $vlrparc * (pow(1 + $guess , -$nprest)) ) - ($vp * $guess);
+            $divisor = $nprest * $vlrparc * pow(1 + $guess , (-$nprest - 1)) - $vp;
+            $newguess = $guess - ( $divdnd / $divisor );
+            $newguess = round($newguess, $precision);
+            if ($newguess == $guess) {
+                return $newguess;
+            } else {
+                $guess = $newguess;
+            }
+        }
+        return null;
+    }
+}
+
+if (!function_exists('generateAmortizationSchedule')) {
+   function generateAmortizationSchedule($principal, $annualInterestRate, $loanTerm) {
+        $monthlyInterestRate = ($annualInterestRate / 100) / 12;
+        $angsuran_pokok_bunga = round(($principal / $loanTerm) + ($principal * $monthlyInterestRate), 2);
+        $total_bunga = round(($principal * $monthlyInterestRate)*$loanTerm,2);
+        $rate = calculateRate($loanTerm, $angsuran_pokok_bunga, $principal);
+        $suku_bunga_konversi = round($rate, 9);
+
+        $schedule = [];
+        $setDebet = $principal;
+
+        for ($i = 1; $i <= $loanTerm; $i++) {
+            $interest = $setDebet * $suku_bunga_konversi;
+            $principalPayment = $angsuran_pokok_bunga - $interest;
+            $setDebet -= $principalPayment;
+        
+            $schedule[] = [
+                'angsuran_ke' => $i,
+                'pokok' => round($principalPayment, 2),
+                'bunga' => round($interest, 2),
+                'total_angsuran' => round($angsuran_pokok_bunga, 2),
+                'baki_debet' => round($setDebet, 2)
+            ];
+        }
+
+        return $schedule;
+    }
+}
+
+
+
 // private function nikCounter()
 //     {
 //         $checkMax = M_HrEmployee::max('NIK');
