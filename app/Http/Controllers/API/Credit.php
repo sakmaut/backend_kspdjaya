@@ -23,7 +23,7 @@ class Credit extends Controller
                 throw new Exception("Order Number Is Not Exist", 404);
             }
     
-            return response()->json(['response' =>self::buildData($request,$check)], 200);
+            return response()->json(self::buildData($request,$check), 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
