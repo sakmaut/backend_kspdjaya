@@ -168,7 +168,7 @@ if (!function_exists('generateAmortizationSchedule')) {
                 $totalInterest = array_sum(array_slice($interestValues, 0, -1));
                 $bnga = round($total_bunga - $totalInterest, 2);
                 $angsuran = $pokok + $bnga;
-                $set_pokok = $setDebet;
+                $set_pokok = $schedule[$i - 1]['baki_debet'];
             }else{
                 $bnga = round($interest, 2);
                 $angsuran = $angsuran_pokok_bunga;
