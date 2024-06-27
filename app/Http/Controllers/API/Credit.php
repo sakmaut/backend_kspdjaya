@@ -30,9 +30,21 @@ class Credit extends Controller
         }
     }
 
+    function queryKapos($branchID){
+        $result = DB::table('users')
+                    ->select('fullname', 'position', 'branch.address')
+                    ->join('branch', 'branch.id', '=', 'users.branch_id')
+                    ->where('branch.id', '=', $branchID)
+                    ->where('users.position', '=', 'KAPOS')
+                    ->first();
+
+        return $result;
+    }
+
     function buildData($request,$data){
         $cr_personal = M_CrPersonal::where('APPLICATION_ID',$data->ID)->first();
         $cr_guarante_vehicle = M_CrGuaranteVehicle::where('CR_SURVEY_ID',$data->CR_SURVEY_ID)->first();
+        $pihak1= self::queryKapos($data->BRANCH);
 
         $principal = $data->SUBMISSION_VALUE;
         $annualInterestRate = 40;
@@ -42,14 +54,14 @@ class Credit extends Controller
         $data = [
             "no_perjanjian" => generateCode($request, 'credit', 'LOAN_NUMBER'),
              "pihak_1" => [
-                "nama" => "",
-                "jabatan" => "",
-                "alamat_kantor" => ""
+                "nama" => strtoupper($pihak1->fullname),
+                "jabatan" => strtoupper($pihak1->position),
+                "alamat_kantor" => strtoupper($pihak1->address)
              ],
              "pihak_2" => [
-                "nama" => $cr_personal->NAME,
-                "no_identitas" => $cr_personal->ID_NUMBER,
-                "alamat" => $cr_personal->ADDRESS
+                "nama" =>strtoupper($cr_personal->NAME),
+                "no_identitas" => strtoupper($cr_personal->ID_NUMBER),
+                "alamat" => strtoupper($cr_personal->ADDRESS)
              ],
              "pokok_margin" => "",
              "tenor" => $data->PERIOD,
