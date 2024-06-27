@@ -47,7 +47,7 @@ class Credit extends Controller
         $pihak1= self::queryKapos($data->BRANCH);
 
         $principal = $data->SUBMISSION_VALUE + $data->NET_ADMIN;
-        $annualInterestRate = 40;
+        $annualInterestRate = $data->FLAT_RATE;
         $loanTerm = $data->PERIOD;
         $angsuran = $request->angsuran;
 

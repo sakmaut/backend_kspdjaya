@@ -145,8 +145,8 @@ if (!function_exists('calculateRate')) {
 if (!function_exists('generateAmortizationSchedule')) {
    function generateAmortizationSchedule($principal,$angsuran,$annualInterestRate, $loanTerm) {
         $monthlyInterestRate = ($annualInterestRate / 100) / 12;
-        // $angsuran_pokok_bunga = round(($principal / $loanTerm) + ($principal * $monthlyInterestRate), 2);
-        $angsuran_pokok_bunga =$angsuran;
+        $angsuran_pokok_bunga = round(($principal / $loanTerm) + ($principal * $monthlyInterestRate), 2);
+        // $angsuran_pokok_bunga =$angsuran;
         $total_bunga = ($principal * $monthlyInterestRate)*$loanTerm;
         $rate = calculateRate($loanTerm, $angsuran_pokok_bunga, $principal);
         $suku_bunga_konversi = round($rate, 10);
