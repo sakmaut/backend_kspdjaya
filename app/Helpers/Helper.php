@@ -143,7 +143,7 @@ if (!function_exists('generateAmortizationSchedule')) {
         $angsuran_pokok_bunga =$angsuran;
         $total_bunga = ($principal * $monthlyInterestRate)*$loanTerm;
         $rate = calculateRate($loanTerm, $angsuran_pokok_bunga, $principal);
-        $suku_bunga_konversi = number_format($rate, 8);
+        $suku_bunga_konversi = round($rate, 10);
 
         $schedule = [];
         $setDebet = $principal;
@@ -169,10 +169,10 @@ if (!function_exists('generateAmortizationSchedule')) {
         
             $schedule[] = [
                 'angsuran_ke' => $i,
-                'pokok' => $pokok,
-                'bunga' => $bnga,
-                'total_angsuran' => $angsuran,
-                'baki_debet' => $setDebet
+                'pokok' => number_format($pokok,2),
+                'bunga' => number_format($bnga,2),
+                'total_angsuran' => number_format($angsuran,2),
+                'baki_debet' => number_format($setDebet,2)
             ];
         }
 
