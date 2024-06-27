@@ -48,8 +48,15 @@ class Credit extends Controller
 
         $principal = $data->SUBMISSION_VALUE + $data->NET_ADMIN;
         $annualInterestRate = $data->FLAT_RATE;
+        $effRate = $data->EFF_RATE;
         $loanTerm = $data->PERIOD;
         $angsuran = $request->angsuran;
+
+        // $principal = $request->pokok_pinjaman;
+        // $annualInterestRate = $request->bunga;
+        // $effRate = 40;
+        // $loanTerm = $request->tenor;
+        // $angsuran = $request->angsuran;
 
         $data = [
             "no_perjanjian" => generateCode($request, 'credit', 'LOAN_NUMBER'),
@@ -79,7 +86,7 @@ class Credit extends Controller
              "no_polisi" => $cr_guarante_vehicle->POILICE_NUMBER??null,
              "no_rangka" =>$cr_guarante_vehicle->CHASIS_NUMBER??null,
              "no_mesin" => $cr_guarante_vehicle->ENGINE_NUMBER??null,
-             "struktur" => generateAmortizationSchedule($principal,$angsuran, $annualInterestRate, $loanTerm)??null
+             "struktur" => generateAmortizationSchedule($principal,$angsuran, $annualInterestRate,$effRate, $loanTerm)??null
         ];
 
         return $data;

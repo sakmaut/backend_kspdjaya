@@ -143,13 +143,13 @@ if (!function_exists('calculateRate')) {
 }
 
 if (!function_exists('generateAmortizationSchedule')) {
-   function generateAmortizationSchedule($principal,$angsuran,$annualInterestRate, $loanTerm) {
+   function generateAmortizationSchedule($principal,$angsuran,$annualInterestRate,$effRate, $loanTerm) {
         $monthlyInterestRate = ($annualInterestRate / 100) / 12;
-        $angsuran_pokok_bunga = round(($principal / $loanTerm) + ($principal * $monthlyInterestRate), 2);
-        // $angsuran_pokok_bunga =$angsuran;
+        // $angsuran_pokok_bunga = round(($principal / $loanTerm) + ($principal * $monthlyInterestRate), 2);
+        $angsuran_pokok_bunga =$angsuran;
         $total_bunga = ($principal * $monthlyInterestRate)*$loanTerm;
-        $rate = calculateRate($loanTerm, $angsuran_pokok_bunga, $principal);
-        $suku_bunga_konversi = round($rate, 10);
+        // $rate = calculateRate($loanTerm, $angsuran_pokok_bunga, $principal);
+        $suku_bunga_konversi = round(($effRate/12)/100,10);
 
         $schedule = [];
         $setDebet = $principal;
@@ -178,8 +178,12 @@ if (!function_exists('generateAmortizationSchedule')) {
                 'pokok' => number_format($pokok,2),
                 'bunga' => number_format($bnga,2),
                 'total_angsuran' => number_format($angsuran,2),
-                'baki_debet' => number_format($setDebet,2)
+                'baki_debet' => $setDebet <= 0?0:number_format($setDebet,2)
             ];
+
+            if ($setDebet <= 0) {
+                break;
+            }
         }
 
         return $schedule;
