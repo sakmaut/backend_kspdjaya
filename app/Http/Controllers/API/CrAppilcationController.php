@@ -474,7 +474,7 @@ class CrAppilcationController extends Controller
         $arrayList = [
             'id_application' => $setApplicationId,
             'order_number' => $application->ORDER_NUMBER,
-            'angsuran' => $application->INSTALLMENT,
+            'angsuran' => (float)$application->INSTALLMENT,
             'pelanggan' =>[
                 "nama" => $cr_personal->NAME ?? ( $data->nama?? ''),
                 "nama_panggilan" => $cr_personal->ALIAS ?? null,
