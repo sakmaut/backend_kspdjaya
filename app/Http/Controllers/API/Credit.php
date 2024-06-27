@@ -54,32 +54,32 @@ class Credit extends Controller
         $data = [
             "no_perjanjian" => generateCode($request, 'credit', 'LOAN_NUMBER'),
              "pihak_1" => [
-                "nama" => strtoupper($pihak1->fullname),
-                "jabatan" => strtoupper($pihak1->position),
-                "alamat_kantor" => strtoupper($pihak1->address)
+                "nama" => strtoupper($pihak1->fullname)??null,
+                "jabatan" => strtoupper($pihak1->position)??null,
+                "alamat_kantor" => strtoupper($pihak1->address)??null
              ],
              "pihak_2" => [
-                "nama" =>strtoupper($cr_personal->NAME),
-                "no_identitas" => strtoupper($cr_personal->ID_NUMBER),
-                "alamat" => strtoupper($cr_personal->ADDRESS)
+                "nama" =>strtoupper($cr_personal->NAME)??null,
+                "no_identitas" => strtoupper($cr_personal->ID_NUMBER)??null,
+                "alamat" => strtoupper($cr_personal->ADDRESS)??null
              ],
-             "pokok_margin" =>bilangan($principal),
-             "tenor" => bilangan($data->PERIOD,false),
-             "tgl_awal_cicilan" => $request->tgl_awal,
-             "tgl_akhir_cicilan" => Carbon::parse($request->tgl_awal)->addMonths($data->PERIOD)->format('Y-m-d'),
-             "angsuran" =>bilangan($angsuran),
-             "opt_periode" => $data->OPT_PERIODE,
-             "tipe_jaminan" => $data->CREDIT_TYPE,
-             "no_bpkb" =>  $cr_guarante_vehicle->BPKB_NUMBER,
+             "pokok_margin" =>bilangan($principal)??null,
+             "tenor" => bilangan($data->PERIOD,false)??null,
+             "tgl_awal_cicilan" => $request->tgl_awal??null,
+             "tgl_akhir_cicilan" => Carbon::parse($request->tgl_awal)->addMonths($data->PERIOD)->format('Y-m-d')??null,
+             "angsuran" =>bilangan($angsuran)??null,
+             "opt_periode" => $data->OPT_PERIODE??null,
+             "tipe_jaminan" => $data->CREDIT_TYPE??null,
+             "no_bpkb" =>  $cr_guarante_vehicle->BPKB_NUMBER??null,
              "atas_nama" => "",
-             "merk" => $cr_guarante_vehicle->BRAND,
-             "type" => $cr_guarante_vehicle->TYPE,
-             "tahun" => $cr_guarante_vehicle->PRODUCTION_YEAR,
-             "warna" => $cr_guarante_vehicle->COLOR,
-             "no_polisi" => $cr_guarante_vehicle->POILICE_NUMBER,
-             "no_rangka" =>$cr_guarante_vehicle->CHASIS_NUMBER,
-             "no_mesin" => $cr_guarante_vehicle->ENGINE_NUMBER,
-             "struktur" => generateAmortizationSchedule($principal,$angsuran, $annualInterestRate, $loanTerm)
+             "merk" => $cr_guarante_vehicle->BRAND??null,
+             "type" => $cr_guarante_vehicle->TYPE??null,
+             "tahun" => $cr_guarante_vehicle->PRODUCTION_YEAR??null,
+             "warna" => $cr_guarante_vehicle->COLOR??null,
+             "no_polisi" => $cr_guarante_vehicle->POILICE_NUMBER??null,
+             "no_rangka" =>$cr_guarante_vehicle->CHASIS_NUMBER??null,
+             "no_mesin" => $cr_guarante_vehicle->ENGINE_NUMBER??null,
+             "struktur" => generateAmortizationSchedule($principal,$angsuran, $annualInterestRate, $loanTerm)??null
         ];
 
         return $data;
