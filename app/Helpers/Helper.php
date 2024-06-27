@@ -168,14 +168,16 @@ if (!function_exists('generateAmortizationSchedule')) {
                 $totalInterest = array_sum(array_slice($interestValues, 0, -1));
                 $bnga = round($total_bunga - $totalInterest, 2);
                 $angsuran = $pokok + $bnga;
+                $set_pokok = $setDebet;
             }else{
                 $bnga = round($interest, 2);
                 $angsuran = $angsuran_pokok_bunga;
+                $set_pokok = $pokok;
             }
         
             $schedule[] = [
                 'angsuran_ke' => $i,
-                'pokok' => number_format($pokok,2),
+                'pokok' => number_format($set_pokok,2),
                 'bunga' => number_format($bnga,2),
                 'total_angsuran' => number_format($angsuran,2),
                 'baki_debet' => $setDebet <= 0?0:number_format($setDebet,2)
