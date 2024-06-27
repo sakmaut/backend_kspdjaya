@@ -63,7 +63,7 @@ class Credit extends Controller
                 "no_identitas" => strtoupper($cr_personal->ID_NUMBER),
                 "alamat" => strtoupper($cr_personal->ADDRESS)
              ],
-             "pokok_margin" => $principal,
+             "pokok_margin" => number_format($principal),
              "tenor" => $data->PERIOD,
              "tgl_awal_cicilan" => $request->tgl_awal,
              "tgl_akhir_cicilan" => Carbon::parse($request->tgl_awal)->addMonths($data->PERIOD)->format('Y-m-d'),
