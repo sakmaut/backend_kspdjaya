@@ -46,7 +46,7 @@ class Credit extends Controller
         $cr_guarante_vehicle = M_CrGuaranteVehicle::where('CR_SURVEY_ID',$data->CR_SURVEY_ID)->first();
         $pihak1= self::queryKapos($data->BRANCH);
 
-        $principal = $data->SUBMISSION_VALUE;
+        $principal = $data->SUBMISSION_VALUE + $data->NET_ADMIN;
         $annualInterestRate = 40;
         $loanTerm = $data->PERIOD;
         $angsuran = $request->angsuran;
@@ -63,7 +63,7 @@ class Credit extends Controller
                 "no_identitas" => strtoupper($cr_personal->ID_NUMBER),
                 "alamat" => strtoupper($cr_personal->ADDRESS)
              ],
-             "pokok_margin" => "",
+             "pokok_margin" => $principal,
              "tenor" => $data->PERIOD,
              "tgl_awal_cicilan" => $request->tgl_awal,
              "tgl_akhir_cicilan" => Carbon::parse($request->tgl_awal)->addMonths($data->PERIOD)->format('Y-m-d'),
