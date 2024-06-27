@@ -82,8 +82,8 @@ if (!function_exists('generateCode')) {
     }
 }
 
-if (!function_exists('terbilang')) {
-    function angkaKeKata($angka) {
+if (!function_exists('angkaKeKata')) {
+    function angkaKeKata($angka,$rupiah = true) {
         $angka = abs($angka);
         $kata = array("", "satu", "dua", "tiga", "empat", "lima", "enam", "tujuh", "delapan", "sembilan", "sepuluh", "sebelas");
         $hasil = "";
@@ -110,8 +110,14 @@ if (!function_exists('terbilang')) {
             $hasil = angkaKeKata(floor($angka / 1000000000000)) . " triliun" . angkaKeKata($angka % 1000000000000);
         }
 
-        $final_result = str_replace("rupiah", "", $hasil) . " rupiah";
-        $cleaned = preg_replace('/\s+/', ' ', $final_result);
+        if($rupiah){
+            $final_result = str_replace("rupiah", "", $hasil) . " rupiah";
+            $cleaned = preg_replace('/\s+/', ' ', $final_result);
+        }else{
+            $final_result = str_replace("rupiah", "", $hasil);
+            $cleaned = preg_replace('/\s+/', ' ', $final_result);
+        }
+
         return $cleaned;
     }
 }
@@ -180,19 +186,18 @@ if (!function_exists('generateAmortizationSchedule')) {
     }
 }
 
+if(!function_exists('bilangan')){
+    function bilangan($principal,$currency = true) {
 
-
-// private function nikCounter()
-//     {
-//         $checkMax = M_HrEmployee::max('NIK');
-
-//         $currentDate = Carbon::now();
-//         $year = substr($currentDate->format('Y'), -2);
-//         $month = $currentDate->format('m');
-//         $lastSequence = (int) substr($checkMax, 4, 3);
-//         $lastSequence++;
-
-//         $generateCode = $year . $month . sprintf("%03s", $lastSequence);
-
-//         return $generateCode;
-//     }
+        if ($currency){
+            $formattedNumber = 'Rp. ' . number_format($principal);
+            $principalInWords = strtoupper(angkaKeKata(round($principal, 2)));
+        }else{
+            $formattedNumber = number_format($principal);
+            $principalInWords = strtoupper(angkaKeKata(round($principal, 2),false));
+        }
+       
+        $formattedPrincipal = $formattedNumber . ' (' . $principalInWords . ')';
+        return str_replace(' ( ', ' (', $formattedPrincipal);
+    }
+}

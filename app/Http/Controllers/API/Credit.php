@@ -63,11 +63,11 @@ class Credit extends Controller
                 "no_identitas" => strtoupper($cr_personal->ID_NUMBER),
                 "alamat" => strtoupper($cr_personal->ADDRESS)
              ],
-             "pokok_margin" => number_format($principal),
-             "tenor" => $data->PERIOD,
+             "pokok_margin" =>bilangan($principal),
+             "tenor" => bilangan($data->PERIOD,false),
              "tgl_awal_cicilan" => $request->tgl_awal,
              "tgl_akhir_cicilan" => Carbon::parse($request->tgl_awal)->addMonths($data->PERIOD)->format('Y-m-d'),
-             "angsuran" =>'Rp. '.number_format(round($data->INSTALLMENT,2)).' ('.strtoupper(angkaKeKata(round($data->INSTALLMENT,2))).')',
+             "angsuran" =>bilangan($angsuran),
              "opt_periode" => $data->OPT_PERIODE,
              "tipe_jaminan" => $data->CREDIT_TYPE,
              "no_bpkb" =>  $cr_guarante_vehicle->BPKB_NUMBER,
@@ -79,7 +79,7 @@ class Credit extends Controller
              "no_polisi" => $cr_guarante_vehicle->POILICE_NUMBER,
              "no_rangka" =>$cr_guarante_vehicle->CHASIS_NUMBER,
              "no_mesin" => $cr_guarante_vehicle->ENGINE_NUMBER,
-             "struktur_kredit" => generateAmortizationSchedule($principal,$angsuran, $annualInterestRate, $loanTerm)
+             "struktur" => generateAmortizationSchedule($principal,$angsuran, $annualInterestRate, $loanTerm)
         ];
 
         return $data;
