@@ -88,7 +88,7 @@ class Credit extends Controller
         }
 
         $data = [
-            "no_perjanjian" => !$check_exist? $loan_number:$check_exist->ORDER_NUMBER,
+            "no_perjanjian" => !$check_exist? $loan_number:$check_exist->LOAN_NUMBER,
             "flag" => !$check_exist?0:1,
              "pihak_1" => [
                 "nama" => strtoupper($pihak1->fullname)??null,
