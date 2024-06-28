@@ -213,48 +213,8 @@ if(!function_exists('bilangan')){
     }
 }
 
-// $monthlyInterestRate = ($annualInterestRate / 100) / 12;
-// // $angsuran_pokok_bunga = round(($principal / $loanTerm) + ($principal * $monthlyInterestRate), 2);
-// $angsuran_pokok_bunga = $angsuran;
-// $total_bunga = ($principal * $monthlyInterestRate) * $loanTerm;
-// // $rate = calculateRate($loanTerm, $angsuran_pokok_bunga, $principal);
-// $suku_bunga_konversi = round(($effRate / 12) / 100, 10);
-
-// $schedule = [];
-// $setDebet = $principal;
-// $totalInterest = 0;
-// $interestValues = [];
-
-// for ($i = 1; $i <= $loanTerm; $i++) {
-//     $interest = $setDebet * $suku_bunga_konversi;
-//     $principalPayment = $angsuran_pokok_bunga - $interest;
-//     $setDebet -= $principalPayment;
-//     $pokok = $principalPayment;
-
-//     $interestValues[] = $interest;
-
-//     $bnga = round($interest, 2);
-//     $angsuran = $angsuran_pokok_bunga;
-//     $set_pokok = $pokok;
-
-//     if ($i == $loanTerm) {
-//         $totalInterest = array_sum(array_slice($interestValues, 0, -1));
-//         $bnga = round($total_bunga - $totalInterest, 2);
-//         $angsuran = $pokok + $bnga;
-//         $set_pokok = floatval(str_replace(',', '', $schedule[$i - 2]['baki_debet']));
-//     }
-
-//     $schedule[] = [
-//         'angsuran_ke' => $i,
-//         'pokok' => number_format($set_pokok, 2),
-//         'bunga' => number_format($bnga, 2),
-//         'total_angsuran' => number_format($angsuran, 2),
-//         'baki_debet' => $setDebet <= 0 ? 0 : number_format($setDebet, 2)
-//     ];
-
-//     if ($setDebet <= 0) {
-//         break;
-//     }
-// }
-
-// return $schedule;
+if(!function_exists('converttodecimal')){
+    function converttodecimal($number) {
+        return floatval(str_replace(',', '',  $number));
+    }
+}
