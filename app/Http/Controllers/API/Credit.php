@@ -51,12 +51,7 @@ class Credit extends Controller
         $effRate = $data->EFF_RATE;
         $loanTerm = $data->PERIOD;
         $angsuran = $request->angsuran;
-
-        // $principal = $request->pokok_pinjaman;
-        // $annualInterestRate = $request->bunga;
-        // $effRate = 40;
-        // $loanTerm = $request->tenor;
-        // $angsuran = $request->angsuran;
+        $set_tgl_awal =$request->tgl_awal;
 
         $data = [
             "no_perjanjian" => generateCode($request, 'credit', 'LOAN_NUMBER'),
@@ -72,8 +67,8 @@ class Credit extends Controller
              ],
              "pokok_margin" =>bilangan($principal)??null,
              "tenor" => bilangan($data->PERIOD,false)??null,
-             "tgl_awal_cicilan" => $request->tgl_awal??null,
-             "tgl_akhir_cicilan" => Carbon::parse($request->tgl_awal)->addMonths($data->PERIOD)->format('Y-m-d')??null,
+             "tgl_awal_cicilan" => $set_tgl_awal??null,
+             "tgl_akhir_cicilan" => Carbon::parse($set_tgl_awal)->addMonths($data->PERIOD)->format('Y-m-d')??null,
              "angsuran" =>bilangan($angsuran)??null,
              "opt_periode" => $data->OPT_PERIODE??null,
              "tipe_jaminan" => $data->CREDIT_TYPE??null,
@@ -86,7 +81,7 @@ class Credit extends Controller
              "no_polisi" => $cr_guarante_vehicle->POILICE_NUMBER??null,
              "no_rangka" =>$cr_guarante_vehicle->CHASIS_NUMBER??null,
              "no_mesin" => $cr_guarante_vehicle->ENGINE_NUMBER??null,
-             "struktur" => generateAmortizationSchedule($principal,$angsuran, $annualInterestRate,$effRate, $loanTerm)??null
+             "struktur" => generateAmortizationSchedule($principal,$angsuran, $set_tgl_awal,$effRate, $loanTerm)??null
         ];
 
         return $data;
