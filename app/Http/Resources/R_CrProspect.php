@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\M_Credit;
 use App\Models\M_CrProspect;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -22,10 +23,11 @@ class R_CrProspect extends JsonResource
     public function toArray(Request $request): array
     {
         $stts_approval = M_SurveyApproval::where('CR_SURVEY_ID',$this->id)->first();
+        $check_exist = M_Credit::where('ORDER_NUMBER',$this->order_number)->first();
 
         $data = [
             'id' => $this->id,
-            "flag" => '',
+            "flag" => !$check_exist?0:1,
             'order_number' => $this->order_number,
             'visit_date' => $this->visit_date  == null ? null :date('Y-m-d', strtotime($this->visit_date)),
             'nama_debitur' => $this->nama_debitur,
