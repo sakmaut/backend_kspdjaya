@@ -48,6 +48,7 @@ class Credit extends Controller
         return $result;
     }
 
+
     private function buildData($request,$data){
         $cr_personal = M_CrPersonal::where('APPLICATION_ID',$data->ID)->first();
         $cr_guarante_vehicle = M_CrGuaranteVehicle::where('CR_SURVEY_ID',$data->CR_SURVEY_ID)->first();
@@ -86,6 +87,7 @@ class Credit extends Controller
 
         $data = [
             "no_perjanjian" => $loan_number,
+            "flag" => '',
              "pihak_1" => [
                 "nama" => strtoupper($pihak1->fullname)??null,
                 "jabatan" => strtoupper($pihak1->position)??null,
