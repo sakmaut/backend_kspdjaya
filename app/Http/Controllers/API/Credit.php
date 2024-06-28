@@ -65,7 +65,9 @@ class Credit extends Controller
         $data_credit_schedule = generateAmortizationSchedule($principal,$angsuran, $set_tgl_awal,$effRate, $loanTerm);
         $installment_count = count($data_credit_schedule);
 
-        if (!M_Credit::where('ORDER_NUMBER', $request->order_number)->first() && 'yes' === $request->flag) {
+        $check_exist = M_Credit::where('ORDER_NUMBER', $request->order_number)->first();
+
+        if (!$check_exist && 'yes' === $request->flag) {
             self::insert_credit($request, $data, $loan_number,$installment_count);
             foreach ($data_credit_schedule as $list) {
                 $credit_schedule =
@@ -87,7 +89,7 @@ class Credit extends Controller
 
         $data = [
             "no_perjanjian" => $loan_number,
-            "flag" => '',
+            "flag" => !$check_exist?0:1,
              "pihak_1" => [
                 "nama" => strtoupper($pihak1->fullname)??null,
                 "jabatan" => strtoupper($pihak1->position)??null,
