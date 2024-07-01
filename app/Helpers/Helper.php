@@ -147,7 +147,7 @@ function tambahBulan($tanggal, $jumlahBulan) {
     
     $date->add(new DateInterval('P' . $jumlahBulan . 'M'));
     
-    return $date->format('Y-m-d');
+    return $date->format('d/m/Y');
 }
 
 if (!function_exists('generateAmortizationSchedule')) {
@@ -169,7 +169,7 @@ if (!function_exists('generateAmortizationSchedule')) {
                 
                 $schedule[] = [
                     'angsuran_ke' =>  $i,
-                    'tgl_angsuran' => tambahBulan(date('d/m/Y',strtotime($setDate)), $i),
+                    'tgl_angsuran' => tambahBulan($setDate, $i),
                     'pokok' => number_format($principalPayment, 2),
                     'bunga' => number_format($interest, 2),
                     'total_angsuran' => number_format($principalPayment + $interest, 2),
@@ -183,7 +183,7 @@ if (!function_exists('generateAmortizationSchedule')) {
             
             $schedule[] = [
                 'angsuran_ke' =>  $i,
-                'tgl_angsuran' => tambahBulan(date('d/m/Y',strtotime($setDate)), $i),
+                'tgl_angsuran' => tambahBulan($setDate, $i),
                 'pokok' => number_format($principalPayment, 2),
                 'bunga' => number_format($interest, 2),
                 'total_angsuran' => number_format($angsuran_pokok_bunga, 2),
