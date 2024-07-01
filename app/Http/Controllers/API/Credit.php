@@ -39,7 +39,7 @@ class Credit extends Controller
 
     function queryKapos($branchID){
         $result = DB::table('users')
-                    ->select('fullname', 'position', 'branch.address','branch.name')
+                    ->select('fullname', 'position', 'branch.address','branch.name','branch.city')
                     ->join('branch', 'branch.id', '=', 'users.branch_id')
                     ->where('branch.id', '=', $branchID)
                     ->where('users.position', '=', 'KAPOS')
@@ -90,7 +90,8 @@ class Credit extends Controller
         $data = [
             "no_perjanjian" => !$check_exist? $loan_number:$check_exist->LOAN_NUMBER,
             "cabang" => 'CABANG '.strtoupper($pihak1->name)??null,
-            "tgl_cetak" => Carbon::now()->format('d-m-Y'),
+            "kota" => strtoupper($pihak1->city)??null,
+            "tgl_cetak" => Carbon::now()->format('d/m/Y'),
             "flag" => !$check_exist?0:1,
              "pihak_1" => [
                 "nama" => strtoupper($pihak1->fullname)??null,
@@ -104,8 +105,8 @@ class Credit extends Controller
              ],
              "pokok_margin" =>bilangan($principal)??null,
              "tenor" => bilangan($data->PERIOD,false)??null,
-             "tgl_awal_cicilan" => Carbon::parse($set_tgl_awal)->format('d-m-Y')??null,
-             "tgl_akhir_cicilan" => Carbon::parse($set_tgl_awal)->addMonths($data->PERIOD)->format('d-m-Y')??null,
+             "tgl_awal_cicilan" => Carbon::parse($set_tgl_awal)->format('d/m/Y')??null,
+             "tgl_akhir_cicilan" => Carbon::parse($set_tgl_awal)->addMonths($data->PERIOD)->format('d/m/Y')??null,
              "angsuran" =>bilangan($angsuran)??null,
              "opt_periode" => $data->OPT_PERIODE??null,
              "tipe_jaminan" => $data->CREDIT_TYPE??null,
