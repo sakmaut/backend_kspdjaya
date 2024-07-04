@@ -2,17 +2,19 @@
 
 namespace App\Console;
 
+use DateTime;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
 class Kernel extends ConsoleKernel
 {
-    /**
-     * Define the application's command schedule.
-     */
+
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
+        $schedule->command('app:check-arrears')->when(function (DateTime $time) {
+            // Run the job only when the current time is 08:00:00
+            return $time->format('H:i:s') === '16:21:00';
+        });
     }
 
     /**
