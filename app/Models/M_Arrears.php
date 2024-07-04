@@ -6,50 +6,35 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
-class M_Credit extends Model
+class M_Arrears extends Model
 {
     use HasFactory;
-    protected $table = 'credit';
+    protected $table = 'arrears';
     protected $fillable = [
         'ID',
-        'LOAN_NUMBER',
         'STATUS_REC',
-        'BRANCH',
-        'CUST_CODE',
-        'ORDER_NUMBER',
-        'COLLECTIBILITY',
-        'MCF_ID',
-        'ENTRY_DATE',
+        'LOAN_NUMBER',
+        'START_DATE',
         'END_DATE',
-        'DEFAULT_ACCOUNT',
-        'FIRST_ARR_DATE',
-        'INSTALLMENT_DATE',
-        'PCPL_ORI',
-        'PAID_PRINCIPAL',
-        'PAID_INTEREST',
+        'PAST_DUE_PCPL',
+        'PAST_DUE_INTRST',
+        'PAST_DUE_PENALTY',
+        'PAID_PCPL',
+        'PAID_INT',
         'PAID_PENALTY',
-        'DUE_PRINCIPAL',
-        'DUE_INTEREST',
-        'DUE_PENALTY',
-        'CREDIT_TYPE',
-        'INSTALLMENT_COUNT',
-        'PERIOD',
-        'INSTALLMENT',
-        'FLAT_RATE',
-        'EFF_RATE',
-        'VERSION',
-        'CREATED_BY',
-        'CREATED_AT',
-        'MOD_DATE',
-        'MOD_USER',
-        'DELETED_BY',
-        'DELETED_AT',
+        'WOFF_PCPL',
+        'WOFF_INT',
+        'WOFF_PENALTY',
+        'PENALTY_RATE',
+        'TRNS_CODE'
     ];
+    
     protected $guarded = [];
     public $incrementing = false;
     protected $keyType = 'string';
     protected $primaryKey = 'ID';
     public $timestamps = false;
+
     protected static function boot()
     {
         parent::boot();
