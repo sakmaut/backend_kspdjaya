@@ -11,10 +11,7 @@ class Kernel extends ConsoleKernel
 
     protected function schedule(Schedule $schedule): void
     {
-        $schedule->command('app:check-arrears')->when(function (DateTime $time) {
-            // Run the job only when the current time is 08:00:00
-            return $time->format('H:i:s') === '16:21:00';
-        });
+        $schedule->command('app:check-arrears')->dailyAt('09:25');
     }
 
     /**
