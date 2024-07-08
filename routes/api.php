@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\API\{
+    AdminFeeController,
     AuthController,
     BranchController,
     CrAppilcationController,
@@ -60,6 +61,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Credit
     Route::post('pk', [Credit::class, 'index']);
+    Route::resource('admin_fee', AdminFeeController::class);
 });
 
 
