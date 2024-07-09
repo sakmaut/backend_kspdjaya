@@ -20,7 +20,6 @@ class AdminFeeController extends Controller
             $build = [];
         
             foreach ($data as $value) {
-
               
                 $struktur = [];
 
@@ -45,7 +44,7 @@ class AdminFeeController extends Controller
                     $strukturTenors['tenor_'. $tenor] = $tenorData;
                 }
 
-                $build = [
+                $build[] = [
                     'tipe' => $value->category,
                     'range_start' => (float) $value->start_value,
                     'range_end' =>(float) $value->end_value,
@@ -54,9 +53,7 @@ class AdminFeeController extends Controller
                     'tenor_18' =>$strukturTenors['tenor_18'],
                     'tenor_24' =>$strukturTenors['tenor_24']
                 ];
-            }
-
-            
+            }            
 
             return response()->json($build, 200);
         } catch (\Exception $e) {
