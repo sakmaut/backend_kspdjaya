@@ -33,4 +33,9 @@ class M_AdminFee extends Model
             }
         });
     }
+
+    public function links()
+    {
+        return $this->hasMany(M_AdminType::class,'admin_fee_id');
+    }
 }

@@ -11,6 +11,53 @@ use Illuminate\Support\Facades\DB;
 
 class AdminFeeController extends Controller
 {
+
+    public function index(Request $request)
+    {
+        try {
+            $data = M_AdminFee::with('links')->get();
+
+            $build = [];
+
+            foreach ($data as $value) {
+
+                $struktur = [];
+    
+                foreach ($value->links as $link) {
+                    $struktur[] = [
+                        'fee_name' => $link['fee_name'],
+                        '6_month' => $link['6_month'],
+                        '12_month' => $link['12_month'],
+                        '18_month' => $link['18_month'],
+                        '24_month' => $link['24_month'],
+                    ];
+                }
+
+                $tenors = ['6', '12', '18', '24'];
+                $strukturTenors = [];
+
+                foreach ($tenors as $tenor) {
+                    $tenorData = ['tenor' => $tenor];
+                    foreach ($struktur as $s) {
+                        $tenorData[$s['fee_name']] = $s[$tenor . '_month'];
+                    }
+                    $strukturTenors[] = $tenorData;
+                }
+
+                $build[] = [
+                    'tipe' => $value->category,
+                    'range' =>'Rp. '. number_format($value->start_value) . ' - ' .number_format( $value->end_value),
+                    'struktur' => $strukturTenors
+                ];
+            }
+
+            return response()->json($build, 200);
+        } catch (\Exception $e) {
+            ActivityLogger::logActivity($request,$e->getMessage(),500);
+            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+        }
+    }
+
     public function store(Request $request)
     {
         DB::beginTransaction();
