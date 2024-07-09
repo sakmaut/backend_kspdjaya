@@ -39,14 +39,15 @@ class AdminFeeController extends Controller
                 foreach ($tenors as $tenor) {
                     $tenorData = ['tenor' => $tenor];
                     foreach ($struktur as $s) {
-                        $tenorData[$s['fee_name']] = $s[$tenor . '_month'];
+                        $tenorData[$s['fee_name']] = (float) $s[$tenor . '_month'];
                     }
                     $strukturTenors[] = $tenorData;
                 }
 
                 $build[] = [
                     'tipe' => $value->category,
-                    'range' =>'Rp. '. number_format($value->start_value) . ' - ' .number_format( $value->end_value),
+                    'range_start' => (float) $value->start_value,
+                    'range_end' =>(float) $value->end_value,
                     'struktur' => $strukturTenors
                 ];
             }
