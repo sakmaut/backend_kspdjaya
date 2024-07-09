@@ -76,11 +76,11 @@ class AdminFeeController extends Controller
                 foreach ($request->struktur as $value) {
                     $data_admin_type = [
                         'admin_fee_id' => $admin_fee_id->id,
-                        'fee_name' => $value['fee_name'],
-                        '6_month' => $value['6_month'],
-                        '12_month' => $value['12_month'],
-                        '18_month' => $value['18_month'],
-                        '24_month' => $value['24_month']
+                        'fee_name' => $value['key'],
+                        '6_month' => $value['tenor6'],
+                        '12_month' => $value['tenor12'],
+                        '18_month' => $value['tenor18'],
+                        '24_month' => $value['tenor24']
                     ];
     
                     M_AdminType::create($data_admin_type);
