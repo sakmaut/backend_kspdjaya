@@ -18,11 +18,12 @@ class AdminFeeController extends Controller
             $data = M_AdminFee::with('links')->get();
 
             $build = [];
-
+        
             foreach ($data as $value) {
 
+              
                 $struktur = [];
-    
+
                 foreach ($value->links as $link) {
                     $struktur[] = [
                         'fee_name' => $link['fee_name'],
@@ -37,20 +38,25 @@ class AdminFeeController extends Controller
                 $strukturTenors = [];
 
                 foreach ($tenors as $tenor) {
-                    // $tenorData = ['tenor' => (int) $tenor];
+                    $tenorData = ['tenor' => (int) $tenor];
                     foreach ($struktur as $s) {
                         $tenorData[$s['fee_name']] = (float) $s[$tenor . '_month'];
                     }
-                    $strukturTenors[(int) $tenor] = $tenorData;
+                    $strukturTenors['tenor_'. $tenor] = $tenorData;
                 }
 
-                $build[] = [
+                $build = [
                     'tipe' => $value->category,
                     'range_start' => (float) $value->start_value,
                     'range_end' =>(float) $value->end_value,
-                    'struktur' => $strukturTenors
+                    'tenor_6' =>$strukturTenors['tenor_6'],
+                    'tenor_12' =>$strukturTenors['tenor_12'],
+                    'tenor_18' =>$strukturTenors['tenor_18'],
+                    'tenor_24' =>$strukturTenors['tenor_24']
                 ];
             }
+
+            
 
             return response()->json($build, 200);
         } catch (\Exception $e) {
