@@ -37,7 +37,7 @@ class AdminFeeController extends Controller
                 $strukturTenors = [];
 
                 foreach ($tenors as $tenor) {
-                    $tenorData = ['tenor' => $tenor];
+                    $tenorData = ['tenor' => (int) $tenor];
                     foreach ($struktur as $s) {
                         $tenorData[$s['fee_name']] = (float) $s[$tenor . '_month'];
                     }
