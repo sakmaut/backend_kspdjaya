@@ -17,6 +17,7 @@ class AdminFeeController extends Controller
         try {
 
             $data_admin_fee =[
+                'category' => $request->kategory,
                 'start_value' => $request->start_value,
                 'end_value' => $request->end_value
             ];

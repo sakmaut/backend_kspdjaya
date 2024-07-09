@@ -13,6 +13,7 @@ class M_AdminFee extends Model
     protected $fillable = [
         'id',
         'branch',
+        'category',
         'start_value',
         'end_value',
         'start_date',
