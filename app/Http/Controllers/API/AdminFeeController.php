@@ -162,10 +162,10 @@ class AdminFeeController extends Controller
                 'tipe' => $value->category,
                 'range_start' => (float) $value->start_value,
                 'range_end' =>(float) $value->end_value,
-                ($value->category == 'bulanan' ? 'tenor_6' : 'tenor_3') =>$strukturTenors['tenor_6'],
-                ($value->category == 'bulanan' ? 'tenor_12' : 'tenor_6') =>$strukturTenors['tenor_12'],
-                ($value->category == 'bulanan' ? 'tenor_18' : 'tenor_12') =>$strukturTenors['tenor_18'],
-                ($value->category == 'bulanan' ? 'tenor_24' : 'tenor_18') =>$strukturTenors['tenor_24']
+                'tenor_6' =>$strukturTenors['tenor_6'],
+                'tenor_12' =>$strukturTenors['tenor_12'],
+                'tenor_18' =>$strukturTenors['tenor_18'],
+                'tenor_24' =>$strukturTenors['tenor_24']
             ];
         }   
         
