@@ -87,47 +87,57 @@ class AdminFeeController extends Controller
         }
     }
 
-    // public function update(Request $request,$id)
-    // {
-    //     DB::beginTransaction();
-    //     try {
+    public function update(Request $request,$id)
+    {
+        DB::beginTransaction();
+        try {
 
-    //         $data_admin_fee =[
-    //             'category' => $request->kategory,
-    //             'start_value' => $request->start_value,
-    //             'end_value' => $request->end_value
-    //         ];
+            $admin_fee = M_AdminFee::find($id);
 
-    //         $admin_fee_id = M_AdminFee::create($data_admin_fee);
+            if (!$admin_fee) {
+                throw new Exception("Data Not Found", 404);
+            }
 
-    //         if(isset($request->struktur) && is_array($request->struktur)){
-    //             foreach ($request->struktur as $value) {
-    //                 $data_admin_type = [
-    //                     'admin_fee_id' => $admin_fee_id->id,
-    //                     'fee_name' => isset($value['key'])?$value['key']:'',
-    //                     '6_month' => $value['tenor6'],
-    //                     '12_month' => $value['tenor12'],
-    //                     '18_month' => $value['tenor18'],
-    //                     '24_month' => $value['tenor24']
-    //                 ];
+            $data_admin_fee =[
+                'category' => $request->kategory,
+                'start_value' => $request->start_value,
+                'end_value' => $request->end_value
+            ];
+
+            $admin_fee->update($data_admin_fee);
+
+            if (M_AdminType::where('admin_fee_id', $id)->exists()) {
+                M_AdminType::where('admin_fee_id', $id)->delete();
+            }
+
+            if(isset($request->struktur) && is_array($request->struktur)){
+                foreach ($request->struktur as $value) {
+                    $data_admin_type = [
+                        'admin_fee_id' => $id,
+                        'fee_name' => isset($value['key'])?$value['key']:'',
+                        '6_month' => $value['tenor6'],
+                        '12_month' => $value['tenor12'],
+                        '18_month' => $value['tenor18'],
+                        '24_month' => $value['tenor24']
+                    ];
                    
-    //                 M_AdminType::create($data_admin_type);
-    //             }
-    //         }
+                    M_AdminType::create($data_admin_type);
+                }
+            }
 
-    //         DB::commit();
-    //         ActivityLogger::logActivity($request,"Success",200);
-    //         return response()->json(['message' => 'created successfully',"status" => 200], 200);
-    //     }catch (QueryException $e) {
-    //         DB::rollback();
-    //         ActivityLogger::logActivity($request,$e->getMessage(),409);
-    //         return response()->json(['message' => $e->getMessage(),"status" => 409], 409);
-    //     } catch (\Exception $e) {
-    //         DB::rollback();
-    //         ActivityLogger::logActivity($request,$e->getMessage(),500);
-    //         return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
-    //     }
-    // }
+            DB::commit();
+            ActivityLogger::logActivity($request,"Success",200);
+            return response()->json(['message' => 'update successfully'], 200);
+        }catch (QueryException $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($request,$e->getMessage(),409);
+            return response()->json(['message' => $e->getMessage()], 409);
+        } catch (\Exception $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($request,$e->getMessage(),500);
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+    }
 
     public function buildArray($data){
         $build = [];
