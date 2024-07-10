@@ -151,10 +151,16 @@ class AdminFeeController extends Controller
 
             foreach ($tenors as $tenor) {
                 $tenorData = ['tenor' => (int) $tenor];
+                $total = 0;
+            
                 foreach ($struktur as $s) {
-                    $tenorData[$s['fee_name']] = (float) $s[$tenor . '_month'];
+                    $feeValue = (float) $s[$tenor . '_month'];
+                    $tenorData[$s['fee_name']] = $feeValue;
+                    $total += $feeValue;
                 }
-                $strukturTenors['tenor_'. $tenor] = $tenorData;
+            
+                $tenorData['total'] = $total;
+                $strukturTenors['tenor_' . $tenor] = $tenorData;
             }
 
             $build[] = [
