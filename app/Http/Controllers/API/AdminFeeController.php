@@ -136,15 +136,28 @@ class AdminFeeController extends Controller
           
             $struktur = [];
 
-            foreach ($value->links as $link) {
-                $struktur[] = [
-                    'fee_name' => $link['fee_name'],
-                    '6_month' => $link['6_month'],
-                    '12_month' => $link['12_month'],
-                    '18_month' => $link['18_month'],
-                    '24_month' => $link['24_month'],
-                ];
+            if($value->category === 'bulanan'){
+                foreach ($value->links as $link) {
+                    $struktur[] = [
+                        'fee_name' => $link['fee_name'],
+                        '6_month' => $link['6_month'],
+                        '12_month' => $link['12_month'],
+                        '18_month' => $link['18_month'],
+                        '24_month' => $link['24_month'],
+                    ];
+                }
+            }else{
+                foreach ($value->links as $link) {
+                    $struktur[] = [
+                        'fee_name' => $link['fee_name'],
+                        '3_month' => $link['6_month'],
+                        '6_month' => $link['12_month'],
+                        '12_month' => $link['18_month'],
+                        '18_month' => $link['24_month'],
+                    ];
+                }
             }
+            
 
             $tenors = ['6', '12', '18', '24'];
             $strukturTenors = [];
