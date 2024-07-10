@@ -135,29 +135,16 @@ class AdminFeeController extends Controller
         foreach ($data as $value) {
           
             $struktur = [];
-
-            if($value->category === 'bulanan'){
-                foreach ($value->links as $link) {
-                    $struktur[] = [
-                        'fee_name' => $link['fee_name'],
-                        '6_month' => $link['6_month'],
-                        '12_month' => $link['12_month'],
-                        '18_month' => $link['18_month'],
-                        '24_month' => $link['24_month'],
-                    ];
-                }
-            }else{
-                foreach ($value->links as $link) {
-                    $struktur[] = [
-                        'fee_name' => $link['fee_name'],
-                        '3_month' => $link['6_month'],
-                        '6_month' => $link['12_month'],
-                        '12_month' => $link['18_month'],
-                        '18_month' => $link['24_month'],
-                    ];
-                }
-            }
             
+            foreach ($value->links as $link) {
+                $struktur[] = [
+                    'fee_name' => $link['fee_name'],
+                    '6_month' => $link['6_month'],
+                    '12_month' => $link['12_month'],
+                    '18_month' => $link['18_month'],
+                    '24_month' => $link['24_month'],
+                ];
+            }
 
             $tenors = ['6', '12', '18', '24'];
             $strukturTenors = [];
@@ -175,7 +162,7 @@ class AdminFeeController extends Controller
                 'tipe' => $value->category,
                 'range_start' => (float) $value->start_value,
                 'range_end' =>(float) $value->end_value,
-                'tenor_6' =>$strukturTenors['tenor_6'],
+                ($value->category == 'bulanan' ? 'tenor_6' : 'tenor_3') =>$strukturTenors['tenor_6'],
                 'tenor_12' =>$strukturTenors['tenor_12'],
                 'tenor_18' =>$strukturTenors['tenor_18'],
                 'tenor_24' =>$strukturTenors['tenor_24']
