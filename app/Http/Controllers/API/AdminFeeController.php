@@ -279,7 +279,7 @@ class AdminFeeController extends Controller
 
             $show = $this->buildArrayOnly($adminFee);
     
-            return response()->json($plafond, 200);
+            return response()->json($show, 200);
         } catch (Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage()], 500);
