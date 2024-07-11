@@ -272,14 +272,14 @@ class AdminFeeController extends Controller
                 $adminFee = M_AdminFee::with('links')->get();
             }else{
                 $adminFee = M_AdminFee::with('links') 
-                            ->whereRaw("start_value >= $plafond and end_value <= $plafond")
+                            ->whereRaw("start_value >= $plafond and end_value < $plafond")
                             ->where('category', $angsuran_type)
                             ->get();
             }
 
             $show = $this->buildArrayOnly($adminFee);
     
-            return response()->json($show, 200);
+            return response()->json($plafond, 200);
         } catch (Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage()], 500);
@@ -294,7 +294,7 @@ class AdminFeeController extends Controller
             $tenor = $request->tenor;
 
             $adminFee = M_AdminFee::with('links') 
-                            ->whereRaw("start_value >= $plafond and end_value <= $plafond")
+                            ->whereRaw("start_value >= $plafond and end_value < $plafond")
                             ->where('category', $angsuran_type)
                             ->get();
 
