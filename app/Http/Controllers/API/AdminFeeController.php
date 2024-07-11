@@ -208,6 +208,60 @@ class AdminFeeController extends Controller
         return $build;
     }
 
+    public function buildArrayOnly($data){
+        $build = [];
+        
+        foreach ($data as $value) {
+          
+            $struktur = [];
+            
+            foreach ($value->links as $link) {
+                $struktur[] = [
+                    'fee_name' => $link['fee_name'],
+                    '6_month' => $link['6_month'],
+                    '12_month' => $link['12_month'],
+                    '18_month' => $link['18_month'],
+                    '24_month' => $link['24_month'],
+                ];
+            }
+
+            $tenors = ['6', '12', '18', '24'];
+            $strukturTenors = [];
+
+            foreach ($tenors as $tenor) {
+                $tenorData = ['tenor' => (int) $tenor];
+                $total = 0;
+            
+                foreach ($struktur as $s) {
+                    $feeName = $s['fee_name'];
+                    $feeValue = (float) $s[$tenor . '_month'];
+                    $tenorData[$feeName] = $feeValue;
+            
+                    if ($feeName !== 'eff_rate') {
+                        $total += $feeValue;
+                    }
+                }
+            
+                $tenorData['total'] = $total;
+                $strukturTenors['tenor_' . $tenor] = $tenorData;
+            }
+            
+
+            $build= [
+                'id' => $value->id,
+                'tipe' => $value->category,
+                'range_start' => (float) $value->start_value,
+                'range_end' =>(float) $value->end_value,
+                'tenor_6' =>$strukturTenors['tenor_6'],
+                'tenor_12' =>$strukturTenors['tenor_12'],
+                'tenor_18' =>$strukturTenors['tenor_18'],
+                'tenor_24' =>$strukturTenors['tenor_24']
+            ];
+        }   
+        
+        return $build;
+    }
+
     public function fee_survey(Request $request)
     {
         try {
@@ -223,7 +277,7 @@ class AdminFeeController extends Controller
                             ->get();
             }
 
-            $show = $this->buildArray($adminFee);
+            $show = $this->buildArrayOnly($adminFee);
     
             return response()->json($show, 200);
         } catch (Exception $e) {
