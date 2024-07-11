@@ -50,6 +50,21 @@ class AdminFeeController extends Controller
         DB::beginTransaction();
         try {
 
+            $checkRange =   M_AdminFee::where('category', 'bulanan')
+                            ->where(function ($query) use ($request) {
+                                $query->where(function ($q) use ($request) {
+                                    $q->where('start_value', '<', $request->start_value)
+                                    ->where('end_value', '>', $request->start_value);
+                                })->orWhere(function ($q) use ($request) {
+                                    $q->where('start_value', '<', $request->end_value)
+                                    ->where('end_value', '>', $request->end_value);
+                                });
+                            })->get();
+
+            if (!$checkRange->isEmpty()) {
+                throw new Exception("Data Range Sudah Ada");
+            }
+
             $data_admin_fee =[
                 'category' => $request->kategory,
                 'start_value' => $request->start_value,
@@ -79,11 +94,11 @@ class AdminFeeController extends Controller
         }catch (QueryException $e) {
             DB::rollback();
             ActivityLogger::logActivity($request,$e->getMessage(),409);
-            return response()->json(['message' => $e->getMessage(),"status" => 409], 409);
+            return response()->json(['message' => $e->getMessage()], 409);
         } catch (\Exception $e) {
             DB::rollback();
             ActivityLogger::logActivity($request,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+            return response()->json(['message' => $e->getMessage()], 500);
         }
     }
 
