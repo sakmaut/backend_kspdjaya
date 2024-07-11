@@ -272,7 +272,7 @@ class AdminFeeController extends Controller
                 $adminFee = M_AdminFee::with('links')->get();
             }else{
                 $adminFee = M_AdminFee::with('links') 
-                            ->whereRaw("start_value > $plafond and end_value <= $plafond")
+                            ->whereRaw("start_value => $plafond and end_value <= $plafond")
                             ->where('category', $angsuran_type)
                             ->get();
             }
@@ -294,7 +294,7 @@ class AdminFeeController extends Controller
             $tenor = $request->tenor;
 
             $adminFee = M_AdminFee::with('links') 
-                            ->whereRaw("start_value > $plafond and end_value <= $plafond")
+                            ->whereRaw("start_value => $plafond and end_value <= $plafond")
                             ->where('category', $angsuran_type)
                             ->get();
 
