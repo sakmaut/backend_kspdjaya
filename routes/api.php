@@ -62,6 +62,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Credit
     Route::post('pk', [Credit::class, 'index']);
     Route::resource('admin_fee', AdminFeeController::class);
+    Route::get('fee', [AdminFeeController::class, 'fee']);
 });
 
 

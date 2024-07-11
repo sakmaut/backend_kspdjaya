@@ -192,5 +192,25 @@ class AdminFeeController extends Controller
         
         return $build;
     }
+
+    public function fee(Request $request)
+    {
+        try {
+            $plafond = (int) $request->plafond / 1000000; 
+            $angsuran_type = $request->jenis_angsuran;
+
+            $adminFee = M_AdminFee::with('links') 
+                    ->whereRaw("start_value <= $plafond and end_value >= $plafond")
+                    ->where('category', $angsuran_type)
+                    ->get();
+
+            $show = $this->buildArray($adminFee);
+    
+            return response()->json($show, 200);
+        } catch (Exception $e) {
+            ActivityLogger::logActivity($request,$e->getMessage(),500);
+            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+        }
+    }
     
 }
