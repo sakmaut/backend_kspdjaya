@@ -19,6 +19,7 @@ class M_CrSurvey extends Model
         'plafond', 
         'tenor', 
         'category', 
+        'jenis_angsuran',
         'nama', 
         'tgl_lahir', 
         'ktp', 

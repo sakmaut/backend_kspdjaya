@@ -93,7 +93,8 @@ class CrSurveyController extends Controller
                 'tujuan_kredit' => $data->tujuan_kredit,
                 'plafond' => (int) $data->plafond,
                 'tenor' => $data->tenor, 
-                'kategory' => $data->category 
+                'kategory' => $data->category,
+                'jenis_angsuran' => $data->jenis_angsuran 
             ],
             'data_nasabah' => [
                 'nama' => $data->nama,
@@ -142,7 +143,8 @@ class CrSurveyController extends Controller
                 "no_polisi" => $list->POLICE_NUMBER,
                 "no_rangka" => $list->CHASIS_NUMBER,
                 "no_mesin" => $list->ENGINE_NUMBER,
-                "no_stnk" => $list->BPKB_NUMBER,
+                "no_bpkb" => $list->BPKB_NUMBER,
+                "no_stnk" => $list->STNK_NUMBER,
                 "nilai" => (int) $list->VALUE
             ];    
         }
@@ -165,7 +167,7 @@ class CrSurveyController extends Controller
                 throw new Exception("Id Approval Is Exist", 409);
             }
 
-            self::createCrProspek($request);
+            self::createCrSurvey($request);
             self::createCrProspekApproval($request);
 
             if (collect($request->jaminan_kendaraan)->isNotEmpty()) {
@@ -186,7 +188,7 @@ class CrSurveyController extends Controller
         }
     }
 
-    private function createCrProspek($request)
+    private function createCrSurvey($request)
     {
         $data_array = [
             'id' => $request->id,
@@ -196,6 +198,7 @@ class CrSurveyController extends Controller
             'plafond' => $request->order['plafond']?? null,
             'tenor' => $request->order['tenor']?? null,
             'category' => $request->order['category']?? null,
+            'jenis_angsuran' => $request->order['jenis_angsuran']?? null,
             'nama' => $request->data_nasabah['nama']?? null,
             'tgl_lahir' => $request->data_nasabah['tgl_lahir']?? null,
             'ktp' => $request->data_nasabah['no_ktp']?? null,
@@ -252,6 +255,7 @@ class CrSurveyController extends Controller
                 'CHASIS_NUMBER' => $result['no_rangka'],
                 'ENGINE_NUMBER' => $result['no_mesin'],
                 'BPKB_NUMBER' => $result['no_bpkb'],
+                'STNK_NUMBER' => $result['no_stnk'],
                 'VALUE' => $result['nilai'],
                 'COLLATERAL_FLAG' => "",
                 'VERSION' => 1,
@@ -273,6 +277,7 @@ class CrSurveyController extends Controller
                 'plafond' => $request->order['plafond']?? null,
                 'tenor' => $request->order['tenor']?? null,
                 'category' => $request->order['kategory']?? null,
+                'jenis_angsuran' => $request->order['jenis_angsuran']?? null,
                 'nama' => $request->data_nasabah['nama']?? null,
                 'tgl_lahir' => date('Y-m-d', strtotime($request->data_nasabah['tgl_lahir']))?? null,
                 'ktp' => $request->data_nasabah['no_ktp']?? null,
@@ -326,7 +331,8 @@ class CrSurveyController extends Controller
                         'POLICE_NUMBER' => $result['no_polisi']??null,
                         'CHASIS_NUMBER' => $result['no_rangka']??null,
                         'ENGINE_NUMBER' => $result['no_mesin']??null,
-                        'BPKB_NUMBER' => $result['no_stnk']??null,
+                        'BPKB_NUMBER' => $result['no_bpkb']??null,
+                        'STNK_NUMBER' => $result['no_stnk']??null,
                         'VALUE' => $result['nilai']??null,
                         'COLLATERAL_FLAG' => "",
                         'VERSION' => 1,
