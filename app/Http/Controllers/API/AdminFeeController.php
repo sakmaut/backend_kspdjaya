@@ -213,19 +213,94 @@ class AdminFeeController extends Controller
         try {
             $plafond = (int) $request->plafond / 1000000; 
             $angsuran_type = $request->jenis_angsuran;
+            $tenor = $request->tenor;
 
-            $adminFee = M_AdminFee::with('links') 
-                    ->whereRaw("start_value <= $plafond and end_value >= $plafond")
-                    ->where('category', $angsuran_type)
-                    ->get();
+            if($plafond == null || $plafond == 0 || empty($plafond)){
+                $adminFee = M_AdminFee::with('links')->get();
+            }else{
+                $adminFee = M_AdminFee::with('links') 
+                            ->whereRaw("start_value <= $plafond and end_value >= $plafond")
+                            ->where('category', $angsuran_type)
+                            ->get();
+            }
 
-            $show = $this->buildArray($adminFee);
+            $show = $this->buildArrayFee($adminFee,$tenor);
     
             return response()->json($show, 200);
         } catch (Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+            return response()->json(['message' => $e->getMessage()], 500);
         }
+    }
+
+    public function buildArrayFee($data,$tenor){
+        $build = [];
+        $tenorSearch = 'tenor_' . $tenor;
+
+        foreach ($data as $value) {
+          
+            $struktur = [];
+            
+            foreach ($value->links as $link) {
+                $struktur[] = [
+                    'fee_name' => $link['fee_name'],
+                    '6_month' => $link['6_month'],
+                    '12_month' => $link['12_month'],
+                    '18_month' => $link['18_month'],
+                    '24_month' => $link['24_month'],
+                ];
+            }
+
+            $tenors = ['6', '12', '18', '24'];
+            $strukturTenors = [];
+
+            foreach ($tenors as $tenor) {
+                $tenorData = ['tenor' => (int) $tenor];
+                $total = 0;
+            
+                foreach ($struktur as $s) {
+                    $feeName = $s['fee_name'];
+                    $feeValue = (float) $s[$tenor . '_month'];
+                    $tenorData[$feeName] = $feeValue;
+            
+                    if ($feeName !== 'eff_rate') {
+                        $total += $feeValue;
+                    }
+                }
+            
+                $tenorData['total'] = $total;
+
+                switch ($tenor) {
+                    case '6':
+                        $strukturTenors['tenor_6'] = $tenorData;
+                        break;
+                    case '12':
+                        $strukturTenors['tenor_12'] = $tenorData;
+                        break;
+                    case '18':
+                        $strukturTenors['tenor_18'] = $tenorData;
+                        break;
+                    case '24':
+                        $strukturTenors['tenor_24'] = $tenorData;
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            $build[] = array_merge(
+                [
+                    'id' => $value->id,
+                    'tipe' => $value->category,
+                    'range_start' => (float) $value->start_value,
+                    'range_end' => (float) $value->end_value,
+                ],
+                $strukturTenors[$tenorSearch]
+            );
+            
+        }   
+        
+        return $build;
     }
     
 }

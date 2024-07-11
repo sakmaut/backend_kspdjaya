@@ -40,24 +40,24 @@ class AuthController extends Controller
 
             if (strtolower($user->status) !== 'active') {
                 $this->logLoginActivity($request, 'User status is not active', 401);
-                return response()->json(['message' => 'Invalid Credential', 'status' => 401], 401);
+                return response()->json(['message' => 'Invalid Credential'], 401);
             }
 
             $menu = M_MasterUserAccessMenu::where(['users_id'=>$user->id])->first();
 
             if (!$menu) {
                 $this->logLoginActivity($request, 'Menu Not Found', 401);
-                return response()->json(['message' => 'Invalid Credential', 'status' => 401], 401);
+                return response()->json(['message' => 'Invalid Credential'], 401);
             }
 
             $token = $this->generateToken($user);
 
             $this->logLoginActivity($request, 'Success', 200);
-            return response()->json(['message' => true, 'status' => 200, 'response' => ['token' => $token]], 200);
+            return response()->json(['token' => $token], 200);
 
         } catch (\Exception $e) {
             $this->logLoginActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => 'An error occurred', 'status' => 500], 500);
+            return response()->json(['message' => 'An error occurred'], 500);
         }
     }
 
