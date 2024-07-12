@@ -268,9 +268,9 @@ class AdminFeeController extends Controller
             $flat_rate = round(self::calculate_flat_interest($tenor,$eff_rate),2);
             $pokok_pembayaran = ($plafond+$total);
             $interest_margin = (int) (($flat_rate / 12) * $tenor * $pokok_pembayaran / 100);
-            $angsuran_calc = number_format(($pokok_pembayaran + $interest_margin) / $tenor);
+            $angsuran_calc = ($pokok_pembayaran + $interest_margin) / $tenor;
 
-            $tenorData['angsuran'] = $angsuran_calc;
+            $tenorData['angsuran'] = ceil(round($angsuran_calc,3)/1000)*1000;
             $tenorData['total'] = $total;
             $strukturTenors["tenor_$tenor"] = $tenorData;
         }
