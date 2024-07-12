@@ -505,6 +505,7 @@ class CrAppilcationController extends Controller
         $applicationDetail = M_CrApplication::where('ID',$setApplicationId)->first();
         $cr_survey= M_CrSurvey::where('id',$surveyId)->first();
         $check_exist = M_Credit::where('ORDER_NUMBER', $application->ORDER_NUMBER)->first();
+        $cr_guarantor = M_CrApplicationGuarantor::where('APPLICATION_ID',$setApplicationId)->first();
 
         $arrayList = [
             'id_application' => $setApplicationId,
@@ -610,15 +611,19 @@ class CrAppilcationController extends Controller
                 "no_telp" => $cr_personal_extra->EMERGENCY_PHONE_HOUSE?? null,
                 "no_hp" => $cr_personal_extra->EMERGENCY_PHONE_PERSONAL?? null, 
             ],
-            "surat" => [
-                "alamat"  => $cr_personal_extra->MAIL_ADDRESS?? null,
-                "rt"  => $cr_personal_extra->MAIL_RT?? null,
-                "rw"  => $cr_personal_extra->MAIL_RW?? null,
-                "provinsi" => $cr_personal_extra->MAIL_PROVINCE?? null,
-                "kota" => $cr_personal_extra->MAIL_CITY?? null,
-                "kelurahan" => $cr_personal_extra->MAIL_KELURAHAN?? null,
-                "kecamatan" => $cr_personal_extra->MAIL_KECAMATAN?? null,
-                "kode_pos" => $cr_personal_extra->MAIL_ZIP_CODE?? null    
+            "penjamin" => [
+                "nama" => $cr_guarantor->NAME ?? null,
+                "jenis_kelamin" => $cr_guarantor->GENDER?? null,
+                "tempat_lahir" => $cr_guarantor->BIRTHPLACE?? null,
+                "tgl_lahir" =>$cr_guarantor->BIRTHDATE?? null,
+                "alamat" => $cr_guarantor->ADDRESS?? null,
+                "tipe_identitas"  => $cr_guarantor->IDENTIY_TYPE?? null,
+                "no_identitas"  => $cr_guarantor->NUMBER_IDENTITY?? null,
+                "pekerjaan"  => $cr_guarantor->OCCUPATION?? null,
+                "lama_bekerja"  => $cr_guarantor->WORK_PERIOD?? null,
+                "hubCust" => $cr_guarantor->STATUS_WITH_DEBITUR?? null,
+                "no_hp" => $cr_guarantor->MOBILE_NUMBER?? null,
+                "pendapatan" => $cr_guarantor->INCOME?? null,   
             ],
             "info_bank" =>[],
             "ekstra" =>[
@@ -645,8 +650,6 @@ class CrAppilcationController extends Controller
             ],
             "jaminan_kendaraan" => [],        
             "prospect_approval" => [
-                // "flag_approval" => $approval_detail->ONCHARGE_APPRVL,
-                // "keterangan" => $approval_detail->ONCHARGE_DESCR,
                 "status" => $approval_detail->application_result == null ?$approval_detail->application_result:""
             ],
             "attachment" =>$attachment_data
