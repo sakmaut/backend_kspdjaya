@@ -38,4 +38,18 @@ class M_AdminFee extends Model
     {
         return $this->hasMany(M_AdminType::class,'admin_fee_id');
     }
+
+    public function checkRange($plafond,$angsuran_type){
+        $query = self::with('links')
+                ->where('category', $angsuran_type)
+                ->where(function($query) use ($plafond) {
+                    $query->where('start_value', '<=', $plafond)
+                            ->where('end_value', '>=', $plafond);
+                })
+                ->orderByRaw('ABS(start_value - ?) + ABS(end_value - ?)', [$plafond, $plafond])
+                ->limit(1)
+                ->get();
+
+        return $query;
+    }
 }
