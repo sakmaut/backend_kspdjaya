@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\M_ApplicationApproval;
 use App\Models\M_CrApplication;
 use App\Models\M_CrApplicationBank;
+use App\Models\M_CrApplicationGuarantor;
 use App\Models\M_Credit;
 use App\Models\M_CrGuaranteVehicle;
 use App\Models\M_CrOrder;
@@ -135,6 +136,7 @@ class CrAppilcationController extends Controller
             self::insert_cr_personal($request,$id);
             self::insert_cr_order($request, $surveyID,$id);
             self::insert_cr_personal_extra($request,$id);
+            self::insert_cr_guarantor($request,$id);
             self::insert_bank_account($request,$id);
             self::insert_application_approval($id, $surveyID,$request->flag_pengajuan);
 
@@ -304,6 +306,37 @@ class CrAppilcationController extends Controller
             $data_cr_application['CUST_CODE'] = generateCode($request, 'cr_personal', 'CUST_CODE');
     
             M_CrPersonal::create($data_cr_application);
+        }else{
+            $check->update($data_cr_application);
+        }
+    }
+
+    private function insert_cr_guarantor($request,$applicationId){
+
+        $check = M_CrApplicationGuarantor::where('APPLICATION_ID',$applicationId)->first();
+
+        $data_cr_application =[  
+            'NAME' => $request->penjamin['nama']??null,
+            'GENDER' => $request->penjamin['jenis_kelamin']??null,
+            'BIRTHPLACE' => $request->penjamin['tempat_lahir']??null,
+            'BIRTHDATE' => $request->penjamin['tgl_lahir']??null,
+            'ADDRESS' => $request->penjamin['alamat'].' '.$request->penjamin['rt'].'/'.$request->penjamin['rw']
+                        .' '.$request->penjamin['kota'].' '.$request->penjamin['kecamatan'].' '.
+                        $request->penjamin['kelurahan'].' '.$request->penjamin['provinsi'].' '.$request->penjamin['kode_pos']??null,
+            'IDENTITY_TYPE' => $request->penjamin['tipe_identitas']??null,
+            'NUMBER_IDENTITY' => $request->penjamin['no_identitas']??null,
+            'OCCUPATION' => $request->penjamin['pekerjaan']??null,
+            'WORK_PERIOD' => $request->penjamin['lama_bekerja']??null,
+            'STATUS_WITH_DEBITUR' => $request->penjamin['hubCust']??null,
+            'MOBILE_NUMBER' => $request->penjamin['no_hp']??null,
+            'INCOME' => $request->penjamin['pendapatan']??null,
+        ];
+
+        if(!$check){
+            $data_cr_application['ID'] = Uuid::uuid7()->toString();
+            $data_cr_application['APPLICATION_ID'] = $applicationId;
+    
+            M_CrApplicationGuarantor::create($data_cr_application);
         }else{
             $check->update($data_cr_application);
         }
