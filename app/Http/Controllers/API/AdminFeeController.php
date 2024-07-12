@@ -272,9 +272,12 @@ class AdminFeeController extends Controller
                 $adminFee = M_AdminFee::with('links')->get();
             }else{
                 $adminFee = M_AdminFee::with('links')
-                            ->where('start_value', '<=', $plafond)
                             ->where('category', $angsuran_type)
-                            ->orderBy('start_value', 'desc')
+                            ->where(function($query) use ($plafond) {
+                                $query->where('start_value', '<=', $plafond)
+                                        ->where('end_value', '>=', $plafond);
+                            })
+                            ->orderByRaw('ABS(start_value - ?) + ABS(end_value - ?)', [$plafond, $plafond])
                             ->limit(1)
                             ->get();
             }
@@ -296,11 +299,14 @@ class AdminFeeController extends Controller
             $tenor = $request->tenor;
 
             $adminFee = M_AdminFee::with('links')
-                            ->where('start_value', '<=', $plafond)
-                            ->where('category', $angsuran_type)
-                            ->orderBy('start_value', 'desc')
-                            ->limit(1)
-                            ->get();
+                        ->where('category', $angsuran_type)
+                        ->where(function($query) use ($plafond) {
+                            $query->where('start_value', '<=', $plafond)
+                                    ->where('end_value', '>=', $plafond);
+                        })
+                        ->orderByRaw('ABS(start_value - ?) + ABS(end_value - ?)', [$plafond, $plafond])
+                        ->limit(1)
+                        ->get();
 
             $show = $this->buildArrayFee($adminFee,$tenor);
     
