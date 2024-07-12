@@ -172,7 +172,12 @@ class AdminFeeController extends Controller
                 $adminFee =$this->adminfee->checkRange($plafond,$angsuran_type);
             }
 
-            $show = $this->buildArray($adminFee,['returnSingle' => true,'plafond' => $request->plafond]);
+            $show = $this->buildArray($adminFee,
+            [
+                'returnSingle' => true,
+                'plafond' => $request->plafond,
+                'angsuran_type' => $angsuran_type
+            ]);
     
             return response()->json($show, 200);
         } catch (Exception $e) {
@@ -204,11 +209,12 @@ class AdminFeeController extends Controller
         $returnSingle = $options['returnSingle'] ?? false;
         $specificTenor = $options['tenor'] ?? null;
         $plafond = $options['plafond'] ?? null;
+        $angsuran_type = $options['angsuran_type'] ?? null;
 
         $build = [];
 
         foreach ($data as $value) {
-            $strukturTenors = $this->buildStrukturTenors($value->links, $specificTenor,$plafond);
+            $strukturTenors = $this->buildStrukturTenors($value->links, $specificTenor,$plafond,$angsuran_type);
             
             $item = [
                 'id' => $value->id,
@@ -233,20 +239,37 @@ class AdminFeeController extends Controller
         return $build;
     }
 
-    private function buildStrukturTenors($links, $specificTenor = null,$plafond)
+    private function buildStrukturTenors($links, $specificTenor = null,$plafond,$angsuran_type)
     {
         $struktur = [];
         foreach ($links as $link) {
-            $struktur[] = [
-                'fee_name' => $link['fee_name'],
-                '6_month' => $link['6_month'],
-                '12_month' => $link['12_month'],
-                '18_month' => $link['18_month'],
-                '24_month' => $link['24_month'],
-            ];
+
+            if($angsuran_type == 'bulanan'){
+                $struktur[] = [
+                    'fee_name' => $link['fee_name'],
+                    '6_month' => $link['6_month'],
+                    '12_month' => $link['12_month'],
+                    '18_month' => $link['18_month'],
+                    '24_month' => $link['24_month'],
+                ];
+            }else{
+                $struktur[] = [
+                    'fee_name' => $link['fee_name'],
+                    '3_month' => $link['6_month'],
+                    '6_month' => $link['12_month'],
+                    '12_month' => $link['18_month'],
+                    '18_month' => $link['24_month'],
+                ];
+            }
+            
         }
 
-        $tenors = $specificTenor ? [$specificTenor] : ['6', '12', '18', '24'];
+        if($angsuran_type == 'bulanan'){
+            $tenors = $specificTenor ? [$specificTenor] : ['6', '12', '18', '24'];
+        }else{
+            $tenors = $specificTenor ? [$specificTenor] : ['3', '6', '12', '18'];
+        }
+
         $strukturTenors = [];
 
         foreach ($tenors as $tenor) {
@@ -265,10 +288,21 @@ class AdminFeeController extends Controller
             }
 
             $eff_rate = $tenorData['eff_rate'];
-            $flat_rate = round(self::calculate_flat_interest($tenor,$eff_rate),2);
+            $flat_rate = round(self::calculate_flat_interest($tenor,$eff_rate,$angsuran_type),2);
             $pokok_pembayaran = ($plafond+$total);
             $interest_margin = (int) (($flat_rate / 12) * $tenor * $pokok_pembayaran / 100);
-            $angsuran_calc = ($pokok_pembayaran + $interest_margin) / $tenor;
+
+            if($angsuran_type == 'bulanan'){
+                $angsuran_calc = ($pokok_pembayaran + $interest_margin) / $tenor;
+            }else{
+                if ($tenor == 3 || $tenor == 6) {
+                    $angsuran_calc = ($pokok_pembayaran + $interest_margin);
+                } elseif ($tenor == 12) {
+                    $angsuran_calc = ($pokok_pembayaran + $interest_margin) / 2;
+                }elseif($tenor == 18){
+                    $angsuran_calc = ($pokok_pembayaran + $interest_margin) / 3;
+                }
+            }
 
             $tenorData['angsuran'] = ceil(round($angsuran_calc,3)/1000)*1000;
             $tenorData['total'] = $total;
@@ -276,16 +310,25 @@ class AdminFeeController extends Controller
         }
 
         return $strukturTenors;
-    }
+    } 
     
-    function calculate_flat_interest($tenor, $eff_rate) {
-        $eff_rate_decimal = $eff_rate/100;
+    function calculate_flat_interest($tenor, $eff_rate,$angsuran_type) {
+
+        $eff_rate_decimal = $eff_rate / 100;
         $monthly_eff_rate = $eff_rate_decimal / 12;
-        $compounded_factor = pow((1 + $monthly_eff_rate), -$tenor);
-        $numerator = $tenor * $monthly_eff_rate;
-        $denominator = 1 - $compounded_factor;
-        $bunga_flat = (($numerator / $denominator) - 1) * (12 / $tenor) * 100;
-        
-        return $bunga_flat;
+
+        if ($angsuran_type === 'bulanan') {
+            $compounded_factor = pow(1 + $monthly_eff_rate, -$tenor);
+            $numerator = $tenor * $monthly_eff_rate;
+            $denominator = 1 - $compounded_factor;
+            return (($numerator / $denominator) - 1) * (12 / $tenor) * 100;
+        } else {
+            if ($tenor == 3 || $tenor == 6) {
+                return $eff_rate;
+            } elseif ($tenor == 12 || $tenor == 18) {
+                $compounded_factor = pow(1 + $monthly_eff_rate, -$tenor);
+                return ((($tenor * $monthly_eff_rate) / (1 - $compounded_factor) - 1) * (12 / $tenor) + 0.1) * 100;
+            }
+        }
     }    
 }
