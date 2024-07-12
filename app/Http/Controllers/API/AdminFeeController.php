@@ -271,9 +271,11 @@ class AdminFeeController extends Controller
             if($plafond == null || $plafond == 0 || empty($plafond)){
                 $adminFee = M_AdminFee::with('links')->get();
             }else{
-                $adminFee = M_AdminFee::with('links') 
-                            ->whereRaw("start_value <= $plafond and end_value <= $plafond")
+                $adminFee = M_AdminFee::with('links')
+                            ->where('start_value', '<=', $plafond)
                             ->where('category', $angsuran_type)
+                            ->orderBy('start_value', 'desc')
+                            ->limit(1)
                             ->get();
             }
 
@@ -293,9 +295,11 @@ class AdminFeeController extends Controller
             $angsuran_type = $request->jenis_angsuran;
             $tenor = $request->tenor;
 
-            $adminFee = M_AdminFee::with('links') 
-                            ->whereRaw("start_value <= $plafond and end_value <= $plafond")
+            $adminFee = M_AdminFee::with('links')
+                            ->where('start_value', '<=', $plafond)
                             ->where('category', $angsuran_type)
+                            ->orderBy('start_value', 'desc')
+                            ->limit(1)
                             ->get();
 
             $show = $this->buildArrayFee($adminFee,$tenor);
