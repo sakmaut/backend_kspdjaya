@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\M_CrApplication;
+use App\Models\M_CrCollateral;
 use App\Models\M_Credit;
 use App\Models\M_CreditSchedule;
 use App\Models\M_CrGuaranteVehicle;
@@ -21,6 +22,14 @@ use Ramsey\Uuid\Uuid;
 
 class Credit extends Controller
 {
+
+    private $timeNow;
+
+    public function __construct()
+    {
+        $this->timeNow = Carbon::now();
+    }
+
     public function index(Request $request)
     {
         try {
@@ -47,7 +56,6 @@ class Credit extends Controller
 
         return $result;
     }
-
 
     private function buildData($request,$data){
         $cr_personal = M_CrPersonal::where('APPLICATION_ID',$data->ID)->first();
@@ -85,6 +93,7 @@ class Credit extends Controller
             }
             self::insert_customer($request,$data);
             self::insert_customer_xtra($data);
+            self::insert_collateral($request,$data);
         }
 
         $data = [
@@ -161,7 +170,6 @@ class Credit extends Controller
         ];
 
         M_Credit::create($data_credit);
-        
     }
 
     private function insert_customer($request,$data){
@@ -268,5 +276,34 @@ class Credit extends Controller
         ];
 
         M_CustomerExtra::create($data_customer_xtra);
+    }
+
+    private function insert_collateral($request,$data){
+        $data_collateral = M_CrGuaranteVehicle::where('CR_SURVEY_ID',$data->CR_SURVEY_ID)->get();
+
+        if($data_collateral->isNotEmpty()){
+            foreach ($data_collateral as $res) {
+                $data_jaminan = [
+                    'HEADER_ID' => "",
+                    'TYPE' => $res->TYPE??null,
+                    'BRAND' => $res->BRAND??null,
+                    'PRODUCTION_YEAR' => $res->PRODUCTION_YEAR??null,
+                    'COLOR' => $res->COLOR??null,
+                    'ON_BEHALF' => $res->ON_BEHALF??null,
+                    'POLICE_NUMBER' => $res->POLICE_NUMBER??null,
+                    'CHASIS_NUMBER' => $res->CHASIS_NUMBER??null,
+                    'ENGINE_NUMBER' => $res->ENGINE_NUMBER??null,
+                    'BPKB_NUMBER' => $res->BPKB_NUMBER??null,
+                    'STNK_NUMBER' => $res->STNK_NUMBER??null,
+                    'VALUE' => $res->VALUE??null,
+                    'COLLATERAL_FLAG' => "",
+                    'VERSION' => 1,
+                    'CREATE_DATE' => $this->timeNow,
+                    'CREATE_BY' => $request->user()->id,
+                ];
+    
+                M_CrCollateral::create($data_jaminan);
+            }
+        }
     }
 }

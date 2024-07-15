@@ -9,6 +9,7 @@ use App\Http\Controllers\API\{
     CrSurveyController,
     DetailProfileController,
     MasterMenuController,
+    TaksasiController,
     UserAccessMenuController,
     UsersController
 };
@@ -30,6 +31,7 @@ Route::middleware(['auth:sanctum', 'check.access'])->group(function () {
     Route::get('kunjungan_admin', [CrSurveyController::class, 'showAdmins']);
     Route::get('fpk_kapos', [CrAppilcationController::class, 'showKapos']);
     Route::get('fpk_ho', [CrAppilcationController::class, 'showHo']);
+    // Route::resource('taksasi', TaksasiController::class)->only(['index']);
 });
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -64,6 +66,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::resource('admin_fee', AdminFeeController::class);
     Route::post('fee_survey', [AdminFeeController::class, 'fee_survey']);
     Route::post('fee', [AdminFeeController::class, 'fee']);
+
+    // Route::resource('taksasi', TaksasiController::class)->except(['index']);
+    Route::resource('taksasi', TaksasiController::class);
 });
 
 
