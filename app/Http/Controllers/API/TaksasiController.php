@@ -98,69 +98,80 @@ class TaksasiController extends Controller
         }
     }
 
-    // public function update(Request $request,$id)
-    // {
-    //     DB::beginTransaction();
-    //     try {
-    //         $request->validate([
-    //             'CODE' => 'unique:branch,code,'.$id,
-    //             'NAME' => 'unique:branch,name,'.$id,
-    //             'ADDRESS' => 'required|string',
-    //             'ZIP_CODE' => 'numeric'
-    //         ]);
+    public function update(Request $request,$id)
+    {
+        DB::beginTransaction();
+        try {
+            $taksasi = M_Taksasi::where('id',$id)->first();
 
-    //         $branch = M_Branch::findOrFail($id);
+            if(!$taksasi){
+                throw new Exception("Data Not Found", 1);
+            }
 
-    //         $request['MOD_USER'] = $request->user()->id;
-    //         $request['MOD_DATE'] = Carbon::now()->format('Y-m-d');
+            $data_taksasi =[
+                'brand'=> $request->brand,
+                'code'=> $request->code,
+                'model'=> $request->model,
+                'descr'=> $request->descr,
+                'updated_by'=>$request->user()->id,
+                'updated_at'=>$this->timeNow
+            ];
+           
+            $taksasi->update($data_taksasi);
 
-    //         $data = array_change_key_case($request->all(), CASE_UPPER);
+            $taksasi_price = M_TaksasiPrice::where('taksasi_id',$id)->delete();
+        
+            if(isset($request->price) && is_array($request->price)){
+                foreach ($request->price as $res) {
+                    $taksasi_price =[
+                        'taksasi_id'=> $id,
+                        'year'=> $res['name'],
+                        'price'=> $res['harga']
+                    ];
+        
+                    M_TaksasiPrice::create($taksasi_price);
+                }
+            }
 
-    //         compareData(M_Branch::class,$id,$data,$request);
+            DB::commit();
+            ActivityLogger::logActivity($request,"Success",200);
+            return response()->json(['message' => 'updated successfully'], 200);
+        } catch (\Exception $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($request,$e->getMessage(),500);
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+    }
 
-    //         $branch->update($data);
-
-    //         DB::commit();
-    //         ActivityLogger::logActivity($request,"Success",200);
-    //         return response()->json(['message' => 'Cabang updated successfully', "status" => 200], 200);
-    //     } catch (ModelNotFoundException $e) {
-    //         DB::rollback();
-    //         ActivityLogger::logActivity($request,'Data Not Found',404);
-    //         return response()->json(['message' => 'Data Not Found', "status" => 404], 404);
-    //     } catch (\Exception $e) {
-    //         DB::rollback();
-    //         ActivityLogger::logActivity($request,$e->getMessage(),500);
-    //         return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
-    //     }
-    // }
-
-    // public function destroy(Request $req,$id)
-    // { 
-    //     DB::beginTransaction();
-    //     try {
+    public function destroy(Request $req,$id)
+    { 
+        DB::beginTransaction();
+        try {
             
-    //         $users = M_Branch::findOrFail($id);
+            $taksasi = M_Taksasi::where('id',$id)->first();
 
-    //         $update = [
-    //             'deleted_by' => $req->user()->id,
-    //             'deleted_at' => Carbon::now()->format('Y-m-d H:i:s')
-    //         ];
+            if(!$taksasi){
+                throw new Exception("Data Not Found", 1);
+            }
 
-    //         $data = array_change_key_case($update, CASE_UPPER);
+            $update = [
+                'deleted_by' => $req->user()->id,
+                'deleted_at' => Carbon::now()->format('Y-m-d H:i:s')
+            ];
 
-    //         $users->update($data);
+            $taksasi->update($update);
 
-    //         DB::commit();
-    //         ActivityLogger::logActivity($req,"Success",200);
-    //         return response()->json(['message' => 'Users deleted successfully', "status" => 200], 200);
-    //     } catch (ModelNotFoundException $e) {
-    //         DB::rollback();
-    //         ActivityLogger::logActivity($req,'Data Not Found',404);
-    //         return response()->json(['message' => 'Data Not Found', "status" => 404], 404);
-    //     } catch (\Exception $e) {
-    //         DB::rollback();
-    //         ActivityLogger::logActivity($req,$e->getMessage(),500);
-    //         return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
-    //     }
-    // }
+            DB::commit();
+            ActivityLogger::logActivity($req,"Success",200);
+            return response()->json(['message' => 'deleted successfully'], 200);
+        } catch (ModelNotFoundException $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($req,'Data Not Found',404);
+            return response()->json(['message' => 'Data Not Found'], 404);
+        } catch (\Exception $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($req,$e->getMessage(),500);
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+    }
 }
