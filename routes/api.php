@@ -7,6 +7,7 @@ use App\Http\Controllers\API\{
     CrAppilcationController,
     Credit,
     CrSurveyController,
+    CustomerController,
     DetailProfileController,
     MasterMenuController,
     TaksasiController,
@@ -69,6 +70,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Route::resource('taksasi', TaksasiController::class)->except(['index']);
     Route::resource('taksasi', TaksasiController::class);
+    Route::resource('customer', CustomerController::class);
 });
 
 
