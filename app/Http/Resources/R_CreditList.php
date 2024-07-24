@@ -23,9 +23,9 @@ class R_CreditList extends JsonResource
                 'id' => $this->ID,
                 'loan_number' => $this->LOAN_NUMBER,
                 'cust_code' => $this->CUST_CODE,
-                'order_number' => $this->RT.'/'.$this->RW,
+                'order_number' => $this->ORDER_NUMBER,
                 'sisa_angsuran' =>($this->PCPL_ORI - $this->PAID_PRINCIPAL),
-                'total_bayar' => $this->RT.'/'.$this->RW,
+                'total_bayar' => 0,
             ],
             'struktur_kredit' => $structur
         ];
