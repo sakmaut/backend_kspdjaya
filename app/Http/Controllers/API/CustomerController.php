@@ -29,10 +29,6 @@ class CustomerController extends Controller
         try {
             $data =  M_Credit::where('CUST_CODE',$request->cust_code)->get();
 
-            if ($data->isEmpty()) {
-                throw new Exception("Cust Code Not Found", 404);
-            }
-
             $dto = R_CreditList::collection($data);
 
             return response()->json($dto, 200);
