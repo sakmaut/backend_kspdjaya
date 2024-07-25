@@ -45,7 +45,7 @@ class PaymentController extends Controller
     
             DB::commit();
             ActivityLogger::logActivity($request,"Success",200);
-            return response()->json(['message' => 'created successfully', $arrayData], 200);
+            return response()->json(['message' => 'created successfully'], 200);
         }catch (QueryException $e) {
             DB::rollback();
             ActivityLogger::logActivity($request,$e->getMessage(),409);
