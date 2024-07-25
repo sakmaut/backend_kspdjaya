@@ -10,6 +10,7 @@ use App\Http\Controllers\API\{
     CustomerController,
     DetailProfileController,
     MasterMenuController,
+    PaymentController,
     TaksasiController,
     UserAccessMenuController,
     UsersController
@@ -72,6 +73,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::resource('taksasi', TaksasiController::class);
     Route::resource('customer', CustomerController::class);
     Route::post('credit_list', [CustomerController::class, 'creditList']);
+    Route::resource('payment', PaymentController::class);
 });
 
 

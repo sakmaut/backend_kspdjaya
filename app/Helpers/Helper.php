@@ -59,7 +59,7 @@ if (!function_exists('compareData')) {
 }
 
 if (!function_exists('generateCode')) {
-    function generateCode($request, $table, $column) {
+    function generateCode($request, $table, $column,$prefix = '') {
         $branchId = $request->user()->branch_id;
         $branch = M_Branch::find($branchId);
     
@@ -75,8 +75,12 @@ if (!function_exists('generateCode')) {
         $currentDate = Carbon::now();
         $year = $currentDate->format('y');
         $month = $currentDate->format('m');
-    
-        $generateCode = sprintf("%s%s%s%05d", $branchCodeNumber, $year, $month, $lastSequence);
+
+        if($prefix != '' || $prefix != null){
+            $generateCode = $prefix.sprintf("%s%s%s%05d", $branchCodeNumber, $year, $month, $lastSequence);
+        }else{
+            $generateCode = sprintf("%s%s%s%05d", $branchCodeNumber, $year, $month, $lastSequence);
+        }
     
         return $generateCode;
     }
