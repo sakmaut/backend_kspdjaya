@@ -72,7 +72,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Route::resource('taksasi', TaksasiController::class)->except(['index']);
     Route::resource('taksasi', TaksasiController::class);
     Route::resource('customer', CustomerController::class);
-    Route::post('credit_list', [CustomerController::class, 'creditList']);
+    Route::post('kontrak_fasilitas', [CustomerController::class, 'fasilitas']);
+    Route::post('struktur_kredit', [CustomerController::class, 'creditStruktur']);
     Route::resource('payment', PaymentController::class);
 });
 

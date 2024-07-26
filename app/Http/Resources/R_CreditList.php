@@ -16,7 +16,7 @@ class R_CreditList extends JsonResource
     public function toArray(Request $request): array
     {
 
-        $structur = M_CreditSchedule::where('loan_number',$this->LOAN_NUMBER)->get();
+       
 
         return [
             'kontrak_fasilitas' => [
@@ -26,8 +26,7 @@ class R_CreditList extends JsonResource
                 'order_number' => $this->ORDER_NUMBER,
                 'sisa_angsuran' =>($this->PCPL_ORI - $this->PAID_PRINCIPAL),
                 'total_bayar' => ($this->PAID_PRINCIPAL + $this->PAID_INTEREST),
-            ],
-            'struktur_kredit' => $structur
+            ]
         ];
     }
 }
