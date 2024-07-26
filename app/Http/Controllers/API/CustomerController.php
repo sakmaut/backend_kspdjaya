@@ -28,10 +28,10 @@ class CustomerController extends Controller
     public function fasilitas(Request $request)
     {
         try {
-            $data =  M_Credit::where('LOAN_NUMBER',$request->loan_number)->get();
+            $data =  M_Credit::where('CUST_CODE',$request->cust_code)->get();
 
             if ($data->isEmpty()) {
-                throw new Exception("Loan Number Is Not Exist");
+                throw new Exception("Cust Code Is Not Exist");
             }
 
             $dto = R_CreditList::collection($data);

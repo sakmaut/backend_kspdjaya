@@ -16,8 +16,6 @@ class R_CreditList extends JsonResource
     public function toArray(Request $request): array
     {
 
-       
-
         return [
             'id' => $this->ID,
             'loan_number' => $this->LOAN_NUMBER,
