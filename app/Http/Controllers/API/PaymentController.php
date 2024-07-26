@@ -23,7 +23,12 @@ class PaymentController extends Controller
         DB::beginTransaction();
         try {   
 
-            $update_credit = M_CreditSchedule::where(['loan_number' => $request->loan_number,'PAYMENT_DATE'=>$request->tgl_bayar])->get();
+            M_CreditSchedule::where([
+                'loan_number' => $request->loan_number,
+                'PAYMENT_DATE' => $request->tgl_bayar
+            ])->update([
+                'PAID_FLAG' => 'paid',
+            ]);
             
             $getCodeBranch = M_Branch::find($request->user()->branch_id);
 

@@ -80,13 +80,14 @@ class Credit extends Controller
             foreach ($data_credit_schedule as $list) {
                 $credit_schedule =
                 [
-                    'ID' => Uuid::uuid7()->toString(),
-                    'LOAN_NUMBER' => $loan_number,
+                    'id' => Uuid::uuid7()->toString(),
+                    'loan_number' => $loan_number,
                     'PAYMENT_DATE' => $list['tgl_angsuran'],
-                    'PRINCIPAL' => converttodecimal($list['pokok']),
-                    'INTEREST' => converttodecimal($list['bunga']),
-                    'INSTALLMENT' => converttodecimal($list['total_angsuran']),
-                    'PRINCIPAL_REMAINS' => converttodecimal($list['baki_debet'])
+                    'principal' => converttodecimal($list['pokok']),
+                    'interest' => converttodecimal($list['bunga']),
+                    'installment' => converttodecimal($list['total_angsuran']),
+                    'principal_remains' => converttodecimal($list['baki_debet']),
+                    'PAID_FLAG' => ''
                 ];
 
                 M_CreditSchedule::create($credit_schedule);
