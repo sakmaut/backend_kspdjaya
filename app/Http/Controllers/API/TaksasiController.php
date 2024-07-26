@@ -27,7 +27,7 @@ class TaksasiController extends Controller
     {
         try {
             $data = M_Taksasi::paginate(20);
-            $dto = R_Taksasi::collection($data);
+            $dto = new R_Taksasi($data);
 
             ActivityLogger::logActivity($request,"Success",200);
             return response()->json($dto, 200);
