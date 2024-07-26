@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\R_Branch;
 use App\Http\Resources\R_BranchDetail;
 use App\Models\M_Branch;
+use App\Models\M_CreditSchedule;
 use App\Models\M_Payment;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -21,6 +22,8 @@ class PaymentController extends Controller
     {
         DB::beginTransaction();
         try {   
+
+            $update_credit = M_CreditSchedule::where(['loan_number' => $request->loan_number,'PAYMENT_DATE'=>$request->tgl_bayar])->get();
             
             $getCodeBranch = M_Branch::find($request->user()->branch_id);
 
@@ -31,6 +34,7 @@ class PaymentController extends Controller
                 'BRANCH' => $getCodeBranch->CODE_NUMBER,
                 'LOAN_NUM' => $request->loan_number,
                 'VALUE_DATE' => $request->tgl_bayar,
+                
                 'ENTRY_DATE' => Carbon::now(),
                 'TITLE' => $request->ket_pembayaran,
                 'ORIGINAL_AMOUNT' => $request->nilai_pembayaran,
