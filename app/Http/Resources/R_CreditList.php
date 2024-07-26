@@ -19,14 +19,12 @@ class R_CreditList extends JsonResource
        
 
         return [
-            'kontrak_fasilitas' => [
-                'id' => $this->ID,
-                'loan_number' => $this->LOAN_NUMBER,
-                'cust_code' => $this->CUST_CODE,
-                'order_number' => $this->ORDER_NUMBER,
-                'sisa_angsuran' =>($this->PCPL_ORI - $this->PAID_PRINCIPAL),
-                'total_bayar' => ($this->PAID_PRINCIPAL + $this->PAID_INTEREST),
-            ]
+            'id' => $this->ID,
+            'loan_number' => $this->LOAN_NUMBER,
+            'cust_code' => $this->CUST_CODE,
+            'order_number' => $this->ORDER_NUMBER,
+            'sisa_angsuran' =>($this->PCPL_ORI - $this->PAID_PRINCIPAL),
+            'total_bayar' => ($this->PAID_PRINCIPAL + $this->PAID_INTEREST),
         ];
     }
 }
