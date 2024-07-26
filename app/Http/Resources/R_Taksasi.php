@@ -25,7 +25,19 @@ class R_Taksasi extends JsonResource
             "code" => $this->code,
             "model" => $this->model,
             "descr" => $this->descr,
-            'price' => $taksasi_price
+            'price' => $taksasi_price,
+            'eta' => [
+                'current_page' => $this->currentPage(),
+                'total_pages' => $this->lastPage(),
+                'total_records' => $this->total(),
+                'per_page' => 20,
+            ],
+            'links' => [
+                'first' => $this->url(1),
+                'last' => $this->url($this->lastPage()),
+                'prev' => $this->previousPageUrl(),
+                'next' => $this->nextPageUrl(),
+            ],
         ];
     }
 }
