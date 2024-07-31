@@ -136,7 +136,9 @@ class CrAppilcationController extends Controller
             self::insert_cr_personal($request,$id);
             self::insert_cr_order($request, $surveyID,$id);
             self::insert_cr_personal_extra($request,$id);
-            self::insert_cr_guarantor($request,$id);
+            if (!empty($request->penjamin)) {
+                self::insert_cr_guarantor($request, $id);
+            }
             self::insert_bank_account($request,$id);
             self::insert_application_approval($id, $surveyID,$request->flag_pengajuan);
 
