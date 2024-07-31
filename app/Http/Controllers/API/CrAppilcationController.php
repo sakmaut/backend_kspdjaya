@@ -320,9 +320,9 @@ class CrAppilcationController extends Controller
             'GENDER' => $request->penjamin['jenis_kelamin']??null,
             'BIRTHPLACE' => $request->penjamin['tempat_lahir']??null,
             'BIRTHDATE' => $request->penjamin['tgl_lahir']??null,
-            'ADDRESS' => $request->penjamin['alamat'].' '.$request->penjamin['rt'].'/'.$request->penjamin['rw']
-                        .' '.$request->penjamin['kota'].' '.$request->penjamin['kecamatan'].' '.
-                        $request->penjamin['kelurahan'].' '.$request->penjamin['provinsi'].' '.$request->penjamin['kode_pos']??null,
+            'ADDRESS' => $request->penjamin['alamat']??null.' '.$request->penjamin['rt']??null.'/'.$request->penjamin['rw']??null
+                        .' '.$request->penjamin['kota']??null.' '.$request->penjamin['kecamatan']??null.' '.
+                        $request->penjamin['kelurahan']??null.' '.$request->penjamin['provinsi']??null.' '.$request->penjamin['kode_pos']??null,
             'IDENTITY_TYPE' => $request->penjamin['tipe_identitas']??null,
             'NUMBER_IDENTITY' => $request->penjamin['no_identitas']??null,
             'OCCUPATION' => $request->penjamin['pekerjaan']??null,
