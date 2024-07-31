@@ -513,6 +513,7 @@ class CrAppilcationController extends Controller
             'id_application' => $setApplicationId,
             'order_number' => $application->ORDER_NUMBER,
             'angsuran' => (float)$application->INSTALLMENT,
+            'jenis_angsuran' => $cr_survey->jenis_angsuran,
             "flag" => !$check_exist?0:1,
             'pelanggan' =>[
                 "nama" => $cr_personal->NAME ?? ( $data->nama?? ''),
