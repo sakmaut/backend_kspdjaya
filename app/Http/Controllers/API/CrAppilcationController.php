@@ -628,7 +628,7 @@ class CrAppilcationController extends Controller
             ],
             "info_bank" =>[],
             "ekstra" =>[
-                'angsuran' => (float)$application->INSTALLMENT,
+                // 'angsuran' => (float)$application->INSTALLMENT,
                 'jenis_angsuran' => $cr_survey->jenis_angsuran,
                 'tenor' => $cr_survey->tenor,
                 "nilai_yang_diterima" => $applicationDetail->SUBMISSION_VALUE == ''?(int) $data->plafond:(int)$applicationDetail->SUBMISSION_VALUE?? null,
