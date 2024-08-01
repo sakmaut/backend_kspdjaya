@@ -39,4 +39,9 @@ class M_Taksasi extends Model
             }
         });
     }
+
+    public function taksasi_price()
+    {
+        return $this->hasMany(M_TaksasiPrice::class,'taksasi_id');
+    }
 }

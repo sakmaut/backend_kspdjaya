@@ -37,6 +37,74 @@ class TaksasiController extends Controller
         }
     }
 
+    public function brandList(Request $request)
+    {
+        try {
+            $data = M_Taksasi::distinct()
+                    ->select('brand')
+                    ->get()
+                    ->pluck('brand')
+                    ->toArray();
+
+            $result = ['brand' => $data];
+
+            ActivityLogger::logActivity($request,"Success",200);
+            return response()->json($result, 200);
+        } catch (\Exception $e) {
+            ActivityLogger::logActivity($request,$e->getMessage(),500);
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function codeModelList(Request $request)
+    {
+        try {
+            $request->validate([
+                'merk' => 'required',
+            ], [
+                'merk.required' => 'Merk Tidak Boleh Kosong',
+            ]);
+
+            $data = M_Taksasi::distinct()
+                    ->select('code', 'model')
+                    ->where('brand', '=', $request->merk)
+                    ->get()
+                    ->toArray();
+
+            ActivityLogger::logActivity($request,"Success",200);
+            return response()->json($data, 200);
+        } catch (\Exception $e) {
+            ActivityLogger::logActivity($request,$e->getMessage(),500);
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function price(Request $request)
+    {
+        try {
+            $request->validate([
+                'code' => 'required',
+                'tahun' => 'required',
+            ], [
+                'code.required' => 'Code Tidak Boleh Kosong',
+                'tahun.required' => 'Tahun Tidak Boleh Kosong'
+            ]);
+
+            $data = M_Taksasi::select('taksasi.code', 'taksasi_price.year', 
+                            DB::raw('CAST(taksasi_price.price AS UNSIGNED) AS price'))
+                    ->join('taksasi_price', 'taksasi_price.taksasi_id', '=', 'taksasi.id')
+                    ->where('taksasi.code', '=', $request->code)
+                    ->where('taksasi_price.year', '=',  $request->tahun)
+                    ->get();
+
+            ActivityLogger::logActivity($request,"Success",200);
+            return response()->json($data, 200);
+        } catch (\Exception $e) {
+            ActivityLogger::logActivity($request,$e->getMessage(),500);
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+    }
+
     public function show(Request $req,$id)
     {
         try {
