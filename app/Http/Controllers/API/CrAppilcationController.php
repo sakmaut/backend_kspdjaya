@@ -568,9 +568,6 @@ class CrAppilcationController extends Controller
                 "ekstra2" => $cr_personal->EXT_2??null
             ],
             'order' =>[
-                'angsuran' => (float)$application->INSTALLMENT,
-                'jenis_angsuran' => $cr_survey->jenis_angsuran,
-                'tenor' => $cr_survey->tenor,
                 'cr_prospect_id' => $prospect_id??null,
                 "nama_ibu" => $cr_oder->MOTHER_NAME ?? null, 
                 "kategori" => $cr_oder->CATEGORY ?? null, 
@@ -631,6 +628,9 @@ class CrAppilcationController extends Controller
             ],
             "info_bank" =>[],
             "ekstra" =>[
+                'angsuran' => (float)$application->INSTALLMENT,
+                'jenis_angsuran' => $cr_survey->jenis_angsuran,
+                'tenor' => $cr_survey->tenor,
                 "nilai_yang_diterima" => $applicationDetail->SUBMISSION_VALUE == ''?(int) $data->plafond:(int)$applicationDetail->SUBMISSION_VALUE?? null,
                 "periode" => $applicationDetail->PERIOD == ''?$data->tenor:$applicationDetail->PERIOD?? null,
                 // "pokok_pembayaran"=> null,
