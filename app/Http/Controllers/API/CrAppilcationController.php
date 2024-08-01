@@ -514,7 +514,6 @@ class CrAppilcationController extends Controller
             'order_number' => $application->ORDER_NUMBER,
             'angsuran' => (float)$application->INSTALLMENT,
             'jenis_angsuran' => $cr_survey->jenis_angsuran,
-            'tenor' => $cr_survey->tenor,
             "flag" => !$check_exist?0:1,
             'pelanggan' =>[
                 "nama" => $cr_personal->NAME ?? ( $data->nama?? ''),
@@ -571,6 +570,7 @@ class CrAppilcationController extends Controller
                 "ekstra2" => $cr_personal->EXT_2??null
             ],
             'order' =>[
+                'tenor' => $cr_survey->tenor,
                 'cr_prospect_id' => $prospect_id??null,
                 "nama_ibu" => $cr_oder->MOTHER_NAME ?? null, 
                 "kategori" => $cr_oder->CATEGORY ?? null, 
