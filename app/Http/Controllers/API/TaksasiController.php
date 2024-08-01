@@ -66,10 +66,22 @@ class TaksasiController extends Controller
             ]);
 
             $data = M_Taksasi::distinct()
-                    ->select('code', 'model')
+                    ->select('id','code', 'model')
                     ->where('brand', '=', $request->merk)
                     ->get()
                     ->toArray();
+            
+            $year = M_TaksasiPrice::distinct()
+                    ->select('year')
+                    ->orderBy('year','asc')
+                    ->get()
+                    ->pluck('year')
+                    ->toArray();
+
+            foreach ($data as &$item) {
+                $item['tahun'] = $year;
+            }
+            
 
             ActivityLogger::logActivity($request,"Success",200);
             return response()->json($data, 200);
