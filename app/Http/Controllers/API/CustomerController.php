@@ -58,4 +58,34 @@ class CustomerController extends Controller
             return response()->json(['message' => $e->getMessage()], 500);
         }
     }
+
+    public function cekRO(Request $request)
+    {
+        try {
+            $data = M_Customer::where('ID_NUMBER',$request->no_ktp)->get();
+
+            if($data->isNotEmpty()){
+                $datas = [];
+                foreach($data as $customer) {
+                    $datas[] = [
+                        'no_ktp' => $customer->ID_NUMBER,
+                        'name' => $customer->NAME,
+                        'tgl_lahir' => $customer->BIRTHDATE,
+                        'alamat' => $customer->ADDRESS,
+                        'rw' => $customer->RW,
+                        'rt' => $customer->RT,
+                        'no_hp' => $customer->PHONE_PERSONAL
+                    ];
+                }
+            }else{
+                $datas =[];
+            }
+
+           
+            return response()->json($datas, 200);
+        } catch (\Exception $e) {
+            ActivityLogger::logActivity($request,$e->getMessage(),500);
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+    }
 }
