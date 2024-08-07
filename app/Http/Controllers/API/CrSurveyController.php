@@ -283,8 +283,8 @@ class CrSurveyController extends Controller
                 'nama' => $request->data_nasabah['nama']?? null,
                 'tgl_lahir' => date('Y-m-d', strtotime($request->data_nasabah['tgl_lahir']))?? null,
                 'ktp' => $request->data_nasabah['no_ktp']?? null,
-                'kk' => $request->data_nasabah['no_kk']?? null,
                 'hp' => $request->data_nasabah['no_hp']?? null,
+                'kk' => $request->data_nasabah['no_kk']?? null,
                 'alamat' => $request->data_nasabah['alamat']?? null,
                 'rt' => $request->data_nasabah['rt']?? null,
                 'rw' => $request->data_nasabah['rw']?? null,
@@ -311,9 +311,9 @@ class CrSurveyController extends Controller
                 throw new Exception("Cr Survey Id Not Found",404);
             }
 
-            compareData(M_CrSurvey::class,$id,$data_prospect,$request);
-
             $prospek_check->update($data_prospect);
+
+            compareData(M_CrSurvey::class,$id,$data_prospect,$request);
 
             if (collect($request->jaminan_kendaraan)->isNotEmpty()) {
                 foreach ($request->jaminan_kendaraan as $result) {

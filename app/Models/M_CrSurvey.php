@@ -24,6 +24,7 @@ class M_CrSurvey extends Model
         'tgl_lahir', 
         'ktp', 
         'hp', 
+        'kk', 
         'alamat', 
         'rt', 
         'rw', 
