@@ -92,7 +92,7 @@ class CrSurveyController extends Controller
             'data_order' =>[
                 'tujuan_kredit' => $data->tujuan_kredit,
                 'plafond' => (int) $data->plafond,
-                'tenor' => $data->tenor, 
+                'tenor' => strval($data->tenor), 
                 'kategory' => $data->category,
                 'jenis_angsuran' => $data->jenis_angsuran 
             ],
