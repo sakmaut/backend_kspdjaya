@@ -71,20 +71,59 @@ class TaksasiController extends Controller
                     ->get()
                     ->toArray();
             
-            $year = M_TaksasiPrice::distinct()
-                    ->select('year')
-                    ->orderBy('year','asc')
-                    ->get()
-                    ->pluck('year')
-                    ->toArray();
+            // $year = M_TaksasiPrice::distinct()
+            //         ->select('year')
+            //         ->orderBy('year','asc')
+            //         ->get()
+            //         ->pluck('year')
+            //         ->toArray();
 
-            foreach ($data as &$item) {
-                $item['tahun'] = $year;
-            }
+            // foreach ($data as &$item) {
+            //     $item['tahun'] = $year;
+            // }
             
 
             ActivityLogger::logActivity($request,"Success",200);
             return response()->json($data, 200);
+        } catch (\Exception $e) {
+            ActivityLogger::logActivity($request,$e->getMessage(),500);
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function year(Request $request)
+    {
+        try {
+            $request->validate([
+                'merk' => 'required',
+                'tipe' => 'required',
+            ], [
+                'merk.required' => 'Merk Tidak Boleh Kosong',
+                'tipe.required' => 'Tipe Tidak Boleh Kosong',
+            ]);
+
+            $tipe_array = explode(' - ', $request->tipe);
+
+            $data = M_Taksasi::distinct()
+                    ->select('id')
+                    ->where('brand', '=', $request->merk)
+                    ->where('code', '=', $tipe_array[0])
+                    ->where('model', '=', $tipe_array[1])
+                    ->get();
+           
+
+            $year = M_TaksasiPrice::distinct()
+                    ->select('year')
+                    ->where('taksasi_id', '=',$data->first()->id)
+                    ->orderBy('year','asc')
+                    ->get()
+                    ->toArray();
+
+            $years = array_column($year, 'year');
+            
+
+            ActivityLogger::logActivity($request,"Success",200);
+            return response()->json($years, 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage()], 500);
