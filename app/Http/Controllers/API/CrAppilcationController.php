@@ -526,18 +526,18 @@ class CrAppilcationController extends Controller
                 "no_identitas" => $data->ktp,
                 "tgl_terbit_identitas" => $cr_personal->ID_ISSUE_DATE ??null,
                 "masa_berlaku_identitas" => $cr_personal->ID_VALID_DATE ?? null,
-                "no_kk" => $cr_personal->KK??null,
+                "no_kk" => empty($cr_personal->KK)?$cr_survey->kk:$cr_personal->KK,
                 "warganegara" => $cr_personal->CITIZEN??null
             ],
             'alamat_identitas' =>[
-                "alamat" => $cr_personal->ADDRESS??null,
-                "rt" => $cr_personal->RT??null,
-                "rw" => $cr_personal->RW??null,
-                "provinsi" => $cr_personal->PROVINCE??null,
-                "kota" => $cr_personal->CITY??null,
-                "kelurahan" => $cr_personal->KELURAHAN??null,
-                "kecamatan" => $cr_personal->KECAMATAN??null,
-                "kode_pos" => $cr_personal->ZIP_CODE??null
+                "alamat" => empty($cr_personal->ADDRESS)?$cr_survey->alamat:$cr_personal->ADDRESS,
+                "rt" =>empty($cr_personal->RT)?$cr_survey->rt:$cr_personal->RT,
+                "rw" =>empty($cr_personal->RW)?$cr_survey->rw:$cr_personal->RW,
+                "provinsi" =>empty($cr_personal->PROVINCE)?$cr_survey->privince:$cr_personal->PROVINCE,
+                "kota" =>empty($cr_personal->CITY)?$cr_survey->city:$cr_personal->CITY,
+                "kelurahan" =>empty($cr_personal->KELURAHAN)?$cr_survey->kelurahan:$cr_personal->KELURAHAN,
+                "kecamatan" =>empty($cr_personal->KECAMATAN)?$cr_survey->kecamatan:$cr_personal->KECAMATAN,
+                "kode_pos" => empty($cr_personal->ZIP_CODE)?$cr_survey->zip_code:$cr_personal->ZIP_CODE
             ],
             'alamat_tagih' =>[
                 "alamat" => $cr_personal->INS_ADDRESS??null,
