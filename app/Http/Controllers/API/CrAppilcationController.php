@@ -574,7 +574,7 @@ class CrAppilcationController extends Controller
                 "gelar" => $cr_oder->TITLE ?? null, 
                 "lama_bekerja" => empty($cr_oder->WORK_PERIOD)?$cr_survey->work_period:$cr_oder->WORK_PERIOD, 
                 "tanggungan" => $cr_oder->DEPENDANTS ?? null, 
-                "biaya_bulanan" =>empty($cr_oder->BIAYA)?$cr_survey->expenses:$cr_oder->WORK_PERIOD, 
+                "biaya_bulanan" =>intval(empty($cr_oder->BIAYA)?$cr_survey->expenses:$cr_oder->BIAYA), 
                 "pendapatan_pribadi" => intval(empty($cr_oder->INCOME_PERSONAL)?$cr_survey->income_personal:$cr_oder->WORK_PERIOD),
                 "pendapatan_pasangan" =>intval(empty($cr_oder->INCOME_SPOUSE)?$cr_survey->income_spouse:$cr_oder->WORK_PERIOD),
                 "pendapatan_lainnya" =>intval(empty($cr_oder->INCOME_OTHER)?$cr_survey->income_other:$cr_oder->WORK_PERIOD),
@@ -684,7 +684,7 @@ class CrAppilcationController extends Controller
                 "no_rangka" => $list->CHASIS_NUMBER,
                 "no_mesin" => $list->ENGINE_NUMBER,
                 "no_stnk" => $list->BPKB_NUMBER,
-                "nilai" =>$list->VALUE
+                "nilai" =>intval($list->VALUE)
             ];    
         }  
         
