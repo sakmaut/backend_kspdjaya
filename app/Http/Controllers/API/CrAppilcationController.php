@@ -556,7 +556,7 @@ class CrAppilcationController extends Controller
                 "harga_pasar"=>$cr_oder->HARGA_PASAR??null
             ],
             'pekerjaan' =>[
-                "pekerjaan" => $cr_personal->OCCUPATION??null,
+                "pekerjaan" => empty($cr_personal->OCCUPATION)?$cr_survey->usaha:$cr_personal->OCCUPATION,
                 "pekerjaan_id" => $cr_personal->OCCUPATION_ON_ID??null,
                 "agama" => $cr_personal->RELIGION??null,
                 "pendidikan" => $cr_personal->EDUCATION??null,
