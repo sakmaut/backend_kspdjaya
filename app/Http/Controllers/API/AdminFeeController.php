@@ -266,12 +266,24 @@ class AdminFeeController extends Controller
 
             $tenorData = ['tenor' =>strval($tenor)];
             $total = 0;
-            if($tenor == '3' && $angsuran_type == 'musiman' ){
-                $tenor_name = '6_month';
-            } else{
+            if($angsuran_type == 'musiman'){
+                switch ($tenor) {
+                    case '3':
+                        $tenor_name = '6_month';
+                        break;
+                    case '6':
+                        $tenor_name = '12_month';
+                        break;
+                    case '12':
+                        $tenor_name = '18_month';
+                        break;
+                    case '18':
+                        $tenor_name = '24_month';
+                        break;
+                }
+            }else{
                 $tenor_name = $tenor . '_month';
             }
-            
 
             foreach ($struktur as $s) {
                 $feeName = $s['fee_name'];
@@ -291,20 +303,18 @@ class AdminFeeController extends Controller
                         $set_tenor = 3;
                        break;
                     case '6':
-                         $set_tenor = 3;
-                        break;
-                    case '12':
                          $set_tenor = 6;
                         break;
-                    case '18':
+                    case '12':
                          $set_tenor = 12;
                         break;
-                    case '24':
+                    case '18':
                          $set_tenor = 18;
                         break;
                 }
             }
 
+           
             $eff_rate = $tenorData['eff_rate'];
             $flat_rate = round(self::calculate_flat_interest($set_tenor,$eff_rate,$angsuran_type),2);
             $pokok_pembayaran = ($plafond+$total);
