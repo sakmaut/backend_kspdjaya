@@ -633,7 +633,7 @@ class CrAppilcationController extends Controller
             "ekstra" =>[
                 'jenis_angsuran' => empty($application->INSTALLMENT_TYPE)?$cr_survey->jenis_angsuran:$application->INSTALLMENT_TYPE,
                 'tenor' => empty($application->TENOR)?strval($cr_survey->tenor):strval($application->TENOR),
-                "nilai_yang_diterima" => (int)$applicationDetail->ACC_VALUE ?? null,
+                "nilai_yang_diterima" => $applicationDetail->SUBMISSION_VALUE == ''?(int) $data->plafond:(int)$applicationDetail->SUBMISSION_VALUE?? null,
                 "periode" => $applicationDetail->PERIOD == ''?$data->tenor:$applicationDetail->PERIOD?? null,
                 "total"=> (int)$applicationDetail->TOTAL_ADMIN?? null,
                 "cadangan"=> $applicationDetail->CADANGAN?? null,
@@ -641,8 +641,7 @@ class CrAppilcationController extends Controller
                 "provisi"=> $applicationDetail->PROVISION?? null,
                 "asuransi"=> $applicationDetail->INSURANCE?? null,
                 "biaya_transfer"=> $applicationDetail->TRANSFER_FEE?? null,
-                "eff_rate"=> $applicationDetail->EFF_RATE?? null,
-                // "pokok_pembayaran"=> (int)$applicationDetail->POKOK_PEMBAYARAN?? null
+                "eff_rate"=> $applicationDetail->EFF_RATE?? null
             ],
             "jaminan_kendaraan" => [],        
             "prospect_approval" => [
