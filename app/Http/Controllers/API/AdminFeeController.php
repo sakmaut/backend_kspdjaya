@@ -258,7 +258,7 @@ class AdminFeeController extends Controller
 
         foreach ($tenors as $tenor) {
 
-            $tenorData = ['tenor' => (int) $tenor];
+            $tenorData = ['tenor' =>strval($tenor)];
             $total = 0;
             $tenor_name = $tenor . '_month';
 
