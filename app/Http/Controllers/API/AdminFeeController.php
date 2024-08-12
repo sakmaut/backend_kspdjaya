@@ -195,7 +195,12 @@ class AdminFeeController extends Controller
 
             $adminFee =$this->adminfee->checkRange($plafond,$angsuran_type);
 
-            $show = $this->buildArray($adminFee,['returnSingle' => true,'tenor' => $tenor]);
+            $show = $this->buildArray($adminFee,
+            [   'returnSingle' => true,
+                'tenor' => $tenor,
+                'angsuran_type' => $angsuran_type,
+                'plafond' => $request->plafond,
+            ]);
     
             return response()->json($show, 200);
         } catch (Exception $e) {
@@ -236,7 +241,7 @@ class AdminFeeController extends Controller
             $build[] = $item;
         }
 
-        return $build;
+        return $data;
     }
 
     private function buildStrukturTenors($links, $specificTenor = null,$plafond,$angsuran_type)
@@ -245,6 +250,7 @@ class AdminFeeController extends Controller
         foreach ($links as $link) {
             $struktur[] = [
                 'fee_name' => $link['fee_name'],
+                '3_month' => isset($link['3_month']) ? $link['3_month'] : 0,
                 '6_month' => $link['6_month'],
                 '12_month' => $link['12_month'],
                 '18_month' => $link['18_month'],
@@ -276,6 +282,9 @@ class AdminFeeController extends Controller
                 $set_tenor = $tenor;
             }else{
                 switch ($tenor) {
+                    case '3':
+                        $set_tenor = 3;
+                       break;
                     case '6':
                          $set_tenor = 3;
                         break;
@@ -297,7 +306,11 @@ class AdminFeeController extends Controller
             $interest_margin = (int) (($flat_rate / 12) * $set_tenor * $pokok_pembayaran / 100);
 
             if($angsuran_type == 'bulanan'){
-                $angsuran_calc = ($pokok_pembayaran + $interest_margin) / $set_tenor;
+                if (!in_array($set_tenor, ['6', '12', '18', '24'])) {
+                    $angsuran_calc = 0;
+                } else {
+                    $angsuran_calc = ($pokok_pembayaran + $interest_margin) / $set_tenor;
+                }
             }else{
                 if ($set_tenor == 3 || $set_tenor == 6) {
                     $angsuran_calc = ($pokok_pembayaran + $interest_margin);
@@ -325,13 +338,21 @@ class AdminFeeController extends Controller
             $compounded_factor = pow(1 + $monthly_eff_rate, -$tenor);
             $numerator = $tenor * $monthly_eff_rate;
             $denominator = 1 - $compounded_factor;
-            return (($numerator / $denominator) - 1) * (12 / $tenor) * 100;
+            if($denominator != 0){
+                return (($numerator / $denominator) - 1) * (12 / $tenor) * 100;
+            }else{
+                return 0;
+            }
         } else {
             if ($tenor == 3 || $tenor == 6) {
                 return $eff_rate;
             } elseif ($tenor == 12 || $tenor == 18) {
                 $compounded_factor = pow(1 + $monthly_eff_rate, -$tenor);
+            if($tenor != 0){
                 return ((($tenor * $monthly_eff_rate) / (1 - $compounded_factor) - 1) * (12 / $tenor) + 0.1) * 100;
+            }else{
+                return 0;
+            }
             }
         }
     }    
