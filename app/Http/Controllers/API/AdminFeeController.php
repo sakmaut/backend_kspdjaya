@@ -266,7 +266,12 @@ class AdminFeeController extends Controller
 
             $tenorData = ['tenor' =>strval($tenor)];
             $total = 0;
-            $tenor_name = $tenor . '_month';
+            if($tenor == '3' && $angsuran_type == 'musiman' ){
+                $tenor_name = '6_month';
+            } else{
+                $tenor_name = $tenor . '_month';
+            }
+            
 
             foreach ($struktur as $s) {
                 $feeName = $s['fee_name'];
