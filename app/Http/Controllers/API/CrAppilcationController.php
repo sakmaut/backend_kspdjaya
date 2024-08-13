@@ -644,7 +644,7 @@ class CrAppilcationController extends Controller
                 "biaya_transfer"=> $applicationDetail->TRANSFER_FEE?? null,
                 "eff_rate"=> $applicationDetail->EFF_RATE?? null
             ],
-            "barang_taksas" => [],        
+            "jaminan_kendaraan" => [],        
             "prospect_approval" => [
                 "status" => $approval_detail->application_result == null ?$approval_detail->application_result:""
             ],
@@ -665,7 +665,7 @@ class CrAppilcationController extends Controller
                                 ->all();
 
         foreach ($guarente_vehicle as $list) {
-            $arrayList['barang_taksas'][] = [
+            $arrayList['jaminan_kendaraan'] = [
                 'id' => $list->ID,
                 "tipe" => $list->TYPE,
                 "merk" => $list->BRAND,
