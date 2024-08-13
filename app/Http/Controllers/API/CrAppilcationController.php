@@ -140,6 +140,7 @@ class CrAppilcationController extends Controller
                 self::insert_cr_guarantor($request, $id);
             }
             self::insert_bank_account($request,$id);
+            self::insert_taksasi($request, $surveyID);
             self::insert_application_approval($id, $surveyID,$request->flag_pengajuan);
 
             if($request->user()->position === 'KAPOS'){
@@ -643,7 +644,7 @@ class CrAppilcationController extends Controller
                 "biaya_transfer"=> $applicationDetail->TRANSFER_FEE?? null,
                 "eff_rate"=> $applicationDetail->EFF_RATE?? null
             ],
-            "jaminan_kendaraan" => [],        
+            "barang_taksas" => [],        
             "prospect_approval" => [
                 "status" => $approval_detail->application_result == null ?$approval_detail->application_result:""
             ],
@@ -664,7 +665,7 @@ class CrAppilcationController extends Controller
                                 ->all();
 
         foreach ($guarente_vehicle as $list) {
-            $arrayList['jaminan_kendaraan'][] = [
+            $arrayList['barang_taksas'][] = [
                 'id' => $list->ID,
                 "tipe" => $list->TYPE,
                 "merk" => $list->BRAND,
@@ -674,13 +675,36 @@ class CrAppilcationController extends Controller
                 "no_polisi" => $list->POLICE_NUMBER,
                 "no_rangka" => $list->CHASIS_NUMBER,
                 "no_mesin" => $list->ENGINE_NUMBER,
-                "no_stnk" => $list->BPKB_NUMBER,
-                "nilai" =>intval($list->VALUE)
+                "no_stnk" => $list->STNK_NUMBER,
+                "nilai" =>intval($list->VALUE),
+                "no_bpkb" => $list->BPKB_NUMBER,
             ];    
         }  
         
         return $arrayList;
     }
+
+    private function insert_taksasi($request,$id){
+
+        $check = M_CrGuaranteVehicle::where('CR_SURVEY_ID',$id)->first();
+
+        $data_order =[
+            'TYPE' => $request->barang_taksasi['tipe']??null,
+            'BRAND' => $request->barang_taksasi['merk']??null,
+            'PRODUCTION_YEAR' => $request->barang_taksasi['tahun']??null,
+            'COLOR' => $request->barang_taksasi['warna']??null,
+            'ON_BEHALF' => $request->barang_taksasi['atas_nama']??null,
+            'POLICE_NUMBER' => $request->barang_taksasi['no_polisi']??null,
+            'CHASIS_NUMBER' => $request->barang_taksasi['no_rangka']??null,
+            'ENGINE_NUMBER' => $request->barang_taksasi['no_mesin']??null,
+            'STNK_NUMBER' => $request->barang_taksasi['no_stnk']??null,
+            'VALUE' => $request->barang_taksasi['nilai']??null,
+            'BPKB_NUMBER' => $request->barang_taksasi['no_bpkb']??null
+        ];
+
+        $check->update($data_order);
+    }
+
 
     public function approvalKapos(Request $request)
     {
