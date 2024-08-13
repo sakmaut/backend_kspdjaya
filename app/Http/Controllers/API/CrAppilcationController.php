@@ -512,6 +512,7 @@ class CrAppilcationController extends Controller
         $cr_survey= M_CrSurvey::where('id',$surveyId)->first();
         $check_exist = M_Credit::where('ORDER_NUMBER', $application->ORDER_NUMBER)->first();
         $cr_guarantor = M_CrApplicationGuarantor::where('APPLICATION_ID',$setApplicationId)->first();
+        $approval = M_ApplicationApproval::where('cr_application_id',$setApplicationId)->first();
 
         $arrayList = [
             'id_application' => $setApplicationId,
@@ -642,13 +643,20 @@ class CrAppilcationController extends Controller
                 "provisi"=> $applicationDetail->PROVISION?? null,
                 "asuransi"=> $applicationDetail->INSURANCE?? null,
                 "biaya_transfer"=> $applicationDetail->TRANSFER_FEE?? null,
-                "eff_rate"=> $applicationDetail->EFF_RATE?? null
+                "eff_rate"=> $applicationDetail->EFF_RATE?? null,
+                "angsuran"=> intval($applicationDetail->INSTALLMENT)?? null
             ],
             "jaminan_kendaraan" => [],        
             "prospect_approval" => [
                 "status" => $approval_detail->application_result == null ?$approval_detail->application_result:""
             ],
-            "attachment" =>$attachment_data
+            "attachment" =>$attachment_data,
+            "approval" => 
+            [
+                'status' => $approval->application_result,
+                'kapos' => $approval->cr_application_kapos_desc,
+                'ho' => $approval->cr_application_ho_desc            
+            ]
         ];
         
         $arrayList['info_bank'] = M_CrApplicationBank::where('APPLICATION_ID', $application->ID)
