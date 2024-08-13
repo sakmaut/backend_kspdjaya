@@ -626,7 +626,7 @@ class CrAppilcationController extends Controller
                 "no_identitas"  => $cr_guarantor->NUMBER_IDENTITY?? null,
                 "pekerjaan"  => $cr_guarantor->OCCUPATION?? null,
                 "lama_bekerja"  => $cr_guarantor->WORK_PERIOD?? null,
-                "hubCust" => $cr_guarantor->STATUS_WITH_DEBITUR?? null,
+                "hub_cust" => $cr_guarantor->STATUS_WITH_DEBITUR?? null,
                 "no_hp" => $cr_guarantor->MOBILE_NUMBER?? null,
                 "pendapatan" => $cr_guarantor->INCOME?? null,   
             ],
