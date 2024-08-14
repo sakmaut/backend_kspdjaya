@@ -197,6 +197,7 @@ class AdminFeeController extends Controller
 
             $show = $this->buildArray($adminFee,
             [   'returnSingle' => true,
+                'type' => 'fee',
                 'tenor' => $tenor,
                 'angsuran_type' => $angsuran_type,
                 'plafond' => $request->plafond,
@@ -215,11 +216,17 @@ class AdminFeeController extends Controller
         $specificTenor = $options['tenor'] ?? null;
         $plafond = $options['plafond'] ?? null;
         $angsuran_type = $options['angsuran_type'] ?? null;
+        $type = $options['type'] ?? null;
 
         $build = [];
 
         foreach ($data as $value) {
-            $strukturTenors = $this->buildStrukturTenors($value->links, $specificTenor,$plafond,$angsuran_type);
+            if($type == 'fee'){
+                $strukturTenors = $this->buildStrukturTenorsSingle($value->links, $specificTenor,$plafond,$angsuran_type);
+            }else{
+                $strukturTenors = $this->buildStrukturTenors($value->links, $specificTenor,$plafond,$angsuran_type);
+            }
+           
             
             $item = [
                 'id' => $value->id,
@@ -244,13 +251,98 @@ class AdminFeeController extends Controller
         return $data;
     }
 
-    private function buildStrukturTenors($links, $specificTenor = null,$plafond,$angsuran_type)
+    private function buildStrukturTenors($links, $specificTenor = null, $plafond, $angsuran_type)
     {
         $struktur = [];
         foreach ($links as $link) {
             $struktur[] = [
                 'fee_name' => $link['fee_name'],
-                '3_month' => isset($link['3_month']) ? $link['3_month'] : 0,
+                '6_month' => $link['6_month'],
+                '12_month' => $link['12_month'],
+                '18_month' => $link['18_month'],
+                '24_month' => $link['24_month'],
+            ];
+        }
+    
+        $tenors = $specificTenor ? [$specificTenor] : ['6', '12', '18', '24'];
+    
+        $strukturTenors = [];
+    
+        foreach ($tenors as $tenor) {
+            $tenorData = ['tenor' => strval($tenor)];
+            $total = 0;
+            $tenor_name = $tenor . '_month';
+    
+        foreach ($struktur as $s) {
+            $feeName = $s['fee_name'];
+            $feeValue = (float) $s[$tenor_name];
+            $tenorData[$feeName] = $feeValue;
+
+            if ($feeName !== 'eff_rate') {
+                $total += $feeValue;
+            }
+        }
+    
+            if ($angsuran_type == 'bulanan') {
+                $set_tenor = $tenor;
+            } else {
+                if ($specificTenor) {
+                    $set_tenor = $tenor;
+                } else {
+                    switch ($tenor) {
+                        case '6':
+                            $set_tenor = 3;
+                            break;
+                        case '12':
+                            $set_tenor = 6;
+                            break;
+                        case '18':
+                            $set_tenor = 12;
+                            break;
+                        case '24':
+                            $set_tenor = 18;
+                            break;
+                        default:
+                            $set_tenor = $tenor;
+                    }
+                }
+            }
+    
+            $eff_rate = $tenorData['eff_rate'];
+            $flat_rate = round(self::calculate_flat_interest($set_tenor, $eff_rate, $angsuran_type), 2);
+            $pokok_pembayaran = ($plafond + $total);
+            $interest_margin = (int)(($flat_rate / 12) * $set_tenor * $pokok_pembayaran / 100);
+    
+            if ($angsuran_type == 'bulanan') {
+                if (!in_array($set_tenor, ['6', '12', '18', '24'])) {
+                    $angsuran_calc = 0;
+                } else {
+                    $angsuran_calc = ($pokok_pembayaran + $interest_margin) / $set_tenor;
+                }
+            } else {
+                if ($set_tenor == 3 || $set_tenor == 6) {
+                    $angsuran_calc = ($pokok_pembayaran + $interest_margin);
+                } elseif ($set_tenor == 12) {
+                    $angsuran_calc = ($pokok_pembayaran + $interest_margin) / 2;
+                } elseif ($set_tenor == 18) {
+                    $angsuran_calc = ($pokok_pembayaran + $interest_margin) / 3;
+                }
+            }
+    
+            $tenorData['angsuran'] = ceil(round($angsuran_calc, 3) / 1000) * 1000;
+            $tenorData['total'] = $total;
+            $strukturTenors["tenor_$tenor"] = $tenorData;
+        }
+    
+        return $strukturTenors;
+    }
+    
+    private function buildStrukturTenorsSingle($links, $specificTenor = null, $plafond, $angsuran_type)
+    {
+        $struktur = [];
+        foreach ($links as $link) {
+            $struktur[] = [
+                'fee_name' => $link['fee_name'],
                 '6_month' => $link['6_month'],
                 '12_month' => $link['12_month'],
                 '18_month' => $link['18_month'],
@@ -258,91 +350,65 @@ class AdminFeeController extends Controller
             ];
         }
 
+        $musimanTenorMapping = [
+            '3' => '6',
+            '6' => '12',
+            '12' => '18',
+            '18' => '24'
+        ];    
+    
         $tenors = $specificTenor ? [$specificTenor] : ['6', '12', '18', '24'];
-
+    
         $strukturTenors = [];
-
+    
         foreach ($tenors as $tenor) {
-
-            $tenorData = ['tenor' =>strval($tenor)];
+            $tenorData = ['tenor' => strval($tenor)];
             $total = 0;
-            if($angsuran_type == 'musiman'){
-                switch ($tenor) {
-                    case '3':
-                        $tenor_name = '6_month';
-                        break;
-                    case '6':
-                        $tenor_name = '12_month';
-                        break;
-                    case '12':
-                        $tenor_name = '18_month';
-                        break;
-                    case '18':
-                        $tenor_name = '24_month';
-                        break;
-                }
-            }else{
+            if ($angsuran_type == 'musiman') {
+                $tenor_name = isset($musimanTenorMapping[$tenor]) ? $musimanTenorMapping[$tenor] . '_month' : $tenor . '_month';
+            } else {
                 $tenor_name = $tenor . '_month';
             }
+    
+        foreach ($struktur as $s) {
+            $feeName = $s['fee_name'];
+            $feeValue = (float) $s[$tenor_name];
+            $tenorData[$feeName] = $feeValue;
 
-            foreach ($struktur as $s) {
-                $feeName = $s['fee_name'];
-                $feeValue = (float) $s[$tenor_name];
-                $tenorData[$feeName] = $feeValue;
-
-                if ($feeName !== 'eff_rate') {
-                    $total += $feeValue;
-                }
+            if ($feeName !== 'eff_rate') {
+                $total += $feeValue;
             }
-
-            if($angsuran_type == 'bulanan'){
-                $set_tenor = $tenor;
-            }else{
-                switch ($tenor) {
-                    case '3':
-                        $set_tenor = 3;
-                       break;
-                    case '6':
-                         $set_tenor = 6;
-                        break;
-                    case '12':
-                         $set_tenor = 12;
-                        break;
-                    case '18':
-                         $set_tenor = 18;
-                        break;
-                }
-            }
-
-           
+        }
+    
+            $set_tenor = ($angsuran_type == 'bulanan' || $specificTenor) ? $tenor : $musimanTenorMapping[$tenor] ?? $tenor;
             $eff_rate = $tenorData['eff_rate'];
-            $flat_rate = round(self::calculate_flat_interest($set_tenor,$eff_rate,$angsuran_type),2);
-            $pokok_pembayaran = ($plafond+$total);
-            $interest_margin = (int) (($flat_rate / 12) * $set_tenor * $pokok_pembayaran / 100);
-
-            if($angsuran_type == 'bulanan'){
+            $flat_rate = round(self::calculate_flat_interest($set_tenor, $eff_rate, $angsuran_type), 2);
+            $pokok_pembayaran = ($plafond + $total);
+            $interest_margin = (int)(($flat_rate / 12) * $set_tenor * $pokok_pembayaran / 100);
+    
+            if ($angsuran_type == 'bulanan') {
                 if (!in_array($set_tenor, ['6', '12', '18', '24'])) {
                     $angsuran_calc = 0;
                 } else {
                     $angsuran_calc = ($pokok_pembayaran + $interest_margin) / $set_tenor;
                 }
-            }else{
+            } else {
                 if ($set_tenor == 3 || $set_tenor == 6) {
                     $angsuran_calc = ($pokok_pembayaran + $interest_margin);
                 } elseif ($set_tenor == 12) {
                     $angsuran_calc = ($pokok_pembayaran + $interest_margin) / 2;
-                }elseif($set_tenor == 18){
+                } elseif ($set_tenor == 18) {
                     $angsuran_calc = ($pokok_pembayaran + $interest_margin) / 3;
                 }
             }
-
-            $tenorData['angsuran'] = ceil(round($angsuran_calc,3)/1000)*1000;
+    
+            $tenorData['angsuran'] = ceil(round($angsuran_calc, 3) / 1000) * 1000;
             $tenorData['total'] = $total;
             $strukturTenors["tenor_$tenor"] = $tenorData;
         }
-
+    
         return $strukturTenors;
-    } 
+    }
     
     function calculate_flat_interest($tenor, $eff_rate,$angsuran_type) {
 
