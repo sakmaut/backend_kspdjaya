@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Models\M_CrApplication;
 use App\Models\M_CrApplicationGuarantor;
+use App\Models\M_CrApplicationSpouse;
 use App\Models\M_CrCollateral;
 use App\Models\M_Credit;
 use App\Models\M_CreditSchedule;
@@ -62,6 +63,7 @@ class Credit extends Controller
         $cr_personal = M_CrPersonal::where('APPLICATION_ID',$data->ID)->first();
         $cr_guarante_vehicle = M_CrGuaranteVehicle::where('CR_SURVEY_ID',$data->CR_SURVEY_ID)->first();
         $cr_guarantor = M_CrApplicationGuarantor::where('APPLICATION_ID',$data->ID)->first();
+        $cr_spouse = M_CrApplicationSpouse::where('APPLICATION_ID',$data->ID)->first();
         $pihak1= self::queryKapos($data->BRANCH);
         $loan_number = generateCode($request, 'credit', 'LOAN_NUMBER');
 
@@ -128,6 +130,13 @@ class Credit extends Controller
                 "hub_cust" => $cr_guarantor->STATUS_WITH_DEBITUR?? null,
                 "no_hp" => $cr_guarantor->MOBILE_NUMBER?? null,
                 "pendapatan" => $cr_guarantor->INCOME?? null,   
+            ],
+            "pasangan" => [
+                "nama_pasangan" =>$cr_spouse->NAME ?? null,
+                "tmptlahir_pasangan" =>$cr_spouse->BIRTHPLACE ?? null,
+                "pekerjaan_pasangan" => $cr_spouse->OCCUPATION ?? null,
+                "tgllahir_pasangan" => $cr_spouse->BIRTHDATE ?? null,
+                "alamat_pasangan" => $cr_spouse->ADDRESS ?? null
             ],
              "pokok_margin" =>bilangan($principal)??null,
              "tenor" => bilangan($data->PERIOD,false)??null,

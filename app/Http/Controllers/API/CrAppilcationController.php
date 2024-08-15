@@ -7,6 +7,7 @@ use App\Models\M_ApplicationApproval;
 use App\Models\M_CrApplication;
 use App\Models\M_CrApplicationBank;
 use App\Models\M_CrApplicationGuarantor;
+use App\Models\M_CrApplicationSpouse;
 use App\Models\M_Credit;
 use App\Models\M_CrGuaranteVehicle;
 use App\Models\M_CrOrder;
@@ -138,6 +139,9 @@ class CrAppilcationController extends Controller
             self::insert_cr_personal_extra($request,$id);
             if (!empty($request->penjamin)) {
                 self::insert_cr_guarantor($request, $id);
+            }
+            if (!empty($request->pasangan)) {
+                self::insert_cr_spouse($request, $id);
             }
             self::insert_bank_account($request,$id);
             self::insert_taksasi($request, $surveyID);
@@ -348,6 +352,28 @@ class CrAppilcationController extends Controller
         }
     }
 
+    private function insert_cr_spouse($request,$applicationId){
+
+        $check = M_CrApplicationSpouse::where('APPLICATION_ID',$applicationId)->first();
+
+        $data_cr_application =[  
+            'NAME' => $request->pasangan['nama_pasangan']??null,
+            'BIRTHPLACE' => $request->pasangan['tmptlahir_pasangan']??null,
+            'BIRTHDATE' => $request->pasangan['"tgllahir_pasangan']??null,
+            'ADDRESS' => $request->pasangan['alamat_pasangan']??null,
+            'OCCUPATION' => $request->pasangan['pekerjaan_pasangan']??null
+        ];
+
+        if(!$check){
+            $data_cr_application['ID'] = Uuid::uuid7()->toString();
+            $data_cr_application['APPLICATION_ID'] = $applicationId;
+    
+            M_CrApplicationGuarantor::create($data_cr_application);
+        }else{
+            $check->update($data_cr_application);
+        }
+    }
+
     private function insert_cr_personal_extra($request,$applicationId){
 
         $check = M_CrPersonalExtra::where('APPLICATION_ID',$applicationId)->first();
@@ -512,6 +538,7 @@ class CrAppilcationController extends Controller
         $cr_survey= M_CrSurvey::where('id',$surveyId)->first();
         $check_exist = M_Credit::where('ORDER_NUMBER', $application->ORDER_NUMBER)->first();
         $cr_guarantor = M_CrApplicationGuarantor::where('APPLICATION_ID',$setApplicationId)->first();
+        $cr_spouse = M_CrApplicationSpouse::where('APPLICATION_ID',$setApplicationId)->first();
         $approval = M_ApplicationApproval::where('cr_application_id',$setApplicationId)->first();
 
         $arrayList = [
@@ -630,6 +657,13 @@ class CrAppilcationController extends Controller
                 "hub_cust" => $cr_guarantor->STATUS_WITH_DEBITUR?? null,
                 "no_hp" => $cr_guarantor->MOBILE_NUMBER?? null,
                 "pendapatan" => $cr_guarantor->INCOME?? null,   
+            ],
+            "pasangan" => [
+                "nama_pasangan" =>$cr_spouse->NAME ?? null,
+                "tmptlahir_pasangan" =>$cr_spouse->BIRTHPLACE ?? null,
+                "pekerjaan_pasangan" => $cr_spouse->OCCUPATION ?? null,
+                "tgllahir_pasangan" => $cr_spouse->BIRTHDATE ?? null,
+                "alamat_pasangan" => $cr_spouse->ADDRESS ?? null
             ],
             "info_bank" =>[],
             "ekstra" =>[
