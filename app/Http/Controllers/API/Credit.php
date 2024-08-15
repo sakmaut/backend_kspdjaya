@@ -69,7 +69,7 @@ class Credit extends Controller
         // $annualInterestRate = $data->FLAT_RATE;
         $effRate = $data->EFF_RATE;
         $loanTerm = $data->PERIOD;
-        $angsuran = $request->INSTALLMENT;
+        $angsuran = $data->INSTALLMENT;
         $set_tgl_awal =$request->tgl_awal;
 
         $data_credit_schedule = generateAmortizationSchedule($principal,$angsuran, $set_tgl_awal,$effRate, $loanTerm);
