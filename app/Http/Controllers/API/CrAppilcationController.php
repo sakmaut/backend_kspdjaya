@@ -132,6 +132,7 @@ class CrAppilcationController extends Controller
             }
 
             $surveyID = $check_application_id->CR_SURVEY_ID;
+            
 
             self::insert_cr_application($request,$check_application_id);
             self::insert_cr_personal($request,$id);
@@ -360,7 +361,7 @@ class CrAppilcationController extends Controller
         $data_cr_application =[  
             'NAME' => $request->pasangan['nama_pasangan']??null,
             'BIRTHPLACE' => $request->pasangan['tmptlahir_pasangan']??null,
-            'BIRTHDATE' => $request->pasangan['"tgllahir_pasangan']??null,
+            'BIRTHDATE' => $request->pasangan['tgllahir_pasangan']??null,
             'ADDRESS' => $request->pasangan['alamat_pasangan']??null,
             'OCCUPATION' => $request->pasangan['pekerjaan_pasangan']??null
         ];
