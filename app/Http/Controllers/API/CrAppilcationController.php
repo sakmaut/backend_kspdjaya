@@ -327,19 +327,20 @@ class CrAppilcationController extends Controller
 
         $data_cr_application =[  
             'NAME' => $request->penjamin['nama']??null,
-            // 'GENDER' => $request->penjamin['jenis_kelamin']??null,
-            // 'BIRTHPLACE' => $request->penjamin['tempat_lahir']??null,
+            'GENDER' => $request->penjamin['jenis_kelamin']??null,
+            'BIRTHPLACE' => $request->penjamin['tempat_lahir']??null,
             'BIRTHDATE' => $request->penjamin['tgl_lahir']??null,
-            // 'ADDRESS' => $request->penjamin['alamat']??null.' '.$request->penjamin['rt']??null.'/'.$request->penjamin['rw']??null
+            'ADDRESS' => $request->penjamin['alamat']??null,
+            // .' '.$request->penjamin['rt']??null.'/'.$request->penjamin['rw']??null
             //             .' '.$request->penjamin['kota']??null.' '.$request->penjamin['kecamatan']??null.' '.
             //             $request->penjamin['kelurahan']??null.' '.$request->penjamin['provinsi']??null.' '.$request->penjamin['kode_pos']??null,
-            // 'IDENTITY_TYPE' => $request->penjamin['tipe_identitas']??null,
-            // 'NUMBER_IDENTITY' => $request->penjamin['no_identitas']??null,
+            'IDENTITY_TYPE' => $request->penjamin['tipe_identitas']??null,
+            'NUMBER_IDENTITY' => $request->penjamin['no_identitas']??null,
             'OCCUPATION' => $request->penjamin['pekerjaan']??null,
-            // 'WORK_PERIOD' => $request->penjamin['lama_bekerja']??null,
+            'WORK_PERIOD' => $request->penjamin['lama_bekerja']??null,
             'STATUS_WITH_DEBITUR' => $request->penjamin['hub_cust']??null,
             'MOBILE_NUMBER' => $request->penjamin['no_hp']??null,
-            // 'INCOME' => $request->penjamin['pendapatan']??null,
+            'INCOME' => $request->penjamin['pendapatan']??null,
         ];
 
         if(!$check){
