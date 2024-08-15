@@ -369,7 +369,7 @@ class CrAppilcationController extends Controller
             $data_cr_application['ID'] = Uuid::uuid7()->toString();
             $data_cr_application['APPLICATION_ID'] = $applicationId;
     
-            M_CrApplicationGuarantor::create($data_cr_application);
+            M_CrApplicationSpouse::create($data_cr_application);
         }else{
             $check->update($data_cr_application);
         }
