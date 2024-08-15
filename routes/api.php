@@ -64,7 +64,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('image_upload_personal', [DetailProfileController::class, 'uploadImage']);
 
     // Credit
-    Route::post('pk', [Credit::class, 'index']);
+    Route::get('pk', [Credit::class, 'index']);
     Route::resource('admin_fee', AdminFeeController::class);
     Route::post('fee_survey', [AdminFeeController::class, 'fee_survey']);
     Route::post('fee', [AdminFeeController::class, 'fee']);

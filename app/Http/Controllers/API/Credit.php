@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\M_CrApplication;
+use App\Models\M_CrApplicationGuarantor;
 use App\Models\M_CrCollateral;
 use App\Models\M_Credit;
 use App\Models\M_CreditSchedule;
@@ -60,6 +61,7 @@ class Credit extends Controller
     private function buildData($request,$data){
         $cr_personal = M_CrPersonal::where('APPLICATION_ID',$data->ID)->first();
         $cr_guarante_vehicle = M_CrGuaranteVehicle::where('CR_SURVEY_ID',$data->CR_SURVEY_ID)->first();
+        $cr_guarantor = M_CrApplicationGuarantor::where('APPLICATION_ID',$data->ID)->first();
         $pihak1= self::queryKapos($data->BRANCH);
         $loan_number = generateCode($request, 'credit', 'LOAN_NUMBER');
 
@@ -113,6 +115,20 @@ class Credit extends Controller
                 "no_identitas" => strtoupper($cr_personal->ID_NUMBER)??null,
                 "alamat" => strtoupper($cr_personal->ADDRESS)??null
              ],
+             "penjamin" => [
+                "nama" => $cr_guarantor->NAME ?? null,
+                "jenis_kelamin" => $cr_guarantor->GENDER?? null,
+                "tempat_lahir" => $cr_guarantor->BIRTHPLACE?? null,
+                "tgl_lahir" =>$cr_guarantor->BIRTHDATE?? null,
+                "alamat" => $cr_guarantor->ADDRESS?? null,
+                "tipe_identitas"  => $cr_guarantor->IDENTIY_TYPE?? null,
+                "no_identitas"  => $cr_guarantor->NUMBER_IDENTITY?? null,
+                "pekerjaan"  => $cr_guarantor->OCCUPATION?? null,
+                "lama_bekerja"  => $cr_guarantor->WORK_PERIOD?? null,
+                "hub_cust" => $cr_guarantor->STATUS_WITH_DEBITUR?? null,
+                "no_hp" => $cr_guarantor->MOBILE_NUMBER?? null,
+                "pendapatan" => $cr_guarantor->INCOME?? null,   
+            ],
              "pokok_margin" =>bilangan($principal)??null,
              "tenor" => bilangan($data->PERIOD,false)??null,
              "tgl_awal_cicilan" => Carbon::parse($set_tgl_awal)->format('d/m/Y')??null,
