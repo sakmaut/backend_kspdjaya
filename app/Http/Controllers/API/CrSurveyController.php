@@ -98,7 +98,7 @@ class CrSurveyController extends Controller
             ],
             'data_nasabah' => [
                 'nama' => $data->nama,
-                'tgl_lahir' => date('Y-m-d',strtotime($data->tgl_lahir)) ,
+                'tgl_lahir' => is_null($data->tgl_lahir) ? null : date('Y-m-d',strtotime($data->tgl_lahir)),
                 'no_hp' => $data->hp,
                 'no_ktp' => $data->ktp,
                 'no_kk' => $data->kk,
