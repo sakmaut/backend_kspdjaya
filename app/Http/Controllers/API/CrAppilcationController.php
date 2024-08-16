@@ -551,7 +551,7 @@ class CrAppilcationController extends Controller
                 "nama" => $cr_personal->NAME ?? ( $data->nama?? ''),
                 "nama_panggilan" => $cr_personal->ALIAS ?? null,
                 "jenis_kelamin" => $cr_personal->GENDER ?? null,
-                "tempat_lahir" => empty($cr_personal->BIRTHPLACE)?$cr_survey->tgl_lahir:$cr_personal->BIRTHPLACE,
+                "tempat_lahir" => $cr_personal->BIRTHPLACE??null,
                 "tgl_lahir" => empty($cr_personal->BIRTHDATE)?$cr_survey->tgl_lahir:$cr_personal->BIRTHDATE,
                 "gol_darah" => $cr_personal->BLOOD_TYPE??null,
                 "status_kawin" => $cr_personal->MARTIAL_STATUS??null,
