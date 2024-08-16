@@ -591,7 +591,7 @@ class CrAppilcationController extends Controller
             ],
             'pekerjaan' =>[
                 "pekerjaan" => empty($cr_personal->OCCUPATION)?$cr_survey->usaha:$cr_personal->OCCUPATION,
-                "pekerjaan_id" => $cr_personal->OCCUPATION_ON_ID??null,
+                "pekerjaan_id" => empty($cr_personal->OCCUPATION_ON_ID)?$cr_survey->sector:$cr_personal->OCCUPATION_ON_ID,
                 "agama" => $cr_personal->RELIGION??null,
                 "pendidikan" => $cr_personal->EDUCATION??null,
                 "status_rumah" => $cr_personal->PROPERTY_STATUS??null,
