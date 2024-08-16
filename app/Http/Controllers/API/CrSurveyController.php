@@ -98,7 +98,7 @@ class CrSurveyController extends Controller
             ],
             'data_nasabah' => [
                 'nama' => $data->nama,
-                'tgl_lahir' => is_null($data->tgl_lahir) ? null : date('d-m-Y',strtotime($data->tgl_lahir)),
+                'tgl_lahir' => is_null($data->tgl_lahir) ? null : date('Y-m-d',strtotime($data->tgl_lahir)),
                 'no_hp' => $data->hp,
                 'no_ktp' => $data->ktp,
                 'no_kk' => $data->kk,
@@ -119,7 +119,7 @@ class CrSurveyController extends Controller
                 'penghasilan_pribadi' => (int) $data->income_personal,
                 'penghasilan_pasangan' => (int) $data->income_spouse,
                 'penghasilan_lainnya' => (int) $data->income_other,
-                'tgl_survey' => is_null($data->visit_date) ? null: date('d-m-Y',strtotime($data->visit_date)),
+                'tgl_survey' => is_null($data->visit_date) ? null: date('Y-m-d',strtotime($data->visit_date)),
                 'catatan_survey' => $data->survey_note,
             ], 
             'jaminan_kendaraan' => [],
