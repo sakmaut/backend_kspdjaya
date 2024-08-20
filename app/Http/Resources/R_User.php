@@ -25,6 +25,8 @@ class R_User extends JsonResource
             'cabang_id' => $branch->ID ?? null,
             'cabang_nama' => $branch->NAME ?? null,
             'jabatan' => $this->position,
+            'no_ktp' => $this->no_ktp,
+            'alamat' => $this->alamat,
             'gender' => $this->gender,
             'no_hp' => $this->mobile_number,
             'status' => $this->status,

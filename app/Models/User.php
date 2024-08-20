@@ -26,6 +26,8 @@ class User extends Authenticatable
         'fullname',
         'branch_id',
         'position',
+        'no_ktp',
+        'alamat',
         'gender',
         'status',
         'mobile_number',
