@@ -50,7 +50,7 @@ class Credit extends Controller
 
     function queryKapos($branchID){
         $result = DB::table('users')
-                    ->select('fullname', 'position', 'branch.address','branch.name','branch.city')
+                    ->select('fullname', 'position','no_ktp','alamat', 'branch.address','branch.name','branch.city')
                     ->join('branch', 'branch.id', '=', 'users.branch_id')
                     ->where('branch.id', '=', $branchID)
                     ->where('users.position', '=', 'KAPOS')
@@ -110,6 +110,8 @@ class Credit extends Controller
              "pihak_1" => [
                 "nama" => strtoupper($pihak1->fullname)??null,
                 "jabatan" => strtoupper($pihak1->position)??null,
+                "no_ktp" => strtoupper($pihak1->no_ktp)??null,
+                "alamat" => strtoupper($pihak1->alamat)??null,
                 "alamat_kantor" => strtoupper($pihak1->address)??null
              ],
              "pihak_2" => [
