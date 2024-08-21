@@ -147,12 +147,37 @@ if (!function_exists('calculateRate')) {
 }
 
 function tambahBulan($tanggal, $jumlahBulan) {
-    $date = new DateTime($tanggal);
-    
-    $date->add(new DateInterval('P' . $jumlahBulan . 'M'));
-    
-    return $date->format('d/m/Y');
+    // Parsing tanggal dari format yang dikenal
+    if (preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/', $tanggal, $parts)) {
+        $day = (int) $parts[1];
+        $month = (int) $parts[2];
+        $year = (int) $parts[3];
+    } elseif (preg_match('/^(\d{1,2})-(\d{1,2})-(\d{4})$/', $tanggal, $parts)) {
+        $day = (int) $parts[1];
+        $month = (int) $parts[2];
+        $year = (int) $parts[3];
+    } elseif (preg_match('/^(\d{4})-(\d{1,2})-(\d{1,2})$/', $tanggal, $parts)) {
+        $year = (int) $parts[1];
+        $month = (int) $parts[2];
+        $day = (int) $parts[3];
+    } else {
+        throw new InvalidArgumentException('Format tanggal tidak valid. Diharapkan mm/dd/yyyy, dd/mm/yyyy, atau yyyy-mm-dd');
+    }
+
+    // Menambahkan bulan ke tanggal
+    $date = Carbon::create($year, $month, $day);
+    $date->addMonths($jumlahBulan);
+
+    // Check if the resulting day is valid
+    $lastDayOfMonth = $date->copy()->lastOfMonth()->day;
+    if ($date->day > $lastDayOfMonth) {
+        // Set the day to the last day of the month
+        $date->day = $lastDayOfMonth;
+    }
+
+    return $date->format('d-m-Y');
 }
+
 
 if (!function_exists('generateAmortizationSchedule')) {
    function generateAmortizationSchedule($principal,$angsuran,$setDate,$effRate, $loanTerm) {

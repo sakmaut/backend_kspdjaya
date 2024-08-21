@@ -82,13 +82,14 @@ class Credit extends Controller
         $settglawal = Carbon::now()->format('Y-m-d');
 
         if (!$check_exist && 'yes' === $request->flag) {
-            self::insert_credit($request, $data, $loan_number,$installment_count);
+            $creditID =self::insert_credit($request, $data, $loan_number,$installment_count);
+
             foreach ($data_credit_schedule as $list) {
                 $credit_schedule =
                 [
                     'id' => Uuid::uuid7()->toString(),
                     'loan_number' => $loan_number,
-                    'PAYMENT_DATE' => $list['tgl_angsuran'],
+                    'PAYMENT_DATE' => Carbon::parse($list['tgl_angsuran'])->format('Y-m-d'),
                     'principal' => converttodecimal($list['pokok']),
                     'interest' => converttodecimal($list['bunga']),
                     'installment' => converttodecimal($list['total_angsuran']),
@@ -98,9 +99,10 @@ class Credit extends Controller
 
                 M_CreditSchedule::create($credit_schedule);
             }
+            
             self::insert_customer($request,$data);
             self::insert_customer_xtra($data);
-            self::insert_collateral($request,$data);
+            // self::insert_collateral($request,$data,$creditID);
         }
 
         $data = [
@@ -167,6 +169,7 @@ class Credit extends Controller
 
     private function insert_credit($request,$data,$loan_number,$installment_count){
 
+        $cr_personal = M_CrPersonal::where('APPLICATION_ID',$data->ID)->first();
         $survey = M_CrSurvey::find($data->CR_SURVEY_ID);
 
         $data_credit =[
@@ -174,7 +177,7 @@ class Credit extends Controller
             'LOAN_NUMBER' => $loan_number,
             'STATUS_REC' => $data->BRANCH,
             'BRANCH'   => $data->BRANCH,
-            'CUST_CODE' => $data->CUST_CODE,
+            'CUST_CODE' => $cr_personal->CUST_CODE,
             'ORDER_NUMBER' => $data->ORDER_NUMBER,
             'COLLECTIBILITY'  => '',
             'MCF_ID'  => $survey->created_by??null,
@@ -200,7 +203,10 @@ class Credit extends Controller
             'CREATED_AT' => Carbon::now(),
         ];
 
-        M_Credit::create($data_credit);
+        $credit = M_Credit::create($data_credit);
+        $last_id = $credit->id;
+
+        return $last_id;
     }
 
     private function insert_customer($request,$data){
@@ -309,13 +315,14 @@ class Credit extends Controller
         M_CustomerExtra::create($data_customer_xtra);
     }
 
-    private function insert_collateral($request,$data){
+    private function insert_collateral($request,$data,$lastID){
         $data_collateral = M_CrGuaranteVehicle::where('CR_SURVEY_ID',$data->CR_SURVEY_ID)->get();
 
         if($data_collateral->isNotEmpty()){
             foreach ($data_collateral as $res) {
                 $data_jaminan = [
                     'HEADER_ID' => "",
+                    'CR_CREDIT_ID' => $lastID??null,
                     'TYPE' => $res->TYPE??null,
                     'BRAND' => $res->BRAND??null,
                     'PRODUCTION_YEAR' => $res->PRODUCTION_YEAR??null,
