@@ -79,6 +79,8 @@ class Credit extends Controller
 
         $check_exist = M_Credit::where('ORDER_NUMBER', $request->order_number)->first();
 
+        $settglawal = Carbon::now()->format('Y-m-d');
+
         if (!$check_exist && 'yes' === $request->flag) {
             self::insert_credit($request, $data, $loan_number,$installment_count);
             foreach ($data_credit_schedule as $list) {
@@ -120,7 +122,7 @@ class Credit extends Controller
                 "no_identitas" => strtoupper($cr_personal->ID_NUMBER)??null,
                 "alamat" => strtoupper($cr_personal->ADDRESS)??null
              ],
-             "penjamin" => [
+            "penjamin" => [
                 "nama" => $cr_guarantor->NAME ?? null,
                 "jenis_kelamin" => $cr_guarantor->GENDER?? null,
                 "tempat_lahir" => $cr_guarantor->BIRTHPLACE?? null,
@@ -143,8 +145,8 @@ class Credit extends Controller
             ],
              "pokok_margin" =>bilangan($principal)??null,
              "tenor" => bilangan($data->PERIOD,false)??null,
-             "tgl_awal_pk" => !empty($check_exist)?Carbon::parse($check_exist->ENTRY_DATE)->format('Y-m-d'):null,
-             "tgl_akhir_pk" => !empty($check_exist)?Carbon::parse($check_exist->END_DATE)->format('Y-m-d'):null,
+             "tgl_awal_pk" => !empty($check_exist)?Carbon::parse($check_exist->ENTRY_DATE)->format('Y-m-d'):$settglawal,
+             "tgl_akhir_pk" => !empty($check_exist)?Carbon::parse($check_exist->END_DATE)->format('Y-m-d'):self::addMonthsAndAdjustDate($settglawal,$loanTerm),
              "angsuran" =>bilangan($angsuran)??null,
              "opt_periode" => $data->OPT_PERIODE??null,
              "tipe_jaminan" => $data->CREDIT_TYPE??null,
@@ -179,7 +181,7 @@ class Credit extends Controller
             'ENTRY_DATE'  => Carbon::now(),
             'FIRST_ARR_DATE'  => null,
             'INSTALLMENT_DATE'  => $request->tgl_awal??null,
-            'END_DATE'  => Carbon::parse($request->tgl_awal)->addMonths($data->PERIOD)->format('Y-m-d')??null,
+            'END_DATE'  => self::addMonthsAndAdjustDate($request->tgl_awal,$data->PERIOD)??null,
             'PCPL_ORI'  => $data->SUBMISSION_VALUE + ($data->NET_ADMIN ?? 0)??null,
             'PAID_PRINCIPAL'  => null,
             'PAID_INTEREST'  => null,
@@ -334,5 +336,27 @@ class Credit extends Controller
                 M_CrCollateral::create($data_jaminan);
             }
         }
+    }
+
+    function addMonthsAndAdjustDate($tgl_awal, $period) {
+        $date = Carbon::parse($tgl_awal);
+        
+        // Add the specified number of months
+        $newDate = $date->addMonths($period);
+    
+        // Check if the new date is in February and adjust accordingly
+        if ($newDate->month == 2) {
+            // Leap year check
+            if ($newDate->isLeapYear()) {
+                // If leap year and day exceeds 29, set day to 29
+                $newDate->day = min($newDate->day, 29);
+            } else {
+                // If not a leap year and day exceeds 28, set day to 28
+                $newDate->day = min($newDate->day, 28);
+            }
+        }
+        
+        // Return the adjusted date in 'Y-m-d' format
+        return $newDate->format('Y-m-d');
     }
 }
