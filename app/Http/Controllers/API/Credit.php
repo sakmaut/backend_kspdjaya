@@ -165,7 +165,7 @@ class Credit extends Controller
              "no_polisi" => $cr_guarante_vehicle->POLICE_NUMBER??null,
              "no_rangka" =>$cr_guarante_vehicle->CHASIS_NUMBER??null,
              "no_mesin" => $cr_guarante_vehicle->ENGINE_NUMBER??null,
-             "struktur" => !$credit_schedule?$credit_schedule : $data_credit_schedule??null
+             "struktur" => $data_credit_schedule??null
         ];
 
         return $data;
