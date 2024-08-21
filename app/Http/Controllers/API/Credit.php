@@ -91,7 +91,7 @@ class Credit extends Controller
                     'pokok' => number_format($key['PRINCIPAL'], 2),
                     'bunga' => number_format($key['INTEREST'], 2),
                     'total_angsuran' => number_format($key['INSTALLMENT'], 2),
-                    'baki_debet' => number_format($key['PRINCIPAL_REMIANS'], 2)
+                    'baki_debet' => number_format($key['PRINCIPAL_REMAINS'], 2)
                 ];
             }
         }
