@@ -79,8 +79,6 @@ class Credit extends Controller
 
         $check_exist = M_Credit::where('ORDER_NUMBER', $request->order_number)->first();
 
-        $settglawal = Carbon::now()->format('Y-m-d');
-
         if (!$check_exist && 'yes' === $request->flag) {
             $creditID =self::insert_credit($request, $data, $loan_number,$installment_count);
 
@@ -147,8 +145,8 @@ class Credit extends Controller
             ],
              "pokok_margin" =>bilangan($principal)??null,
              "tenor" => bilangan($data->PERIOD,false)??null,
-             "tgl_awal_pk" => !empty($check_exist)?Carbon::parse($check_exist->ENTRY_DATE)->format('Y-m-d'):$settglawal,
-             "tgl_akhir_pk" => !empty($check_exist)?Carbon::parse($check_exist->END_DATE)->format('Y-m-d'):self::addMonthsAndAdjustDate($settglawal,$loanTerm),
+             "tgl_awal_pk" => !empty($check_exist)?Carbon::parse($check_exist->ENTRY_DATE)->format('Y-m-d'):Carbon::parse($set_tgl_awal)->format('Y-m-d'),
+             "tgl_akhir_pk" => !empty($check_exist)?Carbon::parse($check_exist->END_DATE)->format('Y-m-d'):self::addMonthsAndAdjustDate($set_tgl_awal,$loanTerm),
              "angsuran" =>bilangan($angsuran)??null,
              "opt_periode" => $data->OPT_PERIODE??null,
              "tipe_jaminan" => $data->CREDIT_TYPE??null,
