@@ -17,7 +17,8 @@ class M_CreditSchedule extends Model
         'PRINCIPAL',
         'INTEREST',
         'INSTALLMENT',
-        'PRINCIPAL_REMAINS'
+        'PRINCIPAL_REMAINS',
+        'PAID_FLAG'
     ];
     protected $guarded = [];
     public $incrementing = false;

@@ -78,20 +78,22 @@ class Credit extends Controller
         $installment_count = count($data_credit_schedule);
 
         $check_exist = M_Credit::where('ORDER_NUMBER', $request->order_number)->first();
+        // $credit_schedule = M_CreditSchedule::where('LOAN_NUMBER',$check_exist->LOAN_NUMBER)->get();
+        $SET_UUID = Uuid::uuid7()->toString();
 
-        if (!$check_exist && 'yes' === $request->flag) {
-            $creditID =self::insert_credit($request, $data, $loan_number,$installment_count);
+        if (!$check_exist && $request->flag == 'yes') {
+            self::insert_credit($SET_UUID,$request, $data, $loan_number,$installment_count);
 
             foreach ($data_credit_schedule as $list) {
                 $credit_schedule =
                 [
-                    'id' => Uuid::uuid7()->toString(),
-                    'loan_number' => $loan_number,
+                    'ID' => Uuid::uuid7()->toString(),
+                    'LOAN_NUMBER' => $loan_number,
                     'PAYMENT_DATE' => Carbon::parse($list['tgl_angsuran'])->format('Y-m-d'),
-                    'principal' => converttodecimal($list['pokok']),
-                    'interest' => converttodecimal($list['bunga']),
-                    'installment' => converttodecimal($list['total_angsuran']),
-                    'principal_remains' => converttodecimal($list['baki_debet']),
+                    'PRINCIPAL' => converttodecimal($list['pokok']),
+                    'INTEREST' => converttodecimal($list['bunga']),
+                    'INSTALLMENT' => converttodecimal($list['total_angsuran']),
+                    'PRINCIPAL_REMAINS' => converttodecimal($list['baki_debet']),
                     'PAID_FLAG' => ''
                 ];
 
@@ -100,7 +102,7 @@ class Credit extends Controller
             
             self::insert_customer($request,$data);
             self::insert_customer_xtra($data);
-            // self::insert_collateral($request,$data,$creditID);
+            self::insert_collateral($request,$data,$SET_UUID);
         }
 
         $data = [
@@ -165,13 +167,13 @@ class Credit extends Controller
         return $data;
     }
 
-    private function insert_credit($request,$data,$loan_number,$installment_count){
+    private function insert_credit($SET_UUID,$request,$data,$loan_number,$installment_count){
 
         $cr_personal = M_CrPersonal::where('APPLICATION_ID',$data->ID)->first();
         $survey = M_CrSurvey::find($data->CR_SURVEY_ID);
 
         $data_credit =[
-            'ID' => Uuid::uuid7()->toString(),
+            'ID' =>  $SET_UUID,
             'LOAN_NUMBER' => $loan_number,
             'STATUS_REC' => $data->BRANCH,
             'BRANCH'   => $data->BRANCH,
