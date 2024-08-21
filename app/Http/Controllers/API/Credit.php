@@ -77,9 +77,6 @@ class Credit extends Controller
         $data_credit_schedule = generateAmortizationSchedule($principal,$angsuran, $set_tgl_awal,$effRate, $loanTerm);
         $installment_count = count($data_credit_schedule);
 
-        print_r($data_credit_schedule);
-        die;
-
         $check_exist = M_Credit::where('ORDER_NUMBER', $request->order_number)->first();
 
         if(!$check_exist){
@@ -168,7 +165,7 @@ class Credit extends Controller
              "no_polisi" => $cr_guarante_vehicle->POLICE_NUMBER??null,
              "no_rangka" =>$cr_guarante_vehicle->CHASIS_NUMBER??null,
              "no_mesin" => $cr_guarante_vehicle->ENGINE_NUMBER??null,
-             "struktur" => $data_credit_schedule??null
+             "struktur" => !$credit_schedule?$credit_schedule : $data_credit_schedule??null
         ];
 
         return $data;
