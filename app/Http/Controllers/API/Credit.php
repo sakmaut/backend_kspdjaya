@@ -77,10 +77,23 @@ class Credit extends Controller
         $data_credit_schedule = generateAmortizationSchedule($principal,$angsuran, $set_tgl_awal,$effRate, $loanTerm);
         $installment_count = count($data_credit_schedule);
 
+        $schedule = [];
         $check_exist = M_Credit::where('ORDER_NUMBER', $request->order_number)->first();
 
-        if(!$check_exist){
+        if(!$check_exist || !empty($check_exist->LOAN_NUMBER)){
             $credit_schedule = M_CreditSchedule::where('LOAN_NUMBER',$check_exist->LOAN_NUMBER)->get();
+
+            $no = 1;
+            foreach ($credit_schedule as $key) {
+                $schedule[] = [
+                    'angsuran_ke' =>  $no++,
+                    'tgl_angsuran' => $key['PAYMENT_DATE'],
+                    'pokok' => number_format($key['PRINCIPAL'], 2),
+                    'bunga' => number_format($key['INTEREST'], 2),
+                    'total_angsuran' => number_format($key['INSTALLMENT'], 2),
+                    'baki_debet' => number_format($key['PRINCIPAL_REMIANS'], 2)
+                ];
+            }
         }
       
         $SET_UUID = Uuid::uuid7()->toString();
@@ -165,7 +178,7 @@ class Credit extends Controller
              "no_polisi" => $cr_guarante_vehicle->POLICE_NUMBER??null,
              "no_rangka" =>$cr_guarante_vehicle->CHASIS_NUMBER??null,
              "no_mesin" => $cr_guarante_vehicle->ENGINE_NUMBER??null,
-             "struktur" => $data_credit_schedule??null
+             "struktur" => !$check_exist || !empty($check_exist->LOAN_NUMBER)?$schedule:$data_credit_schedule??null
         ];
 
         return $data;
