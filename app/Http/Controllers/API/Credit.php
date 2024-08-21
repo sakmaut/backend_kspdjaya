@@ -178,7 +178,7 @@ class Credit extends Controller
             'ORDER_NUMBER' => $data->ORDER_NUMBER,
             'COLLECTIBILITY'  => '',
             'MCF_ID'  => $survey->created_by??null,
-            'ENTRY_DATE'  => Carbon::now(),
+            'ENTRY_DATE'  => $request->tgl_awal??null,
             'FIRST_ARR_DATE'  => null,
             'INSTALLMENT_DATE'  => $request->tgl_awal??null,
             'END_DATE'  => self::addMonthsAndAdjustDate($request->tgl_awal,$data->PERIOD)??null,
