@@ -550,16 +550,7 @@ class CrAppilcationController extends Controller
             'order_number' => $application->ORDER_NUMBER,
             "flag" => !$check_exist?0:1,
             'pelanggan' =>[],
-            'alamat_identitas' =>[
-                "alamat" => empty($cr_personal->ADDRESS)?$cr_survey->alamat:$cr_personal->ADDRESS,
-                "rt" =>empty($cr_personal->RT)?$cr_survey->rt:$cr_personal->RT,
-                "rw" =>empty($cr_personal->RW)?$cr_survey->rw:$cr_personal->RW,
-                "provinsi" =>empty($cr_personal->PROVINCE)?$cr_survey->privince:$cr_personal->PROVINCE,
-                "kota" =>empty($cr_personal->CITY)?$cr_survey->city:$cr_personal->CITY,
-                "kelurahan" =>empty($cr_personal->KELURAHAN)?$cr_survey->kelurahan:$cr_personal->KELURAHAN,
-                "kecamatan" =>empty($cr_personal->KECAMATAN)?$cr_survey->kecamatan:$cr_personal->KECAMATAN,
-                "kode_pos" => empty($cr_personal->ZIP_CODE)?$cr_survey->zip_code:$cr_personal->ZIP_CODE
-            ],
+            'alamat_identitas' =>[],
             'alamat_tagih' =>[
                 "alamat" => $cr_personal->INS_ADDRESS??null,
                 "rt" => $cr_personal->INS_RT??null,
@@ -576,18 +567,7 @@ class CrAppilcationController extends Controller
                 "tahun"=>$cr_oder->TAHUN??null,
                 "harga_pasar"=>$cr_oder->HARGA_PASAR??null
             ],
-            'pekerjaan' =>[
-                "pekerjaan" => empty($cr_personal->OCCUPATION)?$cr_survey->usaha:$cr_personal->OCCUPATION,
-                "pekerjaan_id" => empty($cr_personal->OCCUPATION_ON_ID)?$cr_survey->sector:$cr_personal->OCCUPATION_ON_ID,
-                "agama" => $cr_personal->RELIGION??null,
-                "pendidikan" => $cr_personal->EDUCATION??null,
-                "status_rumah" => $cr_personal->PROPERTY_STATUS??null,
-                "telepon_rumah" => $cr_personal->PHONE_HOUSE??null,
-                "telepon_selular" => empty($cr_personal->PHONE_PERSONAL)?$data->hp:$cr_personal->PHONE_PERSONAL,
-                "telepon_kantor" => $cr_personal->PHONE_OFFICE??null,
-                "ekstra1" => $cr_personal->EXT_1??null,
-                "ekstra2" => $cr_personal->EXT_2??null
-            ],
+            'pekerjaan' =>[],
             'order' =>[
                 'cr_prospect_id' => $prospect_id??null,
                 "nama_ibu" => $cr_oder->MOTHER_NAME ?? null, 
@@ -699,6 +679,30 @@ class CrAppilcationController extends Controller
                 "no_kk" => empty($cr_personal->KK)?$cr_survey->kk:$cr_personal->KK,
                 "warganegara" => $cr_personal->CITIZEN??null
             ];
+
+            $arrayList['alamat-identitas'] =[
+                "alamat" => empty($cr_personal->ADDRESS)?$cr_survey->alamat:$cr_personal->ADDRESS,
+                "rt" =>empty($cr_personal->RT)?$cr_survey->rt:$cr_personal->RT,
+                "rw" =>empty($cr_personal->RW)?$cr_survey->rw:$cr_personal->RW,
+                "provinsi" =>empty($cr_personal->PROVINCE)?$cr_survey->privince:$cr_personal->PROVINCE,
+                "kota" =>empty($cr_personal->CITY)?$cr_survey->city:$cr_personal->CITY,
+                "kelurahan" =>empty($cr_personal->KELURAHAN)?$cr_survey->kelurahan:$cr_personal->KELURAHAN,
+                "kecamatan" =>empty($cr_personal->KECAMATAN)?$cr_survey->kecamatan:$cr_personal->KECAMATAN,
+                "kode_pos" => empty($cr_personal->ZIP_CODE)?$cr_survey->zip_code:$cr_personal->ZIP_CODE
+            ];
+
+            $arrayList['pekerjaan'] = [
+                "pekerjaan" => empty($cr_personal->OCCUPATION)?$cr_survey->usaha:$cr_personal->OCCUPATION,
+                "pekerjaan_id" => empty($cr_personal->OCCUPATION_ON_ID)?$cr_survey->sector:$cr_personal->OCCUPATION_ON_ID,
+                "agama" => $cr_personal->RELIGION??null,
+                "pendidikan" => $cr_personal->EDUCATION??null,
+                "status_rumah" => $cr_personal->PROPERTY_STATUS??null,
+                "telepon_rumah" => $cr_personal->PHONE_HOUSE??null,
+                "telepon_selular" => empty($cr_personal->PHONE_PERSONAL)?$data->hp:$cr_personal->PHONE_PERSONAL,
+                "telepon_kantor" => $cr_personal->PHONE_OFFICE??null,
+                "ekstra1" => $cr_personal->EXT_1??null,
+                "ekstra2" => $cr_personal->EXT_2??null
+            ];
         }else{
             $arrayList['pelanggan'] = [
                 "nama" => $check_ro->NAME ?? null,
@@ -715,6 +719,30 @@ class CrAppilcationController extends Controller
                 "masa_berlaku_identitas" => $check_ro->ID_VALID_DATE ?? null,
                 "no_kk" => $check_ro->KK??null,
                 "warganegara" => $check_ro->CITIZEN??null
+            ];
+
+            $arrayList['alamat-identitas'] =[
+                "alamat" => $check_ro->ADDRESS??null,
+                "rt" =>$check_ro->RT??null,
+                "rw" =>$check_ro->RW??null,
+                "provinsi" =>$check_ro->PROVINCE??null,
+                "kota" =>$check_ro->CITY??null,
+                "kelurahan" =>$check_ro->KELURAHAN??null,
+                "kecamatan" =>$check_ro->KECAMATAN??null,
+                "kode_pos" => $check_ro->ZIP_CODE??null
+            ];
+
+            $arrayList['pekerjaan'] = [
+                "pekerjaan" => $check_ro->OCCUPATION??null,
+                "pekerjaan_id" =>$check_ro->OCCUPATION_ON_ID??null,
+                "agama" => $check_ro->RELIGION??null,
+                "pendidikan" => $check_ro->EDUCATION??null,
+                "status_rumah" => $check_ro->PROPERTY_STATUS??null,
+                "telepon_rumah" => $check_ro->PHONE_HOUSE??null,
+                "telepon_selular" =>$check_ro->PHONE_PERSONAL??null,
+                "telepon_kantor" => $check_ro->PHONE_OFFICE??null,
+                "ekstra1" => $check_ro->EXT_1??null,
+                "ekstra2" => $check_ro->EXT_2??null
             ];
         }
         
