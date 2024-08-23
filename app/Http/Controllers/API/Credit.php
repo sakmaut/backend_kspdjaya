@@ -165,7 +165,7 @@ class Credit extends Controller
              "pokok_margin" =>bilangan($principal)??null,
              "tenor" => bilangan($data->PERIOD,false)??null,
              "tgl_awal_pk" => !empty($check_exist)?Carbon::parse($check_exist->ENTRY_DATE)->format('Y-m-d'):Carbon::parse($set_tgl_awal)->format('Y-m-d'),
-             "tgl_akhir_pk" => !empty($check_exist)?Carbon::parse($check_exist->END_DATE)->format('Y-m-d'):self::addMonthsAndAdjustDate($set_tgl_awal,$loanTerm),
+             "tgl_akhir_pk" => !empty($check_exist)?Carbon::parse($check_exist->END_DATE)->format('Y-m-d'):add_months($set_tgl_awal,$loanTerm),
              "angsuran" =>bilangan($angsuran)??null,
              "opt_periode" => $data->OPT_PERIODE??null,
              "tipe_jaminan" => $data->CREDIT_TYPE??null,
@@ -201,7 +201,7 @@ class Credit extends Controller
             'ENTRY_DATE'  => $request->tgl_awal??null,
             'FIRST_ARR_DATE'  => null,
             'INSTALLMENT_DATE'  => $request->tgl_awal??null,
-            'END_DATE'  => self::addMonthsAndAdjustDate($request->tgl_awal,$data->PERIOD)??null,
+            'END_DATE'  => add_months($request->tgl_awal,$data->PERIOD)??null,
             'PCPL_ORI'  => $data->SUBMISSION_VALUE + ($data->NET_ADMIN ?? 0)??null,
             'PAID_PRINCIPAL'  => null,
             'PAID_INTEREST'  => null,
@@ -368,23 +368,5 @@ class Credit extends Controller
                 M_CrCollateral::create($data_jaminan);
             }
         }
-    }
-
-    function addMonthsAndAdjustDate($tgl_awal, $period) {
-        $date = Carbon::parse($tgl_awal);
-        
-        // Add the specified number of months
-        $newDate = $date->addMonths($period);
-        
-        // Get the last day of the new month
-        $lastDayOfMonth = $newDate->endOfMonth()->day;
-        
-        // If the new day exceeds the last day of the month, set it to the last day
-        if ($newDate->day > $lastDayOfMonth) {
-            $newDate->day = $lastDayOfMonth;
-        }
-        
-        // Return the adjusted date in 'Y-m-d' format
-        return $newDate->format('Y-m-d');
     }
 }
