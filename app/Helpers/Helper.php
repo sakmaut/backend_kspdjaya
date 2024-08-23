@@ -146,38 +146,27 @@ if (!function_exists('calculateRate')) {
     }
 }
 
-function tambahBulan($tanggal, $jumlahBulan) {
-    // Parsing tanggal dari format yang dikenal
-    if (preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/', $tanggal, $parts)) {
-        $day = (int) $parts[1];
-        $month = (int) $parts[2];
-        $year = (int) $parts[3];
-    } elseif (preg_match('/^(\d{1,2})-(\d{1,2})-(\d{4})$/', $tanggal, $parts)) {
-        $day = (int) $parts[1];
-        $month = (int) $parts[2];
-        $year = (int) $parts[3];
-    } elseif (preg_match('/^(\d{4})-(\d{1,2})-(\d{1,2})$/', $tanggal, $parts)) {
-        $year = (int) $parts[1];
-        $month = (int) $parts[2];
-        $day = (int) $parts[3];
+function add_months($date_str, $months) {
+    $date = explode('-', $date_str);
+    $year = $date[0];
+    $month = $date[1];
+    $day = $date[2];
+
+    $new_month = $month + $months;
+    $new_year = $year + floor($new_month / 12);
+    $new_month = $new_month % 12;
+    if ($new_month == 0) {
+        $new_month = 12;
+        $new_year--;
+    }
+
+    if (!checkdate($new_month, $day, $new_year)) {
+        $lastDay = date('t', mktime(0, 0, 0, $new_month, 1, $new_year));
+        return sprintf("%04d-%02d-%02d", $new_year, $new_month, $lastDay);
     } else {
-        throw new InvalidArgumentException('Format tanggal tidak valid. Diharapkan mm/dd/yyyy, dd/mm/yyyy, atau yyyy-mm-dd');
+        return sprintf("%04d-%02d-%02d", $new_year, $new_month, $day);
     }
-
-    // Menambahkan bulan ke tanggal
-    $date = Carbon::create($year, $month, $day);
-    $date->addMonths($jumlahBulan);
-
-    // Check if the resulting day is valid
-    $lastDayOfMonth = $date->copy()->lastOfMonth()->day;
-    if ($date->day > $lastDayOfMonth) {
-        // Set the day to the last day of the month
-        $date->day = $lastDayOfMonth;
-    }
-
-    return $date->format('d-m-Y');
 }
-
 
 if (!function_exists('generateAmortizationSchedule')) {
    function generateAmortizationSchedule($principal,$angsuran,$setDate,$effRate, $loanTerm) {
@@ -198,7 +187,7 @@ if (!function_exists('generateAmortizationSchedule')) {
                 
                 $schedule[] = [
                     'angsuran_ke' =>  $i,
-                    'tgl_angsuran' => tambahBulan($setDate, $i),
+                    'tgl_angsuran' => add_months($setDate, $i),
                     'pokok' => number_format($principalPayment, 2),
                     'bunga' => number_format($interest, 2),
                     'total_angsuran' => number_format($principalPayment + $interest, 2),
@@ -212,7 +201,7 @@ if (!function_exists('generateAmortizationSchedule')) {
             
             $schedule[] = [
                 'angsuran_ke' =>  $i,
-                'tgl_angsuran' => tambahBulan($setDate, $i),
+                'tgl_angsuran' => add_months($setDate, $i),
                 'pokok' => number_format($principalPayment, 2),
                 'bunga' => number_format($interest, 2),
                 'total_angsuran' => number_format($angsuran_pokok_bunga, 2),
