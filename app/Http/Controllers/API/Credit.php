@@ -246,6 +246,7 @@ class Credit extends Controller
             'MARTIAL_DATE' =>$cr_personal->MARTIAL_DATE,
             'ID_TYPE' =>$cr_personal->ID_TYPE,
             'ID_NUMBER' =>$cr_personal->ID_NUMBER,
+            'KK_NUMBER' =>$cr_personal->KK,
             'ID_ISSUE_DATE' =>$cr_personal->ID_ISSUE_DATE,
             'ID_VALID_DATE' =>$cr_personal->ID_VALID_DATE,
             'ADDRESS' =>$cr_personal->ADDRESS,

@@ -25,6 +25,7 @@ class M_Customer extends Model
         'MARTIAL_DATE',
         'ID_TYPE',
         'ID_NUMBER',
+        'KK_NUMBER',
         'ID_ISSUE_DATE',
         'ID_VALID_DATE',
         'ADDRESS',
