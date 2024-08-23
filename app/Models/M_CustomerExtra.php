@@ -18,6 +18,7 @@ class M_CustomerExtra extends Model
         'SPOUSE_NAME',
         'SPOUSE_BIRTHPLACE',
         'SPOUSE_BIRTHDATE',
+        'SPOUSE_OCCUPATION',
         'SPOUSE_ID_NUMBER',
         'SPOUSE_INCOME',
         'SPOUSE_ADDRESS',

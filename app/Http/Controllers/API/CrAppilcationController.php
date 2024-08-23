@@ -16,6 +16,7 @@ use App\Models\M_CrPersonalExtra;
 use App\Models\M_CrSurvey;
 use App\Models\M_CrSurveyDocument;
 use App\Models\M_Customer;
+use App\Models\M_CustomerExtra;
 use App\Models\M_SurveyApproval;
 use App\Models\User;
 use Carbon\Carbon;
@@ -596,13 +597,7 @@ class CrAppilcationController extends Controller
                 "no_hp" => $cr_guarantor->MOBILE_NUMBER?? null,
                 "pendapatan" => $cr_guarantor->INCOME?? null,   
             ],
-            "pasangan" => [
-                "nama_pasangan" =>$cr_spouse->NAME ?? null,
-                "tmptlahir_pasangan" =>$cr_spouse->BIRTHPLACE ?? null,
-                "pekerjaan_pasangan" => $cr_spouse->OCCUPATION ?? null,
-                "tgllahir_pasangan" => $cr_spouse->BIRTHDATE ?? null,
-                "alamat_pasangan" => $cr_spouse->ADDRESS ?? null
-            ],
+            "pasangan" => [],
             "info_bank" =>[],
             "ekstra" =>[
                 'jenis_angsuran' => empty($application->INSTALLMENT_TYPE)?$cr_survey->jenis_angsuran:$application->INSTALLMENT_TYPE,
@@ -683,6 +678,14 @@ class CrAppilcationController extends Controller
                 "kecamatan" =>empty($cr_personal->KECAMATAN)?$cr_survey->kecamatan:$cr_personal->KECAMATAN,
                 "kode_pos" => empty($cr_personal->ZIP_CODE)?$cr_survey->zip_code:$cr_personal->ZIP_CODE
             ];
+            
+            $arrayList['pasangan']=[
+                "nama_pasangan" =>$cr_spouse->NAME ?? null,
+                "tmptlahir_pasangan" =>$cr_spouse->BIRTHPLACE ?? null,
+                "pekerjaan_pasangan" => $cr_spouse->OCCUPATION ?? null,
+                "tgllahir_pasangan" => $cr_spouse->BIRTHDATE ?? null,
+                "alamat_pasangan" => $cr_spouse->ADDRESS ?? null
+            ];
 
             $arrayList['alamat_tagih']=[
                 "alamat" => $cr_personal->INS_ADDRESS??null,
@@ -708,6 +711,9 @@ class CrAppilcationController extends Controller
                 "ekstra2" => $cr_personal->EXT_2??null
             ];
         }else{
+
+            $custmer_xtra = M_CustomerExtra::where('CUST_CODE',$check_ro->CUST_CODE)->first();
+
             $arrayList['pelanggan'] = [
                 "nama" => $check_ro->NAME ?? null,
                 "nama_panggilan" => $check_ro->ALIAS ?? null,
@@ -760,6 +766,13 @@ class CrAppilcationController extends Controller
                 "kode_pos" => $check_ro->INS_ZIP_CODE??null
             ];
 
+            $arrayList['pasangan']=[
+                "nama_pasangan" =>$custmer_xtra->SPOUSE_NAME ?? null,
+                "tmptlahir_pasangan" =>$custmer_xtra->SPOUSE_BIRTHPLACE ?? null,
+                "pekerjaan_pasangan" => $custmer_xtra->SPOUSE_OCCUPATION ?? null,
+                "tgllahir_pasangan" => $custmer_xtra->SPOUSE_BIRTHDATE ?? null,
+                "alamat_pasangan" => $custmer_xtra->SPOUSE_ADDRESS ?? null
+            ];
 
             $arrayList['alamat_identitas'] =[
                 "alamat" => $check_ro->ADDRESS??null,

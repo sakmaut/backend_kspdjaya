@@ -298,18 +298,20 @@ class Credit extends Controller
 
         $cr_personal = M_CrPersonal::where('APPLICATION_ID',$data->ID)->first();
         $cr_personal_extra = M_CrPersonalExtra::where('APPLICATION_ID',$data->ID)->first();
+        $cr_spouse = M_CrApplicationSpouse::where('APPLICATION_ID',$data->ID)->first();
 
         $data_customer_xtra =[
             'ID' => Uuid::uuid7()->toString(),
             'CUST_CODE' =>$cr_personal->CUST_CODE,
             'OTHER_OCCUPATION_1' =>$cr_personal_extra->OTHER_OCCUPATION_1,
             'OTHER_OCCUPATION_2' =>$cr_personal_extra->OTHER_OCCUPATION_2,
-            'SPOUSE_NAME' => null,
-            'SPOUSE_BIRTHPLACE' => null,
-            'SPOUSE_BIRTHDATE' => null,
-            'SPOUSE_ID_NUMBER' => null,
-            'SPOUSE_INCOME' => null,
-            'SPOUSE_ADDRESS' => null,
+            'SPOUSE_NAME' =>  $cr_spouse->NAME,
+            'SPOUSE_BIRTHPLACE' =>  $cr_spouse->BIRTHPLACE,
+            'SPOUSE_BIRTHDATE' =>  $cr_spouse->BIRTHDATE,
+            'SPOUSE_ID_NUMBER' => $cr_spouse->NUMBER_IDENTITY,
+            'SPOUSE_INCOME' => $cr_spouse->INCOME,
+            'SPOUSE_ADDRESS' => $cr_spouse->ADDRESS,
+            'SPOUSE_OCCUPATION' => $cr_spouse->OCCUPATION,
             'SPOUSE_RT' => null,
             'SPOUSE_RW' => null,
             'SPOUSE_PROVINCE' => null,
