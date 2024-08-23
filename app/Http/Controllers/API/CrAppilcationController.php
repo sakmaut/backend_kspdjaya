@@ -769,12 +769,20 @@ class CrAppilcationController extends Controller
             ];
 
             $arrayList['pasangan']=[
-                "nama_pasangan" =>!empty($custmer_xtra->SPOUSE_NAME)? $custmer_xtra->SPOUSE_NAME:$cr_spouse->SPOUSE_NAME,
-                "tmptlahir_pasangan" =>!empty($custmer_xtra->SPOUSE_BIRTHPLACE) ?$custmer_xtra->SPOUSE_BIRTHPLACE: $cr_spouse->SPOUSE_BIRTHPLACE,
-                "pekerjaan_pasangan" => !empty($custmer_xtra->SPOUSE_OCCUPATION) ?$custmer_xtra->SPOUSE_OCCUPATION: $cr_spouse->SPOUSE_OCCUPATION,
-                "tgllahir_pasangan" => !empty($custmer_xtra->SPOUSE_BIRTHDATE)?$custmer_xtra->SPOUSE_BIRTHDATE: $cr_spouse->SPOUSE_BIRTHDATE,
-                "alamat_pasangan" => !empty($custmer_xtra->SPOUSE_ADDRESS)?$custmer_xtra->SPOUSE_ADDRESS : $cr_spouse->SPOUSE_ADDRESS
+                "nama_pasangan" =>$cr_spouse->NAME ?? null,
+                "tmptlahir_pasangan" =>$cr_spouse->BIRTHPLACE ?? null,
+                "pekerjaan_pasangan" => $cr_spouse->OCCUPATION ?? null,
+                "tgllahir_pasangan" => $cr_spouse->BIRTHDATE ?? null,
+                "alamat_pasangan" => $cr_spouse->ADDRESS ?? null
             ];
+
+            // $arrayList['pasangan']=[
+            //     "nama_pasangan" =>!empty($custmer_xtra->SPOUSE_NAME)? $custmer_xtra->SPOUSE_NAME:$cr_spouse->SPOUSE_NAME,
+            //     "tmptlahir_pasangan" =>!empty($custmer_xtra->SPOUSE_BIRTHPLACE) ?$custmer_xtra->SPOUSE_BIRTHPLACE: $cr_spouse->SPOUSE_BIRTHPLACE,
+            //     "pekerjaan_pasangan" => !empty($custmer_xtra->SPOUSE_OCCUPATION) ?$custmer_xtra->SPOUSE_OCCUPATION: $cr_spouse->SPOUSE_OCCUPATION,
+            //     "tgllahir_pasangan" => !empty($custmer_xtra->SPOUSE_BIRTHDATE)?$custmer_xtra->SPOUSE_BIRTHDATE: $cr_spouse->SPOUSE_BIRTHDATE,
+            //     "alamat_pasangan" => !empty($custmer_xtra->SPOUSE_ADDRESS)?$custmer_xtra->SPOUSE_ADDRESS : $cr_spouse->SPOUSE_ADDRESS
+            // ];
 
             $arrayList['kerabat_darurat'] =[
                 "nama"  => $custmer_xtra->EMERGENCY_NAME?? null,
