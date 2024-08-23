@@ -375,17 +375,13 @@ class Credit extends Controller
         
         // Add the specified number of months
         $newDate = $date->addMonths($period);
-    
-        // Check if the new date is in February and adjust accordingly
-        if ($newDate->month == 2) {
-            // Leap year check
-            if ($newDate->isLeapYear()) {
-                // If leap year and day exceeds 29, set day to 29
-                $newDate->day = min($newDate->day, 29);
-            } else {
-                // If not a leap year and day exceeds 28, set day to 28
-                $newDate->day = min($newDate->day, 28);
-            }
+        
+        // Get the last day of the new month
+        $lastDayOfMonth = $newDate->endOfMonth()->day;
+        
+        // If the new day exceeds the last day of the month, set it to the last day
+        if ($newDate->day > $lastDayOfMonth) {
+            $newDate->day = $lastDayOfMonth;
         }
         
         // Return the adjusted date in 'Y-m-d' format
