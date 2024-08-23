@@ -570,19 +570,7 @@ class CrAppilcationController extends Controller
                 "usaha_lain3"  => $cr_personal_extra->OTHER_OCCUPATION_3?? null,
                 "usaha_lain4"  => $cr_personal_extra->OTHER_OCCUPATION_4?? null,
             ],
-            'kerabat_darurat' =>[
-                "nama"  => $cr_personal_extra->EMERGENCY_NAME?? null,
-                "alamat"  => $cr_personal_extra->EMERGENCY_ADDRESS?? null,
-                "rt"  => $cr_personal_extra->EMERGENCY_RT?? null,
-                "rw"  => $cr_personal_extra->EMERGENCY_RW?? null,
-                "provinsi" =>$cr_personal_extra->EMERGENCY_PROVINCE?? null,
-                "kota" => $cr_personal_extra->EMERGENCY_CITY?? null,
-                "kelurahan" => $cr_personal_extra->EMERGENCY_KELURAHAN?? null,
-                "kecamatan" => $cr_personal_extra->EMERGENCY_KECAMATAN?? null,
-                "kode_pos" => $cr_personal_extra->EMERGENCY_ZIP_CODE?? null,
-                "no_telp" => $cr_personal_extra->EMERGENCY_PHONE_HOUSE?? null,
-                "no_hp" => $cr_personal_extra->EMERGENCY_PHONE_PERSONAL?? null, 
-            ],
+            'kerabat_darurat' =>[],
             "penjamin" => [
                 "nama" => $cr_guarantor->NAME ?? null,
                 "jenis_kelamin" => $cr_guarantor->GENDER?? null,
@@ -687,6 +675,20 @@ class CrAppilcationController extends Controller
                 "alamat_pasangan" => $cr_spouse->ADDRESS ?? null
             ];
 
+            $arrayList['kerabat_darurat'] =[
+                "nama"  => $cr_personal_extra->EMERGENCY_NAME?? null,
+                "alamat"  => $cr_personal_extra->EMERGENCY_ADDRESS?? null,
+                "rt"  => $cr_personal_extra->EMERGENCY_RT?? null,
+                "rw"  => $cr_personal_extra->EMERGENCY_RW?? null,
+                "provinsi" =>$cr_personal_extra->EMERGENCY_PROVINCE?? null,
+                "kota" => $cr_personal_extra->EMERGENCY_CITY?? null,
+                "kelurahan" => $cr_personal_extra->EMERGENCY_KELURAHAN?? null,
+                "kecamatan" => $cr_personal_extra->EMERGENCY_KECAMATAN?? null,
+                "kode_pos" => $cr_personal_extra->EMERGENCY_ZIP_CODE?? null,
+                "no_telp" => $cr_personal_extra->EMERGENCY_PHONE_HOUSE?? null,
+                "no_hp" => $cr_personal_extra->EMERGENCY_PHONE_PERSONAL?? null, 
+            ];
+
             $arrayList['alamat_tagih']=[
                 "alamat" => $cr_personal->INS_ADDRESS??null,
                 "rt" => $cr_personal->INS_RT??null,
@@ -772,6 +774,20 @@ class CrAppilcationController extends Controller
                 "pekerjaan_pasangan" => $custmer_xtra->SPOUSE_OCCUPATION ?? null,
                 "tgllahir_pasangan" => $custmer_xtra->SPOUSE_BIRTHDATE ?? null,
                 "alamat_pasangan" => $custmer_xtra->SPOUSE_ADDRESS ?? null
+            ];
+
+            $arrayList['kerabat_darurat'] =[
+                "nama"  => $custmer_xtra->EMERGENCY_NAME?? null,
+                "alamat"  => $custmer_xtra->EMERGENCY_ADDRESS?? null,
+                "rt"  => $custmer_xtra->EMERGENCY_RT?? null,
+                "rw"  => $custmer_xtra->EMERGENCY_RW?? null,
+                "provinsi" =>$custmer_xtra->EMERGENCY_PROVINCE?? null,
+                "kota" => $custmer_xtra->EMERGENCY_CITY?? null,
+                "kelurahan" => $custmer_xtra->EMERGENCY_KELURAHAN?? null,
+                "kecamatan" => $custmer_xtra->EMERGENCY_KECAMATAN?? null,
+                "kode_pos" => $custmer_xtra->EMERGENCY_ZIP_CODE?? null,
+                "no_telp" => $custmer_xtra->EMERGENCY_PHONE_HOUSE?? null,
+                "no_hp" => $custmer_xtra->EMERGENCY_PHONE_PERSONAL?? null, 
             ];
 
             $arrayList['alamat_identitas'] =[
