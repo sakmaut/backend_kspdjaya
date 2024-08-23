@@ -69,7 +69,7 @@ class CustomerController extends Controller
                 foreach($data as $customer) {
                     $datas[] = [
                         'no_ktp' => $customer->ID_NUMBER,
-                        'kk' => $customer->KK_NUMBER,
+                        'no_kk' => $customer->KK_NUMBER,
                         'nama' => $customer->NAME,
                         'tgl_lahir' => $customer->BIRTHDATE,
                         'alamat' => $customer->ADDRESS,
