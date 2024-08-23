@@ -736,7 +736,7 @@ class CrAppilcationController extends Controller
                 "pendapatan_pribadi" => intval(empty($cr_oder->INCOME_PERSONAL)?$cr_survey->income_personal:$cr_oder->INCOME_PERSONAL),
                 "pendapatan_pasangan" =>intval(empty($cr_oder->INCOME_SPOUSE)?$cr_survey->income_spouse:$cr_oder->INCOME_SPOUSE),
                 "pendapatan_lainnya" =>intval(empty($cr_oder->INCOME_OTHER)?$cr_survey->income_other:$cr_oder->INCOME_OTHER),
-                "no_npwp" => $check_ro->NO_NPWP??null,
+                "no_npwp" => $check_ro->NPWP??null,
                 "order_tanggal" =>  $cr_oder->ORDER_TANGGAL??null,
                 "order_status" =>  $cr_oder->ORDER_STATUS??null,
                 "order_tipe" =>  $cr_oder->ORDER_TIPE??null,
