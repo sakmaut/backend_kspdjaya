@@ -545,6 +545,7 @@ class CrAppilcationController extends Controller
         $cr_spouse = M_CrApplicationSpouse::where('APPLICATION_ID',$setApplicationId)->first();
         $approval = M_ApplicationApproval::where('cr_application_id',$setApplicationId)->first();
         $check_ro = M_Customer::where('ID_NUMBER',empty($cr_personal->ID_NUMBER)?$data->ktp:$cr_personal->ID_NUMBER)->first();
+        $check_cust_xtra = M_CustomerExtra::where('CUST_CODE',$cr_personal->CUST_CODE)->first();
 
         $arrayList = [
             'id_application' => $setApplicationId,
@@ -714,8 +715,6 @@ class CrAppilcationController extends Controller
             ];
         }else{
 
-            $custmer_xtra = M_CustomerExtra::where('CUST_CODE',$check_ro->CUST_CODE)->first();
-
             $arrayList['pelanggan'] = [
                 "nama" => $check_ro->NAME ?? null,
                 "nama_panggilan" => $check_ro->ALIAS ?? null,
@@ -768,34 +767,26 @@ class CrAppilcationController extends Controller
                 "kode_pos" => $check_ro->INS_ZIP_CODE??null
             ];
 
-            // $arrayList['pasangan']=[
-            //     "nama_pasangan" =>$cr_spouse->NAME ?? null,
-            //     "tmptlahir_pasangan" =>$cr_spouse->BIRTHPLACE ?? null,
-            //     "pekerjaan_pasangan" => $cr_spouse->OCCUPATION ?? null,
-            //     "tgllahir_pasangan" => $cr_spouse->BIRTHDATE ?? null,
-            //     "alamat_pasangan" => $cr_spouse->ADDRESS ?? null
-            // ];
-
             $arrayList['pasangan']=[
-                "nama_pasangan" => $custmer_xtra ? $custmer_xtra->SPOUSE_NAME ?? $cr_spouse->SPOUSE_NAME : null,
-                "tmptlahir_pasangan" => $custmer_xtra ? $custmer_xtra->BIRTHPLACE ?? $cr_spouse->BIRTHPLACE : null,
-                "pekerjaan_pasangan" => $custmer_xtra ? $custmer_xtra->OCCUPATION ?? $cr_spouse->OCCUPATION : null,
-                "tgllahir_pasangan" => $custmer_xtra ? $custmer_xtra->BIRTHDATE ?? $cr_spouse->BIRTHDATE : null,
-                "alamat_pasangan" => $custmer_xtra ? $custmer_xtra->ADDRESS ?? $cr_spouse->ADDRESS : null
+                "nama_pasangan" => $check_cust_xtra ? $check_cust_xtra->SPOUSE_NAME : $cr_spouse->NAME,
+                "tmptlahir_pasangan" => $check_cust_xtra? $check_cust_xtra->BIRTHPLACE : $cr_spouse->BIRTHPLACE,
+                "pekerjaan_pasangan" => $check_cust_xtra ? $check_cust_xtra->OCCUPATION : $cr_spouse->OCCUPATION,
+                "tgllahir_pasangan" => $check_cust_xtra ? $check_cust_xtra->BIRTHDATE : $cr_spouse->BIRTHDATE,
+                "alamat_pasangan" => $check_cust_xtra ? $check_cust_xtra->ADDRESS : $cr_spouse->ADDRESS
             ];
 
             $arrayList['kerabat_darurat'] =[
-                "nama"  => $custmer_xtra->EMERGENCY_NAME?? null,
-                "alamat"  => $custmer_xtra->EMERGENCY_ADDRESS?? null,
-                "rt"  => $custmer_xtra->EMERGENCY_RT?? null,
-                "rw"  => $custmer_xtra->EMERGENCY_RW?? null,
-                "provinsi" =>$custmer_xtra->EMERGENCY_PROVINCE?? null,
-                "kota" => $custmer_xtra->EMERGENCY_CITY?? null,
-                "kelurahan" => $custmer_xtra->EMERGENCY_KELURAHAN?? null,
-                "kecamatan" => $custmer_xtra->EMERGENCY_KECAMATAN?? null,
-                "kode_pos" => $custmer_xtra->EMERGENCY_ZIP_CODE?? null,
-                "no_telp" => $custmer_xtra->EMERGENCY_PHONE_HOUSE?? null,
-                "no_hp" => $custmer_xtra->EMERGENCY_PHONE_PERSONAL?? null, 
+                "nama"  => $check_cust_xtra->EMERGENCY_NAME?? null,
+                "alamat"  => $check_cust_xtra->EMERGENCY_ADDRESS?? null,
+                "rt"  => $check_cust_xtra->EMERGENCY_RT?? null,
+                "rw"  => $check_cust_xtra->EMERGENCY_RW?? null,
+                "provinsi" =>$check_cust_xtra->EMERGENCY_PROVINCE?? null,
+                "kota" => $check_cust_xtra->EMERGENCY_CITY?? null,
+                "kelurahan" => $check_cust_xtra->EMERGENCY_KELURAHAN?? null,
+                "kecamatan" => $check_cust_xtra->EMERGENCY_KECAMATAN?? null,
+                "kode_pos" => $check_cust_xtra->EMERGENCY_ZIP_CODE?? null,
+                "no_telp" => $check_cust_xtra->EMERGENCY_PHONE_HOUSE?? null,
+                "no_hp" => $check_cust_xtra->EMERGENCY_PHONE_PERSONAL?? null, 
             ];
 
             $arrayList['alamat_identitas'] =[
