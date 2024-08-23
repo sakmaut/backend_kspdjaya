@@ -570,7 +570,6 @@ class CrAppilcationController extends Controller
             'pekerjaan' =>[],
             'order' =>[
                 'cr_prospect_id' => $prospect_id??null,
-                "nama_ibu" => $cr_oder->MOTHER_NAME ?? null, 
                 "kategori" => $cr_oder->CATEGORY ?? null, 
                 "gelar" => $cr_oder->TITLE ?? null, 
                 "lama_bekerja" => empty($cr_oder->WORK_PERIOD)?$cr_survey->work_period:$cr_oder->WORK_PERIOD, 
@@ -680,6 +679,10 @@ class CrAppilcationController extends Controller
                 "warganegara" => $cr_personal->CITIZEN??null
             ];
 
+            $arrayList['order'] = [
+                "nama_ibu" => $cr_oder->MOTHER_NAME ?? null, 
+            ];
+
             $arrayList['alamat-identitas'] =[
                 "alamat" => empty($cr_personal->ADDRESS)?$cr_survey->alamat:$cr_personal->ADDRESS,
                 "rt" =>empty($cr_personal->RT)?$cr_survey->rt:$cr_personal->RT,
@@ -720,6 +723,11 @@ class CrAppilcationController extends Controller
                 "no_kk" => $check_ro->KK??null,
                 "warganegara" => $check_ro->CITIZEN??null
             ];
+
+            $arrayList['order'] = [
+                "nama_ibu" => $check_ro->MOTHER_NAME ?? null, 
+            ];
+
 
             $arrayList['alamat_identitas'] =[
                 "alamat" => $check_ro->ADDRESS??null,
