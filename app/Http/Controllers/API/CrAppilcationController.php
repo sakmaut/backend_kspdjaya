@@ -769,7 +769,7 @@ class CrAppilcationController extends Controller
             ];
 
             $arrayList['pasangan']=[
-                "nama_pasangan" => $cr_spouse->NAME != null?$cr_spouse->NAME:$custmer_xtra->SPOUSE_NAME,
+                "nama_pasangan" => $cr_spouse->NAME != null?$cr_spouse->NAME??null:$custmer_xtra->SPOUSE_NAME,
                 "tmptlahir_pasangan" => $cr_spouse->BIRTHPLACE != null?$cr_spouse->BIRTHPLACE:$custmer_xtra->BIRTHPLACE,
                 "pekerjaan_pasangan" => $cr_spouse->OCCUPATION != null?$cr_spouse->OCCUPATION: $custmer_xtra->OCCUPATION,
                 "tgllahir_pasangan" => $cr_spouse->BIRTHDATE != null?$cr_spouse->BIRTHDATE:$custmer_xtra->BIRTHDATE,
