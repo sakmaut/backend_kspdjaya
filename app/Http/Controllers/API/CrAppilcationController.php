@@ -551,16 +551,7 @@ class CrAppilcationController extends Controller
             "flag" => !$check_exist?0:1,
             'pelanggan' =>[],
             'alamat_identitas' =>[],
-            'alamat_tagih' =>[
-                "alamat" => $cr_personal->INS_ADDRESS??null,
-                "rt" => $cr_personal->INS_RT??null,
-                "rw" => $cr_personal->INS_RW??null,
-                "provinsi" => $cr_personal->INS_PROVINCE??null,
-                "kota" => $cr_personal->INS_CITY??null,
-                "kelurahan" => $cr_personal->INS_KELURAHAN??null,
-                "kecamatan" => $cr_personal->INS_KECAMATAN??null,
-                "kode_pos" => $cr_personal->INS_ZIP_CODE??null
-            ],
+            'alamat_tagih' =>[],
             "barang_taksasi"=>[
                 "kode_barang"=>$cr_oder->KODE_BARANG??null,
                 "id_tipe"=>$cr_oder->ID_TIPE??null,
@@ -683,7 +674,7 @@ class CrAppilcationController extends Controller
                 "nama_ibu" => $cr_oder->MOTHER_NAME ?? null, 
             ];
 
-            $arrayList['alamat-identitas'] =[
+            $arrayList['alamat_identitas'] =[
                 "alamat" => empty($cr_personal->ADDRESS)?$cr_survey->alamat:$cr_personal->ADDRESS,
                 "rt" =>empty($cr_personal->RT)?$cr_survey->rt:$cr_personal->RT,
                 "rw" =>empty($cr_personal->RW)?$cr_survey->rw:$cr_personal->RW,
@@ -692,6 +683,17 @@ class CrAppilcationController extends Controller
                 "kelurahan" =>empty($cr_personal->KELURAHAN)?$cr_survey->kelurahan:$cr_personal->KELURAHAN,
                 "kecamatan" =>empty($cr_personal->KECAMATAN)?$cr_survey->kecamatan:$cr_personal->KECAMATAN,
                 "kode_pos" => empty($cr_personal->ZIP_CODE)?$cr_survey->zip_code:$cr_personal->ZIP_CODE
+            ];
+
+            $arrayList['alamat_tagih']=[
+                "alamat" => $cr_personal->INS_ADDRESS??null,
+                "rt" => $cr_personal->INS_RT??null,
+                "rw" => $cr_personal->INS_RW??null,
+                "provinsi" => $cr_personal->INS_PROVINCE??null,
+                "kota" => $cr_personal->INS_CITY??null,
+                "kelurahan" => $cr_personal->INS_KELURAHAN??null,
+                "kecamatan" => $cr_personal->INS_KECAMATAN??null,
+                "kode_pos" => $cr_personal->INS_ZIP_CODE??null
             ];
 
             $arrayList['pekerjaan'] = [
@@ -726,6 +728,17 @@ class CrAppilcationController extends Controller
 
             $arrayList['order'] = [
                 "nama_ibu" => $check_ro->MOTHER_NAME ?? null, 
+            ];
+
+            $arrayList['alamat_tagih']=[
+                "alamat" => $check_ro->INS_ADDRESS??null,
+                "rt" => $check_ro->INS_RT??null,
+                "rw" => $check_ro->INS_RW??null,
+                "provinsi" => $check_ro->INS_PROVINCE??null,
+                "kota" => $check_ro->INS_CITY??null,
+                "kelurahan" => $check_ro->INS_KELURAHAN??null,
+                "kecamatan" => $check_ro->INS_KECAMATAN??null,
+                "kode_pos" => $check_ro->INS_ZIP_CODE??null
             ];
 
 
