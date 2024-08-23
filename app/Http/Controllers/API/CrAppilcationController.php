@@ -721,7 +721,7 @@ class CrAppilcationController extends Controller
                 "warganegara" => $check_ro->CITIZEN??null
             ];
 
-            $arrayList['alamat-identitas'] =[
+            $arrayList['alamat_identitas'] =[
                 "alamat" => $check_ro->ADDRESS??null,
                 "rt" =>$check_ro->RT??null,
                 "rw" =>$check_ro->RW??null,
