@@ -768,21 +768,21 @@ class CrAppilcationController extends Controller
                 "kode_pos" => $check_ro->INS_ZIP_CODE??null
             ];
 
-            $arrayList['pasangan']=[
-                "nama_pasangan" =>$cr_spouse->NAME ?? null,
-                "tmptlahir_pasangan" =>$cr_spouse->BIRTHPLACE ?? null,
-                "pekerjaan_pasangan" => $cr_spouse->OCCUPATION ?? null,
-                "tgllahir_pasangan" => $cr_spouse->BIRTHDATE ?? null,
-                "alamat_pasangan" => $cr_spouse->ADDRESS ?? null
-            ];
-
             // $arrayList['pasangan']=[
-            //     "nama_pasangan" =>!empty($custmer_xtra->SPOUSE_NAME)? $custmer_xtra->SPOUSE_NAME:$cr_spouse->SPOUSE_NAME,
-            //     "tmptlahir_pasangan" =>!empty($custmer_xtra->SPOUSE_BIRTHPLACE) ?$custmer_xtra->SPOUSE_BIRTHPLACE: $cr_spouse->SPOUSE_BIRTHPLACE,
-            //     "pekerjaan_pasangan" => !empty($custmer_xtra->SPOUSE_OCCUPATION) ?$custmer_xtra->SPOUSE_OCCUPATION: $cr_spouse->SPOUSE_OCCUPATION,
-            //     "tgllahir_pasangan" => !empty($custmer_xtra->SPOUSE_BIRTHDATE)?$custmer_xtra->SPOUSE_BIRTHDATE: $cr_spouse->SPOUSE_BIRTHDATE,
-            //     "alamat_pasangan" => !empty($custmer_xtra->SPOUSE_ADDRESS)?$custmer_xtra->SPOUSE_ADDRESS : $cr_spouse->SPOUSE_ADDRESS
+            //     "nama_pasangan" =>$cr_spouse->NAME ?? null,
+            //     "tmptlahir_pasangan" =>$cr_spouse->BIRTHPLACE ?? null,
+            //     "pekerjaan_pasangan" => $cr_spouse->OCCUPATION ?? null,
+            //     "tgllahir_pasangan" => $cr_spouse->BIRTHDATE ?? null,
+            //     "alamat_pasangan" => $cr_spouse->ADDRESS ?? null
             // ];
+
+            $arrayList['pasangan']=[
+                "nama_pasangan" => $custmer_xtra ? $custmer_xtra->SPOUSE_NAME ?? $cr_spouse->SPOUSE_NAME : null,
+                "tmptlahir_pasangan" => $custmer_xtra ? $custmer_xtra->BIRTHPLACE ?? $cr_spouse->BIRTHPLACE : null,
+                "pekerjaan_pasangan" => $custmer_xtra ? $custmer_xtra->OCCUPATION ?? $cr_spouse->OCCUPATION : null,
+                "tgllahir_pasangan" => $custmer_xtra ? $custmer_xtra->BIRTHDATE ?? $cr_spouse->BIRTHDATE : null,
+                "alamat_pasangan" => $custmer_xtra ? $custmer_xtra->ADDRESS ?? $cr_spouse->ADDRESS : null
+            ];
 
             $arrayList['kerabat_darurat'] =[
                 "nama"  => $custmer_xtra->EMERGENCY_NAME?? null,
