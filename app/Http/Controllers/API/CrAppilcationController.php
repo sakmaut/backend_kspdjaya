@@ -769,11 +769,11 @@ class CrAppilcationController extends Controller
             ];
 
             $arrayList['pasangan']=[
-                "nama_pasangan" => $custmer_xtra->SPOUSE_NAME != null ? $custmer_xtra->SPOUSE_NAME : $cr_spouse->NAME,
-                "tmptlahir_pasangan" => $custmer_xtra->BIRTHPLACE != null? $custmer_xtra->BIRTHPLACE : $cr_spouse->BIRTHPLACE,
-                "pekerjaan_pasangan" => $custmer_xtra->OCCUPATION != null? $custmer_xtra->OCCUPATION : $cr_spouse->OCCUPATION,
-                "tgllahir_pasangan" => $custmer_xtra->BIRTHDATE != null ? $custmer_xtra->BIRTHDATE : $cr_spouse->BIRTHDATE,
-                "alamat_pasangan" =>$custmer_xtra->ADDRESS != null ? $custmer_xtra->ADDRESS : $cr_spouse->ADDRESS
+                "nama_pasangan" => $cr_spouse->NAME != null?$cr_spouse->NAME:$custmer_xtra->SPOUSE_NAME,
+                "tmptlahir_pasangan" => $cr_spouse->BIRTHPLACE != null?$cr_spouse->NAME:$custmer_xtra->BIRTHPLACE,
+                "pekerjaan_pasangan" => $cr_spouse->OCCUPATION != null?$cr_spouse->OCCUPATION: $custmer_xtra->OCCUPATION,
+                "tgllahir_pasangan" => $cr_spouse->BIRTHDATE != null?$cr_spouse->NAME:$custmer_xtra->BIRTHDATE,
+                "alamat_pasangan" => $cr_spouse->ADDRESS != null?$cr_spouse->NAME:$custmer_xtra->ADDRESS
             ];
 
             $arrayList['kerabat_darurat'] =[
