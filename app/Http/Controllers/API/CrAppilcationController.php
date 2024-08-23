@@ -559,28 +559,7 @@ class CrAppilcationController extends Controller
                 "harga_pasar"=>$cr_oder->HARGA_PASAR??null
             ],
             'pekerjaan' =>[],
-            'order' =>[
-                'cr_prospect_id' => $prospect_id??null,
-                "kategori" => $cr_oder->CATEGORY ?? null, 
-                "gelar" => $cr_oder->TITLE ?? null, 
-                "lama_bekerja" => empty($cr_oder->WORK_PERIOD)?$cr_survey->work_period:$cr_oder->WORK_PERIOD, 
-                "tanggungan" => $cr_oder->DEPENDANTS ?? null, 
-                "biaya_bulanan" =>intval(empty($cr_oder->BIAYA)?$cr_survey->expenses:$cr_oder->BIAYA), 
-                "pendapatan_pribadi" => intval(empty($cr_oder->INCOME_PERSONAL)?$cr_survey->income_personal:$cr_oder->INCOME_PERSONAL),
-                "pendapatan_pasangan" =>intval(empty($cr_oder->INCOME_SPOUSE)?$cr_survey->income_spouse:$cr_oder->INCOME_SPOUSE),
-                "pendapatan_lainnya" =>intval(empty($cr_oder->INCOME_OTHER)?$cr_survey->income_other:$cr_oder->INCOME_OTHER),
-                "no_npwp" => $cr_oder->NO_NPWP??null,
-                "order_tanggal" =>  $cr_oder->ORDER_TANGGAL??null,
-                "order_status" =>  $cr_oder->ORDER_STATUS??null,
-                "order_tipe" =>  $cr_oder->ORDER_TIPE??null,
-                "unit_bisnis" => $cr_oder->UNIT_BISNIS??null, 
-                "cust_service" => $cr_oder->CUST_SERVICE??null,
-                "ref_pelanggan" => $cr_oder->REF_PELANGGAN??null,
-                "surveyor_name" => User::find($cr_survey->created_by)->fullname,
-                "catatan_survey" => $data->survey_note??null,
-                "prog_marketing" => $cr_oder->PROG_MARKETING??null,
-                "cara_bayar" => $cr_oder->CARA_BAYAR??null
-            ],
+            'order' =>[],
             'tambahan' =>[
                 "nama_bi"  => $cr_personal_extra->BI_NAME ?? null, 
                 "email"  => $cr_personal_extra->EMAIL?? null,
@@ -672,6 +651,26 @@ class CrAppilcationController extends Controller
 
             $arrayList['order'] = [
                 "nama_ibu" => $cr_oder->MOTHER_NAME ?? null, 
+                'cr_prospect_id' => $prospect_id??null,
+                "kategori" => $cr_oder->CATEGORY ?? null, 
+                "gelar" => $cr_oder->TITLE ?? null, 
+                "lama_bekerja" => empty($cr_oder->WORK_PERIOD)?$cr_survey->work_period:$cr_oder->WORK_PERIOD, 
+                "tanggungan" => $cr_oder->DEPENDANTS ?? null, 
+                "biaya_bulanan" =>intval(empty($cr_oder->BIAYA)?$cr_survey->expenses:$cr_oder->BIAYA), 
+                "pendapatan_pribadi" => intval(empty($cr_oder->INCOME_PERSONAL)?$cr_survey->income_personal:$cr_oder->INCOME_PERSONAL),
+                "pendapatan_pasangan" =>intval(empty($cr_oder->INCOME_SPOUSE)?$cr_survey->income_spouse:$cr_oder->INCOME_SPOUSE),
+                "pendapatan_lainnya" =>intval(empty($cr_oder->INCOME_OTHER)?$cr_survey->income_other:$cr_oder->INCOME_OTHER),
+                "no_npwp" => $cr_oder->NO_NPWP??null,
+                "order_tanggal" =>  $cr_oder->ORDER_TANGGAL??null,
+                "order_status" =>  $cr_oder->ORDER_STATUS??null,
+                "order_tipe" =>  $cr_oder->ORDER_TIPE??null,
+                "unit_bisnis" => $cr_oder->UNIT_BISNIS??null, 
+                "cust_service" => $cr_oder->CUST_SERVICE??null,
+                "ref_pelanggan" => $cr_oder->REF_PELANGGAN??null,
+                "surveyor_name" => User::find($cr_survey->created_by)->fullname,
+                "catatan_survey" => $data->survey_note??null,
+                "prog_marketing" => $cr_oder->PROG_MARKETING??null,
+                "cara_bayar" => $cr_oder->CARA_BAYAR??null
             ];
 
             $arrayList['alamat_identitas'] =[
@@ -728,6 +727,26 @@ class CrAppilcationController extends Controller
 
             $arrayList['order'] = [
                 "nama_ibu" => $check_ro->MOTHER_NAME ?? null, 
+                'cr_prospect_id' => $prospect_id??null,
+                "kategori" => $cr_oder->CATEGORY ?? null, 
+                "gelar" => $cr_oder->TITLE ?? null, 
+                "lama_bekerja" => empty($cr_oder->WORK_PERIOD)?$cr_survey->work_period:$cr_oder->WORK_PERIOD, 
+                "tanggungan" => $cr_oder->DEPENDANTS ?? null, 
+                "biaya_bulanan" =>intval(empty($cr_oder->BIAYA)?$cr_survey->expenses:$cr_oder->BIAYA), 
+                "pendapatan_pribadi" => intval(empty($cr_oder->INCOME_PERSONAL)?$cr_survey->income_personal:$cr_oder->INCOME_PERSONAL),
+                "pendapatan_pasangan" =>intval(empty($cr_oder->INCOME_SPOUSE)?$cr_survey->income_spouse:$cr_oder->INCOME_SPOUSE),
+                "pendapatan_lainnya" =>intval(empty($cr_oder->INCOME_OTHER)?$cr_survey->income_other:$cr_oder->INCOME_OTHER),
+                "no_npwp" => $cr_oder->NO_NPWP??null,
+                "order_tanggal" =>  $cr_oder->ORDER_TANGGAL??null,
+                "order_status" =>  $cr_oder->ORDER_STATUS??null,
+                "order_tipe" =>  $cr_oder->ORDER_TIPE??null,
+                "unit_bisnis" => $cr_oder->UNIT_BISNIS??null, 
+                "cust_service" => $cr_oder->CUST_SERVICE??null,
+                "ref_pelanggan" => $cr_oder->REF_PELANGGAN??null,
+                "surveyor_name" => User::find($cr_survey->created_by)->fullname,
+                "catatan_survey" => $data->survey_note??null,
+                "prog_marketing" => $cr_oder->PROG_MARKETING??null,
+                "cara_bayar" => $cr_oder->CARA_BAYAR??null
             ];
 
             $arrayList['alamat_tagih']=[
