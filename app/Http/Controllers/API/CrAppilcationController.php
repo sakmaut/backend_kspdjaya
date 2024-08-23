@@ -546,6 +546,9 @@ class CrAppilcationController extends Controller
         $approval = M_ApplicationApproval::where('cr_application_id',$setApplicationId)->first();
         $check_ro = M_Customer::where('ID_NUMBER',empty($cr_personal->ID_NUMBER)?$data->ktp:$cr_personal->ID_NUMBER)->first();
 
+        print_r($check_ro);
+        die;
+
         $arrayList = [
             'id_application' => $setApplicationId,
             'order_number' => $application->ORDER_NUMBER,
@@ -713,7 +716,6 @@ class CrAppilcationController extends Controller
                 "ekstra2" => $cr_personal->EXT_2??null
             ];
         }else{
-
             $custmer_xtra = M_CustomerExtra::where('CUST_CODE',$check_ro->CUST_CODE)->first();
 
             $arrayList['pelanggan'] = [
@@ -769,7 +771,7 @@ class CrAppilcationController extends Controller
             ];
 
             $arrayList['pasangan']=[
-                "nama_pasangan" => $cr_spouse?$cr_spouse->NAME??null:$custmer_xtra->SPOUSE_NAME,
+                "nama_pasangan" => $cr_spouse?$cr_spouse->NAME:$custmer_xtra->SPOUSE_NAME,
                 "tmptlahir_pasangan" => $cr_spouse?$cr_spouse->BIRTHPLACE:$custmer_xtra->BIRTHPLACE,
                 "pekerjaan_pasangan" => $cr_spouse?$cr_spouse->OCCUPATION: $custmer_xtra->OCCUPATION,
                 "tgllahir_pasangan" => $cr_spouse?$cr_spouse->BIRTHDATE:$custmer_xtra->BIRTHDATE,
