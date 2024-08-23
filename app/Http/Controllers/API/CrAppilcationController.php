@@ -15,6 +15,7 @@ use App\Models\M_CrPersonal;
 use App\Models\M_CrPersonalExtra;
 use App\Models\M_CrSurvey;
 use App\Models\M_CrSurveyDocument;
+use App\Models\M_Customer;
 use App\Models\M_SurveyApproval;
 use App\Models\User;
 use Carbon\Carbon;
@@ -542,27 +543,13 @@ class CrAppilcationController extends Controller
         $cr_guarantor = M_CrApplicationGuarantor::where('APPLICATION_ID',$setApplicationId)->first();
         $cr_spouse = M_CrApplicationSpouse::where('APPLICATION_ID',$setApplicationId)->first();
         $approval = M_ApplicationApproval::where('cr_application_id',$setApplicationId)->first();
+        $check_ro = M_Customer::where('ID_NUMBER',empty($cr_personal->ID_NUMBER)?$data->ktp:$cr_personal->ID_NUMBER)->first();
 
         $arrayList = [
             'id_application' => $setApplicationId,
             'order_number' => $application->ORDER_NUMBER,
             "flag" => !$check_exist?0:1,
-            'pelanggan' =>[
-                "nama" => $cr_personal->NAME ?? ( $data->nama?? ''),
-                "nama_panggilan" => $cr_personal->ALIAS ?? null,
-                "jenis_kelamin" => $cr_personal->GENDER ?? null,
-                "tempat_lahir" => $cr_personal->BIRTHPLACE??null,
-                "tgl_lahir" => empty($cr_personal->BIRTHDATE)?$cr_survey->tgl_lahir:$cr_personal->BIRTHDATE,
-                "gol_darah" => $cr_personal->BLOOD_TYPE??null,
-                "status_kawin" => $cr_personal->MARTIAL_STATUS??null,
-                "tgl_kawin" => $cr_personal->MARTIAL_DATE ?? null,
-                "tipe_identitas" => $cr_personal->ID_TYPE??null,
-                "no_identitas" => empty($cr_personal->ID_NUMBER)?$data->ktp:$cr_personal->ID_NUMBER,
-                "tgl_terbit_identitas" => $cr_personal->ID_ISSUE_DATE ??null,
-                "masa_berlaku_identitas" => $cr_personal->ID_VALID_DATE ?? null,
-                "no_kk" => empty($cr_personal->KK)?$cr_survey->kk:$cr_personal->KK,
-                "warganegara" => $cr_personal->CITIZEN??null
-            ],
+            'pelanggan' =>[],
             'alamat_identitas' =>[
                 "alamat" => empty($cr_personal->ADDRESS)?$cr_survey->alamat:$cr_personal->ADDRESS,
                 "rt" =>empty($cr_personal->RT)?$cr_survey->rt:$cr_personal->RT,
@@ -694,6 +681,42 @@ class CrAppilcationController extends Controller
                 'ho' => $approval->cr_application_ho_desc            
             ]
         ];
+
+        if(!$check_ro){
+            $arrayList['pelanggan'] = [
+                "nama" => $cr_personal->NAME ?? ( $data->nama?? ''),
+                "nama_panggilan" => $cr_personal->ALIAS ?? null,
+                "jenis_kelamin" => $cr_personal->GENDER ?? null,
+                "tempat_lahir" => $cr_personal->BIRTHPLACE??null,
+                "tgl_lahir" => empty($cr_personal->BIRTHDATE)?$cr_survey->tgl_lahir:$cr_personal->BIRTHDATE,
+                "gol_darah" => $cr_personal->BLOOD_TYPE??null,
+                "status_kawin" => $cr_personal->MARTIAL_STATUS??null,
+                "tgl_kawin" => $cr_personal->MARTIAL_DATE ?? null,
+                "tipe_identitas" => $cr_personal->ID_TYPE??null,
+                "no_identitas" => empty($cr_personal->ID_NUMBER)?$data->ktp:$cr_personal->ID_NUMBER,
+                "tgl_terbit_identitas" => $cr_personal->ID_ISSUE_DATE ??null,
+                "masa_berlaku_identitas" => $cr_personal->ID_VALID_DATE ?? null,
+                "no_kk" => empty($cr_personal->KK)?$cr_survey->kk:$cr_personal->KK,
+                "warganegara" => $cr_personal->CITIZEN??null
+            ];
+        }else{
+            $arrayList['pelanggan'] = [
+                "nama" => $check_ro->NAME ?? null,
+                "nama_panggilan" => $check_ro->ALIAS ?? null,
+                "jenis_kelamin" => $check_ro->GENDER ?? null,
+                "tempat_lahir" => $check_ro->BIRTHPLACE??null,
+                "tgl_lahir" => $check_ro->BIRTHDATE??null,
+                "gol_darah" => $check_ro->BLOOD_TYPE??null,
+                "status_kawin" => $check_ro->MARTIAL_STATUS??null,
+                "tgl_kawin" => $check_ro->MARTIAL_DATE ?? null,
+                "tipe_identitas" => $check_ro->ID_TYPE??null,
+                "no_identitas" => $check_ro->ID_NUMBER??null,
+                "tgl_terbit_identitas" => $check_ro->ID_ISSUE_DATE ??null,
+                "masa_berlaku_identitas" => $check_ro->ID_VALID_DATE ?? null,
+                "no_kk" => $check_ro->KK??null,
+                "warganegara" => $check_ro->CITIZEN??null
+            ];
+        }
         
         $arrayList['info_bank'] = M_CrApplicationBank::where('APPLICATION_ID', $application->ID)
                                 ->get()
