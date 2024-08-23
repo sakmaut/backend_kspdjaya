@@ -231,9 +231,9 @@ class Credit extends Controller
         $cr_personal = M_CrPersonal::where('APPLICATION_ID',$data->ID)->first();
         $cr_order = M_CrOrder::where('APPLICATION_ID',$data->ID)->first();
 
+        $check_customer_ktp = M_Customer::where('ID_NUMBER',$cr_personal->ID_NUMBER)->first();
+
         $data_customer =[
-            'ID' => Uuid::uuid7()->toString(),
-            'CUST_CODE' =>$cr_personal->CUST_CODE,
             'NAME' =>$cr_personal->NAME,
             'ALIAS' =>$cr_personal->ALIAS,
             'GENDER' =>$cr_personal->GENDER,
@@ -282,7 +282,15 @@ class Credit extends Controller
             'CREATE_USER' => $request->user()->id,
         ];
 
-        M_Customer::create($data_customer);
+        if(!$check_customer_ktp){
+            $data_customer['ID'] = Uuid::uuid7()->toString();
+            $data_customer['CUST_CODE'] = $cr_personal->CUST_CODE;
+            M_Customer::create($data_customer);
+        }else{
+            $check_customer_ktp->update($data_customer);
+        }
+
+        
     }
 
     private function insert_customer_xtra($data){
