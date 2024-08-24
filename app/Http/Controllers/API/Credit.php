@@ -178,7 +178,8 @@ class Credit extends Controller
              "no_polisi" => $cr_guarante_vehicle->POLICE_NUMBER??null,
              "no_rangka" =>$cr_guarante_vehicle->CHASIS_NUMBER??null,
              "no_mesin" => $cr_guarante_vehicle->ENGINE_NUMBER??null,
-             "struktur" => $check_exist != null && !empty($check_exist->LOAN_NUMBER)?$schedule:$data_credit_schedule??null
+            //  "struktur" => $check_exist != null && !empty($check_exist->LOAN_NUMBER)?$schedule:$data_credit_schedule??null
+            "struktur" => $data_credit_schedule ?? null
         ];
 
         return $data;

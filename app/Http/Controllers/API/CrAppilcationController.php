@@ -546,12 +546,10 @@ class CrAppilcationController extends Controller
         $approval = M_ApplicationApproval::where('cr_application_id',$setApplicationId)->first();
         $check_ro = M_Customer::where('ID_NUMBER',empty($cr_personal->ID_NUMBER)?$data->ktp:$cr_personal->ID_NUMBER)->first();
 
-        print_r($check_ro);
-        die;
-
         $arrayList = [
             'id_application' => $setApplicationId,
             'order_number' => $application->ORDER_NUMBER,
+            'cust_code' => $application->ORDER_NUMBER,
             "flag" => !$check_exist?0:1,
             'pelanggan' =>[],
             'alamat_identitas' =>[],
@@ -771,11 +769,11 @@ class CrAppilcationController extends Controller
             ];
 
             $arrayList['pasangan']=[
-                "nama_pasangan" => $cr_spouse?$cr_spouse->NAME:$custmer_xtra->SPOUSE_NAME,
-                "tmptlahir_pasangan" => $cr_spouse?$cr_spouse->BIRTHPLACE:$custmer_xtra->BIRTHPLACE,
-                "pekerjaan_pasangan" => $cr_spouse?$cr_spouse->OCCUPATION: $custmer_xtra->OCCUPATION,
-                "tgllahir_pasangan" => $cr_spouse?$cr_spouse->BIRTHDATE:$custmer_xtra->BIRTHDATE,
-                "alamat_pasangan" => $cr_spouse?$cr_spouse->ADDRESS:$custmer_xtra->ADDRESS
+                "nama_pasangan" => $cr_spouse?->NAME ?? $custmer_xtra->SPOUSE_NAME,
+                "tmptlahir_pasangan" => $cr_spouse?->BIRTHPLACE??$custmer_xtra->BIRTHPLACE,
+                "pekerjaan_pasangan" => $cr_spouse?->OCCUPATION?? $custmer_xtra->OCCUPATION,
+                "tgllahir_pasangan" => $cr_spouse?->BIRTHDATE??$custmer_xtra->BIRTHDATE,
+                "alamat_pasangan" => $cr_spouse?->ADDRESS??$custmer_xtra->ADDRESS
             ];
 
             $arrayList['kerabat_darurat'] =[
