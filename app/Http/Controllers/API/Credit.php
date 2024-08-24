@@ -300,10 +300,11 @@ class Credit extends Controller
         $cr_personal = M_CrPersonal::where('APPLICATION_ID',$data->ID)->first();
         $cr_personal_extra = M_CrPersonalExtra::where('APPLICATION_ID',$data->ID)->first();
         $cr_spouse = M_CrApplicationSpouse::where('APPLICATION_ID',$data->ID)->first();
+        $check_customer_ktp = M_Customer::where('ID_NUMBER', $cr_personal->ID_NUMBER)->first();
+
+        $update = M_CustomerExtra::where('CUST_CODE', $check_customer_ktp->CUST_CODE)->first();
 
         $data_customer_xtra =[
-            'ID' => Uuid::uuid7()->toString(),
-            'CUST_CODE' =>$cr_personal->CUST_CODE,
             'OTHER_OCCUPATION_1' =>$cr_personal_extra->OTHER_OCCUPATION_1,
             'OTHER_OCCUPATION_2' =>$cr_personal_extra->OTHER_OCCUPATION_2,
             'SPOUSE_NAME' =>  $cr_spouse->NAME,
@@ -341,7 +342,13 @@ class Credit extends Controller
             'EMERGENCY_PHONE_PERSONAL' =>$cr_personal_extra->EMERGENCY_PHONE_PERSONAL
         ];
 
-        M_CustomerExtra::create($data_customer_xtra);
+        if (!$check_customer_ktp) {
+            $data_customer['ID'] = Uuid::uuid7()->toString();
+            $data_customer['CUST_CODE'] = $cr_personal->CUST_CODE;
+            M_CustomerExtra::create($data_customer);
+        } else {
+            $update->update($data_customer_xtra);
+        }
     }
 
     private function insert_collateral($request,$data,$lastID){
