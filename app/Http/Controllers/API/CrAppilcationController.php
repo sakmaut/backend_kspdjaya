@@ -544,7 +544,7 @@ class CrAppilcationController extends Controller
         $cr_guarantor = M_CrApplicationGuarantor::where('APPLICATION_ID',$setApplicationId)->first();
         $cr_spouse = M_CrApplicationSpouse::where('APPLICATION_ID',$setApplicationId)->first();
         $approval = M_ApplicationApproval::where('cr_application_id',$setApplicationId)->first();
-        $check_ro = M_Customer::where('ID_NUMBER',empty($cr_personal->ID_NUMBER)?$data->ktp:$cr_personal->ID_NUMBER)->first();
+        $check_ro = M_Customer::where('ID_NUMBER',$data->ktp??$cr_personal->ID_NUMBER)->first();
 
         $arrayList = [
             'id_application' => $setApplicationId,
