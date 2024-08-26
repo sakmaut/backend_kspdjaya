@@ -169,101 +169,101 @@ function add_months($date_str, $months) {
 }
 
 if (!function_exists('generateAmortizationSchedule')) {
-    //    function generateAmortizationSchedule($principal,$angsuran,$setDate,$effRate, $loanTerm) {
-    //         $suku_bunga_konversi = round(($effRate/12)/100, 10);
-    //         $angsuran_pokok_bunga = $angsuran;
-    //         // $total_bunga = ($principal * (($annualInterestRate / 100) / 12)) * $loanTerm;
+       function generateAmortizationSchedule($principal,$angsuran,$setDate,$effRate, $loanTerm) {
+            $suku_bunga_konversi = round(($effRate/12)/100, 10);
+            $angsuran_pokok_bunga = $angsuran;
+            // $total_bunga = ($principal * (($annualInterestRate / 100) / 12)) * $loanTerm;
 
-    //         $schedule = [];
-    //         $setDebet = $principal;
-    //         $totalInterest = 0;
+            $schedule = [];
+            $setDebet = $principal;
+            $totalInterest = 0;
 
-    //         for ($i = 1; $i <= $loanTerm; $i++) {
-    //             $interest = $setDebet * $suku_bunga_konversi;
-    //             $principalPayment = $angsuran_pokok_bunga - $interest;
+            for ($i = 1; $i <= $loanTerm; $i++) {
+                $interest = $setDebet * $suku_bunga_konversi;
+                $principalPayment = $angsuran_pokok_bunga - $interest;
 
-    //             if ($setDebet <= $principalPayment) {
-    //                 $principalPayment = $setDebet;
+                if ($setDebet <= $principalPayment) {
+                    $principalPayment = $setDebet;
 
-    //                 $schedule[] = [
-    //                     'angsuran_ke' =>  $i,
-    //                     'tgl_angsuran' => add_months($setDate, $i),
-    //                     'pokok' => number_format($principalPayment, 2),
-    //                     'bunga' => number_format($interest, 2),
-    //                     'total_angsuran' => number_format($principalPayment + $interest, 2),
-    //                     'baki_debet' => '0.00'
-    //                 ];
+                    $schedule[] = [
+                        'angsuran_ke' =>  $i,
+                        'tgl_angsuran' => add_months($setDate, $i),
+                        'pokok' => number_format($principalPayment, 2),
+                        'bunga' => number_format($interest, 2),
+                        'total_angsuran' => number_format($principalPayment + $interest, 2),
+                        'baki_debet' => '0.00'
+                    ];
 
-    //                 break;
-    //             }
+                    break;
+                }
 
-    //             $setDebet -= $principalPayment;
+                $setDebet -= $principalPayment;
 
-    //             $schedule[] = [
-    //                 'angsuran_ke' =>  $i,
-    //                 'tgl_angsuran' => add_months($setDate, $i),
-    //                 'pokok' => number_format($principalPayment, 2),
-    //                 'bunga' => number_format($interest, 2),
-    //                 'total_angsuran' => number_format($angsuran_pokok_bunga, 2),
-    //                 'baki_debet' => number_format($setDebet, 2)
-    //             ];
+                $schedule[] = [
+                    'angsuran_ke' =>  $i,
+                    'tgl_angsuran' => add_months($setDate, $i),
+                    'pokok' => number_format($principalPayment, 2),
+                    'bunga' => number_format($interest, 2),
+                    'total_angsuran' => number_format($angsuran_pokok_bunga, 2),
+                    'baki_debet' => number_format($setDebet, 2)
+                ];
 
-    //             $totalInterest += $interest;
+                $totalInterest += $interest;
+            }
+
+            return $schedule;
+        }
+
+    // function generateAmortizationSchedule($principal, $angsuran, $setDate, $effRate, $loanTerm)
+    // {
+    //     $suku_bunga_konversi = round(($effRate / 12) / 100, 10);
+    //     $angsuran_pokok_bunga = $angsuran;
+    //     $schedule = [];
+    //     $setDebet = $principal;
+    //     $totalInterest = 0;
+
+    //     for ($i = 1; $i <= $loanTerm; $i++) {
+    //         $interest = $setDebet * $suku_bunga_konversi;
+    //         $principalPayment = $angsuran_pokok_bunga - $interest;
+
+    //         // Pastikan principalPayment tidak melebihi setDebet
+    //         if ($principalPayment > $setDebet) {
+    //             $principalPayment = $setDebet;
     //         }
 
-    //         return $schedule;
+    //         $setDebet -= $principalPayment;
+
+    //         $schedule[] = [
+    //             'angsuran_ke' =>  $i,
+    //             'tgl_angsuran' => add_months($setDate, $i),
+    //             'pokok' => number_format($principalPayment, 2),
+    //             'bunga' => number_format($interest, 2),
+    //             'total_angsuran' => number_format($principalPayment + $interest, 2),
+    //             'baki_debet' => number_format($setDebet, 2)
+    //         ];
+
+    //         $totalInterest += $interest;
+
+    //         // Jika debet sudah 0, berhenti
+    //         if ($setDebet <= 0) {
+    //             break;
+    //         }
     //     }
 
-    function generateAmortizationSchedule($principal, $angsuran, $setDate, $effRate, $loanTerm)
-    {
-        $suku_bunga_konversi = round(($effRate / 12) / 100, 10);
-        $angsuran_pokok_bunga = $angsuran;
-        $schedule = [];
-        $setDebet = $principal;
-        $totalInterest = 0;
+    //     // Jika periode angsuran belum mencapai loanTerm, tambahkan periode kosong
+    //     for ($i = count($schedule) + 1; $i <= $loanTerm; $i++) {
+    //         $schedule[] = [
+    //             'angsuran_ke' =>  $i,
+    //             'tgl_angsuran' => add_months($setDate, $i),
+    //             'pokok' => number_format($principalPayment, 2),
+    //             'bunga' => number_format($interest, 2),
+    //             'total_angsuran' => number_format($principalPayment + $interest, 2),
+    //             'baki_debet' => number_format($setDebet, 2)
+    //         ];
+    //     }
 
-        for ($i = 1; $i <= $loanTerm; $i++) {
-            $interest = $setDebet * $suku_bunga_konversi;
-            $principalPayment = $angsuran_pokok_bunga - $interest;
-
-            // Pastikan principalPayment tidak melebihi setDebet
-            if ($principalPayment > $setDebet) {
-                $principalPayment = $setDebet;
-            }
-
-            $setDebet -= $principalPayment;
-
-            $schedule[] = [
-                'angsuran_ke' =>  $i,
-                'tgl_angsuran' => add_months($setDate, $i),
-                'pokok' => number_format($principalPayment, 2),
-                'bunga' => number_format($interest, 2),
-                'total_angsuran' => number_format($principalPayment + $interest, 2),
-                'baki_debet' => number_format($setDebet, 2)
-            ];
-
-            $totalInterest += $interest;
-
-            // Jika debet sudah 0, berhenti
-            if ($setDebet <= 0) {
-                break;
-            }
-        }
-
-        // Jika periode angsuran belum mencapai loanTerm, tambahkan periode kosong
-        for ($i = count($schedule) + 1; $i <= $loanTerm; $i++) {
-            $schedule[] = [
-                'angsuran_ke' =>  $i,
-                'tgl_angsuran' => add_months($setDate, $i),
-                'pokok' => number_format($principalPayment, 2),
-                'bunga' => number_format($interest, 2),
-                'total_angsuran' => number_format($principalPayment + $interest, 2),
-                'baki_debet' => number_format($setDebet, 2)
-            ];
-        }
-
-        return $schedule;
-    }
+    //     return $schedule;
+    // }
 
 
 }

@@ -717,7 +717,7 @@ class CrAppilcationController extends Controller
             $custmer_xtra = M_CustomerExtra::where('CUST_CODE',$check_ro->CUST_CODE)->first();
 
             $arrayList['pelanggan'] = [
-                "nama" => $check_ro->NAME ?? null,
+                "nama" => $cr_survey->nama?? $check_ro->NAME ?? $cr_survey->nama,
                 "nama_panggilan" => $check_ro->ALIAS ?? null,
                 "jenis_kelamin" => $check_ro->GENDER ?? null,
                 "tempat_lahir" => $check_ro->BIRTHPLACE??null,
