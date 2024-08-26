@@ -545,8 +545,8 @@ class CrAppilcationController extends Controller
                         'INS_KECAMATAN' => $customer->INS_KECAMATAN??null,
                         'INS_ZIP_CODE' => $customer->INS_ZIP_CODE??null,
             
-                        'OCCUPATION' => $customer->OCCUPATION??null,
-                        'OCCUPATION_ON_ID' => $customer->OCCUPATION_ON_ID??null,
+                        'OCCUPATION' => $check_survey_id->usaha??null,
+                        'OCCUPATION_ON_ID' => $check_survey_id->sector??null,
                         'RELIGION' => $customer->RELIGION??null,
                         'EDUCATION' => $customer->EDUCATION??null,
                         'PROPERTY_STATUS' => $customer->PROPERTY_STATUS??null,
