@@ -40,8 +40,11 @@ class Credit extends Controller
             if (!$check) {
                 throw new Exception("Order Number Is Not Exist", 404);
             }
+
+            // $data_credit_schedule = generateAmortizationSchedule(3000000, 1976000, '2024-08-26', 44, 18);
     
             return response()->json(self::buildData($request,$check), 200);
+            // return response()->json($data_credit_schedule, 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
@@ -75,6 +78,7 @@ class Credit extends Controller
         $set_tgl_awal =$request->tgl_awal;
 
         $data_credit_schedule = generateAmortizationSchedule($principal,$angsuran, $set_tgl_awal,$effRate, $loanTerm);
+
         $installment_count = count($data_credit_schedule);
 
         $schedule = [];
