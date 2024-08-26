@@ -504,6 +504,90 @@ class CrAppilcationController extends Controller
                     'application_result' => '0:draft'
                 ];
 
+                $customer = M_Customer::where('ID_NUMBER',$check_survey_id->ktp)->first();
+                $customer_xtra = M_CustomerExtra::where('CUST_CODE',$customer->CUST_CODE)->first();
+
+                if(strtolower($check_survey_id->category) == 'ro'){
+                    $data_cr_personal =[  
+                        'ID' => Uuid::uuid7()->toString(),
+                        'APPLICATION_ID' => $uuid,
+                        'CUST_CODE' => generateCode($request, 'cr_personal', 'CUST_CODE'),
+                        'NAME' => $check_survey_id->nama??null,
+                        'ALIAS' => $customer->ALIAS??null,
+                        'GENDER' => $customer->GENDER??null,
+                        'BIRTHPLACE' => $customer->BIRTHPLACE??null,
+                        'BIRTHDATE' => $check_survey_id->tgl_lahir??null,
+                        'BLOOD_TYPE' => $customer->BLOOD_TYPE??null,
+                        'MARTIAL_STATUS' => $customer->MARTIAL_STATUS??null,
+                        'MARTIAL_DATE' => $customer->MARTIAL_DATE??null,
+                        'ID_TYPE' => $customer->ID_TYPE??null,
+                        'ID_NUMBER' => $check_survey_id->ktp??null,
+                        'ID_ISSUE_DATE' => $customer->ID_ISSUE_DATE??null,
+                        'ID_VALID_DATE' => $customer->ID_VALID_DATE??null,
+                        'KK' => $check_survey_id->kk??null,
+                        'CITIZEN' => $customer->CITIZEN??null,
+                        
+                        'ADDRESS' => $check_survey_id->alamat,
+                        'RT' => $check_survey_id->rt,
+                        'RW' => $check_survey_id->rw,
+                        'PROVINCE' => $check_survey_id->province,
+                        'CITY' => $check_survey_id->city,
+                        'KELURAHAN' => $check_survey_id->kelurahan,
+                        'KECAMATAN' => $check_survey_id->kecamatan,
+                        'ZIP_CODE' => $check_survey_id->zip_code,
+            
+                        'INS_ADDRESS' => $customer->INS_ADDRESS??null,
+                        'INS_RT' => $customer->INS_RT??null,
+                        'INS_RW' => $customer->INS_RW??null,
+                        'INS_PROVINCE' => $customer->INS_PROVINCE??null,
+                        'INS_CITY' => $customer->INS_CITY??null,
+                        'INS_KELURAHAN' => $customer->INS_KELURAHAN??null,
+                        'INS_KECAMATAN' => $customer->INS_KECAMATAN??null,
+                        'INS_ZIP_CODE' => $customer->INS_ZIP_CODE??null,
+            
+                        'OCCUPATION' => $customer->OCCUPATION??null,
+                        'OCCUPATION_ON_ID' => $customer->OCCUPATION_ON_ID??null,
+                        'RELIGION' => $customer->RELIGION??null,
+                        'EDUCATION' => $customer->EDUCATION??null,
+                        'PROPERTY_STATUS' => $customer->PROPERTY_STATUS??null,
+                        'PHONE_HOUSE' => $customer->PHONE_HOUSE??null,
+                        'PHONE_PERSONAL' => $check_survey_id->hp??null,
+                        'PHONE_OFFICE' => $customer->PHONE_OFFICE??null,
+                        'EXT_1' => $customer->EXT_1??null,
+                        'EXT_2' => $customer->EXT_2??null,
+                        'VERSION' => 1,
+                        'CREATE_DATE' => Carbon::now()->format('Y-m-d'),
+                        'CREATE_USER' => $request->user()->id,
+                    ];
+
+                    $data_cr_order =[
+                        'ID' => Uuid::uuid7()->toString(),
+                        'APPLICATION_ID' => $uuid,
+                        'NO_NPWP' => $customer->NPWP??null,
+                        'MOTHER_NAME' => $customer->MOTHER_NAME ?? null,
+                        'WORK_PERIOD'  => $check_survey_id->work_period ?? null,
+                        'INCOME_PERSONAL'  => $check_survey_id->income_personal ?? null,
+                        'INCOME_SPOUSE'  => $check_survey_id->income_spouse ?? null,
+                        'INCOME_OTHER'  => $check_survey_id->income_other ?? null,
+                        'UNIT_BISNIS' => $check_survey_id->usaha??null,
+                        'EXPENSES'  =>  $check_survey_id->expenses?? null,                    
+                    ];  
+                    
+                    $data_cr_application_spouse =[
+                        'ID' => Uuid::uuid7()->toString(),
+                        'APPLICATION_ID' => $uuid,
+                        'NAME' => $customer_xtra->SPOUSE_NAME??null,
+                        'BIRTHPLACE' => $customer_xtra->SPOUSE_BIRTHPLACE??null,
+                        'BIRTHDATE' => $customer_xtra->SPOUSE_BIRTHDATE??null,
+                        'ADDRESS' => $customer_xtra->SPOUSE_ADDRESS??null,
+                        'OCCUPATION' => $customer_xtra->SPOUSE_OCCUPATION??null
+                    ];    
+                
+                    M_CrPersonal::create($data_cr_personal);
+                    M_CrOrder::create($data_cr_order);
+                    M_CrApplicationSpouse::create($data_cr_application_spouse);
+                }
+
                 M_ApplicationApproval::create($data_approval_fpk);
             }else{
                 $generate_uuid = $check_prospect_id->ID;
@@ -551,17 +635,83 @@ class CrAppilcationController extends Controller
             'order_number' => $application->ORDER_NUMBER,
             'cust_code' => $application->ORDER_NUMBER,
             "flag" => !$check_exist?0:1,
-            'pelanggan' =>[],
-            'alamat_identitas' =>[],
-            'alamat_tagih' =>[],
+            'pelanggan' =>[
+                "nama" => $cr_personal->NAME ?? ( $data->nama?? ''),
+                "nama_panggilan" => $cr_personal->ALIAS ?? null,
+                "jenis_kelamin" => $cr_personal->GENDER ?? null,
+                "tempat_lahir" => $cr_personal->BIRTHPLACE??null,
+                "tgl_lahir" => empty($cr_personal->BIRTHDATE)?$cr_survey->tgl_lahir:$cr_personal->BIRTHDATE,
+                "gol_darah" => $cr_personal->BLOOD_TYPE??null,
+                "status_kawin" => $cr_personal->MARTIAL_STATUS??null,
+                "tgl_kawin" => $cr_personal->MARTIAL_DATE ?? null,
+                "tipe_identitas" => $cr_personal->ID_TYPE??null,
+                "no_identitas" => empty($cr_personal->ID_NUMBER)?$data->ktp:$cr_personal->ID_NUMBER,
+                "tgl_terbit_identitas" => $cr_personal->ID_ISSUE_DATE ??null,
+                "masa_berlaku_identitas" => $cr_personal->ID_VALID_DATE ?? null,
+                "no_kk" => empty($cr_personal->KK)?$cr_survey->kk:$cr_personal->KK,
+                "warganegara" => $cr_personal->CITIZEN??null
+            ],
+            'alamat_identitas' =>[
+                "alamat" => empty($cr_personal->ADDRESS)?$cr_survey->alamat:$cr_personal->ADDRESS,
+                "rt" =>empty($cr_personal->RT)?$cr_survey->rt:$cr_personal->RT,
+                "rw" =>empty($cr_personal->RW)?$cr_survey->rw:$cr_personal->RW,
+                "provinsi" =>empty($cr_personal->PROVINCE)?$cr_survey->privince:$cr_personal->PROVINCE,
+                "kota" =>empty($cr_personal->CITY)?$cr_survey->city:$cr_personal->CITY,
+                "kelurahan" =>empty($cr_personal->KELURAHAN)?$cr_survey->kelurahan:$cr_personal->KELURAHAN,
+                "kecamatan" =>empty($cr_personal->KECAMATAN)?$cr_survey->kecamatan:$cr_personal->KECAMATAN,
+                "kode_pos" => empty($cr_personal->ZIP_CODE)?$cr_survey->zip_code:$cr_personal->ZIP_CODE
+            ],
+            'alamat_tagih' =>[
+                "alamat" => $cr_personal->INS_ADDRESS??null,
+                "rt" => $cr_personal->INS_RT??null,
+                "rw" => $cr_personal->INS_RW??null,
+                "provinsi" => $cr_personal->INS_PROVINCE??null,
+                "kota" => $cr_personal->INS_CITY??null,
+                "kelurahan" => $cr_personal->INS_KELURAHAN??null,
+                "kecamatan" => $cr_personal->INS_KECAMATAN??null,
+                "kode_pos" => $cr_personal->INS_ZIP_CODE??null
+            ],
             "barang_taksasi"=>[
                 "kode_barang"=>$cr_oder->KODE_BARANG??null,
                 "id_tipe"=>$cr_oder->ID_TIPE??null,
                 "tahun"=>$cr_oder->TAHUN??null,
                 "harga_pasar"=>$cr_oder->HARGA_PASAR??null
             ],
-            'pekerjaan' =>[],
-            'order' =>[],
+            'pekerjaan' =>[
+                "pekerjaan" => empty($cr_personal->OCCUPATION)?$cr_survey->usaha:$cr_personal->OCCUPATION,
+                "pekerjaan_id" => empty($cr_personal->OCCUPATION_ON_ID)?$cr_survey->sector:$cr_personal->OCCUPATION_ON_ID,
+                "agama" => $cr_personal->RELIGION??null,
+                "pendidikan" => $cr_personal->EDUCATION??null,
+                "status_rumah" => $cr_personal->PROPERTY_STATUS??null,
+                "telepon_rumah" => $cr_personal->PHONE_HOUSE??null,
+                "telepon_selular" => empty($cr_personal->PHONE_PERSONAL)?$data->hp:$cr_personal->PHONE_PERSONAL,
+                "telepon_kantor" => $cr_personal->PHONE_OFFICE??null,
+                "ekstra1" => $cr_personal->EXT_1??null,
+                "ekstra2" => $cr_personal->EXT_2??null
+            ],
+            'order' =>[
+                "nama_ibu" => $cr_oder->MOTHER_NAME ?? null, 
+                'cr_prospect_id' => $prospect_id??null,
+                "kategori" => $cr_oder->CATEGORY ?? null, 
+                "gelar" => $cr_oder->TITLE ?? null, 
+                "lama_bekerja" => empty($cr_oder->WORK_PERIOD)?$cr_survey->work_period:$cr_oder->WORK_PERIOD, 
+                "tanggungan" => $cr_oder->DEPENDANTS ?? null, 
+                "biaya_bulanan" =>intval(empty($cr_oder->BIAYA)?$cr_survey->expenses:$cr_oder->BIAYA), 
+                "pendapatan_pribadi" => intval(empty($cr_oder->INCOME_PERSONAL)?$cr_survey->income_personal:$cr_oder->INCOME_PERSONAL),
+                "pendapatan_pasangan" =>intval(empty($cr_oder->INCOME_SPOUSE)?$cr_survey->income_spouse:$cr_oder->INCOME_SPOUSE),
+                "pendapatan_lainnya" =>intval(empty($cr_oder->INCOME_OTHER)?$cr_survey->income_other:$cr_oder->INCOME_OTHER),
+                "no_npwp" => $cr_oder->NO_NPWP??null,
+                "order_tanggal" =>  $cr_oder->ORDER_TANGGAL??null,
+                "order_status" =>  $cr_oder->ORDER_STATUS??null,
+                "order_tipe" =>  $cr_oder->ORDER_TIPE??null,
+                "unit_bisnis" => $cr_oder->UNIT_BISNIS??null, 
+                "cust_service" => $cr_oder->CUST_SERVICE??null,
+                "ref_pelanggan" => $cr_oder->REF_PELANGGAN??null,
+                "surveyor_name" => User::find($cr_survey->created_by)->fullname,
+                "catatan_survey" => $data->survey_note??null,
+                "prog_marketing" => $cr_oder->PROG_MARKETING??null,
+                "cara_bayar" => $cr_oder->CARA_BAYAR??null
+            ],
             'tambahan' =>[
                 "nama_bi"  => $cr_personal_extra->BI_NAME ?? null, 
                 "email"  => $cr_personal_extra->EMAIL?? null,
@@ -571,7 +721,19 @@ class CrAppilcationController extends Controller
                 "usaha_lain3"  => $cr_personal_extra->OTHER_OCCUPATION_3?? null,
                 "usaha_lain4"  => $cr_personal_extra->OTHER_OCCUPATION_4?? null,
             ],
-            'kerabat_darurat' =>[],
+            'kerabat_darurat' =>[
+                "nama"  => $cr_personal_extra->EMERGENCY_NAME?? null,
+                "alamat"  => $cr_personal_extra->EMERGENCY_ADDRESS?? null,
+                "rt"  => $cr_personal_extra->EMERGENCY_RT?? null,
+                "rw"  => $cr_personal_extra->EMERGENCY_RW?? null,
+                "provinsi" =>$cr_personal_extra->EMERGENCY_PROVINCE?? null,
+                "kota" => $cr_personal_extra->EMERGENCY_CITY?? null,
+                "kelurahan" => $cr_personal_extra->EMERGENCY_KELURAHAN?? null,
+                "kecamatan" => $cr_personal_extra->EMERGENCY_KECAMATAN?? null,
+                "kode_pos" => $cr_personal_extra->EMERGENCY_ZIP_CODE?? null,
+                "no_telp" => $cr_personal_extra->EMERGENCY_PHONE_HOUSE?? null,
+                "no_hp" => $cr_personal_extra->EMERGENCY_PHONE_PERSONAL?? null, 
+            ],
             "penjamin" => [
                 "nama" => $cr_guarantor->NAME ?? null,
                 "jenis_kelamin" => $cr_guarantor->GENDER?? null,
@@ -586,7 +748,13 @@ class CrAppilcationController extends Controller
                 "no_hp" => $cr_guarantor->MOBILE_NUMBER?? null,
                 "pendapatan" => $cr_guarantor->INCOME?? null,   
             ],
-            "pasangan" => [],
+            "pasangan" => [
+                "nama_pasangan" =>$cr_spouse->NAME ?? null,
+                "tmptlahir_pasangan" =>$cr_spouse->BIRTHPLACE ?? null,
+                "pekerjaan_pasangan" => $cr_spouse->OCCUPATION ?? null,
+                "tgllahir_pasangan" => $cr_spouse->BIRTHDATE ?? null,
+                "alamat_pasangan" => $cr_spouse->ADDRESS ?? null
+            ],
             "info_bank" =>[],
             "ekstra" =>[
                 'jenis_angsuran' => empty($application->INSTALLMENT_TYPE)?$cr_survey->jenis_angsuran:$application->INSTALLMENT_TYPE,
@@ -614,206 +782,6 @@ class CrAppilcationController extends Controller
                 'ho' => $approval->cr_application_ho_desc            
             ]
         ];
-
-        if(!$check_ro){
-            $arrayList['pelanggan'] = [
-                "nama" => $cr_personal->NAME ?? ( $data->nama?? ''),
-                "nama_panggilan" => $cr_personal->ALIAS ?? null,
-                "jenis_kelamin" => $cr_personal->GENDER ?? null,
-                "tempat_lahir" => $cr_personal->BIRTHPLACE??null,
-                "tgl_lahir" => empty($cr_personal->BIRTHDATE)?$cr_survey->tgl_lahir:$cr_personal->BIRTHDATE,
-                "gol_darah" => $cr_personal->BLOOD_TYPE??null,
-                "status_kawin" => $cr_personal->MARTIAL_STATUS??null,
-                "tgl_kawin" => $cr_personal->MARTIAL_DATE ?? null,
-                "tipe_identitas" => $cr_personal->ID_TYPE??null,
-                "no_identitas" => empty($cr_personal->ID_NUMBER)?$data->ktp:$cr_personal->ID_NUMBER,
-                "tgl_terbit_identitas" => $cr_personal->ID_ISSUE_DATE ??null,
-                "masa_berlaku_identitas" => $cr_personal->ID_VALID_DATE ?? null,
-                "no_kk" => empty($cr_personal->KK)?$cr_survey->kk:$cr_personal->KK,
-                "warganegara" => $cr_personal->CITIZEN??null
-            ];
-
-            $arrayList['order'] = [
-                "nama_ibu" => $cr_oder->MOTHER_NAME ?? null, 
-                'cr_prospect_id' => $prospect_id??null,
-                "kategori" => $cr_oder->CATEGORY ?? null, 
-                "gelar" => $cr_oder->TITLE ?? null, 
-                "lama_bekerja" => empty($cr_oder->WORK_PERIOD)?$cr_survey->work_period:$cr_oder->WORK_PERIOD, 
-                "tanggungan" => $cr_oder->DEPENDANTS ?? null, 
-                "biaya_bulanan" =>intval(empty($cr_oder->BIAYA)?$cr_survey->expenses:$cr_oder->BIAYA), 
-                "pendapatan_pribadi" => intval(empty($cr_oder->INCOME_PERSONAL)?$cr_survey->income_personal:$cr_oder->INCOME_PERSONAL),
-                "pendapatan_pasangan" =>intval(empty($cr_oder->INCOME_SPOUSE)?$cr_survey->income_spouse:$cr_oder->INCOME_SPOUSE),
-                "pendapatan_lainnya" =>intval(empty($cr_oder->INCOME_OTHER)?$cr_survey->income_other:$cr_oder->INCOME_OTHER),
-                "no_npwp" => $cr_oder->NO_NPWP??null,
-                "order_tanggal" =>  $cr_oder->ORDER_TANGGAL??null,
-                "order_status" =>  $cr_oder->ORDER_STATUS??null,
-                "order_tipe" =>  $cr_oder->ORDER_TIPE??null,
-                "unit_bisnis" => $cr_oder->UNIT_BISNIS??null, 
-                "cust_service" => $cr_oder->CUST_SERVICE??null,
-                "ref_pelanggan" => $cr_oder->REF_PELANGGAN??null,
-                "surveyor_name" => User::find($cr_survey->created_by)->fullname,
-                "catatan_survey" => $data->survey_note??null,
-                "prog_marketing" => $cr_oder->PROG_MARKETING??null,
-                "cara_bayar" => $cr_oder->CARA_BAYAR??null
-            ];
-
-            $arrayList['alamat_identitas'] =[
-                "alamat" => empty($cr_personal->ADDRESS)?$cr_survey->alamat:$cr_personal->ADDRESS,
-                "rt" =>empty($cr_personal->RT)?$cr_survey->rt:$cr_personal->RT,
-                "rw" =>empty($cr_personal->RW)?$cr_survey->rw:$cr_personal->RW,
-                "provinsi" =>empty($cr_personal->PROVINCE)?$cr_survey->privince:$cr_personal->PROVINCE,
-                "kota" =>empty($cr_personal->CITY)?$cr_survey->city:$cr_personal->CITY,
-                "kelurahan" =>empty($cr_personal->KELURAHAN)?$cr_survey->kelurahan:$cr_personal->KELURAHAN,
-                "kecamatan" =>empty($cr_personal->KECAMATAN)?$cr_survey->kecamatan:$cr_personal->KECAMATAN,
-                "kode_pos" => empty($cr_personal->ZIP_CODE)?$cr_survey->zip_code:$cr_personal->ZIP_CODE
-            ];
-            
-            $arrayList['pasangan']=[
-                "nama_pasangan" =>$cr_spouse->NAME ?? null,
-                "tmptlahir_pasangan" =>$cr_spouse->BIRTHPLACE ?? null,
-                "pekerjaan_pasangan" => $cr_spouse->OCCUPATION ?? null,
-                "tgllahir_pasangan" => $cr_spouse->BIRTHDATE ?? null,
-                "alamat_pasangan" => $cr_spouse->ADDRESS ?? null
-            ];
-
-            $arrayList['kerabat_darurat'] =[
-                "nama"  => $cr_personal_extra->EMERGENCY_NAME?? null,
-                "alamat"  => $cr_personal_extra->EMERGENCY_ADDRESS?? null,
-                "rt"  => $cr_personal_extra->EMERGENCY_RT?? null,
-                "rw"  => $cr_personal_extra->EMERGENCY_RW?? null,
-                "provinsi" =>$cr_personal_extra->EMERGENCY_PROVINCE?? null,
-                "kota" => $cr_personal_extra->EMERGENCY_CITY?? null,
-                "kelurahan" => $cr_personal_extra->EMERGENCY_KELURAHAN?? null,
-                "kecamatan" => $cr_personal_extra->EMERGENCY_KECAMATAN?? null,
-                "kode_pos" => $cr_personal_extra->EMERGENCY_ZIP_CODE?? null,
-                "no_telp" => $cr_personal_extra->EMERGENCY_PHONE_HOUSE?? null,
-                "no_hp" => $cr_personal_extra->EMERGENCY_PHONE_PERSONAL?? null, 
-            ];
-
-            $arrayList['alamat_tagih']=[
-                "alamat" => $cr_personal->INS_ADDRESS??null,
-                "rt" => $cr_personal->INS_RT??null,
-                "rw" => $cr_personal->INS_RW??null,
-                "provinsi" => $cr_personal->INS_PROVINCE??null,
-                "kota" => $cr_personal->INS_CITY??null,
-                "kelurahan" => $cr_personal->INS_KELURAHAN??null,
-                "kecamatan" => $cr_personal->INS_KECAMATAN??null,
-                "kode_pos" => $cr_personal->INS_ZIP_CODE??null
-            ];
-
-            $arrayList['pekerjaan'] = [
-                "pekerjaan" => empty($cr_personal->OCCUPATION)?$cr_survey->usaha:$cr_personal->OCCUPATION,
-                "pekerjaan_id" => empty($cr_personal->OCCUPATION_ON_ID)?$cr_survey->sector:$cr_personal->OCCUPATION_ON_ID,
-                "agama" => $cr_personal->RELIGION??null,
-                "pendidikan" => $cr_personal->EDUCATION??null,
-                "status_rumah" => $cr_personal->PROPERTY_STATUS??null,
-                "telepon_rumah" => $cr_personal->PHONE_HOUSE??null,
-                "telepon_selular" => empty($cr_personal->PHONE_PERSONAL)?$data->hp:$cr_personal->PHONE_PERSONAL,
-                "telepon_kantor" => $cr_personal->PHONE_OFFICE??null,
-                "ekstra1" => $cr_personal->EXT_1??null,
-                "ekstra2" => $cr_personal->EXT_2??null
-            ];
-        }else{
-            $custmer_xtra = M_CustomerExtra::where('CUST_CODE',$check_ro->CUST_CODE)->first();
-
-            $arrayList['pelanggan'] = [
-                "nama" => $cr_survey->nama?? $check_ro->NAME ?? $cr_survey->nama,
-                "nama_panggilan" => $check_ro->ALIAS ?? null,
-                "jenis_kelamin" => $check_ro->GENDER ?? null,
-                "tempat_lahir" => $check_ro->BIRTHPLACE??null,
-                "tgl_lahir" => $cr_survey->tgl_lahir?? $check_ro->BIRTHDATE ?? $cr_survey->tgl_lahir,
-                "gol_darah" => $check_ro->BLOOD_TYPE??null,
-                "status_kawin" => $check_ro->MARTIAL_STATUS??null,
-                "tgl_kawin" => $check_ro->MARTIAL_DATE ?? null,
-                "tipe_identitas" => $check_ro->ID_TYPE??null,
-                "no_identitas" =>  $cr_survey->ktp?? $check_ro->ID_NUMBER??$cr_survey->ktp,
-                "tgl_terbit_identitas" => $check_ro->ID_ISSUE_DATE ??null,
-                "masa_berlaku_identitas" => $check_ro->ID_VALID_DATE ?? null,
-                "no_kk" =>$cr_survey->kk?? $check_ro->KK ?? $cr_survey->kk,
-                "warganegara" => $check_ro->CITIZEN??null
-            ];
-
-            $arrayList['order'] = [
-                "nama_ibu" => $check_ro->MOTHER_NAME ?? null, 
-                'cr_prospect_id' => $prospect_id??null,
-                "kategori" => $cr_oder->CATEGORY ?? null, 
-                "gelar" => $cr_oder->TITLE ?? null, 
-                "lama_bekerja" => empty($cr_oder->WORK_PERIOD)?$cr_survey->work_period:$cr_oder->WORK_PERIOD, 
-                "tanggungan" => $cr_oder->DEPENDANTS ?? null, 
-                "biaya_bulanan" =>intval(empty($cr_oder->BIAYA)?$cr_survey->expenses:$cr_oder->BIAYA), 
-                "pendapatan_pribadi" => intval(empty($cr_oder->INCOME_PERSONAL)?$cr_survey->income_personal:$cr_oder->INCOME_PERSONAL),
-                "pendapatan_pasangan" =>intval(empty($cr_oder->INCOME_SPOUSE)?$cr_survey->income_spouse:$cr_oder->INCOME_SPOUSE),
-                "pendapatan_lainnya" =>intval(empty($cr_oder->INCOME_OTHER)?$cr_survey->income_other:$cr_oder->INCOME_OTHER),
-                "no_npwp" => $check_ro->NPWP??null,
-                "order_tanggal" =>  $cr_oder->ORDER_TANGGAL??null,
-                "order_status" =>  $cr_oder->ORDER_STATUS??null,
-                "order_tipe" =>  $cr_oder->ORDER_TIPE??null,
-                "unit_bisnis" => $cr_oder->UNIT_BISNIS??null, 
-                "cust_service" => $cr_oder->CUST_SERVICE??null,
-                "ref_pelanggan" => $cr_oder->REF_PELANGGAN??null,
-                "surveyor_name" => User::find($cr_survey->created_by)->fullname,
-                "catatan_survey" => $data->survey_note??null,
-                "prog_marketing" => $cr_oder->PROG_MARKETING??null,
-                "cara_bayar" => $cr_oder->CARA_BAYAR??null
-            ];
-
-            $arrayList['alamat_tagih']=[
-                "alamat" => $check_ro->INS_ADDRESS??null,
-                "rt" => $check_ro->INS_RT??null,
-                "rw" => $check_ro->INS_RW??null,
-                "provinsi" => $check_ro->INS_PROVINCE??null,
-                "kota" => $check_ro->INS_CITY??null,
-                "kelurahan" => $check_ro->INS_KELURAHAN??null,
-                "kecamatan" => $check_ro->INS_KECAMATAN??null,
-                "kode_pos" => $check_ro->INS_ZIP_CODE??null
-            ];
-
-            $arrayList['pasangan']=[
-                "nama_pasangan" => $cr_spouse?->NAME ?? $custmer_xtra->SPOUSE_NAME,
-                "tmptlahir_pasangan" => $cr_spouse?->BIRTHPLACE??$custmer_xtra->BIRTHPLACE,
-                "pekerjaan_pasangan" => $cr_spouse?->OCCUPATION?? $custmer_xtra->OCCUPATION,
-                "tgllahir_pasangan" => $cr_spouse?->BIRTHDATE??$custmer_xtra->BIRTHDATE,
-                "alamat_pasangan" => $cr_spouse?->ADDRESS??$custmer_xtra->ADDRESS
-            ];
-
-            $arrayList['kerabat_darurat'] =[
-                "nama"  => $custmer_xtra->EMERGENCY_NAME?? null,
-                "alamat"  => $custmer_xtra->EMERGENCY_ADDRESS?? null,
-                "rt"  => $custmer_xtra->EMERGENCY_RT?? null,
-                "rw"  => $custmer_xtra->EMERGENCY_RW?? null,
-                "provinsi" =>$custmer_xtra->EMERGENCY_PROVINCE?? null,
-                "kota" => $custmer_xtra->EMERGENCY_CITY?? null,
-                "kelurahan" => $custmer_xtra->EMERGENCY_KELURAHAN?? null,
-                "kecamatan" => $custmer_xtra->EMERGENCY_KECAMATAN?? null,
-                "kode_pos" => $custmer_xtra->EMERGENCY_ZIP_CODE?? null,
-                "no_telp" => $custmer_xtra->EMERGENCY_PHONE_HOUSE?? null,
-                "no_hp" => $custmer_xtra->EMERGENCY_PHONE_PERSONAL?? null, 
-            ];
-
-            $arrayList['alamat_identitas'] =[
-                "alamat" => $cr_survey->alamat?? $check_ro->ADDRESS??$cr_survey->alamat,
-                "rt" => $cr_survey->rt?? $check_ro->RT??$cr_survey->rt,
-                "rw" => $cr_survey->rw?? $check_ro->RW??$cr_survey->rw,
-                "provinsi" =>$cr_survey->province?? $check_ro->PROVINCE??$cr_survey->province,
-                "kota" => $cr_survey->city?? $check_ro->CITY??$cr_survey->city,
-                "kelurahan" => $cr_survey->kelurahan?? $check_ro->KELURAHAN??$cr_survey->kelurahan,
-                "kecamatan" => $cr_survey->kecamatan??$check_ro->KECAMATAN??$cr_survey->kecamatan,
-                "kode_pos" => $cr_survey->zip_code?? $check_ro->ZIP_CODE??$cr_survey->zip_code
-            ];
-
-            $arrayList['pekerjaan'] = [
-                "pekerjaan" => $check_ro->OCCUPATION??null,
-                "pekerjaan_id" =>$check_ro->OCCUPATION_ON_ID??null,
-                "agama" => $check_ro->RELIGION??null,
-                "pendidikan" => $check_ro->EDUCATION??null,
-                "status_rumah" => $check_ro->PROPERTY_STATUS??null,
-                "telepon_rumah" => $check_ro->PHONE_HOUSE??null,
-                "telepon_selular" =>$check_ro->PHONE_PERSONAL??null,
-                "telepon_kantor" => $check_ro->PHONE_OFFICE??null,
-                "ekstra1" => $check_ro->EXT_1??null,
-                "ekstra2" => $check_ro->EXT_2??null
-            ];
-        }
         
         $arrayList['info_bank'] = M_CrApplicationBank::where('APPLICATION_ID', $application->ID)
                                 ->get()
