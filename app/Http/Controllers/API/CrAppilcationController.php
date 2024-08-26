@@ -581,9 +581,26 @@ class CrAppilcationController extends Controller
                         'BIRTHDATE' => $customer_xtra->SPOUSE_BIRTHDATE??null,
                         'ADDRESS' => $customer_xtra->SPOUSE_ADDRESS??null,
                         'OCCUPATION' => $customer_xtra->SPOUSE_OCCUPATION??null
+                    ];
+
+                    $data_cr_personal_extra = [
+                        'ID' => Uuid::uuid7()->toString(),
+                        'APPLICATION_ID' => $uuid,
+                        'EMERGENCY_NAME' => $customer_xtra->EMERGENCY_NAME ?? null,
+                        'EMERGENCY_ADDRESS' => $customer_xtra->EMERGENCY_ADDRESS ?? null,
+                        'EMERGENCY_RT' => $customer_xtra->EMERGENCY_RT ?? null,
+                        'EMERGENCY_RW' => $customer_xtra->EMERGENCY_RW ?? null,
+                        'EMERGENCY_PROVINCE' => $customer_xtra->EMERGENCY_PROVINCE ?? null,
+                        'EMERGENCY_CITY' => $customer_xtra->EMERGENCY_CITY ?? null,
+                        'EMERGENCY_KELURAHAN' => $customer_xtra->EMERGENCY_KELURAHAN ?? null,
+                        'EMERGENCY_KECAMATAN' => $customer_xtra->EMERGENCY_KECAMATAN ?? null,
+                        'EMERGENCY_ZIP_CODE' => $$customer_xtra->EMERGENCY_ZIP_CODE ?? null,
+                        'EMERGENCY_PHONE_HOUSE' => $customer_xtra->EMERGENCY_PHONE_HOUSE ?? null,
+                        'EMERGENCY_PHONE_PERSONAL' => $customer_xtra->EMERGENCY_PHONE_PERSONAL ?? null
                     ];    
                 
                     M_CrPersonal::create($data_cr_personal);
+                    M_CrPersonalExtra::create($data_cr_personal_extra);
                     M_CrOrder::create($data_cr_order);
                     M_CrApplicationSpouse::create($data_cr_application_spouse);
                 }
