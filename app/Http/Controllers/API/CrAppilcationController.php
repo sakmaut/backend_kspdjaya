@@ -791,14 +791,14 @@ class CrAppilcationController extends Controller
             ];
 
             $arrayList['alamat_identitas'] =[
-                "alamat" => $check_ro->ADDRESS??null,
-                "rt" =>$check_ro->RT??null,
-                "rw" =>$check_ro->RW??null,
-                "provinsi" =>$check_ro->PROVINCE??null,
-                "kota" =>$check_ro->CITY??null,
-                "kelurahan" =>$check_ro->KELURAHAN??null,
-                "kecamatan" =>$check_ro->KECAMATAN??null,
-                "kode_pos" => $check_ro->ZIP_CODE??null
+                "alamat" => $cr_survey->alamat?? $check_ro->ADDRESS??$cr_survey->alamat,
+                "rt" => $cr_survey->rt?? $check_ro->RT??$cr_survey->rt,
+                "rw" => $cr_survey->rw?? $check_ro->RW??$cr_survey->rw,
+                "provinsi" =>$cr_survey->province?? $check_ro->PROVINCE??$cr_survey->province,
+                "kota" => $cr_survey->city?? $check_ro->CITY??$cr_survey->city,
+                "kelurahan" => $cr_survey->kelurahan?? $check_ro->KELURAHAN??$cr_survey->kelurahan,
+                "kecamatan" => $cr_survey->kecamatan??$check_ro->KECAMATAN??$cr_survey->kecamatan,
+                "kode_pos" => $cr_survey->zip_code?? $check_ro->ZIP_CODE??$cr_survey->zip_code
             ];
 
             $arrayList['pekerjaan'] = [
