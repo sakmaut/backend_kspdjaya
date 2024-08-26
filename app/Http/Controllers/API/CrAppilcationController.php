@@ -721,15 +721,15 @@ class CrAppilcationController extends Controller
                 "nama_panggilan" => $check_ro->ALIAS ?? null,
                 "jenis_kelamin" => $check_ro->GENDER ?? null,
                 "tempat_lahir" => $check_ro->BIRTHPLACE??null,
-                "tgl_lahir" => $check_ro->BIRTHDATE??null,
+                "tgl_lahir" => $cr_survey->tgl_lahir?? $check_ro->BIRTHDATE ?? $cr_survey->tgl_lahir,
                 "gol_darah" => $check_ro->BLOOD_TYPE??null,
                 "status_kawin" => $check_ro->MARTIAL_STATUS??null,
                 "tgl_kawin" => $check_ro->MARTIAL_DATE ?? null,
                 "tipe_identitas" => $check_ro->ID_TYPE??null,
-                "no_identitas" => $check_ro->ID_NUMBER??null,
+                "no_identitas" =>  $cr_survey->ktp?? $check_ro->ID_NUMBER??$cr_survey->ktp,
                 "tgl_terbit_identitas" => $check_ro->ID_ISSUE_DATE ??null,
                 "masa_berlaku_identitas" => $check_ro->ID_VALID_DATE ?? null,
-                "no_kk" => $check_ro->KK??null,
+                "no_kk" =>$cr_survey->kk?? $check_ro->KK ?? $cr_survey->kk,
                 "warganegara" => $check_ro->CITIZEN??null
             ];
 
