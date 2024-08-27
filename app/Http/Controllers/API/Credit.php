@@ -347,7 +347,7 @@ class Credit extends Controller
         if (!$update) {
             $data_customer['ID'] = Uuid::uuid7()->toString();
             $data_customer['CUST_CODE'] = $cr_personal->CUST_CODE;
-            M_CustomerExtra::create($data_customer);
+            M_CustomerExtra::create($data_customer_xtra);
         } else {
             $update->update($data_customer_xtra);
         }
