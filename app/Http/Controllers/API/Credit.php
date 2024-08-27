@@ -73,7 +73,7 @@ class Credit extends Controller
         $principal = $data->SUBMISSION_VALUE + $data->NET_ADMIN;
         // $annualInterestRate = $data->FLAT_RATE;
         $effRate = $data->EFF_RATE;
-        $loanTerm = $data->PERIOD;
+        $loanTerm = $data->TENOR;
         $angsuran = $data->INSTALLMENT;
         $set_tgl_awal =$request->tgl_awal;
 
