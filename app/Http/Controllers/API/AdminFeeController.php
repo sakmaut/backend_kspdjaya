@@ -326,6 +326,8 @@ class AdminFeeController extends Controller
                     $angsuran_calc = ($pokok_pembayaran + $interest_margin) / 2;
                 } elseif ($set_tenor == 18) {
                     $angsuran_calc = ($pokok_pembayaran + $interest_margin) / 3;
+                }elseif ($set_tenor == 24) {
+                    $angsuran_calc = ($pokok_pembayaran + $interest_margin) / 3;
                 }
             }
     
