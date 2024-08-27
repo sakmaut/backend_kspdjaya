@@ -304,7 +304,6 @@ class Credit extends Controller
         $cr_spouse = M_CrApplicationSpouse::where('APPLICATION_ID',$data->ID)->first();
         $check_customer_ktp = M_Customer::where('ID_NUMBER', $cr_personal->ID_NUMBER)->first();
         $cr_order = M_CrOrder::where('APPLICATION_ID',$data->ID)->first();
-
         $update = M_CustomerExtra::where('CUST_CODE', $check_customer_ktp->CUST_CODE)->first();
 
 
@@ -347,8 +346,8 @@ class Credit extends Controller
         ];
 
         if (!$update) {
-            $data_customer['ID'] = Uuid::uuid7()->toString();
-            $data_customer['CUST_CODE'] = $cr_personal->CUST_CODE;
+            $data_customer_xtra['ID'] = Uuid::uuid7()->toString();
+            $data_customer_xtra['CUST_CODE'] = $cr_personal->CUST_CODE;
             M_CustomerExtra::create($data_customer_xtra);
         } else {
             $update->update($data_customer_xtra);
