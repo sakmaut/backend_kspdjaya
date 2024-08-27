@@ -41,7 +41,7 @@ class Credit extends Controller
                 throw new Exception("Order Number Is Not Exist", 404);
             }
 
-            // $data_credit_schedule = generateAmortizationSchedule(3000000, 1976000, '2024-08-26', 44, 18);
+            // $data_credit_schedule = generateAmortizationSchedule(7760000, 492000, '2024-09-26', 44, 24);
     
             return response()->json(self::buildData($request,$check), 200);
             // return response()->json($data_credit_schedule, 200);
@@ -70,7 +70,7 @@ class Credit extends Controller
         $pihak1= self::queryKapos($data->BRANCH);
         $loan_number = generateCode($request, 'credit', 'LOAN_NUMBER');
 
-        $principal = $data->SUBMISSION_VALUE + $data->NET_ADMIN;
+        $principal = $data->POKOK_PEMBAYARAN;
         // $annualInterestRate = $data->FLAT_RATE;
         $effRate = $data->EFF_RATE;
         $loanTerm = $data->TENOR;
@@ -182,8 +182,8 @@ class Credit extends Controller
              "no_polisi" => $cr_guarante_vehicle->POLICE_NUMBER??null,
              "no_rangka" =>$cr_guarante_vehicle->CHASIS_NUMBER??null,
              "no_mesin" => $cr_guarante_vehicle->ENGINE_NUMBER??null,
-            //  "struktur" => $check_exist != null && !empty($check_exist->LOAN_NUMBER)?$schedule:$data_credit_schedule??null
-            "struktur" => $data_credit_schedule ?? null
+             "struktur" => $check_exist != null && !empty($check_exist->LOAN_NUMBER)?$schedule:$data_credit_schedule??null
+            // "struktur" => $data_credit_schedule ?? null
         ];
 
         return $data;
@@ -295,8 +295,6 @@ class Credit extends Controller
         }else{
             $check_customer_ktp->update($data_customer);
         }
-
-        
     }
 
     private function insert_customer_xtra($data){
