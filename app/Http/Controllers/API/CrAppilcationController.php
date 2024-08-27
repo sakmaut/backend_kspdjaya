@@ -504,6 +504,8 @@ class CrAppilcationController extends Controller
                     'application_result' => '0:draft'
                 ];
 
+                M_ApplicationApproval::create($data_approval_fpk);
+
                 $customer = M_Customer::where('ID_NUMBER',$check_survey_id->ktp)->first();
                 $customer_xtra = M_CustomerExtra::where('CUST_CODE',$customer->CUST_CODE)->first();
 
@@ -604,8 +606,6 @@ class CrAppilcationController extends Controller
                     M_CrOrder::create($data_cr_order);
                     M_CrApplicationSpouse::create($data_cr_application_spouse);
                 }
-
-                M_ApplicationApproval::create($data_approval_fpk);
             }else{
                 $generate_uuid = $check_prospect_id->ID;
             }
@@ -645,7 +645,6 @@ class CrAppilcationController extends Controller
         $cr_guarantor = M_CrApplicationGuarantor::where('APPLICATION_ID',$setApplicationId)->first();
         $cr_spouse = M_CrApplicationSpouse::where('APPLICATION_ID',$setApplicationId)->first();
         $approval = M_ApplicationApproval::where('cr_application_id',$setApplicationId)->first();
-        $check_ro = M_Customer::where('ID_NUMBER',$data->ktp??$cr_personal->ID_NUMBER)->first();
 
         $arrayList = [
             'id_application' => $setApplicationId,
