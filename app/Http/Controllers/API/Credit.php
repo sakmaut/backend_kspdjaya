@@ -167,7 +167,7 @@ class Credit extends Controller
                 "alamat_pasangan" => $cr_spouse->ADDRESS ?? null
             ],
              "pokok_margin" =>bilangan($principal)??null,
-             "tenor" => bilangan($data->PERIOD,false)??null,
+             "tenor" => bilangan($data->TENOR,false)??null,
              "tgl_awal_pk" => !empty($check_exist)?Carbon::parse($check_exist->ENTRY_DATE)->format('Y-m-d'):Carbon::parse($set_tgl_awal)->format('Y-m-d'),
              "tgl_akhir_pk" => !empty($check_exist)?Carbon::parse($check_exist->END_DATE)->format('Y-m-d'):add_months($set_tgl_awal,$loanTerm),
              "angsuran" =>bilangan($angsuran)??null,
