@@ -6,40 +6,19 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
-class M_Payment extends Model
+class M_PaymentAttachment extends Model
 {
     use HasFactory;
-    protected $table = 'payment';
+    protected $table = 'payment_attachment';
     protected $fillable = [
-        'ID',
-        'STTS_RCRD',
-        'INVOICE',
-        'ACC_NUM',
-        'BRANCH',
-        'LOAN_NUM',
-        'VALUE_DATE',
-        'ENTRY_DATE',
-        'TITLE',
-        'ORIGINAL_AMOUNT',
-        'OS_AMOUNT',
-        'CALC_DAYS',
-        'SETTLE_ACCOUNT',
-        'START_DATE',
-        'END_DATE',
-        'USER_ID',
-        'LAST_JOB_DATE',
-        'AUTH_BY',
-        'AUTH_DATE',
-        'ARREARS_ID',
-        'ATTACHMENT',
-        'BANK_NAME',
-        'BANK_ACC_NUMBER',
-        'RECEIPT_TIME'
+        'id',
+        'payment_id',
+        'file_attach'
     ];
     protected $guarded = [];
     public $incrementing = false;
     protected $keyType = 'string';
-    protected $primaryKey = 'ID';
+    protected $primaryKey = 'id';
     public $timestamps = false;
     protected static function boot()
     {

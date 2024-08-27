@@ -28,7 +28,7 @@ class CustomerController extends Controller
     public function fasilitas(Request $request)
     {
         try {
-            $data =  M_Credit::where('CUST_CODE',$request->cust_code)->get();
+            $data =  M_Credit::where(['CUST_CODE' => $request->cust_code,'STATUS' =>'A'])->get();
 
             if ($data->isEmpty()) {
                 throw new Exception("Cust Code Is Not Exist");
