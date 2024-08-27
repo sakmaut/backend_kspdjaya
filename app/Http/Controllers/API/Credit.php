@@ -338,9 +338,9 @@ class Credit extends Controller
             'EMERGENCY_RT' =>$cr_personal_extra->EMERGENCY_RT,
             'EMERGENCY_RW' =>$cr_personal_extra->EMERGENCY_RW,
             'EMERGENCY_PROVINCE' =>$cr_personal_extra->EMERGENCY_PROVINCE,
-            'EMERGENCYL_CITY' =>$cr_personal_extra->EMERGENCYL_CITY,
+            'EMERGENCYL_CITY' =>$cr_personal_extra->EMERGENCY_CITY,
             'EMERGENCY_KELURAHAN' =>$cr_personal_extra->EMERGENCY_KELURAHAN,
-            'EMERGENCYL_KECAMATAN' =>$cr_personal_extra->EMERGENCYL_KECAMATAN,
+            'EMERGENCYL_KECAMATAN' =>$cr_personal_extra->EMERGENCY_KECAMATAN,
             'EMERGENCY_ZIP_CODE' =>$cr_personal_extra->EMERGENCY_ZIP_CODE,
             'EMERGENCY_PHONE_HOUSE' =>$cr_personal_extra->EMERGENCY_PHONE_HOUSE,
             'EMERGENCY_PHONE_PERSONAL' =>$cr_personal_extra->EMERGENCY_PHONE_PERSONAL
