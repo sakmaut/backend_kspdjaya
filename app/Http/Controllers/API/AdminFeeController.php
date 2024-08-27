@@ -370,15 +370,15 @@ class AdminFeeController extends Controller
                 $tenor_name = $tenor . '_month';
             }
     
-        foreach ($struktur as $s) {
-            $feeName = $s['fee_name'];
-            $feeValue = (float) $s[$tenor_name];
-            $tenorData[$feeName] = $feeValue;
+            foreach ($struktur as $s) {
+                $feeName = $s['fee_name'];
+                $feeValue = (float) $s[$tenor_name];
+                $tenorData[$feeName] = $feeValue;
 
-            if ($feeName !== 'eff_rate') {
-                $total += $feeValue;
+                if ($feeName !== 'eff_rate') {
+                    $total += $feeValue;
+                }
             }
-        }
     
             $set_tenor = ($angsuran_type == 'bulanan' || $specificTenor) ? $tenor : $musimanTenorMapping[$tenor] ?? $tenor;
             $eff_rate = $tenorData['eff_rate'];
@@ -398,6 +398,8 @@ class AdminFeeController extends Controller
                 } elseif ($set_tenor == 12) {
                     $angsuran_calc = ($pokok_pembayaran + $interest_margin) / 2;
                 } elseif ($set_tenor == 18) {
+                    $angsuran_calc = ($pokok_pembayaran + $interest_margin) / 3;
+                }elseif ($set_tenor == 24) {
                     $angsuran_calc = ($pokok_pembayaran + $interest_margin) / 3;
                 }
             }
