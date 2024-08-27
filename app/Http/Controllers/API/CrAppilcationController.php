@@ -661,7 +661,7 @@ class CrAppilcationController extends Controller
                 "gol_darah" => $cr_personal->BLOOD_TYPE??null,
                 "status_kawin" => $cr_personal->MARTIAL_STATUS??null,
                 "tgl_kawin" => $cr_personal->MARTIAL_DATE ?? null,
-                "tipe_identitas" => $cr_personal->ID_TYPE??null,
+                "tipe_identitas" => "KTP",
                 "no_identitas" => empty($cr_personal->ID_NUMBER)?$data->ktp:$cr_personal->ID_NUMBER,
                 "tgl_terbit_identitas" => $cr_personal->ID_ISSUE_DATE ??null,
                 "masa_berlaku_identitas" => $cr_personal->ID_VALID_DATE ?? null,
