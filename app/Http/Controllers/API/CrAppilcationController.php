@@ -794,9 +794,9 @@ class CrAppilcationController extends Controller
             "attachment" =>$attachment_data,
             "approval" => 
             [
-                'status' => $approval->application_result,
-                'kapos' => $approval->cr_application_kapos_desc,
-                'ho' => $approval->cr_application_ho_desc            
+                'status' => $approval->application_result??null,
+                'kapos' => $approval->cr_application_kapos_desc??null,
+                'ho' => $approval->cr_application_ho_desc ??null           
             ]
         ];
         
