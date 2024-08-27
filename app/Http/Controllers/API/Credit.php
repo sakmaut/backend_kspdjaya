@@ -344,7 +344,7 @@ class Credit extends Controller
             'EMERGENCY_PHONE_PERSONAL' =>$cr_personal_extra->EMERGENCY_PHONE_PERSONAL
         ];
 
-        if (!$check_customer_ktp) {
+        if (!$update) {
             $data_customer['ID'] = Uuid::uuid7()->toString();
             $data_customer['CUST_CODE'] = $cr_personal->CUST_CODE;
             M_CustomerExtra::create($data_customer);
