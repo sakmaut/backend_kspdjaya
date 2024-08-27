@@ -17,7 +17,7 @@ class M_Credit extends Model
         'BRANCH',
         'CUST_CODE',
         'ORDER_NUMBER',
-        'COLLECTIBILITY',
+        'STATUS',
         'MCF_ID',
         'ENTRY_DATE',
         'END_DATE',

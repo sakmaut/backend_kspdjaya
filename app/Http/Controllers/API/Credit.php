@@ -201,7 +201,7 @@ class Credit extends Controller
             'BRANCH'   => $data->BRANCH,
             'CUST_CODE' => $cr_personal->CUST_CODE,
             'ORDER_NUMBER' => $data->ORDER_NUMBER,
-            'COLLECTIBILITY'  => '',
+            'STATUS'  => 'A',
             'MCF_ID'  => $survey->created_by??null,
             'ENTRY_DATE'  => $request->tgl_awal??null,
             'FIRST_ARR_DATE'  => null,
