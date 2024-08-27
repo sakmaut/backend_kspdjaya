@@ -774,7 +774,7 @@ class CrAppilcationController extends Controller
             "info_bank" =>[],
             "ekstra" =>[
                 'jenis_angsuran' => empty($application->INSTALLMENT_TYPE)?$cr_survey->jenis_angsuran:$application->INSTALLMENT_TYPE,
-                'tenor' => empty($application->TENOR)?strval($cr_survey->tenor):strval($application->TENOR),
+                'tenor' => $application->TENOR,
                 "nilai_yang_diterima" => $applicationDetail->SUBMISSION_VALUE == ''?(int) $data->plafond:(int)$applicationDetail->SUBMISSION_VALUE?? null,
                 "periode" => $applicationDetail->PERIOD == ''?$data->tenor:$applicationDetail->PERIOD?? null,
                 "total"=> (int)$applicationDetail->TOTAL_ADMIN?? null,
