@@ -303,8 +303,10 @@ class Credit extends Controller
         $cr_personal_extra = M_CrPersonalExtra::where('APPLICATION_ID',$data->ID)->first();
         $cr_spouse = M_CrApplicationSpouse::where('APPLICATION_ID',$data->ID)->first();
         $check_customer_ktp = M_Customer::where('ID_NUMBER', $cr_personal->ID_NUMBER)->first();
+        $cr_order = M_CrOrder::where('APPLICATION_ID',$data->ID)->first();
 
         $update = M_CustomerExtra::where('CUST_CODE', $check_customer_ktp->CUST_CODE)->first();
+
 
         $data_customer_xtra =[
             'OTHER_OCCUPATION_1' =>$cr_personal_extra->OTHER_OCCUPATION_1,
@@ -313,7 +315,7 @@ class Credit extends Controller
             'SPOUSE_BIRTHPLACE' =>  $cr_spouse->BIRTHPLACE,
             'SPOUSE_BIRTHDATE' =>  $cr_spouse->BIRTHDATE,
             'SPOUSE_ID_NUMBER' => $cr_spouse->NUMBER_IDENTITY,
-            'SPOUSE_INCOME' => $cr_spouse->INCOME,
+            'SPOUSE_INCOME' => $cr_order->INCOME_SPOUSE,
             'SPOUSE_ADDRESS' => $cr_spouse->ADDRESS,
             'SPOUSE_OCCUPATION' => $cr_spouse->OCCUPATION,
             'SPOUSE_RT' => null,
