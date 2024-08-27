@@ -409,6 +409,12 @@ class CrSurveyController extends Controller
                 'cr_prospect_id' =>'string'
             ]);
 
+            $delete = M_CrSurveyDocument::where(['CR_SURVEY_ID' => $req->cr_prospect_id,'TYPE' => $req->type])->first();
+
+            if ($delete) {
+                $delete->delete();
+            }
+
             if ($req->hasFile('image')) {
                 $image_path = $req->file('image')->store('public/Cr_Survey');
                 $image_path = str_replace('public/', '', $image_path);
