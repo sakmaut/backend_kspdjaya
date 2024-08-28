@@ -52,7 +52,22 @@ class CustomerController extends Controller
                 throw new Exception("Loan Number Is Not Exist");
             }
 
-            return response()->json($data, 200);
+            $schedule = [];
+            $i = 1;
+            foreach ($data as $res) {
+                $schedule[]=[
+                    'angsuran_ke' =>  $i++,
+                    'loan_number' => $res->LOAN_NUMBER,
+                    'tgl_angsuran' => $res->PAYMENT_DATE,
+                    'principal' => number_format($res->PRINCIPAL, 2),
+                    'interest' => number_format($res->INTEREST, 2),
+                    'installment' => number_format($res->INSTALLMENT, 2),
+                    'principal_remains' => number_format($res->PRINCIPAL_REMAINS, 2),
+                    'flag' => $res->PAID_FLAG
+                ];
+            }
+
+            return response()->json($schedule, 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage()], 500);
