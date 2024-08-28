@@ -529,8 +529,8 @@ class CrAppilcationController extends Controller
                         'CITIZEN' => $customer->CITIZEN??null,
                         
                         'ADDRESS' => $check_survey_id->alamat,
-                        'RT' => $customer->RT,
-                        'RW' => $customer->RW,
+                        'RT' => $check_survey_id->rt,
+                        'RW' => $check_survey_id->rw,
                         'PROVINCE' => $customer->PROVINCE,
                         'CITY' => $customer->CITY,
                         'KELURAHAN' => $customer->KELURAHAN,
