@@ -22,6 +22,7 @@ class R_CreditList extends JsonResource
             'cust_code' => $this->CUST_CODE,
             'order_number' => $this->ORDER_NUMBER,
             'sisa_angsuran' =>($this->PCPL_ORI - $this->PAID_PRINCIPAL),
+            'angsuran' =>$this->INSTALLMENT,
             'total_bayar' => ($this->PAID_PRINCIPAL + $this->PAID_INTEREST),
         ];
     }
