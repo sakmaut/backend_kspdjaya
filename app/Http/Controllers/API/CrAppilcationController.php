@@ -530,14 +530,14 @@ class CrAppilcationController extends Controller
                         'KK' => $check_survey_id->kk??null,
                         'CITIZEN' => $customer->CITIZEN??null,
                         
-                        'ADDRESS' => $check_survey_id->alamat,
-                        'RT' => $check_survey_id->rt,
-                        'RW' => $check_survey_id->rw,
-                        'PROVINCE' => $check_survey_id->province,
-                        'CITY' => $check_survey_id->city,
-                        'KELURAHAN' => $check_survey_id->kelurahan,
-                        'KECAMATAN' => $check_survey_id->kecamatan,
-                        'ZIP_CODE' => $check_survey_id->zip_code,
+                        'ADDRESS' => $customer->ADDRESS,
+                        'RT' => $customer->RT,
+                        'RW' => $customer->RW,
+                        'PROVINCE' => $customer->PROVINCE,
+                        'CITY' => $customer->CITY,
+                        'KELURAHAN' => $customer->KELURAHAN,
+                        'KECAMATAN' => $customer->KECAMATAN,
+                        'ZIP_CODE' => $customer->ZIP_CODE,
             
                         'INS_ADDRESS' => $customer->INS_ADDRESS??null,
                         'INS_RT' => $customer->INS_RT??null,
@@ -597,7 +597,7 @@ class CrAppilcationController extends Controller
                         'EMERGENCY_CITY' => $customer_xtra->EMERGENCY_CITY ?? null,
                         'EMERGENCY_KELURAHAN' => $customer_xtra->EMERGENCY_KELURAHAN ?? null,
                         'EMERGENCY_KECAMATAN' => $customer_xtra->EMERGENCY_KECAMATAN ?? null,
-                        'EMERGENCY_ZIP_CODE' => $$customer_xtra->EMERGENCY_ZIP_CODE ?? null,
+                        'EMERGENCY_ZIP_CODE' => $customer_xtra->EMERGENCY_ZIP_CODE ?? null,
                         'EMERGENCY_PHONE_HOUSE' => $customer_xtra->EMERGENCY_PHONE_HOUSE ?? null,
                         'EMERGENCY_PHONE_PERSONAL' => $customer_xtra->EMERGENCY_PHONE_PERSONAL ?? null
                     ];    
