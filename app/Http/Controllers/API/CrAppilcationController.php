@@ -513,7 +513,6 @@ class CrAppilcationController extends Controller
                     $data_cr_personal =[  
                         'ID' => Uuid::uuid7()->toString(),
                         'APPLICATION_ID' => $uuid,
-                        'CUST_CODE' => generateCode($request, 'cr_personal', 'CUST_CODE'),
                         'NAME' => $check_survey_id->nama??null,
                         'ALIAS' => $customer->ALIAS??null,
                         'GENDER' => $customer->GENDER??null,
