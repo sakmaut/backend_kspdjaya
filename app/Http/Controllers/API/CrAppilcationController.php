@@ -316,7 +316,6 @@ class CrAppilcationController extends Controller
         if(!$check){
             $data_cr_application['ID'] = Uuid::uuid7()->toString();
             $data_cr_application['APPLICATION_ID'] = $applicationId;
-            $data_cr_application['CUST_CODE'] = generateCode($request, 'cr_personal', 'CUST_CODE');
     
             M_CrPersonal::create($data_cr_application);
         }else{

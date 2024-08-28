@@ -86,6 +86,28 @@ if (!function_exists('generateCode')) {
     }
 }
 
+if (!function_exists('generateCustCode')) {
+    function generateCustCode($request, $table, $column) {
+        $branchId = $request->user()->branch_id;
+        $branch = M_Branch::find($branchId);
+    
+        if (!$branch) {
+            throw new Exception("Branch not found.");
+        }
+    
+        $branchCodeNumber = $branch->CODE_NUMBER;
+    
+        $latestRecord = DB::table($table)->latest($column)->first();
+        $lastSequence = $latestRecord ? (int) substr($latestRecord->$column, 7, 5) + 1 : 1;
+    
+
+        $generateCode = sprintf("%s%05d", $branchCodeNumber, $lastSequence);
+    
+        return $generateCode;
+    }
+}
+
+
 if (!function_exists('angkaKeKata')) {
     function angkaKeKata($angka,$rupiah = true) {
         $angka = abs($angka);

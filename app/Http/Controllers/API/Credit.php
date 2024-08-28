@@ -44,7 +44,7 @@ class Credit extends Controller
             // $data_credit_schedule = generateAmortizationSchedule(7760000, 492000, '2024-09-26', 44, 24);
     
             return response()->json(self::buildData($request,$check), 200);
-            // return response()->json($data_credit_schedule, 200);
+            // return response()->json( generateCustCode($request, 'credit', 'CUST_CODE'), 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
@@ -101,9 +101,10 @@ class Credit extends Controller
         }
       
         $SET_UUID = Uuid::uuid7()->toString();
+        $cust_code = generateCustCode($request, 'credit', 'CUST_CODE');
 
         if (!$check_exist && $request->flag == 'yes') {
-            self::insert_credit($SET_UUID,$request, $data, $loan_number,$installment_count);
+            self::insert_credit($SET_UUID,$request, $data, $loan_number,$installment_count, $cust_code);
 
             foreach ($data_credit_schedule as $list) {
                 $credit_schedule =
@@ -121,8 +122,8 @@ class Credit extends Controller
                 M_CreditSchedule::create($credit_schedule);
             }
             
-            self::insert_customer($request,$data);
-            self::insert_customer_xtra($data);
+            self::insert_customer($request,$data, $cust_code);
+            self::insert_customer_xtra($data, $cust_code);
             self::insert_collateral($request,$data,$SET_UUID);
         }
 
@@ -189,9 +190,8 @@ class Credit extends Controller
         return $data;
     }
 
-    private function insert_credit($SET_UUID,$request,$data,$loan_number,$installment_count){
+    private function insert_credit($SET_UUID,$request,$data,$loan_number,$installment_count, $cust_code){
 
-        $cr_personal = M_CrPersonal::where('APPLICATION_ID',$data->ID)->first();
         $survey = M_CrSurvey::find($data->CR_SURVEY_ID);
 
         $data_credit =[
@@ -199,7 +199,7 @@ class Credit extends Controller
             'LOAN_NUMBER' => $loan_number,
             'STATUS_REC' => $data->BRANCH,
             'BRANCH'   => $data->BRANCH,
-            'CUST_CODE' => $cr_personal->CUST_CODE,
+            'CUST_CODE' => $cust_code,
             'ORDER_NUMBER' => $data->ORDER_NUMBER,
             'STATUS'  => 'A',
             'MCF_ID'  => $survey->created_by??null,
@@ -231,7 +231,7 @@ class Credit extends Controller
         return $last_id;
     }
 
-    private function insert_customer($request,$data){
+    private function insert_customer($request,$data, $cust_code){
 
         $cr_personal = M_CrPersonal::where('APPLICATION_ID',$data->ID)->first();
         $cr_order = M_CrOrder::where('APPLICATION_ID',$data->ID)->first();
@@ -290,14 +290,14 @@ class Credit extends Controller
 
         if(!$check_customer_ktp){
             $data_customer['ID'] = Uuid::uuid7()->toString();
-            $data_customer['CUST_CODE'] = $cr_personal->CUST_CODE;
+            $data_customer['CUST_CODE'] = $cust_code;
             M_Customer::create($data_customer);
         }else{
             $check_customer_ktp->update($data_customer);
         }
     }
 
-    private function insert_customer_xtra($data){
+    private function insert_customer_xtra($data, $cust_code){
 
         $cr_personal = M_CrPersonal::where('APPLICATION_ID',$data->ID)->first();
         $cr_personal_extra = M_CrPersonalExtra::where('APPLICATION_ID',$data->ID)->first();
@@ -308,15 +308,15 @@ class Credit extends Controller
 
 
         $data_customer_xtra =[
-            'OTHER_OCCUPATION_1' =>$cr_personal_extra->OTHER_OCCUPATION_1,
-            'OTHER_OCCUPATION_2' =>$cr_personal_extra->OTHER_OCCUPATION_2,
-            'SPOUSE_NAME' =>  $cr_spouse->NAME,
-            'SPOUSE_BIRTHPLACE' =>  $cr_spouse->BIRTHPLACE,
-            'SPOUSE_BIRTHDATE' =>  $cr_spouse->BIRTHDATE,
-            'SPOUSE_ID_NUMBER' => $cr_spouse->NUMBER_IDENTITY,
-            'SPOUSE_INCOME' => $cr_order->INCOME_SPOUSE,
-            'SPOUSE_ADDRESS' => $cr_spouse->ADDRESS,
-            'SPOUSE_OCCUPATION' => $cr_spouse->OCCUPATION,
+            'OTHER_OCCUPATION_1' =>$cr_personal_extra->OTHER_OCCUPATION_1??null,
+            'OTHER_OCCUPATION_2' =>$cr_personal_extra->OTHER_OCCUPATION_2??null,
+            'SPOUSE_NAME' =>  $cr_spouse->NAME??null,
+            'SPOUSE_BIRTHPLACE' =>  $cr_spouse->BIRTHPLACE??null,
+            'SPOUSE_BIRTHDATE' =>  $cr_spouse->BIRTHDATE??null,
+            'SPOUSE_ID_NUMBER' => $cr_spouse->NUMBER_IDENTITY??null,
+            'SPOUSE_INCOME' => $cr_order->INCOME_SPOUSE??null,
+            'SPOUSE_ADDRESS' => $cr_spouse->ADDRESS??null,
+            'SPOUSE_OCCUPATION' => $cr_spouse->OCCUPATION??null,
             'SPOUSE_RT' => null,
             'SPOUSE_RW' => null,
             'SPOUSE_PROVINCE' => null,
@@ -332,22 +332,22 @@ class Credit extends Controller
             'INS_KELURAHAN' =>null,
             'INS_KECAMATAN' =>null,
             'INS_ZIP_CODE' =>null,
-            'EMERGENCY_NAME' =>$cr_personal_extra->EMERGENCY_NAME,
-            'EMERGENCY_ADDRESS' =>$cr_personal_extra->EMERGENCY_ADDRESS,
-            'EMERGENCY_RT' =>$cr_personal_extra->EMERGENCY_RT,
-            'EMERGENCY_RW' =>$cr_personal_extra->EMERGENCY_RW,
-            'EMERGENCY_PROVINCE' =>$cr_personal_extra->EMERGENCY_PROVINCE,
-            'EMERGENCYL_CITY' =>$cr_personal_extra->EMERGENCY_CITY,
-            'EMERGENCY_KELURAHAN' =>$cr_personal_extra->EMERGENCY_KELURAHAN,
-            'EMERGENCYL_KECAMATAN' =>$cr_personal_extra->EMERGENCY_KECAMATAN,
-            'EMERGENCY_ZIP_CODE' =>$cr_personal_extra->EMERGENCY_ZIP_CODE,
-            'EMERGENCY_PHONE_HOUSE' =>$cr_personal_extra->EMERGENCY_PHONE_HOUSE,
-            'EMERGENCY_PHONE_PERSONAL' =>$cr_personal_extra->EMERGENCY_PHONE_PERSONAL
+            'EMERGENCY_NAME' =>$cr_personal_extra->EMERGENCY_NAME??null,
+            'EMERGENCY_ADDRESS' =>$cr_personal_extra->EMERGENCY_ADDRESS??null,
+            'EMERGENCY_RT' =>$cr_personal_extra->EMERGENCY_RT??null,
+            'EMERGENCY_RW' =>$cr_personal_extra->EMERGENCY_RW??null,
+            'EMERGENCY_PROVINCE' =>$cr_personal_extra->EMERGENCY_PROVINCE??null,
+            'EMERGENCYL_CITY' =>$cr_personal_extra->EMERGENCY_CITY??null,
+            'EMERGENCY_KELURAHAN' =>$cr_personal_extra->EMERGENCY_KELURAHAN??null,
+            'EMERGENCYL_KECAMATAN' =>$cr_personal_extra->EMERGENCY_KECAMATAN??null,
+            'EMERGENCY_ZIP_CODE' =>$cr_personal_extra->EMERGENCY_ZIP_CODE??null,
+            'EMERGENCY_PHONE_HOUSE' =>$cr_personal_extra->EMERGENCY_PHONE_HOUSE??null,
+            'EMERGENCY_PHONE_PERSONAL' =>$cr_personal_extra->EMERGENCY_PHONE_PERSONAL??null
         ];
 
         if (!$update) {
             $data_customer_xtra['ID'] = Uuid::uuid7()->toString();
-            $data_customer_xtra['CUST_CODE'] = $cr_personal->CUST_CODE;
+            $data_customer_xtra['CUST_CODE'] =  $cust_code;
             M_CustomerExtra::create($data_customer_xtra);
         } else {
             $update->update($data_customer_xtra);

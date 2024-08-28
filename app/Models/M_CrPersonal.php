@@ -13,7 +13,6 @@ class M_CrPersonal extends Model
     protected $fillable = [
         'ID',
         'APPLICATION_ID',
-        'CUST_CODE',
         'NAME',
         'ALIAS',
         'GENDER',
