@@ -63,6 +63,7 @@ class CustomerController extends Controller
                     'interest' => number_format($res->INTEREST, 2),
                     'installment' => number_format($res->INSTALLMENT, 2),
                     'principal_remains' => number_format($res->PRINCIPAL_REMAINS, 2),
+                    'payment' => number_format($res->PAYMENT_VALUE, 2),
                     'flag' => $res->PAID_FLAG
                 ];
             }
