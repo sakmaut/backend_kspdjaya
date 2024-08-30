@@ -654,7 +654,7 @@ class CrAppilcationController extends Controller
                 "nama_panggilan" => $cr_personal->ALIAS ?? null,
                 "jenis_kelamin" => $cr_personal->GENDER ?? null,
                 "tempat_lahir" => $cr_personal->BIRTHPLACE??null,
-                "tgl_lahir" => date_format(date_create(empty($cr_personal->BIRTHDATE)?$cr_survey->tgl_lahir:$cr_personal->BIRTHDATE), 'd-m-Y'),
+                "tgl_lahir" => date_format(date_create(empty($cr_personal->BIRTHDATE)?$cr_survey->tgl_lahir:$cr_personal->BIRTHDATE), 'Y-m-d'),
                 "gol_darah" => $cr_personal->BLOOD_TYPE??null,
                 "status_kawin" => $cr_personal->MARTIAL_STATUS??null,
                 "tgl_kawin" => $cr_personal->MARTIAL_DATE ?? null,
