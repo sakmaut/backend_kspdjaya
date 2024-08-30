@@ -25,7 +25,7 @@ class R_CrProspect extends JsonResource
     {
         $stts_approval = M_SurveyApproval::where('CR_SURVEY_ID',$this->id)->first();
         $check_exist = M_Credit::where('ORDER_NUMBER',$this->order_number)->first();
-        $attachment = M_CrSurveyDocument::where('CR_SURVEY_ID',$this->id)->get();
+        $attachment = M_CrSurveyDocument::where(['CR_SURVEY_ID' => $this->id,'TYPE' => 'berkas pencairan'])->get();
 
         $data = [
             'id' => $this->id,
