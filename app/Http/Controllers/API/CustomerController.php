@@ -49,7 +49,7 @@ class CustomerController extends Controller
             $data = M_CreditSchedule::where('LOAN_NUMBER', $request->loan_number)
             ->where(function ($query) {
                 $query->whereNull('PAID_FLAG')
-                    ->orWhere('PAID_FLAG', '<>', 'ok');
+                    ->orWhere('PAID_FLAG', '<>', 'PAID');
             })
             ->get();
 
