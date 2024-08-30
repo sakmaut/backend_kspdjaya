@@ -18,6 +18,7 @@ class M_CreditSchedule extends Model
         'INTEREST',
         'INSTALLMENT',
         'PRINCIPAL_REMAINS',
+        'PAYMENT_VALUE',
         'PAID_FLAG'
     ];
     protected $guarded = [];
