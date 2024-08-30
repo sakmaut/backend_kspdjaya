@@ -46,7 +46,7 @@ class CustomerController extends Controller
     public function creditStruktur(Request $request)
     {
         try {
-            $data = M_CreditSchedule::where('loan_number',$request->loan_number)->get();
+            $data = M_CreditSchedule::where(['LOAN_NUMBER' => $request->loan_number,'PAID_FLAG' => 'PAID'])->get();
 
             if ($data->isEmpty()) {
                 throw new Exception("Loan Number Is Not Exist");
