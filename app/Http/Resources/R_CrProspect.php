@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Models\M_Credit;
 use App\Models\M_CrProspect;
+use App\Models\M_CrSurveyDocument;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
@@ -24,6 +25,7 @@ class R_CrProspect extends JsonResource
     {
         $stts_approval = M_SurveyApproval::where('CR_SURVEY_ID',$this->id)->first();
         $check_exist = M_Credit::where('ORDER_NUMBER',$this->order_number)->first();
+        $attachment = M_CrSurveyDocument::where('CR_SURVEY_ID',$this->id)->get();
 
         $data = [
             'id' => $this->id,
@@ -34,7 +36,8 @@ class R_CrProspect extends JsonResource
             'alamat' => $this->alamat,
             'hp' => $this->hp,
             'plafond' => $this->plafond,
-            'status' => ($stts_approval)?$stts_approval->APPROVAL_RESULT:''
+            'status' => ($stts_approval)?$stts_approval->APPROVAL_RESULT:'',
+            'attachment' => $attachment
         ];
         
         return $data;
