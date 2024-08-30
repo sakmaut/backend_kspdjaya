@@ -34,14 +34,12 @@ class M_CrSurveyDocument extends Model
     }
 
     public static function attachment($survey_id,$array = []){
-        $attachment = self::where('CR_SURVEY_ID', $survey_id)
+        $attachment = self::table('cr_survey_document')
+                        ->where('CR_SURVEY_ID', $survey_id)
                         ->whereIn('TYPE', $array)
+                        ->groupBy('type')
                         ->orderBy('CREATED_AT', 'desc')
-                        ->get()
-                        ->groupBy('TYPE')
-                        ->map(function($items) {
-                            return $items->first()->toArray();
-                        });
+                        ->get();
 
         return $attachment;
     }
