@@ -13,6 +13,7 @@ class M_CreditSchedule extends Model
     protected $fillable = [
         'ID',
         'LOAN_NUMBER',
+        'INSTALLMENT_COUNT',
         'PAYMENT_DATE',
         'PRINCIPAL',
         'INTEREST',

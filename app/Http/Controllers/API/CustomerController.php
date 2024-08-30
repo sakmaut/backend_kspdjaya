@@ -58,10 +58,9 @@ class CustomerController extends Controller
             }
 
             $schedule = [];
-            $i = 1;
             foreach ($data as $res) {
                 $schedule[]=[
-                    'angsuran_ke' =>  $i++,
+                    'angsuran_ke' =>  $res->INSTALLMENT_COUNT,
                     'loan_number' => $res->LOAN_NUMBER,
                     'tgl_angsuran' => $res->PAYMENT_DATE,
                     'principal' => number_format($res->PRINCIPAL, 2),

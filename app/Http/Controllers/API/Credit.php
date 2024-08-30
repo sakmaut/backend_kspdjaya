@@ -106,11 +106,13 @@ class Credit extends Controller
         if (!$check_exist && $request->flag == 'yes') {
             self::insert_credit($SET_UUID,$request, $data, $loan_number,$installment_count, $cust_code);
 
+            $no =1;
             foreach ($data_credit_schedule as $list) {
                 $credit_schedule =
                 [
                     'ID' => Uuid::uuid7()->toString(),
                     'LOAN_NUMBER' => $loan_number,
+                    'INSTALLMENT_COUNT' => $no++,
                     'PAYMENT_DATE' => Carbon::parse($list['tgl_angsuran'])->format('Y-m-d'),
                     'PRINCIPAL' => converttodecimal($list['pokok']),
                     'INTEREST' => converttodecimal($list['bunga']),
