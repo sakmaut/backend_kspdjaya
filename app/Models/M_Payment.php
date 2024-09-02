@@ -13,6 +13,8 @@ class M_Payment extends Model
     protected $fillable = [
         'ID',
         'STTS_RCRD',
+        'NO_TRX',
+        'PAYMENT_METHOD',
         'INVOICE',
         'ACC_NUM',
         'BRANCH',
