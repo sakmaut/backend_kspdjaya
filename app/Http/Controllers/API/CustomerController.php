@@ -58,6 +58,7 @@ class CustomerController extends Controller
                 $paymentAmount = $request->jumlah_uang;
             
                 foreach ($data as $scheduleItem) {
+                    $initialPaymentValue = $scheduleItem->PAYMENT_VALUE;
                     if ($paymentAmount > 0) {
                         $installment = $scheduleItem->INSTALLMENT;
                         $remainingPayment = $installment - $scheduleItem->PAYMENT_VALUE;
@@ -74,8 +75,8 @@ class CustomerController extends Controller
                             continue;
                         }
                     }
-                
-                    $schedule[] = [
+
+                    $schedule['list_structur'][] = [
                         'angsuran_ke' => $scheduleItem->INSTALLMENT_COUNT,
                         'loan_number' => $scheduleItem->LOAN_NUMBER,
                         'tgl_angsuran' => $scheduleItem->PAYMENT_DATE,
@@ -83,7 +84,9 @@ class CustomerController extends Controller
                         'interest' => number_format($scheduleItem->INTEREST, 2),
                         'installment' => number_format($scheduleItem->INSTALLMENT, 2),
                         'principal_remains' => number_format($scheduleItem->PRINCIPAL_REMAINS, 2),
-                        'payment' => number_format($scheduleItem->PAYMENT_VALUE, 2),
+                        'before_payment' =>  number_format($initialPaymentValue, 2),
+                        'after_payment' => number_format($scheduleItem->PAYMENT_VALUE -  $initialPaymentValue, 2),
+                        'total_payment' => number_format($scheduleItem->PAYMENT_VALUE, 2),
                         'flag' => $scheduleItem->PAID_FLAG
                     ];
                 }
