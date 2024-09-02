@@ -25,8 +25,8 @@ class PaymentController extends Controller
 
             $schedule = M_CreditSchedule::where('loan_number',$request->loan_number)->get();
             $paymentAmount = $request->nilai_pembayaran;
+            $getCodeBranch = M_Branch::find($request->user()->branch_id);
             
-            $angsuran = [];
             foreach ($schedule as $scheduleItem) {
                 if ($paymentAmount > 0) {
                     $installment = $scheduleItem->INSTALLMENT;
@@ -38,44 +38,40 @@ class PaymentController extends Controller
                         $scheduleItem->PAYMENT_VALUE += $paymentValue;
             
                         if ($scheduleItem->PAYMENT_VALUE == $installment) {
-                            $angsuran[] = $scheduleItem->INSTALLMENT_COUNT;
                             $scheduleItem->PAID_FLAG = 'PAID';
                         }
                     } else {
                         continue;
                     }
+
+                    $arrayData = [  
+                        'ID' => Uuid::uuid7()->toString(),
+                        'STTS_RCRD' => 'A',
+                        'INVOICE' => generateCode($request, 'payment', 'INVOICE','INV'),
+                        'BRANCH' => $getCodeBranch->CODE_NUMBER,
+                        'LOAN_NUM' => $request->loan_number,
+                        'VALUE_DATE' => $request->tgl_bayar,
+                        'ENTRY_DATE' => Carbon::now(),
+                        'TITLE' => 'Angsuran Ke-'.$scheduleItem->INSTALLMENT_COUNT,
+                        'ORIGINAL_AMOUNT' => $request->nilai_pembayaran,
+                        'OS_AMOUNT' => 0,
+                        'AUTH_BY' => $request->user()->id,
+                        'AUTH_DATE' => Carbon::now(),
+                        'BANK_NAME' => $request->nama_bank??null,
+                        'BANK_ACC_NUMBER' => $request->no_rekening??null,
+                    ];
+
+                    M_Payment::create($arrayData);
             
                     $scheduleItem->save();
                 } else {
                     break;
                 }
             }
-            
-            // $getCodeBranch = M_Branch::find($request->user()->branch_id);
-
-            // $arrayData = [  
-            //     'ID' => Uuid::uuid7()->toString(),
-            //     'STTS_RCRD' => 'A',
-            //     'INVOICE' => generateCode($request, 'payment', 'INVOICE','INV'),
-            //     'BRANCH' => $getCodeBranch->CODE_NUMBER,
-            //     'LOAN_NUM' => $request->loan_number,
-            //     'VALUE_DATE' => $request->tgl_bayar,
-                
-            //     'ENTRY_DATE' => Carbon::now(),
-            //     'TITLE' => $request->ket_pembayaran,
-            //     'ORIGINAL_AMOUNT' => $request->nilai_pembayaran,
-            //     'OS_AMOUNT' => 0,
-            //     'AUTH_BY' => $request->user()->id,
-            //     'AUTH_DATE' => Carbon::now(),
-            //     'BANK_NAME' => $request->nama_bank??null,
-            //     'BANK_ACC_NUMBER' => $request->no_rekening??null,
-            // ];
-
-            // M_Payment::create($arrayData);
-    
+  
             DB::commit();
             // ActivityLogger::logActivity($request,"Success",200);
-            return response()->json($angsuran, 200);
+            return response()->json($schedule, 200);
         }catch (QueryException $e) {
             DB::rollback();
             ActivityLogger::logActivity($request,$e->getMessage(),409);
