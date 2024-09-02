@@ -8,6 +8,7 @@ use App\Models\M_CrCollateral;
 use App\Models\M_Credit;
 use App\Models\M_CreditSchedule;
 use App\Models\M_Customer;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 
@@ -79,13 +80,13 @@ class CustomerController extends Controller
                     $schedule[] = [
                         'angsuran_ke' => $scheduleItem->INSTALLMENT_COUNT,
                         'loan_number' => $scheduleItem->LOAN_NUMBER,
-                        'tgl_angsuran' => $scheduleItem->PAYMENT_DATE,
+                        'tgl_angsuran' => Carbon::parse($scheduleItem->PAYMENT_DATE)->format('d-m-Y'),
                         'principal' => number_format($scheduleItem->PRINCIPAL, 2),
                         'interest' => number_format($scheduleItem->INTEREST, 2),
                         'installment' => number_format($scheduleItem->INSTALLMENT, 2),
                         'principal_remains' => number_format($scheduleItem->PRINCIPAL_REMAINS, 2),
                         'before_payment' =>  number_format($initialPaymentValue, 2),
-                        'after_payment' => number_format($scheduleItem->PAYMENT_VALUE -  $initialPaymentValue, 2),
+                        'after_payment' => intval($scheduleItem->PAYMENT_VALUE -  $initialPaymentValue),
                         'payment' => number_format($scheduleItem->PAYMENT_VALUE, 2),
                         'flag' => $scheduleItem->PAID_FLAG
                     ];
