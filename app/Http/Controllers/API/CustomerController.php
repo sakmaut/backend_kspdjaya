@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\R_CreditList;
+use App\Models\M_CrCollateral;
 use App\Models\M_Credit;
 use App\Models\M_CreditSchedule;
 use App\Models\M_Customer;
@@ -15,7 +16,11 @@ class CustomerController extends Controller
     public function index(Request $request)
     {
         try {
-            $data =  M_Customer::all();
+            $data = M_Customer::all()->map(function ($customer) {
+                $credit = M_Credit::where('CUST_CODE',$customer->CUST_CODE)->first();
+                $customer->jaminan = M_CrCollateral::where('CR_CREDIT_ID', $credit->ID)->first();
+                return $customer;
+            });
 
             ActivityLogger::logActivity($request,"Success",200);
             return response()->json($data, 200);
