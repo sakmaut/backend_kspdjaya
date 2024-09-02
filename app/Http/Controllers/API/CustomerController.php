@@ -86,7 +86,7 @@ class CustomerController extends Controller
                         'principal_remains' => number_format($scheduleItem->PRINCIPAL_REMAINS, 2),
                         'before_payment' =>  number_format($initialPaymentValue, 2),
                         'after_payment' => number_format($scheduleItem->PAYMENT_VALUE -  $initialPaymentValue, 2),
-                        'total_payment' => number_format($scheduleItem->PAYMENT_VALUE, 2),
+                        'payment' => number_format($scheduleItem->PAYMENT_VALUE, 2),
                         'flag' => $scheduleItem->PAID_FLAG
                     ];
                 }
