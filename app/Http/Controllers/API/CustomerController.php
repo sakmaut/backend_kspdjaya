@@ -128,7 +128,7 @@ class CustomerController extends Controller
                     $schedule[]=[
                         'angsuran_ke' =>  $res->INSTALLMENT_COUNT,
                         'loan_number' => $res->LOAN_NUMBER,
-                        'tgl_angsuran' => $res->PAYMENT_DATE,
+                        'tgl_angsuran' => Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y'),
                         'principal' => number_format($res->PRINCIPAL, 2),
                         'interest' => number_format($res->INTEREST, 2),
                         'installment' => number_format($res->INSTALLMENT, 2),
