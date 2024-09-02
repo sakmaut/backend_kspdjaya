@@ -77,7 +77,10 @@ class CustomerController extends Controller
                         }
                     }
 
+                    $after_value = intval($scheduleItem->PAYMENT_VALUE -  $initialPaymentValue);
+
                     $schedule[] = [
+                        'id_structur' => $scheduleItem->INSTALLMENT_COUNT.'-'. $after_value,
                         'angsuran_ke' => $scheduleItem->INSTALLMENT_COUNT,
                         'loan_number' => $scheduleItem->LOAN_NUMBER,
                         'tgl_angsuran' => Carbon::parse($scheduleItem->PAYMENT_DATE)->format('d-m-Y'),
@@ -86,7 +89,7 @@ class CustomerController extends Controller
                         'installment' => number_format($scheduleItem->INSTALLMENT, 2),
                         'principal_remains' => number_format($scheduleItem->PRINCIPAL_REMAINS, 2),
                         'before_payment' =>  number_format($initialPaymentValue, 2),
-                        'after_payment' => intval($scheduleItem->PAYMENT_VALUE -  $initialPaymentValue),
+                        'after_payment' =>  $after_value,
                         'payment' => number_format($scheduleItem->PAYMENT_VALUE, 2),
                         'flag' => $scheduleItem->PAID_FLAG
                     ];
