@@ -75,7 +75,7 @@ class CustomerController extends Controller
                         }
                     }
                 
-                    $schedule[] = [
+                    $schedule['plan'] = [
                         'angsuran_ke' => $scheduleItem->INSTALLMENT_COUNT,
                         'loan_number' => $scheduleItem->LOAN_NUMBER,
                         'tgl_angsuran' => $scheduleItem->PAYMENT_DATE,
