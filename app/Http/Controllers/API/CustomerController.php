@@ -87,6 +87,27 @@ class CustomerController extends Controller
                         'flag' => $scheduleItem->PAID_FLAG
                     ];
                 }
+
+                $paymentFor = [];
+                foreach ($schedule as $key => $value) {
+                    if ($value['flag'] == 'PAID') {
+                        $paymentFor[] = [
+                            'angsuran_ke' => $value['angsuran_ke'],
+                            'loan_number' => $value['loan_number'],
+                            'tgl_angsuran' => $value['tgl_angsuran'],
+                            'principal' => $value['principal'],
+                            'interest' => $value['interest'],
+                            'installment' => $value['installment'],
+                            'principal_remains' => $value['principal_remains'],
+                            'payment' => $value['payment'],
+                            'flag' => $value['flag']
+                        ];
+                    }
+                }
+
+                foreach ($schedule as $key => $value) {
+                    $schedule['payment_for'] = $paymentFor;
+                }
             }else{
                 $data = M_CreditSchedule::where('LOAN_NUMBER', $request->loan_number)
                 ->where(function ($query) {
