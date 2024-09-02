@@ -61,8 +61,10 @@ class PaymentController extends Controller
                         'BANK_ACC_NUMBER' => $request->no_rekening??null,
                     ];
 
-                    M_Payment::create($arrayData);
-            
+                    if($paymentAmount != 0){
+                        M_Payment::create($arrayData);
+                    }
+                   
                     $scheduleItem->save();
                 } else {
                     break;
