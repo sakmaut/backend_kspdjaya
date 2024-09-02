@@ -46,30 +46,67 @@ class CustomerController extends Controller
     public function creditStruktur(Request $request)
     {
         try {
-            $data = M_CreditSchedule::where('LOAN_NUMBER', $request->loan_number)
-            ->where(function ($query) {
-                $query->whereNull('PAID_FLAG')
-                    ->orWhere('PAID_FLAG', '<>', 'PAID');
-            })
-            ->get();
-
-            if ($data->isEmpty()) {
-                throw new Exception("Loan Number Is Not Exist");
-            }
-
             $schedule = [];
-            foreach ($data as $res) {
-                $schedule[]=[
-                    'angsuran_ke' =>  $res->INSTALLMENT_COUNT,
-                    'loan_number' => $res->LOAN_NUMBER,
-                    'tgl_angsuran' => $res->PAYMENT_DATE,
-                    'principal' => number_format($res->PRINCIPAL, 2),
-                    'interest' => number_format($res->INTEREST, 2),
-                    'installment' => number_format($res->INSTALLMENT, 2),
-                    'principal_remains' => number_format($res->PRINCIPAL_REMAINS, 2),
-                    'payment' => number_format($res->PAYMENT_VALUE, 2),
-                    'flag' => $res->PAID_FLAG
-                ];
+
+            if (isset($request->jumlah_uang)) {
+                $data = M_CreditSchedule::where('loan_number',$request->loan_number)->get();
+                $paymentAmount = $request->jumlah_uang;
+            
+                foreach ($data as $scheduleItem) {
+                    if ($paymentAmount > 0) {
+                        $installment = $scheduleItem->INSTALLMENT;
+                        $remainingPayment = $installment - $scheduleItem->PAYMENT_VALUE;
+                
+                        if ($remainingPayment > 0) {
+                            $paymentValue = min($paymentAmount, $remainingPayment);
+                            $paymentAmount -= $paymentValue;
+                            $scheduleItem->PAYMENT_VALUE += $paymentValue;
+                
+                            if ($scheduleItem->PAYMENT_VALUE == $installment) {
+                                $scheduleItem->PAID_FLAG = 'PAID';
+                            }
+                        } else {
+                            continue;
+                        }
+                    }
+                
+                    $schedule[] = [
+                        'angsuran_ke' => $scheduleItem->INSTALLMENT_COUNT,
+                        'loan_number' => $scheduleItem->LOAN_NUMBER,
+                        'tgl_angsuran' => $scheduleItem->PAYMENT_DATE,
+                        'principal' => number_format($scheduleItem->PRINCIPAL, 2),
+                        'interest' => number_format($scheduleItem->INTEREST, 2),
+                        'installment' => number_format($scheduleItem->INSTALLMENT, 2),
+                        'principal_remains' => number_format($scheduleItem->PRINCIPAL_REMAINS, 2),
+                        'payment' => number_format($scheduleItem->PAYMENT_VALUE, 2),
+                        'flag' => $scheduleItem->PAID_FLAG
+                    ];
+                }
+            }else{
+                $data = M_CreditSchedule::where('LOAN_NUMBER', $request->loan_number)
+                ->where(function ($query) {
+                    $query->whereNull('PAID_FLAG')
+                        ->orWhere('PAID_FLAG', '<>', 'PAID');
+                })
+                ->get();
+
+                if ($data->isEmpty()) {
+                    throw new Exception("Loan Number Is Not Exist");
+                }
+
+                foreach ($data as $res) {
+                    $schedule[]=[
+                        'angsuran_ke' =>  $res->INSTALLMENT_COUNT,
+                        'loan_number' => $res->LOAN_NUMBER,
+                        'tgl_angsuran' => $res->PAYMENT_DATE,
+                        'principal' => number_format($res->PRINCIPAL, 2),
+                        'interest' => number_format($res->INTEREST, 2),
+                        'installment' => number_format($res->INSTALLMENT, 2),
+                        'principal_remains' => number_format($res->PRINCIPAL_REMAINS, 2),
+                        'payment' => number_format($res->PAYMENT_VALUE, 2),
+                        'flag' => $res->PAID_FLAG
+                    ];
+                }
             }
 
             return response()->json($schedule, 200);

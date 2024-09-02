@@ -25,7 +25,8 @@ class PaymentController extends Controller
 
             $schedule = M_CreditSchedule::where('loan_number',$request->loan_number)->get();
             $paymentAmount = $request->nilai_pembayaran;
-
+            
+            $angsuran = [];
             foreach ($schedule as $scheduleItem) {
                 if ($paymentAmount > 0) {
                     $installment = $scheduleItem->INSTALLMENT;
@@ -37,6 +38,7 @@ class PaymentController extends Controller
                         $scheduleItem->PAYMENT_VALUE += $paymentValue;
             
                         if ($scheduleItem->PAYMENT_VALUE == $installment) {
+                            $angsuran[] = $scheduleItem->INSTALLMENT_COUNT;
                             $scheduleItem->PAID_FLAG = 'PAID';
                         }
                     } else {
@@ -49,7 +51,7 @@ class PaymentController extends Controller
                 }
             }
             
-            $getCodeBranch = M_Branch::find($request->user()->branch_id);
+            // $getCodeBranch = M_Branch::find($request->user()->branch_id);
 
             // $arrayData = [  
             //     'ID' => Uuid::uuid7()->toString(),
@@ -72,8 +74,8 @@ class PaymentController extends Controller
             // M_Payment::create($arrayData);
     
             DB::commit();
-            ActivityLogger::logActivity($request,"Success",200);
-            return response()->json($schedule, 200);
+            // ActivityLogger::logActivity($request,"Success",200);
+            return response()->json($angsuran, 200);
         }catch (QueryException $e) {
             DB::rollback();
             ActivityLogger::logActivity($request,$e->getMessage(),409);
