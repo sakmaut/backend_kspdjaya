@@ -8,11 +8,13 @@ use App\Http\Resources\R_BranchDetail;
 use App\Models\M_Branch;
 use App\Models\M_CreditSchedule;
 use App\Models\M_Payment;
+use App\Models\M_PaymentAttachment;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Validator;
 use Ramsey\Uuid\Uuid;
 
@@ -98,5 +100,47 @@ class PaymentController extends Controller
         }
 
         return $newCode;
+    }
+
+    public function upload(Request $req)
+    {
+        DB::beginTransaction();
+        try {
+
+            $this->validate($req, [
+                'image' => 'image|mimes:jpg,png,jpeg,gif,svg',
+                'payment_id' =>'string'
+            ]);
+
+            if ($req->hasFile('image')) {
+                $image_path = $req->file('image')->store('public/Payment');
+                $image_path = str_replace('public/', '', $image_path);
+
+                $url = URL::to('/') . '/storage/' . $image_path;
+
+                $data_array_attachment = [
+                    'id' => Uuid::uuid4()->toString(),
+                    'payment_id' => $req->payment_id,
+                    'file_attach' => $url ?? ''
+                ];
+
+                M_PaymentAttachment::create($data_array_attachment);
+
+                DB::commit();
+                return response()->json($url, 200);
+            } else {
+                DB::rollback();
+                ActivityLogger::logActivity($req, 'No image file provided', 400);
+                return response()->json(['message' => 'No image file provided', "status" => 400], 400);
+            }
+        } catch (QueryException $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($req,$e->getMessage(),409);
+            return response()->json(['message' => $e->getMessage(),"status" => 409], 409);
+        } catch (\Exception $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($req,$e->getMessage(),500);
+            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+        } 
     }
 }
