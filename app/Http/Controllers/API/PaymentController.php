@@ -49,17 +49,17 @@ class PaymentController extends Controller
             
                         if ($scheduleItem->PAYMENT_VALUE == $installment) {
                             $scheduleItem->PAID_FLAG = 'PAID';
-
-                            $pembayaran[] = [
-                                'installment' => $scheduleItem->INSTALLMENT_COUNT,
-                                'payment_value' => $paymentValue,
-                                'original_amount' => $request->nilai_pembayaran,
-                                'title' => 'Angsuran Ke-'.$scheduleItem->INSTALLMENT_COUNT,
-                            ];
                         }
                     } else {
                         continue;
                     }
+
+                    $pembayaran[] = [
+                        'installment' => $scheduleItem->INSTALLMENT_COUNT,
+                        'payment_value' => $paymentValue,
+                        'original_amount' => $request->nilai_pembayaran,
+                        'title' => 'Angsuran Ke-'.$scheduleItem->INSTALLMENT_COUNT,
+                    ];
 
                     $arrayData = [  
                         'ID' => Uuid::uuid7()->toString(),
