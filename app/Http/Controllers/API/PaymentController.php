@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\R_Branch;
 use App\Http\Resources\R_BranchDetail;
 use App\Models\M_Branch;
+use App\Models\M_Credit;
 use App\Models\M_CreditSchedule;
+use App\Models\M_Customer;
 use App\Models\M_Payment;
 use App\Models\M_PaymentAttachment;
 use Carbon\Carbon;
@@ -30,6 +32,9 @@ class PaymentController extends Controller
             $getCodeBranch = M_Branch::find($request->user()->branch_id);
             $created_now = Carbon::now();
             $no_inv = generateCode($request, 'payment', 'INVOICE','INV');
+
+            $credit = M_Credit::where('LOAN_NUMBER',$request->loan_number)->first();
+            $detail_customer = M_Customer::where('CUST_CODE',$credit->CUST_CODE)->first();
 
             $pembayaran = [];
             foreach ($schedule as $scheduleItem) {
@@ -87,14 +92,25 @@ class PaymentController extends Controller
 
             $build = [
                 "no_transaksi" => $no_inv,
-                "no_pelanggan" => null,
+                "detail_pelanggan" => [
+                    'cust_code' =>  $detail_customer->CUST_CODE,
+                    'nama' => $detail_customer->NAME,
+                    'alamat' => $detail_customer->ADDRESS,
+                    'rt' => $detail_customer->RT,
+                    'rw' => $detail_customer->RW,
+                    'provinsi' => $detail_customer->PROVINCE,
+                    'kota' => $detail_customer->CITY,
+                    'kelurahan' => $detail_customer->KELURAHAN,
+                    'kecamatan' => $detail_customer->KECAMATAN,
+                ],
                 "tgl_transaksi" => Carbon::now()->format('d-m-Y'),
                 "pembayaran" => $pembayaran,
                 "pembulatan" => $request->pembulatan,
+                "kembalian" => $request->kembalian,
                 "jml_pembayaran" => $request->nilai_pembayaran,
                 "terbilang" => bilangan($request->nilai_pembayaran)??null,
                 "created_by" => $request->user()->fullname,
-                "created_at" => $created_now
+                "created_at" => Carbon::parse($created_now)->format('d-m-Y')
             ];
   
             DB::commit();
