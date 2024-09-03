@@ -23,13 +23,17 @@ class CrBlacklistController extends Controller
         }
     }
 
-    public function show(Request $req,$id)
+    public function check(Request $req)
     {
         try {
-            $check = M_CrBlacklist::where('LOAN_NUMBER',$id)->firstOrFail();
+            $param = $req->param;
+            $blacklist = M_CrBlacklist::where('LOAN_NUMBER', $param)
+                        ->orWhere('KTP', $param)
+                        ->orWhere('KK', $param)
+                        ->first();
 
             ActivityLogger::logActivity($req,"Success",200);
-            return response()->json($check, 200);
+            return response()->json($blacklist, 200);
         } catch (ModelNotFoundException $e) {
             ActivityLogger::logActivity($req,'Data Not Found',404);
             return response()->json(['message' => 'Data Not Found',"status" => 404], 404);
