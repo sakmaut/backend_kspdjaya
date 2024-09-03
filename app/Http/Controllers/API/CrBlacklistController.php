@@ -28,9 +28,10 @@ class CrBlacklistController extends Controller
         try {
             $param = $req->param;
             $blacklist = M_CrBlacklist::where('LOAN_NUMBER', $param)
-                        ->orWhere('KTP', $param)
-                        ->orWhere('KK', $param)
-                        ->first();
+                    ->orWhere('KTP', $param)
+                    ->orWhere('KK', $param)
+                    ->selectRaw("LOAN_NUMBER,KTP,KK, (SELECT GROUP_CONCAT(NOTE) FROM cr_blacklist WHERE LOAN_NUMBER = ? OR KTP = ? OR KK = ?) as notes", [$param, $param, $param])
+                    ->first();
 
             ActivityLogger::logActivity($req,"Success",200);
             return response()->json($blacklist, 200);
