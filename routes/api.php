@@ -13,7 +13,8 @@ use App\Http\Controllers\API\{
     PaymentController,
     TaksasiController,
     UserAccessMenuController,
-    UsersController
+    UsersController,
+    CrBlacklistController
 };
 use App\Http\Controllers\Welcome;
 use Illuminate\Http\Request;
@@ -83,6 +84,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('struktur_kredit', [CustomerController::class, 'creditStruktur']);
     Route::resource('payment', PaymentController::class);
     Route::post('payment_attachment', [PaymentController::class, 'upload']);
+
+    //Blacklist
+    Route::resource('blacklist', CrBlacklistController::class);
 });
 
 

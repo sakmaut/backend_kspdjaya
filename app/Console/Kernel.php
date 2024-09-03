@@ -9,9 +9,13 @@ use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 class Kernel extends ConsoleKernel
 {
 
+    protected $commands = [
+        Commands\DemoCron::class,
+    ];
+
     protected function schedule(Schedule $schedule): void
     {
-        $schedule->command('app:check-arrears')->dailyAt('09:25');
+        $schedule->command('demo:cron')->everySecond();
     }
 
     /**
