@@ -3,6 +3,7 @@
 use App\Http\Controllers\API\{
     AdminFeeController,
     AuthController,
+    BpkbController,
     BranchController,
     CrAppilcationController,
     Credit,
@@ -88,6 +89,8 @@ Route::middleware('auth:sanctum')->group(function () {
     //Blacklist
     Route::resource('blacklist', CrBlacklistController::class);
     Route::post('blacklist_detail', [CrBlacklistController::class,'check']);
+
+    Route::resource('bpkb', BpkbController::class);
 });
 
 
