@@ -32,9 +32,11 @@ class DemoCron extends Command
     {
         $data = [
             'CODE' =>  Uuid::uuid7()->toString(),
+            'NAME' =>  'BACOT',
             'CODE_NUMBER' => Uuid::uuid7()->toString(),
             'CREATE_DATE' => Carbon::now()->format('Y-m-d'),
-            'CREATE_USER' =>''
+            'CREATE_USER' =>'',
+            'DELETED_AT' => Carbon::now()
         ];
 
         M_Branch::create($data);
