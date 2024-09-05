@@ -7,6 +7,7 @@ use App\Models\M_Test;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Log\Logger;
+use Ramsey\Uuid\Uuid;
 
 class DemoCron extends Command
 {
@@ -29,18 +30,13 @@ class DemoCron extends Command
      */
     public function handle()
     {
-        try {
-            $data = [
-                'CODE' => 'value1',
-                'CODE_NUMBER' => 123455,
-                'CREATE_DATE' => Carbon::now()->format('Y-m-d'),
-                'CREATE_USER' =>''
-            ];
+        $data = [
+            'CODE' =>  Uuid::uuid7()->toString(),
+            'CODE_NUMBER' => Uuid::uuid7()->toString(),
+            'CREATE_DATE' => Carbon::now()->format('Y-m-d'),
+            'CREATE_USER' =>''
+        ];
 
-            M_Branch::create($data);
-
-        } catch (\Exception $e) {
-            echo "Error: " . $e->getMessage();
-        }
+        M_Branch::create($data);
     }
 }
