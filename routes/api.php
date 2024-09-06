@@ -4,6 +4,7 @@ use App\Http\Controllers\API\{
     AdminFeeController,
     AuthController,
     BpkbController,
+    BpkbTransactionController,
     BranchController,
     CrAppilcationController,
     Credit,
@@ -91,6 +92,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('blacklist_detail', [CrBlacklistController::class,'check']);
 
     Route::resource('bpkb', BpkbController::class);
+    Route::resource('bpkb_transaction', BpkbTransactionController::class);
 });
 
 

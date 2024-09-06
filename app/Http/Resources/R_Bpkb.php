@@ -15,6 +15,7 @@ class R_Bpkb extends JsonResource
     public function toArray(Request $request): array
     {
         return [
+            "id" => $this->ID,
             "no_polisi" => $this->POLICE_NUMBER,
             "no_rangka" => $this->CHASIS_NUMBER,
             "no_mesin" => $this->ENGINE_NUMBER,

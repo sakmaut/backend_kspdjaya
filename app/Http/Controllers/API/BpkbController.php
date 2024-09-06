@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\R_Bpkb;
+use App\Models\M_CrCollateral;
 use App\Models\M_Credit;
 use App\Models\M_CrSurvey;
 use Illuminate\Http\Request;
@@ -16,10 +17,12 @@ class BpkbController extends Controller
 
             $branch = $request->user()->branch_id;
 
-            $data = M_Credit::leftJoin('cr_collateral as t2', 't2.CR_CREDIT_ID', '=', 'credit.ID')
-                                ->select('credit.BRANCH', 't2.*')
-                                ->where('credit.BRANCH',$branch)
-                                ->get();
+            // $data = M_Credit::leftJoin('cr_collateral as t2', 't2.CR_CREDIT_ID', '=', 'credit.ID')
+            //                     ->select('credit.BRANCH', 't2.*')
+            //                     ->where('credit.BRANCH',$branch)
+            //                     ->get();
+
+            $data = M_CrCollateral::where('LOCATION_BRANCH',$branch)->get();
 
             $dto = R_Bpkb::collection($data);
 

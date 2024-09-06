@@ -6,37 +6,20 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
-class M_CrCollateral extends Model
+class M_BpkbTransaction extends Model
 {
     use HasFactory;
-    protected $table = 'cr_collateral';
-
+    protected $table = 'bpkb_transaction';
     protected $fillable = [
-       'ID',
-       'CR_CREDIT_ID',
-       'HEADER_ID',
-       'BRAND',
-       'TYPE',
-       'PRODUCTION_YEAR',
-       'COLOR',
-       'ON_BEHALF',
-       'POLICE_NUMBER',
-       'CHASIS_NUMBER',
-       'ENGINE_NUMBER',
-       'BPKB_NUMBER',
-       'STNK_NUMBER',
-       'VALUE',
-       'COLLATERAL_FLAG',
-       'VERSION',
-       'LOCATION_BRANCH',
-       'CREATE_DATE',
-       'CREATE_BY',
-       'MOD_DATE',
-       'MOD_BY',
-       'DELETED_AT',
-       'DELETED_BY'
+        'ID',
+        'FROM_BRANCH',
+        'TO_BRANCH',
+        'CATEGORY',
+        'NOTE',
+        'STATUS',
+        'CREATED_BY',
+        'CREATED_AT'
     ];
-
     protected $guarded = [];
     public $incrementing = false;
     protected $keyType = 'string';
