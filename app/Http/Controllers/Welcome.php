@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\M_Arrears;
 use App\Models\M_Branch;
 use App\Models\M_CrPersonal;
 use App\Models\M_CrProspect;
@@ -21,10 +22,6 @@ class Welcome extends Controller
      */
     public function index(Request $request)
     {
-        // $source = $_FILES["image"]['tmp_name'];
-        // $destination = '../public/storage/Cr_Prospect/' . $_FILES["image"]["name"];
-        // $push = self::compress($source,$destination,2);
-
         return response()->json(['message' => 'OK',"status" => 200,'response' =>'WELCOME'], 200);
     }
 
