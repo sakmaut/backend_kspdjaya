@@ -20,7 +20,7 @@ class R_CustomerSearch extends JsonResource
             "nama" => $this->NAME,
             "no_polisi" => $this->POLICE_NUMBER,
             "alamat" => $this->ADDRESS,
-            "angsuran" => $this->INSTALLMENT
+            "angsuran" => intval($this->INSTALLMENT)
         ];
     }
 }
