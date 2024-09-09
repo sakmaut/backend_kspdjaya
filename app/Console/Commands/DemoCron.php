@@ -56,7 +56,8 @@ class DemoCron extends Command
                         'LOAN_NUMBER' => $result->LOAN_NUMBER,
                         'START_DATE' => $result->PAYMENT_DATE,
                         'END_DATE' => null,
-                        'PAST_DUE_PCPL' => $result->INSTALLMENT,
+                        'PAST_DUE_PCPL' => $result->PRINCIPAL,
+                        'PAST_DUE_INTRST' => $result->INTEREST,
                         'PAST_DUE_PENALTY' => $pastDuePinalty,
                         'CREATED_AT' => Carbon::now()
                     ];
