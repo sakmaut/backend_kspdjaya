@@ -62,15 +62,26 @@ class DemoCron extends Command
                         'CREATED_AT' => Carbon::now()
                     ];
                 }
-        
-                $process = M_Arrears::insert($arrearsData);
-    
-                if($process){
-                    M_CronJobLog::create([
-                        'STATUS' => 'SUCCESS',
-                        'DESCRIPTION' => 'SUCCESS'
-                    ]);
+
+                $existingArrears = M_Arrears::where([
+                    'STATUS_REC' => 'A',
+                    'LOAN_NUMBER' => $result->LOAN_NUMBER,
+                    'START_DATE' => $result->PAYMENT_DATE
+                ])->first();
+
+                if ($existingArrears) {
+                    // Update the existing record
+                    $existingArrears->update($arrearsData);
+                } else {
+                    // Insert a new record
+                    M_Arrears::insert($arrearsData);
                 }
+    
+                M_CronJobLog::create([
+                    'STATUS' => 'SUCCESS',
+                    'DESCRIPTION' => 'SUCCESS'
+                ]);
+
             }else{
                 M_CronJobLog::create([
                     'STATUS' => 'SUCCESS',
