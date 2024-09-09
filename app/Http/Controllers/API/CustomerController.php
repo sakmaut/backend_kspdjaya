@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\R_CreditList;
+use App\Http\Resources\R_CustomerSearch;
 use App\Models\M_CrCollateral;
 use App\Models\M_Credit;
 use App\Models\M_CreditSchedule;
@@ -35,28 +36,37 @@ class CustomerController extends Controller
     public function searchCustomer(Request $request)
     {
         try {
+            $searchParams = [
+                'nama' => 't1.NAME',
+                'no_kontrak' => 't0.LOAN_NUMBER',
+                'no_polisi' => 't2.POLICE_NUMBER',
+            ];
+            
+            // Check if all search parameters are null
+            if (array_reduce(array_keys($searchParams), function ($carry, $param) use ($request) {
+                return $carry && is_null($request->$param);
+            }, true)) {
+                return [];
+            }
+            
             $query = DB::table('credit as t0')
-                ->select('*')
+                ->select('t0.LOAN_NUMBER', 't0.INSTALLMENT', 't1.NAME', 't1.ADDRESS', 't2.POLICE_NUMBER', 't0.ORDER_NUMBER')
                 ->join('customer as t1', 't1.CUST_CODE', '=', 't0.CUST_CODE')
                 ->join('cr_collateral as t2', 't2.CR_CREDIT_ID', '=', 't0.ID');
             
-                $searchParams = [
-                    'nama' => 't1.NAME',
-                    'no_kontrak' => 't0.LOAN_NUMBER',
-                    'no_polisi' => 't2.POLICE_NUMBER',
-                ];
-                
-                foreach ($searchParams as $param => $column) {
-                    if ($request->$param) {
-                        $query->where($column, 'like', '%' . $request->$param . '%');
-                    }
+            foreach ($searchParams as $param => $column) {
+                if ($request->$param) {
+                    $query->where($column, 'like', '%' . $request->$param . '%');
                 }
-
-                $results = $query->get();
+            }
             
+            $results = $query->get();
+            
+    
+            $dto = R_CustomerSearch::collection($results);
 
             // ActivityLogger::logActivity($request,"Success",200);
-            return response()->json($results, 200);
+            return response()->json($dto, 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
