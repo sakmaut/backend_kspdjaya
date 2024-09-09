@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\R_CreditList;
 use App\Http\Resources\R_CustomerSearch;
+use App\Models\M_Arrears;
 use App\Models\M_CrCollateral;
 use App\Models\M_Credit;
 use App\Models\M_CreditSchedule;
@@ -98,6 +99,7 @@ class CustomerController extends Controller
 
             if (isset($request->jumlah_uang)) {
                 $data = M_CreditSchedule::where('loan_number',$request->loan_number)->get();
+              
                 $paymentAmount = $request->jumlah_uang;
             
                 foreach ($data as $scheduleItem) {
@@ -120,6 +122,7 @@ class CustomerController extends Controller
                     }
 
                     $after_value = intval($scheduleItem->PAYMENT_VALUE -  $initialPaymentValue);
+                    $arrears = M_Arrears::where('LOAN_NUMBER',$scheduleItem->loan_number)->get();
 
                     $schedule[] = [
                         'id_structur' => $scheduleItem->INSTALLMENT_COUNT.'-'. $after_value,
@@ -133,7 +136,8 @@ class CustomerController extends Controller
                         'before_payment' =>  number_format($initialPaymentValue, 2),
                         'after_payment' =>  $after_value,
                         'payment' => number_format($scheduleItem->PAYMENT_VALUE, 2),
-                        'flag' => $scheduleItem->PAID_FLAG
+                        'flag' => $scheduleItem->PAID_FLAG,
+                        'tunggakkan' => $arrears
                     ];
                 }
 
