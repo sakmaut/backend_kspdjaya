@@ -35,7 +35,8 @@ class DemoCron extends Command
     {
         try {
             $query = DB::table('credit_schedule')
-                ->where('PAYMENT_DATE', '<', DB::raw('CURDATE()'))
+                // ->where('PAYMENT_DATE', '<', DB::raw('CURDATE()'))
+                ->where('PAYMENT_DATE', '<', DB::raw("'2024-09-10'"))
                 ->where('PAID_FLAG', '')
                 ->select('*')
                 ->get();
