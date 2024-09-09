@@ -46,7 +46,8 @@ class DemoCron extends Command
                 foreach ($query as $result) {
     
                     $startDate = $result->PAYMENT_DATE;
-                    $endDate = date('Y-m-d'); // current date
+                    // $endDate = date('Y-m-d'); // current date
+                    $endDate = date('2024-09-10');
                     $daysDiff = (strtotime($endDate) - strtotime($startDate)) / (60 * 60 * 24);
     
                     $pastDuePinalty = $result->INSTALLMENT * ($daysDiff * 0.005);
