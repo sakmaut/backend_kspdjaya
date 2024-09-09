@@ -11,6 +11,7 @@ use App\Models\M_Customer;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CustomerController extends Controller
 {
@@ -25,6 +26,37 @@ class CustomerController extends Controller
 
             ActivityLogger::logActivity($request,"Success",200);
             return response()->json($data, 200);
+        } catch (\Exception $e) {
+            ActivityLogger::logActivity($request,$e->getMessage(),500);
+            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+        }
+    }
+
+    public function searchCustomer(Request $request)
+    {
+        try {
+            $query = DB::table('credit as t0')
+                ->select('*')
+                ->join('customer as t1', 't1.CUST_CODE', '=', 't0.CUST_CODE')
+                ->join('cr_collateral as t2', 't2.CR_CREDIT_ID', '=', 't0.ID');
+            
+                $searchParams = [
+                    'nama' => 't1.NAME',
+                    'no_kontrak' => 't0.LOAN_NUMBER',
+                    'no_polisi' => 't2.POLICE_NUMBER',
+                ];
+                
+                foreach ($searchParams as $param => $column) {
+                    if ($request->$param) {
+                        $query->where($column, 'like', '%' . $request->$param . '%');
+                    }
+                }
+
+                $results = $query->get();
+            
+
+            // ActivityLogger::logActivity($request,"Success",200);
+            return response()->json($results, 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);

@@ -219,7 +219,7 @@ class Credit extends Controller
             'CREDIT_TYPE'  =>$data->CREDIT_TYPE??null,
             'INSTALLMENT_COUNT'  => $installment_count,
             'PERIOD'  => $data->PERIOD,
-            'INSTALLMENT'  => $request->angsuran,
+            'INSTALLMENT'  => $data->INSTALLMENT,
             'FLAT_RATE'  => $data->FLAT_RATE??null,
             'EFF_RATE'  => $data->EFF_RATE??null,
             'VERSION'  => 1,
