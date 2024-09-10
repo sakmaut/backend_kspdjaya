@@ -226,9 +226,9 @@ class CustomerController extends Controller
                         'installment' => intval($scheduleItem->INSTALLMENT),
                         'principal_remains' => intval($scheduleItem->PRINCIPAL_REMAINS),
                         'before_payment' => intval($initialPaymentValue),
-                        'after_payment' => $after_value,
-                        'bayar_angsuran' => $bayar_angsuran,
-                        'bayar_denda' => $bayar_denda,
+                        'after_payment' => intval($after_value),
+                        'bayar_angsuran' => intval($bayar_angsuran),
+                        'bayar_denda' => intval($bayar_denda),
                         'payment' => intval($scheduleItem->PAYMENT_VALUE),
                         'flag' => $scheduleItem->PAID_FLAG,
                         'denda' => intval($arrears->PAST_DUE_PENALTY ?? null)
