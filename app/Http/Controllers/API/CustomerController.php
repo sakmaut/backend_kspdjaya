@@ -217,6 +217,7 @@ class CustomerController extends Controller
                     // Store the current schedule details
                     $schedule[] = [
                         'key' => $j++,
+                        'jumlah_uang' => $request->jumlah_uang,
                         'id_structur' => $scheduleItem->INSTALLMENT_COUNT . '-' . $after_value,
                         'angsuran_ke' => $scheduleItem->INSTALLMENT_COUNT,
                         'loan_number' => $scheduleItem->LOAN_NUMBER,
