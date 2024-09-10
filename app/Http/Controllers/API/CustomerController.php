@@ -127,6 +127,8 @@ class CustomerController extends Controller
                     }
                   
                     $after_value = intval($scheduleItem->PAYMENT_VALUE -  $initialPaymentValue);
+                    $beforePastDue = $scheduleItem->PAYMENT_VALUE - ($arrears->PAST_DUE_PENALTY ?? 0);
+                    $denda = $after_value - ($beforePastDue);
 
                     $schedule[] = [
                         'id_structur' => $scheduleItem->INSTALLMENT_COUNT.'-'. $after_value,
@@ -139,6 +141,8 @@ class CustomerController extends Controller
                         'principal_remains' => intval($scheduleItem->PRINCIPAL_REMAINS),
                         'before_payment' =>  intval($initialPaymentValue),
                         'after_payment' =>  $after_value,
+                        'bayar_angsuran' =>  $beforePastDue,
+                        'bayar_denda' =>  $denda,
                         'payment' => intval($scheduleItem->PAYMENT_VALUE),
                         'flag' => $scheduleItem->PAID_FLAG,
                         'denda' => intval($arrears->PAST_DUE_PENALTY??null)
