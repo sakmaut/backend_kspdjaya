@@ -184,7 +184,7 @@ class CustomerController extends Controller
                         'principal_remains' => number_format($res->PRINCIPAL_REMAINS, 2),
                         'payment' => number_format($res->PAYMENT_VALUE, 2),
                         'flag' => $res->PAID_FLAG,
-                        'denda' =>intval( $arrears->PAST_DUE_PENALTY)
+                        'denda' =>intval($arrears->PAST_DUE_PENALTY??null)
                     ];
                 }
             }
