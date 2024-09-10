@@ -184,11 +184,11 @@ class CustomerController extends Controller
                         'angsuran_ke' =>  $res->INSTALLMENT_COUNT,
                         'loan_number' => $res->LOAN_NUMBER,
                         'tgl_angsuran' => Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y'),
-                        'principal' => number_format($res->PRINCIPAL, 2),
-                        'interest' => number_format($res->INTEREST, 2),
-                        'installment' => number_format($res->INSTALLMENT, 2),
-                        'principal_remains' => number_format($res->PRINCIPAL_REMAINS, 2),
-                        'payment' => number_format($res->PAYMENT_VALUE, 2),
+                        'principal' => intval($res->PRINCIPAL),
+                        'interest' => intval($res->INTEREST),
+                        'installment' => intval($res->INSTALLMENT),
+                        'principal_remains' => intval($res->PRINCIPAL_REMAINS),
+                        'payment' => intval($res->PAYMENT_VALUE),
                         'flag' => $res->PAID_FLAG,
                         'denda' =>intval($arrears->PAST_DUE_PENALTY??null)
                     ];
