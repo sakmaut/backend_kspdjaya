@@ -99,47 +99,57 @@ class CustomerController extends Controller
 
             if (isset($request->jumlah_uang)) {
                 $data = M_CreditSchedule::where('loan_number',$request->loan_number)->get();
-
                 $paymentAmount = $request->jumlah_uang;
 
                 foreach ($data as $scheduleItem) {
                     $initialPaymentValue = $scheduleItem->PAYMENT_VALUE;
                     $arrears = M_Arrears::where(['LOAN_NUMBER' => $scheduleItem->LOAN_NUMBER, 'START_DATE' => $scheduleItem->PAYMENT_DATE])->first();
-
-                    // Continue processing while there's paymentAmount left
+                
                     if ($paymentAmount > 0) {
                         $installment = $scheduleItem->INSTALLMENT;
                         $remainingPayment = $installment - $scheduleItem->PAYMENT_VALUE;
-
+                
                         // Pay the installment first
                         if ($remainingPayment > 0) {
                             $paymentValue = min($paymentAmount, $remainingPayment);
                             $scheduleItem->PAYMENT_VALUE += $paymentValue;
                             $paymentAmount -= $paymentValue;
                         }
-
-                        // If the full installment is paid, pay the penalty if there's any remaining amount
-                        if ($scheduleItem->PAYMENT_VALUE == $installment && $arrears) {
+                
+                        // After paying the installment, check if there's enough to pay the penalty
+                        $penaltyPaid = 0;
+                        if ($scheduleItem->PAYMENT_VALUE == $installment && $arrears && $paymentAmount > 0) {
                             $penalty = $arrears->PAST_DUE_PENALTY ?? 0;
-
-                            if ($paymentAmount > 0 && $paymentAmount >= $penalty) {
-                                // Deduct penalty if enough remaining balance
+                
+                            if ($paymentAmount >= $penalty) {
+                                $penaltyPaid = $penalty;
                                 $scheduleItem->PAYMENT_VALUE += $penalty;
                                 $paymentAmount -= $penalty;
+                            } else {
+                                // If there's not enough to cover the full penalty, pay only what's remaining
+                                $penaltyPaid = $paymentAmount;
+                                $scheduleItem->PAYMENT_VALUE += $paymentAmount;
+                                $paymentAmount = 0;
                             }
                         }
-
-                        // Mark as paid if both installment and penalty are fully covered
+                
+                        // Mark as paid if both installment and penalty (if applicable) are fully covered
                         if ($scheduleItem->PAYMENT_VALUE >= $installment + ($arrears->PAST_DUE_PENALTY ?? 0)) {
                             $scheduleItem->PAID_FLAG = 'PAID';
                         }
                     }
-
-                    // Calculate values for the current schedule
+                
+                    // Calculate beforePastDue (without deducting penalty from installment if payment is insufficient)
+                    if ($arrears) {
+                        $beforePastDue = $scheduleItem->PAYMENT_VALUE - $penaltyPaid; // Do not reduce by penalty if insufficient
+                    } else {
+                        $beforePastDue = $scheduleItem->PAYMENT_VALUE;
+                    }
+                
+                    // Calculate values for after_payment and penalty (denda)
                     $after_value = intval($scheduleItem->PAYMENT_VALUE - $initialPaymentValue);
-                    $beforePastDue = $scheduleItem->PAYMENT_VALUE - ($arrears->PAST_DUE_PENALTY ?? 0);
                     $denda = $after_value - $beforePastDue;
-
+                
                     // Store the current schedule details
                     $schedule[] = [
                         'id_structur' => $scheduleItem->INSTALLMENT_COUNT . '-' . $after_value,
@@ -152,13 +162,16 @@ class CustomerController extends Controller
                         'principal_remains' => intval($scheduleItem->PRINCIPAL_REMAINS),
                         'before_payment' => intval($initialPaymentValue),
                         'after_payment' => $after_value,
-                        'bayar_angsuran' => $beforePastDue,
+                        'bayar_angsuran' => $beforePastDue, // Reflect the full installment payment without penalty deduction if insufficient
                         'bayar_denda' => $denda,
                         'payment' => intval($scheduleItem->PAYMENT_VALUE),
                         'flag' => $scheduleItem->PAID_FLAG,
                         'denda' => intval($arrears->PAST_DUE_PENALTY ?? null)
                     ];
                 }
+                
+
+                
               
                 // $paymentAmount = $request->jumlah_uang;
             
