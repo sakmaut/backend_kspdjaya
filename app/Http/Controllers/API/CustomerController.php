@@ -99,39 +99,51 @@ class CustomerController extends Controller
 
             if (isset($request->jumlah_uang)) {
                 $data = M_CreditSchedule::where('loan_number',$request->loan_number)->get();
-              
+
                 $paymentAmount = $request->jumlah_uang;
-            
+
                 foreach ($data as $scheduleItem) {
                     $initialPaymentValue = $scheduleItem->PAYMENT_VALUE;
-                    $arrears = M_Arrears::where(['LOAN_NUMBER' => $scheduleItem->LOAN_NUMBER,'START_DATE' => $scheduleItem->PAYMENT_DATE])->first();
+                    $arrears = M_Arrears::where(['LOAN_NUMBER' => $scheduleItem->LOAN_NUMBER, 'START_DATE' => $scheduleItem->PAYMENT_DATE])->first();
 
+                    // Continue processing while there's paymentAmount left
                     if ($paymentAmount > 0) {
                         $installment = $scheduleItem->INSTALLMENT;
                         $remainingPayment = $installment - $scheduleItem->PAYMENT_VALUE;
-                
+
+                        // Pay installment first
                         if ($remainingPayment > 0) {
                             $paymentValue = min($paymentAmount, $remainingPayment);
-                            $paymentAmount -= $paymentValue + ($arrears->PAST_DUE_PENALTY ?? 0);
                             $scheduleItem->PAYMENT_VALUE += $paymentValue;
+                            $paymentAmount -= $paymentValue;
+                        }
 
-                            // Add penalty (denda) to both schedule items
-                            $scheduleItem->PAYMENT_VALUE += $arrears->PAST_DUE_PENALTY ?? 0;
-                
-                            if ($scheduleItem->PAYMENT_VALUE == $installment) {
-                                $scheduleItem->PAID_FLAG = 'PAID';
+                        // If installment is fully paid, pay penalty
+                        if ($scheduleItem->PAYMENT_VALUE == $installment && $arrears) {
+                            $penalty = $arrears->PAST_DUE_PENALTY ?? 0;
+                            if ($paymentAmount >= $penalty) {
+                                $scheduleItem->PAYMENT_VALUE += $penalty;
+                                $paymentAmount -= $penalty;
+                            } else {
+                                $scheduleItem->PAYMENT_VALUE += $paymentAmount;
+                                $paymentAmount = 0;
                             }
-                        } else {
-                            continue;
+                        }
+
+                        // Mark as paid if both installment and penalty are covered
+                        if ($scheduleItem->PAYMENT_VALUE == $installment + ($arrears->PAST_DUE_PENALTY ?? 0)) {
+                            $scheduleItem->PAID_FLAG = 'PAID';
                         }
                     }
-                  
-                    $after_value = intval($scheduleItem->PAYMENT_VALUE -  $initialPaymentValue);
-                    $beforePastDue = $scheduleItem->PAYMENT_VALUE - ($arrears->PAST_DUE_PENALTY ?? 0);
-                    $denda = $after_value - ($beforePastDue);
 
+                    // Calculate values for the current schedule
+                    $after_value = intval($scheduleItem->PAYMENT_VALUE - $initialPaymentValue);
+                    $beforePastDue = $scheduleItem->PAYMENT_VALUE - ($arrears->PAST_DUE_PENALTY ?? 0);
+                    $denda = $after_value - $beforePastDue;
+
+                    // Store the current schedule details
                     $schedule[] = [
-                        'id_structur' => $scheduleItem->INSTALLMENT_COUNT.'-'. $after_value,
+                        'id_structur' => $scheduleItem->INSTALLMENT_COUNT . '-' . $after_value,
                         'angsuran_ke' => $scheduleItem->INSTALLMENT_COUNT,
                         'loan_number' => $scheduleItem->LOAN_NUMBER,
                         'tgl_angsuran' => Carbon::parse($scheduleItem->PAYMENT_DATE)->format('d-m-Y'),
@@ -139,15 +151,68 @@ class CustomerController extends Controller
                         'interest' => intval($scheduleItem->INTEREST),
                         'installment' => intval($scheduleItem->INSTALLMENT),
                         'principal_remains' => intval($scheduleItem->PRINCIPAL_REMAINS),
-                        'before_payment' =>  intval($initialPaymentValue),
-                        'after_payment' =>  $after_value,
-                        'bayar_angsuran' =>  $beforePastDue,
-                        'bayar_denda' =>  $denda,
+                        'before_payment' => intval($initialPaymentValue),
+                        'after_payment' => $after_value,
+                        'bayar_angsuran' => $beforePastDue,
+                        'bayar_denda' => $denda,
                         'payment' => intval($scheduleItem->PAYMENT_VALUE),
                         'flag' => $scheduleItem->PAID_FLAG,
-                        'denda' => intval($arrears->PAST_DUE_PENALTY??null)
+                        'denda' => intval($arrears->PAST_DUE_PENALTY ?? null)
                     ];
                 }
+
+              
+                // $paymentAmount = $request->jumlah_uang;
+            
+                // foreach ($data as $scheduleItem) {
+                //     $initialPaymentValue = $scheduleItem->PAYMENT_VALUE;
+                //     $arrears = M_Arrears::where(['LOAN_NUMBER' => $scheduleItem->LOAN_NUMBER,'START_DATE' => $scheduleItem->PAYMENT_DATE])->first();
+
+                //     if ($paymentAmount > 0) {
+                //         $installment = $scheduleItem->INSTALLMENT;
+                //         $remainingPayment = $installment - $scheduleItem->PAYMENT_VALUE;
+                
+                //         if ($remainingPayment > 0) {
+                //             $paymentValue = min($paymentAmount, $remainingPayment);
+                //             $paymentAmount -= $paymentValue;
+                //              // Pay the installment first
+                //             $scheduleItem->PAYMENT_VALUE += $paymentValue;
+
+                //             // Then, deduct the penalty
+                //             $penalty = $arrears->PAST_DUE_PENALTY ?? 0;
+                //             $paymentAmount -= $penalty;
+                //             $scheduleItem->PAYMENT_VALUE += $penalty;
+
+                //             if ($scheduleItem->PAYMENT_VALUE == $installment) {
+                //                 $scheduleItem->PAID_FLAG = 'PAID';
+                //             }
+                //         } else {
+                //             continue;
+                //         }
+                //     }
+                  
+                //     $after_value = intval($scheduleItem->PAYMENT_VALUE -  $initialPaymentValue);
+                //     $beforePastDue = $scheduleItem->PAYMENT_VALUE - ($arrears->PAST_DUE_PENALTY ?? 0);
+                //     $denda = $after_value - ($beforePastDue);
+
+                //     $schedule[] = [
+                //         'id_structur' => $scheduleItem->INSTALLMENT_COUNT.'-'. $after_value,
+                //         'angsuran_ke' => $scheduleItem->INSTALLMENT_COUNT,
+                //         'loan_number' => $scheduleItem->LOAN_NUMBER,
+                //         'tgl_angsuran' => Carbon::parse($scheduleItem->PAYMENT_DATE)->format('d-m-Y'),
+                //         'principal' => intval($scheduleItem->PRINCIPAL),
+                //         'interest' => intval($scheduleItem->INTEREST),
+                //         'installment' => intval($scheduleItem->INSTALLMENT),
+                //         'principal_remains' => intval($scheduleItem->PRINCIPAL_REMAINS),
+                //         'before_payment' =>  intval($initialPaymentValue),
+                //         'after_payment' =>  $after_value,
+                //         'bayar_angsuran' =>  $beforePastDue,
+                //         'bayar_denda' =>  $denda,
+                //         'payment' => intval($scheduleItem->PAYMENT_VALUE),
+                //         'flag' => $scheduleItem->PAID_FLAG,
+                //         'denda' => intval($arrears->PAST_DUE_PENALTY??null)
+                //     ];
+                // }
 
                 // $paymentFor = [];
                 // foreach ($schedule as $key => $value) {
