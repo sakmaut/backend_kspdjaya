@@ -111,27 +111,26 @@ class CustomerController extends Controller
                         $installment = $scheduleItem->INSTALLMENT;
                         $remainingPayment = $installment - $scheduleItem->PAYMENT_VALUE;
 
-                        // Pay installment first
+                        // Pay the installment first
                         if ($remainingPayment > 0) {
                             $paymentValue = min($paymentAmount, $remainingPayment);
                             $scheduleItem->PAYMENT_VALUE += $paymentValue;
                             $paymentAmount -= $paymentValue;
                         }
 
-                        // If installment is fully paid, pay penalty
+                        // If the full installment is paid, pay the penalty if there's any remaining amount
                         if ($scheduleItem->PAYMENT_VALUE == $installment && $arrears) {
                             $penalty = $arrears->PAST_DUE_PENALTY ?? 0;
-                            if ($paymentAmount >= $penalty) {
+
+                            if ($paymentAmount > 0 && $paymentAmount >= $penalty) {
+                                // Deduct penalty if enough remaining balance
                                 $scheduleItem->PAYMENT_VALUE += $penalty;
                                 $paymentAmount -= $penalty;
-                            } else {
-                                $scheduleItem->PAYMENT_VALUE += $paymentAmount;
-                                $paymentAmount = 0;
                             }
                         }
 
-                        // Mark as paid if both installment and penalty are covered
-                        if ($scheduleItem->PAYMENT_VALUE == $installment + ($arrears->PAST_DUE_PENALTY ?? 0)) {
+                        // Mark as paid if both installment and penalty are fully covered
+                        if ($scheduleItem->PAYMENT_VALUE >= $installment + ($arrears->PAST_DUE_PENALTY ?? 0)) {
                             $scheduleItem->PAID_FLAG = 'PAID';
                         }
                     }
@@ -160,7 +159,6 @@ class CustomerController extends Controller
                         'denda' => intval($arrears->PAST_DUE_PENALTY ?? null)
                     ];
                 }
-
               
                 // $paymentAmount = $request->jumlah_uang;
             
