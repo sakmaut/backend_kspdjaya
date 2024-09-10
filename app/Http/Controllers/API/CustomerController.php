@@ -122,7 +122,6 @@ class CustomerController extends Controller
                     }
 
                     $after_value = intval($scheduleItem->PAYMENT_VALUE -  $initialPaymentValue);
-                    $arrears = M_Arrears::where('LOAN_NUMBER',$scheduleItem->loan_number)->get();
 
                     $schedule[] = [
                         'id_structur' => $scheduleItem->INSTALLMENT_COUNT.'-'. $after_value,
@@ -136,8 +135,7 @@ class CustomerController extends Controller
                         'before_payment' =>  number_format($initialPaymentValue, 2),
                         'after_payment' =>  $after_value,
                         'payment' => number_format($scheduleItem->PAYMENT_VALUE, 2),
-                        'flag' => $scheduleItem->PAID_FLAG,
-                        'tunggakkan' => $arrears
+                        'flag' => $scheduleItem->PAID_FLAG
                     ];
                 }
 
@@ -174,6 +172,8 @@ class CustomerController extends Controller
                 }
 
                 foreach ($data as $res) {
+                    $arrears = M_Arrears::where(['LOAN_NUMBER' => $res->LOAN_NUMBER,'START_DATE' => $res->PAYMENT_DATE])->first();
+
                     $schedule[]=[
                         'angsuran_ke' =>  $res->INSTALLMENT_COUNT,
                         'loan_number' => $res->LOAN_NUMBER,
@@ -183,7 +183,8 @@ class CustomerController extends Controller
                         'installment' => number_format($res->INSTALLMENT, 2),
                         'principal_remains' => number_format($res->PRINCIPAL_REMAINS, 2),
                         'payment' => number_format($res->PAYMENT_VALUE, 2),
-                        'flag' => $res->PAID_FLAG
+                        'flag' => $res->PAID_FLAG,
+                        'denda' =>intval( $arrears->PAST_DUE_PENALTY)
                     ];
                 }
             }
