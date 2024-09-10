@@ -104,14 +104,19 @@ class CustomerController extends Controller
             
                 foreach ($data as $scheduleItem) {
                     $initialPaymentValue = $scheduleItem->PAYMENT_VALUE;
+                    $arrears = M_Arrears::where(['LOAN_NUMBER' => $scheduleItem->LOAN_NUMBER,'START_DATE' => $scheduleItem->PAYMENT_DATE])->first();
+
                     if ($paymentAmount > 0) {
                         $installment = $scheduleItem->INSTALLMENT;
                         $remainingPayment = $installment - $scheduleItem->PAYMENT_VALUE;
                 
                         if ($remainingPayment > 0) {
                             $paymentValue = min($paymentAmount, $remainingPayment);
-                            $paymentAmount -= $paymentValue;
+                            $paymentAmount -= $paymentValue + ($arrears->PAST_DUE_PENALTY ?? 0);
                             $scheduleItem->PAYMENT_VALUE += $paymentValue;
+
+                            // Add penalty (denda) to both schedule items
+                            $scheduleItem->PAYMENT_VALUE += $arrears->PAST_DUE_PENALTY ?? 0;
                 
                             if ($scheduleItem->PAYMENT_VALUE == $installment) {
                                 $scheduleItem->PAID_FLAG = 'PAID';
@@ -120,7 +125,7 @@ class CustomerController extends Controller
                             continue;
                         }
                     }
-
+                  
                     $after_value = intval($scheduleItem->PAYMENT_VALUE -  $initialPaymentValue);
 
                     $schedule[] = [
@@ -135,7 +140,8 @@ class CustomerController extends Controller
                         'before_payment' =>  number_format($initialPaymentValue, 2),
                         'after_payment' =>  $after_value,
                         'payment' => number_format($scheduleItem->PAYMENT_VALUE, 2),
-                        'flag' => $scheduleItem->PAID_FLAG
+                        'flag' => $scheduleItem->PAID_FLAG,
+                        'denda' => intval($arrears->PAST_DUE_PENALTY??null)
                     ];
                 }
 
