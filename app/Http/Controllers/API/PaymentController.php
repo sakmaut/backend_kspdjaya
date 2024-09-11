@@ -169,7 +169,7 @@ class PaymentController extends Controller
         return [
             'ID' => Uuid::uuid7()->toString(),
             'ACC_KEY' => $acc_key,
-            'STTS_RCRD' =>  $request->payment_method == 'tunai'?'PAID':'PENDING',
+            'STTS_RCRD' =>  $request->payment_method == 'cash'?'PAID':'PENDING',
             'INVOICE' => $no_inv,
             'NO_TRX' => generateCode($request, 'payment', 'NO_TRX', 'TRX'),
             'PAYMENT_METHOD' => $request->payment_method,
