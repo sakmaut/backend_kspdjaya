@@ -268,10 +268,12 @@ class CustomerController extends Controller
                     throw new Exception("Loan Number Is Not Exist");
                 }
 
+                $j = 0;
                 foreach ($data as $res) {
                     $arrears = M_Arrears::where(['LOAN_NUMBER' => $res->LOAN_NUMBER,'START_DATE' => $res->PAYMENT_DATE])->first();
 
                     $schedule[]=[
+                        'key' => $j++,
                         'angsuran_ke' =>  $res->INSTALLMENT_COUNT,
                         'loan_number' => $res->LOAN_NUMBER,
                         'tgl_angsuran' => Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y'),
