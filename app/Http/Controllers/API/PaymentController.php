@@ -23,6 +23,18 @@ use Ramsey\Uuid\Uuid;
 
 class PaymentController extends Controller
 {
+
+    public function index(Request $request){
+        try {
+            $data = M_Payment::all();
+
+            return response()->json($data, 200);
+        } catch (\Exception $e) {
+            ActivityLogger::logActivity($request,$e->getMessage(),500);
+            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+        }
+    }
+
     public function store(Request $request)
     {
         DB::beginTransaction();

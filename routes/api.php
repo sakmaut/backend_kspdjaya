@@ -79,7 +79,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('taksasi_year', [TaksasiController::class, 'year']);
     Route::post('taksasi_price', [TaksasiController::class, 'price']);
 
-
     Route::resource('customer', CustomerController::class);
     Route::post('search_customer', [CustomerController::class,'searchCustomer']);
     Route::post('check_ro', [CustomerController::class,'cekRO']);
