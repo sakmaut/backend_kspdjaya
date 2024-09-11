@@ -11,7 +11,9 @@ use App\Models\M_Credit;
 use App\Models\M_CreditSchedule;
 use App\Models\M_Customer;
 use App\Models\M_Kwitansi;
+use App\Models\M_KwitansiStructurDetail;
 use App\Models\M_Payment;
+use App\Models\M_PaymentApproval;
 use App\Models\M_PaymentAttachment;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -84,8 +86,7 @@ class PaymentController extends Controller
                             ]);
                         }
                     }
-                  
-            
+
                     // // Add installment details to pembayaran array
                     $pembayaran[] = [
                         'installment' => $res['angsuran_ke'],
@@ -97,6 +98,26 @@ class PaymentController extends Controller
             
                     // Prepare payment data based on installment
                     self::createPaymentRecords($request, $res, $tgl_angsuran, $loan_number, $no_inv, $getCodeBranch, $created_now);
+
+                    $save_kwitansi_detail = [
+                        "no_invoice" => $no_inv,
+                        "key" => $res['key'],
+                        'angsuran_ke' => $res['angsuran_ke'],
+                        'loan_number' => $res['loan_number'],
+                        'tgl_angsuran' => $res['tgl_angsuran'],
+                        'principal' => $res['principal'],
+                        'interest' => $res['interest'],
+                        'installment' => $res['installment'],
+                        'principal_remains' => $res['principal_remains'],
+                        'payment' => $res['payment'],
+                        'bayar_angsuran' => $res['bayar_angsuran'],
+                        "bayar_denda" => $res['bayar_denda'],
+                        "total_bayar" => $res['total_bayar'],
+                        "flag" => $res['flag'],
+                        "denda" => $res['denda']
+                    ];
+
+                    M_KwitansiStructurDetail::create($save_kwitansi_detail);
                 }
             }
 
@@ -276,4 +297,58 @@ class PaymentController extends Controller
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
         } 
     }
+
+    public function approval(Request $request)
+    {
+
+        try {
+            $check = M_KwitansiStructurDetail::where('no_invoice', $request->no_invoice)->get();
+
+            foreach ($check as $res) {
+
+                $loan_number = $res['loan_number'];
+                $tgl_angsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
+
+                $credit_schedule = M_CreditSchedule::where([
+                    'LOAN_NUMBER' => $loan_number,
+                    'PAYMENT_DATE' => $tgl_angsuran
+                ])->first();
+
+                if ($credit_schedule) {
+                    $credit_schedule->update([
+                        'PAYMENT_VALUE' =>  $res['bayar_angsuran'],
+                        'PAID_FLAG' => $res['bayar_angsuran'] == $credit_schedule->INSTALLMENT ? 'PAID' : ''
+                    ]);
+                }
+
+                // // Update arrears
+                $check_arrears = M_Arrears::where([
+                    'LOAN_NUMBER' => $loan_number,
+                    'START_DATE' => $tgl_angsuran
+                ])->first();
+
+                if ($check_arrears) {
+                    $check_arrears->update([
+                        'PAID_PENALTY' => $res['bayar_denda']
+                    ]);
+                }
+            }
+
+            $data_approval = [
+                'PAYMENT_ID' => $request->no_invoice,
+                'ONCHARGE_APPRVL' => $request->flag,
+                'ONCHARGE_PERSON' => $request->user()->id,
+                'ONCHARGE_TIME' => Carbon::now(),
+                'ONCHARGE_DESCR' => $request->keterangan,
+                'APPROVAL_RESULT' => $request->flag == 'yes' ? 'PAID' : 'CANCEL'
+            ];
+
+            M_PaymentApproval::create($data_approval);
+
+            return response()->json(['message' => 'approval success'], 200);
+        } catch (\Exception $e) {
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+        }
+    } 
 }
