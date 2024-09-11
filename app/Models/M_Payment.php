@@ -12,6 +12,7 @@ class M_Payment extends Model
     protected $table = 'payment';
     protected $fillable = [
         'ID',
+        'ACC_KEY',
         'STTS_RCRD',
         'NO_TRX',
         'PAYMENT_METHOD',
