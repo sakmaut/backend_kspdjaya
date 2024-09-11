@@ -43,31 +43,35 @@ class PaymentController extends Controller
                     // // Fetch credit and customer details once
                     $credit = M_Credit::where('LOAN_NUMBER', $loan_number)->first();
                     $detail_customer = M_Customer::where('CUST_CODE', $credit->CUST_CODE)->first();
-            
-                    // // Update credit schedule
-                    $credit_schedule = M_CreditSchedule::where([
-                        'LOAN_NUMBER' => $loan_number,
-                        'PAYMENT_DATE' => $tgl_angsuran
-                    ])->first();
 
-                    if ($credit_schedule) {
-                        $credit_schedule->update([
-                            'PAYMENT_VALUE' =>  $res['bayar_angsuran'],
-                            'PAID_FLAG' => $res['bayar_angsuran'] == $credit_schedule->INSTALLMENT ? 'PAID' : ''
-                        ]);
+                    $check_method_payment = strtolower($request->payment_method) == 'tunai';
+
+                    if($check_method_payment){
+                        $credit_schedule = M_CreditSchedule::where([
+                            'LOAN_NUMBER' => $loan_number,
+                            'PAYMENT_DATE' => $tgl_angsuran
+                        ])->first();
+
+                        if ($credit_schedule) {
+                            $credit_schedule->update([
+                                'PAYMENT_VALUE' =>  $res['bayar_angsuran'],
+                                'PAID_FLAG' => $res['bayar_angsuran'] == $credit_schedule->INSTALLMENT ? 'PAID' : ''
+                            ]);
+                        }
+                
+                        // // Update arrears
+                        $check_arrears = M_Arrears::where([
+                            'LOAN_NUMBER' => $loan_number,
+                            'START_DATE' => $tgl_angsuran
+                        ])->first();
+                
+                        if ($check_arrears) {
+                            $check_arrears->update([
+                                'PAID_PENALTY' => $res['bayar_denda']
+                            ]);
+                        }
                     }
-            
-                    // // Update arrears
-                    $check_arrears = M_Arrears::where([
-                        'LOAN_NUMBER' => $loan_number,
-                        'START_DATE' => $tgl_angsuran
-                    ])->first();
-            
-                    if ($check_arrears) {
-                        $check_arrears->update([
-                            'PAID_PENALTY' => $res['bayar_denda']
-                        ]);
-                    }
+                  
             
                     // // Add installment details to pembayaran array
                     $pembayaran[] = [
@@ -153,7 +157,7 @@ class PaymentController extends Controller
         return [
             'ID' => Uuid::uuid7()->toString(),
             'ACC_KEY' => $acc_key,
-            'STTS_RCRD' => 'A',
+            'STTS_RCRD' =>  $request->payment_method == 'tunai'?'PAID':'PENDING',
             'INVOICE' => $no_inv,
             'NO_TRX' => generateCode($request, 'payment', 'NO_TRX', 'TRX'),
             'PAYMENT_METHOD' => $request->payment_method,
