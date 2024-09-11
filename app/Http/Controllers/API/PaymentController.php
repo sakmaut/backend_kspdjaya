@@ -10,6 +10,7 @@ use App\Models\M_Branch;
 use App\Models\M_Credit;
 use App\Models\M_CreditSchedule;
 use App\Models\M_Customer;
+use App\Models\M_Kwitansi;
 use App\Models\M_Payment;
 use App\Models\M_PaymentAttachment;
 use Carbon\Carbon;
@@ -26,7 +27,7 @@ class PaymentController extends Controller
 
     public function index(Request $request){
         try {
-            $data = M_Payment::all();
+            $data = M_Kwitansi::all();
 
             return response()->json($data, 200);
         } catch (\Exception $e) {
@@ -98,11 +99,42 @@ class PaymentController extends Controller
                     self::createPaymentRecords($request, $res, $tgl_angsuran, $loan_number, $no_inv, $getCodeBranch, $created_now);
                 }
             }
+
+            $save_kwitansi = [
+                "NO_TRANSAKSI" => $no_inv,
+                "TGL_TRANSAKSI" => Carbon::now()->format('d-m-Y'),
+                'CUST_CODE' => $customer_detail['cust_code'],
+                'NAMA' => $customer_detail['nama'],
+                'ALAMAT' => $customer_detail['alamat'],
+                'RT' => $customer_detail['rt'],
+                'RW' => $customer_detail['rw'],
+                'PROVINSI' => $customer_detail['provinsi'],
+                'KOTA' => $customer_detail['kota'],
+                'KELURAHAN' => $customer_detail['kelurahan'],
+                'KECAMATAN' => $customer_detail['kecamatan'],
+                "METODE_PEMBAYARAN" => $request->payment_method ?? null,
+                "PEMBULATAN" => $request-> pembulatan ?? null,
+                "KEMBALIAN" => $request-> kembalian ?? null,
+                "JUMLAH_UANG" => $request-> jumlah_uang ?? null,
+                "NAMA_BANK" => $request->nama_bank??null,
+                "NO_REKENING" => $request-> no_rekening ?? null,
+                "CREATED_BY" => $request->user()->fullname
+            ];
+
+            M_Kwitansi::create($save_kwitansi);
             
             // Build response
             $build = [
                 "no_transaksi" => $no_inv,
-                $customer_detail,
+                'cust_code' => $customer_detail['cust_code'],
+                'nama' => $customer_detail['nama'],
+                'alamat' => $customer_detail['alamat'],
+                'rt' => $customer_detail['rt'],
+                'rw' => $customer_detail['rw'],
+                'provinsi' => $customer_detail['provinsi'],
+                'kota' => $customer_detail['kota'],
+                'kelurahan' => $customer_detail['kelurahan'],
+                'kecamatan' => $customer_detail['kecamatan'],
                 "tgl_transaksi" => Carbon::now()->format('d-m-Y'),
                 "payment_method" => $request->payment_method,
                 "nama_bank" => $request->nama_bank,
