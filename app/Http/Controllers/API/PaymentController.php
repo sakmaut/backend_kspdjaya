@@ -56,7 +56,7 @@ class PaymentController extends Controller
                     $credit = M_Credit::where('LOAN_NUMBER', $loan_number)->first();
                     $detail_customer = M_Customer::where('CUST_CODE', $credit->CUST_CODE)->first();
 
-                    $check_method_payment = strtolower($request->payment_method) == 'tunai';
+                    $check_method_payment = strtolower($request->payment_method) == 'cash';
 
                     if($check_method_payment){
                         $credit_schedule = M_CreditSchedule::where([
