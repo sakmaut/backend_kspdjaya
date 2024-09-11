@@ -86,7 +86,7 @@ class PaymentController extends Controller
             // Build response
             $build = [
                 "no_transaksi" => $no_inv,
-                "detail_pelanggan" => $customer_detail,
+                $customer_detail,
                 "tgl_transaksi" => Carbon::now()->format('d-m-Y'),
                 "payment_method" => $request->payment_method,
                 "nama_bank" => $request->nama_bank,
@@ -95,8 +95,8 @@ class PaymentController extends Controller
                 "pembayaran" => $pembayaran,
                 "pembulatan" => $request->pembulatan,
                 "kembalian" => $request->kembalian,
-                "jml_pembayaran" => $request->nilai_pembayaran,
-                "terbilang" => bilangan($request->nilai_pembayaran) ?? null,
+                "jumlah_uang" => $request->jumlah_uang,
+                "terbilang" => bilangan($request->total_bayar) ?? null,
                 "created_by" => $request->user()->fullname,
                 "created_at" => Carbon::parse($created_now)->format('d-m-Y')
             ];
