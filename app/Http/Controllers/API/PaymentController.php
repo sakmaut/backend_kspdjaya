@@ -140,6 +140,12 @@ class PaymentController extends Controller
         $interest_amount = $res['bayar_angsuran'] >= $res['principal'] ? ($res['bayar_angsuran'] - $res['principal']) : 0;
         $data_interest = self::preparePaymentData($request, $loan_number, $res, $tgl_angsuran, 'BUNGA', $interest_amount, $no_inv, $branch, $created_now);
         M_Payment::create($data_interest);
+
+         // Payment Denda
+        if($res['bayar_denda'] !== 0){
+            $data_interest = self::preparePaymentData($request, $loan_number, $res, $tgl_angsuran, 'DENDA', $res['bayar_denda'], $no_inv, $branch, $created_now);
+            M_Payment::create($data_interest);
+        }  
     }
 
     function preparePaymentData($request, $loan_number, $res, $tgl_angsuran, $acc_key, $amount, $no_inv, $branch, $created_now)
