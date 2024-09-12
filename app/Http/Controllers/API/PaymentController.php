@@ -3,8 +3,6 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\R_Branch;
-use App\Http\Resources\R_BranchDetail;
 use App\Http\Resources\R_Kwitansi;
 use App\Models\M_Arrears;
 use App\Models\M_Branch;
@@ -16,6 +14,7 @@ use App\Models\M_KwitansiStructurDetail;
 use App\Models\M_Payment;
 use App\Models\M_PaymentApproval;
 use App\Models\M_PaymentAttachment;
+use App\Models\M_PaymentDetail;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -45,144 +44,32 @@ class PaymentController extends Controller
     public function store(Request $request)
     {
         DB::beginTransaction();
-        try {   
-            $getCodeBranch = M_Branch::find($request->user()->branch_id);
-            $created_now = Carbon::now();
-            $no_inv = generateCode($request, 'payment', 'INVOICE','INV');
+        try {
 
+            $created_now = Carbon::now();
+            $no_inv = generateCode($request, 'payment', 'INVOICE', 'INV');
+
+            // Fetch branch information
+            $getCodeBranch = M_Branch::findOrFail($request->user()->branch_id);
+
+            // Initialize variables
             $customer_detail = [];
             $pembayaran = [];
-            
+
+            // Process payment structures
             if (isset($request->struktur) && is_array($request->struktur)) {
                 foreach ($request->struktur as $res) {
-
-                    $loan_number = $res['loan_number'];
-                    $tgl_angsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
-
-                    // $check_pay_exist = M_Payment::where(['STTS_RCRD' => 'PENDING','LOAN_NUM' => $loan_number ])->first();
-
-                    // if (!$check_pay_exist) {
-                    //     throw new Exception("Payment Exist", 404);
-                    // }        
-            
-                    // // Fetch credit and customer details once
-                    $credit = M_Credit::where('LOAN_NUMBER', $loan_number)->first();
-                    $detail_customer = M_Customer::where('CUST_CODE', $credit->CUST_CODE)->first();
-
-                    $check_method_payment = strtolower($request->payment_method) == 'cash';
-
-                    if($check_method_payment){
-                        $credit_schedule = M_CreditSchedule::where([
-                            'LOAN_NUMBER' => $loan_number,
-                            'PAYMENT_DATE' => $tgl_angsuran
-                        ])->first();
-
-                        if ($credit_schedule) {
-                            $credit_schedule->update([
-                                'PAYMENT_VALUE' =>  $res['bayar_angsuran'],
-                                'PAID_FLAG' => $res['bayar_angsuran'] == $credit_schedule->INSTALLMENT ? 'PAID' : ''
-                            ]);
-                        }
-                
-                        // // Update arrears
-                        $check_arrears = M_Arrears::where([
-                            'LOAN_NUMBER' => $loan_number,
-                            'START_DATE' => $tgl_angsuran
-                        ])->first();
-                
-                        if ($check_arrears) {
-                            $check_arrears->update([
-                                'PAID_PENALTY' => $res['bayar_denda']
-                            ]);
-                        }
-                    }
-
-                    // // Add installment details to pembayaran array
-                    $pembayaran[] = [
-                        'installment' => $res['angsuran_ke'],
-                        'title' => 'Angsuran Ke-' . $res['angsuran_ke']
-                    ];
-            
-                    // // Set customer details
-                    $customer_detail = self::setCustomerDetail($detail_customer);
-            
-                    // Prepare payment data based on installment
-                    self::createPaymentRecords($request, $res, $tgl_angsuran, $loan_number, $no_inv, $getCodeBranch, $created_now);
-
-                    $save_kwitansi_detail = [
-                        "no_invoice" => $no_inv,
-                        "key" => $res['key'],
-                        'angsuran_ke' => $res['angsuran_ke'],
-                        'loan_number' => $res['loan_number'],
-                        'tgl_angsuran' => $res['tgl_angsuran'],
-                        'principal' => $res['principal'],
-                        'interest' => $res['interest'],
-                        'installment' => $res['installment'],
-                        'principal_remains' => $res['principal_remains'],
-                        'payment' => $res['payment'],
-                        'bayar_angsuran' => $res['bayar_angsuran'],
-                        "bayar_denda" => $res['bayar_denda'],
-                        "total_bayar" => $res['total_bayar'],
-                        "flag" => $res['flag'],
-                        "denda" => $res['denda']
-                    ];
-
-                    M_KwitansiStructurDetail::create($save_kwitansi_detail);
+                    $this->processPaymentStructure($res, $request, $getCodeBranch, $no_inv, $created_now, $pembayaran, $customer_detail);
                 }
             }
+            // Save main kwitansi record
+            $this->saveKwitansi($request, $customer_detail, $no_inv, $created_now);
 
-            $save_kwitansi = [
-                "NO_TRANSAKSI" => $no_inv,
-                "TGL_TRANSAKSI" => Carbon::now()->format('d-m-Y'),
-                'CUST_CODE' => $customer_detail['cust_code'],
-                'NAMA' => $customer_detail['nama'],
-                'ALAMAT' => $customer_detail['alamat'],
-                'RT' => $customer_detail['rt'],
-                'RW' => $customer_detail['rw'],
-                'PROVINSI' => $customer_detail['provinsi'],
-                'KOTA' => $customer_detail['kota'],
-                'KELURAHAN' => $customer_detail['kelurahan'],
-                'KECAMATAN' => $customer_detail['kecamatan'],
-                "METODE_PEMBAYARAN" => $request->payment_method ?? null,
-                "TOTAL_BAYAR" => $request->total_bayar ?? null,
-                "PEMBULATAN" => $request->pembulatan ?? null,
-                "KEMBALIAN" => $request->kembalian ?? null,
-                "JUMLAH_UANG" => $request->jumlah_uang ?? null,
-                "NAMA_BANK" => $request->nama_bank??null,
-                "NO_REKENING" => $request->no_rekening ?? null,
-                "CREATED_BY" => $request->user()->fullname
-            ];
-
-            M_Kwitansi::create($save_kwitansi);
-            
             // Build response
-            $build = [
-                "no_transaksi" => $no_inv,
-                'cust_code' => $customer_detail['cust_code'],
-                'nama' => $customer_detail['nama'],
-                'alamat' => $customer_detail['alamat'],
-                'rt' => $customer_detail['rt'],
-                'rw' => $customer_detail['rw'],
-                'provinsi' => $customer_detail['provinsi'],
-                'kota' => $customer_detail['kota'],
-                'kelurahan' => $customer_detail['kelurahan'],
-                'kecamatan' => $customer_detail['kecamatan'],
-                "tgl_transaksi" => Carbon::now()->format('d-m-Y'),
-                "payment_method" => $request->payment_method,
-                "nama_bank" => $request->nama_bank,
-                "no_rekening" => $request->no_rekening,
-                "bukti_transfer" => '',
-                "pembayaran" => $pembayaran,
-                "pembulatan" => $request->pembulatan,
-                "kembalian" => $request->kembalian,
-                "jumlah_uang" => $request->jumlah_uang,
-                "terbilang" => bilangan($request->total_bayar) ?? null,
-                "created_by" => $request->user()->fullname,
-                "created_at" => Carbon::parse($created_now)->format('d-m-Y')
-            ];
-  
+            $build = $this->buildResponse($request, $customer_detail, $pembayaran, $no_inv, $created_now);
+
             DB::commit();
-            // ActivityLogger::logActivity($request,"Success",200);
+            // ActivityLogger::logActivity($request, "Success", 200);
             return response()->json($build, 200);
         }catch (QueryException $e) {
             DB::rollback();
@@ -193,6 +80,139 @@ class PaymentController extends Controller
             ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage()], 500);
         }
+    }
+
+    private function processPaymentStructure($res, $request, $getCodeBranch, $no_inv, $created_now, &$pembayaran, &$customer_detail)
+    {
+        $loan_number = $res['loan_number'];
+        $tgl_angsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
+
+        // Fetch credit and customer details once
+        $credit = M_Credit::where('LOAN_NUMBER', $loan_number)->firstOrFail();
+        $detail_customer = M_Customer::where('CUST_CODE', $credit->CUST_CODE)->firstOrFail();
+
+        $check_method_payment = strtolower($request->payment_method) === 'cash';
+
+        if ($check_method_payment) {
+            $this->updateCreditSchedule($loan_number, $tgl_angsuran, $res['bayar_angsuran']);
+            $this->updateArrears($loan_number, $tgl_angsuran, $res['bayar_denda']);
+        }
+
+        // Add installment details to pembayaran array
+        $pembayaran[] = [
+            'installment' => $res['angsuran_ke'],
+            'title' => 'Angsuran Ke-' . $res['angsuran_ke']
+        ];
+
+        // Set customer details
+        $customer_detail = self::setCustomerDetail($detail_customer);
+
+        // Prepare payment data and create records
+        self::createPaymentRecords($request, $res, $tgl_angsuran, $loan_number, $no_inv, $getCodeBranch, $created_now);
+
+        $save_kwitansi_detail = [
+            "no_invoice" => $no_inv,
+            "key" => $res['key'],
+            'angsuran_ke' => $res['angsuran_ke'],
+            'loan_number' => $res['loan_number'],
+            'tgl_angsuran' => $res['tgl_angsuran'],
+            'principal' => $res['principal'],
+            'interest' => $res['interest'],
+            'installment' => $res['installment'],
+            'principal_remains' => $res['principal_remains'],
+            'payment' => $res['payment'],
+            'bayar_angsuran' => $res['bayar_angsuran'],
+            "bayar_denda" => $res['bayar_denda'],
+            "total_bayar" => $res['total_bayar'],
+            "flag" => $res['flag'],
+            "denda" => $res['denda']
+        ];
+
+        M_KwitansiStructurDetail::create($save_kwitansi_detail);
+    }
+
+    private function updateCreditSchedule($loan_number, $tgl_angsuran, $bayar_angsuran)
+    {
+        $credit_schedule = M_CreditSchedule::where([
+            'LOAN_NUMBER' => $loan_number,
+            'PAYMENT_DATE' => $tgl_angsuran
+        ])->first();
+
+        if ($credit_schedule) {
+            $credit_schedule->update([
+                'PAYMENT_VALUE' => $bayar_angsuran,
+                'PAID_FLAG' => $bayar_angsuran == $credit_schedule->INSTALLMENT ? 'PAID' : ''
+            ]);
+        }
+    }
+
+    private function updateArrears($loan_number, $tgl_angsuran, $bayar_denda)
+    {
+        $check_arrears = M_Arrears::where([
+            'LOAN_NUMBER' => $loan_number,
+            'START_DATE' => $tgl_angsuran
+        ])->first();
+
+        if ($check_arrears) {
+            $check_arrears->update([
+                'PAID_PENALTY' => $bayar_denda
+            ]);
+        }
+    }
+
+    private function saveKwitansi($request, $customer_detail, $no_inv, $created_now)
+    {
+        $save_kwitansi = [
+            "NO_TRANSAKSI" => $no_inv,
+            "TGL_TRANSAKSI" => Carbon::now()->format('d-m-Y'),
+            'CUST_CODE' => $customer_detail['cust_code'],
+            'NAMA' => $customer_detail['nama'],
+            'ALAMAT' => $customer_detail['alamat'],
+            'RT' => $customer_detail['rt'],
+            'RW' => $customer_detail['rw'],
+            'PROVINSI' => $customer_detail['provinsi'],
+            'KOTA' => $customer_detail['kota'],
+            'KELURAHAN' => $customer_detail['kelurahan'],
+            'KECAMATAN' => $customer_detail['kecamatan'],
+            "METODE_PEMBAYARAN" => $request->payment_method ?? null,
+            "TOTAL_BAYAR" => $request->total_bayar ?? null,
+            "PEMBULATAN" => $request->pembulatan ?? null,
+            "KEMBALIAN" => $request->kembalian ?? null,
+            "JUMLAH_UANG" => $request->jumlah_uang ?? null,
+            "NAMA_BANK" => $request->nama_bank ?? null,
+            "NO_REKENING" => $request->no_rekening ?? null,
+            "CREATED_BY" => $request->user()->fullname
+        ];
+
+        M_Kwitansi::create($save_kwitansi);
+    }
+
+    private function buildResponse($request, $customer_detail, $pembayaran, $no_inv, $created_now)
+    {
+        return [
+            "no_transaksi" => $no_inv,
+            'cust_code' => $customer_detail['cust_code'],
+            'nama' => $customer_detail['nama'],
+            'alamat' => $customer_detail['alamat'],
+            'rt' => $customer_detail['rt'],
+            'rw' => $customer_detail['rw'],
+            'provinsi' => $customer_detail['provinsi'],
+            'kota' => $customer_detail['kota'],
+            'kelurahan' => $customer_detail['kelurahan'],
+            'kecamatan' => $customer_detail['kecamatan'],
+            "tgl_transaksi" => Carbon::now()->format('d-m-Y'),
+            "payment_method" => $request->payment_method,
+            "nama_bank" => $request->nama_bank,
+            "no_rekening" => $request->no_rekening,
+            "bukti_transfer" => '',
+            "pembayaran" => $pembayaran,
+            "pembulatan" => $request->pembulatan,
+            "kembalian" => $request->kembalian,
+            "jumlah_uang" => $request->jumlah_uang,
+            "terbilang" => bilangan($request->total_bayar) ?? null,
+            "created_by" => $request->user()->fullname,
+            "created_at" => Carbon::parse($created_now)->format('d-m-Y')
+        ];
     }
 
     function setCustomerDetail($customer)
@@ -212,28 +232,11 @@ class PaymentController extends Controller
 
     function createPaymentRecords($request, $res, $tgl_angsuran, $loan_number, $no_inv, $branch, $created_now)
     {
-        // Payment principal
-        $data_principal = self::preparePaymentData($request, $loan_number, $res, $tgl_angsuran, 'POKOK', $res['principal'], $no_inv, $branch, $created_now);
-        M_Payment::create($data_principal);
+        $uid = Uuid::uuid7()->toString();
 
-        // Payment interest
-        $interest_amount = $res['bayar_angsuran'] >= $res['principal'] ? ($res['bayar_angsuran'] - $res['principal']) : 0;
-        $data_interest = self::preparePaymentData($request, $loan_number, $res, $tgl_angsuran, 'BUNGA', $interest_amount, $no_inv, $branch, $created_now);
-        M_Payment::create($data_interest);
-
-         // Payment Denda
-        if($res['bayar_denda'] !== 0){
-            $data_interest = self::preparePaymentData($request, $loan_number, $res, $tgl_angsuran, 'DENDA', $res['bayar_denda'], $no_inv, $branch, $created_now);
-            M_Payment::create($data_interest);
-        }  
-    }
-
-    function preparePaymentData($request, $loan_number, $res, $tgl_angsuran, $acc_key, $amount, $no_inv, $branch, $created_now)
-    {
-        return [
-            'ID' => Uuid::uuid7()->toString(),
-            'ACC_KEY' => $acc_key,
-            'STTS_RCRD' => $request->payment_method == 'cash'?'PAID':'PENDING',
+        $payment_record = [
+            'ID' => $uid,
+            'STTS_RCRD' => $request->payment_method == 'cash' ? 'PAID' : 'PENDING',
             'INVOICE' => $no_inv,
             'NO_TRX' => $request->uid,
             'PAYMENT_METHOD' => $request->payment_method,
@@ -242,13 +245,45 @@ class PaymentController extends Controller
             'VALUE_DATE' => null,
             'ENTRY_DATE' => $created_now,
             'TITLE' => 'Angsuran Ke-' . $res['angsuran_ke'],
-            'ORIGINAL_AMOUNT' => $amount,
+            'ORIGINAL_AMOUNT' => ($res['bayar_angsuran']+ $res['bayar_denda']),
             'OS_AMOUNT' => 0,
             'START_DATE' => $tgl_angsuran,
             'AUTH_BY' => $request->user()->id,
             'AUTH_DATE' => $created_now,
             'BANK_NAME' => $request->nama_bank ?? null,
             'BANK_ACC_NUMBER' => $request->no_rekening ?? null
+        ];
+
+        M_Payment::create($payment_record);
+
+        // Payment principal
+        $principal_amount = $res['principal'];
+        $angsuran_amount = $res['bayar_angsuran'];
+        $bayar_denda = $res['bayar_denda'];
+
+        // Payment principal
+        $data_principal = self::preparePaymentData($uid,'POKOK',$principal_amount);
+        M_PaymentDetail::create($data_principal);
+
+        // Payment interest
+        $interest_amount = ($angsuran_amount >= $principal_amount) ? ($angsuran_amount - $principal_amount) : 0;
+        $data_interest = self::preparePaymentData($uid,'BUNGA', $interest_amount);
+        M_PaymentDetail::create($data_interest);
+
+        // Payment denda
+        if ($bayar_denda !== 0) {
+            $data_denda = self::preparePaymentData($uid,'DENDA', $bayar_denda);
+            M_PaymentDetail::create($data_denda);
+        }
+    }
+
+    function preparePaymentData($payment_id,$acc_key, $amount)
+    {
+        return [
+            'PAYMENT_ID' => $payment_id,
+            'ACC_KEYS' => $acc_key,
+            'ORIGINAL_AMOUNT' => $amount,
+            'OS_AMOUNT' => 0
         ];
     }
 
@@ -311,12 +346,14 @@ class PaymentController extends Controller
 
     public function approval(Request $request)
     {
-
         try {
             $payment = M_Payment::where('INVOICE', $request->no_invoice)->get();
             $check = M_KwitansiStructurDetail::where('no_invoice', $request->no_invoice)->get();
-            
 
+            if($check->isEmpty()){
+                throw new Exception('Invoice Number Not Found');
+            }
+            
             if ($payment) {
                 foreach ($payment as $payments) {
                     $payments->update([

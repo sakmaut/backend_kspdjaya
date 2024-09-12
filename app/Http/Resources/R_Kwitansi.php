@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\M_Branch;
 use App\Models\M_KwitansiStructurDetail;
 use App\Models\M_Payment;
 use App\Models\M_PaymentAttachment;
@@ -17,29 +18,28 @@ class R_Kwitansi extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        // Retrieve payment and related data
+        $payment = M_Payment::where('INVOICE', $this->NO_TRANSAKSI)->first();
+        $details = M_KwitansiStructurDetail::where('no_invoice', $this->NO_TRANSAKSI)
+            ->orderBy('angsuran_ke', 'asc')
+            ->get();
+        $branch = $payment ? M_Branch::where('CODE_NUMBER', $payment->BRANCH)->first() : null;
+        $attachment = $payment ? M_PaymentAttachment::where('payment_id', $payment->NO_TRX)->value('file_attach') : null;
 
-        $payment = M_Payment::where('INVOICE', $this->NO_TRANSAKSI)->limit(1)->get()->first();
-        $detail = M_KwitansiStructurDetail::where('no_invoice',$this->NO_TRANSAKSI)->orderBy('angsuran_ke', 'asc')->get();
-
-        if($payment){
-            $attachment = M_PaymentAttachment::where('payment_id',$payment->NO_TRX)->first()->file_attach??null; 
-        }else {
-            $attachment = null; // or some default value
-        }
-
-       
-        $pembayaran = []; // Initialize an empty array to store the pembayaran data
-
-        foreach ($detail as $res) {
-            $pembayaran[] = [
-                'installment' => $res->angsuran_ke, // Use $res instead of $detail
-                'title' => 'Angsuran Ke-' . $res->angsuran_ke
+        // Build pembayaran array
+        $pembayaran = $details->map(function ($res) {
+            return [
+                'installment' => $res->angsuran_ke,
+                'title' => 'Angsuran Ke-' . $res->angsuran_ke,
+                'bayar_angsuran' => $res->bayar_angsuran,
+                'bayar_denda' => $res->bayar_denda,
             ];
-        }
+        })->toArray();
 
         return [
             "id" => $this->ID,
             "no_transaksi" => $this->NO_TRANSAKSI,
+            "cabang" => $branch->NAME ?? null,
             "cust_code" => $this->CUST_CODE,
             "nama" => $this->NAMA,
             "alamat" => $this->ALAMAT,
@@ -61,9 +61,10 @@ class R_Kwitansi extends JsonResource
             "jumlah_uang" => intval($this->JUMLAH_UANG),
             "terbilang" => bilangan($this->TOTAL_BAYAR) ?? null,
             'attachment' => $attachment,
-            "STATUS" => $payment->STTS_RCRD??null,
-            "created_by" =>  $this->CREATED_BY,
-            "created_at" => $this->CREATED_AT
+            "STATUS" => $payment->STTS_RCRD ?? null,
+            "created_by" => $this->CREATED_BY,
+            "created_at" => $this->CREATED_AT,
         ];
     }
+
 }
