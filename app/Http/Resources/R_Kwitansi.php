@@ -21,7 +21,7 @@ class R_Kwitansi extends JsonResource
         $payment = M_Payment::where('INVOICE', $this->NO_TRANSAKSI)->limit(1)->get()->first();
         $detail = M_KwitansiStructurDetail::where('no_invoice',$this->NO_TRANSAKSI)->orderBy('angsuran_ke', 'asc')->get();
 
-        if($payment->NO_TRX != null){
+        if($payment){
             $attachment = M_PaymentAttachment::where('payment_id',$payment->NO_TRX)->get(); 
         }else {
             $attachment = null; // or some default value
