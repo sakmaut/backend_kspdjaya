@@ -7,7 +7,6 @@ use App\Models\M_Payment;
 use App\Models\M_PaymentAttachment;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Facades\DB;
 
 class R_Kwitansi extends JsonResource
 {
@@ -19,18 +18,14 @@ class R_Kwitansi extends JsonResource
     public function toArray(Request $request): array
     {
 
-        // $payment = M_Payment::where('INVOICE', $this->NO_TRANSAKSI)->limit(1)->get()->first();
-
-        $result = DB::table('payment as a')
-                ->select('a.STTS_RCRD', 'b.file_attach')
-                ->leftJoin('payment_attachment as b', 'b.payment_id', '=', 'a.NO_TRX')
-                ->where('a.INVOICE',$this->NO_TRANSAKSI)
-                ->whereNotNull('b.file_attach')
-                ->limit(1)
-                ->first();
-        
+        $payment = M_Payment::where('INVOICE', $this->NO_TRANSAKSI)->limit(1)->get()->first();
         $detail = M_KwitansiStructurDetail::where('no_invoice',$this->NO_TRANSAKSI)->orderBy('angsuran_ke', 'asc')->get();
 
+        if($payment->NO_TRX != null){
+            $attachment = M_PaymentAttachment::where('payment_id',$payment->NO_TRX)->get(); 
+        }
+
+       
         $pembayaran = []; // Initialize an empty array to store the pembayaran data
 
         foreach ($detail as $res) {
@@ -63,8 +58,8 @@ class R_Kwitansi extends JsonResource
             "total_bayar" => intval($this->TOTAL_BAYAR),
             "jumlah_uang" => intval($this->JUMLAH_UANG),
             "terbilang" => bilangan($this->TOTAL_BAYAR) ?? null,
-            "attachment" => $result->file_attach??null,
-            "STATUS" => $result->STTS_RCRD??null,
+            'attachment' => $attachment??null,
+            "STATUS" => $payment->STTS_RCRD,
             "created_by" =>  $this->CREATED_BY,
             "created_at" => $this->CREATED_AT
         ];
