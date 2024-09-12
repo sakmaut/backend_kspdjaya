@@ -21,11 +21,11 @@ class R_Kwitansi extends JsonResource
         $payment = M_Payment::where('INVOICE', $this->NO_TRANSAKSI)->limit(1)->get()->first();
         $detail = M_KwitansiStructurDetail::where('no_invoice',$this->NO_TRANSAKSI)->orderBy('angsuran_ke', 'asc')->get();
 
-        // if($payment){
-        //     $attachment = M_PaymentAttachment::where('payment_id',$payment->NO_TRX)->get(); 
-        // }else {
-        //     $attachment = null; // or some default value
-        // }
+        if($payment){
+            $attachment = M_PaymentAttachment::where('payment_id',$payment->NO_TRX)->get(); 
+        }else {
+            $attachment = null; // or some default value
+        }
 
        
         $pembayaran = []; // Initialize an empty array to store the pembayaran data
@@ -60,7 +60,7 @@ class R_Kwitansi extends JsonResource
             "total_bayar" => intval($this->TOTAL_BAYAR),
             "jumlah_uang" => intval($this->JUMLAH_UANG),
             "terbilang" => bilangan($this->TOTAL_BAYAR) ?? null,
-            // 'attachment' => $attachment,
+            'attachment' => $attachment,
             "STATUS" => $payment->STTS_RCRD,
             "created_by" =>  $this->CREATED_BY,
             "created_at" => $this->CREATED_AT
