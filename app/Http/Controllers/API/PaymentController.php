@@ -17,6 +17,7 @@ use App\Models\M_Payment;
 use App\Models\M_PaymentApproval;
 use App\Models\M_PaymentAttachment;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
@@ -57,6 +58,12 @@ class PaymentController extends Controller
 
                     $loan_number = $res['loan_number'];
                     $tgl_angsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
+
+                    // $check_pay_exist = M_Payment::where(['STTS_RCRD' => 'PENDING','LOAN_NUM' => $loan_number ])->first();
+
+                    // if (!$check_pay_exist) {
+                    //     throw new Exception("Payment Exist", 404);
+                    // }        
             
                     // // Fetch credit and customer details once
                     $credit = M_Credit::where('LOAN_NUMBER', $loan_number)->first();
