@@ -226,9 +226,9 @@ class PaymentController extends Controller
         return [
             'ID' => Uuid::uuid7()->toString(),
             'ACC_KEY' => $acc_key,
-            'STTS_RCRD' =>  $request->payment_method == 'cash'?'PAID':'PENDING',
+            'STTS_RCRD' => $request->payment_method == 'cash'?'PAID':'PENDING',
             'INVOICE' => $no_inv,
-            'NO_TRX' => generateCode($request, 'payment', 'NO_TRX', 'TRX'),
+            'NO_TRX' => $request->uid,
             'PAYMENT_METHOD' => $request->payment_method,
             'BRANCH' => $branch->CODE_NUMBER,
             'LOAN_NUM' => $loan_number,
@@ -278,7 +278,7 @@ class PaymentController extends Controller
 
                 $data_array_attachment = [
                     'id' => Uuid::uuid4()->toString(),
-                    'payment_id' => $req->payment_id,
+                    'payment_id' => $req->uid,
                     'file_attach' => $url ?? ''
                 ];
 
