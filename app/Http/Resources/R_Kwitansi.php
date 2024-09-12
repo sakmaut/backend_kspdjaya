@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Models\M_KwitansiStructurDetail;
 use App\Models\M_Payment;
+use App\Models\M_PaymentAttachment;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -19,8 +20,8 @@ class R_Kwitansi extends JsonResource
 
         $payment = M_Payment::where('INVOICE', $this->NO_TRANSAKSI)->limit(1)->get()->first();
         $detail = M_KwitansiStructurDetail::where('no_invoice',$this->NO_TRANSAKSI)->orderBy('angsuran_ke', 'asc')->get();
+        $attachment = M_PaymentAttachment::where('payment_id',$payment->NO_TRX)->get(); 
 
-       
         $pembayaran = []; // Initialize an empty array to store the pembayaran data
 
         foreach ($detail as $res) {
@@ -53,6 +54,7 @@ class R_Kwitansi extends JsonResource
             "total_bayar" => intval($this->TOTAL_BAYAR),
             "jumlah_uang" => intval($this->JUMLAH_UANG),
             "terbilang" => bilangan($this->TOTAL_BAYAR) ?? null,
+            "attachment" => $attachment,
             "STATUS" => $payment->STTS_RCRD,
             "created_by" =>  $this->CREATED_BY,
             "created_at" => $this->CREATED_AT
