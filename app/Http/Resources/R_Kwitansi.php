@@ -24,6 +24,8 @@ class R_Kwitansi extends JsonResource
 
         if ($payment) {
             $attachment = M_PaymentAttachment::where('payment_id', $payment->NO_TRX??null)->get();
+        }else{
+            $attachment = '';
         }
 
         $pembayaran = []; // Initialize an empty array to store the pembayaran data
