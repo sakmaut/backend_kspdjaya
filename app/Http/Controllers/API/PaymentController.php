@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\R_Branch;
 use App\Http\Resources\R_BranchDetail;
+use App\Http\Resources\R_Kwitansi;
 use App\Models\M_Arrears;
 use App\Models\M_Branch;
 use App\Models\M_Credit;
@@ -31,7 +32,9 @@ class PaymentController extends Controller
         try {
             $data = M_Kwitansi::all();
 
-            return response()->json($data, 200);
+            $dto = R_Kwitansi::collection($data);
+
+            return response()->json($dto, 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
