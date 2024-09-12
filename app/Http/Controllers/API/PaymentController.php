@@ -355,4 +355,53 @@ class PaymentController extends Controller
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     } 
+
+    public function pelunasan(Request $request){
+        $result = DB::select(
+            "SELECT 
+                (a.PCPL_ORI-a.PAID_PRINCIPAL) as sisa_pokok, 
+                c.BUNGA as BUNGA_BERJALAN, 
+                b.INT_ARR as TUNGGAKAN_BUNGA, 
+                b.DENDA as DENDA, 
+                (a.PENALTY_RATE/100)*(a.PCPL_ORI-a.PAID_PRINCIPAL) as PINALTI
+            FROM 
+                credit a
+            LEFT JOIN (
+                SELECT 
+                    LOAN_NUMBER, 
+                    SUM(PAST_DUE_INTRST)-SUM(PAID_INT) as INT_ARR, 
+                    SUM(PAST_DUE_PENALTY)-SUM(PAID_PENALTY) as DENDA
+                FROM 
+                    arrears
+                WHERE 
+                    LOAN_NUMBER = '001240800004'
+                    AND STATUS_REC = 'A'
+                GROUP BY 
+                    LOAN_NUMBER
+            ) b ON b.LOAN_NUMBER = a.LOAN_NUMBER
+            LEFT JOIN (
+                SELECT 
+                    LOAN_NUMBER, 
+                    INTEREST * DATEDIFF(NOW(), PAYMENT_DATE) / 
+                        DATE_FORMAT(DATE_ADD(DATE_ADD(STR_TO_DATE(CONCAT('01',DATE_FORMAT(PAYMENT_DATE,'%m%Y')),'%d%m%Y'),INTERVAL 1 MONTH),INTERVAL -1 DAY),'%m') as BUNGA
+                FROM 
+                    credit_schedule
+                WHERE 
+                    LOAN_NUMBER = '001240800004'
+                    AND PAYMENT_DATE = (
+                        SELECT 
+                            MAX(PAYMENT_DATE)
+                        FROM 
+                            credit_schedule
+                        WHERE 
+                            LOAN_NUMBER = '001240800004'
+                            AND PAYMENT_DATE <= NOW()
+                    )
+            ) c ON c.LOAN_NUMBER = a.LOAN_NUMBER
+            WHERE 
+                a.LOAN_NUMBER = '001240800004'"
+        );
+
+        return $result;
+    }
 }
