@@ -59,31 +59,37 @@ if (!function_exists('compareData')) {
 }
 
 if (!function_exists('generateCode')) {
-    function generateCode($request, $table, $column,$prefix = '') {
+    function generateCode($request, $table, $column, $prefix = '') {
+        // Get branch ID from the user request
         $branchId = $request->user()->branch_id;
+        // Find branch based on the branch ID
         $branch = M_Branch::find($branchId);
     
         if (!$branch) {
             throw new Exception("Branch not found.");
         }
     
+        // Get the branch code number
         $branchCodeNumber = $branch->CODE_NUMBER;
     
+        // Retrieve the latest record from the table based on the column
         $latestRecord = DB::table($table)->latest($column)->first();
-        $lastSequence = $latestRecord ? (int) substr($latestRecord->$column, 7, 5) + 1 : 1;
+        // Extract the last sequence number from the column value (if exists)
+        $lastSequence = $latestRecord ? (int) substr($latestRecord->$column, -5) + 1 : 1;
     
+        // Get current year and month
         $currentDate = Carbon::now();
         $year = $currentDate->format('y');
         $month = $currentDate->format('m');
-
-        if($prefix != '' || $prefix != null){
-            $generateCode = $prefix.sprintf("%s%s%s%05d", $branchCodeNumber, $year, $month, $lastSequence);
-        }else{
-            $generateCode = sprintf("%s%s%s%05d", $branchCodeNumber, $year, $month, $lastSequence);
-        }
+    
+        // Generate the code based on the presence of the prefix
+        $generateCode = $prefix !== '' && $prefix !== null
+            ? sprintf("%s%s%s%s%05d", $prefix, $branchCodeNumber, $year, $month, $lastSequence)
+            : sprintf("%s%s%s%05d", $branchCodeNumber, $year, $month, $lastSequence);
     
         return $generateCode;
     }
+    
 }
 
 if (!function_exists('generateCustCode')) {
