@@ -306,7 +306,17 @@ class PaymentController extends Controller
     {
 
         try {
+            $payment = M_Payment::where('INVOICE', $request->no_invoice)->get();
             $check = M_KwitansiStructurDetail::where('no_invoice', $request->no_invoice)->get();
+            
+
+            if ($payment) {
+                foreach ($payment as $payments) {
+                    $payments->update([
+                        'STTS_RCRD' => 'PAID',
+                    ]);
+                }
+            }
 
             foreach ($check as $res) {
 
@@ -349,7 +359,7 @@ class PaymentController extends Controller
 
             M_PaymentApproval::create($data_approval);
 
-            return response()->json(['message' => 'approval success'], 200);
+            return response()->json(['message' => 'success'], 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
