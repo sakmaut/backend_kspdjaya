@@ -137,11 +137,12 @@ class PaymentController extends Controller
                 'KELURAHAN' => $customer_detail['kelurahan'],
                 'KECAMATAN' => $customer_detail['kecamatan'],
                 "METODE_PEMBAYARAN" => $request->payment_method ?? null,
-                "PEMBULATAN" => $request-> pembulatan ?? null,
-                "KEMBALIAN" => $request-> kembalian ?? null,
-                "JUMLAH_UANG" => $request-> jumlah_uang ?? null,
+                "TOTAL_BAYAR" => $request->total_bayar ?? null,
+                "PEMBULATAN" => $request->pembulatan ?? null,
+                "KEMBALIAN" => $request->kembalian ?? null,
+                "JUMLAH_UANG" => $request->jumlah_uang ?? null,
                 "NAMA_BANK" => $request->nama_bank??null,
-                "NO_REKENING" => $request-> no_rekening ?? null,
+                "NO_REKENING" => $request->no_rekening ?? null,
                 "CREATED_BY" => $request->user()->fullname
             ];
 

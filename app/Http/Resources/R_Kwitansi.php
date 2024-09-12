@@ -16,7 +16,7 @@ class R_Kwitansi extends JsonResource
     public function toArray(Request $request): array
     {
 
-        $detail = M_KwitansiStructurDetail::where('no_invoice',$this->NO_TRANSAKSI)->get();
+        $detail = M_KwitansiStructurDetail::where('no_invoice',$this->NO_TRANSAKSI)->orderBy('angsuran_ke', 'asc')->get();
 
        
         $pembayaran = []; // Initialize an empty array to store the pembayaran data
@@ -48,8 +48,9 @@ class R_Kwitansi extends JsonResource
             "pembayaran" => $pembayaran,
             "pembulatan" => $this->PEMBULATAN,
             "kembalian" => $this->KEMBALIAN,
+            "total_bayar" => $this->TOTAL_BAYAR,
             "jumlah_uang" => $this->JUMLAH_UANG,
-            "terbilang" => bilangan($this->JUMLAH_UANG) ?? null,
+            "terbilang" => bilangan($this->TOTAL_BAYAR) ?? null,
             "created_by" =>  $this->CREATED_BY,
             "created_at" => $this->CREATED_AT
         ];
