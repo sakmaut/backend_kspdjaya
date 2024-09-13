@@ -6,17 +6,18 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
-class M_BpkbDetail extends Model
+class M_BpkbApproval extends Model
 {
     use HasFactory;
-    protected $table = 'bpkb_detail';
+    protected $table = 'bpkb_approval';
     protected $fillable = [ 
         'ID',
         'BPKB_TRANSACTION_ID',
-        'COLLATERAL_ID',
-        'STATUS',
-        'UPDATED_BY',
-        'UPDATED_AT'
+        'ONCHARGE_APPRVL',
+        'ONCHARGE_PERSON',
+        'ONCHARGE_TIME',
+        'ONCHARGE_DESCR',
+        'APPROVAL_RESULT'
     ];
     protected $guarded = [];
     public $incrementing = false;

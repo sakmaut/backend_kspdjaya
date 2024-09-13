@@ -24,8 +24,9 @@ class R_BpkbList extends JsonResource
         $results = DB::table('bpkb_detail as a')
                     ->leftJoin('cr_collateral as b','b.ID', '=', 'a.COLLATERAL_ID')
                     ->where('a.BPKB_TRANSACTION_ID', $this->ID)
-                    ->select('b.POLICE_NUMBER', 'b.ON_BEHALF', 'b.CHASIS_NUMBER', 'b.ENGINE_NUMBER', 'b.BPKB_NUMBER', 'b.STNK_NUMBER')
+                    ->select('b.POLICE_NUMBER', 'b.ON_BEHALF', 'b.CHASIS_NUMBER', 'b.ENGINE_NUMBER', 'b.BPKB_NUMBER', 'b.STNK_NUMBER','a.STATUS')
                     ->get();
+
         $user = User::where('id',$this->CREATED_BY)->first();
 
         return [
@@ -37,7 +38,8 @@ class R_BpkbList extends JsonResource
             "kurir" => $this->COURIER,
             "tgl" => Carbon::parse($this->CREATED_AT)->format('Y-m-d'),
             "bpkb" => $results,
-            "jml_bpkb" => $results->count()
+            "jml_bpkb" => $results->count(),
+            "status" => $this->STATUS,
         ];
     }
 }
