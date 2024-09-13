@@ -22,9 +22,15 @@ class BpkbTransactionController extends Controller
     {
         try {
 
+            $position = $request->user()->position;
             $branch = $request->user()->branch_id;
 
-            $data = M_BpkbTransaction::where('FROM_BRANCH',$branch)->get();
+            if($position == "HO"){
+                $data = M_BpkbTransaction::where('TO_BRANCH','ho')->get();
+            }else{
+                $data = M_BpkbTransaction::where('FROM_BRANCH',$branch)->get();
+            }
+
             $dto = R_BpkbList::collection($data);
 
             ActivityLogger::logActivity($request,"Success",200);
