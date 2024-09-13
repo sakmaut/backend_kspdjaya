@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\R_BpkbList;
 use App\Models\M_BpkbDetail;
 use App\Models\M_BpkbTransaction;
 use App\Models\M_CrCollateral;
@@ -24,9 +25,10 @@ class BpkbTransactionController extends Controller
             $branch = $request->user()->branch_id;
 
             $data = M_BpkbTransaction::where('FROM_BRANCH',$branch)->get();
+            $dto = R_BpkbList::collection($data);
 
             ActivityLogger::logActivity($request,"Success",200);
-            return response()->json($data, 200);
+            return response()->json($dto, 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
@@ -42,8 +44,7 @@ class BpkbTransactionController extends Controller
                 'TO_BRANCH' => $request->tujuan,
                 'CATEGORY' => $request->kategori??null,
                 'NOTE' => $request->catatan,
-                'CREATE_BY' => Carbon::now()->format('Y-m-d'),
-                'CREATE_AT' => $request->user()->id
+                'CREATE_BY' => $request->user()->id
             ];
 
            $transaction = M_BpkbTransaction::create($data);
