@@ -44,7 +44,7 @@ class BpkbTransactionController extends Controller
                 'TO_BRANCH' => $request->tujuan,
                 'CATEGORY' => $request->kategori??null,
                 'NOTE' => $request->catatan,
-                'CREATE_BY' => $request->user()->id
+                'CREATED_BY' => $request->user()->id
             ];
 
            $transaction = M_BpkbTransaction::create($data);

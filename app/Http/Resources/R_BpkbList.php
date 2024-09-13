@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Models\M_BpkbDetail;
 use App\Models\M_Branch;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\DB;
@@ -30,6 +31,7 @@ class R_BpkbList extends JsonResource
             "dari_cabang" =>$branch->NAME ??null,
             "ke_cabang" =>  $this->TO_BRANCH,
             "keterangan" => $this->NOTE,
+            "tgl" => Carbon::parse($this->CREATED_AT)->format('Y-m-d'),
             "bpkb" => $results
         ];
     }
