@@ -44,6 +44,7 @@ class BpkbTransactionController extends Controller
                 'TO_BRANCH' => $request->tujuan,
                 'CATEGORY' => $request->kategori??null,
                 'NOTE' => $request->catatan,
+                'COURIER' => $request->kurir??null,
                 'CREATED_BY' => $request->user()->id
             ];
 

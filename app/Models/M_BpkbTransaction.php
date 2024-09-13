@@ -17,6 +17,7 @@ class M_BpkbTransaction extends Model
         'CATEGORY',
         'NOTE',
         'STATUS',
+        'COURIER',
         'CREATED_BY',
         'CREATED_AT'
     ];
