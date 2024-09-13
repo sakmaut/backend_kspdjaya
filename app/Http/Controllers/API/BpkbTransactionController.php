@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Models\M_BpkbDetail;
 use App\Models\M_BpkbTransaction;
+use App\Models\M_CrCollateral;
 use Carbon\Carbon;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
@@ -55,6 +56,9 @@ class BpkbTransactionController extends Controller
                     ];
 
                     M_BpkbDetail::create($detail);
+
+                    $collateral = M_CrCollateral::where('ID',$res['id'])->first();
+                    $collateral->update(['LOCATION_BRANCH' => $request->tujuan]);
                 } 
            }
     
