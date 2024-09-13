@@ -416,51 +416,44 @@ class PaymentController extends Controller
             $loan_number = $request->loan_number;
 
             $result = DB::select(
-                "SELECT 
-                    (a.PCPL_ORI-a.PAID_PRINCIPAL) as sisa_pokok, 
-                    c.BUNGA as BUNGA_BERJALAN, 
-                    b.INT_ARR as TUNGGAKAN_BUNGA, 
-                    b.DENDA as DENDA, 
-                    (a.PENALTY_RATE/100)*(a.PCPL_ORI-a.PAID_PRINCIPAL) as PINALTI
-                FROM 
-                    credit a
-                LEFT JOIN (
-                    SELECT 
-                        LOAN_NUMBER, 
-                        SUM(PAST_DUE_INTRST)-SUM(PAID_INT) as INT_ARR, 
-                        SUM(PAST_DUE_PENALTY)-SUM(PAID_PENALTY) as DENDA
-                    FROM 
-                        arrears
-                    WHERE 
-                        LOAN_NUMBER = '{$loan_number}'
-                        AND STATUS_REC = 'A'
-                    GROUP BY 
-                        LOAN_NUMBER
-                ) b ON b.LOAN_NUMBER = a.LOAN_NUMBER
-                LEFT JOIN (
-                    SELECT 
-                        LOAN_NUMBER, 
-                        INTEREST * DATEDIFF(NOW(), PAYMENT_DATE) / 
-                            DATE_FORMAT(DATE_ADD(DATE_ADD(STR_TO_DATE(CONCAT('01',DATE_FORMAT(PAYMENT_DATE,'%m%Y')),'%d%m%Y'),INTERVAL 1 MONTH),INTERVAL -1 DAY),'%m') as BUNGA
-                    FROM 
-                        credit_schedule
-                    WHERE 
-                        LOAN_NUMBER = '{$loan_number}'
-                        AND PAYMENT_DATE = (
-                            SELECT 
-                                MAX(PAYMENT_DATE)
-                            FROM 
-                                credit_schedule
-                            WHERE 
-                                LOAN_NUMBER = '{$loan_number}'
-                                AND PAYMENT_DATE <= NOW()
-                        )
-                ) c ON c.LOAN_NUMBER = a.LOAN_NUMBER
-                WHERE 
-                    a.LOAN_NUMBER = '{$loan_number}'"
+                "select	(a.PCPL_ORI-coalesce(a.PAID_PRINCIPAL,0)) as SISA_POKOK,
+                        c.BUNGA as BUNGA_BERJALAN,
+                        b.INT_ARR as TUNGGAKAN_BUNGA,
+                        b.DENDA as DENDA,
+                        (coalesce(a.PENALTY_RATE,3)/100)*(a.PCPL_ORI-coalesce(a.PAID_PRINCIPAL,0)) as PINALTI
+                from	credit a
+                        left join (	select	LOAN_NUMBER, 
+                                            sum(PAST_DUE_INTRST)-sum(PAID_INT) as INT_ARR, 
+                                            sum(PAST_DUE_PENALTY)-sum(PAID_PENALTY) as DENDA
+                                    from	arrears
+                                    where	LOAN_NUMBER = '{$loan_number}'
+                                            and STATUS_REC = 'A'
+                                    group 	by LOAN_NUMBER) b
+                            on b.LOAN_NUMBER = a.LOAN_NUMBER
+                        left join (	select	LOAN_NUMBER, 
+                                            INTEREST * datediff(now(), PAYMENT_DATE) / 
+                                                date_format(date_add(date_add(str_to_date(concat('01',date_format(PAYMENT_DATE,'%m%Y')),'%d%m%Y'),interval 1 month),interval -1 day),'%m') as BUNGA
+                                    from	credit_schedule
+                                    where	LOAN_NUMBER = '{$loan_number}'
+                                            and PAYMENT_DATE = (	select	max(PAYMENT_DATE)
+                                                                    from	credit_schedule
+                                                                    where	LOAN_NUMBER = '{$loan_number}'
+                                                                            and PAYMENT_DATE <= now())) c
+                        on c.LOAN_NUMBER = a.LOAN_NUMBER
+                where a.LOAN_NUMBER = '{$loan_number}'"
             );
+
+            $processedResults = array_map(function ($item) {
+                return [
+                    'SISA_POKOK' => intval($item->SISA_POKOK),
+                    'BUNGA_BERJALAN' => intval($item->BUNGA_BERJALAN),
+                    'TUNGGAKAN_BUNGA' => intval($item->TUNGGAKAN_BUNGA),
+                    'DENDA' => intval($item->DENDA),
+                    'PINALTI' => intval($item->PINALTI),
+                ];
+            }, $result);
     
-            return response()->json($result, 200);
+            return response()->json($processedResults, 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
