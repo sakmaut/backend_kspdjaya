@@ -92,7 +92,7 @@ class BpkbTransactionController extends Controller
                         ])->first();
 
                         $check_list_bpkb->update([
-                            'STATUS' => $res['flag_ho'],
+                            'STATUS' => $check_list_bpkb?'yes':'no',
                             'UPDATED_BY' => $user->id,
                             'UPDATED_AT' => Carbon::now()
                         ]);
