@@ -60,13 +60,9 @@ class BpkbTransactionController extends Controller
                 }
 
                 $check->update([
-                    'FROM_BRANCH' => 'ho',
-                    'TO_BRANCH' => $request->tujuan,
                     'CATEGORY' => $request->kategori??null,
                     'NOTE' => $request->catatan,
-                    'STATUS' => 'APPROVE_HO',
-                    'COURIER' => $request->kurir??null,
-                    'CREATED_BY' => $user->id
+                    'STATUS' => 'APPROVE_HO'
                 ]);
 
                 $data_approval = [
@@ -98,14 +94,6 @@ class BpkbTransactionController extends Controller
                         ]);
 
                         $collateralIds[] = $res['id'];
-                    }
-    
-                    // Retrieve all collaterals in one query
-                    $collaterals = M_CrCollateral::whereIn('ID', $collateralIds)->get();
-            
-                    // Update collaterals
-                    foreach ($collaterals as $collateral) {
-                        $collateral->update(['LOCATION_BRANCH' => $request->tujuan]);
                     }
                 }
             }else{
