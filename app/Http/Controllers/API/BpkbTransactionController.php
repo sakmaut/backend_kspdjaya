@@ -78,36 +78,49 @@ class BpkbTransactionController extends Controller
 
                 if(!empty($request->bpkb) && is_array($request->bpkb)){
 
-                    $collateralIds = [];
-            
-                    foreach ($request->bpkb as $res) {
-                        $check_list_bpkb = M_BpkbDetail::where([
-                            'BPKB_TRANSACTION_ID' => $id_bpkb_transaction,
-                            'COLLATERAL_ID' => $res['id']
-                        ])->first();
+                    $requestCollateralIds = collect($request->bpkb)->pluck('id')->toArray();
 
-                        if($check_list_bpkb){
-                            $check_list_bpkb->update([
+                    $getList = M_BpkbDetail::where('BPKB_TRANSACTION_ID', $id_bpkb_transaction)->get();
+
+                    // Create an associative array to map existing COLLATERAL_IDs to their records
+                    $existingRecords = $getList->keyBy('COLLATERAL_ID');
+
+                    $collateralIdsToUpdateNo = [];
+
+                    foreach ($getList as $record) {
+                        $collateralId = $record->COLLATERAL_ID;
+                    
+                        if (in_array($collateralId, $requestCollateralIds)) {
+                            // Update status to 'yes' if the collateral ID exists in the request
+                            $record->update([
                                 'STATUS' => 'yes',
                                 'UPDATED_BY' => $user->id,
                                 'UPDATED_AT' => Carbon::now()
                             ]);
-                        }else{
-                            $check_list_bpkb->update([
+                            
+                            // Remove from the list of collateral IDs to be updated to 'no'
+                            $requestCollateralIds = array_diff($requestCollateralIds, [$collateralId]);
+                        } else {
+                            // Collect IDs that need to be updated to 'no'
+                            $collateralIdsToUpdateNo[] = $collateralId;
+                        }
+                    }
+
+                    if (!empty($collateralIdsToUpdateNo)) {
+                        M_BpkbDetail::where('BPKB_TRANSACTION_ID', $id_bpkb_transaction)
+                            ->whereIn('COLLATERAL_ID', $collateralIdsToUpdateNo)
+                            ->update([
                                 'STATUS' => 'no',
                                 'UPDATED_BY' => $user->id,
                                 'UPDATED_AT' => Carbon::now()
                             ]);
-
-                            $collateralIds[] = $res['id'];
-                        }
                     }
 
-                    $collaterals = M_CrCollateral::whereIn('ID', $collateralIds)->get();
-            
-                    // Update collaterals
-                    foreach ($collaterals as $collateral) {
-                        $collateral->update(['LOCATION_BRANCH' => $check->FROM_BRANCH]);
+                    if (!empty($collateralIdsToUpdateNo)) {
+                        $collaterals = M_CrCollateral::whereIn('ID', $collateralIdsToUpdateNo)->get();
+                        foreach ($collaterals as $collateral) {
+                            $collateral->update(['LOCATION_BRANCH' => $check->FROM_BRANCH]);
+                        }
                     }
                 }
             }else{
