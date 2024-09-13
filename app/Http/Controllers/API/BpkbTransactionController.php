@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Ramsey\Uuid\Uuid as Uuid;
 
 class BpkbTransactionController extends Controller
 {
@@ -49,17 +50,27 @@ class BpkbTransactionController extends Controller
 
            if(!empty($request->bpkb) && is_array($request->bpkb)){
 
-                foreach ($request->bpkb as $res) {
-                    $detail = [
-                        'BPKB_TRANSACTION_ID' => $transaction->ID,
-                        'COLLATERAL_ID' => $res['id'],
-                    ];
+            $details = [];
+            $collateralIds = [];
+    
+            foreach ($request->bpkb as $res) {
+                $details[] = [
+                    'ID' => Uuid::uuid7()->toString(),
+                    'BPKB_TRANSACTION_ID' => $transaction->ID,
+                    'COLLATERAL_ID' => $res['id'],
+                ];
+                $collateralIds[] = $res['id'];
+            }
 
-                    M_BpkbDetail::create($detail);
+            M_BpkbDetail::insert($details);
 
-                    $collateral = M_CrCollateral::where('ID',$res['id'])->first();
-                    $collateral->update(['LOCATION_BRANCH' => $request->tujuan]);
-                } 
+            // Retrieve all collaterals in one query
+            $collaterals = M_CrCollateral::whereIn('ID', $collateralIds)->get();
+    
+            // Update collaterals
+            foreach ($collaterals as $collateral) {
+                $collateral->update(['LOCATION_BRANCH' => $request->tujuan]);
+            }
            }
     
             DB::commit();
