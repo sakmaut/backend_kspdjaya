@@ -78,7 +78,6 @@ class BpkbTransactionController extends Controller
 
                 if(!empty($request->bpkb) && is_array($request->bpkb)){
 
-                    $details = [];
                     $collateralIds = [];
             
                     foreach ($request->bpkb as $res) {
@@ -87,13 +86,28 @@ class BpkbTransactionController extends Controller
                             'COLLATERAL_ID' => $res['id']
                         ])->first();
 
-                        $check_list_bpkb->update([
-                            'STATUS' => $check_list_bpkb?'yes':'no',
-                            'UPDATED_BY' => $user->id,
-                            'UPDATED_AT' => Carbon::now()
-                        ]);
+                        if($check_list_bpkb){
+                            $check_list_bpkb->update([
+                                'STATUS' => 'yes',
+                                'UPDATED_BY' => $user->id,
+                                'UPDATED_AT' => Carbon::now()
+                            ]);
+                        }else{
+                            $check_list_bpkb->update([
+                                'STATUS' => 'no',
+                                'UPDATED_BY' => $user->id,
+                                'UPDATED_AT' => Carbon::now()
+                            ]);
 
-                        $collateralIds[] = $res['id'];
+                            $collateralIds[] = $res['id'];
+                        }
+                    }
+
+                    $collaterals = M_CrCollateral::whereIn('ID', $collateralIds)->get();
+            
+                    // Update collaterals
+                    foreach ($collaterals as $collateral) {
+                        $collateral->update(['LOCATION_BRANCH' => $check->FROM_BRANCH]);
                     }
                 }
             }else{
