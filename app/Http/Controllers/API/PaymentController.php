@@ -175,7 +175,7 @@ class PaymentController extends Controller
     {
         $save_kwitansi = [
             "NO_TRANSAKSI" => $no_inv,
-            "LOAN_NUMBER" => $request->loan_number ?? null,
+            "LOAN_NUMBER" => $request->no_facility ?? null,
             "TGL_TRANSAKSI" => Carbon::now()->format('d-m-Y'),
             'CUST_CODE' => $customer_detail['cust_code'],
             'NAMA' => $customer_detail['nama'],
