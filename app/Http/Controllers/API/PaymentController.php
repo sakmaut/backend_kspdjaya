@@ -411,6 +411,24 @@ class PaymentController extends Controller
                     }
                 }
             }else{
+
+                foreach ($check as $res) {
+
+                    $loan_number = $res['loan_number'];
+                    $tgl_angsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
+
+                    $credit_schedule = M_CreditSchedule::where([
+                        'LOAN_NUMBER' => $loan_number,
+                        'PAYMENT_DATE' => $tgl_angsuran
+                    ])->first();
+
+                    if ($credit_schedule) {
+                        $credit_schedule->update([
+                            'PAYMENT_VALUE' => "",
+                            'PAID_FLAG' => ''
+                        ]);
+                    }
+                }
                 
             }
 
