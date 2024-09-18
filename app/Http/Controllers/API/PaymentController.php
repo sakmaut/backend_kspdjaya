@@ -410,8 +410,10 @@ class PaymentController extends Controller
                         ]);
                     }
                 }
+            }else{
+                
             }
-            
+
             $data_approval = [
                 'PAYMENT_ID' => $request->no_invoice,
                 'ONCHARGE_APPRVL' => $request->flag,
