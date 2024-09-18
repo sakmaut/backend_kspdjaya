@@ -39,6 +39,7 @@ class R_Kwitansi extends JsonResource
         return [
             "id" => $this->ID,
             "no_transaksi" => $this->NO_TRANSAKSI,
+            "no_fasilitas" => $this->LOAN_NUMBER,
             "cabang" => $branch->NAME ?? null,
             "cust_code" => $this->CUST_CODE,
             "nama" => $this->NAMA,
