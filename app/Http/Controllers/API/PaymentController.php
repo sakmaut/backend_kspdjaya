@@ -96,6 +96,17 @@ class PaymentController extends Controller
         if ($check_method_payment) {
             $this->updateCreditSchedule($loan_number, $tgl_angsuran, $res['bayar_angsuran']);
             $this->updateArrears($loan_number, $tgl_angsuran, $res['bayar_denda']);
+        }else{
+            $credit_schedule = M_CreditSchedule::where([
+                'LOAN_NUMBER' => $loan_number,
+                'PAYMENT_DATE' => $tgl_angsuran
+            ])->first();
+    
+            if ($credit_schedule) {
+                $credit_schedule->update([
+                    'PAID_FLAG' => 'ON_PROGRESS'
+                ]);
+            }
         }
 
         // Add installment details to pembayaran array
