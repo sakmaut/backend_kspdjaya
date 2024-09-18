@@ -368,9 +368,15 @@ class PaymentController extends Controller
             
             if ($payment) {
                 foreach ($payment as $payments) {
-                    $payments->update([
-                        'STTS_RCRD' => 'PAID',
-                    ]);
+                    if($request->flag == 'yes'){
+                        $payments->update([
+                            'STTS_RCRD' => 'PAID',
+                        ]);
+                    }else{
+                        $payments->update([
+                            'STTS_RCRD' => 'CANCEL',
+                        ]);
+                    }
                 }
             }
 
