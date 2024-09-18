@@ -104,7 +104,7 @@ class PaymentController extends Controller
     
             if ($credit_schedule) {
                 $credit_schedule->update([
-                    'PAID_FLAG' => 'ON_PROGRESS'
+                    'PAID_FLAG' => 'PENDING'
                 ]);
             }
         }
