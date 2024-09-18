@@ -380,36 +380,38 @@ class PaymentController extends Controller
                 }
             }
 
-            foreach ($check as $res) {
+            if($request->flag == 'yes'){
+                foreach ($check as $res) {
 
-                $loan_number = $res['loan_number'];
-                $tgl_angsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
+                    $loan_number = $res['loan_number'];
+                    $tgl_angsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
 
-                $credit_schedule = M_CreditSchedule::where([
-                    'LOAN_NUMBER' => $loan_number,
-                    'PAYMENT_DATE' => $tgl_angsuran
-                ])->first();
+                    $credit_schedule = M_CreditSchedule::where([
+                        'LOAN_NUMBER' => $loan_number,
+                        'PAYMENT_DATE' => $tgl_angsuran
+                    ])->first();
 
-                if ($credit_schedule) {
-                    $credit_schedule->update([
-                        'PAYMENT_VALUE' =>  $res['bayar_angsuran'],
-                        'PAID_FLAG' => $res['bayar_angsuran'] == $credit_schedule->INSTALLMENT ? 'PAID' : ''
-                    ]);
-                }
+                    if ($credit_schedule) {
+                        $credit_schedule->update([
+                            'PAYMENT_VALUE' =>  $res['bayar_angsuran'],
+                            'PAID_FLAG' => $res['bayar_angsuran'] == $credit_schedule->INSTALLMENT ? 'PAID' : ''
+                        ]);
+                    }
 
-                // // Update arrears
-                $check_arrears = M_Arrears::where([
-                    'LOAN_NUMBER' => $loan_number,
-                    'START_DATE' => $tgl_angsuran
-                ])->first();
+                    // // Update arrears
+                    $check_arrears = M_Arrears::where([
+                        'LOAN_NUMBER' => $loan_number,
+                        'START_DATE' => $tgl_angsuran
+                    ])->first();
 
-                if ($check_arrears) {
-                    $check_arrears->update([
-                        'PAID_PENALTY' => $res['bayar_denda']
-                    ]);
+                    if ($check_arrears) {
+                        $check_arrears->update([
+                            'PAID_PENALTY' => $res['bayar_denda']
+                        ]);
+                    }
                 }
             }
-
+            
             $data_approval = [
                 'PAYMENT_ID' => $request->no_invoice,
                 'ONCHARGE_APPRVL' => $request->flag,
