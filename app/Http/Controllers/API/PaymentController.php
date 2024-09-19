@@ -248,6 +248,7 @@ class PaymentController extends Controller
 
         $payment_record = [
             'ID' => $uid,
+            'ACC_KEY' => $request->pembayaran,
             'STTS_RCRD' => $request->payment_method == 'cash' ? 'PAID' : 'PENDING',
             'INVOICE' => $no_inv,
             'NO_TRX' => $request->uid,
@@ -274,17 +275,17 @@ class PaymentController extends Controller
         $bayar_denda = $res['bayar_denda'];
 
         // Payment principal
-        $data_principal = self::preparePaymentData($uid,'POKOK',$principal_amount);
+        $data_principal = self::preparePaymentData($uid,'ANGSURAN POKOK',$principal_amount);
         M_PaymentDetail::create($data_principal);
 
         // Payment interest
         $interest_amount = ($angsuran_amount >= $principal_amount) ? ($angsuran_amount - $principal_amount) : 0;
-        $data_interest = self::preparePaymentData($uid,'BUNGA', $interest_amount);
+        $data_interest = self::preparePaymentData($uid, 'BUNGA PINJAMAN', $interest_amount);
         M_PaymentDetail::create($data_interest);
 
         // Payment denda
         if ($bayar_denda !== 0) {
-            $data_denda = self::preparePaymentData($uid,'DENDA', $bayar_denda);
+            $data_denda = self::preparePaymentData($uid,'DENDA PINJAMAN', $bayar_denda);
             M_PaymentDetail::create($data_denda);
         }
     }
