@@ -288,6 +288,16 @@ class PaymentController extends Controller
             $data_denda = self::preparePaymentData($uid,'DENDA PINJAMAN', $bayar_denda);
             M_PaymentDetail::create($data_denda);
         }
+
+        $check_credit = M_Credit::where(['LOAN_NUMBER' => $loan_number])->first();
+
+        if ($check_credit) {
+            $check_credit->update([
+                'PAID_PRINCIPAL' => $check_credit->PAID_PRINCIPAL + $principal_amount,
+                'PAID_INTEREST' => $check_credit->PAID_INTEREST + $interest_amount,
+                'PAID_PINALTY' => $bayar_denda !== 0 ? $check_credit->PAID_PINALTY + $bayar_denda:0
+            ]);
+        }
     }
 
     function preparePaymentData($payment_id,$acc_key, $amount)
