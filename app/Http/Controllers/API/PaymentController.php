@@ -82,6 +82,25 @@ class PaymentController extends Controller
         }
     }
 
+    public function paymentPelunasan(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+
+            DB::commit();
+            // ActivityLogger::logActivity($request, "Success", 200);
+            return response()->json($request, 200);
+        } catch (QueryException $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($request, $e->getMessage(), 409);
+            return response()->json(['message' => $e->getMessage()], 409);
+        } catch (\Exception $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+    }
+
     private function processPaymentStructure($res, $request, $getCodeBranch, $no_inv, $created_now, &$pembayaran, &$customer_detail)
     {
         $loan_number = $res['loan_number'];
@@ -94,7 +113,7 @@ class PaymentController extends Controller
         $check_method_payment = strtolower($request->payment_method) === 'cash';
 
         if ($check_method_payment) {
-            $this->updateCreditSchedule($loan_number, $tgl_angsuran, $res['bayar_angsuran']);
+            $this->updateCreditSchedule($loan_number, $tgl_angsuran, $res);
             $this->updateArrears($loan_number, $tgl_angsuran, $res['bayar_denda']);
         }else{
             $credit_schedule = M_CreditSchedule::where([
@@ -132,7 +151,7 @@ class PaymentController extends Controller
             'installment' => $res['installment'],
             'principal_remains' => $res['principal_remains'],
             'payment' => $res['payment'],
-            'bayar_angsuran' => $res['bayar_angsuran'],
+            'bayar_angsuran' => $res,
             "bayar_denda" => $res['bayar_denda'],
             "total_bayar" => $res['total_bayar'],
             "flag" => $res['flag'],
@@ -142,7 +161,7 @@ class PaymentController extends Controller
         M_KwitansiStructurDetail::create($save_kwitansi_detail);
     }
 
-    private function updateCreditSchedule($loan_number, $tgl_angsuran, $bayar_angsuran)
+    private function updateCreditSchedule($loan_number, $tgl_angsuran, $res)
     {
         $credit_schedule = M_CreditSchedule::where([
             'LOAN_NUMBER' => $loan_number,
@@ -150,9 +169,16 @@ class PaymentController extends Controller
         ])->first();
 
         if ($credit_schedule) {
+            $payment_value_principal = $res['principal'];
+            $remaining_amount = $res['bayar_angsuran'] - $payment_value_principal;
+            $payment_value_interest = $remaining_amount > $res['interest'] ? $res['interest'] : $remaining_amount;
+            $payment_value = $res['bayar_angsuran'];
+
             $credit_schedule->update([
-                'PAYMENT_VALUE' => $bayar_angsuran,
-                'PAID_FLAG' => $bayar_angsuran == $credit_schedule->INSTALLMENT ? 'PAID' : ''
+                'PAYMENT_VALUE_PRINCIPAL' => $payment_value_principal,
+                'PAYMENT_VALUE_INTEREST' => $payment_value_interest,
+                'PAYMENT_VALUE' => $payment_value,
+                'PAID_FLAG' => $res['bayar_angsuran'] == $credit_schedule->INSTALLMENT ? 'PAID' : ''
             ]);
         }
     }

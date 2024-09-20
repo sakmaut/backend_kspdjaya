@@ -88,6 +88,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('payment_attachment', [PaymentController::class, 'upload']);
     Route::post('payment_approval', [PaymentController::class, 'approval']);
     Route::post('pelunasan', [PaymentController::class, 'pelunasan']);
+    Route::post('payment_pelunasan', [PaymentController::class, 'paymentPelunasan']);
 
     //Blacklist
     Route::resource('blacklist', CrBlacklistController::class);
