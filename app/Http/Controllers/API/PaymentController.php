@@ -86,10 +86,136 @@ class PaymentController extends Controller
     {
         DB::beginTransaction();
         try {
-
             DB::commit();
-            // ActivityLogger::logActivity($request, "Success", 200);
-            return response()->json($request, 200);
+
+            $check = M_CreditSchedule::where('LOAN_NUMBER', $request->LOAN_NUMBER)->first();
+
+            if (!$check) {
+                throw new Exception('Loan Number Not Exist');
+            }
+
+            $creditSchedule = M_CreditSchedule::where('LOAN_NUMBER', $request->LOAN_NUMBER)
+                                ->whereNull('PAID_FLAG')
+                                ->get();
+
+            $bayarPokok = $request->input('BAYAR_POKOK');
+            $bayarBunga = $request->input('BAYAR_BUNGA');
+
+            foreach ($creditSchedule as $res) {
+                if ($bayarPokok > 0) {
+                    if ($bayarPokok >= $res['PRINCIPAL']) {
+                        $payment_value_principal = $res['PRINCIPAL'];
+                        $bayarPokok -= $res['PRINCIPAL'];
+                    } else {
+                        $payment_value_principal = $bayarPokok;
+                        $bayarPokok = 0;
+                    }
+                } else {
+                    $payment_value_principal = 0;
+                }
+
+                // Calculate for interest
+                if ($bayarBunga > 0) {
+                    if ($bayarBunga >= $res['INTEREST']) {
+                        $payment_value_interest = $res['INTEREST'];
+                        $bayarBunga -= $res['INTEREST'];
+                    } else {
+                        $payment_value_interest = $bayarBunga;
+                        $bayarBunga = 0;
+                    }
+                } else {
+                    $payment_value_interest = 0;
+                }
+
+                // Total payment value (principal + interest)
+                $payment_value = $payment_value_principal + $payment_value_interest;
+
+                // Check if the installment is fully paid
+                $isPaid = $payment_value == $res['INSTALLMENT'] ? 'PAID' : '';
+
+                // Update the credit schedule record
+                $res->update([
+                    'PAYMENT_VALUE_PRINCIPAL' => $payment_value_principal,
+                    'PAYMENT_VALUE_INTEREST' => $payment_value_interest,
+                    'PAYMENT_VALUE' => $payment_value,
+                    'PAID_FLAG' => $isPaid
+                ]);
+
+                // Break the loop if both `BAYAR_POKOK` and `BAYAR_BUNGA` are fully used
+                if ($bayarPokok <= 0 && $bayarBunga <= 0) {
+                    break;
+                }
+              
+            }
+
+            $uid = Uuid::uuid7()->toString();
+
+            $created_now = Carbon::now();
+
+            $discounts = $request->only(['DISKON_POKOK', 'DISKON_PINALTI', 'DISKON_BUNGA', 'DISKON_DENDA']);
+            $status = collect($discounts)->every(fn ($value) => $value != 0) ? 'PAID' : 'PENDING';
+
+            $no_inv = generateCode($request, 'payment', 'INVOICE', 'INV');
+            $getCodeBranch = M_Branch::findOrFail($request->user()->branch_id);
+
+            $installmentCounts = $creditSchedule->map(function ($item) {
+                return $item->INSTALLMENT_COUNT;
+            })->join(',');
+
+            $payment_record = [
+                'ID' => $uid,
+                'ACC_KEY' => 'pelunasan',
+                'STTS_RCRD' => $status,
+                'INVOICE' => $no_inv,
+                'NO_TRX' => $request->uid??null,
+                'PAYMENT_METHOD' => '',
+                'BRANCH' => $getCodeBranch->CODE_NUMBER,
+                'LOAN_NUM' => $request->LOAN_NUMBER ?? null,
+                'VALUE_DATE' => null,
+                'ENTRY_DATE' => $created_now,
+                'TITLE' => 'Angsuran Ke-' . $installmentCounts,
+                'ORIGINAL_AMOUNT' => ($res['bayar_angsuran'] + $res['bayar_denda']),
+                'OS_AMOUNT' => 0,
+                'START_DATE' => null,
+                'AUTH_BY' => $request->user()->id,
+                'AUTH_DATE' => $created_now
+            ];
+
+            M_Payment::create($payment_record);
+
+            $data_principal = self::preparePaymentData($uid, 'PELUNASAN POKOK', $request->BAYAR_POKOK);
+            M_PaymentDetail::create($data_principal);
+
+            $data_principal = self::preparePaymentData($uid, 'BAYAR BUNGA', $request->BAYAR_BUNGA);
+            M_PaymentDetail::create($data_principal);
+
+            $data_principal = self::preparePaymentData($uid, 'BAYAR PINALTY', $request->BAYAR_PINALTI);
+            M_PaymentDetail::create($data_principal);
+
+            $data_principal = self::preparePaymentData($uid, 'BAYAR DENDA', $request->BAYAR_DENDA);
+            M_PaymentDetail::create($data_principal);
+
+            if($request->DISKON_POKOK != 0){
+                $data_principal = self::preparePaymentData($uid, 'DISKON DENDA', $request->DISKON_POKOK);
+                M_PaymentDetail::create($data_principal);
+            }
+
+            if ($request->DISKON_PINALTI != 0) {
+                $data_principal = self::preparePaymentData($uid, 'DISKON PINALTY', $request->DISKON_PINALTI);
+                M_PaymentDetail::create($data_principal);
+            }
+
+            if ($request->DISKON_BUNGA != 0) {
+                $data_principal = self::preparePaymentData($uid, 'DISKON BUNGA', $request->DISKON_BUNGA);
+                M_PaymentDetail::create($data_principal);
+            }
+
+            if ($request->DISKON_DENDA != 0) {
+                $data_principal = self::preparePaymentData($uid, 'DISKON DENDA', $request->DISKON_DENDA);
+                M_PaymentDetail::create($data_principal);
+            }
+    
+            return response()->json($creditSchedule, 200);
         } catch (QueryException $e) {
             DB::rollback();
             ActivityLogger::logActivity($request, $e->getMessage(), 409);
