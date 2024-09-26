@@ -88,10 +88,26 @@ class PaymentController extends Controller
         try {
             DB::commit();
 
-            $check = M_CreditSchedule::where('LOAN_NUMBER', $request->LOAN_NUMBER)->first();
+            $loan_number = $request->LOAN_NUMBER;
+
+            $check = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)->first();
 
             if (!$check) {
                 throw new Exception('Loan Number Not Exist');
+            }
+
+            $check_credit = M_Credit::where(['LOAN_NUMBER' => $loan_number])->first();
+
+            if (!$check_credit) {
+                throw new Exception('Loan Number Not Exist');
+            }
+
+            if ($check_credit) {
+                $check_credit->update([
+                    'PAID_PRINCIPAL' => $request->BAYAR_POKOK,
+                    'PAID_INTEREST' => $request->BAYAR_BUNGA,
+                    'PAID_PINALTY' => $request->PAID_PINALTY
+                ]);
             }
 
             $creditSchedule = M_CreditSchedule::where('LOAN_NUMBER', $request->LOAN_NUMBER)
