@@ -81,7 +81,7 @@ class PaymentController extends Controller
             return response()->json(['message' => $e->getMessage()], 500);
         }
     }
-
+    //upd
     public function paymentPelunasan(Request $request)
     {
         DB::beginTransaction();
