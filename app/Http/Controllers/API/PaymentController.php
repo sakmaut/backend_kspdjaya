@@ -130,7 +130,7 @@ class PaymentController extends Controller
             'installment' => $res['installment'],
             'principal_remains' => $res['principal_remains'],
             'payment' => $res['payment'],
-            'bayar_angsuran' => $res,
+            'bayar_angsuran' => $res['bayar_angsuran'],
             "bayar_denda" => $res['bayar_denda'],
             "total_bayar" => $res['total_bayar'],
             "flag" => $res['flag'],
