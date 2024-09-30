@@ -16,7 +16,8 @@ use App\Http\Controllers\API\{
     TaksasiController,
     UserAccessMenuController,
     UsersController,
-    CrBlacklistController
+    CrBlacklistController,
+    PelunasanController
 };
 use App\Http\Controllers\Welcome;
 use Illuminate\Http\Request;
@@ -87,8 +88,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::resource('payment', PaymentController::class);
     Route::post('payment_attachment', [PaymentController::class, 'upload']);
     Route::post('payment_approval', [PaymentController::class, 'approval']);
-    Route::post('pelunasan', [PaymentController::class, 'pelunasan']);
-    Route::post('payment_pelunasan', [PaymentController::class, 'paymentPelunasan']);
+
+    Route::post('pelunasan', [PelunasanController::class, 'checkCredit']);
+    Route::post('payment_pelunasan', [PelunasanController::class, 'processPayment']);
+    Route::get('list_pelunasan', [PelunasanController::class, 'index']);
 
     //Blacklist
     Route::resource('blacklist', CrBlacklistController::class);
