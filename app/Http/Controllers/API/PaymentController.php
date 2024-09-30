@@ -101,6 +101,15 @@ class PaymentController extends Controller
             }
 
             $credit = M_Credit::where('LOAN_NUMBER', $loan_number)->firstOrFail();
+
+            if ($credit) {
+                $credit->update([
+                    'PAID_PRINCIPAL' => $request->BAYAR_POKOK,
+                    'PAID_INTEREST' => $request->BAYAR_BUNGA,
+                    'PAID_PINALTY' => $request->BAYAR_PINALTI
+                ]);
+            }
+
             $detail_customer = M_Customer::where('CUST_CODE', $credit->CUST_CODE)->firstOrFail();
 
             $save_kwitansi = [
@@ -203,70 +212,56 @@ class PaymentController extends Controller
                 }
             }
 
+            $bayarPokok = $request->input('BAYAR_POKOK');
+            $bayarBunga = $request->input('BAYAR_BUNGA');
 
-            
+            foreach ($creditSchedule as $res) {
+                if ($bayarPokok > 0) {
+                    if ($bayarPokok >= $res['PRINCIPAL']) {
+                        $payment_value_principal = $res['PRINCIPAL'];
+                        $bayarPokok -= $res['PRINCIPAL'];
+                    } else {
+                        $payment_value_principal = $bayarPokok;
+                        $bayarPokok = 0;
+                    }
+                } else {
+                    $payment_value_principal = 0;
+                }
 
-            // if ($check_credit) {
-            //     $check_credit->update([
-            //         'PAID_PRINCIPAL' => $request->BAYAR_POKOK,
-            //         'PAID_INTEREST' => $request->BAYAR_BUNGA,
-            //         'PAID_PINALTY' => $request->PAID_PINALTY
-            //     ]);
-            // }
+                // Calculate for interest
+                if ($bayarBunga > 0) {
+                    if ($bayarBunga >= $res['INTEREST']) {
+                        $payment_value_interest = $res['INTEREST'];
+                        $bayarBunga -= $res['INTEREST'];
+                    } else {
+                        $payment_value_interest = $bayarBunga;
+                        $bayarBunga = 0;
+                    }
+                } else {
+                    $payment_value_interest = 0;
+                }
 
-           
+                // Total payment value (principal + interest)
+                $payment_value = $payment_value_principal + $payment_value_interest;
 
-            // $bayarPokok = $request->input('BAYAR_POKOK');
-            // $bayarBunga = $request->input('BAYAR_BUNGA');
+                // Check if the installment is fully paid
+                $isPaid = $payment_value == $res['PRINCIPAL'] ? 'PAID' : '';
 
-            // foreach ($creditSchedule as $res) {
-            //     if ($bayarPokok > 0) {
-            //         if ($bayarPokok >= $res['PRINCIPAL']) {
-            //             $payment_value_principal = $res['PRINCIPAL'];
-            //             $bayarPokok -= $res['PRINCIPAL'];
-            //         } else {
-            //             $payment_value_principal = $bayarPokok;
-            //             $bayarPokok = 0;
-            //         }
-            //     } else {
-            //         $payment_value_principal = 0;
-            //     }
+                // Update the credit schedule record
+                $res->update([
+                    'PAYMENT_VALUE_PRINCIPAL' => $payment_value_principal,
+                    'PAYMENT_VALUE_INTEREST' => $payment_value_interest,
+                    'PAYMENT_VALUE' => $payment_value,
+                    'PAID_FLAG' => $isPaid
+                ]);
 
-            //     // Calculate for interest
-            //     if ($bayarBunga > 0) {
-            //         if ($bayarBunga >= $res['INTEREST']) {
-            //             $payment_value_interest = $res['INTEREST'];
-            //             $bayarBunga -= $res['INTEREST'];
-            //         } else {
-            //             $payment_value_interest = $bayarBunga;
-            //             $bayarBunga = 0;
-            //         }
-            //     } else {
-            //         $payment_value_interest = 0;
-            //     }
-
-            //     // Total payment value (principal + interest)
-            //     $payment_value = $payment_value_principal + $payment_value_interest;
-
-            //     // Check if the installment is fully paid
-            //     $isPaid = $payment_value == $res['INSTALLMENT'] ? 'PAID' : '';
-
-            //     // Update the credit schedule record
-            //     $res->update([
-            //         'PAYMENT_VALUE_PRINCIPAL' => $payment_value_principal,
-            //         'PAYMENT_VALUE_INTEREST' => $payment_value_interest,
-            //         'PAYMENT_VALUE' => $payment_value,
-            //         'PAID_FLAG' => $isPaid
-            //     ]);
-
-            //     // Break the loop if both `BAYAR_POKOK` and `BAYAR_BUNGA` are fully used
-            //     if ($bayarPokok <= 0 && $bayarBunga <= 0) {
-            //         break;
-            //     }
+                // Break the loop if both `BAYAR_POKOK` and `BAYAR_BUNGA` are fully used
+                if ($bayarPokok <= 0 && $bayarBunga <= 0) {
+                    break;
+                }
               
-            // }
+            }
         
-
             $response = [
                 "no_transaksi" => $no_inv,
                 'cust_code' => $detail_customer->CUST_CODE,
