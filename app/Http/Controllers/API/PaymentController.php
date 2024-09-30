@@ -28,7 +28,7 @@ class PaymentController extends Controller
 
     public function index(Request $request){
         try {
-            $data = M_Kwitansi::all();
+            $data = M_Kwitansi::where('PAYMENT_TYPE', 'angsuran')->get();
 
             $dto = R_Kwitansi::collection($data);
 
