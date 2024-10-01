@@ -126,7 +126,7 @@ class CustomerController extends Controller
                     'bayar_denda' => intval($arrears->PAST_DUE_PENALTY??null),
                     'total_bayar' => intval($res->INSTALLMENT+($arrears->PAST_DUE_PENALTY??null)),
                     'flag' => $res->PAID_FLAG,
-                    'denda' =>intval($arrears->PAST_DUE_PENALTY??null)
+                    'denda' =>intval($arrears->PAST_DUE_PENALTY - $arrears->PAID_PENALTY??null)
                 ];
             }
 
