@@ -150,49 +150,71 @@ class PaymentController extends Controller
         if ($credit_schedule) {
             $byr_angsuran = $res['bayar_angsuran'];
             $payment_value = $byr_angsuran + $credit_schedule->PAYMENT_VALUE;
-            $remaining_principal = $byr_angsuran - $credit_schedule->PRINCIPAL;
 
             $valBeforePrincipal = $credit_schedule->PAYMENT_VALUE_PRINCIPAL;
             $valBeforeInterest = $credit_schedule->PAYMENT_VALUE_INTEREST;
             $getPrincipal = $credit_schedule->PRINCIPAL;
             $getInterest = $credit_schedule->INTEREST;
 
-            if ($remaining_principal >= 0) {
-                // If angsuran can fully cover the principal
-                $payment_value_principal = $credit_schedule->PRINCIPAL;
+            // Determine the new principal payment value
+            $new_payment_value_principal = $valBeforePrincipal;
+            $new_payment_value_interest = $valBeforeInterest;
 
-                // Use remaining amount to pay off interest
-                $payment_value_interest = min($remaining_principal, $credit_schedule->INTEREST);
+            // Check if principal has already reached the maximum
+            if ($valBeforePrincipal < $getPrincipal) {
+                // Calculate how much can still be added to the principal
+                $remaining_to_principal = $getPrincipal - $valBeforePrincipal;
+
+                if ($byr_angsuran >= $remaining_to_principal) {
+                    // If the payment covers the remaining principal
+                    $new_payment_value_principal = $getPrincipal; // Set to maximum
+                    $remaining_payment = $byr_angsuran - $remaining_to_principal; // Remaining payment goes to interest
+                } else {
+                    // If the payment is less than the remaining principal
+                    $new_payment_value_principal += $byr_angsuran; // Add to principal
+                    $remaining_payment = 0; // No remaining payment to apply to interest
+                }
             } else {
-                // If angsuran is less than the principal
-                $payment_value_principal = $byr_angsuran;
-                $payment_value_interest = $byr_angsuran; // No payment towards interest
+                // If principal is already at maximum, we add all to interest
+                $remaining_payment = $byr_angsuran;
             }
 
-            // Add to principal if it's not fully paid
-            $new_payment_value_principal = ($getPrincipal > $valBeforePrincipal)
-                ? $valBeforePrincipal + $payment_value_principal
-                : $valBeforePrincipal;
+            // Update interest with remaining payment only if principal is fully paid
+            if ($new_payment_value_principal == $getPrincipal) {
+                // Only update interest if it has not reached the max
+                if ($valBeforeInterest < $getInterest) {
+                    $new_payment_value_interest = min($valBeforeInterest + $remaining_payment, $getInterest);
+                }
+            }
 
-            // Add to interest if it's not fully paid
-            $new_payment_value_interest = ($getInterest > $valBeforeInterest)
-                ? $valBeforeInterest + $payment_value_interest
-                : $valBeforeInterest;
+            // Prepare updates only if values have changed
+            $updates = [];
+            if ($new_payment_value_principal !== $valBeforePrincipal) {
+                $updates['PAYMENT_VALUE_PRINCIPAL'] = $new_payment_value_principal;
+            }
+
+            // Only update interest if it has changed
+            if ($new_payment_value_interest !== $valBeforeInterest) {
+                $updates['PAYMENT_VALUE_INTEREST'] = $new_payment_value_interest;
+            }
 
             // Calculate insufficient payment
             $total_paid = $new_payment_value_principal + $new_payment_value_interest;
 
             $insufficient_payment = ($getPrincipal > $new_payment_value_principal || $getInterest > $new_payment_value_interest)
-                                    ? ($total_paid - $credit_schedule->INSTALLMENT)
-                                    : 0;
+                ? ($total_paid - $credit_schedule->INSTALLMENT)
+                : 0;
 
-            $credit_schedule->update([
-                'PAYMENT_VALUE_PRINCIPAL' => $new_payment_value_principal,
-                'PAYMENT_VALUE_INTEREST' => $new_payment_value_interest,
-                'INSUFFICIENT_PAYMENT' => $insufficient_payment,
-                'PAYMENT_VALUE' => $payment_value,
-                'PAID_FLAG' => $payment_value == $credit_schedule->INSTALLMENT ? 'PAID' : ''
-            ]);
+            // Prepare the update data
+            $updates['INSUFFICIENT_PAYMENT'] = $insufficient_payment;
+            $updates['PAYMENT_VALUE'] = $payment_value;
+            $updates['PAID_FLAG'] = $payment_value == $credit_schedule->INSTALLMENT ? 'PAID' : '';
+
+            // Update the schedule if there are any changes
+            if (!empty($updates)) {
+                $credit_schedule->update($updates);
+            }
+
         }
 
     }
