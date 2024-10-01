@@ -117,7 +117,7 @@ class CustomerController extends Controller
                     'angsuran_ke' =>  $res->INSTALLMENT_COUNT,
                     'loan_number' => $res->LOAN_NUMBER,
                     'tgl_angsuran' => Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y'),
-                    'principal' => intval($res->PRINCIPAL),
+                    'principal' => intval($res->PRINCIPAL) - intval($res->PAYMENT_VALUE),
                     'interest' => intval($res->INTEREST),
                     'installment' => intval($res->INSTALLMENT),
                     'principal_remains' => intval($res->PRINCIPAL_REMAINS),
