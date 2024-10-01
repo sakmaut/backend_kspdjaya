@@ -11,7 +11,8 @@ class M_Kwitansi extends Model
     use HasFactory;
     protected $table = 'kwitansi';
     protected $fillable = [
-        'ID', 
+        'ID',
+        'PAYMENT_TYPE',
         'NO_TRANSAKSI', 
         'LOAN_NUMBER', 
         'TGL_TRANSAKSI', 

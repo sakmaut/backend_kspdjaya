@@ -21,6 +21,7 @@ class M_CreditSchedule extends Model
         'PRINCIPAL_REMAINS',
         'PAYMENT_VALUE_PRINCIPAL',
         'PAYMENT_VALUE_INTEREST',
+        'INSUFFICIENT_PAYMENT',
         'PAYMENT_VALUE',
         'PAID_FLAG'
     ];
