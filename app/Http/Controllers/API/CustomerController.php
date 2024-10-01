@@ -119,7 +119,7 @@ class CustomerController extends Controller
                     'tgl_angsuran' => Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y'),
                     'principal' => intval($res->PRINCIPAL),
                     'interest' => intval($res->INTEREST),
-                    'installment' => intval($res->INSTALLMENT),
+                    'installment' => intval($res->INSTALLMENT) - intval($res->PAYMENT_VALUE),
                     'principal_remains' => intval($res->PRINCIPAL_REMAINS),
                     'payment' => intval($res->PAYMENT_VALUE),
                     'bayar_angsuran' => intval($res->INSTALLMENT) - intval($res->PAYMENT_VALUE),
