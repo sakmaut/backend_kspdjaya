@@ -402,13 +402,15 @@ class PaymentController extends Controller
         $bayar_denda = $res['bayar_denda'];
 
         // Payment principal
-        $data_principal = self::preparePaymentData($uid,'ANGSURAN POKOK',$principal_amount);
+        $data_principal = self::preparePaymentData($uid,'ANGSURAN POKOK', $angsuran_amount);
         M_PaymentDetail::create($data_principal);
 
         // Payment interest
         $interest_amount = ($angsuran_amount >= $principal_amount) ? ($angsuran_amount - $principal_amount) : 0;
-        $data_interest = self::preparePaymentData($uid, 'BUNGA PINJAMAN', $interest_amount);
-        M_PaymentDetail::create($data_interest);
+        if ($interest_amount !== 0) {
+            $data_interest = self::preparePaymentData($uid, 'BUNGA PINJAMAN', $interest_amount);
+            M_PaymentDetail::create($data_interest);
+        }
 
         // Payment denda
         if ($bayar_denda !== 0) {
