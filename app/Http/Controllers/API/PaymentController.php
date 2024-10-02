@@ -93,7 +93,7 @@ class PaymentController extends Controller
 
         if ($check_method_payment) {
             $this->updateCreditSchedule($loan_number, $tgl_angsuran, $res);
-            $this->updateArrears($loan_number, $tgl_angsuran, $res['bayar_denda']);
+            $this->updateArrears($loan_number, $tgl_angsuran, $res['bayar_denda'],$res);
         }else{
             $credit_schedule = M_CreditSchedule::where([
                 'LOAN_NUMBER' => $loan_number,
@@ -216,10 +216,9 @@ class PaymentController extends Controller
             }
 
         }
-
     }
 
-    private function updateArrears($loan_number, $tgl_angsuran, $bayar_denda)
+    private function updateArrears($loan_number, $tgl_angsuran, $bayar_denda,$res)
     {
         $check_arrears = M_Arrears::where([
             'LOAN_NUMBER' => $loan_number,
@@ -233,10 +232,66 @@ class PaymentController extends Controller
             // Sum the current penalty with the new value
             $new_penalty = $current_penalty + $bayar_denda;
 
-            // Update the PAID_PENALTY field with the new summed value
-            $check_arrears->update([
-                'PAID_PENALTY' => $new_penalty
-            ]);
+            $byr_angsuran = $res['bayar_angsuran'];
+
+            $valBeforePrincipal = $check_arrears->PAID_PCPL;
+            $valBeforeInterest = $check_arrears->PAID_INT;
+            $getPrincipal = $check_arrears->PAST_DUE_PCPL;
+            $getInterest = $check_arrears->PAST_DUE_INTRST;
+
+            // Determine the new principal payment value
+            $new_payment_value_principal = $valBeforePrincipal;
+            $new_payment_value_interest = $valBeforeInterest;
+
+            // Check if principal has already reached the maximum
+            if ($valBeforePrincipal < $getPrincipal) {
+                // Calculate how much can still be added to the principal
+                $remaining_to_principal = $getPrincipal - $valBeforePrincipal;
+
+                if ($byr_angsuran >= $remaining_to_principal) {
+                    // If the payment covers the remaining principal
+                    $new_payment_value_principal = $getPrincipal; // Set to maximum
+                    $remaining_payment = $byr_angsuran - $remaining_to_principal; // Remaining payment goes to interest
+                } else {
+                    // If the payment is less than the remaining principal
+                    $new_payment_value_principal += $byr_angsuran; // Add to principal
+                    $remaining_payment = 0; // No remaining payment to apply to interest
+                }
+            } else {
+                // If principal is already at maximum, we add all to interest
+                $remaining_payment = $byr_angsuran;
+            }
+
+            // Update interest with remaining payment only if principal is fully paid
+            if ($new_payment_value_principal == $getPrincipal) {
+                // Only update interest if it has not reached the max
+                if ($valBeforeInterest < $getInterest) {
+                    $new_payment_value_interest = min($valBeforeInterest + $remaining_payment, $getInterest);
+                }
+            }
+
+            // Prepare updates only if values have changed
+            $updates = [];
+            if ($new_payment_value_principal !== $valBeforePrincipal) {
+                $updates['PAID_PCPL'] = $new_payment_value_principal;
+            }
+
+            // Only update interest if it has changed
+            if ($new_payment_value_interest !== $valBeforeInterest) {
+                $updates['PAID_INT'] = $new_payment_value_interest;
+            }
+
+            $updates['PAID_PENALTY'] = $new_penalty;
+            
+            // Update the schedule if there are any changes
+            if (!empty($updates)) {
+                $check_arrears->update($updates);
+            }
+
+            if ($new_payment_value_principal == $getPrincipal && $new_payment_value_interest == $getInterest) {
+                // Update the status record if both values are maxed out
+                $check_arrears->update(['STATUS_REC' => 'D']);
+            }
         }
 
     }
@@ -329,7 +384,7 @@ class PaymentController extends Controller
             'VALUE_DATE' => null,
             'ENTRY_DATE' => $created_now,
             'TITLE' => 'Angsuran Ke-' . $res['angsuran_ke'],
-            'ORIGINAL_AMOUNT' => $res['total_bayar'],
+            'ORIGINAL_AMOUNT' => ($res['bayar_angsuran']+$res['bayar_denda']),
             'OS_AMOUNT' => 0,
             'START_DATE' => $tgl_angsuran,
             'END_DATE' => $created_now,
