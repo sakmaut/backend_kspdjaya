@@ -227,10 +227,18 @@ class PaymentController extends Controller
         ])->first();
 
         if ($check_arrears) {
+            // Get the current value of PAID_PENALTY
+            $current_penalty = $check_arrears->PAID_PENALTY;
+
+            // Sum the current penalty with the new value
+            $new_penalty = $current_penalty + $bayar_denda;
+
+            // Update the PAID_PENALTY field with the new summed value
             $check_arrears->update([
-                'PAID_PENALTY' => $bayar_denda
+                'PAID_PENALTY' => $new_penalty
             ]);
         }
+
     }
 
     private function saveKwitansi($request, $customer_detail, $no_inv, $created_now)
