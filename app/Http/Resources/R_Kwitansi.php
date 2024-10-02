@@ -26,16 +26,6 @@ class R_Kwitansi extends JsonResource
         $branch = $payment ? M_Branch::where('CODE_NUMBER', $payment->BRANCH)->first() : null;
         $attachment = $payment ? M_PaymentAttachment::where('payment_id', $payment->NO_TRX)->value('file_attach') : null;
 
-        // Build pembayaran array
-        $pembayaran = $details->map(function ($res) {
-            return [
-                'installment' => $res->angsuran_ke,
-                'title' => 'Angsuran Ke-' . $res->angsuran_ke,
-                'bayar_angsuran' => $res->bayar_angsuran,
-                'bayar_denda' => $res->bayar_denda,
-            ];
-        })->toArray();
-
         return [
             "id" => $this->ID,
             "no_transaksi" => $this->NO_TRANSAKSI,
@@ -55,7 +45,9 @@ class R_Kwitansi extends JsonResource
             "nama_bank" => $this->NAMA_BANK,
             "no_rekening" => $this->NO_REKENING,
             "bukti_transfer" => $this->BUKTI_TRANSFER,
-            "pembayaran" => $pembayaran,
+            'installment' => $details->pluck('angsuran_ke')->implode(','),
+            'bayar_angsuran' => $details->sum('bayar_angsuran'),
+            'bayar_denda' => $details->sum('bayar_denda'),
             "pembulatan" => intval($this->PEMBULATAN),
             "kembalian" => intval($this->KEMBALIAN),
             "total_bayar" => intval($this->TOTAL_BAYAR),
