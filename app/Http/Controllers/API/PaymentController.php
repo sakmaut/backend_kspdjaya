@@ -372,6 +372,17 @@ class PaymentController extends Controller
     {
         $uid = Uuid::uuid7()->toString();
 
+        $check = M_Payment::where('LOAN_NUM', $loan_number)
+            ->orderBy('AUTH_DATE', 'desc')
+            ->first();
+
+        if (is_null($check)) {
+            $os_amount = $res['principal_remains'];
+        } else {
+            $pokok = $res['bayar_angsuran'] > $res['principal'] ? $res['principal'] : $res['bayar_angsuran'];
+            $os_amount = $check->OS_AMOUNT - $pokok;
+        }
+
         $payment_record = [
             'ID' => $uid,
             'ACC_KEY' => $request->pembayaran,
@@ -385,7 +396,7 @@ class PaymentController extends Controller
             'ENTRY_DATE' => $created_now,
             'TITLE' => 'Angsuran Ke-' . $res['angsuran_ke'],
             'ORIGINAL_AMOUNT' => ($res['bayar_angsuran']+$res['bayar_denda']),
-            'OS_AMOUNT' => 0,
+            'OS_AMOUNT' => $os_amount,
             'START_DATE' => $tgl_angsuran,
             'END_DATE' => $created_now,
             'AUTH_BY' => $request->user()->id,
