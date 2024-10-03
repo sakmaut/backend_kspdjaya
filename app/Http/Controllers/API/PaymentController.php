@@ -377,7 +377,7 @@ class PaymentController extends Controller
             ->first();
 
         if (is_null($check)) {
-            $pokok = $res['bayar_angsuran'] > $res['principal'] ? $res['principal_remains'] : ($res['principal_remains'] - $res['bayar_angsuran']);
+            $pokok = $res['bayar_angsuran'] > $res['principal'] ? $res['principal_remains'] : (($res['principal_remains']+ $res['principal']) - $res['bayar_angsuran']);
             $os_amount = $pokok;
         } else {
             $pokok = $res['bayar_angsuran'] > $res['principal'] ? $res['principal'] : $res['bayar_angsuran'];
