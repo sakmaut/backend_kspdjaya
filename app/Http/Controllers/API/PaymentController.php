@@ -83,7 +83,7 @@ class PaymentController extends Controller
     private function processPaymentStructure($res, $request, $getCodeBranch, $no_inv, $created_now, &$pembayaran, &$customer_detail)
     {
         $loan_number = $res['loan_number'];
-        $tgl_angsuran = now();
+        $tgl_angsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
 
         // Fetch credit and customer details once
         $credit = M_Credit::where('LOAN_NUMBER', $loan_number)->firstOrFail();
@@ -429,14 +429,14 @@ class PaymentController extends Controller
             'BRANCH' => $branch->CODE_NUMBER,
             'LOAN_NUM' => $loan_number,
             'VALUE_DATE' => null,
-            'ENTRY_DATE' => $created_now,
+            'ENTRY_DATE' => now(),
             'TITLE' => 'Angsuran Ke-' . $res['angsuran_ke'],
             'ORIGINAL_AMOUNT' => ($res['bayar_angsuran']+$res['bayar_denda']),
             'OS_AMOUNT' => $os_amount,
             'START_DATE' => $tgl_angsuran,
-            'END_DATE' => $created_now,
+            'END_DATE' => now(),
             'AUTH_BY' => $request->user()->id,
-            'AUTH_DATE' => $created_now,
+            'AUTH_DATE' => now(),
             'BANK_NAME' => $request->nama_bank ?? null,
             'BANK_ACC_NUMBER' => $request->no_rekening ?? null
         ];
