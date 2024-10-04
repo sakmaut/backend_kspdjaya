@@ -89,25 +89,25 @@ class PaymentController extends Controller
         $credit = M_Credit::where('LOAN_NUMBER', $loan_number)->firstOrFail();
         $detail_customer = M_Customer::where('CUST_CODE', $credit->CUST_CODE)->firstOrFail();
 
-        $check_method_payment = strtolower($request->payment_method) === 'cash';
+        $check_method_payment = strtolower($request->payment_method) === 'transfer';
+
+        $this->updateCreditSchedule($loan_number, $tgl_angsuran, $res);
+        $this->updateArrears($loan_number, $tgl_angsuran, $res['bayar_denda'], $res);
+
+        self::createPaymentRecords($request, $res, $tgl_angsuran, $loan_number, $no_inv, $getCodeBranch, $created_now);
 
         if ($check_method_payment) {
-            $this->updateCreditSchedule($loan_number, $tgl_angsuran, $res);
-            $this->updateArrears($loan_number, $tgl_angsuran, $res['bayar_denda'],$res);
-        }else{
             $credit_schedule = M_CreditSchedule::where([
                 'LOAN_NUMBER' => $loan_number,
                 'PAYMENT_DATE' => $tgl_angsuran
             ])->first();
-    
+
             if ($credit_schedule) {
                 $credit_schedule->update([
                     'PAID_FLAG' => 'PENDING'
                 ]);
             }
         }
-
-        self::createPaymentRecords($request, $res, $tgl_angsuran, $loan_number, $no_inv, $getCodeBranch, $created_now);
 
         // Add installment details to pembayaran array
         $pembayaran[] = [
