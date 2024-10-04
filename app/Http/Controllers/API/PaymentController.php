@@ -373,7 +373,7 @@ class PaymentController extends Controller
         $uid = Uuid::uuid7()->toString();
 
         $check = M_Payment::where('LOAN_NUM', $loan_number)
-            ->orderBy('AUTH_DATE', 'desc')
+            ->latest('AUTH_DATE')
             ->first();
 
         $getPayments = M_Payment::where('LOAN_NUM', $loan_number)
