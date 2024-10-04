@@ -376,17 +376,20 @@ class PaymentController extends Controller
             ->orderBy('AUTH_DATE', 'desc')
             ->first();
 
-        $payments = M_Payment::where('LOAN_NUM', $loan_number)
+        $getPayments = M_Payment::where('LOAN_NUM', $loan_number)
             ->where('START_DATE', $tgl_angsuran)
             ->leftJoin('payment_detail', 'payment_detail.PAYMENT_ID', '=', 'payment.ID')
             ->select('payment_detail.ACC_KEYS', 'payment_detail.ORIGINAL_AMOUNT')
-            ->orderBy('payment.AUTH_DATE', 'desc')
-            ->get()
-            ->keyBy('ACC_KEYS')
-            ->transform(function ($item) {
-                return $item->ORIGINAL_AMOUNT;
-            })
-            ->all();
+            ->get();
+        
+        $payments = [];
+
+        $totalAmount = 0; // To store the sum of ORIGINAL_AMOUNT
+        foreach ($getPayments as $payment) {
+            // Build the array
+            $payments[$payment->ACC_KEYS] = $payment->ORIGINAL_AMOUNT;
+            $totalAmount += $payment->ORIGINAL_AMOUNT;
+        }
 
         $credit_schedule = M_CreditSchedule::where([
             'LOAN_NUMBER' => $loan_number,
@@ -399,7 +402,7 @@ class PaymentController extends Controller
             $getPrincipal = $credit_schedule->PRINCIPAL;
             $getInterest = $credit_schedule->INTEREST;
 
-            $getPayPrincipal = isset($payments['ANGSURAN_POKOK']) ? intval($payments['ANGSURAN_POKOK']) : 0;
+            $getPayPrincipal = isset($payments['ANGSURAN_POKOK']) ? intval($totalAmount) : 0;
             $getPayInterest = isset($payments['ANGSURAN_BUNGA']) ? intval($payments['ANGSURAN_BUNGA']) : 0;
 
             if ($getPayPrincipal !== $getPrincipal) {
@@ -450,7 +453,7 @@ class PaymentController extends Controller
             $getPrincipal = $credit_schedule->PRINCIPAL;
             $getInterest = $credit_schedule->INTEREST;
 
-            $getPayPrincipal = isset($payments['ANGSURAN_POKOK'])? intval($payments['ANGSURAN_POKOK']):0;
+            $getPayPrincipal = isset($payments['ANGSURAN_POKOK'])? intval($totalAmount):0;
             $getPayInterest = isset($payments['ANGSURAN_BUNGA']) ? intval($payments['ANGSURAN_BUNGA']) : 0;
 
             if($getPayPrincipal !== $getPrincipal){
