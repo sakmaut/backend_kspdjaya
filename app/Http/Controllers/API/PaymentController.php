@@ -53,7 +53,7 @@ class PaymentController extends Controller
             // Initialize variables
             $customer_detail = [];
             $pembayaran = [];
-
+           
             // Process payment structures
             if (isset($request->struktur) && is_array($request->struktur)) {
                 foreach ($request->struktur as $res) {
@@ -373,7 +373,7 @@ class PaymentController extends Controller
         $uid = Uuid::uuid7()->toString();
 
         $check = M_Payment::where('LOAN_NUM', $loan_number)
-            ->latest('AUTH_DATE')
+            ->latest('BANK_NAME')
             ->first();
 
         $getPayments = M_Payment::where('LOAN_NUM', $loan_number)
@@ -437,13 +437,11 @@ class PaymentController extends Controller
             'END_DATE' => now(),
             'AUTH_BY' => $request->user()->id,
             'AUTH_DATE' => now(),
-            'BANK_NAME' => $request->nama_bank ?? null,
+            'BANK_NAME' => round(microtime(true) * 1000),
             'BANK_ACC_NUMBER' => $request->no_rekening ?? null
         ];
 
         M_Payment::create($payment_record);
-
-        usleep(rand(100, 500));
 
         $credit_schedule = M_CreditSchedule::where([
             'LOAN_NUMBER' => $loan_number,
