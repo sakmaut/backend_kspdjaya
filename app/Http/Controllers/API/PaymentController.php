@@ -443,6 +443,8 @@ class PaymentController extends Controller
 
         M_Payment::create($payment_record);
 
+        usleep(rand(100, 500));
+
         $credit_schedule = M_CreditSchedule::where([
             'LOAN_NUMBER' => $loan_number,
             'PAYMENT_DATE' => $tgl_angsuran
