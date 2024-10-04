@@ -83,7 +83,7 @@ class PaymentController extends Controller
     private function processPaymentStructure($res, $request, $getCodeBranch, $no_inv, $created_now, &$pembayaran, &$customer_detail)
     {
         $loan_number = $res['loan_number'];
-        $tgl_angsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
+        $tgl_angsuran = now();
 
         // Fetch credit and customer details once
         $credit = M_Credit::where('LOAN_NUMBER', $loan_number)->firstOrFail();
