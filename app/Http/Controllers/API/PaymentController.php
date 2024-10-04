@@ -388,7 +388,10 @@ class PaymentController extends Controller
         foreach ($getPayments as $payment) {
             // Build the array
             $payments[$payment->ACC_KEYS] = $payment->ORIGINAL_AMOUNT;
-            $totalAmount += $payment->ORIGINAL_AMOUNT;
+            
+            if ($payment->ACC_KEYS === 'ANGSURAN_POKOK') {
+                $totalAmount += $payment->ORIGINAL_AMOUNT;
+            }
         }
 
         $credit_schedule = M_CreditSchedule::where([
