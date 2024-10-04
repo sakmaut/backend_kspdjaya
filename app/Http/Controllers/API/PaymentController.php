@@ -107,6 +107,8 @@ class PaymentController extends Controller
             }
         }
 
+        self::createPaymentRecords($request, $res, $tgl_angsuran, $loan_number, $no_inv, $getCodeBranch, $created_now);
+
         // Add installment details to pembayaran array
         $pembayaran[] = [
             'installment' => $res['angsuran_ke'],
@@ -115,9 +117,6 @@ class PaymentController extends Controller
 
         // Set customer details
         $customer_detail = self::setCustomerDetail($detail_customer);
-
-        // Prepare payment data and create records
-        self::createPaymentRecords($request, $res, $tgl_angsuran, $loan_number, $no_inv, $getCodeBranch, $created_now);
 
         $save_kwitansi_detail = [
             "no_invoice" => $no_inv,
@@ -208,12 +207,13 @@ class PaymentController extends Controller
             // Prepare the update data
             $updates['INSUFFICIENT_PAYMENT'] = $insufficient_payment;
             $updates['PAYMENT_VALUE'] = $payment_value;
-            $updates['PAID_FLAG'] = $payment_value == $credit_schedule->INSTALLMENT ? 'PAID' : '';
 
             // Update the schedule if there are any changes
             if (!empty($updates)) {
                 $credit_schedule->update($updates);
             }
+
+            $credit_schedule->update(['PAID_FLAG' => $credit_schedule->PAYMENT_VALUE >= $credit_schedule->INSTALLMENT ? 'PAID' : '']);
 
         }
     }
@@ -408,37 +408,63 @@ class PaymentController extends Controller
 
         M_Payment::create($payment_record);
 
-        // Payment principal
-        $principal_amount = $res['principal'];
-        $angsuran_amount = $res['bayar_angsuran'];
-        $bayar_denda = $res['bayar_denda'];
+        $credit_schedule = M_CreditSchedule::where([
+            'LOAN_NUMBER' => $loan_number,
+            'PAYMENT_DATE' => $tgl_angsuran
+        ])->first();
 
-        // Payment principal
-        $data_principal = self::preparePaymentData($uid,'ANGSURAN POKOK', $angsuran_amount);
-        M_PaymentDetail::create($data_principal);
+        $payments = M_Payment::where('LOAN_NUM', $loan_number)
+                                ->where('START_DATE', $tgl_angsuran)
+                                ->leftJoin('payment_detail', 'payment_detail.PAYMENT_ID', '=', 'payment.ID')
+                                ->select('payment_detail.ACC_KEYS', 'payment_detail.ORIGINAL_AMOUNT')
+                                ->orderBy('payment.AUTH_DATE', 'desc')
+                                ->get()
+                                ->keyBy('ACC_KEYS')
+                                ->transform(function ($item) {
+                                    return $item->ORIGINAL_AMOUNT;
+                                })
+                                ->all();
 
-        // Payment interest
-        $interest_amount = ($angsuran_amount >= $principal_amount) ? ($angsuran_amount - $principal_amount) : 0;
-        if ($interest_amount !== 0) {
-            $data_interest = self::preparePaymentData($uid, 'BUNGA PINJAMAN', $interest_amount);
-            M_PaymentDetail::create($data_interest);
+        if ($credit_schedule) {
+            $valBeforePrincipal = $credit_schedule->PAYMENT_VALUE_PRINCIPAL;
+            $valBeforeInterest = $credit_schedule->PAYMENT_VALUE_INTEREST;
+            $getPrincipal = $credit_schedule->PRINCIPAL;
+            $getInterest = $credit_schedule->INTEREST;
+
+            $getPay = isset($payments['ANGSURAN_POKOK'])? $payments['ANGSURAN_POKOK']:0;
+
+            if(intval($getPay) !== $getPrincipal){
+                $data_principal = self::preparePaymentData($uid, 'ANGSURAN_POKOK', $valBeforePrincipal); // Set to PRINCIPAL value
+                M_PaymentDetail::create($data_principal);
+            }
+
+            // Only update interest if it has changed
+            if ($valBeforeInterest != null) {
+                $data_interest = self::preparePaymentData($uid, 'ANGSURAN_BUNGA', $valBeforeInterest);
+                M_PaymentDetail::create($data_interest);
+            }
         }
+       
 
-        // Payment denda
-        if ($bayar_denda !== 0) {
-            $data_denda = self::preparePaymentData($uid,'DENDA PINJAMAN', $bayar_denda);
-            M_PaymentDetail::create($data_denda);
-        }
+        // $data_interest = self::preparePaymentData($uid, 'BUNGA_PINJAMAN', $new_payment_value_interest);
+        // M_PaymentDetail::create($data_interest);
 
-        $check_credit = M_Credit::where(['LOAN_NUMBER' => $loan_number])->first();
+        // $bayar_denda = $res['bayar_denda'];
 
-        if ($check_credit) {
-            $check_credit->update([
-                'PAID_PRINCIPAL' => $check_credit->PAID_PRINCIPAL + $principal_amount,
-                'PAID_INTEREST' => $check_credit->PAID_INTEREST + $interest_amount,
-                'PAID_PINALTY' => $bayar_denda !== 0 ? $check_credit->PAID_PINALTY + $bayar_denda:0
-            ]);
-        }
+        // if ($bayar_denda !== 0) {
+        //     $data_denda = self::preparePaymentData($uid, 'DENDA_PINJAMAN', $bayar_denda);
+        //     M_PaymentDetail::create($data_denda);
+        // }
+
+        // $check_credit = M_Credit::where(['LOAN_NUMBER' => $loan_number])->first();
+
+        // if ($check_credit) {
+        //     $check_credit->update([
+        //         'PAID_PRINCIPAL' => $check_credit->PAID_PRINCIPAL + $principal_amount,
+        //         'PAID_INTEREST' => $check_credit->PAID_INTEREST + $interest_amount,
+        //         'PAID_PINALTY' => $bayar_denda !== 0 ? $check_credit->PAID_PINALTY + $bayar_denda:0
+        //     ]);
+        // }
     }
 
     function preparePaymentData($payment_id,$acc_key, $amount)
@@ -566,7 +592,6 @@ class PaymentController extends Controller
                         ]);
                     }
                 }
-                
             }
 
             $data_approval = [
