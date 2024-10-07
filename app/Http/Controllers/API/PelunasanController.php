@@ -92,207 +92,209 @@ class PelunasanController extends Controller
         try {
             DB::commit();
 
-            // $loan_number = $request->LOAN_NUMBER;
-            // $uid = Uuid::uuid7()->toString();
-            // $created_now = Carbon::now();
-            // $no_inv = generateCode($request, 'payment', 'INVOICE', 'INV');
-            // $getCodeBranch = M_Branch::findOrFail($request->user()->branch_id);
+            $loan_number = $request->LOAN_NUMBER;
+            $uid = Uuid::uuid7()->toString();
+            $created_now = Carbon::now();
+            $no_inv = generateCode($request, 'payment', 'INVOICE', 'INV');
+            $getCodeBranch = M_Branch::findOrFail($request->user()->branch_id);
 
-            // $check = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)->first();
+            $check = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)->first();
 
-            // if (!$check) {
-            //     throw new Exception('Loan Number Not Exist');
-            // }
+            if (!$check) {
+                throw new Exception('Loan Number Not Exist');
+            }
 
-            // $credit = M_Credit::where('LOAN_NUMBER', $loan_number)->firstOrFail();
+            $credit = M_Credit::where('LOAN_NUMBER', $loan_number)->firstOrFail();
 
-            // if ($credit) {
-            //     $credit->update([
-            //         'PAID_PRINCIPAL' => $request->BAYAR_POKOK,
-            //         'PAID_INTEREST' => $request->BAYAR_BUNGA,
-            //         'PAID_PINALTY' => $request->BAYAR_PINALTI
-            //     ]);
-            // }
+            if ($credit) {
+                $credit->update([
+                    'PAID_PRINCIPAL' => $request->BAYAR_POKOK,
+                    'PAID_INTEREST' => $request->BAYAR_BUNGA,
+                    'PAID_PINALTY' => $request->BAYAR_PINALTI
+                ]);
+            }
 
-            // $detail_customer = M_Customer::where('CUST_CODE', $credit->CUST_CODE)->firstOrFail();
+            $detail_customer = M_Customer::where('CUST_CODE', $credit->CUST_CODE)->firstOrFail();
 
-            // $save_kwitansi = [
-            //     "PAYMENT_TYPE" => 'pelunasan',
-            //     "NO_TRANSAKSI" => $no_inv,
-            //     "LOAN_NUMBER" => $request->LOAN_NUMBER ?? null,
-            //     "TGL_TRANSAKSI" => Carbon::now()->format('d-m-Y'),
-            //     'CUST_CODE' => $detail_customer->CUST_CODE,
-            //     'NAMA' => $detail_customer->NAME,
-            //     'ALAMAT' => $detail_customer->ADDRESS,
-            //     'RT' => $detail_customer->RT,
-            //     'RW' => $detail_customer->RW,
-            //     'PROVINSI' => $detail_customer->PROVINCE,
-            //     'KOTA' => $detail_customer->CITY,
-            //     'KELURAHAN' => $detail_customer->KELURAHAN,
-            //     'KECAMATAN' => $detail_customer->KECAMATAN,
-            //     "METODE_PEMBAYARAN" => $request->METODE_PEMBAYARAN ?? null,
-            //     "TOTAL_BAYAR" => $request->TOTAL_BAYAR ?? null,
-            //     "PEMBULATAN" => $request->PEMBULATAN ?? null,
-            //     "KEMBALIAN" => $request->KEMBALIAN ?? null,
-            //     "JUMLAH_UANG" => $request->UANG_PELANGGAN ?? null,
-            //     "NAMA_BANK" => $request->NAMA_BANK ?? null,
-            //     "NO_REKENING" => $request->NO_REKENING ?? null,
-            //     "CREATED_BY" => $request->user()->fullname
-            // ];
+            $save_kwitansi = [
+                "PAYMENT_TYPE" => 'pelunasan',
+                "NO_TRANSAKSI" => $no_inv,
+                "LOAN_NUMBER" => $request->LOAN_NUMBER ?? null,
+                "TGL_TRANSAKSI" => Carbon::now()->format('d-m-Y'),
+                'CUST_CODE' => $detail_customer->CUST_CODE,
+                'NAMA' => $detail_customer->NAME,
+                'ALAMAT' => $detail_customer->ADDRESS,
+                'RT' => $detail_customer->RT,
+                'RW' => $detail_customer->RW,
+                'PROVINSI' => $detail_customer->PROVINCE,
+                'KOTA' => $detail_customer->CITY,
+                'KELURAHAN' => $detail_customer->KELURAHAN,
+                'KECAMATAN' => $detail_customer->KECAMATAN,
+                "METODE_PEMBAYARAN" => $request->METODE_PEMBAYARAN ?? null,
+                "TOTAL_BAYAR" => $request->TOTAL_BAYAR ?? null,
+                "PEMBULATAN" => $request->PEMBULATAN ?? null,
+                "KEMBALIAN" => $request->KEMBALIAN ?? null,
+                "JUMLAH_UANG" => $request->UANG_PELANGGAN ?? null,
+                "NAMA_BANK" => $request->NAMA_BANK ?? null,
+                "NO_REKENING" => $request->NO_REKENING ?? null,
+                "CREATED_BY" => $request->user()->fullname
+            ];
 
-            // M_Kwitansi::create($save_kwitansi);
+            M_Kwitansi::create($save_kwitansi);
 
-            // $discounts = $request->only(['DISKON_POKOK', 'DISKON_PINALTI', 'DISKON_BUNGA', 'DISKON_DENDA']);
+            $discounts = $request->only(['DISKON_POKOK', 'DISKON_PINALTI', 'DISKON_BUNGA', 'DISKON_DENDA']);
 
-            // // Check if all discount values are non-zero
-            // $allDiscountsPaid = collect($discounts)->every(fn ($value) => $value != 0);
+            // Check if all discount values are non-zero
+            $allDiscountsPaid = collect($discounts)->every(fn ($value) => $value != 0);
 
-            // // Check if the payment method is cash
-            // $checkMethodPayment = strtolower($request->METODE_PEMBAYARAN) === 'cash';
+            // Check if the payment method is cash
+            $checkMethodPayment = strtolower($request->METODE_PEMBAYARAN) === 'cash';
 
-            // // Determine the status
-            // $status = $allDiscountsPaid ? 'PAID' : 'PENDING';
+            // Determine the status
+            $status = $allDiscountsPaid ? 'PAID' : 'PENDING';
 
-            // // If payment method is cash, set status to PENDING regardless of discounts
-            // if ($checkMethodPayment) {
-            //     $status = 'PENDING';
-            // }
+            // If payment method is cash, set status to PENDING regardless of discounts
+            if ($checkMethodPayment) {
+                $status = 'PENDING';
+            }
 
-            // $creditSchedule = M_CreditSchedule::where('LOAN_NUMBER', $request->LOAN_NUMBER)
-            //     ->whereNull('PAID_FLAG')
-            //     ->get();
+            $creditSchedule = M_CreditSchedule::where('LOAN_NUMBER', $request->LOAN_NUMBER)
+                            ->where(function($query) {
+                                $query->where('PAID_FLAG', '!=', 'PAID')
+                                    ->orWhereNull('PAID_FLAG');
+                            })
+                            ->get();
 
-            // $installmentCounts = $creditSchedule->map(function ($item) {
-            //     return $item->INSTALLMENT_COUNT;
-            // })->join(',');
+            $installmentCounts = $creditSchedule->map(function ($item) {
+                return $item->INSTALLMENT_COUNT;
+            })->join(',');
 
-            // $payment_record = [
-            //     'ID' => $uid,
-            //     'ACC_KEY' => 'pelunasan',
-            //     'STTS_RCRD' => $status,
-            //     'INVOICE' => $no_inv,
-            //     'NO_TRX' => $request->uid ?? null,
-            //     'PAYMENT_METHOD' => $request->METODE_PEMBAYARAN,
-            //     'BRANCH' => $getCodeBranch->CODE_NUMBER,
-            //     'LOAN_NUM' => $request->LOAN_NUMBER ?? null,
-            //     'VALUE_DATE' => null,
-            //     'ENTRY_DATE' => $created_now,
-            //     'TITLE' => 'Angsuran Ke-' . $installmentCounts,
-            //     'ORIGINAL_AMOUNT' => $request->TOTAL_BAYAR,
-            //     'OS_AMOUNT' => 0,
-            //     'START_DATE' => null,
-            //     'AUTH_BY' => $request->user()->id,
-            //     'AUTH_DATE' => $created_now
-            // ];
+            $payment_record = [
+                'ID' => $uid,
+                'ACC_KEY' => 'pelunasan',
+                'STTS_RCRD' => $status,
+                'INVOICE' => $no_inv,
+                'NO_TRX' => $request->uid ?? null,
+                'PAYMENT_METHOD' => $request->METODE_PEMBAYARAN,
+                'BRANCH' => $getCodeBranch->CODE_NUMBER,
+                'LOAN_NUM' => $request->LOAN_NUMBER ?? null,
+                'VALUE_DATE' => null,
+                'ENTRY_DATE' => $created_now,
+                'TITLE' => 'Angsuran Ke-' . $installmentCounts,
+                'ORIGINAL_AMOUNT' => $request->TOTAL_BAYAR,
+                'OS_AMOUNT' => 0,
+                'START_DATE' => null,
+                'AUTH_BY' => $request->user()->id,
+                'AUTH_DATE' => $created_now
+            ];
 
-            // M_Payment::create($payment_record);
+            M_Payment::create($payment_record);
 
-            // $payments = [
-            //     'BAYAR_POKOK'   => 'PELUNASAN POKOK',
-            //     'BAYAR_BUNGA'   => 'BAYAR PELUNASAN BUNGA',
-            //     'BAYAR_PINALTI' => 'BAYAR PELUNASAN PINALTY',
-            //     'BAYAR_DENDA'   => 'BAYAR PELUNASAN DENDA'
-            // ];
+            $payments = [
+                'BAYAR_POKOK'   => 'PELUNASAN POKOK',
+                'BAYAR_BUNGA'   => 'BAYAR PELUNASAN BUNGA',
+                'BAYAR_PINALTI' => 'BAYAR PELUNASAN PINALTY',
+                'BAYAR_DENDA'   => 'BAYAR PELUNASAN DENDA'
+            ];
 
-            // $discounts = [
-            //     'DISKON_POKOK'   => 'DISKON POKOK',
-            //     'DISKON_BUNGA'   => 'DISKON BUNGA',
-            //     'DISKON_PINALTI' => 'DISKON PINALTY',
-            //     'DISKON_DENDA'   => 'DISKON DENDA'
-            // ];
+            $discounts = [
+                'DISKON_POKOK'   => 'DISKON POKOK',
+                'DISKON_BUNGA'   => 'DISKON BUNGA',
+                'DISKON_PINALTI' => 'DISKON PINALTY',
+                'DISKON_DENDA'   => 'DISKON DENDA'
+            ];
 
-            // // Handle payments
-            // foreach ($payments as $key => $description) {
-            //     if ($request->$key != 0) {
-            //         $data = self::preparePaymentData($uid, $description, $request->$key);
-            //         M_PaymentDetail::create($data);
-            //     }
-            // }
+            // Handle payments
+            foreach ($payments as $key => $description) {
+                if ($request->$key != 0) {
+                    $data = self::preparePaymentData($uid, $description, $request->$key);
+                    M_PaymentDetail::create($data);
+                }
+            }
 
-            // // Handle discounts
-            // foreach ($discounts as $key => $description) {
-            //     if ($request->$key != 0) {
-            //         $data = self::preparePaymentData($uid, $description, $request->$key);
-            //         M_PaymentDetail::create($data);
-            //     }
-            // }
+            // Handle discounts
+            foreach ($discounts as $key => $description) {
+                if ($request->$key != 0) {
+                    $data = self::preparePaymentData($uid, $description, $request->$key);
+                    M_PaymentDetail::create($data);
+                }
+            }
 
-            // $bayarPokok = $request->input('BAYAR_POKOK');
-            // $bayarBunga = $request->input('BAYAR_BUNGA');
+            $bayarPokok = $request->input('BAYAR_POKOK');
+            $bayarBunga = $request->input('BAYAR_BUNGA');
 
-            // foreach ($creditSchedule as $res) {
-            //     if ($bayarPokok > 0) {
-            //         if ($bayarPokok >= $res['PRINCIPAL']) {
-            //             $payment_value_principal = $res['PRINCIPAL'];
-            //             $bayarPokok -= $res['PRINCIPAL'];
-            //         } else {
-            //             $payment_value_principal = $bayarPokok;
-            //             $bayarPokok = 0;
-            //         }
-            //     } else {
-            //         $payment_value_principal = 0;
-            //     }
+            foreach ($creditSchedule as $res) {
+                if ($bayarPokok > 0) {
+                    if ($bayarPokok >= $res['PRINCIPAL']) {
+                        $payment_value_principal = $res['PRINCIPAL'];
+                        $bayarPokok -= $res['PRINCIPAL'];
+                    } else {
+                        $payment_value_principal = $bayarPokok;
+                        $bayarPokok = 0;
+                    }
+                } else {
+                    $payment_value_principal = 0;
+                }
 
-            //     // Calculate for interest
-            //     if ($bayarBunga > 0) {
-            //         if ($bayarBunga >= $res['INTEREST']) {
-            //             $payment_value_interest = $res['INTEREST'];
-            //             $bayarBunga -= $res['INTEREST'];
-            //         } else {
-            //             $payment_value_interest = $bayarBunga;
-            //             $bayarBunga = 0;
-            //         }
-            //     } else {
-            //         $payment_value_interest = 0;
-            //     }
+                // Calculate for interest
+                if ($bayarBunga > 0) {
+                    if ($bayarBunga >= $res['INTEREST']) {
+                        $payment_value_interest = $res['INTEREST'];
+                        $bayarBunga -= $res['INTEREST'];
+                    } else {
+                        $payment_value_interest = $bayarBunga;
+                        $bayarBunga = 0;
+                    }
+                } else {
+                    $payment_value_interest = 0;
+                }
 
-            //     // Total payment value (principal + interest)
-            //     $payment_value = $payment_value_principal + $payment_value_interest;
-            //     $valBeforePrincipal = $res['PAYMENT_VALUE_PRINCIPAL'];
+                // Total payment value (principal + interest)
+                $payment_value = $payment_value_principal + $payment_value_interest;
 
-            //     // Check if the installment is fully paid
-            //     $isPaid = $valBeforePrincipal == $res['PRINCIPAL'] ? 'PAID' : '';
+                // Check if the installment is fully paid
+                $isPaid = $payment_value_principal == $res['PRINCIPAL'] ? 'PAID' : '';
 
-            //     // Update the credit schedule record
-            //     $res->update([
-            //         'PAYMENT_VALUE_PRINCIPAL' => $payment_value_principal,
-            //         'PAYMENT_VALUE_INTEREST' => $payment_value_interest,
-            //         'PAYMENT_VALUE' => $payment_value,
-            //         'PAID_FLAG' => $isPaid
-            //     ]);
+                // Update the credit schedule record
+                $res->update([
+                    'PAYMENT_VALUE_PRINCIPAL' => $payment_value_principal,
+                    'PAYMENT_VALUE_INTEREST' => $payment_value_interest,
+                    'PAYMENT_VALUE' => $payment_value,
+                    'PAID_FLAG' => $isPaid
+                ]);
 
-            //     // Break the loop if both `BAYAR_POKOK` and `BAYAR_BUNGA` are fully used
-            //     if ($bayarPokok <= 0 && $bayarBunga <= 0) {
-            //         break;
-            //     }
-            // }
+                // Break the loop if both `BAYAR_POKOK` and `BAYAR_BUNGA` are fully used
+                if ($bayarPokok <= 0 && $bayarBunga <= 0) {
+                    break;
+                }
+            }
 
-            // $response = [
-            //     "no_transaksi" => $no_inv,
-            //     'cust_code' => $detail_customer->CUST_CODE,
-            //     'nama' => $detail_customer->NAME,
-            //     'alamat' => $detail_customer->ADDRESS,
-            //     'rt' => $detail_customer->RT,
-            //     'rw' => $detail_customer->RW,
-            //     'provinsi' => $detail_customer->PROVINCE,
-            //     'kota' => $detail_customer->CITY,
-            //     'kelurahan' => $detail_customer->KELURAHAN,
-            //     'kecamatan' => $detail_customer->KECAMATAN,
-            //     "tgl_transaksi" => Carbon::now()->format('d-m-Y'),
-            //     "payment_method" => $request->METODE_PEMBAYARAN,
-            //     "nama_bank" => $request->NAMA_BANK,
-            //     "no_rekening" => $request->NO_REKENING,
-            //     "bukti_transfer" => '',
-            //     "pembayaran" => 'PELUNASAN',
-            //     "pembulatan" => $request->PEMBULATAN,
-            //     "kembalian" => $request->KEMBALIAN,
-            //     "jumlah_uang" => $request->UANG_PELANGGAN,
-            //     "terbilang" => bilangan($request->TOTAL_BAYAR) ?? null,
-            //     "created_by" => $request->user()->fullname,
-            //     "created_at" => Carbon::parse($created_now)->format('d-m-Y')
-            // ];
+            $response = [
+                "no_transaksi" => $no_inv,
+                'cust_code' => $detail_customer->CUST_CODE,
+                'nama' => $detail_customer->NAME,
+                'alamat' => $detail_customer->ADDRESS,
+                'rt' => $detail_customer->RT,
+                'rw' => $detail_customer->RW,
+                'provinsi' => $detail_customer->PROVINCE,
+                'kota' => $detail_customer->CITY,
+                'kelurahan' => $detail_customer->KELURAHAN,
+                'kecamatan' => $detail_customer->KECAMATAN,
+                "tgl_transaksi" => Carbon::now()->format('d-m-Y'),
+                "payment_method" => $request->METODE_PEMBAYARAN,
+                "nama_bank" => $request->NAMA_BANK,
+                "no_rekening" => $request->NO_REKENING,
+                "bukti_transfer" => '',
+                "pembayaran" => 'PELUNASAN',
+                "pembulatan" => $request->PEMBULATAN,
+                "kembalian" => $request->KEMBALIAN,
+                "jumlah_uang" => $request->UANG_PELANGGAN,
+                "terbilang" => bilangan($request->TOTAL_BAYAR) ?? null,
+                "created_by" => $request->user()->fullname,
+                "created_at" => Carbon::parse($created_now)->format('d-m-Y')
+            ];
 
-            return response()->json($request->all(), 200);
+            return response()->json($response, 200);
         } catch (QueryException $e) {
             DB::rollback();
             ActivityLogger::logActivity($request, $e->getMessage(), 409);
