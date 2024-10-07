@@ -506,10 +506,11 @@ class CrAppilcationController extends Controller
 
                 M_ApplicationApproval::create($data_approval_fpk);
 
-                $customer = M_Customer::where('ID_NUMBER',$check_survey_id->ktp)->first();
-                $customer_xtra = M_CustomerExtra::where('CUST_CODE',$customer->CUST_CODE)->first();
-
                 if(strtolower($check_survey_id->category) == 'ro'){
+
+                    $customer = M_Customer::where('ID_NUMBER',$check_survey_id->ktp)->first();
+                    $customer_xtra = M_CustomerExtra::where('CUST_CODE',$customer->CUST_CODE)->first();    
+
                     $data_cr_personal =[  
                         'ID' => Uuid::uuid7()->toString(),
                         'APPLICATION_ID' => $uuid,
