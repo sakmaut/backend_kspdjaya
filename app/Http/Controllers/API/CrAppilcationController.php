@@ -469,9 +469,6 @@ class CrAppilcationController extends Controller
 
     public function generateUuidFPK(Request $request)
     {
-
-        print_r($this->createAutoCode(M_CrApplication::class,'ORDER_NUMBER','FPK'));
-        die;
         try {
             $getSurveyId = $request->cr_prospect_id;
 
