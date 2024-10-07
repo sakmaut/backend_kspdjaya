@@ -19,9 +19,9 @@ class Controller extends BaseController
         $_trans = date("Ymd");
 
         $noUrut = (int) substr(!empty($query) ? $query : 0, 17, 5);
+        $noUrut++; // increment without padding
 
-        $noUrut++;
-        $generateCode = $prefix . '/' . $_trans . '/' . sprintf("%05s", $noUrut);
+        $generateCode = $prefix . '/' . $_trans . '/' . sprintf("%05d", $noUrut); // pad only when generating the final code
 
         return $generateCode;
     }
