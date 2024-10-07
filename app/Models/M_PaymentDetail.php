@@ -14,8 +14,7 @@ class M_PaymentDetail extends Model
         'ID',
         'PAYMENT_ID',
         'ACC_KEYS',
-        'ORIGINAL_AMOUNT',
-        'OS_AMOUNT'
+        'ORIGINAL_AMOUNT'
     ];
     protected $guarded = [];
     public $incrementing = false;

@@ -498,8 +498,7 @@ class PaymentController extends Controller
         return [
             'PAYMENT_ID' => $payment_id,
             'ACC_KEYS' => $acc_key,
-            'ORIGINAL_AMOUNT' => $amount,
-            'OS_AMOUNT' => 0
+            'ORIGINAL_AMOUNT' => $amount
         ];
     }
 
