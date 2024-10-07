@@ -17,12 +17,15 @@ class Controller extends BaseController
     {
         $query = $table::max($field);
         $_trans = date("Ymd");
-
-        $noUrut = (int) substr(!empty($query) ? $query : 0, 17, 5);
-        $noUrut++; // increment without padding
-
-        $generateCode = $prefix . '/' . $_trans . '/' . sprintf("%05d", $noUrut); // pad only when generating the final code
-
+    
+        // Ambil urutan dari hasil query
+        $noUrut = !empty($query) ? (int) substr($query, 17, 5) : 0; // Ambil angka dari hasil maksimum
+        $noUrut++; // Increment tanpa padding
+    
+        // Hasil akhir dengan padding
+        $generateCode = $prefix . '/' . $_trans . '/' . sprintf("%05d", $noUrut);
+    
         return $generateCode;
     }
+    
 }
