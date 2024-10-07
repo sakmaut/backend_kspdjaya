@@ -19,7 +19,7 @@ class Controller extends BaseController
         $_trans = date("Ymd");
     
         // Ambil urutan dari hasil query
-        $noUrut = !empty($query) ? (int) substr($query, 17, 5) : 0; // Ambil angka dari hasil maksimum
+        $noUrut = !empty($query) ? (int) substr($query, 13, 5) : 0; // Ambil angka dari hasil maksimum
         $noUrut++; // Increment tanpa padding
     
         // Hasil akhir dengan padding
