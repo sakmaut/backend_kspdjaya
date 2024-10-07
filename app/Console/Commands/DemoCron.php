@@ -35,62 +35,60 @@ class DemoCron extends Command
     {
         try {
             $query = DB::table('credit_schedule')
-                ->where('PAYMENT_DATE', '<=', DB::raw('CURDATE()'))
-                ->where('PAID_FLAG', '')
-                ->select('*')
-                ->get();
-
-            if (!$query->isEmpty()) {
-                $arrearsData = [];
-                foreach ($query as $result) {
-                    $startDate = $result->PAYMENT_DATE;
-                    // $endDate = date('2024-09-10');
-                    $endDate = date('Y-m-d');
-                    $daysDiff = (strtotime($endDate) - strtotime($startDate)) / (60 * 60 * 24);
-            
-                    $pastDuePinalty = $result->INSTALLMENT * ($daysDiff * 0.005);
-            
-                    $arrearsData[] = [
-                        'ID' => Uuid::uuid7()->toString(),
-                        'STATUS_REC' => 'A',
-                        'LOAN_NUMBER' => $result->LOAN_NUMBER,
-                        'START_DATE' => $result->PAYMENT_DATE,
-                        'END_DATE' => null,
-                        'PAST_DUE_PCPL' => $result->PRINCIPAL,
-                        'PAST_DUE_INTRST' => $result->INTEREST,
+            ->where('PAYMENT_DATE', '<=', DB::raw('CURDATE()'))
+            ->where('PAID_FLAG', '!=', 'PAID')
+            ->select('*')
+            ->get();
+        
+        if (!$query->isEmpty()) {
+            $arrearsData = [];
+            foreach ($query as $result) {
+                $startDate = $result->PAYMENT_DATE;
+                $endDate = date('Y-m-d');
+                $daysDiff = (strtotime($endDate) - strtotime($startDate)) / (60 * 60 * 24);
+                $pastDuePinalty = $result->INSTALLMENT * ($daysDiff * 0.005);
+        
+                $arrearsData[] = [
+                    'ID' => Uuid::uuid7()->toString(),
+                    'STATUS_REC' => 'A',
+                    'LOAN_NUMBER' => $result->LOAN_NUMBER,
+                    'START_DATE' => $result->PAYMENT_DATE,
+                    'END_DATE' => null,
+                    'PAST_DUE_PCPL' => $result->PRINCIPAL,
+                    'PAST_DUE_INTRST' => $result->INTEREST,
+                    'PAST_DUE_PENALTY' => $pastDuePinalty,
+                    'CREATED_AT' => Carbon::now()
+                ];
+        
+                $existingArrears = M_Arrears::where([
+                    'STATUS_REC' => 'A',
+                    'LOAN_NUMBER' => $result->LOAN_NUMBER,
+                    'START_DATE' => $result->PAYMENT_DATE
+                ])->first();
+        
+                if ($existingArrears) {
+                    // Update the existing record
+                    $existingArrears->update([
                         'PAST_DUE_PENALTY' => $pastDuePinalty,
-                        'CREATED_AT' => Carbon::now()
-                    ];
-            
-                    $existingArrears = M_Arrears::where([
-                        'STATUS_REC' => 'A',
-                        'LOAN_NUMBER' => $result->LOAN_NUMBER,
-                        'START_DATE' => $result->PAYMENT_DATE
-                    ])->first();
-            
-                    if ($existingArrears) {
-                        // Update the existing record
-                        $existingArrears->update([
-                            'PAST_DUE_PENALTY' => $pastDuePinalty,
-                            'UPDATED_AT' => Carbon::now()
-                        ]);
-                    } else {
-                        // Insert a new record
-                        M_Arrears::insert($arrearsData);
-                    }
+                        'UPDATED_AT' => Carbon::now()
+                    ]);
                 }
-    
-                M_CronJobLog::create([
-                    'STATUS' => 'SUCCESS',
-                    'DESCRIPTION' => 'SUCCESS'
-                ]);
-
-            }else{
-                M_CronJobLog::create([
-                    'STATUS' => 'SUCCESS',
-                    'DESCRIPTION' => 'DATA ARREARS EMPTY'
-                ]);
-            }            
+            }
+        
+            // Insert all new records at once
+            M_Arrears::insert($arrearsData);
+        
+            M_CronJobLog::create([
+                'STATUS' => 'SUCCESS',
+                'DESCRIPTION' => 'SUCCESS'
+            ]);
+        } else {
+            M_CronJobLog::create([
+                'STATUS' => 'SUCCESS',
+                'DESCRIPTION' => 'DATA ARREARS EMPTY'
+            ]);
+        }
+         
         } catch (\Illuminate\Database\QueryException $e) {
             M_CronJobLog::create([
                 'STATUS' => 'FAIL',
