@@ -411,10 +411,14 @@ class PaymentController extends Controller
             if ($getPayPrincipal !== $getPrincipal) {
                 $setPrincipal = $valBeforePrincipal - $getPayPrincipal;
                 if (is_null($check)) {
-                    $pokok = $res['bayar_angsuran'] > $res['principal'] ? $res['principal_remains'] : (($res['principal_remains'] + $res['principal']) - $res['bayar_angsuran']);
-                    $os_amount = $pokok;
+                    $pokok = $res['bayar_angsuran'] > $res['principal'] 
+                             ? $res['principal_remains'] 
+                             : (($res['principal_remains'] + $res['principal']) - $res['bayar_angsuran']);
+                    // Ensure 'os_amount' is set with the right decimal precision
+                    $os_amount = round($pokok, 2); // or use number_format($pokok, 2, '.', '') for string
                 } else {
-                    $os_amount = $check->OS_AMOUNT - $setPrincipal;
+                    // Adjust 'os_amount' based on existing check
+                    $os_amount = round($check->OS_AMOUNT - $setPrincipal, 2); // same formatting here
                 }
             }
         }
