@@ -405,7 +405,10 @@ class PaymentController extends Controller
 
             if ($getPayPrincipal !== $getPrincipal) {
                 $setPrincipal = $valBeforePrincipal - $getPayPrincipal;
-                if (is_null($check)) {
+
+                if ($request->payment_method == 'transfer') {
+                    $os_amount = round($res['principal_remains'] + $res['principal'], 2);
+                } elseif (is_null($check)) {
                     $pokok = $res['bayar_angsuran'] > $res['principal'] 
                              ? $res['principal_remains'] 
                              : (($res['principal_remains'] + $res['principal']) - $res['bayar_angsuran']);
@@ -468,7 +471,7 @@ class PaymentController extends Controller
 
             $bayar_denda = $res['bayar_denda'];
 
-            if ($bayar_denda !== 0) {
+            if ($bayar_denda !== 0 && $request->payment_method == 'cash') {
                 $data_denda = self::preparePaymentData($uid, 'DENDA_PINJAMAN', $bayar_denda);
                 M_PaymentDetail::create($data_denda);
             }
