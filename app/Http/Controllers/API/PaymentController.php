@@ -446,7 +446,7 @@ class PaymentController extends Controller
             $getPayPrincipal = isset($payments['ANGSURAN_POKOK'])? intval($totalAmount):0;
             $getPayInterest = isset($payments['ANGSURAN_BUNGA']) ? intval($payments['ANGSURAN_BUNGA']) : 0;
 
-            if($getPayPrincipal !== $getPrincipal && $getPayPrincipal != 0){
+            if($getPayPrincipal != $getPrincipal || $getPayPrincipal != 0){
                 $setPrincipal = $valBeforePrincipal - $getPayPrincipal;
                 $data_principal = self::preparePaymentData($uid, 'ANGSURAN_POKOK', $setPrincipal); // Set to PRINCIPAL value
                 M_PaymentDetail::create($data_principal);
