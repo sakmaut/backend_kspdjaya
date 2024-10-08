@@ -209,7 +209,7 @@ class Credit extends Controller
             'FIRST_ARR_DATE'  => null,
             'INSTALLMENT_DATE'  => $request->tgl_awal??null,
             'END_DATE'  => add_months($request->tgl_awal,$data->PERIOD)??null,
-            'PCPL_ORI'  => $data->SUBMISSION_VALUE + ($data->NET_ADMIN ?? 0)??null,
+            'PCPL_ORI'  => $data->SUBMISSION_VALUE + ($data->TOTAL_ADMIN ?? 0)??null,
             'PAID_PRINCIPAL'  => null,
             'PAID_INTEREST'  => null,
             'PAID_PENALTY'  => null,
