@@ -53,7 +53,7 @@ class CrAppilcationController extends Controller
     public function showHo(Request $request)
     {
         try {
-            $data = M_CrApplication::fpkListData($request,'0:draft', '6:closed kapos');
+            $data = M_CrApplication::fpkListData($request,'6:closed kapos');
             return response()->json(['message' => 'OK', "status" => 200, 'response' => $data], 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
