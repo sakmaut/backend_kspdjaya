@@ -301,6 +301,7 @@ class PaymentController extends Controller
     {
         $save_kwitansi = [
             "PAYMENT_TYPE" => 'angsuran',
+            "STTS_PAYMENT" => $request->payment_method == 'cash' ? "PAID" : "PENDING",
             "NO_TRANSAKSI" => $no_inv,
             "LOAN_NUMBER" => $request->no_facility ?? null,
             "TGL_TRANSAKSI" => Carbon::now()->format('d-m-Y'),
@@ -383,6 +384,8 @@ class PaymentController extends Controller
             ->select('payment_detail.ACC_KEYS', 'payment_detail.ORIGINAL_AMOUNT')
             ->get();
         
+        $kwitansi = M_Kwitansi::where('LOAN_NUMBER',$loan_number)->first();
+        
         $payments = [];
 
         $totalAmount = 0; // To store the sum of ORIGINAL_AMOUNT
@@ -413,13 +416,12 @@ class PaymentController extends Controller
                 $setPrincipal = $valBeforePrincipal - $getPayPrincipal;
 
                if (is_null($check)) {
-                    $pokok = $res['bayar_angsuran'] >= floatval($res['principal']) 
+                    $pokok = $res['bayar_angsuran'] > floatval($res['principal']) 
                              ? floatval($res['principal_remains']) 
                              : ((floatval($res['principal_remains']) + floatval($res['principal'])) - $res['bayar_angsuran']);
                     
                     $os_amount = round($pokok, 2); // or use number_format($pokok, 2, '.', '') for string
                 } else {
-                    // Adjust 'os_amount' based on existing check
                     $os_amount = round($check->OS_AMOUNT - $setPrincipal, 2); // same formatting here
                 }
             }
@@ -427,7 +429,7 @@ class PaymentController extends Controller
 
         $payment_record = [
             'ID' => $uid,
-            'ACC_KEY' => $request->pembayaran,
+            'ACC_KEY' => isset($request->pembayaran)?$request->pembayaran:$kwitansi->METODE_PEMBAYARAN??null,
             'STTS_RCRD' => $status_paid,
             'INVOICE' => $no_inv,
             'NO_TRX' => $request->uid,
@@ -556,6 +558,8 @@ class PaymentController extends Controller
                 throw new Exception('Invoice Number Not Found');
             }
 
+            $kwitansi = M_Kwitansi::where('NO_TRANSAKSI',$request->no_invoice)->firstOrFail();
+
             $request->merge(['payment_method' => 'transfer']);
 
             if($request->flag == 'yes'){
@@ -563,10 +567,11 @@ class PaymentController extends Controller
                 foreach ($check as $res) {
                     $this->processPaymentStructure($res, $request, $getCodeBranch, $request->no_invoice,'PAID');
                 }
+                $kwitansi->update(['STTS_PAYMENT' => 'PAID']);
             }else{
                 $request->merge(['approval' => 'no']);
-                foreach ($check as $res) {
 
+                foreach ($check as $res) {
                     $this->processPaymentStructure($res, $request, $getCodeBranch, $request->no_invoice,'CANCEL');
 
                     $credit_schedule = M_CreditSchedule::where([
@@ -578,6 +583,7 @@ class PaymentController extends Controller
                         $credit_schedule->update(['PAID_FLAG' => null]);
                     }
                 }
+                $kwitansi->update(['STTS_PAYMENT' => 'CANCEL']);
             }
             
             $data_approval = [

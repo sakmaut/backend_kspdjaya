@@ -13,6 +13,7 @@ class M_Kwitansi extends Model
     protected $fillable = [
         'ID',
         'PAYMENT_TYPE',
+        'STTS_PAYMENT',
         'NO_TRANSAKSI', 
         'LOAN_NUMBER', 
         'TGL_TRANSAKSI', 
