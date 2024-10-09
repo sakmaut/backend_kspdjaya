@@ -560,9 +560,10 @@ class PaymentController extends Controller
                 $payment->update(['STTS_RCRD' => $status]);
             }
 
-            $uid = $payment->ID;
-
             if($request->flag == 'yes'){
+
+                $uid = $payment->ID;
+
                 foreach ($check as $res) {
 
                     $loan_number = $res['loan_number'];
@@ -636,6 +637,17 @@ class PaymentController extends Controller
                                 'PAID_PINALTY' => $paidPenalty
                             ]);
                         }
+                    }
+                }
+            }else{
+                foreach ($check as $res) {
+                    $credit_schedule = M_CreditSchedule::where([
+                        'LOAN_NUMBER' => $res['loan_number'],
+                        'PAYMENT_DATE' => Carbon::parse($res['tgl_angsuran'])->format('Y-m-d')
+                    ])->first();
+
+                    if($credit_schedule){
+                        $credit_schedule->update(['PAID_FLAG' => null]);
                     }
                 }
             }
