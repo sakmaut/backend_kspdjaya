@@ -53,13 +53,57 @@ class PaymentController extends Controller
             // Initialize variables
             $customer_detail = [];
             $pembayaran = [];
-           
+
+            $request->merge(['approval' => 'approve']);
+
             // Process payment structures
             if (isset($request->struktur) && is_array($request->struktur)) {
                 foreach ($request->struktur as $res) {
-                    $this->processPaymentStructure($res, $request, $getCodeBranch, $no_inv, $created_now, $pembayaran, $customer_detail);
+                    $check_method_payment = strtolower($request->payment_method) === 'cash';
+
+                    // Fetch credit and customer details once
+                    $credit = M_Credit::where('LOAN_NUMBER', $res['loan_number'])->firstOrFail();
+                    $detail_customer = M_Customer::where('CUST_CODE', $credit->CUST_CODE)->firstOrFail();
+                    $customer_detail = self::setCustomerDetail($detail_customer);
+
+                    $pembayaran[] = [
+                        'installment' => $res['angsuran_ke'],
+                        'title' => 'Angsuran Ke-' . $res['angsuran_ke']
+                    ];
+            
+                    // Set customer details
+                    $save_kwitansi_detail = [
+                        "no_invoice" => $no_inv,
+                        "key" => $res['key'],
+                        'angsuran_ke' => $res['angsuran_ke'],
+                        'loan_number' => $res['loan_number'],
+                        'tgl_angsuran' => $res['tgl_angsuran'],
+                        'principal' => $res['principal'],
+                        'interest' => $res['interest'],
+                        'installment' => $res['installment'],
+                        'principal_remains' => $res['principal_remains'],
+                        'payment' => $res['payment'],
+                        'bayar_angsuran' => $res['bayar_angsuran'],
+                        "bayar_denda" => $res['bayar_denda'],
+                        "total_bayar" => $res['total_bayar'],
+                        "flag" => '',
+                        "denda" => $res['denda']
+                    ];
+            
+                    M_KwitansiStructurDetail::create($save_kwitansi_detail);
+
+                    if ($check_method_payment) {
+                        $this->processPaymentStructure($res, $request, $getCodeBranch, $no_inv,'PAID');
+                    } else {
+                        $tgl_angsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
+                        M_CreditSchedule::where([
+                            'LOAN_NUMBER' => $res['loan_number'],
+                            'PAYMENT_DATE' => $tgl_angsuran
+                        ])->update(['PAID_FLAG' => 'PENDING']);
+                    }
                 }
             }
+
             // Save main kwitansi record
             $this->saveKwitansi($request, $customer_detail, $no_inv, $created_now);
 
@@ -80,58 +124,18 @@ class PaymentController extends Controller
         }
     }
 
-    private function processPaymentStructure($res, $request, $getCodeBranch, $no_inv, $created_now, &$pembayaran, &$customer_detail)
+    private function processPaymentStructure($res, $request, $getCodeBranch, $no_inv,$status_paid)
     {
         $loan_number = $res['loan_number'];
         $tgl_angsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
-
-        // Fetch credit and customer details once
-        $credit = M_Credit::where('LOAN_NUMBER', $loan_number)->firstOrFail();
-        $detail_customer = M_Customer::where('CUST_CODE', $credit->CUST_CODE)->firstOrFail();
-
-        $check_method_payment = strtolower($request->payment_method) === 'cash';
-
-        if ($check_method_payment) {
+        $stts_apprve = $request->approval === 'approve';
+      
+        if($stts_apprve){
             $this->updateCreditSchedule($loan_number, $tgl_angsuran, $res);
             $this->updateArrears($loan_number, $tgl_angsuran, $res['bayar_denda'], $res);
-        }else{
-            $credit_schedule = M_CreditSchedule::where([
-                'LOAN_NUMBER' => $loan_number,
-                'PAYMENT_DATE' => $tgl_angsuran
-            ])->first();
-
-            $credit_schedule->update(['PAID_FLAG' => 'PENDING']);
         }
-
-        self::createPaymentRecords($request, $res, $tgl_angsuran, $loan_number, $no_inv, $getCodeBranch, $created_now);
-        // Add installment details to pembayaran array
-        $pembayaran[] = [
-            'installment' => $res['angsuran_ke'],
-            'title' => 'Angsuran Ke-' . $res['angsuran_ke']
-        ];
-
-        // Set customer details
-        $customer_detail = self::setCustomerDetail($detail_customer);
-
-        $save_kwitansi_detail = [
-            "no_invoice" => $no_inv,
-            "key" => $res['key'],
-            'angsuran_ke' => $res['angsuran_ke'],
-            'loan_number' => $res['loan_number'],
-            'tgl_angsuran' => $res['tgl_angsuran'],
-            'principal' => $res['principal'],
-            'interest' => $res['interest'],
-            'installment' => $res['installment'],
-            'principal_remains' => $res['principal_remains'],
-            'payment' => $res['payment'],
-            'bayar_angsuran' => $res['bayar_angsuran'],
-            "bayar_denda" => $res['bayar_denda'],
-            "total_bayar" => $res['total_bayar'],
-            "flag" => $res['flag'],
-            "denda" => $res['denda']
-        ];
-
-        M_KwitansiStructurDetail::create($save_kwitansi_detail);
+    
+        self::createPaymentRecords($request, $res, $tgl_angsuran, $loan_number, $no_inv, $getCodeBranch,$status_paid);
     }
 
     private function updateCreditSchedule($loan_number, $tgl_angsuran, $res)
@@ -283,8 +287,10 @@ class PaymentController extends Controller
                 $check_arrears->update($updates);
             }
 
-            if ($new_payment_value_principal == $getPrincipal && $new_payment_value_interest == $getInterest) {
-                // Update the status record if both values are maxed out
+            $total1= floatval($new_payment_value_principal) + floatval($new_payment_value_interest);
+            $total2= floatval($getPrincipal) + floatval($getInterest);
+
+            if ($total1 == $total2) {
                 $check_arrears->update(['STATUS_REC' => 'D']);
             }
         }
@@ -363,7 +369,7 @@ class PaymentController extends Controller
         ];
     }
 
-    function createPaymentRecords($request, $res, $tgl_angsuran, $loan_number, $no_inv, $branch, $created_now)
+    function createPaymentRecords($request, $res, $tgl_angsuran, $loan_number, $no_inv, $branch, $status_paid)
     {
         $uid = Uuid::uuid7()->toString();
 
@@ -406,13 +412,11 @@ class PaymentController extends Controller
             if ($getPayPrincipal !== $getPrincipal) {
                 $setPrincipal = $valBeforePrincipal - $getPayPrincipal;
 
-                if ($request->payment_method == 'transfer') {
-                    $os_amount = round($res['principal_remains'] + $res['principal'], 2);
-                } elseif (is_null($check)) {
-                    $pokok = $res['bayar_angsuran'] > $res['principal'] 
-                             ? $res['principal_remains'] 
-                             : (($res['principal_remains'] + $res['principal']) - $res['bayar_angsuran']);
-                    // Ensure 'os_amount' is set with the right decimal precision
+               if (is_null($check)) {
+                    $pokok = $res['bayar_angsuran'] >= floatval($res['principal']) 
+                             ? floatval($res['principal_remains']) 
+                             : ((floatval($res['principal_remains']) + floatval($res['principal'])) - $res['bayar_angsuran']);
+                    
                     $os_amount = round($pokok, 2); // or use number_format($pokok, 2, '.', '') for string
                 } else {
                     // Adjust 'os_amount' based on existing check
@@ -424,7 +428,7 @@ class PaymentController extends Controller
         $payment_record = [
             'ID' => $uid,
             'ACC_KEY' => $request->pembayaran,
-            'STTS_RCRD' => $request->payment_method == 'cash' ? 'PAID' : 'PENDING',
+            'STTS_RCRD' => $status_paid,
             'INVOICE' => $no_inv,
             'NO_TRX' => $request->uid,
             'PAYMENT_METHOD' => $request->payment_method,
@@ -439,8 +443,7 @@ class PaymentController extends Controller
             'END_DATE' => now(),
             'AUTH_BY' => $request->user()->id,
             'AUTH_DATE' => now(),
-            'BANK_NAME' => round(microtime(true) * 1000),
-            'BANK_ACC_NUMBER' => $request->no_rekening ?? null
+            'BANK_NAME' => round(microtime(true) * 1000)
         ];
 
         M_Payment::create($payment_record);
@@ -544,103 +547,28 @@ class PaymentController extends Controller
     public function approval(Request $request)
     {
         try {
-            $payment = M_Payment::where([
-                'INVOICE' => $request->no_invoice,
-                'STTS_RCRD' => 'PENDING'
-            ])->first();
+
+            $getCodeBranch = M_Branch::findOrFail($request->user()->branch_id);
 
             $check = M_KwitansiStructurDetail::where('no_invoice', $request->no_invoice)->get();
 
             if($check->isEmpty()){
                 throw new Exception('Invoice Number Not Found');
             }
-             
-            if ($payment) {
-                $status = ($request->flag === 'yes') ? 'PAID' : 'CANCEL';
-                $payment->update(['STTS_RCRD' => $status]);
-            }
+
+            $request->merge(['payment_method' => 'transfer']);
 
             if($request->flag == 'yes'){
-
-                $uid = $payment->ID;
-
+                $request->merge(['approval' => 'approve']);
                 foreach ($check as $res) {
-
-                    $loan_number = $res['loan_number'];
-                    $tgl_angsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
-
-                    $this->updateCreditSchedule($loan_number, $tgl_angsuran, $res);
-                    $this->updateArrears($loan_number, $tgl_angsuran, $res['bayar_denda'], $res);
-
-                    $getPayments = M_Payment::where('LOAN_NUM', $loan_number)
-                        ->where('START_DATE', $tgl_angsuran)
-                        ->leftJoin('payment_detail', 'payment_detail.PAYMENT_ID', '=', 'payment.ID')
-                        ->select('payment_detail.ACC_KEYS', 'payment_detail.ORIGINAL_AMOUNT')
-                        ->get();
-                    
-                    $payments = [];
-
-                    $totalAmount = 0; // To store the sum of ORIGINAL_AMOUNT
-                    foreach ($getPayments as $payment) {
-                        // Build the array
-                        $payments[$payment->ACC_KEYS] = $payment->ORIGINAL_AMOUNT;
-                        
-                        if ($payment->ACC_KEYS === 'ANGSURAN_POKOK') {
-                            $totalAmount += $payment->ORIGINAL_AMOUNT;
-                        }
-                    }
-
-                    $credit_schedule = M_CreditSchedule::where([
-                        'LOAN_NUMBER' => $loan_number,
-                        'PAYMENT_DATE' => $tgl_angsuran
-                    ])->first();
-
-                    $check_credit = M_Credit::where(['LOAN_NUMBER' => $loan_number])->first();
-
-                    if ($credit_schedule) {
-                        $valBeforePrincipal = $credit_schedule->PAYMENT_VALUE_PRINCIPAL;
-                        $valBeforeInterest = $credit_schedule->PAYMENT_VALUE_INTEREST;
-                        $getPrincipal = $credit_schedule->PRINCIPAL;
-                        $getInterest = $credit_schedule->INTEREST;
-            
-                        $getPayPrincipal = isset($payments['ANGSURAN_POKOK'])? intval($totalAmount):0;
-                        $getPayInterest = isset($payments['ANGSURAN_BUNGA']) ? intval($payments['ANGSURAN_BUNGA']) : 0;
-            
-                        if($getPayPrincipal !== $getPrincipal){
-                            $setPrincipal = $valBeforePrincipal - $getPayPrincipal;
-                            $data_principal = self::preparePaymentData($uid, 'ANGSURAN_POKOK', $setPrincipal); // Set to PRINCIPAL value
-                            M_PaymentDetail::create($data_principal);
-                        }
-            
-                        // Only update interest if it has changed
-                        if ($getPayInterest !== $getInterest && $valBeforeInterest != null) {
-                            $setInterest = $valBeforeInterest - $getPayInterest;
-                            $data_interest = self::preparePaymentData($uid, 'ANGSURAN_BUNGA', $setInterest);
-                            M_PaymentDetail::create($data_interest);
-                        }
-            
-                        $bayar_denda = $res['bayar_denda'];
-            
-                        if ($bayar_denda != 0) {
-                            $data_denda = self::preparePaymentData($uid, 'DENDA_PINJAMAN', $bayar_denda);
-                            M_PaymentDetail::create($data_denda);
-                        }
-            
-                        if ($check_credit) {
-                            $paidPrincipal = isset($setPrincipal) ? $check_credit->PAID_PRINCIPAL + $setPrincipal : $check_credit->PAID_PRINCIPAL;
-                            $paidInterest = isset($setInterest) ? $check_credit->PAID_INTEREST + $setInterest : $check_credit->PAID_INTEREST;
-                            $paidPenalty = $bayar_denda !== 0 ? $check_credit->PAID_PINALTY + $bayar_denda : $check_credit->PAID_PINALTY;
-            
-                            $check_credit->update([
-                                'PAID_PRINCIPAL' => $paidPrincipal,
-                                'PAID_INTEREST' => $paidInterest,
-                                'PAID_PINALTY' => $paidPenalty
-                            ]);
-                        }
-                    }
+                    $this->processPaymentStructure($res, $request, $getCodeBranch, $request->no_invoice,'PAID');
                 }
             }else{
+                $request->merge(['approval' => 'no']);
                 foreach ($check as $res) {
+
+                    $this->processPaymentStructure($res, $request, $getCodeBranch, $request->no_invoice,'CANCEL');
+
                     $credit_schedule = M_CreditSchedule::where([
                         'LOAN_NUMBER' => $res['loan_number'],
                         'PAYMENT_DATE' => Carbon::parse($res['tgl_angsuran'])->format('Y-m-d')
