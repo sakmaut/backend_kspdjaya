@@ -554,9 +554,6 @@ class PaymentController extends Controller
 
             $getCodeBranch = M_Branch::findOrFail($request->user()->branch_id);
 
-            // return response()->json( $request->flag, 200);
-            // die;
-
             $kwitansi = M_Kwitansi::where('NO_TRANSAKSI',$request->no_invoice)->firstOrFail();
 
             $request->merge(['payment_method' => 'transfer']);
@@ -581,9 +578,7 @@ class PaymentController extends Controller
                             'PAYMENT_DATE' => Carbon::parse($res['tgl_angsuran'])->format('Y-m-d')
                         ])->first();
     
-                        if($credit_schedule){
-                            $credit_schedule->update(['PAID_FLAG' => null]);
-                        }
+                        $credit_schedule->update(['PAID_FLAG' => null]);
                     }
                 }
 
