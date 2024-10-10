@@ -1539,22 +1539,22 @@ class DatabaseSeeder extends Seeder
                 "master_menu_id" => "43ab0741-338f-4e53-adf6-0fbc2c832b8a",
             ],
             [
-                "id" => "01901d3c-7099-735e-a15d-ec4b648899",
+                "id" => "b8aead13-2800-4d8b-be2f-0eb434f2cc26",
                 "jabatan" => "SUPERADMIN",
                 "master_menu_id" => "2e7c4719-026a-48af-9662-fe33237da116",
             ],
             [
-                "id" => "01901d3c-7099-735e-a15d-ec4b65052358",
+                "id" => "bc48b7ca-18e0-4dad-b0f0-fb119e35450f",
                 "jabatan" => "SUPERADMIN",
                 "master_menu_id" => "7ebd9410-7256-4f02-b39e-ffd3e01cb23d",
             ],
             [
-                "id" => "01901d3c-7099-735e-a15d-ec4b65ed0ac2",
+                "id" => "ac2ab04c-b2df-4ce5-98bf-68dfc40e7b9f",
                 "jabatan" => "SUPERADMIN",
                 "master_menu_id" => "e8fdbcb2-b3e3-4d9e-8c24-758736741274",
             ],
             [
-                "id" => "01901d3c-7099-745e-a15d-ec4b6714c896",
+                "id" => "78c13a40-b7e7-4b1a-ac85-116631bfe196",
                 "jabatan" => "SUPERADMIN",
                 "master_menu_id" => "69586e0a-83e2-4ca2-81d3-33cab413b099",
             ],
