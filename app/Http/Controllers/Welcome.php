@@ -22,7 +22,7 @@ class Welcome extends Controller
      */
     public function index(Request $request)
     {
-        return response()->json(['message' => 'OK',"status" => 200,'response' =>'WELCOME'], 200);
+        return response()->json(['message' => 'OK',"status" => 200,'response' =>'DEV'], 200);
     }
 
     function compress($source, $destination, $quality) {
