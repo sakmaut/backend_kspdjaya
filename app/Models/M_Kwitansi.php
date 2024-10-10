@@ -18,6 +18,7 @@ class M_Kwitansi extends Model
         'LOAN_NUMBER', 
         'TGL_TRANSAKSI', 
         'CUST_CODE', 
+        'BRANCH_CODE',
         'NAMA', 
         'ALAMAT', 
         'RT', 

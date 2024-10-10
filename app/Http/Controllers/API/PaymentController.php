@@ -105,7 +105,7 @@ class PaymentController extends Controller
             }
 
             // Save main kwitansi record
-            $this->saveKwitansi($request, $customer_detail, $no_inv, $created_now);
+            $this->saveKwitansi($request, $customer_detail, $no_inv);
 
             // Build response
             $build = $this->buildResponse($request, $customer_detail, $pembayaran, $no_inv, $created_now);
@@ -297,7 +297,7 @@ class PaymentController extends Controller
 
     }
 
-    private function saveKwitansi($request, $customer_detail, $no_inv, $created_now)
+    private function saveKwitansi($request, $customer_detail, $no_inv)
     {
         $save_kwitansi = [
             "PAYMENT_TYPE" => 'angsuran',
@@ -306,6 +306,7 @@ class PaymentController extends Controller
             "LOAN_NUMBER" => $request->no_facility ?? null,
             "TGL_TRANSAKSI" => Carbon::now()->format('d-m-Y'),
             'CUST_CODE' => $customer_detail['cust_code'],
+            'BRANCH_CODE' => $request->user()->branch_id,
             'NAMA' => $customer_detail['nama'],
             'ALAMAT' => $customer_detail['alamat'],
             'RT' => $customer_detail['rt'],
