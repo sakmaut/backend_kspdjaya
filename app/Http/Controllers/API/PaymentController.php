@@ -414,15 +414,15 @@ class PaymentController extends Controller
 
             if ($getPayPrincipal !== $getPrincipal) {
                 $setPrincipal = $valBeforePrincipal - $getPayPrincipal;
-
-               if (is_null($check)) {
-                    $pokok = $res['bayar_angsuran'] > floatval($res['principal']) 
+                if(is_null($check)) {
+                    $pokok = floatval($res['bayar_angsuran']) > floatval($res['principal']) 
                              ? floatval($res['principal_remains']) 
                              : ((floatval($res['principal_remains']) + floatval($res['principal'])) - $res['bayar_angsuran']);
                     
-                    $os_amount = round($pokok, 2); // or use number_format($pokok, 2, '.', '') for string
+                    $os_amount = round($pokok, 2);
                 } else {
-                    $os_amount = round($check->OS_AMOUNT - $setPrincipal, 2); // same formatting here
+                  
+                    $os_amount = round($check->OS_AMOUNT - $setPrincipal, 2);
                 }
             }
         }
@@ -554,6 +554,9 @@ class PaymentController extends Controller
 
             $check = M_KwitansiStructurDetail::where('no_invoice', $request->no_invoice)->get();
 
+            // return response()->json( $check, 200);
+            // die;
+
             if($check->isEmpty()){
                 throw new Exception('Invoice Number Not Found');
             }
@@ -564,25 +567,30 @@ class PaymentController extends Controller
 
             if($request->flag == 'yes'){
                 $request->merge(['approval' => 'approve']);
-                foreach ($check as $res) {
-                    $this->processPaymentStructure($res, $request, $getCodeBranch, $request->no_invoice,'PAID');
+                if (isset($request->struktur) && is_array($request->struktur)) {
+                    foreach ($request->struktur as $res) {
+                        $this->processPaymentStructure($res, $request, $getCodeBranch, $request->no_invoice,'PAID');
+                    }
                 }
                 $kwitansi->update(['STTS_PAYMENT' => 'PAID']);
             }else{
                 $request->merge(['approval' => 'no']);
 
-                foreach ($check as $res) {
-                    $this->processPaymentStructure($res, $request, $getCodeBranch, $request->no_invoice,'CANCEL');
+                if (isset($request->struktur) && is_array($request->struktur)) {
+                    foreach ($request->struktur as $res) {
+                        $this->processPaymentStructure($res, $request, $getCodeBranch, $request->no_invoice,'CANCEL');
 
-                    $credit_schedule = M_CreditSchedule::where([
-                        'LOAN_NUMBER' => $res['loan_number'],
-                        'PAYMENT_DATE' => Carbon::parse($res['tgl_angsuran'])->format('Y-m-d')
-                    ])->first();
-
-                    if($credit_schedule){
-                        $credit_schedule->update(['PAID_FLAG' => null]);
+                        $credit_schedule = M_CreditSchedule::where([
+                            'LOAN_NUMBER' => $res['loan_number'],
+                            'PAYMENT_DATE' => Carbon::parse($res['tgl_angsuran'])->format('Y-m-d')
+                        ])->first();
+    
+                        if($credit_schedule){
+                            $credit_schedule->update(['PAID_FLAG' => null]);
+                        }
                     }
                 }
+                
                 $kwitansi->update(['STTS_PAYMENT' => 'CANCEL']);
             }
             

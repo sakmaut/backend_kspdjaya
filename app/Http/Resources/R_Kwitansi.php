@@ -54,6 +54,7 @@ class R_Kwitansi extends JsonResource
             "jumlah_uang" => intval($this->JUMLAH_UANG),
             "terbilang" => bilangan($this->TOTAL_BAYAR) ?? null,
             'attachment' => $attachment,
+            'struktur' => $details,
             "STATUS" => $this->STTS_PAYMENT ?? null,
             "created_by" => $this->CREATED_BY,
             "created_at" => $this->CREATED_AT,
