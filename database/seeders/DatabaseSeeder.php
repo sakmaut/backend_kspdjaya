@@ -1489,11 +1489,6 @@ class DatabaseSeeder extends Seeder
 
         $jobAccessMenuList = [
             [
-                "id" => "01901d3c-7099-735e-a15d-ec4b648899",
-                "jabatan" => "HO",
-                "master_menu_id" => "2e7c4719-026a-48af-9662-fe33237da116",
-            ],
-            [
                 "id" => "01901d3c-7099-735e-a15d-ec4b648a12cc",
                 "jabatan" => "ADMIN",
                 "master_menu_id" => "2e7c4719-026a-48af-9662-fe33237da116",
@@ -1504,6 +1499,11 @@ class DatabaseSeeder extends Seeder
                 "master_menu_id" => "819c88b5-c2e8-48e7-81b6-4bf5c8fadf6f",
             ],
             [
+                "id" => "01901d3c-7099-735e-a15d-ec4b648899",
+                "jabatan" => "HO",
+                "master_menu_id" => "2e7c4719-026a-48af-9662-fe33237da116",
+            ],
+            [
                 "id" => "01901d3c-7099-735e-a15d-ec4b65052358",
                 "jabatan" => "HO",
                 "master_menu_id" => "7ebd9410-7256-4f02-b39e-ffd3e01cb23d",
@@ -1512,6 +1512,11 @@ class DatabaseSeeder extends Seeder
                 "id" => "01901d3c-7099-735e-a15d-ec4b65ed0ac2",
                 "jabatan" => "HO",
                 "master_menu_id" => "e8fdbcb2-b3e3-4d9e-8c24-758736741274",
+            ],
+            [
+                "id" => "01901d3c-7099-745e-a15d-ec4b6714c896",
+                "jabatan" => "HO",
+                "master_menu_id" => "69586e0a-83e2-4ca2-81d3-33cab413b099",
             ],
             [
                 "id" => "01901d3c-7099-735e-a15d-ec4b66851ca6",
@@ -1534,8 +1539,23 @@ class DatabaseSeeder extends Seeder
                 "master_menu_id" => "43ab0741-338f-4e53-adf6-0fbc2c832b8a",
             ],
             [
+                "id" => "01901d3c-7099-735e-a15d-ec4b648899",
+                "jabatan" => "SUPERADMIN",
+                "master_menu_id" => "2e7c4719-026a-48af-9662-fe33237da116",
+            ],
+            [
+                "id" => "01901d3c-7099-735e-a15d-ec4b65052358",
+                "jabatan" => "SUPERADMIN",
+                "master_menu_id" => "7ebd9410-7256-4f02-b39e-ffd3e01cb23d",
+            ],
+            [
+                "id" => "01901d3c-7099-735e-a15d-ec4b65ed0ac2",
+                "jabatan" => "SUPERADMIN",
+                "master_menu_id" => "e8fdbcb2-b3e3-4d9e-8c24-758736741274",
+            ],
+            [
                 "id" => "01901d3c-7099-745e-a15d-ec4b6714c896",
-                "jabatan" => "HO",
+                "jabatan" => "SUPERADMIN",
                 "master_menu_id" => "69586e0a-83e2-4ca2-81d3-33cab413b099",
             ],
         ];
