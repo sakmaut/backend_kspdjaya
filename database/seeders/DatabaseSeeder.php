@@ -180,6 +180,7 @@ class DatabaseSeeder extends Seeder
             [
                 'ID' => 'c9b93fe8-240f-4a58-991c-f3e42d3cc379',
                 'CODE' => 'PST',
+                'CODE_NUMBER' => '001',
                 'NAME' => 'Pusat',
                 'ADDRESS' => 'JL.BY PASS KANDANGHAUR DEPAN KANTOR PLN BLOK ANJUN DS.KARANGANYAR KEC.KANDANHAUR KAB.INDRAMAYU KARANGANYAR KANDANGHAUR INDRAMAYU',
                 'RT' => '010',
@@ -201,6 +202,7 @@ class DatabaseSeeder extends Seeder
             [
                 'ID' => '58dac1f9-b787-4ece-9786-000b5438ac88',
                 'CODE' => 'KNG',
+                'CODE_NUMBER' => '002',
                 'NAME' => 'Kuningan',
                 'ADDRESS' => 'JL.BY PASS KANDANGHAUR DEPAN KANTOR PLN BLOK ANJUN DS.KARANGANYAR KEC.KANDANHAUR KAB.INDRAMAYU KARANGANYAR KANDANGHAUR INDRAMAYU',
                 'RT' => '010',
