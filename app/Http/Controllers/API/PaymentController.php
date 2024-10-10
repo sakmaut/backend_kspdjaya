@@ -45,7 +45,7 @@ class PaymentController extends Controller
         try {
 
             $created_now = Carbon::now();
-            $no_inv = generateCode($request, 'payment', 'INVOICE', 'INV');
+            $no_inv = generateCode($request, 'kwitansi', 'NO_TRANSAKSI', 'INV');
 
             // Fetch branch information
             $getCodeBranch = M_Branch::findOrFail($request->user()->branch_id);
@@ -550,7 +550,6 @@ class PaymentController extends Controller
 
     public function approval(Request $request)
     {
-        // aaa
         try {
 
             $getCodeBranch = M_Branch::findOrFail($request->user()->branch_id);
