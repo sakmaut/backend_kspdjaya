@@ -375,6 +375,7 @@ class PaymentController extends Controller
         $uid = Uuid::uuid7()->toString();
 
         $check = M_Payment::where('LOAN_NUM', $loan_number)
+            ->where('STTS_RCRD', 'PAID')
             ->latest('BANK_NAME')
             ->first();
 
@@ -552,14 +553,8 @@ class PaymentController extends Controller
 
             $getCodeBranch = M_Branch::findOrFail($request->user()->branch_id);
 
-            $check = M_KwitansiStructurDetail::where('no_invoice', $request->no_invoice)->get();
-
-            // return response()->json( $check, 200);
+            // return response()->json( $request->flag, 200);
             // die;
-
-            if($check->isEmpty()){
-                throw new Exception('Invoice Number Not Found');
-            }
 
             $kwitansi = M_Kwitansi::where('NO_TRANSAKSI',$request->no_invoice)->firstOrFail();
 
@@ -590,7 +585,7 @@ class PaymentController extends Controller
                         }
                     }
                 }
-                
+
                 $kwitansi->update(['STTS_PAYMENT' => 'CANCEL']);
             }
             
