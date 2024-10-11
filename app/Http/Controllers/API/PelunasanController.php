@@ -49,8 +49,8 @@ class PelunasanController extends Controller
                         (coalesce(a.PENALTY_RATE,3)/100)*(a.PCPL_ORI-coalesce(a.PAID_PRINCIPAL,0)) as PINALTI
                 from	credit a
                         left join (	select	LOAN_NUMBER, 
-                                            sum(PAST_DUE_INTRST)-sum(PAID_INT) as INT_ARR, 
-                                            sum(PAST_DUE_PENALTY)-sum(PAID_PENALTY) as DENDA
+                                            sum(coalesce(PAST_DUE_INTRST,0))-sum(coalesce(PAID_INT,0)) as INT_ARR, 
+                                            sum(coalesce(PAST_DUE_PENALTY,0))-sum(coalesce(PAID_PENALTY,0)) as DENDA
                                     from	arrears
                                     where	LOAN_NUMBER = '{$loan_number}'
                                             and STATUS_REC = 'A'
