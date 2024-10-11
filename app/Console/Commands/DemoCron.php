@@ -35,10 +35,13 @@ class DemoCron extends Command
     {
         try {
             $query = DB::table('credit_schedule')
-                ->where('PAYMENT_DATE', '<=', DB::raw('CURDATE()'))
-                ->where('PAID_FLAG', '!=', 'PAID')
-                ->select('*')
-                ->get();
+                        ->where('PAYMENT_DATE', '<=', DB::raw('CURDATE()'))
+                        ->where(function ($query) {
+                            $query->whereNull('PAID_FLAG')
+                                ->orWhere('PAID_FLAG', '=', '');
+                        })
+                        ->select('*')
+                        ->get();
     
             if ($query->isEmpty()) {
                 M_CronJobLog::create([
