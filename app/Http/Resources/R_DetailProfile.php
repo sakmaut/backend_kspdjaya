@@ -16,8 +16,6 @@ class R_DetailProfile extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $attachment = M_HrEmployeeDocument::where('USERS_ID',$request->user()->id)->get();
-
         $branch = M_Branch::find($request->user()->id);
         
         return [
@@ -33,7 +31,7 @@ class R_DetailProfile extends JsonResource
             'gender' => $request->user()->gender,
             'no_hp' => $request->user()->mobile_number,
             'status' => $request->user()->status,
-            'attachment' => [$attachment]
+            'photo_personal' => M_HrEmployeeDocument::attachment($request->user()->id, 'personal'),
         ];
     }
 }
