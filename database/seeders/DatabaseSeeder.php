@@ -172,6 +172,19 @@ class DatabaseSeeder extends Seeder
                 'gender' => "Laki-laki",
                 'mobile_number' => "12345678"
             ],
+            [
+                'username' => "superadmin",
+                'email' => 'superadmin@gmail.com',
+                'email_verified_at' => now(),
+                'password' => Hash::make('admin123'),
+                'remember_token' => Str::random(10),
+                'status' => "active",
+                'fullname' => "SUPERADMIN",
+                'branch_id' => "58dac1f9-b787-4ece-9786-000b5438ac88",
+                'position' => "SUPERADMIN",
+                'gender' => "Laki-laki",
+                'mobile_number' => "12345678"
+            ],
         ];
 
         DB::table('users')->insert($users);
