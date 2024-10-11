@@ -99,6 +99,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::resource('bpkb', BpkbController::class);
     Route::resource('bpkb_transaction', BpkbTransactionController::class);
+    Route::post('change_password', [UsersController::class,'changePassword']);
 });
 
 

@@ -15,9 +15,12 @@ use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Validator;
 use Ramsey\Uuid\Uuid;
 
 class UsersController extends Controller
@@ -295,6 +298,46 @@ class UsersController extends Controller
             DB::rollback();
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+        }
+    }
+
+    public function changePassword(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+
+            Validator::make($request->all(), [
+                'username' => 'required',
+                'password' => 'required'
+            ]);
+            
+            $credentials = $request->only('username', 'password');
+            
+            if (!Auth::guard('web')->attempt($credentials)) {
+                return response()->json(['message' => 'Invalid Credential', 'status' => 401], 401);
+            }
+
+            $user = $request->user();
+
+            $user_query = User::where('id',$user->id)->first();
+
+            $user_query->update(['password' => $request->new_password]);
+    
+            DB::commit();
+            // ActivityLogger::logActivity($request,"Success",200);
+            return response()->json(['message' => 'change password successfully'], 200);
+        } catch (ModelNotFoundException $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($request,'Data Not Found',404);
+            return response()->json(['message' => 'Hr Employee Id Not Found', "status" => 404], 404);
+        }catch (QueryException $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($request,$e->getMessage(),409);
+            return response()->json(['message' => $e->getMessage(),"status" => 409], 409);
+        } catch (\Exception $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($request,$e->getMessage(),500);
+            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
         }
     }
 
