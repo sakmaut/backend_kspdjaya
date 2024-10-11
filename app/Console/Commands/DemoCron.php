@@ -65,6 +65,9 @@ class DemoCron extends Command
                     'PAST_DUE_PCPL' => $result->PRINCIPAL??0,
                     'PAST_DUE_INTRST' => $result->INTEREST??0,
                     'PAST_DUE_PENALTY' => $pastDuePenalty??0,
+                    'PAID_PCPL' => 0,
+                    'PAID_INT' => 0,
+                    'PAID_PENALTY' => 0,
                     'CREATED_AT' => Carbon::now()
                 ];
             }
