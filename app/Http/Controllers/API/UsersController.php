@@ -305,26 +305,15 @@ class UsersController extends Controller
     {
         DB::beginTransaction();
         try {
-
-            Validator::make($request->all(), [
-                'username' => 'required',
-                'password' => 'required'
-            ]);
-            
-            $credentials = $request->only('username', 'password');
-            
-            if (!Auth::guard('web')->attempt($credentials)) {
-                return response()->json(['message' => 'Invalid Credential', 'status' => 401], 401);
-            }
-
-            $user = $request->user();
-
-            $user_query = User::where('id',$user->id)->first();
+            $user_query = User::where('id',$request->user()->id)->first();
 
             $user_query->update(['password' => $request->new_password]);
-    
+
+            $user = $request->user();
+            $user->tokens()->delete();
+
             DB::commit();
-            // ActivityLogger::logActivity($request,"Success",200);
+            ActivityLogger::logActivity($request,"Success",200);
             return response()->json(['message' => 'change password successfully'], 200);
         } catch (ModelNotFoundException $e) {
             DB::rollback();
