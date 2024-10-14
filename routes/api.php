@@ -17,6 +17,7 @@ use App\Http\Controllers\API\{
     UserAccessMenuController,
     UsersController,
     CrBlacklistController,
+    HrPositionController,
     PelunasanController
 };
 use App\Http\Controllers\Welcome;
@@ -100,6 +101,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::resource('bpkb', BpkbController::class);
     Route::resource('bpkb_transaction', BpkbTransactionController::class);
     Route::post('change_password', [UsersController::class,'changePassword']);
+
+    Route::resource('position',HrPositionController::class);
 });
 
 

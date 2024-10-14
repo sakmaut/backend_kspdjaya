@@ -232,6 +232,15 @@ class PelunasanController extends Controller
             }
         }
     }
+
+    function preparePaymentData($payment_id,$acc_key, $amount)
+    {
+        return [
+            'PAYMENT_ID' => $payment_id,
+            'ACC_KEYS' => $acc_key,
+            'ORIGINAL_AMOUNT' => $amount
+        ];
+    }
     
     private function processInstallments($creditSchedule, $request)
     {
