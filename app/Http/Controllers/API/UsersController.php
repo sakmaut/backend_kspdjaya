@@ -175,20 +175,20 @@ class UsersController extends Controller
             //     throw new Exception("Jabatan Not Found", 404);
             // }
 
-            if ($users->position != $request->jabatan) {
-                $getMenu = M_JabatanAccessMenu::where('jabatan', $request->jabatan)->get();
+            // if ($users->position != $request->jabatan) {
+            //     $getMenu = M_JabatanAccessMenu::where('jabatan', $request->jabatan)->get();
 
-                M_MasterUserAccessMenu::where('users_id', $id)->delete();
+            //     M_MasterUserAccessMenu::where('users_id', $id)->delete();
 
-                foreach ($getMenu as $list) {
-                    M_MasterUserAccessMenu::create([
-                        'id' => Uuid::uuid7()->toString(),
-                        'master_menu_id' => $list['master_menu_id'],
-                        'users_id' => $id,
-                        'created_by' => $request->user()->id
-                    ]);
-                }
-            }
+            //     foreach ($getMenu as $list) {
+            //         M_MasterUserAccessMenu::create([
+            //             'id' => Uuid::uuid7()->toString(),
+            //             'master_menu_id' => $list['master_menu_id'],
+            //             'users_id' => $id,
+            //             'created_by' => $request->user()->id
+            //         ]);
+            //     }
+            // }
 
             $data_user = [
                 'username' => $request->username,
