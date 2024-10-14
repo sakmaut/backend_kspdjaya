@@ -107,22 +107,22 @@ class UsersController extends Controller
         
             $userID = User::create($data_array);
 
-            $getMenu = M_JabatanAccessMenu::where('jabatan', $request->jabatan)->get();
+            // $getMenu = M_JabatanAccessMenu::where('jabatan', $request->jabatan)->get();
 
-            if ($getMenu->isEmpty()) {
-                throw new Exception("Jabatan Access Menu Kosong", 404);
-            }
+            // if ($getMenu->isEmpty()) {
+            //     throw new Exception("Jabatan Access Menu Kosong", 404);
+            // }
 
-            foreach ($getMenu as $list) {
-                $data_menu = [
-                    'id' => Uuid::uuid7()->toString(),
-                    'master_menu_id' => $list['master_menu_id'],
-                    'users_id' => $userID->id,
-                    'created_by' => $request->user()->id
-                ];
+            // foreach ($getMenu as $list) {
+            //     $data_menu = [
+            //         'id' => Uuid::uuid7()->toString(),
+            //         'master_menu_id' => $list['master_menu_id'],
+            //         'users_id' => $userID->id,
+            //         'created_by' => $request->user()->id
+            //     ];
 
-                M_MasterUserAccessMenu::create($data_menu);
-            }
+            //     M_MasterUserAccessMenu::create($data_menu);
+            // }
 
             $data_rolling = [
                 'id' => Uuid::uuid7()->toString(),
