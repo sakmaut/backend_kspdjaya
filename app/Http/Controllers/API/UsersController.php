@@ -84,11 +84,11 @@ class UsersController extends Controller
                 throw new Exception("Id Branch Not Found", 404);
             }
 
-            $dataJabatan = ['ADMIN','MCF','HO','KAPOS','SUPERADMIN'];
+            // $dataJabatan = ['ADMIN','MCF','HO','KAPOS','SUPERADMIN'];
 
-            if (!in_array($request->jabatan, $dataJabatan)) {
-                throw new Exception("Jabatan Not Found", 404);
-            }
+            // if (!in_array($request->jabatan, $dataJabatan)) {
+            //     throw new Exception("Jabatan Not Found", 404);
+            // }
 
             $data_array = [
                 'username' => $request->username,
