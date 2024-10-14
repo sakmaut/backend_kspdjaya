@@ -117,12 +117,10 @@ class UserAccessMenuController extends Controller
         try {
             $checks = M_MasterUserAccessMenu::where('users_id', $id)->get();
 
-            if($checks->isEmpty()){
-                throw new Exception("Users Id Not Found",404);
-            }
-
-            foreach ($checks as $check) {
-                $check->delete();
+            if(!$checks->isEmpty()){
+                foreach ($checks as $check) {
+                    $check->delete();
+                }
             }
 
             foreach ($request->menu_list as $value) {

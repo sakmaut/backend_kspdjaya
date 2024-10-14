@@ -169,11 +169,11 @@ class UsersController extends Controller
 
             $users = User::findOrFail($id);
 
-            $dataJabatan = ['ADMIN', 'MCF', 'HO', 'KAPOS'];
+            // $dataJabatan = ['ADMIN', 'MCF', 'HO', 'KAPOS'];
 
-            if (!in_array($request->jabatan, $dataJabatan)) {
-                throw new Exception("Jabatan Not Found", 404);
-            }
+            // if (!in_array($request->jabatan, $dataJabatan)) {
+            //     throw new Exception("Jabatan Not Found", 404);
+            // }
 
             if ($users->position != $request->jabatan) {
                 $getMenu = M_JabatanAccessMenu::where('jabatan', $request->jabatan)->get();
