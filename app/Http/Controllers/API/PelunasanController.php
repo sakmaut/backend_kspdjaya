@@ -53,7 +53,7 @@ class PelunasanController extends Controller
                                             sum(coalesce(PAST_DUE_PENALTY,0))-sum(coalesce(PAID_PENALTY,0)) as DENDA
                                     from	arrears
                                     where	LOAN_NUMBER = '{$loan_number}'
-                                            and STATUS_REC = 'A'
+                                            // and STATUS_REC = 'A'
                                     group 	by LOAN_NUMBER) b
                             on b.LOAN_NUMBER = a.LOAN_NUMBER
                         left join (	select	LOAN_NUMBER, 
