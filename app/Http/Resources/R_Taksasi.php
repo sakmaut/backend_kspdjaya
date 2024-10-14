@@ -21,14 +21,12 @@ class R_Taksasi extends JsonResource
                                         ->get();
 
         return [
-            "data" => [
-                'id' => $this->id,
-                "brand" => $this->brand,
-                "code" => $this->code,
-                "model" => $this->model,
-                "descr" => $this->descr,
-                'price' => $taksasi_price,
-            ]
+           'id' => $this->id,
+            "brand" => $this->brand,
+            "code" => $this->code,
+            "model" => $this->model,
+            "descr" => $this->descr,
+            'price' => $taksasi_price
         ];
     }
 }
