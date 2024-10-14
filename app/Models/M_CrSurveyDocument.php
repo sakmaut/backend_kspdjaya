@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class M_CrSurveyDocument extends Model
@@ -33,15 +34,17 @@ class M_CrSurveyDocument extends Model
         });
     }
 
-    public static function attachment($survey_id,$array = []){
-        $attachment = self::where('CR_SURVEY_ID', $survey_id)
-                        ->whereIn('TYPE', $array)
-                        ->groupBy('type')
-                        ->orderBy('CREATED_AT', 'desc')
-                        ->get();
-
+    public static function attachment($survey_id, $array = []) {
+        $attachment = self::select('TYPE', DB::raw('MAX(CREATED_AT) as latest_created_at'))
+            ->where('CR_SURVEY_ID', $survey_id)
+            ->whereIn('TYPE', $array)
+            ->groupBy('TYPE')
+            ->orderBy('latest_created_at', 'desc')
+            ->get();
+    
         return $attachment;
     }
+    
 
     public static function attachmentGetAll($survey_id,$array = []){
         $attachment = self::where('CR_SURVEY_ID', $survey_id)
