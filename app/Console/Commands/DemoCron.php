@@ -68,7 +68,7 @@ class DemoCron extends Command
                     'PAID_PCPL' => 0,
                     'PAID_INT' => 0,
                     'PAID_PENALTY' => 0,
-                    'CREATED_AT' => Carbon::now()
+                    'CREATED_AT' => Carbon::now('Asia/Jakarta')
                 ];
             }
     
@@ -84,7 +84,7 @@ class DemoCron extends Command
                     // Update the existing record
                     $existingArrears->update([
                         'PAST_DUE_PENALTY' => $data['PAST_DUE_PENALTY']??0,
-                        'UPDATED_AT' => Carbon::now()
+                        'UPDATED_AT' => Carbon::now('Asia/Jakarta')
                     ]);
                 } else {
                     // Insert new record
