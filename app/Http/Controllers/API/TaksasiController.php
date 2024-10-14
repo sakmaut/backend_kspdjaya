@@ -27,7 +27,7 @@ class TaksasiController extends Controller
     {
         try {
             $data = M_Taksasi::all();
-            $dto = new R_Taksasi($data);
+            $dto = R_Taksasi::collection($data);
 
             ActivityLogger::logActivity($request,"Success",200);
             return response()->json($dto, 200);
