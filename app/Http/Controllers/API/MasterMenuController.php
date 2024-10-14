@@ -22,9 +22,9 @@ class MasterMenuController extends Controller
                                     $query->where(function($q) {
                                         $q->whereNull('deleted_by')
                                         ->orWhere('deleted_by', '');
-                                    })
-                                    ->whereNotNull('parent')
-                                    ->where('parent', '!=', '');
+                                    });
+                                    // ->whereNotNull('parent')
+                                    // ->where('parent', '!=', '');
                                 })
                                 ->orWhere('menu_name', 'home')
                                 ->orderBy('order', 'asc')
