@@ -124,6 +124,15 @@ class UsersController extends Controller
             //     M_MasterUserAccessMenu::create($data_menu);
             // }
 
+            $data_menu = [
+                'id' => Uuid::uuid7()->toString(),
+                'master_menu_id' => '2e7c4719-026a-48af-9662-fe33237da116',
+                'users_id' => $userID->id,
+                'created_by' => $request->user()->id
+            ];
+    
+            M_MasterUserAccessMenu::create($data_menu);
+
             $data_rolling = [
                 'id' => Uuid::uuid7()->toString(),
                 'users_id' => $userID->id,
