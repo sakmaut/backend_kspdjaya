@@ -26,7 +26,7 @@ class TaksasiController extends Controller
     public function index(Request $request)
     {
         try {
-            $data = M_Taksasi::paginate(20);
+            $data = M_Taksasi::all();
             $dto = new R_Taksasi($data);
 
             ActivityLogger::logActivity($request,"Success",200);
