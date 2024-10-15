@@ -441,7 +441,8 @@ class CrSurveyController extends Controller
         $image_path = Storage::put("public/Cr_Survey/{$fileName}", $data);
         $image_path = str_replace('public/', '', $image_path);
         
-        $fileSize = strlen($data);// Adjust path
+        $fileSize = strlen($data);
+        $fileSizeInKB = $fileSize / 1024; // Adjust path
 
         // Create the URL for the stored image
         $url = URL::to('/') . '/storage/' .'Cr_Survey/'. $fileName;
@@ -452,7 +453,7 @@ class CrSurveyController extends Controller
             'CR_SURVEY_ID' => $req->cr_prospect_id,
             'TYPE' => $req->type,
             'PATH' => $url ?? '',
-            'SIZE' => $fileSize
+            'SIZE' => $fileSizeInKB.' kb'
         ];
 
         // Insert the record into the database
