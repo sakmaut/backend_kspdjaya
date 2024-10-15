@@ -128,8 +128,8 @@ class CrSurveyController extends Controller
                 'keterangan' => $approval_detail->ONCHARGE_DESCR,
                 'status' => $approval_detail->APPROVAL_RESULT
             ],
-            "dokumen_indentitas" => self::attachment($survey_id, ['ktp', 'kartu keluarga', 'ktp pasangan'])??null,
-            "dokumen_jaminan" => self::attachment($survey_id, ['no rangka', 'no mesin', 'stnk', 'tampak depan', 'tampak belakang', 'tampak kanan', 'tampak kiri'])??null,
+            "dokumen_indentitas" => self::attachment($survey_id, "'ktp', 'kartu keluarga', 'ktp pasangan'"),
+            // "dokumen_jaminan" => self::attachment($survey_id, ['no rangka', 'no mesin', 'stnk', 'tampak depan', 'tampak belakang', 'tampak kanan', 'tampak kiri'])??null,
             "dokumen_pendukung" => M_CrSurveyDocument::attachmentGetAll($survey_id, ['dokumen pendukung'])??null,
         ];
 
@@ -154,13 +154,20 @@ class CrSurveyController extends Controller
         return $arrayList;
     }
 
-    public function attachment($survey_id, $array = []){
-        $documents = M_CrSurveyDocument::whereIn('TYPE',$array)
-                ->where('CR_SURVEY_ID', $survey_id)
-                ->orderBy('CREATED_AT', 'desc')
-                ->limit(3)
-                ->get();
-
+    public function attachment($survey_id, $data){
+        $documents = DB::select(
+            "   SELECT *
+                FROM cr_survey_document AS csd
+                WHERE (TYPE, CREATED_AT) IN (
+                    SELECT TYPE, MAX(CREATED_AT)
+                    FROM cr_survey_document
+                    WHERE TYPE IN ($data)
+                        AND CR_SURVEY_ID = '$survey_id'
+                    GROUP BY TYPE
+                )
+                ORDER BY CREATED_AT DESC"
+        );
+    
         return $documents;        
     }
     
