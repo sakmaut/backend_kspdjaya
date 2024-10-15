@@ -442,7 +442,8 @@ class CrSurveyController extends Controller
         $image_path = str_replace('public/', '', $image_path);
         
         $fileSize = strlen($data);
-        $fileSizeInKB = $fileSize / 1024; // Adjust path
+        $fileSizeInKB = floor($fileSize / 1024);
+        // Adjust path
 
         // Create the URL for the stored image
         $url = URL::to('/') . '/storage/' .'Cr_Survey/'. $fileName;
