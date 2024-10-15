@@ -421,67 +421,44 @@ class CrSurveyController extends Controller
         DB::beginTransaction();
         try {
 
-            // Validate the incoming request
-    $this->validate($req, [
-        'image' => 'required|string', // Expecting a base64 string
-        'type' => 'string',
-        'cr_prospect_id' => 'string'
-    ]);
+            $this->validate($req, [
+                'image' => 'required|string',
+                'type' => 'required|string',
+                'cr_prospect_id' => 'required|string'
+            ]);
 
-    // Decode the base64 string
-    if (preg_match('/^data:image\/(\w+);base64,/', $req->image, $type)) {
-        $data = substr($req->image, strpos($req->image, ',') + 1);
-        $data = base64_decode($data);
+        // Decode the base64 string
+        if (preg_match('/^data:image\/(\w+);base64,/', $req->image, $type)) {
+            $data = substr($req->image, strpos($req->image, ',') + 1);
+            $data = base64_decode($data);
 
-        // Generate a unique filename
-        $extension = strtolower($type[1]); // Get the image extension
-        $fileName = Uuid::uuid4()->toString() . '.' . $extension;
+            // Generate a unique filename
+            $extension = strtolower($type[1]); // Get the image extension
+            $fileName = Uuid::uuid4()->toString() . '.' . $extension;
 
-        // Store the image
-        $image_path = Storage::put("public/Cr_Survey/{$fileName}", $data);
-        $image_path = str_replace('public/', '', $image_path);
-        
-        $fileSize = strlen($data);
-        $fileSizeInKB = floor($fileSize / 1024);
-        // Adjust path
+            // Store the image
+            $image_path = Storage::put("public/Cr_Survey/{$fileName}", $data);
+            $image_path = str_replace('public/', '', $image_path);
+            
+            $fileSize = strlen($data);
+            $fileSizeInKB = floor($fileSize / 1024);
+            // Adjust path
 
-        // Create the URL for the stored image
-        $url = URL::to('/') . '/storage/' .'Cr_Survey/'. $fileName;
+            // Create the URL for the stored image
+            $url = URL::to('/') . '/storage/' .'Cr_Survey/'. $fileName;
 
-        // Prepare data for database insertion
-        $data_array_attachment = [
-            'ID' => Uuid::uuid4()->toString(),
-            'CR_SURVEY_ID' => $req->cr_prospect_id,
-            'TYPE' => $req->type,
-            'PATH' => $url ?? '',
-            'SIZE' => $fileSizeInKB.' kb',
-            'CREATED_BY' => $req->user()->fullname
-        ];
+            // Prepare data for database insertion
+            $data_array_attachment = [
+                'ID' => Uuid::uuid4()->toString(),
+                'CR_SURVEY_ID' => $req->cr_prospect_id,
+                'TYPE' => $req->type,
+                'PATH' => $url ?? '',
+                'SIZE' => $fileSizeInKB.' kb',
+                'CREATED_BY' => $req->user()->fullname
+            ];
 
-        // Insert the record into the database
-        M_CrSurveyDocument::create($data_array_attachment);
-
-
-            // $this->validate($req, [
-            //     'image' => 'image|mimes:jpg,png,jpeg,gif,svg',
-            //     'type' => 'string',
-            //     'cr_prospect_id' =>'string'
-            // ]);
-
-            // if ($req->hasFile('image')) {
-            //     $image_path = $req->file('image')->store('public/Cr_Survey');
-            //     $image_path = str_replace('public/', '', $image_path);
-
-            //     $url = URL::to('/') . '/storage/' . $image_path;
-
-            //     $data_array_attachment = [
-            //         'ID' => Uuid::uuid4()->toString(),
-            //         'CR_SURVEY_ID' => $req->cr_prospect_id,
-            //         'TYPE' => $req->type,
-            //         'PATH' => $url ?? ''
-            //     ];
-
-                // M_CrSurveyDocument::create($data_array_attachment);
+            // Insert the record into the database
+            M_CrSurveyDocument::create($data_array_attachment);
 
                 DB::commit();
                 return response()->json(['message' => 'Image upload successfully', "status" => 200, 'response' => $url], 200);
