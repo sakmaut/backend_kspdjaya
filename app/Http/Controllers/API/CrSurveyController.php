@@ -454,7 +454,8 @@ class CrSurveyController extends Controller
             'CR_SURVEY_ID' => $req->cr_prospect_id,
             'TYPE' => $req->type,
             'PATH' => $url ?? '',
-            'SIZE' => $fileSizeInKB.' kb'
+            'SIZE' => $fileSizeInKB.' kb',
+            'CREATED_BY' => $req->user()->fullname
         ];
 
         // Insert the record into the database
