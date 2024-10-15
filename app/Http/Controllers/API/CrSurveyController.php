@@ -442,7 +442,7 @@ class CrSurveyController extends Controller
         $image_path = str_replace('public/', '', $image_path); // Adjust path
 
         // Create the URL for the stored image
-        $url = URL::to('/') . '/storage/' . $fileName;
+        $url = URL::to('/') . '/storage/' .'Cr_Survey/'. $fileName;
 
         // Prepare data for database insertion
         $data_array_attachment = [
