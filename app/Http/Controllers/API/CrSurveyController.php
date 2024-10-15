@@ -129,9 +129,9 @@ class CrSurveyController extends Controller
                 'keterangan' => $approval_detail->ONCHARGE_DESCR,
                 'status' => $approval_detail->APPROVAL_RESULT
             ],
-            "dokumen_indentitas" => self::attachment($survey_id, "'ktp', 'kartu keluarga', 'ktp pasangan'"),
-            // "dokumen_jaminan" => self::attachment($survey_id, ['no rangka', 'no mesin', 'stnk', 'tampak depan', 'tampak belakang', 'tampak kanan', 'tampak kiri'])??null,
-            "dokumen_pendukung" => M_CrSurveyDocument::attachmentGetAll($survey_id, ['dokumen pendukung'])??null,
+            "dokumen_indentitas" => self::attachment($survey_id, "'ktp', 'kk', 'ktp_pasangan'"),
+            "dokumen_jaminan" => self::attachment($survey_id, "'no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri'"),
+            "dokumen_pendukung" => M_CrSurveyDocument::attachmentGetAll($survey_id, ['other'])??null,
         ];
 
         foreach ($guarente_vehicle as $list) {
