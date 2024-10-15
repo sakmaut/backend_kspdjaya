@@ -16,6 +16,7 @@ class M_CrSurveyDocument extends Model
        'CR_SURVEY_ID',
        'TYPE',
        'PATH',
+       'SIZE',
        'CREATED_BY',
        'CREATED_AT'
     ];
