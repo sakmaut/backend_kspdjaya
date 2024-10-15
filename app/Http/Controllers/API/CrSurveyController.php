@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Ramsey\Uuid\Uuid;
 
@@ -420,26 +421,61 @@ class CrSurveyController extends Controller
         DB::beginTransaction();
         try {
 
-            $this->validate($req, [
-                'image' => 'image|mimes:jpg,png,jpeg,gif,svg',
-                'type' => 'string',
-                'cr_prospect_id' =>'string'
-            ]);
+            // Validate the incoming request
+    $this->validate($req, [
+        'image' => 'required|string', // Expecting a base64 string
+        'type' => 'string',
+        'cr_prospect_id' => 'string'
+    ]);
 
-            if ($req->hasFile('image')) {
-                $image_path = $req->file('image')->store('public/Cr_Survey');
-                $image_path = str_replace('public/', '', $image_path);
+    // Decode the base64 string
+    if (preg_match('/^data:image\/(\w+);base64,/', $req->image, $type)) {
+        $data = substr($req->image, strpos($req->image, ',') + 1);
+        $data = base64_decode($data);
 
-                $url = URL::to('/') . '/storage/' . $image_path;
+        // Generate a unique filename
+        $extension = strtolower($type[1]); // Get the image extension
+        $fileName = Uuid::uuid4()->toString() . '.' . $extension;
 
-                $data_array_attachment = [
-                    'ID' => Uuid::uuid4()->toString(),
-                    'CR_SURVEY_ID' => $req->cr_prospect_id,
-                    'TYPE' => $req->type,
-                    'PATH' => $url ?? ''
-                ];
+        // Store the image
+        $image_path = Storage::put("public/Cr_Survey/{$fileName}", $data);
+        $image_path = str_replace('public/', '', $image_path); // Adjust path
 
-                M_CrSurveyDocument::create($data_array_attachment);
+        // Create the URL for the stored image
+        $url = URL::to('/') . '/storage/' . $fileName;
+
+        // Prepare data for database insertion
+        $data_array_attachment = [
+            'ID' => Uuid::uuid4()->toString(),
+            'CR_SURVEY_ID' => $req->cr_prospect_id,
+            'TYPE' => $req->type,
+            'PATH' => $url ?? ''
+        ];
+
+        // Insert the record into the database
+        M_CrSurveyDocument::create($data_array_attachment);
+
+
+            // $this->validate($req, [
+            //     'image' => 'image|mimes:jpg,png,jpeg,gif,svg',
+            //     'type' => 'string',
+            //     'cr_prospect_id' =>'string'
+            // ]);
+
+            // if ($req->hasFile('image')) {
+            //     $image_path = $req->file('image')->store('public/Cr_Survey');
+            //     $image_path = str_replace('public/', '', $image_path);
+
+            //     $url = URL::to('/') . '/storage/' . $image_path;
+
+            //     $data_array_attachment = [
+            //         'ID' => Uuid::uuid4()->toString(),
+            //         'CR_SURVEY_ID' => $req->cr_prospect_id,
+            //         'TYPE' => $req->type,
+            //         'PATH' => $url ?? ''
+            //     ];
+
+                // M_CrSurveyDocument::create($data_array_attachment);
 
                 DB::commit();
                 return response()->json(['message' => 'Image upload successfully', "status" => 200, 'response' => $url], 200);
