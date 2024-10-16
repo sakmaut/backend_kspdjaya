@@ -63,10 +63,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // Route Group Cr Prospek (Kunjungan)
     Route::resource('kunjungan', CrSurveyController::class)->except(['index', 'howAdmins']);
     Route::post('image_upload_prospect', [CrSurveyController::class, 'uploadImage']);
+    Route::post('image_upload_multiple', [CrSurveyController::class, 'imageMultiple']);
 
     // Detail Profile
     Route::get('me', [DetailProfileController::class, 'index']);
-    Route::post('image_upload_personal', [DetailProfileController::class, 'uploadImage']);
+    Route::post('image_upload_personal', [DetailProfileController::class, 'multipleUpload+']);
 
     // Credit
     Route::post('pk', [Credit::class, 'index']);

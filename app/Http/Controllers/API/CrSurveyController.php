@@ -477,4 +477,70 @@ class CrSurveyController extends Controller
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
         } 
     }
+
+    public function imageMultiple(Request $req)
+    {
+        DB::beginTransaction();
+        try {
+
+            $this->validate($req, [
+                'type' => 'required|string',
+                'cr_prospect_id' => 'required|string',
+            ]);            
+
+            $images = $req->images; // Get the images array from the request
+            $uploadedUrls = []; // Array
+
+            foreach ($images as $key => $imageData) { // Use $key to maintain index
+                if (preg_match('/^data:image\/(\w+);base64,/', $imageData['image'], $type)) {
+                    $data = substr($imageData['image'], strpos($imageData['image'], ',') + 1);
+                    $data = base64_decode($data);
+            
+                    if ($data === false) {
+                        return response()->json(['message' => 'Image data could not be decoded', 'status' => 400], 400);
+                    }
+            
+                    $extension = strtolower($type[1]);
+                    $fileName = Uuid::uuid4()->toString() . '.' . $extension;
+            
+                    // Store the image
+                    $imagePath = Storage::put("public/Cr_Survey/{$fileName}", $data);
+                    $imagePath = str_replace('public/', '', $imagePath);
+            
+                    $fileSizeInKB = floor(strlen($data) / 1024);
+                    $url = URL::to('/') . '/storage/Cr_Survey/' . $fileName;
+            
+                    // Prepare data for database insertion
+                    $dataArrayAttachment = [
+                        'ID' => Uuid::uuid4()->toString(),
+                        'CR_SURVEY_ID' => $req->cr_prospect_id,
+                        'TYPE' => $req->type,
+                        'PATH' => $url,
+                        'SIZE' => $fileSizeInKB . ' kb',
+                        'CREATED_BY' => $req->user()->fullname
+                    ];
+            
+                    // Insert the record into the database
+                    M_CrSurveyDocument::create($dataArrayAttachment);
+                    
+                    // Store the uploaded image URL with a key number
+                    DB::commit();
+                    $uploadedUrls["url_{$key}"] = $url; // Use the loop index as the key
+                } else {
+                    return response()->json(['message' => 'No valid image file provided', 'status' => 400], 400);
+                }
+            }
+
+            return response()->json(['message' => 'Image upload successfully', "status" => 200, 'response' => $uploadedUrls], 200);
+          
+        } catch (QueryException $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($req,$e->getMessage(),409);
+            return response()->json(['message' => $e->getMessage(),"status" => 409], 409);
+        } catch (\Exception $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($req,$e->getMessage(),500);
+            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+        } 
+    }
 }
