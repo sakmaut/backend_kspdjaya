@@ -50,10 +50,11 @@ class PelunasanController extends Controller
                 from	credit a
                         left join (	select	LOAN_NUMBER, 
                                             sum(coalesce(PAST_DUE_INTRST,0))-sum(coalesce(PAID_INT,0)) as INT_ARR, 
-                                            sum(coalesce(PAST_DUE_PENALTY,0))-sum(coalesce(PAID_PENALTY,0)) as DENDA
+                                            sum(case when STATUS_REC <> 'A' then coalesce(PAST_DUE_PENALTY,0) end)-
+                                                sum(case when STATUS_REC <> 'A' then coalesce(PAID_PENALTY,0) end) as TUNGGAKAN_DENDA,
+                                            sum(coalesce(PAST_DUE_PENALTY,0))-sum(coalesce(PAID_PENALTY,0)) as DENDA_TOTAL
                                     from	arrears
                                     where	LOAN_NUMBER = '{$loan_number}'
-                                            and STATUS_REC <> 'A'
                                     group 	by LOAN_NUMBER) b
                             on b.LOAN_NUMBER = a.LOAN_NUMBER
                         left join (	select	LOAN_NUMBER, 
