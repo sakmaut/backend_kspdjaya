@@ -647,6 +647,7 @@ class CrAppilcationController extends Controller
 
         $arrayList = [
             'id_application' => $setApplicationId,
+            'survey_id' => $surveyId,
             'order_number' => $application->ORDER_NUMBER,
             "flag" => !$check_exist?0:1,
             'pelanggan' =>[
