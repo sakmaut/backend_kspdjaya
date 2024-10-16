@@ -76,6 +76,7 @@ class PelunasanController extends Controller
                         'SISA_POKOK' => intval($item->SISA_POKOK),
                         'BUNGA_BERJALAN' => intval($item->BUNGA_BERJALAN),
                         'TUNGGAKAN_BUNGA' => intval($item->TUNGGAKAN_BUNGA),
+                        'TUNGGAKAN_DENDA' => intval($item->TUNGGAKAN_DENDA),
                         'DENDA' => intval($item->DENDA),
                         'PINALTI' => intval($item->PINALTI),
                     ];
