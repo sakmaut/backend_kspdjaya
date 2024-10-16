@@ -18,7 +18,8 @@ class M_CrSurveyDocument extends Model
        'PATH',
        'SIZE',
        'CREATED_BY',
-       'CREATED_AT'
+       'CREATED_AT',
+       'TIMEMILISECOND'
     ];
     protected $guarded = [];
     public $incrementing = false;
