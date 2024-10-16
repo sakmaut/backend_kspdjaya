@@ -635,7 +635,6 @@ class CrAppilcationController extends Controller
 
         $guarente_vehicle = M_CrGuaranteVehicle::where('CR_SURVEY_ID',$surveyId)->get(); 
         $approval_detail = M_ApplicationApproval::where('cr_application_id',$setApplicationId)->first();
-        $attachment_data = M_CrSurveyDocument::where('CR_SURVEY_ID',$surveyId )->get();
         $cr_personal = M_CrPersonal::where('APPLICATION_ID',$setApplicationId)->first();
         $cr_personal_extra = M_CrPersonalExtra::where('APPLICATION_ID',$setApplicationId)->first();
         $cr_oder = M_CrOrder::where('APPLICATION_ID',$setApplicationId)->first();
@@ -788,7 +787,9 @@ class CrAppilcationController extends Controller
             "prospect_approval" => [
                 "status" => $approval_detail->application_result == null ?$approval_detail->application_result:""
             ],
-            "attachment" =>$attachment_data,
+            "dokumen_indentitas" => self::attachment($surveyId, "'ktp', 'kk', 'ktp_pasangan'"),
+            "dokumen_jaminan" => self::attachment($surveyId, "'no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri'"),
+            "dokumen_pendukung" => M_CrSurveyDocument::attachmentGetAll($surveyId, ['other'])??null,
             "approval" => 
             [
                 'status' => $approval->application_result??null,
@@ -828,6 +829,23 @@ class CrAppilcationController extends Controller
         }  
         
         return $arrayList;
+    }
+
+    public function attachment($survey_id, $data){
+        $documents = DB::select(
+            "   SELECT *
+                FROM cr_survey_document AS csd
+                WHERE (TYPE, CREATED_AT) IN (
+                    SELECT TYPE, MAX(CREATED_AT)
+                    FROM cr_survey_document
+                    WHERE TYPE IN ($data)
+                        AND CR_SURVEY_ID = '$survey_id'
+                    GROUP BY TYPE
+                )
+                ORDER BY CREATED_AT DESC"
+        );
+    
+        return $documents;        
     }
 
     private function insert_taksasi($request,$id){
