@@ -25,6 +25,7 @@ class M_CrGuaranteVehicle extends Model
        'ENGINE_NUMBER',
        'BPKB_NUMBER',
        'STNK_NUMBER',
+       'STNK_VALID_DATE',
        'VALUE',
        'COLLATERAL_FLAG',
        'VERSION',

@@ -147,6 +147,7 @@ class CrSurveyController extends Controller
                 "no_mesin" => $list->ENGINE_NUMBER,
                 "no_bpkb" => $list->BPKB_NUMBER,
                 "no_stnk" => $list->STNK_NUMBER,
+                "tgl_stnk" => $list->STNK_VALID_DATE,
                 "nilai" => (int) $list->VALUE
             ];    
         }
@@ -276,6 +277,7 @@ class CrSurveyController extends Controller
                 'ENGINE_NUMBER' => $result['no_mesin'],
                 'BPKB_NUMBER' => $result['no_bpkb'],
                 'STNK_NUMBER' => $result['no_stnk'],
+                'STNK_VALID_DATE' => $result['tgl_stnk'],
                 'VALUE' => $result['nilai'],
                 'COLLATERAL_FLAG' => "",
                 'VERSION' => 1,

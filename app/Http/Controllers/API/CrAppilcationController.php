@@ -824,6 +824,7 @@ class CrAppilcationController extends Controller
                 "no_rangka" => $list->CHASIS_NUMBER,
                 "no_mesin" => $list->ENGINE_NUMBER,
                 "no_stnk" => $list->STNK_NUMBER,
+                "tgl_stnk" => $list->STNK_VALID_DATE,
                 "nilai" =>intval($list->VALUE),
                 "no_bpkb" => $list->BPKB_NUMBER,
             ];    
@@ -863,6 +864,7 @@ class CrAppilcationController extends Controller
             'CHASIS_NUMBER' => $request->barang_taksasi['no_rangka']??null,
             'ENGINE_NUMBER' => $request->barang_taksasi['no_mesin']??null,
             'STNK_NUMBER' => $request->barang_taksasi['no_stnk']??null,
+            'STNK_VALID_DATE' => $request->barang_taksasi['tgl_stnk']??null,
             'VALUE' => $request->barang_taksasi['nilai']??null,
             'BPKB_NUMBER' => $request->barang_taksasi['no_bpkb']??null
         ];
