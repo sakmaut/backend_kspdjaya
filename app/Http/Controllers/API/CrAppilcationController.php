@@ -836,14 +836,14 @@ class CrAppilcationController extends Controller
         $documents = DB::select(
             "   SELECT *
                 FROM cr_survey_document AS csd
-                WHERE (TYPE, CREATED_AT) IN (
-                    SELECT TYPE, MAX(CREATED_AT)
+                WHERE (TYPE, TIMEMILISECOND) IN (
+                    SELECT TYPE, MAX(TIMEMILISECOND)
                     FROM cr_survey_document
                     WHERE TYPE IN ($data)
                         AND CR_SURVEY_ID = '$survey_id'
                     GROUP BY TYPE
                 )
-                ORDER BY CREATED_AT DESC"
+                ORDER BY TIMEMILISECOND DESC"
         );
     
         return $documents;        
