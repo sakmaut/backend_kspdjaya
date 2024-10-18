@@ -104,6 +104,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('change_password', [UsersController::class,'changePassword']);
 
     Route::resource('position',HrPositionController::class);
+    Route::post('checkCollateral', [Credit::class,'checkCollateral']);
 });
 
 

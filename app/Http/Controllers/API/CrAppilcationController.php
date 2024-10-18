@@ -203,13 +203,13 @@ class CrAppilcationController extends Controller
             'LAST_INSTALLMENT'=> $request->ekstra['angsuran_terakhir']??null,
             'INTEREST_MARGIN_EFF_ACTUAL'=> $request->ekstra['bunga_eff_actual']??null,
             'INTEREST_MARGIN_EFF_FLAT'=> $request->ekstra['bunga_flat']??null,
-            'VERSION' => 1,
-            'CREATE_DATE' => Carbon::now()->format('Y-m-d'),
-            'CREATE_USER' => $request->user()->id,
+            'VERSION' => 1
         ];
 
         if(!$applicationModel){
             $data_cr_application['ID'] = Uuid::uuid7()->toString();
+            $data_cr_application['CREATE_DATE'] = Carbon::now()->format('Y-m-d');
+            $data_cr_application['CREATE_USER'] = $request->user()->id;
             $data_cr_application['BRANCH'] = $request->user()->branch_id;
             $data_cr_application['ORDER_NUMBER'] = $this->createAutoCode(M_CrApplication::class,'ORDER_NUMBER','FPK');
             M_CrApplication::create($data_cr_application);

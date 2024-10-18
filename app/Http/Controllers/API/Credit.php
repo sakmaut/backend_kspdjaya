@@ -386,4 +386,25 @@ class Credit extends Controller
             }
         }
     }
+
+    public function checkCollateral(Request $request){
+        try {
+            $check = M_CrCollateral::where('BPKB_NUMBER',$request->no_bpkb)->first();
+
+            if (!$check) {
+                throw new Exception("Bpkb Number Is Not Exist", 404);
+            }
+
+            $credit = M_Credit::where('ID',$check->CR_CREDIT_ID)->first();
+
+            $arrays =[
+                'status' => $credit->STATUS 
+            ];
+
+            return response()->json( $arrays, 200);
+        } catch (\Exception $e) {
+            ActivityLogger::logActivity($request,$e->getMessage(),500);
+            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+        }
+    }
 }
