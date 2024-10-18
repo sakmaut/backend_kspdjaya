@@ -398,7 +398,8 @@ class Credit extends Controller
             $credit = M_Credit::where('ID',$check->CR_CREDIT_ID)->first();
 
             $arrays =[
-                'status' => $credit->STATUS 
+                'status' => $credit->STATUS ,
+                'loan_number' => $credit->LOAN_NUMBER
             ];
 
             return response()->json( $arrays, 200);
