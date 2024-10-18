@@ -226,7 +226,7 @@ class CrAppilcationController extends Controller
         $data_order =[
             'NO_NPWP' => $request->order['no_npwp']??null,
             'BIAYA' => $request->order['biaya_bulanan']??null,
-            'ORDER_TANGGAL' => $request->order['order_tanggal']??null,
+            'ORDER_TANGGAL' => Carbon::parse($request->order['order_tanggal'])->format('Y-m-d')??null,
             'ORDER_STATUS' => $request->order['order_status']??null,
             'ORDER_TIPE' => $request->order['order_tipe']??null,
             'UNIT_BISNIS' => $request->order['unit_bisnis']??null,
