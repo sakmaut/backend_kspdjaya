@@ -137,6 +137,7 @@ class PelunasanController extends Controller
         $bayarBunga = $request->input('BAYAR_BUNGA');
         $bayarPinalty = $request->input('BAYAR_PINALTI');
     
+        $tolerance = 0.3;
         foreach ($arrears as $res) {
             $payment_value_principal = min($bayarPokok, $res['PAST_DUE_PCPL']);
             $bayarPokok -= $payment_value_principal;
@@ -151,7 +152,7 @@ class PelunasanController extends Controller
                 'PAID_PCPL' => $payment_value_principal,
                 'PAID_INT' => $payment_value_interest,
                 'PAID_PENALTY' => $payment_penalty,
-                'STATUS_REC' => $payment_value_principal == $res['PAST_DUE_PCPL'] && $payment_value_interest == $res['PAST_DUE_INTRST'] ? 'D' : ''
+                'STATUS_REC' => (abs($payment_value_principal - $res['PAST_DUE_PCPL']) <= $tolerance) && (abs($payment_value_interest - $res['PAST_DUE_INTRST']) <= $tolerance) ? 'D' : 'A'
             ]);
     
             if ($bayarPokok <= 0 && $bayarBunga <= 0) {
@@ -297,6 +298,7 @@ class PelunasanController extends Controller
         $bayarPokok = $request->input('BAYAR_POKOK');
         $bayarBunga = $request->input('BAYAR_BUNGA');
     
+        $tolerance = 0.3;
         foreach ($creditSchedule as $res) {
             $payment_value_principal = min($bayarPokok, $res['PRINCIPAL']);
             $bayarPokok -= $payment_value_principal;
@@ -308,7 +310,7 @@ class PelunasanController extends Controller
                 'PAYMENT_VALUE_PRINCIPAL' => $payment_value_principal,
                 'PAYMENT_VALUE_INTEREST' => $payment_value_interest,
                 'PAYMENT_VALUE' => $payment_value_principal + $payment_value_interest,
-                'PAID_FLAG' => $payment_value_principal == $res['PRINCIPAL'] ? 'PAID' : ''
+                'PAID_FLAG' => abs($payment_value_principal - $res['PRINCIPAL']) <= $tolerance ? 'PAID' : ''
             ]);
     
             if ($bayarPokok <= 0 && $bayarBunga <= 0) {
