@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\R_Pelunasan;
+use App\Models\M_Arrears;
 use App\Models\M_Branch;
 use App\Models\M_Credit;
 use App\Models\M_CreditSchedule;
@@ -97,7 +98,7 @@ class PelunasanController extends Controller
             $uid = Uuid::uuid7()->toString();
             $no_inv = generateCode($request, 'payment', 'INVOICE', 'INV');
     
-            $check = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)->firstOrFail();
+            M_CreditSchedule::where('LOAN_NUMBER', $loan_number)->firstOrFail();
             $credit = M_Credit::where('LOAN_NUMBER', $loan_number)->firstOrFail();
             $detail_customer = M_Customer::where('CUST_CODE', $credit->CUST_CODE)->firstOrFail();
     
@@ -105,16 +106,17 @@ class PelunasanController extends Controller
             $this->saveReceipt($request, $detail_customer, $no_inv);
             
             $status = $this->determineStatus($request);
-            $creditSchedule = $this->getCreditSchedule($loan_number);
+            // $creditSchedule = $this->getCreditSchedule($loan_number);
     
-            $payment_record = $this->preparePaymentRecord($request, $uid, $no_inv, $status, $creditSchedule);
-            M_Payment::create($payment_record);
+            // $payment_record = $this->preparePaymentRecord($request, $uid, $no_inv, $status, $creditSchedule);
+            // M_Payment::create($payment_record);
     
-            $this->handlePaymentsAndDiscounts($uid, $request);
+            // $this->handlePaymentsAndDiscounts($uid, $request);
     
-            $this->processInstallments($creditSchedule, $request);
+            // $this->processInstallments($creditSchedule, $request);
     
-            $response = $this->prepareResponse($no_inv, $detail_customer, $request);
+            // $response = $this->prepareResponse($no_inv, $detail_customer, $request);
+            $response = "ok";
             DB::commit();
     
             return response()->json($response, 200);
@@ -128,13 +130,94 @@ class PelunasanController extends Controller
             return response()->json(['message' => $e->getMessage()], 500);
         }
     }
+
+    private function processArrears($loan_number, $tgl_angsuran, $bayar_denda,$res)
+    {
+        $check_arrears = M_Arrears::where([
+            'LOAN_NUMBER' => $loan_number,
+            'START_DATE' => $tgl_angsuran
+        ])->first();
+
+        if ($check_arrears) {
+            // Get the current value of PAID_PENALTY
+            $current_penalty = $check_arrears->PAID_PENALTY;
+
+            // Sum the current penalty with the new value
+            $new_penalty = $current_penalty + $bayar_denda;
+
+            $byr_angsuran = $res['bayar_angsuran'];
+
+            $valBeforePrincipal = $check_arrears->PAID_PCPL;
+            $valBeforeInterest = $check_arrears->PAID_INT;
+            $getPrincipal = $check_arrears->PAST_DUE_PCPL;
+            $getInterest = $check_arrears->PAST_DUE_INTRST;
+
+            // Determine the new principal payment value
+            $new_payment_value_principal = $valBeforePrincipal;
+            $new_payment_value_interest = $valBeforeInterest;
+
+            // Check if principal has already reached the maximum
+            if ($valBeforePrincipal < $getPrincipal) {
+                // Calculate how much can still be added to the principal
+                $remaining_to_principal = $getPrincipal - $valBeforePrincipal;
+
+                if ($byr_angsuran >= $remaining_to_principal) {
+                    // If the payment covers the remaining principal
+                    $new_payment_value_principal = $getPrincipal; // Set to maximum
+                    $remaining_payment = $byr_angsuran - $remaining_to_principal; // Remaining payment goes to interest
+                } else {
+                    // If the payment is less than the remaining principal
+                    $new_payment_value_principal += $byr_angsuran; // Add to principal
+                    $remaining_payment = 0; // No remaining payment to apply to interest
+                }
+            } else {
+                // If principal is already at maximum, we add all to interest
+                $remaining_payment = $byr_angsuran;
+            }
+
+            // Update interest with remaining payment only if principal is fully paid
+            if ($new_payment_value_principal == $getPrincipal) {
+                // Only update interest if it has not reached the max
+                if ($valBeforeInterest < $getInterest) {
+                    $new_payment_value_interest = min($valBeforeInterest + $remaining_payment, $getInterest);
+                }
+            }
+
+            // Prepare updates only if values have changed
+            $updates = [];
+            if ($new_payment_value_principal !== $valBeforePrincipal) {
+                $updates['PAID_PCPL'] = $new_payment_value_principal;
+            }
+
+            // Only update interest if it has changed
+            if ($new_payment_value_interest !== $valBeforeInterest) {
+                $updates['PAID_INT'] = $new_payment_value_interest;
+            }
+
+            $updates['PAID_PENALTY'] = $new_penalty;
+            
+            // Update the schedule if there are any changes
+            if (!empty($updates)) {
+                $check_arrears->update($updates);
+            }
+
+            $total1= floatval($new_payment_value_principal) + floatval($new_payment_value_interest);
+            $total2= floatval($getPrincipal) + floatval($getInterest);
+
+            if ($total1 == $total2) {
+                $check_arrears->update(['STATUS_REC' => 'D']);
+            }
+        }
+
+    }
     
     private function updateCredit($credit, $request)
     {
         $credit->update([
             'PAID_PRINCIPAL' => $request->BAYAR_POKOK,
             'PAID_INTEREST' => $request->BAYAR_BUNGA,
-            'PAID_PINALTY' => $request->BAYAR_PINALTI
+            'PAID_PINALTY' => $request->BAYAR_PINALTI,
+            'STATUS' => $credit->PCPL_ORI == $request->BAYAR_POKOK ? 'D' : 'A'
         ]);
     }
     
@@ -142,19 +225,21 @@ class PelunasanController extends Controller
     {
         $data = [
             "PAYMENT_TYPE" => 'pelunasan',
+            "STTS_PAYMENT" => $request->METODE_PEMBAYARAN == 'cash' ? "PAID" : "PENDING",
             "NO_TRANSAKSI" => $no_inv,
             "LOAN_NUMBER" => $request->LOAN_NUMBER,
             "TGL_TRANSAKSI" => Carbon::now()->format('d-m-Y'),
             'CUST_CODE' => $customer->CUST_CODE,
+            'BRANCH_CODE' => $request->user()->branch_id,
             'NAMA' => $customer->NAME,
             'ALAMAT' => $customer->ADDRESS,
             'RT' => $customer->RT,
             'RW' => $customer->RW,
             'PROVINSI' => $customer->PROVINCE,
             'KOTA' => $customer->CITY,
-            'KELURAHAN' => $customer->KELURAHAN,
-            'KECAMATAN' => $customer->KECAMATAN,
-            "METODE_PEMBAYARAN" => $request->METODE_PEMBAYARAN,
+            'KELUMATAN' => $customer->KECAMATAN,
+            "METODRAHAN' => $customer->KELURAHAN,
+            'KECAE_PEMBAYARAN" => $request->METODE_PEMBAYARAN,
             "TOTAL_BAYAR" => $request->TOTAL_BAYAR,
             "PEMBULATAN" => $request->PEMBULATAN,
             "KEMBALIAN" => $request->KEMBALIAN,
