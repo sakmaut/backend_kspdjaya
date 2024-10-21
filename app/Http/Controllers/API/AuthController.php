@@ -63,7 +63,7 @@ class AuthController extends Controller
 
     private function generateToken(User $user)
     {
-        $user->tokens()->delete();
+        // $user->tokens()->delete();
         return $user->createToken($user->id)->plainTextToken;
     }
 
