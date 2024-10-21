@@ -35,7 +35,6 @@ class PelunasanController extends Controller
         }
     }
 
-
     public function checkCredit(Request $request)
     {
         try {
@@ -106,17 +105,18 @@ class PelunasanController extends Controller
             $this->saveReceipt($request, $detail_customer, $no_inv);
             
             $status = $this->determineStatus($request);
-            // $creditSchedule = $this->getCreditSchedule($loan_number);
+            $creditSchedule = $this->getCreditSchedule($loan_number);
+            $arrears = $this->getArrears($loan_number);
     
-            // $payment_record = $this->preparePaymentRecord($request, $uid, $no_inv, $status, $creditSchedule);
-            // M_Payment::create($payment_record);
+            $payment_record = $this->preparePaymentRecord($request, $uid, $no_inv, $status, $creditSchedule);
+            M_Payment::create($payment_record);
     
-            // $this->handlePaymentsAndDiscounts($uid, $request);
+            $this->handlePaymentsAndDiscounts($uid, $request);
     
-            // $this->processInstallments($creditSchedule, $request);
+            $this->processInstallments($creditSchedule, $request);
+            $this->processArrears($arrears, $request);
     
-            // $response = $this->prepareResponse($no_inv, $detail_customer, $request);
-            $response = "ok";
+            $response = $this->prepareResponse($no_inv, $detail_customer, $request);
             DB::commit();
     
             return response()->json($response, 200);
@@ -131,84 +131,33 @@ class PelunasanController extends Controller
         }
     }
 
-    private function processArrears($loan_number, $tgl_angsuran, $bayar_denda,$res)
+    private function processArrears($arrears, $request)
     {
-        $check_arrears = M_Arrears::where([
-            'LOAN_NUMBER' => $loan_number,
-            'START_DATE' => $tgl_angsuran
-        ])->first();
+        $bayarPokok = $request->input('BAYAR_POKOK');
+        $bayarBunga = $request->input('BAYAR_BUNGA');
+        $bayarPinalty = $request->input('BAYAR_PINALTI');
+    
+        foreach ($arrears as $res) {
+            $payment_value_principal = min($bayarPokok, $res['PAST_DUE_PCPL']);
+            $bayarPokok -= $payment_value_principal;
+    
+            $payment_value_interest = min($bayarBunga, $res['PAST_DUE_INTRST']);
+            $bayarBunga -= $payment_value_interest;
 
-        if ($check_arrears) {
-            // Get the current value of PAID_PENALTY
-            $current_penalty = $check_arrears->PAID_PENALTY;
-
-            // Sum the current penalty with the new value
-            $new_penalty = $current_penalty + $bayar_denda;
-
-            $byr_angsuran = $res['bayar_angsuran'];
-
-            $valBeforePrincipal = $check_arrears->PAID_PCPL;
-            $valBeforeInterest = $check_arrears->PAID_INT;
-            $getPrincipal = $check_arrears->PAST_DUE_PCPL;
-            $getInterest = $check_arrears->PAST_DUE_INTRST;
-
-            // Determine the new principal payment value
-            $new_payment_value_principal = $valBeforePrincipal;
-            $new_payment_value_interest = $valBeforeInterest;
-
-            // Check if principal has already reached the maximum
-            if ($valBeforePrincipal < $getPrincipal) {
-                // Calculate how much can still be added to the principal
-                $remaining_to_principal = $getPrincipal - $valBeforePrincipal;
-
-                if ($byr_angsuran >= $remaining_to_principal) {
-                    // If the payment covers the remaining principal
-                    $new_payment_value_principal = $getPrincipal; // Set to maximum
-                    $remaining_payment = $byr_angsuran - $remaining_to_principal; // Remaining payment goes to interest
-                } else {
-                    // If the payment is less than the remaining principal
-                    $new_payment_value_principal += $byr_angsuran; // Add to principal
-                    $remaining_payment = 0; // No remaining payment to apply to interest
-                }
-            } else {
-                // If principal is already at maximum, we add all to interest
-                $remaining_payment = $byr_angsuran;
-            }
-
-            // Update interest with remaining payment only if principal is fully paid
-            if ($new_payment_value_principal == $getPrincipal) {
-                // Only update interest if it has not reached the max
-                if ($valBeforeInterest < $getInterest) {
-                    $new_payment_value_interest = min($valBeforeInterest + $remaining_payment, $getInterest);
-                }
-            }
-
-            // Prepare updates only if values have changed
-            $updates = [];
-            if ($new_payment_value_principal !== $valBeforePrincipal) {
-                $updates['PAID_PCPL'] = $new_payment_value_principal;
-            }
-
-            // Only update interest if it has changed
-            if ($new_payment_value_interest !== $valBeforeInterest) {
-                $updates['PAID_INT'] = $new_payment_value_interest;
-            }
-
-            $updates['PAID_PENALTY'] = $new_penalty;
-            
-            // Update the schedule if there are any changes
-            if (!empty($updates)) {
-                $check_arrears->update($updates);
-            }
-
-            $total1= floatval($new_payment_value_principal) + floatval($new_payment_value_interest);
-            $total2= floatval($getPrincipal) + floatval($getInterest);
-
-            if ($total1 == $total2) {
-                $check_arrears->update(['STATUS_REC' => 'D']);
+            $payment_penalty = min($bayarPinalty, $res['PAST_DUE_PENALTY']);
+            $bayarPinalty -= $payment_penalty;
+    
+            $res->update([
+                'PAID_PCPL' => $payment_value_principal,
+                'PAID_INT' => $payment_value_interest,
+                'PAID_PENALTY' => $payment_penalty,
+                'STATUS_REC' => $payment_value_principal == $res['PAST_DUE_PCPL'] && $payment_value_interest == $res['PAST_DUE_INTRST'] ? 'D' : ''
+            ]);
+    
+            if ($bayarPokok <= 0 && $bayarBunga <= 0) {
+                break;
             }
         }
-
     }
     
     private function updateCredit($credit, $request)
@@ -255,8 +204,16 @@ class PelunasanController extends Controller
     private function determineStatus($request)
     {
         $discounts = $request->only(['DISKON_POKOK', 'DISKON_PINALTI', 'DISKON_BUNGA', 'DISKON_DENDA']);
-        $allDiscountsPaid = collect($discounts)->every(fn ($value) => $value != 0);
-        return strtolower($request->METODE_PEMBAYARAN) === 'cash' ? 'PENDING' : ($allDiscountsPaid ? 'PAID' : 'PENDING');
+
+        if (array_sum($discounts) > 0){
+            $val = "PENDING";
+        }elseif (strtolower($request->METODE_PEMBAYARAN) === 'transfer') {
+            $val = "PENDING";
+        }else{
+            $val = "PAID";
+        }
+
+        return $val ;
     }
     
     private function getCreditSchedule($loan_number)
@@ -265,6 +222,11 @@ class PelunasanController extends Controller
             ->where(function($query) {
                 $query->where('PAID_FLAG', '!=', 'PAID')->orWhereNull('PAID_FLAG');
             })->get();
+    }
+
+    private function getArrears($loan_number)
+    {
+        return M_Arrears::where(['LOAN_NUMBER' => $loan_number,'STATUS_REC' => 'A'])->get();
     }
     
     private function preparePaymentRecord($request, $uid, $no_inv, $status, $creditSchedule)
