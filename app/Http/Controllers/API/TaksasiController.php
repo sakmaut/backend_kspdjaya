@@ -65,12 +65,13 @@ class TaksasiController extends Controller
                 'merk.required' => 'Merk Tidak Boleh Kosong',
             ]);
 
-            $data = M_Taksasi::distinct()
-                    ->select('id','code', 'model')
-                    ->where('brand', '=', $request->merk)
-                    ->get()
-                    ->toArray();
-            
+            $data = M_Taksasi::select('id', 'code', DB::raw("CONCAT(model, ' ', descr) AS model"))
+                        ->where('brand', $request->merk)
+                        ->distinct()
+                        ->get()
+                        ->toArray();
+
+
             // $year = M_TaksasiPrice::distinct()
             //         ->select('year')
             //         ->orderBy('year','asc')
