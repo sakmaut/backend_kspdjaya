@@ -65,7 +65,7 @@ class TaksasiController extends Controller
                 'merk.required' => 'Merk Tidak Boleh Kosong',
             ]);
 
-            $data = M_Taksasi::select('id', 'code', DB::raw("CONCAT(model, ' ', descr) AS model"))
+            $data = M_Taksasi::select('id', 'code', DB::raw("CONCAT(model, ' - ', descr) AS model"))
                         ->where('brand', $request->merk)
                         ->distinct()
                         ->get()
