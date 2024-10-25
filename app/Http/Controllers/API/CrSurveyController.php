@@ -4,6 +4,9 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\R_CrProspect;
+use App\Models\M_CrGuaranteBillyet;
+use App\Models\M_CrGuaranteGold;
+use App\Models\M_CrGuaranteSertification;
 use App\Models\M_CrGuaranteVehicle;
 use App\Models\M_CrSurvey;
 use App\Models\M_CrSurveyDocument;
@@ -86,6 +89,9 @@ class CrSurveyController extends Controller
     {
         $survey_id = $data->id;
         $guarente_vehicle = M_CrGuaranteVehicle::where('CR_SURVEY_ID',$survey_id)->get(); 
+        $guarente_sertificat = M_CrGuaranteSertification::where('CR_SURVEY_ID',$survey_id)->get(); 
+        $guarente_billyet = M_CrGuaranteBillyet::where('CR_SURVEY_ID',$survey_id)->get(); 
+        $guarente_gold = M_CrGuaranteGold::where('CR_SURVEY_ID',$survey_id)->get(); 
         $approval_detail = M_SurveyApproval::where('CR_SURVEY_ID',$survey_id)->first();
         
         $arrayList = [
@@ -123,7 +129,12 @@ class CrSurveyController extends Controller
                 'tgl_survey' => is_null($data->visit_date) ? null: date('Y-m-d',strtotime($data->visit_date)),
                 'catatan_survey' => $data->survey_note,
             ], 
-            'jaminan_kendaraan' => [],
+            'jaminan' => [
+                'kendaraan' => [],
+                'sertifikat' => [],
+                'billyet' => [],
+                'emas' => [],
+            ],
             'prospect_approval' => [
                 'flag_approval' => $approval_detail->ONCHARGE_APPRVL,
                 'keterangan' => $approval_detail->ONCHARGE_DESCR,
@@ -135,20 +146,76 @@ class CrSurveyController extends Controller
         ];
 
         foreach ($guarente_vehicle as $list) {
-            $arrayList['jaminan_kendaraan'][] = [
-                'id' => $list->ID,
-                "tipe" => $list->TYPE,
-                "merk" => $list->BRAND,
-                "tahun" => $list->PRODUCTION_YEAR,
-                "warna" => $list->COLOR,
-                "atas_nama" => $list->ON_BEHALF,
-                "no_polisi" => $list->POLICE_NUMBER,
-                "no_rangka" => $list->CHASIS_NUMBER,
-                "no_mesin" => $list->ENGINE_NUMBER,
-                "no_bpkb" => $list->BPKB_NUMBER,
-                "no_stnk" => $list->STNK_NUMBER,
-                "tgl_stnk" => $list->STNK_VALID_DATE,
-                "nilai" => (int) $list->VALUE
+            $arrayList['jaminan']['kendaraan'][] = [
+                "type" => "kendaraan",
+                "atr" => [ 
+                    'id' => $list->ID,
+                    'status_jaminan' => null,
+                    "tipe" => $list->TYPE,
+                    "merk" => $list->BRAND,
+                    "tahun" => $list->PRODUCTION_YEAR,
+                    "warna" => $list->COLOR,
+                    "atas_nama" => $list->ON_BEHALF,
+                    "no_polisi" => $list->POLICE_NUMBER,
+                    "no_rangka" => $list->CHASIS_NUMBER,
+                    "no_mesin" => $list->ENGINE_NUMBER,
+                    "no_bpkb" => $list->BPKB_NUMBER,
+                    "no_stnk" => $list->STNK_NUMBER,
+                    "tgl_stnk" => $list->STNK_VALID_DATE,
+                    "nilai" => (int) $list->VALUE
+                ]
+            ];    
+        }
+
+        foreach ($guarente_sertificat as $list) {
+            $arrayList['jaminan']['sertifikat'][] = [
+                "type" => "sertifikat",
+                "atr" => [ 
+                    'status_jaminan' => null,
+                    'id' => $list->ID,
+                    "no_sertifikat" => $list->NO_SERTIFIKAT,
+                    "status_kepemilikan" => $list->STATUS_KEPEMILIKAN,
+                    "imb" => $list->IMB,
+                    "luas_tanah" => $list->LUAS_TANAH,
+                    "luas_bangunan" => $list->LUAS_BANGUNAN,
+                    "lokasi" => $list->LOKASI,
+                    "provinsi" => $list->PROVINSI,
+                    "kab_kota" => $list->KAB_KOTA,
+                    "kec" => $list->KECAMATAN,
+                    "desa" => $list->DESA,
+                    "atas_nama" => $list->ATAS_NAMA,
+                    "nilai" => (int) $list->NILAI
+                ]
+            ];    
+        }
+
+        foreach ($guarente_billyet as $list) {
+            $arrayList['jaminan']['billyet'][] = [
+                "type" => "billyet",
+                "atr" => [ 
+                    'id' => $list->ID,
+                    "status_jaminan" => $list->STATUS_JAMINAN,
+                    "no_bilyet" => $list->NO_BILLYET,
+                    "tgl_valuta" => $list->TGL_VALUTA,
+                    "jangka_waktu" => $list->JANGKA_WAKTU,
+                    "atas_nama" => $list->ATAS_NAMA,
+                    "nominal" => (int) $list->NILAI,
+                ]
+            ];    
+        }
+
+        foreach ($guarente_gold as $list) {
+            $arrayList['jaminan']['emas'][] = [
+                "type" => "emas",
+                "atr" => [ 
+                    'id' => $list->ID,
+                    "status_jaminan" => $list->STATUS_JAMINAN,
+                    "kode_emas" => $list->KODE_EMAS,
+                    "berat" => $list->BERAT,
+                    "unit" => $list->UNIT,
+                    "atas_nama" => $list->ATAS_NAMA,
+                    "nominal" => (int) $list->NILAI,
+                ]
             ];    
         }
         
@@ -190,13 +257,13 @@ class CrSurveyController extends Controller
             self::createCrSurvey($request);
             self::createCrProspekApproval($request);
 
-            if (collect($request->jaminan_kendaraan)->isNotEmpty()) {
+            if (collect($request->jaminan)->isNotEmpty()) {
                 self::insert_cr_vehicle($request);
             }
     
             DB::commit();
             ActivityLogger::logActivity($request,"Success",200);
-            return response()->json(['message' => 'created successfully',"status" => 200], 200);
+            return response()->json(['message' => 'created successfully'], 200);
         } catch (QueryException $e) {
             DB::rollback();
             ActivityLogger::logActivity($request,$e->getMessage(),409);
@@ -262,30 +329,96 @@ class CrSurveyController extends Controller
 
     private function insert_cr_vehicle($request){
 
-        foreach ($request->jaminan_kendaraan as $result) {
-            $data_array_col = [
-                'ID' => $this->uuid,
-                'CR_SURVEY_ID' => $request->id,
-                'HEADER_ID' => "",
-                'TYPE' => $result['tipe'],
-                'BRAND' => $result['merk'],
-                'PRODUCTION_YEAR' => $result['tahun'],
-                'COLOR' => $result['warna'],
-                'ON_BEHALF' => $result['atas_nama'],
-                'POLICE_NUMBER' => $result['no_polisi'],
-                'CHASIS_NUMBER' => $result['no_rangka'],
-                'ENGINE_NUMBER' => $result['no_mesin'],
-                'BPKB_NUMBER' => $result['no_bpkb'],
-                'STNK_NUMBER' => $result['no_stnk'],
-                'STNK_VALID_DATE' => $result['tgl_stnk'],
-                'VALUE' => $result['nilai'],
-                'COLLATERAL_FLAG' => "",
-                'VERSION' => 1,
-                'CREATE_DATE' => $this->timeNow,
-                'CREATE_BY' => $request->user()->id,
-            ];
+        foreach ($request->jaminan as $result) {
 
-            M_CrGuaranteVehicle::create($data_array_col);
+            switch ($result['type']) {
+                case 'kendaraan':
+                    $data_array_col = [
+                        'ID' => $this->uuid,
+                        'CR_SURVEY_ID' => $request->id,
+                        'HEADER_ID' => "",
+                        'TYPE' => $result['atr']['tipe'] ?? null,
+                        'BRAND' => $result['atr']['merk'] ?? null,
+                        'PRODUCTION_YEAR' => $result['atr']['tahun'] ?? null,
+                        'COLOR' => $result['atr']['warna'] ?? null,
+                        'ON_BEHALF' => $result['atr']['atas_nama'] ?? null,
+                        'POLICE_NUMBER' => $result['atr']['no_polisi'] ?? null,
+                        'CHASIS_NUMBER' => $result['atr']['no_rangka'] ?? null,
+                        'ENGINE_NUMBER' => $result['atr']['no_mesin'] ?? null,
+                        'BPKB_NUMBER' => $result['atr']['no_bpkb'] ?? null,
+                        'STNK_NUMBER' => $result['atr']['no_stnk'] ?? null,
+                        'STNK_VALID_DATE' => $result['atr']['tgl_stnk'] ?? null,
+                        'VALUE' => $result['atr']['nilai'] ?? null,
+                        'COLLATERAL_FLAG' => "",
+                        'VERSION' => 1,
+                        'CREATE_DATE' => $this->timeNow,
+                        'CREATE_BY' => $request->user()->id,
+                    ];
+    
+                    M_CrGuaranteVehicle::create($data_array_col);
+                    break;
+                case 'sertifikat':
+                    $data_array_col = [
+                        'ID' => $this->uuid,
+                        'CR_SURVEY_ID' => $request->id,
+                        'STATUS_JAMINAN' => $result['atr']['status_jaminan'] ?? null,
+                        'NO_SERTIFIKAT' => $result['atr']['no_sertifikat']?? null,
+                        'STATUS_KEPEMILIKAN' => $result['atr']['status_kepemilikan']?? null,
+                        'IMB' => $result['atr']['imb'] ?? null,
+                        'LUAS_TANAH' => $result['atr']['luas_tanah'] ?? null,
+                        'LUAS_BANGUNAN' => $result['atr']['luas_bangunan'] ?? null,
+                        'LOKASI' => $result['atr']['lokasi'] ?? null,
+                        'PROVINSI' => $result['atr']['provinsi'] ?? null,
+                        'KAB_KOTA' => $result['atr']['kab_kota'] ?? null,
+                        'KECAMATAN' => $result['atr']['kec'] ?? null,
+                        'DESA' => $result['atr']['desa'] ?? null,
+                        'ATAS_NAMA' => $result['atr']['atas_nama'] ?? null,
+                        'NILAI' => $result['atr']['nilai'] ?? null,
+                        'COLLATERAL_FLAG' => "",
+                        'VERSION' => 1,
+                        'CREATE_DATE' => $this->timeNow,
+                        'CREATE_BY' => $request->user()->id,
+                    ];
+    
+                    M_CrGuaranteSertification::create($data_array_col);
+                    break;
+                case 'billyet':
+                    $data_array_col = [
+                        'ID' => $this->uuid,
+                        'CR_SURVEY_ID' => $request->id,
+                        'STATUS_JAMINAN' => $result['atr']['status_jaminan'] ?? null,
+                        'NO_BILLYET' => $result['atr']['no_bilyet'] ?? null,
+                        'TGL_VALUTA' => $result['atr']['tgl_valuta'] ?? null,
+                        'JANGKA_WAKTU' => $result['atr']['jangka_waktu'] ?? null,
+                        'ATAS_NAMA' => $result['atr']['atas_nama'] ?? null,
+                        'NOMINAL' => $result['atr']['nominal'] ?? null,
+                        'COLLATERAL_FLAG' => "",
+                        'VERSION' => 1,
+                        'CREATE_DATE' => $this->timeNow,
+                        'CREATE_BY' => $request->user()->id,
+                    ];
+    
+                    M_CrGuaranteBillyet::create($data_array_col);
+                    break;
+                case 'emas':
+                    $data_array_col = [
+                        'ID' => $this->uuid,
+                        'CR_SURVEY_ID' => $request->id,
+                        'STATUS_JAMINAN' => $result['atr']['status_jaminan'] ?? null,
+                        'KODE_EMAS' => $result['atr']['kode_emas'] ?? null,
+                        'BERAT' => $result['atr']['berat'] ?? null,
+                        'UNIT' => $result['atr']['unit'] ?? null,
+                        'ATAS_NAMA' => $result['atr']['atas_nama'] ?? null,
+                        'NOMINAL' => $result['atr']['nominal'] ?? null,
+                        'COLLATERAL_FLAG' => "",
+                        'VERSION' => 1,
+                        'CREATE_DATE' => $this->timeNow,
+                        'CREATE_BY' => $request->user()->id,
+                    ];
+    
+                    M_CrGuaranteGold::create($data_array_col);
+                    break;
+            }
         }
     }
 
@@ -335,8 +468,8 @@ class CrSurveyController extends Controller
 
             compareData(M_CrSurvey::class,$id,$data_prospect,$request);
 
-            if (collect($request->jaminan_kendaraan)->isNotEmpty()) {
-                foreach ($request->jaminan_kendaraan as $result) {
+            if (collect($request->jaminan)->isNotEmpty()) {
+                foreach ($request->jaminan as $result) {
 
                     $jaminan_check = M_CrGuaranteVehicle::where(['ID' => $result['id'],'CR_SURVEY_ID' =>$id])->whereNull('DELETED_AT')->first();
 
