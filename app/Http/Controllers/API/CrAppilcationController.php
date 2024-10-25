@@ -9,6 +9,9 @@ use App\Models\M_CrApplicationBank;
 use App\Models\M_CrApplicationGuarantor;
 use App\Models\M_CrApplicationSpouse;
 use App\Models\M_Credit;
+use App\Models\M_CrGuaranteBillyet;
+use App\Models\M_CrGuaranteGold;
+use App\Models\M_CrGuaranteSertification;
 use App\Models\M_CrGuaranteVehicle;
 use App\Models\M_CrOrder;
 use App\Models\M_CrPersonal;
@@ -634,6 +637,9 @@ class CrAppilcationController extends Controller
         $setApplicationId = $application->ID;
 
         $guarente_vehicle = M_CrGuaranteVehicle::where('CR_SURVEY_ID',$surveyId)->get(); 
+        $guarente_sertificat = M_CrGuaranteSertification::where('CR_SURVEY_ID',$surveyId)->get(); 
+        $guarente_billyet = M_CrGuaranteBillyet::where('CR_SURVEY_ID',$surveyId)->get(); 
+        $guarente_gold = M_CrGuaranteGold::where('CR_SURVEY_ID',$surveyId)->get(); 
         $approval_detail = M_ApplicationApproval::where('cr_application_id',$setApplicationId)->first();
         $cr_personal = M_CrPersonal::where('APPLICATION_ID',$setApplicationId)->first();
         $cr_personal_extra = M_CrPersonalExtra::where('APPLICATION_ID',$setApplicationId)->first();
@@ -784,7 +790,12 @@ class CrAppilcationController extends Controller
                 "eff_rate"=> $applicationDetail->EFF_RATE?? null,
                 "angsuran"=> intval($applicationDetail->INSTALLMENT)?? null
             ],
-            "jaminan_kendaraan" => [],        
+            'jaminan' => [
+                'kendaraan' => [],
+                'sertifikat' => [],
+                'billyet' => [],
+                'emas' => [],
+            ],  
             "prospect_approval" => [
                 "status" => $approval_detail->application_result == null ?$approval_detail->application_result:""
             ],
@@ -813,22 +824,78 @@ class CrAppilcationController extends Controller
                                 ->all();
 
         foreach ($guarente_vehicle as $list) {
-            $arrayList['jaminan_kendaraan'] = [
-                'id' => $list->ID,
-                "tipe" => $list->TYPE,
-                "merk" => $list->BRAND,
-                "tahun" => $list->PRODUCTION_YEAR,
-                "warna" => $list->COLOR,
-                "atas_nama" => $list->ON_BEHALF,
-                "no_polisi" => $list->POLICE_NUMBER,
-                "no_rangka" => $list->CHASIS_NUMBER,
-                "no_mesin" => $list->ENGINE_NUMBER,
-                "no_stnk" => $list->STNK_NUMBER,
-                "tgl_stnk" => $list->STNK_VALID_DATE,
-                "nilai" =>intval($list->VALUE),
-                "no_bpkb" => $list->BPKB_NUMBER,
+            $arrayList['jaminan']['kendaraan'][] = [
+                "type" => "kendaraan",
+                "atr" => [ 
+                    'id' => $list->ID,
+                    'status_jaminan' => null,
+                    "tipe" => $list->TYPE,
+                    "merk" => $list->BRAND,
+                    "tahun" => $list->PRODUCTION_YEAR,
+                    "warna" => $list->COLOR,
+                    "atas_nama" => $list->ON_BEHALF,
+                    "no_polisi" => $list->POLICE_NUMBER,
+                    "no_rangka" => $list->CHASIS_NUMBER,
+                    "no_mesin" => $list->ENGINE_NUMBER,
+                    "no_bpkb" => $list->BPKB_NUMBER,
+                    "no_stnk" => $list->STNK_NUMBER,
+                    "tgl_stnk" => $list->STNK_VALID_DATE,
+                    "nilai" => (int) $list->VALUE
+                ]
             ];    
-        }  
+        }
+
+        foreach ($guarente_sertificat as $list) {
+            $arrayList['jaminan']['sertifikat'][] = [
+                "type" => "sertifikat",
+                "atr" => [ 
+                    'status_jaminan' => null,
+                    'id' => $list->ID,
+                    "no_sertifikat" => $list->NO_SERTIFIKAT,
+                    "status_kepemilikan" => $list->STATUS_KEPEMILIKAN,
+                    "imb" => $list->IMB,
+                    "luas_tanah" => $list->LUAS_TANAH,
+                    "luas_bangunan" => $list->LUAS_BANGUNAN,
+                    "lokasi" => $list->LOKASI,
+                    "provinsi" => $list->PROVINSI,
+                    "kab_kota" => $list->KAB_KOTA,
+                    "kec" => $list->KECAMATAN,
+                    "desa" => $list->DESA,
+                    "atas_nama" => $list->ATAS_NAMA,
+                    "nilai" => (int) $list->NILAI
+                ]
+            ];    
+        }
+
+        foreach ($guarente_billyet as $list) {
+            $arrayList['jaminan']['billyet'][] = [
+                "type" => "billyet",
+                "atr" => [ 
+                    'id' => $list->ID,
+                    "status_jaminan" => $list->STATUS_JAMINAN,
+                    "no_bilyet" => $list->NO_BILLYET,
+                    "tgl_valuta" => $list->TGL_VALUTA,
+                    "jangka_waktu" => $list->JANGKA_WAKTU,
+                    "atas_nama" => $list->ATAS_NAMA,
+                    "nominal" => (int) $list->NILAI,
+                ]
+            ];    
+        }
+
+        foreach ($guarente_gold as $list) {
+            $arrayList['jaminan']['emas'][] = [
+                "type" => "emas",
+                "atr" => [ 
+                    'id' => $list->ID,
+                    "status_jaminan" => $list->STATUS_JAMINAN,
+                    "kode_emas" => $list->KODE_EMAS,
+                    "berat" => $list->BERAT,
+                    "unit" => $list->UNIT,
+                    "atas_nama" => $list->ATAS_NAMA,
+                    "nominal" => (int) $list->NILAI,
+                ]
+            ];    
+        }
         
         return $arrayList;
     }
@@ -871,7 +938,6 @@ class CrAppilcationController extends Controller
 
         $check->update($data_order);
     }
-
 
     public function approvalKapos(Request $request)
     {
@@ -950,44 +1016,28 @@ class CrAppilcationController extends Controller
                 'cr_application_ho' => $request->user()->id,
                 'cr_application_ho_time' => Carbon::now()->format('Y-m-d'),
                 'cr_application_ho_desc' => $request->keterangan,
+                'cr_application_ho_note' => $request->flag,
             ];
-        
-            if ($request->flag === 'yes') {
-                $data_approval['cr_application_ho_note'] = $request->flag;
-                $data_approval['application_result'] = '3:approved ho';
-        
-                $change_approval = [
-                    'APPROVAL_RESULT' => '6:approved ho'
-                ];
-        
-                $approvalLogMessage = '6:approved ho';
-            }elseif ($request->flag === 'no') {
-                $data_approval['cr_application_ho_note'] = $request->flag;
-                $data_approval['application_result'] = '4:reject ho';
-        
-                $change_approval = [
-                    'APPROVAL_RESULT' => '7:reject ho'
-                ];
-        
-                $approvalLogMessage = '7:reject ho';
-            } else {
-                $data_approval['cr_application_ho_note'] = $request->flag;
-                $data_approval['application_result'] = '5:closed ho';
-        
-                $change_approval = [
-                    'APPROVAL_RESULT' => '8:closed ho'
-                ];
-        
-                $approvalLogMessage = '8:closed ho';
-            }
-        
+            
+            $approvalStatusMap = [
+                'yes' => ['result' => '3:approved ho', 'approval_result' => '6:approved ho'],
+                'no' => ['result' => '4:reject ho', 'approval_result' => '7:reject ho'],
+            ];
+
+            $status = $approvalStatusMap[$request->flag] ?? ['result' => '5:closed ho', 'approval_result' => '8:closed ho'];
+
+            $data_approval['application_result'] = $status['result'];
+            $change_approval = ['APPROVAL_RESULT' => $status['approval_result']];
+
+            // Update approval status and log the change
             $approval_change->update($change_approval);
             $approvalLog = new ApprovalLog();
-            $approvalLog->surveyApprovalLog($request->user()->id, $approval_change->ID, $approvalLogMessage);
-        
+            $approvalLog->surveyApprovalLog($request->user()->id, $approval_change->ID, $status['approval_result']);
+
+            // Update application approval
             $check_application_id->update($data_approval);
         
-            return response()->json(['message' => 'Approval Kapos Successfully', "status" => 200], 200);
+            return response()->json(['message' => 'Approval Ho Successfully'], 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
