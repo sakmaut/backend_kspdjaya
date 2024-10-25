@@ -334,7 +334,7 @@ class CrSurveyController extends Controller
             switch ($result['type']) {
                 case 'kendaraan':
                     $data_array_col = [
-                        'ID' => $this->uuid,
+                        'ID' => Uuid::uuid7()->toString(),
                         'CR_SURVEY_ID' => $request->id,
                         'HEADER_ID' => "",
                         'TYPE' => $result['atr']['tipe'] ?? null,
@@ -359,7 +359,7 @@ class CrSurveyController extends Controller
                     break;
                 case 'sertifikat':
                     $data_array_col = [
-                        'ID' => $this->uuid,
+                        'ID' => Uuid::uuid7()->toString(),
                         'CR_SURVEY_ID' => $request->id,
                         'STATUS_JAMINAN' => $result['atr']['status_jaminan'] ?? null,
                         'NO_SERTIFIKAT' => $result['atr']['no_sertifikat']?? null,
@@ -384,7 +384,7 @@ class CrSurveyController extends Controller
                     break;
                 case 'billyet':
                     $data_array_col = [
-                        'ID' => $this->uuid,
+                        'ID' => Uuid::uuid7()->toString(),
                         'CR_SURVEY_ID' => $request->id,
                         'STATUS_JAMINAN' => $result['atr']['status_jaminan'] ?? null,
                         'NO_BILLYET' => $result['atr']['no_bilyet'] ?? null,
@@ -402,7 +402,7 @@ class CrSurveyController extends Controller
                     break;
                 case 'emas':
                     $data_array_col = [
-                        'ID' => $this->uuid,
+                        'ID' => Uuid::uuid7()->toString(),
                         'CR_SURVEY_ID' => $request->id,
                         'STATUS_JAMINAN' => $result['atr']['status_jaminan'] ?? null,
                         'KODE_EMAS' => $result['atr']['kode_emas'] ?? null,
@@ -470,41 +470,118 @@ class CrSurveyController extends Controller
 
             if (collect($request->jaminan)->isNotEmpty()) {
                 foreach ($request->jaminan as $result) {
+ 
+                    switch ($result['type']) {
+                        case 'kendaraan':
+                            
+                            $kendaraan = M_CrGuaranteVehicle::where(['ID' => $result['atr']['id'],'CR_SURVEY_ID' =>$id])->whereNull('DELETED_AT')->first();
 
-                    $jaminan_check = M_CrGuaranteVehicle::where(['ID' => $result['id'],'CR_SURVEY_ID' =>$id])->whereNull('DELETED_AT')->first();
+                            if (!$kendaraan) {
+                                throw new Exception("Id Jaminan Kendaraan Not Found",404);
+                            }
 
-                    if (!$jaminan_check) {
-                        throw new Exception("Id Jaminan Not Found",404);
+                            $data_array_col = [
+                                'HEADER_ID' => "",
+                                'TYPE' => $result['atr']['tipe'] ?? null,
+                                'BRAND' => $result['atr']['merk'] ?? null,
+                                'PRODUCTION_YEAR' => $result['atr']['tahun'] ?? null,
+                                'COLOR' => $result['atr']['warna'] ?? null,
+                                'ON_BEHALF' => $result['atr']['atas_nama'] ?? null,
+                                'POLICE_NUMBER' => $result['atr']['no_polisi'] ?? null,
+                                'CHASIS_NUMBER' => $result['atr']['no_rangka'] ?? null,
+                                'ENGINE_NUMBER' => $result['atr']['no_mesin'] ?? null,
+                                'BPKB_NUMBER' => $result['atr']['no_bpkb'] ?? null,
+                                'STNK_NUMBER' => $result['atr']['no_stnk'] ?? null,
+                                'STNK_VALID_DATE' => $result['atr']['tgl_stnk'] ?? null,
+                                'VALUE' => $result['atr']['nilai'] ?? null,
+                                'MOD_DATE' => $this->timeNow,
+                                'MOD_BY' => $request->user()->id,
+                            ];
+            
+                            $kendaraan->update($data_array_col);
+
+                            break;
+                        case 'sertifikat':
+
+                            $sertifikasi = M_CrGuaranteSertification::where(['ID' => $result['atr']['id'],'CR_SURVEY_ID' =>$id])->whereNull('DELETED_AT')->first();
+
+                            if (!$sertifikasi) {
+                                throw new Exception("Id Jaminan Sertifikat Not Found",404);
+                            }
+
+                            $data_array_col = [
+                                'STATUS_JAMINAN' => $result['atr']['status_jaminan'] ?? null,
+                                'NO_SERTIFIKAT' => $result['atr']['no_sertifikat']?? null,
+                                'STATUS_KEPEMILIKAN' => $result['atr']['status_kepemilikan']?? null,
+                                'IMB' => $result['atr']['imb'] ?? null,
+                                'LUAS_TANAH' => $result['atr']['luas_tanah'] ?? null,
+                                'LUAS_BANGUNAN' => $result['atr']['luas_bangunan'] ?? null,
+                                'LOKASI' => $result['atr']['lokasi'] ?? null,
+                                'PROVINSI' => $result['atr']['provinsi'] ?? null,
+                                'KAB_KOTA' => $result['atr']['kab_kota'] ?? null,
+                                'KECAMATAN' => $result['atr']['kec'] ?? null,
+                                'DESA' => $result['atr']['desa'] ?? null,
+                                'ATAS_NAMA' => $result['atr']['atas_nama'] ?? null,
+                                'NILAI' => $result['atr']['nilai'] ?? null,
+                                'MOD_DATE' => $this->timeNow,
+                                'MOD_BY' => $request->user()->id,
+                            ];
+            
+                            $sertifikasi->update($data_array_col);
+
+                            break;
+                        case 'billyet':
+
+                            $billyet = M_CrGuaranteBillyet::where(['ID' => $result['atr']['id'],'CR_SURVEY_ID' =>$id])->whereNull('DELETED_AT')->first();
+
+                            if (!$billyet) {
+                                throw new Exception("Id Jaminan Billyet Not Found",404);
+                            }
+
+                            $data_array_col = [
+                                'STATUS_JAMINAN' => $result['atr']['status_jaminan'] ?? null,
+                                'NO_BILLYET' => $result['atr']['no_bilyet'] ?? null,
+                                'TGL_VALUTA' => $result['atr']['tgl_valuta'] ?? null,
+                                'JANGKA_WAKTU' => $result['atr']['jangka_waktu'] ?? null,
+                                'ATAS_NAMA' => $result['atr']['atas_nama'] ?? null,
+                                'NOMINAL' => $result['atr']['nominal'] ?? null,
+                                'MOD_DATE' => $this->timeNow,
+                                'MOD_BY' => $request->user()->id,
+                            ];
+            
+                            $billyet->update($data_array_col);
+
+                            break;
+                        case 'emas':
+
+                            $emas = M_CrGuaranteGold::where(['ID' => $result['atr']['id'],'CR_SURVEY_ID' =>$id])->whereNull('DELETED_AT')->first();
+
+                            if (!$emas) {
+                                throw new Exception("Id Jaminan Emas Not Found",404);
+                            }
+
+                            $data_array_col = [
+                                'STATUS_JAMINAN' => $result['atr']['status_jaminan'] ?? null,
+                                'KODE_EMAS' => $result['atr']['kode_emas'] ?? null,
+                                'BERAT' => $result['atr']['berat'] ?? null,
+                                'UNIT' => $result['atr']['unit'] ?? null,
+                                'ATAS_NAMA' => $result['atr']['atas_nama'] ?? null,
+                                'NOMINAL' => $result['atr']['nominal'] ?? null,
+                                'MOD_DATE' => $this->timeNow,
+                                'MOD_BY' => $request->user()->id,
+                            ];
+            
+                            $emas->update($data_array_col);
+
+                            break;
                     }
-
-                    $data_jaminan = [
-                        'HEADER_ID' => "",
-                        'TYPE' => $result['tipe']??null,
-                        'BRAND' => $result['merk']??null,
-                        'PRODUCTION_YEAR' => $result['tahun']??null,
-                        'COLOR' => $result['warna']??null,
-                        'ON_BEHALF' => $result['atas_nama']??null,
-                        'POLICE_NUMBER' => $result['no_polisi']??null,
-                        'CHASIS_NUMBER' => $result['no_rangka']??null,
-                        'ENGINE_NUMBER' => $result['no_mesin']??null,
-                        'BPKB_NUMBER' => $result['no_bpkb']??null,
-                        'STNK_NUMBER' => $result['no_stnk']??null,
-                        'VALUE' => $result['nilai']??null,
-                        'COLLATERAL_FLAG' => "",
-                        'VERSION' => 1,
-                        'MOD_DATE' => $this->timeNow,
-                        'MOD_BY' => $request->user()->id,
-                    ];
-        
-                    compareData(M_CrGuaranteVehicle::class,$result['id'],$data_jaminan,$request);
-
-                   $jaminan_check->update($data_jaminan);
+                   
                 }
             }
 
             DB::commit();
             ActivityLogger::logActivity($request,"Success",200);
-            return response()->json(['message' => 'updated successfully', 'status' => 200], 200);
+            return response()->json(['message' => 'updated successfully'], 200);
         } catch (ModelNotFoundException $e) {
             DB::rollback();
             ActivityLogger::logActivity($request, 'Cr Prospect Id Not Found', 404);
