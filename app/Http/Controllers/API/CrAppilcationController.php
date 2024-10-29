@@ -1021,7 +1021,7 @@ class CrAppilcationController extends Controller
             
             $approvalStatusMap = [
                 'yes' => ['result' => '3:approved ho', 'approval_result' => '6:approved ho'],
-                'no' => ['result' => '4:nego fpk', 'approval_result' => '7:nego fpk'],
+                'no' => ['result' => '4:nego_fpk', 'approval_result' => '7:nego_fpk'],
             ];
 
             $status = $approvalStatusMap[$request->flag] ?? ['result' => '5:closed ho', 'approval_result' => '8:closed ho'];
