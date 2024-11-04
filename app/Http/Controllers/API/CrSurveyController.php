@@ -129,12 +129,13 @@ class CrSurveyController extends Controller
                 'tgl_survey' => is_null($data->visit_date) ? null: date('Y-m-d',strtotime($data->visit_date)),
                 'catatan_survey' => $data->survey_note,
             ], 
-            'jaminan' => [
-                'kendaraan' => [],
-                'sertifikat' => [],
-                'billyet' => [],
-                'emas' => [],
-            ],
+            // 'jaminan' => [
+            //     'kendaraan' => [],
+            //     'sertifikat' => [],
+            //     'billyet' => [],
+            //     'emas' => [],
+            // ],
+            'jaminan' => [],
             'prospect_approval' => [
                 'flag_approval' => $approval_detail->ONCHARGE_APPRVL,
                 'keterangan' => $approval_detail->ONCHARGE_DESCR,
@@ -146,7 +147,7 @@ class CrSurveyController extends Controller
         ];
 
         foreach ($guarente_vehicle as $list) {
-            $arrayList['jaminan']['kendaraan'][] = [
+            $arrayList['jaminan'][] = [
                 "type" => "kendaraan",
                 "atr" => [ 
                     'id' => $list->ID,
@@ -168,7 +169,7 @@ class CrSurveyController extends Controller
         }
 
         foreach ($guarente_sertificat as $list) {
-            $arrayList['jaminan']['sertifikat'][] = [
+            $arrayList['jaminan'][] = [
                 "type" => "sertifikat",
                 "atr" => [ 
                     'status_jaminan' => null,
@@ -190,7 +191,7 @@ class CrSurveyController extends Controller
         }
 
         foreach ($guarente_billyet as $list) {
-            $arrayList['jaminan']['billyet'][] = [
+            $arrayList['jaminan'][] = [
                 "type" => "billyet",
                 "atr" => [ 
                     'id' => $list->ID,
@@ -205,7 +206,7 @@ class CrSurveyController extends Controller
         }
 
         foreach ($guarente_gold as $list) {
-            $arrayList['jaminan']['emas'][] = [
+            $arrayList['jaminan'][] = [
                 "type" => "emas",
                 "atr" => [ 
                     'id' => $list->ID,
