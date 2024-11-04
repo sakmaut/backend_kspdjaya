@@ -17,6 +17,7 @@ class M_CrGuaranteVehicle extends Model
        'HEADER_ID',
        'BRAND',
        'TYPE',
+       'COUNTER_ID',
        'PRODUCTION_YEAR',
        'COLOR',
        'ON_BEHALF',

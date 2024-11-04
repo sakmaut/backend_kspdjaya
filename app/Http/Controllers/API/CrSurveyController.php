@@ -90,8 +90,8 @@ class CrSurveyController extends Controller
         $survey_id = $data->id;
         $guarente_vehicle = M_CrGuaranteVehicle::where('CR_SURVEY_ID',$survey_id)->get(); 
         $guarente_sertificat = M_CrGuaranteSertification::where('CR_SURVEY_ID',$survey_id)->get(); 
-        $guarente_billyet = M_CrGuaranteBillyet::where('CR_SURVEY_ID',$survey_id)->get(); 
-        $guarente_gold = M_CrGuaranteGold::where('CR_SURVEY_ID',$survey_id)->get(); 
+        // $guarente_billyet = M_CrGuaranteBillyet::where('CR_SURVEY_ID',$survey_id)->get(); 
+        // $guarente_gold = M_CrGuaranteGold::where('CR_SURVEY_ID',$survey_id)->get(); 
         $approval_detail = M_SurveyApproval::where('CR_SURVEY_ID',$survey_id)->first();
         
         $arrayList = [
@@ -165,7 +165,8 @@ class CrSurveyController extends Controller
                     "no_bpkb" => $list->BPKB_NUMBER,
                     "no_stnk" => $list->STNK_NUMBER,
                     "tgl_stnk" => $list->STNK_VALID_DATE,
-                    "nilai" => (int) $list->VALUE
+                    "nilai" => (int) $list->VALUE,
+                    "document" => []
                 ]
             ];    
         }
@@ -669,6 +670,7 @@ class CrSurveyController extends Controller
                 'ID' => Uuid::uuid4()->toString(),
                 'CR_SURVEY_ID' => $req->cr_prospect_id,
                 'TYPE' => $req->type,
+                'COUNTER_ID' => $req->id,
                 'PATH' => $url ?? '',
                 'SIZE' => $fileSizeInKB.' kb',
                 'CREATED_BY' => $req->user()->fullname,
@@ -733,6 +735,7 @@ class CrSurveyController extends Controller
                         'ID' => Uuid::uuid4()->toString(),
                         'CR_SURVEY_ID' => $req->cr_prospect_id,
                         'TYPE' => $req->type,
+                        'COUNTER_ID' => $req->id,
                         'PATH' => $url,
                         'SIZE' => $fileSizeInKB . ' kb',
                         'CREATED_BY' => $req->user()->fullname,
