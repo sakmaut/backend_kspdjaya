@@ -146,9 +146,11 @@ class CrSurveyController extends Controller
             "dokumen_pendukung" => M_CrSurveyDocument::attachmentGetAll($survey_id, ['other'])??null,
         ];
 
+        $no = 1;
         foreach ($guarente_vehicle as $list) {
             $arrayList['jaminan'][] = [
                 "type" => "kendaraan",
+                'id' => $no++,
                 "atr" => [ 
                     'id' => $list->ID,
                     'status_jaminan' => null,
@@ -168,12 +170,14 @@ class CrSurveyController extends Controller
             ];    
         }
 
+        $y = 1;
         foreach ($guarente_sertificat as $list) {
             $arrayList['jaminan'][] = [
                 "type" => "sertifikat",
+                'id' => $y++,
                 "atr" => [ 
-                    'status_jaminan' => null,
                     'id' => $list->ID,
+                    'status_jaminan' => null,
                     "no_sertifikat" => $list->NO_SERTIFIKAT,
                     "status_kepemilikan" => $list->STATUS_KEPEMILIKAN,
                     "imb" => $list->IMB,
@@ -190,35 +194,35 @@ class CrSurveyController extends Controller
             ];    
         }
 
-        foreach ($guarente_billyet as $list) {
-            $arrayList['jaminan'][] = [
-                "type" => "billyet",
-                "atr" => [ 
-                    'id' => $list->ID,
-                    "status_jaminan" => $list->STATUS_JAMINAN,
-                    "no_bilyet" => $list->NO_BILLYET,
-                    "tgl_valuta" => $list->TGL_VALUTA,
-                    "jangka_waktu" => $list->JANGKA_WAKTU,
-                    "atas_nama" => $list->ATAS_NAMA,
-                    "nominal" => (int) $list->NILAI,
-                ]
-            ];    
-        }
+        // foreach ($guarente_billyet as $list) {
+        //     $arrayList['jaminan'][] = [
+        //         "type" => "billyet",
+        //         "atr" => [ 
+        //             'id' => $list->ID,
+        //             "status_jaminan" => $list->STATUS_JAMINAN,
+        //             "no_bilyet" => $list->NO_BILLYET,
+        //             "tgl_valuta" => $list->TGL_VALUTA,
+        //             "jangka_waktu" => $list->JANGKA_WAKTU,
+        //             "atas_nama" => $list->ATAS_NAMA,
+        //             "nominal" => (int) $list->NILAI,
+        //         ]
+        //     ];    
+        // }
 
-        foreach ($guarente_gold as $list) {
-            $arrayList['jaminan'][] = [
-                "type" => "emas",
-                "atr" => [ 
-                    'id' => $list->ID,
-                    "status_jaminan" => $list->STATUS_JAMINAN,
-                    "kode_emas" => $list->KODE_EMAS,
-                    "berat" => $list->BERAT,
-                    "unit" => $list->UNIT,
-                    "atas_nama" => $list->ATAS_NAMA,
-                    "nominal" => (int) $list->NILAI,
-                ]
-            ];    
-        }
+        // foreach ($guarente_gold as $list) {
+        //     $arrayList['jaminan'][] = [
+        //         "type" => "emas",
+        //         "atr" => [ 
+        //             'id' => $list->ID,
+        //             "status_jaminan" => $list->STATUS_JAMINAN,
+        //             "kode_emas" => $list->KODE_EMAS,
+        //             "berat" => $list->BERAT,
+        //             "unit" => $list->UNIT,
+        //             "atas_nama" => $list->ATAS_NAMA,
+        //             "nominal" => (int) $list->NILAI,
+        //         ]
+        //     ];    
+        // }
         
         
         return $arrayList;
