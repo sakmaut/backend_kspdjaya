@@ -368,42 +368,6 @@ class CrSurveyController extends Controller
     
                     M_CrGuaranteSertification::create($data_array_col);
                     break;
-                case 'billyet':
-                    $data_array_col = [
-                        'ID' => Uuid::uuid7()->toString(),
-                        'CR_SURVEY_ID' => $request->id,
-                        'STATUS_JAMINAN' => $result['atr']['status_jaminan'] ?? null,
-                        'NO_BILLYET' => $result['atr']['no_bilyet'] ?? null,
-                        'TGL_VALUTA' => $result['atr']['tgl_valuta'] ?? null,
-                        'JANGKA_WAKTU' => $result['atr']['jangka_waktu'] ?? null,
-                        'ATAS_NAMA' => $result['atr']['atas_nama'] ?? null,
-                        'NOMINAL' => $result['atr']['nominal'] ?? null,
-                        'COLLATERAL_FLAG' => "",
-                        'VERSION' => 1,
-                        'CREATE_DATE' => $this->timeNow,
-                        'CREATE_BY' => $request->user()->id,
-                    ];
-    
-                    M_CrGuaranteBillyet::create($data_array_col);
-                    break;
-                case 'emas':
-                    $data_array_col = [
-                        'ID' => Uuid::uuid7()->toString(),
-                        'CR_SURVEY_ID' => $request->id,
-                        'STATUS_JAMINAN' => $result['atr']['status_jaminan'] ?? null,
-                        'KODE_EMAS' => $result['atr']['kode_emas'] ?? null,
-                        'BERAT' => $result['atr']['berat'] ?? null,
-                        'UNIT' => $result['atr']['unit'] ?? null,
-                        'ATAS_NAMA' => $result['atr']['atas_nama'] ?? null,
-                        'NOMINAL' => $result['atr']['nominal'] ?? null,
-                        'COLLATERAL_FLAG' => "",
-                        'VERSION' => 1,
-                        'CREATE_DATE' => $this->timeNow,
-                        'CREATE_BY' => $request->user()->id,
-                    ];
-    
-                    M_CrGuaranteGold::create($data_array_col);
-                    break;
             }
         }
     }
@@ -459,18 +423,7 @@ class CrSurveyController extends Controller
  
                     switch ($result['type']) {
                         case 'kendaraan':
-                            
-                            $kendaraan = M_CrGuaranteVehicle::where([
-                                                'ID' => $result['atr']['id'],
-                                                'HEADER_ID' =>$result['counter_id'],
-                                                'CR_SURVEY_ID' =>$id
-                                                ])
-                                                ->whereNull('DELETED_AT')->first();
-
-                            if (!$kendaraan) {
-                                throw new Exception("Id Jaminan Kendaraan Not Found",404);
-                            }
-
+ 
                             $data_array_col = [
                                 'TYPE' => $result['atr']['tipe'] ?? null,
                                 'BRAND' => $result['atr']['merk'] ?? null,
@@ -487,21 +440,38 @@ class CrSurveyController extends Controller
                                 'MOD_DATE' => $this->timeNow,
                                 'MOD_BY' => $request->user()->id,
                             ];
-            
-                            $kendaraan->update($data_array_col);
+
+                            if(!isset($result['atr']['id'])){
+
+                                $data_array_col['ID']= Uuid::uuid7()->toString();
+                                $data_array_col['CR_SURVEY_ID']= $id;
+                                $data_array_col['HEADER_ID']= $result['counter_id'];
+                                $data_array_col['CREATE_DATE']= $this->timeNow;
+                                $data_array_col['CREATE_BY']= $request->user()->id;
+
+                                M_CrGuaranteVehicle::create($data_array_col);
+
+                            }else{
+
+                                $data_array_col['MOD_DATE']= $this->timeNow;
+                                $data_array_col['MOD_BY']= $request->user()->id;
+
+                                $kendaraan = M_CrGuaranteVehicle::where([
+                                    'ID' => $result['atr']['id'],
+                                    'HEADER_ID' =>$result['counter_id'],
+                                    'CR_SURVEY_ID' =>$id
+                                    ])
+                                    ->whereNull('DELETED_AT')->first();
+
+                                if (!$kendaraan) {
+                                    throw new Exception("Id Jaminan Kendaraan Not Found",404);
+                                }
+
+                                $kendaraan->update($data_array_col);
+                            }
 
                             break;
                         case 'sertifikat':
-
-                            $sertifikasi = M_CrGuaranteSertification::where([
-                                'ID' => $result['atr']['id'],
-                                'HEADER_ID' =>$result['counter_id'],
-                                'CR_SURVEY_ID' =>$id
-                                ])->whereNull('DELETED_AT')->first();
-
-                            if (!$sertifikasi) {
-                                throw new Exception("Id Jaminan Sertifikat Not Found",404);
-                            }
 
                             $data_array_col = [
                                 'STATUS_JAMINAN' => $result['atr']['status_jaminan'] ?? null,
@@ -516,12 +486,36 @@ class CrSurveyController extends Controller
                                 'KECAMATAN' => $result['atr']['kec'] ?? null,
                                 'DESA' => $result['atr']['desa'] ?? null,
                                 'ATAS_NAMA' => $result['atr']['atas_nama'] ?? null,
-                                'NILAI' => $result['atr']['nilai'] ?? null,
-                                'MOD_DATE' => $this->timeNow,
-                                'MOD_BY' => $request->user()->id,
+                                'NILAI' => $result['atr']['nilai'] ?? null
                             ];
-            
-                            $sertifikasi->update($data_array_col);
+
+                            if(!isset($result['atr']['id'])){
+
+                                $data_array_col['ID']= Uuid::uuid7()->toString();
+                                $data_array_col['CR_SURVEY_ID']= $id;
+                                $data_array_col['HEADER_ID']= $result['counter_id'];
+                                $data_array_col['CREATE_DATE']= $this->timeNow;
+                                $data_array_col['CREATE_BY']= $request->user()->id;
+
+                                M_CrGuaranteSertification::create($data_array_col);
+
+                            }else{
+
+                                $data_array_col['MOD_DATE']= $this->timeNow;
+                                $data_array_col['MOD_BY']= $request->user()->id;
+
+                                $sertifikasi = M_CrGuaranteSertification::where([
+                                    'ID' => $result['atr']['id'],
+                                    'HEADER_ID' =>$result['counter_id'],
+                                    'CR_SURVEY_ID' =>$id
+                                    ])->whereNull('DELETED_AT')->first();
+    
+                                if (!$sertifikasi) {
+                                    throw new Exception("Id Jaminan Sertifikat Not Found",404);
+                                }
+
+                                $sertifikasi->update($data_array_col);
+                            }
 
                             break;
                     }
