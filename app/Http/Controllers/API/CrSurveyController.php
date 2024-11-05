@@ -88,8 +88,14 @@ class CrSurveyController extends Controller
     private function resourceDetail($data)
     {
         $survey_id = $data->id;
-        $guarente_vehicle = M_CrGuaranteVehicle::where('CR_SURVEY_ID',$survey_id)->get(); 
-        $guarente_sertificat = M_CrGuaranteSertification::where('CR_SURVEY_ID',$survey_id)->get(); 
+        $guarente_vehicle = M_CrGuaranteVehicle::where('CR_SURVEY_ID',$survey_id)->where(function($query) {
+                                $query->whereNull('DELETED_AT')
+                                    ->orWhere('DELETED_AT', '');
+                            })->get(); 
+        $guarente_sertificat = M_CrGuaranteSertification::where('CR_SURVEY_ID',$survey_id)->where(function($query) {
+                                    $query->whereNull('DELETED_AT')
+                                        ->orWhere('DELETED_AT', '');
+                                })->get(); 
         $approval_detail = M_SurveyApproval::where('CR_SURVEY_ID',$survey_id)->first();
         
         $arrayList = [
