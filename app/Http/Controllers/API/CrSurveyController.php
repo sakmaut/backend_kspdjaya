@@ -141,7 +141,7 @@ class CrSurveyController extends Controller
         foreach ($guarente_vehicle as $list) {
             $arrayList['jaminan'][] = [
                 "type" => "kendaraan",
-                'id' => $no++,
+                'counter_id' => $no++,
                 "atr" => [ 
                     'id' => $list->ID,
                     'status_jaminan' => null,
@@ -166,7 +166,7 @@ class CrSurveyController extends Controller
         foreach ($guarente_sertificat as $list) {
             $arrayList['jaminan'][] = [
                 "type" => "sertifikat",
-                'id' => $y++,
+                'counter_id' => $y++,
                 "atr" => [ 
                     'id' => $list->ID,
                     'status_jaminan' => null,
