@@ -381,149 +381,187 @@ class CrSurveyController extends Controller
         DB::beginTransaction();
         try {
 
-            $data_prospect = [
-                'tujuan_kredit' => $request->order['tujuan_kredit']?? null,
-                'plafond' => $request->order['plafond']?? null,
-                'tenor' => $request->order['tenor']?? null,
-                'category' => $request->order['kategory']?? null,
-                'jenis_angsuran' => $request->order['jenis_angsuran']?? null,
-                'nama' => $request->data_nasabah['nama']?? null,
-                'tgl_lahir' => date('Y-m-d', strtotime($request->data_nasabah['tgl_lahir']))?? null,
-                'ktp' => $request->data_nasabah['no_ktp']?? null,
-                'hp' => $request->data_nasabah['no_hp']?? null,
-                'kk' => $request->data_nasabah['no_kk']?? null,
-                'alamat' => $request->data_nasabah['alamat']?? null,
-                'rt' => $request->data_nasabah['rt']?? null,
-                'rw' => $request->data_nasabah['rw']?? null,
-                'province' => $request->data_nasabah['provinsi']?? null,
-                'city' => $request->data_nasabah['kota']?? null,
-                'kecamatan' => $request->data_nasabah['kecamatan']?? null,
-                'kelurahan' => $request->data_nasabah['kelurahan']?? null,
-                'usaha' => $request->data_survey['usaha'] ?? null,
-                'sector' => $request->data_survey['sektor'] ?? null,
-                "work_period" => $request->data_survey['lama_bekerja']?? null,
-                "expenses" => $request->data_survey['pengeluaran'] ?? null,
-                "income_personal" => $request->data_survey['penghasilan_pribadi']?? null,
-                "income_spouse" =>  $request->data_survey['penghasilan_pasangan']?? null,
-                "income_other" =>  $request->data_survey['penghasilan_lainnya']?? null,
-                'visit_date' => is_null($request->data_survey['tgl_survey']) ? null : date('Y-m-d', strtotime($request->data_survey['tgl_survey'])),
-                'survey_note' => $request->data_survey['catatan_survey']?? null,
-                'updated_by' => $request->user()->id,
-                'updated_at' => $this->timeNow
-            ];
+            // $data_prospect = [
+            //     'tujuan_kredit' => $request->order['tujuan_kredit']?? null,
+            //     'plafond' => $request->order['plafond']?? null,
+            //     'tenor' => $request->order['tenor']?? null,
+            //     'category' => $request->order['kategory']?? null,
+            //     'jenis_angsuran' => $request->order['jenis_angsuran']?? null,
+            //     'nama' => $request->data_nasabah['nama']?? null,
+            //     'tgl_lahir' => date('Y-m-d', strtotime($request->data_nasabah['tgl_lahir']))?? null,
+            //     'ktp' => $request->data_nasabah['no_ktp']?? null,
+            //     'hp' => $request->data_nasabah['no_hp']?? null,
+            //     'kk' => $request->data_nasabah['no_kk']?? null,
+            //     'alamat' => $request->data_nasabah['alamat']?? null,
+            //     'rt' => $request->data_nasabah['rt']?? null,
+            //     'rw' => $request->data_nasabah['rw']?? null,
+            //     'province' => $request->data_nasabah['provinsi']?? null,
+            //     'city' => $request->data_nasabah['kota']?? null,
+            //     'kecamatan' => $request->data_nasabah['kecamatan']?? null,
+            //     'kelurahan' => $request->data_nasabah['kelurahan']?? null,
+            //     'usaha' => $request->data_survey['usaha'] ?? null,
+            //     'sector' => $request->data_survey['sektor'] ?? null,
+            //     "work_period" => $request->data_survey['lama_bekerja']?? null,
+            //     "expenses" => $request->data_survey['pengeluaran'] ?? null,
+            //     "income_personal" => $request->data_survey['penghasilan_pribadi']?? null,
+            //     "income_spouse" =>  $request->data_survey['penghasilan_pasangan']?? null,
+            //     "income_other" =>  $request->data_survey['penghasilan_lainnya']?? null,
+            //     'visit_date' => is_null($request->data_survey['tgl_survey']) ? null : date('Y-m-d', strtotime($request->data_survey['tgl_survey'])),
+            //     'survey_note' => $request->data_survey['catatan_survey']?? null,
+            //     'updated_by' => $request->user()->id,
+            //     'updated_at' => $this->timeNow
+            // ];
 
-            $prospek_check = M_CrSurvey::where('id',$id)->whereNull('deleted_at')->first();
+            // $prospek_check = M_CrSurvey::where('id',$id)->whereNull('deleted_at')->first();
 
-            if (!$prospek_check) {
-                throw new Exception("Cr Survey Id Not Found",404);
+            // if (!$prospek_check) {
+            //     throw new Exception("Cr Survey Id Not Found",404);
+            // }
+
+            // $prospek_check->update($data_prospect);
+
+            // compareData(M_CrSurvey::class,$id,$data_prospect,$request);
+
+            // if (collect($request->jaminan)->isNotEmpty()) {
+            //     foreach ($request->jaminan as $result) {
+ 
+            //         switch ($result['type']) {
+            //             case 'kendaraan':
+ 
+            //                 $data_array_col = [
+            //                     'TYPE' => $result['atr']['tipe'] ?? null,
+            //                     'BRAND' => $result['atr']['merk'] ?? null,
+            //                     'PRODUCTION_YEAR' => $result['atr']['tahun'] ?? null,
+            //                     'COLOR' => $result['atr']['warna'] ?? null,
+            //                     'ON_BEHALF' => $result['atr']['atas_nama'] ?? null,
+            //                     'POLICE_NUMBER' => $result['atr']['no_polisi'] ?? null,
+            //                     'CHASIS_NUMBER' => $result['atr']['no_rangka'] ?? null,
+            //                     'ENGINE_NUMBER' => $result['atr']['no_mesin'] ?? null,
+            //                     'BPKB_NUMBER' => $result['atr']['no_bpkb'] ?? null,
+            //                     'STNK_NUMBER' => $result['atr']['no_stnk'] ?? null,
+            //                     'STNK_VALID_DATE' => $result['atr']['tgl_stnk'] ?? null,
+            //                     'VALUE' => $result['atr']['nilai'] ?? null,
+            //                     'MOD_DATE' => $this->timeNow,
+            //                     'MOD_BY' => $request->user()->id,
+            //                 ];
+
+            //                 if(!isset($result['atr']['id'])){
+
+            //                     $data_array_col['ID']= Uuid::uuid7()->toString();
+            //                     $data_array_col['CR_SURVEY_ID']= $id;
+            //                     $data_array_col['HEADER_ID']= $result['counter_id'];
+            //                     $data_array_col['CREATE_DATE']= $this->timeNow;
+            //                     $data_array_col['CREATE_BY']= $request->user()->id;
+
+            //                     M_CrGuaranteVehicle::create($data_array_col);
+
+            //                 }else{
+
+            //                     $data_array_col['MOD_DATE']= $this->timeNow;
+            //                     $data_array_col['MOD_BY']= $request->user()->id;
+
+            //                     $kendaraan = M_CrGuaranteVehicle::where([
+            //                         'ID' => $result['atr']['id'],
+            //                         'HEADER_ID' =>$result['counter_id'],
+            //                         'CR_SURVEY_ID' =>$id
+            //                         ])
+            //                         ->whereNull('DELETED_AT')->first();
+
+            //                     if (!$kendaraan) {
+            //                         throw new Exception("Id Jaminan Kendaraan Not Found",404);
+            //                     }
+
+            //                     $kendaraan->update($data_array_col);
+            //                 }
+
+            //                 break;
+            //             case 'sertifikat':
+
+            //                 $data_array_col = [
+            //                     'STATUS_JAMINAN' => $result['atr']['status_jaminan'] ?? null,
+            //                     'NO_SERTIFIKAT' => $result['atr']['no_sertifikat']?? null,
+            //                     'STATUS_KEPEMILIKAN' => $result['atr']['status_kepemilikan']?? null,
+            //                     'IMB' => $result['atr']['imb'] ?? null,
+            //                     'LUAS_TANAH' => $result['atr']['luas_tanah'] ?? null,
+            //                     'LUAS_BANGUNAN' => $result['atr']['luas_bangunan'] ?? null,
+            //                     'LOKASI' => $result['atr']['lokasi'] ?? null,
+            //                     'PROVINSI' => $result['atr']['provinsi'] ?? null,
+            //                     'KAB_KOTA' => $result['atr']['kab_kota'] ?? null,
+            //                     'KECAMATAN' => $result['atr']['kec'] ?? null,
+            //                     'DESA' => $result['atr']['desa'] ?? null,
+            //                     'ATAS_NAMA' => $result['atr']['atas_nama'] ?? null,
+            //                     'NILAI' => $result['atr']['nilai'] ?? null
+            //                 ];
+
+            //                 if(!isset($result['atr']['id'])){
+
+            //                     $data_array_col['ID']= Uuid::uuid7()->toString();
+            //                     $data_array_col['CR_SURVEY_ID']= $id;
+            //                     $data_array_col['HEADER_ID']= $result['counter_id'];
+            //                     $data_array_col['CREATE_DATE']= $this->timeNow;
+            //                     $data_array_col['CREATE_BY']= $request->user()->id;
+
+            //                     M_CrGuaranteSertification::create($data_array_col);
+
+            //                 }else{
+
+            //                     $data_array_col['MOD_DATE']= $this->timeNow;
+            //                     $data_array_col['MOD_BY']= $request->user()->id;
+
+            //                     $sertifikasi = M_CrGuaranteSertification::where([
+            //                         'ID' => $result['atr']['id'],
+            //                         'HEADER_ID' =>$result['counter_id'],
+            //                         'CR_SURVEY_ID' =>$id
+            //                         ])->whereNull('DELETED_AT')->first();
+    
+            //                     if (!$sertifikasi) {
+            //                         throw new Exception("Id Jaminan Sertifikat Not Found",404);
+            //                     }
+
+            //                     $sertifikasi->update($data_array_col);
+            //                 }
+
+            //                 break;
+            //         }
+                   
+            //     }
+            // }
+
+            if (collect($request->deleted_kendaraan)->isNotEmpty()) {
+                foreach ($request->deleted_kendaraan as $res) {
+                   try {
+                     $check = M_CrGuaranteVehicle::findOrFail($res['id']);
+
+                    $data = [
+                        'deleted_by' => $request->user()->id,
+                        'deleted_at' => $this->timeNow
+                    ];
+                    
+                    $check->update($data);
+                   } catch (\Exception $e) {
+                    DB::rollback();
+                    ActivityLogger::logActivity($request,$e->getMessage(),500);
+                    return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+                   }
+                }
             }
 
-            $prospek_check->update($data_prospect);
+            if (collect($request->deleted_sertifikat)->isNotEmpty()) {
+                foreach ($request->deleted_sertifikat as $res) {
+                   try {
+                     $check = M_CrGuaranteSertification::findOrFail($res['id']);
 
-            compareData(M_CrSurvey::class,$id,$data_prospect,$request);
-
-            if (collect($request->jaminan)->isNotEmpty()) {
-                foreach ($request->jaminan as $result) {
- 
-                    switch ($result['type']) {
-                        case 'kendaraan':
- 
-                            $data_array_col = [
-                                'TYPE' => $result['atr']['tipe'] ?? null,
-                                'BRAND' => $result['atr']['merk'] ?? null,
-                                'PRODUCTION_YEAR' => $result['atr']['tahun'] ?? null,
-                                'COLOR' => $result['atr']['warna'] ?? null,
-                                'ON_BEHALF' => $result['atr']['atas_nama'] ?? null,
-                                'POLICE_NUMBER' => $result['atr']['no_polisi'] ?? null,
-                                'CHASIS_NUMBER' => $result['atr']['no_rangka'] ?? null,
-                                'ENGINE_NUMBER' => $result['atr']['no_mesin'] ?? null,
-                                'BPKB_NUMBER' => $result['atr']['no_bpkb'] ?? null,
-                                'STNK_NUMBER' => $result['atr']['no_stnk'] ?? null,
-                                'STNK_VALID_DATE' => $result['atr']['tgl_stnk'] ?? null,
-                                'VALUE' => $result['atr']['nilai'] ?? null,
-                                'MOD_DATE' => $this->timeNow,
-                                'MOD_BY' => $request->user()->id,
-                            ];
-
-                            if(!isset($result['atr']['id'])){
-
-                                $data_array_col['ID']= Uuid::uuid7()->toString();
-                                $data_array_col['CR_SURVEY_ID']= $id;
-                                $data_array_col['HEADER_ID']= $result['counter_id'];
-                                $data_array_col['CREATE_DATE']= $this->timeNow;
-                                $data_array_col['CREATE_BY']= $request->user()->id;
-
-                                M_CrGuaranteVehicle::create($data_array_col);
-
-                            }else{
-
-                                $data_array_col['MOD_DATE']= $this->timeNow;
-                                $data_array_col['MOD_BY']= $request->user()->id;
-
-                                $kendaraan = M_CrGuaranteVehicle::where([
-                                    'ID' => $result['atr']['id'],
-                                    'HEADER_ID' =>$result['counter_id'],
-                                    'CR_SURVEY_ID' =>$id
-                                    ])
-                                    ->whereNull('DELETED_AT')->first();
-
-                                if (!$kendaraan) {
-                                    throw new Exception("Id Jaminan Kendaraan Not Found",404);
-                                }
-
-                                $kendaraan->update($data_array_col);
-                            }
-
-                            break;
-                        case 'sertifikat':
-
-                            $data_array_col = [
-                                'STATUS_JAMINAN' => $result['atr']['status_jaminan'] ?? null,
-                                'NO_SERTIFIKAT' => $result['atr']['no_sertifikat']?? null,
-                                'STATUS_KEPEMILIKAN' => $result['atr']['status_kepemilikan']?? null,
-                                'IMB' => $result['atr']['imb'] ?? null,
-                                'LUAS_TANAH' => $result['atr']['luas_tanah'] ?? null,
-                                'LUAS_BANGUNAN' => $result['atr']['luas_bangunan'] ?? null,
-                                'LOKASI' => $result['atr']['lokasi'] ?? null,
-                                'PROVINSI' => $result['atr']['provinsi'] ?? null,
-                                'KAB_KOTA' => $result['atr']['kab_kota'] ?? null,
-                                'KECAMATAN' => $result['atr']['kec'] ?? null,
-                                'DESA' => $result['atr']['desa'] ?? null,
-                                'ATAS_NAMA' => $result['atr']['atas_nama'] ?? null,
-                                'NILAI' => $result['atr']['nilai'] ?? null
-                            ];
-
-                            if(!isset($result['atr']['id'])){
-
-                                $data_array_col['ID']= Uuid::uuid7()->toString();
-                                $data_array_col['CR_SURVEY_ID']= $id;
-                                $data_array_col['HEADER_ID']= $result['counter_id'];
-                                $data_array_col['CREATE_DATE']= $this->timeNow;
-                                $data_array_col['CREATE_BY']= $request->user()->id;
-
-                                M_CrGuaranteSertification::create($data_array_col);
-
-                            }else{
-
-                                $data_array_col['MOD_DATE']= $this->timeNow;
-                                $data_array_col['MOD_BY']= $request->user()->id;
-
-                                $sertifikasi = M_CrGuaranteSertification::where([
-                                    'ID' => $result['atr']['id'],
-                                    'HEADER_ID' =>$result['counter_id'],
-                                    'CR_SURVEY_ID' =>$id
-                                    ])->whereNull('DELETED_AT')->first();
-    
-                                if (!$sertifikasi) {
-                                    throw new Exception("Id Jaminan Sertifikat Not Found",404);
-                                }
-
-                                $sertifikasi->update($data_array_col);
-                            }
-
-                            break;
-                    }
-                   
+                    $data = [
+                        'deleted_by' => $request->user()->id,
+                        'deleted_at' => $this->timeNow
+                    ];
+                    
+                    $check->update($data);
+                   } catch (\Exception $e) {
+                    DB::rollback();
+                    ActivityLogger::logActivity($request,$e->getMessage(),500);
+                    return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+                   }
                 }
             }
 
