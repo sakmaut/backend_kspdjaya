@@ -64,6 +64,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::resource('kunjungan', CrSurveyController::class)->except(['index', 'howAdmins']);
     Route::post('image_upload_prospect', [CrSurveyController::class, 'uploadImage']);
     Route::post('image_upload_multiple', [CrSurveyController::class, 'imageMultiple']);
+    Route::delete('image_deleted/{id}', [CrSurveyController::class, 'destroyImage']);
 
     // Detail Profile
     Route::get('me', [DetailProfileController::class, 'index']);

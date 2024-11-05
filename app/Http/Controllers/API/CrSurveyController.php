@@ -635,6 +635,28 @@ class CrSurveyController extends Controller
         } 
     }
 
+    public function destroyImage(Request $req,$id)
+    {
+        DB::beginTransaction();
+        try {
+            $check = M_CrSurveyDocument::findOrFail($id);
+
+            $check->delete();
+
+            DB::commit();
+            ActivityLogger::logActivity($req,"deleted successfully",200);
+            return response()->json(['message' => 'deleted successfully',"status" => 200], 200);
+        } catch (ModelNotFoundException $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($req, 'Document Id Not Found', 404);
+            return response()->json(['message' => 'Document Id Not Found', "status" => 404], 404);
+        } catch (\Exception $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($req,$e->getMessage(),500);
+            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+        } 
+    }
+
     public function uploadImage(Request $req)
     {
         DB::beginTransaction();
