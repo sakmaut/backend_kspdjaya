@@ -472,7 +472,6 @@ class CrSurveyController extends Controller
                             }
 
                             $data_array_col = [
-                                'HEADER_ID' => "",
                                 'TYPE' => $result['atr']['tipe'] ?? null,
                                 'BRAND' => $result['atr']['merk'] ?? null,
                                 'PRODUCTION_YEAR' => $result['atr']['tahun'] ?? null,
