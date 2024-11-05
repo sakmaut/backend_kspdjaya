@@ -538,6 +538,18 @@ class CrSurveyController extends Controller
                     ];
                     
                     $check->update($data);
+
+                    $deleted_docs = M_CrSurveyDocument::where([
+                        'CR_SURVEY_ID' => $id,
+                        'COUNTER_ID' => $check->HEADER_ID
+                    ])->whereIn('TYPE', ['no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri'])->get();
+
+                    if (!$deleted_docs->isEmpty()) {
+                        foreach ($deleted_docs as $doc) {
+                            $doc->delete();
+                        }
+                    }
+
                    } catch (\Exception $e) {
                     DB::rollback();
                     ActivityLogger::logActivity($request,$e->getMessage(),500);
@@ -557,6 +569,15 @@ class CrSurveyController extends Controller
                     ];
                     
                     $check->update($data);
+
+                    $deleted_docs = M_CrSurveyDocument::where(['CR_SURVEY_ID' => $id,'TYPE' => 'sertifikat','COUNTER_ID' => $check->HEADER_ID])->get();
+
+                    if (!$deleted_docs->isEmpty()) {
+                        foreach ($deleted_docs as $doc) {
+                            $doc->delete();
+                        }
+                    }
+
                    } catch (\Exception $e) {
                     DB::rollback();
                     ActivityLogger::logActivity($request,$e->getMessage(),500);
