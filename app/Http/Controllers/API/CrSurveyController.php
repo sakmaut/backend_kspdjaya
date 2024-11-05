@@ -90,8 +90,6 @@ class CrSurveyController extends Controller
         $survey_id = $data->id;
         $guarente_vehicle = M_CrGuaranteVehicle::where('CR_SURVEY_ID',$survey_id)->get(); 
         $guarente_sertificat = M_CrGuaranteSertification::where('CR_SURVEY_ID',$survey_id)->get(); 
-        // $guarente_billyet = M_CrGuaranteBillyet::where('CR_SURVEY_ID',$survey_id)->get(); 
-        // $guarente_gold = M_CrGuaranteGold::where('CR_SURVEY_ID',$survey_id)->get(); 
         $approval_detail = M_SurveyApproval::where('CR_SURVEY_ID',$survey_id)->first();
         
         $arrayList = [
@@ -129,12 +127,6 @@ class CrSurveyController extends Controller
                 'tgl_survey' => is_null($data->visit_date) ? null: date('Y-m-d',strtotime($data->visit_date)),
                 'catatan_survey' => $data->survey_note,
             ], 
-            // 'jaminan' => [
-            //     'kendaraan' => [],
-            //     'sertifikat' => [],
-            //     'billyet' => [],
-            //     'emas' => [],
-            // ],
             'jaminan' => [],
             'prospect_approval' => [
                 'flag_approval' => $approval_detail->ONCHARGE_APPRVL,
@@ -142,7 +134,6 @@ class CrSurveyController extends Controller
                 'status' => $approval_detail->APPROVAL_RESULT
             ],
             "dokumen_indentitas" => self::attachment($survey_id, "'ktp', 'kk', 'ktp_pasangan'"),
-            "dokumen_jaminan" => self::attachment($survey_id, "'no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri'"),
             "dokumen_pendukung" => M_CrSurveyDocument::attachmentGetAll($survey_id, ['other'])??null,
         ];
 
@@ -166,7 +157,7 @@ class CrSurveyController extends Controller
                     "no_stnk" => $list->STNK_NUMBER,
                     "tgl_stnk" => $list->STNK_VALID_DATE,
                     "nilai" => (int) $list->VALUE,
-                    "document" => []
+                    "document" => self::attachment_guarante($survey_id,$list->HEADER_ID ,"'no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri'")
                 ]
             ];    
         }
@@ -190,42 +181,12 @@ class CrSurveyController extends Controller
                     "kec" => $list->KECAMATAN,
                     "desa" => $list->DESA,
                     "atas_nama" => $list->ATAS_NAMA,
-                    "nilai" => (int) $list->NILAI
+                    "nilai" => (int) $list->NILAI,
+                    "document" => self::attachment_guarante($survey_id,$list->HEADER_ID ,"'no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri'")
                 ]
             ];    
         }
 
-        // foreach ($guarente_billyet as $list) {
-        //     $arrayList['jaminan'][] = [
-        //         "type" => "billyet",
-        //         "atr" => [ 
-        //             'id' => $list->ID,
-        //             "status_jaminan" => $list->STATUS_JAMINAN,
-        //             "no_bilyet" => $list->NO_BILLYET,
-        //             "tgl_valuta" => $list->TGL_VALUTA,
-        //             "jangka_waktu" => $list->JANGKA_WAKTU,
-        //             "atas_nama" => $list->ATAS_NAMA,
-        //             "nominal" => (int) $list->NILAI,
-        //         ]
-        //     ];    
-        // }
-
-        // foreach ($guarente_gold as $list) {
-        //     $arrayList['jaminan'][] = [
-        //         "type" => "emas",
-        //         "atr" => [ 
-        //             'id' => $list->ID,
-        //             "status_jaminan" => $list->STATUS_JAMINAN,
-        //             "kode_emas" => $list->KODE_EMAS,
-        //             "berat" => $list->BERAT,
-        //             "unit" => $list->UNIT,
-        //             "atas_nama" => $list->ATAS_NAMA,
-        //             "nominal" => (int) $list->NILAI,
-        //         ]
-        //     ];    
-        // }
-        
-        
         return $arrayList;
     }
 
@@ -238,6 +199,24 @@ class CrSurveyController extends Controller
                     FROM cr_survey_document
                     WHERE TYPE IN ($data)
                         AND CR_SURVEY_ID = '$survey_id'
+                    GROUP BY TYPE
+                )
+                ORDER BY TIMEMILISECOND DESC"
+        );
+    
+        return $documents;        
+    }
+
+    public function attachment_guarante($survey_id,$header_id, $data){
+        $documents = DB::select(
+            "   SELECT *
+                FROM cr_survey_document AS csd
+                WHERE (TYPE, TIMEMILISECOND) IN (
+                    SELECT TYPE, MAX(TIMEMILISECOND)
+                    FROM cr_survey_document
+                    WHERE TYPE IN ($data)
+                        AND CR_SURVEY_ID = '$survey_id'
+                        AND COUNTER_ID = '$header_id'
                     GROUP BY TYPE
                 )
                 ORDER BY TIMEMILISECOND DESC"
@@ -264,7 +243,7 @@ class CrSurveyController extends Controller
             self::createCrProspekApproval($request);
 
             if (collect($request->jaminan)->isNotEmpty()) {
-                self::insert_cr_vehicle($request);
+                self::insert_guarante($request);
             }
     
             DB::commit();
@@ -333,7 +312,7 @@ class CrSurveyController extends Controller
         $approvalLog->surveyApprovalLog($request->user()->id, $approval->ID, $result);
     } 
 
-    private function insert_cr_vehicle($request){
+    private function insert_guarante($request){
 
         foreach ($request->jaminan as $result) {
 
@@ -342,7 +321,7 @@ class CrSurveyController extends Controller
                     $data_array_col = [
                         'ID' => Uuid::uuid7()->toString(),
                         'CR_SURVEY_ID' => $request->id,
-                        'HEADER_ID' => "",
+                        'HEADER_ID' => $request->counter_id,
                         'TYPE' => $result['atr']['tipe'] ?? null,
                         'BRAND' => $result['atr']['merk'] ?? null,
                         'PRODUCTION_YEAR' => $result['atr']['tahun'] ?? null,
@@ -366,6 +345,7 @@ class CrSurveyController extends Controller
                 case 'sertifikat':
                     $data_array_col = [
                         'ID' => Uuid::uuid7()->toString(),
+                        'HEADER_ID' => $request->counter_id,
                         'CR_SURVEY_ID' => $request->id,
                         'STATUS_JAMINAN' => $result['atr']['status_jaminan'] ?? null,
                         'NO_SERTIFIKAT' => $result['atr']['no_sertifikat']?? null,

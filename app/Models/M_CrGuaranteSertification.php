@@ -12,6 +12,7 @@ class M_CrGuaranteSertification extends Model
     protected $table = 'cr_guarante_sertification';
     protected $fillable = [
         'ID',
+        'HEADER_ID',
         'CR_SURVEY_ID',
         'STATUS_JAMINAN',
         'NO_SERTIFIKAT',
