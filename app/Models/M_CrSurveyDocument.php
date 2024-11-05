@@ -57,4 +57,14 @@ class M_CrSurveyDocument extends Model
 
         return $attachment;
     }
+
+    public static function attachmentSertifikat($survey_id,$counterID,$array = []){
+        $attachment = self::where('CR_SURVEY_ID', $survey_id)
+                    ->where('COUNTER_ID', $counterID)
+                    ->whereIn('TYPE', $array)
+                    ->orderBy('TIMEMILISECOND', 'desc')
+                    ->get();
+
+    return $attachment;
+}
 }

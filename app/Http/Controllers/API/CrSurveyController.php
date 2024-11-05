@@ -186,7 +186,7 @@ class CrSurveyController extends Controller
                     "desa" => $list->DESA,
                     "atas_nama" => $list->ATAS_NAMA,
                     "nilai" => (int) $list->NILAI,
-                    "document" => self::attachment_guarante($survey_id,$list->HEADER_ID ,"'sertifikat'")
+                    "document" => M_CrSurveyDocument::attachmentSertifikat($survey_id,$list->HEADER_ID, ['sertifikat'])??null,
                 ]
             ];    
         }
