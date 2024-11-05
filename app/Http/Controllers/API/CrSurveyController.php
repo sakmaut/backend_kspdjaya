@@ -143,11 +143,10 @@ class CrSurveyController extends Controller
             "dokumen_pendukung" => M_CrSurveyDocument::attachmentGetAll($survey_id, ['other'])??null,
         ];
 
-        $no = 1;
         foreach ($guarente_vehicle as $list) {
             $arrayList['jaminan'][] = [
                 "type" => "kendaraan",
-                'counter_id' => $no++,
+                'counter_id' => $list->HEADER_ID,
                 "atr" => [ 
                     'id' => $list->ID,
                     'status_jaminan' => null,
@@ -168,11 +167,10 @@ class CrSurveyController extends Controller
             ];    
         }
 
-        $y = 1;
         foreach ($guarente_sertificat as $list) {
             $arrayList['jaminan'][] = [
                 "type" => "sertifikat",
-                'counter_id' => $y++,
+                'counter_id' => $list->HEADER_ID,
                 "atr" => [ 
                     'id' => $list->ID,
                     'status_jaminan' => null,
