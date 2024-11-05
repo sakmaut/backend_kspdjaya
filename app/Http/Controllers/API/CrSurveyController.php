@@ -533,8 +533,8 @@ class CrSurveyController extends Controller
                      $check = M_CrGuaranteVehicle::findOrFail($res['id']);
 
                     $data = [
-                        'deleted_by' => $request->user()->id,
-                        'deleted_at' => $this->timeNow
+                        'DELETED_BY' => $request->user()->id,
+                        'DELETED_AT' => $this->timeNow
                     ];
                     
                     $check->update($data);
@@ -551,9 +551,9 @@ class CrSurveyController extends Controller
                    try {
                      $check = M_CrGuaranteSertification::findOrFail($res['id']);
 
-                    $data = [
-                        'deleted_by' => $request->user()->id,
-                        'deleted_at' => $this->timeNow
+                     $data = [
+                        'DELETED_BY' => $request->user()->id,
+                        'DELETED_AT' => $this->timeNow
                     ];
                     
                     $check->update($data);
