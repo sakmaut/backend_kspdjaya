@@ -321,7 +321,7 @@ class CrSurveyController extends Controller
                     $data_array_col = [
                         'ID' => Uuid::uuid7()->toString(),
                         'CR_SURVEY_ID' => $request->id,
-                        'HEADER_ID' => $request->counter_id,
+                        'HEADER_ID' => $result['counter_id'],
                         'TYPE' => $result['atr']['tipe'] ?? null,
                         'BRAND' => $result['atr']['merk'] ?? null,
                         'PRODUCTION_YEAR' => $result['atr']['tahun'] ?? null,
@@ -345,7 +345,7 @@ class CrSurveyController extends Controller
                 case 'sertifikat':
                     $data_array_col = [
                         'ID' => Uuid::uuid7()->toString(),
-                        'HEADER_ID' => $request->counter_id,
+                        'HEADER_ID' => $result['counter_id'],
                         'CR_SURVEY_ID' => $request->id,
                         'STATUS_JAMINAN' => $result['atr']['status_jaminan'] ?? null,
                         'NO_SERTIFIKAT' => $result['atr']['no_sertifikat']?? null,
