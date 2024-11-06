@@ -137,7 +137,7 @@ class CrAppilcationController extends Controller
             }
 
             $surveyID = $check_application_id->CR_SURVEY_ID;
-            
+            $timenow = Carbon::now();
 
             self::insert_cr_application($request,$check_application_id);
             self::insert_cr_personal($request,$id);
@@ -188,7 +188,7 @@ class CrAppilcationController extends Controller
                                 'STNK_NUMBER' => $result['atr']['no_stnk'] ?? null,
                                 'STNK_VALID_DATE' => $result['atr']['tgl_stnk'] ?? null,
                                 'VALUE' => $result['atr']['nilai'] ?? null,
-                                'MOD_DATE' => $this->timeNow,
+                                'MOD_DATE' => $timenow,
                                 'MOD_BY' => $request->user()->id,
                             ];
 
@@ -197,14 +197,14 @@ class CrAppilcationController extends Controller
                                 $data_array_col['ID']= Uuid::uuid7()->toString();
                                 $data_array_col['CR_SURVEY_ID']= $id;
                                 $data_array_col['HEADER_ID']= $result['counter_id'];
-                                $data_array_col['CREATE_DATE']= $this->timeNow;
+                                $data_array_col['CREATE_DATE']= $timenow;
                                 $data_array_col['CREATE_BY']= $request->user()->id;
 
                                 M_CrGuaranteVehicle::create($data_array_col);
 
                             }else{
 
-                                $data_array_col['MOD_DATE']= $this->timeNow;
+                                $data_array_col['MOD_DATE']= $timenow;
                                 $data_array_col['MOD_BY']= $request->user()->id;
 
                                 $kendaraan = M_CrGuaranteVehicle::where([
@@ -245,14 +245,14 @@ class CrAppilcationController extends Controller
                                 $data_array_col['ID']= Uuid::uuid7()->toString();
                                 $data_array_col['CR_SURVEY_ID']= $id;
                                 $data_array_col['HEADER_ID']= $result['counter_id'];
-                                $data_array_col['CREATE_DATE']= $this->timeNow;
+                                $data_array_col['CREATE_DATE']= $timenow;
                                 $data_array_col['CREATE_BY']= $request->user()->id;
 
                                 M_CrGuaranteSertification::create($data_array_col);
 
                             }else{
 
-                                $data_array_col['MOD_DATE']= $this->timeNow;
+                                $data_array_col['MOD_DATE']= $timenow;
                                 $data_array_col['MOD_BY']= $request->user()->id;
 
                                 $sertifikasi = M_CrGuaranteSertification::where([
@@ -281,7 +281,7 @@ class CrAppilcationController extends Controller
 
                     $data = [
                         'DELETED_BY' => $request->user()->id,
-                        'DELETED_AT' => $this->timeNow
+                        'DELETED_AT' => $timenow
                     ];
                     
                     $check->update($data);
@@ -312,7 +312,7 @@ class CrAppilcationController extends Controller
 
                      $data = [
                         'DELETED_BY' => $request->user()->id,
-                        'DELETED_AT' => $this->timeNow
+                        'DELETED_AT' => $timenow
                     ];
                     
                     $check->update($data);
