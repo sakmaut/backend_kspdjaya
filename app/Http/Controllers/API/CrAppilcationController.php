@@ -492,6 +492,11 @@ class CrAppilcationController extends Controller
     }
 
     private function insert_cr_guarantor($request,$applicationId){
+        if (collect($request->penjamin)->isNotEmpty()) {
+            foreach ($request->penjamin as $res) {
+
+            }
+        }
 
         $check = M_CrApplicationGuarantor::where('APPLICATION_ID',$applicationId)->first();
 
@@ -501,9 +506,6 @@ class CrAppilcationController extends Controller
             'BIRTHPLACE' => $request->penjamin['tempat_lahir']??null,
             'BIRTHDATE' => $request->penjamin['tgl_lahir']??null,
             'ADDRESS' => $request->penjamin['alamat']??null,
-            // .' '.$request->penjamin['rt']??null.'/'.$request->penjamin['rw']??null
-            //             .' '.$request->penjamin['kota']??null.' '.$request->penjamin['kecamatan']??null.' '.
-            //             $request->penjamin['kelurahan']??null.' '.$request->penjamin['provinsi']??null.' '.$request->penjamin['kode_pos']??null,
             'IDENTITY_TYPE' => $request->penjamin['tipe_identitas']??null,
             'NUMBER_IDENTITY' => $request->penjamin['no_identitas']??null,
             'OCCUPATION' => $request->penjamin['pekerjaan']??null,
@@ -925,6 +927,7 @@ class CrAppilcationController extends Controller
                 "no_hp" => $cr_personal_extra->EMERGENCY_PHONE_PERSONAL?? null, 
             ],
             "penjamin" => [
+                "id" => $cr_guarantor->ID ?? null,
                 "nama" => $cr_guarantor->NAME ?? null,
                 "jenis_kelamin" => $cr_guarantor->GENDER?? null,
                 "tempat_lahir" => $cr_guarantor->BIRTHPLACE?? null,
