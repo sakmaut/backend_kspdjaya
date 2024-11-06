@@ -818,7 +818,7 @@ class CrAppilcationController extends Controller
         $applicationDetail = M_CrApplication::where('ID',$setApplicationId)->first();
         $cr_survey= M_CrSurvey::where('id',$surveyId)->first();
         $check_exist = M_Credit::where('ORDER_NUMBER', $application->ORDER_NUMBER)->first();
-        $cr_guarantor = M_CrApplicationGuarantor::where('APPLICATION_ID',$setApplicationId)->first();
+        $cr_guarantor = M_CrApplicationGuarantor::where('APPLICATION_ID',$setApplicationId)->get();
         $cr_spouse = M_CrApplicationSpouse::where('APPLICATION_ID',$setApplicationId)->first();
         $approval = M_ApplicationApproval::where('cr_application_id',$setApplicationId)->first();
 
@@ -926,21 +926,7 @@ class CrAppilcationController extends Controller
                 "no_telp" => $cr_personal_extra->EMERGENCY_PHONE_HOUSE?? null,
                 "no_hp" => $cr_personal_extra->EMERGENCY_PHONE_PERSONAL?? null, 
             ],
-            "penjamin" => [
-                "id" => $cr_guarantor->ID ?? null,
-                "nama" => $cr_guarantor->NAME ?? null,
-                "jenis_kelamin" => $cr_guarantor->GENDER?? null,
-                "tempat_lahir" => $cr_guarantor->BIRTHPLACE?? null,
-                "tgl_lahir" =>$cr_guarantor->BIRTHDATE?? null,
-                "alamat" => $cr_guarantor->ADDRESS?? null,
-                "tipe_identitas"  => $cr_guarantor->IDENTIY_TYPE?? null,
-                "no_identitas"  => $cr_guarantor->NUMBER_IDENTITY?? null,
-                "pekerjaan"  => $cr_guarantor->OCCUPATION?? null,
-                "lama_bekerja"  => $cr_guarantor->WORK_PERIOD?? null,
-                "hub_cust" => $cr_guarantor->STATUS_WITH_DEBITUR?? null,
-                "no_hp" => $cr_guarantor->MOBILE_NUMBER?? null,
-                "pendapatan" => $cr_guarantor->INCOME?? null,   
-            ],
+            "penjamin" => [],
             "pasangan" => [
                 "nama_pasangan" =>$cr_spouse->NAME ?? null,
                 "tmptlahir_pasangan" =>$cr_spouse->BIRTHPLACE ?? null,
@@ -1011,6 +997,24 @@ class CrAppilcationController extends Controller
                     "nilai" => (int) $list->VALUE,
                     "document" => self::attachment_guarante($surveyId,$list->HEADER_ID ,"'no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri'")
                 ]
+            ];    
+        }
+
+        foreach ($cr_guarantor as $list) {
+            $arrayList['penjamin'][] = [
+                "id" => $list->ID ?? null,
+                "nama" => $list->NAME ?? null,
+                "jenis_kelamin" => $list->GENDER?? null,
+                "tempat_lahir" => $list->BIRTHPLACE?? null,
+                "tgl_lahir" =>$list->BIRTHDATE?? null,
+                "alamat" => $list->ADDRESS?? null,
+                "tipe_identitas"  => $list->IDENTIY_TYPE?? null,
+                "no_identitas"  => $list->NUMBER_IDENTITY?? null,
+                "pekerjaan"  => $list->OCCUPATION?? null,
+                "lama_bekerja"  => $list->WORK_PERIOD?? null,
+                "hub_cust" => $list->STATUS_WITH_DEBITUR?? null,
+                "no_hp" => $list->MOBILE_NUMBER?? null,
+                "pendapatan" => $list->INCOME?? null,   
             ];    
         }
 
