@@ -526,7 +526,7 @@ class CrAppilcationController extends Controller
                     'INCOME' => $res['pendapatan']??null,
                 ];
         
-                if($check->isEmpty()){
+                if(!$check){
                     $data_cr_application['ID'] = $res['id'];
                     $data_cr_application['APPLICATION_ID'] = $applicationId;
             
