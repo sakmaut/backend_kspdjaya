@@ -495,33 +495,31 @@ class CrAppilcationController extends Controller
         if (collect($request->penjamin)->isNotEmpty()) {
             foreach ($request->penjamin as $res) {
 
+                $data_cr_application =[  
+                    'NAME' => $res['nama']??null,
+                    'GENDER' => $res['jenis_kelamin']??null,
+                    'BIRTHPLACE' => $res['tempat_lahir']??null,
+                    'BIRTHDATE' => $res['tgl_lahir']??null,
+                    'ADDRESS' => $res['alamat']??null,
+                    'IDENTITY_TYPE' => $res['tipe_identitas']??null,
+                    'NUMBER_IDENTITY' => $res['no_identitas']??null,
+                    'OCCUPATION' => $res['pekerjaan']??null,
+                    'WORK_PERIOD' => $res['lama_bekerja']??null,
+                    'STATUS_WITH_DEBITUR' => $res['hub_cust']??null,
+                    'MOBILE_NUMBER' => $res['no_hp']??null,
+                    'INCOME' => $res['pendapatan']??null,
+                ];
+        
+                if(!isset($res['id'])){
+                    $data_cr_application['ID'] = Uuid::uuid7()->toString();
+                    $data_cr_application['APPLICATION_ID'] = $applicationId;
+            
+                    M_CrApplicationGuarantor::create($data_cr_application);
+                }else{
+                    $check = M_CrApplicationGuarantor::where('ID',$res['id'])->first();
+                    $check->update($data_cr_application);
+                }
             }
-        }
-
-        $check = M_CrApplicationGuarantor::where('APPLICATION_ID',$applicationId)->first();
-
-        $data_cr_application =[  
-            'NAME' => $request->penjamin['nama']??null,
-            'GENDER' => $request->penjamin['jenis_kelamin']??null,
-            'BIRTHPLACE' => $request->penjamin['tempat_lahir']??null,
-            'BIRTHDATE' => $request->penjamin['tgl_lahir']??null,
-            'ADDRESS' => $request->penjamin['alamat']??null,
-            'IDENTITY_TYPE' => $request->penjamin['tipe_identitas']??null,
-            'NUMBER_IDENTITY' => $request->penjamin['no_identitas']??null,
-            'OCCUPATION' => $request->penjamin['pekerjaan']??null,
-            'WORK_PERIOD' => $request->penjamin['lama_bekerja']??null,
-            'STATUS_WITH_DEBITUR' => $request->penjamin['hub_cust']??null,
-            'MOBILE_NUMBER' => $request->penjamin['no_hp']??null,
-            'INCOME' => $request->penjamin['pendapatan']??null,
-        ];
-
-        if(!$check){
-            $data_cr_application['ID'] = Uuid::uuid7()->toString();
-            $data_cr_application['APPLICATION_ID'] = $applicationId;
-    
-            M_CrApplicationGuarantor::create($data_cr_application);
-        }else{
-            $check->update($data_cr_application);
         }
     }
 
