@@ -413,7 +413,8 @@ class CrAppilcationController extends Controller
             'INCOME_PERSONAL'  => $request->order['pendapatan_pribadi'] ?? null,
             'INCOME_SPOUSE'  => $request->order['pendapatan_pasangan'] ?? null,
             'INCOME_OTHER'  => $request->order['pendapatan_lainnya'] ?? null,
-            'EXPENSES'  => $request->order['biaya_bulanan'] ?? null
+            'EXPENSES'  => $request->order['biaya_bulanan'] ?? null,
+            'SURVEY_NOTE' => $request->order['catatan_survey'] ?? null
         ];
 
         if(!$check){
@@ -897,7 +898,7 @@ class CrAppilcationController extends Controller
                 "cust_service" => $cr_oder->CUST_SERVICE??null,
                 "ref_pelanggan" => $cr_oder->REF_PELANGGAN??null,
                 "surveyor_name" => User::find($cr_survey->created_by)->fullname,
-                "catatan_survey" => $data->survey_note??null,
+                "catatan_survey" => !empty($cr_oder->SURVEY_NOTE)?$cr_oder->SURVEY_NOTE: $data->survey_note??null,
                 "prog_marketing" => $cr_oder->PROG_MARKETING??null,
                 "cara_bayar" => $cr_oder->CARA_BAYAR??null
             ],

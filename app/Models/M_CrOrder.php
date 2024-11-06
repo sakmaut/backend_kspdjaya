@@ -35,7 +35,8 @@ class M_CrOrder extends Model
         'KODE_BARANG',
         'ID_TIPE',
         'TAHUN',
-        'HARGA_PASAR'
+        'HARGA_PASAR',
+        'SURVEY_NOTE'
     ];
     protected $guarded = [];
     public $incrementing = false;
