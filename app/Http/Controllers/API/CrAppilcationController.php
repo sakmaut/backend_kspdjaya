@@ -169,6 +169,170 @@ class CrAppilcationController extends Controller
                 $checkApproval->update($data_approval);
             }
 
+            if (collect($request->jaminan)->isNotEmpty()) {
+                foreach ($request->jaminan as $result) {
+ 
+                    switch ($result['type']) {
+                        case 'kendaraan':
+ 
+                            $data_array_col = [
+                                'TYPE' => $result['atr']['tipe'] ?? null,
+                                'BRAND' => $result['atr']['merk'] ?? null,
+                                'PRODUCTION_YEAR' => $result['atr']['tahun'] ?? null,
+                                'COLOR' => $result['atr']['warna'] ?? null,
+                                'ON_BEHALF' => $result['atr']['atas_nama'] ?? null,
+                                'POLICE_NUMBER' => $result['atr']['no_polisi'] ?? null,
+                                'CHASIS_NUMBER' => $result['atr']['no_rangka'] ?? null,
+                                'ENGINE_NUMBER' => $result['atr']['no_mesin'] ?? null,
+                                'BPKB_NUMBER' => $result['atr']['no_bpkb'] ?? null,
+                                'STNK_NUMBER' => $result['atr']['no_stnk'] ?? null,
+                                'STNK_VALID_DATE' => $result['atr']['tgl_stnk'] ?? null,
+                                'VALUE' => $result['atr']['nilai'] ?? null,
+                                'MOD_DATE' => $this->timeNow,
+                                'MOD_BY' => $request->user()->id,
+                            ];
+
+                            if(!isset($result['atr']['id'])){
+
+                                $data_array_col['ID']= Uuid::uuid7()->toString();
+                                $data_array_col['CR_SURVEY_ID']= $id;
+                                $data_array_col['HEADER_ID']= $result['counter_id'];
+                                $data_array_col['CREATE_DATE']= $this->timeNow;
+                                $data_array_col['CREATE_BY']= $request->user()->id;
+
+                                M_CrGuaranteVehicle::create($data_array_col);
+
+                            }else{
+
+                                $data_array_col['MOD_DATE']= $this->timeNow;
+                                $data_array_col['MOD_BY']= $request->user()->id;
+
+                                $kendaraan = M_CrGuaranteVehicle::where([
+                                    'ID' => $result['atr']['id'],
+                                    'HEADER_ID' =>$result['counter_id'],
+                                    'CR_SURVEY_ID' =>$id
+                                    ])
+                                    ->whereNull('DELETED_AT')->first();
+
+                                if (!$kendaraan) {
+                                    throw new Exception("Id Jaminan Kendaraan Not Found",404);
+                                }
+
+                                $kendaraan->update($data_array_col);
+                            }
+
+                            break;
+                        case 'sertifikat':
+
+                            $data_array_col = [
+                                'STATUS_JAMINAN' => $result['atr']['status_jaminan'] ?? null,
+                                'NO_SERTIFIKAT' => $result['atr']['no_sertifikat']?? null,
+                                'STATUS_KEPEMILIKAN' => $result['atr']['status_kepemilikan']?? null,
+                                'IMB' => $result['atr']['imb'] ?? null,
+                                'LUAS_TANAH' => $result['atr']['luas_tanah'] ?? null,
+                                'LUAS_BANGUNAN' => $result['atr']['luas_bangunan'] ?? null,
+                                'LOKASI' => $result['atr']['lokasi'] ?? null,
+                                'PROVINSI' => $result['atr']['provinsi'] ?? null,
+                                'KAB_KOTA' => $result['atr']['kab_kota'] ?? null,
+                                'KECAMATAN' => $result['atr']['kec'] ?? null,
+                                'DESA' => $result['atr']['desa'] ?? null,
+                                'ATAS_NAMA' => $result['atr']['atas_nama'] ?? null,
+                                'NILAI' => $result['atr']['nilai'] ?? null
+                            ];
+
+                            if(!isset($result['atr']['id'])){
+
+                                $data_array_col['ID']= Uuid::uuid7()->toString();
+                                $data_array_col['CR_SURVEY_ID']= $id;
+                                $data_array_col['HEADER_ID']= $result['counter_id'];
+                                $data_array_col['CREATE_DATE']= $this->timeNow;
+                                $data_array_col['CREATE_BY']= $request->user()->id;
+
+                                M_CrGuaranteSertification::create($data_array_col);
+
+                            }else{
+
+                                $data_array_col['MOD_DATE']= $this->timeNow;
+                                $data_array_col['MOD_BY']= $request->user()->id;
+
+                                $sertifikasi = M_CrGuaranteSertification::where([
+                                    'ID' => $result['atr']['id'],
+                                    'HEADER_ID' =>$result['counter_id'],
+                                    'CR_SURVEY_ID' =>$id
+                                    ])->whereNull('DELETED_AT')->first();
+    
+                                if (!$sertifikasi) {
+                                    throw new Exception("Id Jaminan Sertifikat Not Found",404);
+                                }
+
+                                $sertifikasi->update($data_array_col);
+                            }
+
+                            break;
+                    }
+                   
+                }
+            }
+
+            if (collect($request->deleted_kendaraan)->isNotEmpty()) {
+                foreach ($request->deleted_kendaraan as $res) {
+                   try {
+                     $check = M_CrGuaranteVehicle::findOrFail($res['id']);
+
+                    $data = [
+                        'DELETED_BY' => $request->user()->id,
+                        'DELETED_AT' => $this->timeNow
+                    ];
+                    
+                    $check->update($data);
+
+                    $deleted_docs = M_CrSurveyDocument::where([
+                        'CR_SURVEY_ID' => $id,
+                        'COUNTER_ID' => $check->HEADER_ID
+                    ])->whereIn('TYPE', ['no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri'])->get();
+
+                    if (!$deleted_docs->isEmpty()) {
+                        foreach ($deleted_docs as $doc) {
+                            $doc->delete();
+                        }
+                    }
+
+                   } catch (\Exception $e) {
+                    DB::rollback();
+                    ActivityLogger::logActivity($request,$e->getMessage(),500);
+                    return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+                   }
+                }
+            }
+
+            if (collect($request->deleted_sertifikat)->isNotEmpty()) {
+                foreach ($request->deleted_sertifikat as $res) {
+                   try {
+                     $check = M_CrGuaranteSertification::findOrFail($res['id']);
+
+                     $data = [
+                        'DELETED_BY' => $request->user()->id,
+                        'DELETED_AT' => $this->timeNow
+                    ];
+                    
+                    $check->update($data);
+
+                    $deleted_docs = M_CrSurveyDocument::where(['CR_SURVEY_ID' => $id,'TYPE' => 'sertifikat','COUNTER_ID' => $check->HEADER_ID])->get();
+
+                    if (!$deleted_docs->isEmpty()) {
+                        foreach ($deleted_docs as $doc) {
+                            $doc->delete();
+                        }
+                    }
+
+                   } catch (\Exception $e) {
+                    DB::rollback();
+                    ActivityLogger::logActivity($request,$e->getMessage(),500);
+                    return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+                   }
+                }
+            }
+
             return response()->json(['message' => 'Updated Successfully',"status" => 200], 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
