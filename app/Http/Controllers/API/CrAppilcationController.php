@@ -636,10 +636,14 @@ class CrAppilcationController extends Controller
         $surveyId = $data->id;
         $setApplicationId = $application->ID;
 
-        $guarente_vehicle = M_CrGuaranteVehicle::where('CR_SURVEY_ID',$surveyId)->get(); 
-        $guarente_sertificat = M_CrGuaranteSertification::where('CR_SURVEY_ID',$surveyId)->get(); 
-        $guarente_billyet = M_CrGuaranteBillyet::where('CR_SURVEY_ID',$surveyId)->get(); 
-        $guarente_gold = M_CrGuaranteGold::where('CR_SURVEY_ID',$surveyId)->get(); 
+        $guarente_vehicle = M_CrGuaranteVehicle::where('CR_SURVEY_ID',$surveyId)->where(function($query) {
+                                $query->whereNull('DELETED_AT')
+                                    ->orWhere('DELETED_AT', '');
+                            })->get(); 
+        $guarente_sertificat = M_CrGuaranteSertification::where('CR_SURVEY_ID',$surveyId)->where(function($query) {
+                                    $query->whereNull('DELETED_AT')
+                                        ->orWhere('DELETED_AT', '');
+                                })->get(); 
         $approval_detail = M_ApplicationApproval::where('cr_application_id',$setApplicationId)->first();
         $cr_personal = M_CrPersonal::where('APPLICATION_ID',$setApplicationId)->first();
         $cr_personal_extra = M_CrPersonalExtra::where('APPLICATION_ID',$setApplicationId)->first();
@@ -790,12 +794,7 @@ class CrAppilcationController extends Controller
                 "eff_rate"=> $applicationDetail->EFF_RATE?? null,
                 "angsuran"=> intval($applicationDetail->INSTALLMENT)?? null
             ],
-            'jaminan' => [
-                'kendaraan' => [],
-                'sertifikat' => [],
-                'billyet' => [],
-                'emas' => [],
-            ],  
+            'jaminan' => [],  
             "prospect_approval" => [
                 "status" => $approval_detail->application_result == null ?$approval_detail->application_result:""
             ],
@@ -824,8 +823,9 @@ class CrAppilcationController extends Controller
                                 ->all();
 
         foreach ($guarente_vehicle as $list) {
-            $arrayList['jaminan']['kendaraan'][] = [
+            $arrayList['jaminan'][] = [
                 "type" => "kendaraan",
+                'counter_id' => $list->HEADER_ID,
                 "atr" => [ 
                     'id' => $list->ID,
                     'status_jaminan' => null,
@@ -840,17 +840,19 @@ class CrAppilcationController extends Controller
                     "no_bpkb" => $list->BPKB_NUMBER,
                     "no_stnk" => $list->STNK_NUMBER,
                     "tgl_stnk" => $list->STNK_VALID_DATE,
-                    "nilai" => (int) $list->VALUE
+                    "nilai" => (int) $list->VALUE,
+                    "document" => self::attachment_guarante($surveyId,$list->HEADER_ID ,"'no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri'")
                 ]
             ];    
         }
 
         foreach ($guarente_sertificat as $list) {
-            $arrayList['jaminan']['sertifikat'][] = [
+            $arrayList['jaminan'][] = [
                 "type" => "sertifikat",
+                'counter_id' => $list->HEADER_ID,
                 "atr" => [ 
-                    'status_jaminan' => null,
                     'id' => $list->ID,
+                    'status_jaminan' => null,
                     "no_sertifikat" => $list->NO_SERTIFIKAT,
                     "status_kepemilikan" => $list->STATUS_KEPEMILIKAN,
                     "imb" => $list->IMB,
@@ -862,37 +864,8 @@ class CrAppilcationController extends Controller
                     "kec" => $list->KECAMATAN,
                     "desa" => $list->DESA,
                     "atas_nama" => $list->ATAS_NAMA,
-                    "nilai" => (int) $list->NILAI
-                ]
-            ];    
-        }
-
-        foreach ($guarente_billyet as $list) {
-            $arrayList['jaminan']['billyet'][] = [
-                "type" => "billyet",
-                "atr" => [ 
-                    'id' => $list->ID,
-                    "status_jaminan" => $list->STATUS_JAMINAN,
-                    "no_bilyet" => $list->NO_BILLYET,
-                    "tgl_valuta" => $list->TGL_VALUTA,
-                    "jangka_waktu" => $list->JANGKA_WAKTU,
-                    "atas_nama" => $list->ATAS_NAMA,
-                    "nominal" => (int) $list->NILAI,
-                ]
-            ];    
-        }
-
-        foreach ($guarente_gold as $list) {
-            $arrayList['jaminan']['emas'][] = [
-                "type" => "emas",
-                "atr" => [ 
-                    'id' => $list->ID,
-                    "status_jaminan" => $list->STATUS_JAMINAN,
-                    "kode_emas" => $list->KODE_EMAS,
-                    "berat" => $list->BERAT,
-                    "unit" => $list->UNIT,
-                    "atas_nama" => $list->ATAS_NAMA,
-                    "nominal" => (int) $list->NILAI,
+                    "nilai" => (int) $list->NILAI,
+                    "document" => M_CrSurveyDocument::attachmentSertifikat($surveyId,$list->HEADER_ID, ['sertifikat'])??null,
                 ]
             ];    
         }
@@ -909,6 +882,24 @@ class CrAppilcationController extends Controller
                     FROM cr_survey_document
                     WHERE TYPE IN ($data)
                         AND CR_SURVEY_ID = '$survey_id'
+                    GROUP BY TYPE
+                )
+                ORDER BY TIMEMILISECOND DESC"
+        );
+    
+        return $documents;        
+    }
+
+    private function attachment_guarante($survey_id,$header_id, $data){
+        $documents = DB::select(
+            "   SELECT *
+                FROM cr_survey_document AS csd
+                WHERE (TYPE, TIMEMILISECOND) IN (
+                    SELECT TYPE, MAX(TIMEMILISECOND)
+                    FROM cr_survey_document
+                    WHERE TYPE IN ($data)
+                        AND CR_SURVEY_ID = '$survey_id'
+                        AND COUNTER_ID = '$header_id'
                     GROUP BY TYPE
                 )
                 ORDER BY TIMEMILISECOND DESC"
