@@ -508,7 +508,10 @@ class CrAppilcationController extends Controller
         if (collect($request->penjamin)->isNotEmpty()) {
             foreach ($request->penjamin as $res) {
 
+                $check = M_CrApplicationGuarantor::where('ID',$res['id'])->first();
+
                 $data_cr_application =[  
+                    'ID' => $res['id']??null,
                     'NAME' => $res['nama']??null,
                     'GENDER' => $res['jenis_kelamin']??null,
                     'BIRTHPLACE' => $res['tempat_lahir']??null,
@@ -523,13 +526,12 @@ class CrAppilcationController extends Controller
                     'INCOME' => $res['pendapatan']??null,
                 ];
         
-                if(!isset($res['id'])){
-                    $data_cr_application['ID'] = Uuid::uuid7()->toString();
+                if($check->isEmpty()){
+                    $data_cr_application['ID'] = $res['id'];
                     $data_cr_application['APPLICATION_ID'] = $applicationId;
             
                     M_CrApplicationGuarantor::create($data_cr_application);
                 }else{
-                    $check = M_CrApplicationGuarantor::where('ID',$res['id'])->first();
                     $check->update($data_cr_application);
                 }
             }
