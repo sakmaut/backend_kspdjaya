@@ -335,20 +335,13 @@ class CrAppilcationController extends Controller
 
             if (collect($request->deleted_penjamin)->isNotEmpty()) {
                 foreach ($request->deleted_penjamin as $res) {
-                   try {
-                    $check = M_CrApplicationGuarantor::findOrFail($res['id']);
+                    $check = M_CrApplicationGuarantor::where('ID',$res['id'])->get();
 
                     if (!$check->isEmpty()) {
                         foreach ($check as $doc) {
                             $doc->delete();
                         }
                     }
-
-                   } catch (\Exception $e) {
-                    DB::rollback();
-                    ActivityLogger::logActivity($request,$e->getMessage(),500);
-                    return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
-                   }
                 }
             }
 
