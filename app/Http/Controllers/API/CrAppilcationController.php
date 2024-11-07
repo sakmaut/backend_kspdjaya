@@ -860,7 +860,7 @@ class CrAppilcationController extends Controller
                 "alamat" => empty($cr_personal->ADDRESS)?$cr_survey->alamat:$cr_personal->ADDRESS,
                 "rt" =>empty($cr_personal->RT)?$cr_survey->rt:$cr_personal->RT,
                 "rw" =>empty($cr_personal->RW)?$cr_survey->rw:$cr_personal->RW,
-                "provinsi" =>empty($cr_personal->PROVINCE)?$cr_survey->privince:$cr_personal->PROVINCE,
+                "provinsi" =>empty($cr_personal->PROVINCE)?$cr_survey->province:$cr_personal->PROVINCE,
                 "kota" =>empty($cr_personal->CITY)?$cr_survey->city:$cr_personal->CITY,
                 "kelurahan" =>empty($cr_personal->KELURAHAN)?$cr_survey->kelurahan:$cr_personal->KELURAHAN,
                 "kecamatan" =>empty($cr_personal->KECAMATAN)?$cr_survey->kecamatan:$cr_personal->KECAMATAN,
