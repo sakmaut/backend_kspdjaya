@@ -1026,7 +1026,7 @@ class CrAppilcationController extends Controller
                 "tipe_identitas"  => $list->IDENTIY_TYPE?? null,
                 "no_identitas"  => $list->NUMBER_IDENTITY?? null,
                 "pekerjaan"  => $list->OCCUPATION?? null,
-                "lama_bekerja"  => $list->WORK_PERIOD?? null,
+                "lama_bekerja"  => intval($list->WORK_PERIOD)?? null,
                 "hub_cust" => $list->STATUS_WITH_DEBITUR?? null,
                 "no_hp" => $list->MOBILE_NUMBER?? null,
                 "pendapatan" => $list->INCOME?? null,   
