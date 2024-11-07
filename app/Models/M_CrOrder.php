@@ -30,6 +30,7 @@ class M_CrOrder extends Model
         'UNIT_BISNIS',
         'CUST_SERVICE',
         'REF_PELANGGAN',
+        'REF_PELANGGAN_OTHER',
         'PROG_MARKETING',
         'CARA_BAYAR',
         'KODE_BARANG',
