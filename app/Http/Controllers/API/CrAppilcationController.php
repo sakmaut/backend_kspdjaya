@@ -210,7 +210,7 @@ class CrAppilcationController extends Controller
                                 $kendaraan = M_CrGuaranteVehicle::where([
                                     'ID' => $result['atr']['id'],
                                     'HEADER_ID' =>$result['counter_id'],
-                                    'CR_SURVEY_ID' =>$id
+                                    'CR_SURVEY_ID' =>$surveyID
                                     ])
                                     ->whereNull('DELETED_AT')->first();
 
@@ -243,7 +243,7 @@ class CrAppilcationController extends Controller
                             if(!isset($result['atr']['id'])){
 
                                 $data_array_col['ID']= Uuid::uuid7()->toString();
-                                $data_array_col['CR_SURVEY_ID']= $id;
+                                $data_array_col['CR_SURVEY_ID']= $surveyID;
                                 $data_array_col['HEADER_ID']= $result['counter_id'];
                                 $data_array_col['CREATE_DATE']= $timenow;
                                 $data_array_col['CREATE_BY']= $request->user()->id;
@@ -258,7 +258,7 @@ class CrAppilcationController extends Controller
                                 $sertifikasi = M_CrGuaranteSertification::where([
                                     'ID' => $result['atr']['id'],
                                     'HEADER_ID' =>$result['counter_id'],
-                                    'CR_SURVEY_ID' =>$id
+                                    'CR_SURVEY_ID' =>$surveyID
                                     ])->whereNull('DELETED_AT')->first();
     
                                 if (!$sertifikasi) {
@@ -287,7 +287,7 @@ class CrAppilcationController extends Controller
                     $check->update($data);
 
                     $deleted_docs = M_CrSurveyDocument::where([
-                        'CR_SURVEY_ID' => $id,
+                        'CR_SURVEY_ID' => $surveyID,
                         'COUNTER_ID' => $check->HEADER_ID
                     ])->whereIn('TYPE', ['no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri'])->get();
 
