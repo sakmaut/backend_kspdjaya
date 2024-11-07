@@ -900,7 +900,7 @@ class CrAppilcationController extends Controller
                 'cr_prospect_id' => $prospect_id??null,
                 "kategori" => $cr_oder->CATEGORY ?? null, 
                 "gelar" => $cr_oder->TITLE ?? null, 
-                "lama_bekerja" => empty($cr_oder->WORK_PERIOD)?$cr_survey->work_period:$cr_oder->WORK_PERIOD, 
+                "lama_bekerja" => empty($cr_oder->WORK_PERIOD)? intval($cr_survey->work_period):intval($cr_oder->WORK_PERIOD), 
                 "tanggungan" => $cr_oder->DEPENDANTS ?? null, 
                 "biaya_bulanan" =>intval(empty($cr_oder->BIAYA)?$cr_survey->expenses:$cr_oder->BIAYA), 
                 "pendapatan_pribadi" => intval(empty($cr_oder->INCOME_PERSONAL)?$cr_survey->income_personal:$cr_oder->INCOME_PERSONAL),
