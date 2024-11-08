@@ -1143,25 +1143,27 @@ class CrAppilcationController extends Controller
                 'cr_application_kapos_time' => Carbon::now()->format('Y-m-d'),
                 'cr_application_kapos_desc' => $request->keterangan,
             ];
-        
-            if ($request->flag === 'yes') {
-                $data_approval['cr_application_kapos_note'] = $request->flag;
-                $data_approval['application_result'] = '2:waiting ho';
-        
-                $change_approval = [
-                    'APPROVAL_RESULT' => '4:waiting ho'
-                ];
-        
-                $approvalLogMessage = '4:waiting ho';
-            } else {
-                $data_approval['cr_application_kapos_note'] = $request->flag;
-                $data_approval['application_result'] = '6:closed kapos';
-        
-                $change_approval = [
-                    'APPROVAL_RESULT' => '5:closed kapos'
-                ];
-        
-                $approvalLogMessage = '5:closed kapos';
+
+            $data_approval['cr_application_kapos_note'] = $request->flag;
+
+            switch ($request->flag) {
+                case 'yes':
+                    $data_approval['application_result'] = '2:waiting ho';
+                    $change_approval = ['APPROVAL_RESULT' => '4:waiting ho'];
+                    $approvalLogMessage = '4:waiting ho';
+                    break;
+
+                case 'revisi':
+                    $data_approval['application_result'] = '2.K:revisi admin';
+                    $change_approval = ['APPROVAL_RESULT' => '2.K:revisi admin'];
+                    $approvalLogMessage = '2.K:revisi admin';
+                    break;
+
+                default:
+                    $data_approval['application_result'] = '6:closed kapos';
+                    $change_approval = ['APPROVAL_RESULT' => '5:closed kapos'];
+                    $approvalLogMessage = '5:closed kapos';
+                    break;
             }
         
             $approval_change->update($change_approval);
@@ -1203,6 +1205,7 @@ class CrAppilcationController extends Controller
             
             $approvalStatusMap = [
                 'yes' => ['result' => '3:approved ho', 'approval_result' => '6:approved ho'],
+                'revisi' => ['result' => '2.H:revisi admin', 'approval_result' => '2.H:revisi admin'],
                 'no' => ['result' => '4:nego_fpk', 'approval_result' => '7:nego_fpk'],
             ];
 
