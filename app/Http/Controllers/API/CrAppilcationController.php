@@ -64,7 +64,7 @@ class CrAppilcationController extends Controller
     public function showKapos(Request $request)
     {
         try {
-            $data = M_CrApplication::fpkListData($request,'WAKPS','APHO','REORHO','CLHO','REORKPS','CLKPS');
+            $data = M_CrApplication::fpkListData($request,'WAKPS','APKPS','APHO','REORHO','CLHO','REORKPS','CLKPS');
             return response()->json(['message' => true,"status" => 200,'response' => $data], 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
