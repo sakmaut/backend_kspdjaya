@@ -1235,11 +1235,11 @@ class CrAppilcationController extends Controller
             $approvalDataMap = [
                 'yes' => ['code' => 'APKPS', 'result' => 'disetujui kapos'],
                 'revisi' => ['code' => 'REORKPS', 'result' => 'revisi kapos'],
-                'default' => ['code' => 'CLKPS', 'result' => 'dibatalkan kapos'],
+                'no' => ['code' => 'CLKPS', 'result' => 'dibatalkan kapos'],
             ];
     
             // Get corresponding data based on flag
-            $approvalData = $approvalDataMap[$flag] ?? $approvalDataMap['default'];
+            $approvalData = $approvalDataMap[$flag] ?? $approvalDataMap['no'];
     
             // Prepare approval data for the application
             $data_approval = [
@@ -1294,11 +1294,11 @@ class CrAppilcationController extends Controller
             $approvalDataMap = [
                 'yes' => ['code' => 'APHO', 'result' => 'disetujui ho'],
                 'revisi' => ['code' => 'REORHO', 'result' => 'revisi ho'],
-                'default' => ['code' => 'CLHO', 'result' => 'dibatalkan ho'],
+                'no' => ['code' => 'CLHO', 'result' => 'dibatalkan ho'],
             ];
     
             // Get corresponding data based on flag
-            $approvalData = $approvalDataMap[$flag] ?? $approvalDataMap['default'];
+            $approvalData = $approvalDataMap[$flag] ?? $approvalDataMap['no'];
     
             // Prepare approval data for the application
             $data_approval = [
