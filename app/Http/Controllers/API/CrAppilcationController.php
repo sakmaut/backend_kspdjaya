@@ -75,7 +75,7 @@ class CrAppilcationController extends Controller
     public function showHo(Request $request)
     {
         try {
-            $data = M_CrApplication::fpkListData($request,'APKPS','APHO','REORHO','CLHO');
+            $data = M_CrApplication::fpkListData($request,'APKPS','APHO','REORHO','CLHO','CLKPS');
             return response()->json(['message' => true, "status" => 200, 'response' => $data], 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
