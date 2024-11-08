@@ -80,7 +80,8 @@ class M_CrApplication extends Model
                 DB::raw("COALESCE(t7.NAME, t2.nama) as nama_debitur"),
                 DB::raw("COALESCE(t1.SUBMISSION_VALUE, t2.plafond) as plafond"),
                 DB::raw("COALESCE(t1.tenor, t2.tenor) as tenor"),
-            't6.application_result as status'
+            't6.application_result as status',
+            't6.code as status_code'
         )
             ->join('cr_survey as t2', 't2.id', '=', 't1.CR_SURVEY_ID')
             ->join('branch as t3', 't3.ID', '=', 't1.BRANCH')
