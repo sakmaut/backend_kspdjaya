@@ -37,6 +37,7 @@ class R_CrProspect extends JsonResource
             'hp' => $this->hp,
             'plafond' => $this->plafond,
             'status' => ($stts_approval)?$stts_approval->APPROVAL_RESULT:'',
+            'status_code' => ($stts_approval)?$stts_approval->CODE:'',
             'attachment' => $attachment
         ];
         
