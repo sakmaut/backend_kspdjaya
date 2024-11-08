@@ -228,11 +228,11 @@ class CrSurveyController extends Controller
                 throw new Exception("Id Approval Is Exist", 409);
             }
 
-            self::createCrSurvey($request);
-            self::createCrProspekApproval($request);
+           $this->createCrSurvey($request);
+           $this->createCrProspekApproval($request);
 
             if (collect($request->jaminan)->isNotEmpty()) {
-                self::insert_guarante($request);
+               $this->insert_guarante($request);
             }
     
             DB::commit();
@@ -605,12 +605,14 @@ class CrSurveyController extends Controller
                 $data['CODE']='WADM';
                 $data['APPROVAL_RESULT']='menunggu admin';
 
-                $approval = M_SurveyApproval::create($data);
+                if($check){
+                    $check->update($data);
+                }
 
                 $data_log = [
                     'ID' => $this->uuid,
                     'CODE' => $data['CODE'],
-                    'SURVEY_APPROVAL_ID' => $approval->ID,
+                    'SURVEY_APPROVAL_ID' => $check->ID?$check->ID:null,
                     'ONCHARGE_APPRVL' => 'AUTO_APPROVED_BY_SYSTEM',
                     'ONCHARGE_PERSON' => $request->user()->id,
                     'ONCHARGE_TIME' => Carbon::now(),
