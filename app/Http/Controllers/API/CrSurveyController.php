@@ -289,9 +289,7 @@ class CrSurveyController extends Controller
 
     private function createCrProspekApproval($request)
     {
-        $data=[
-            'ID' => $this->uuid,
-            'CODE' => $this->uuid,
+        $data=[ 
             'CR_SURVEY_ID' => $request->id
         ];
 
@@ -589,7 +587,39 @@ class CrSurveyController extends Controller
                 }
             }
 
-            $this->createCrProspekApproval($request);
+            $data=[
+                'CR_SURVEY_ID' => $id
+            ];
+
+            $check = M_SurveyApproval::where('CR_SURVEY_ID',$id)->first();
+    
+            if(!$request->flag){
+                $data['CODE']='DRSVY';
+                $data['APPROVAL_RESULT']='draf survey';
+
+                if($check){
+                    $check->update($data);
+                }
+
+            }else{
+                $data['CODE']='WADM';
+                $data['APPROVAL_RESULT']='menunggu admin';
+
+                $approval = M_SurveyApproval::create($data);
+
+                $data_log = [
+                    'ID' => $this->uuid,
+                    'CODE' => $data['CODE'],
+                    'SURVEY_APPROVAL_ID' => $approval->ID,
+                    'ONCHARGE_APPRVL' => 'AUTO_APPROVED_BY_SYSTEM',
+                    'ONCHARGE_PERSON' => $request->user()->id,
+                    'ONCHARGE_TIME' => Carbon::now(),
+                    'ONCHARGE_DESCR' => 'AUTO_APPROVED_BY_SYSTEM',
+                    'APPROVAL_RESULT' => $data['APPROVAL_RESULT']
+                ];
+        
+                M_SurveyApprovalLog::create($data_log);
+            }
 
             DB::commit();
             ActivityLogger::logActivity($request,"Success",200);
