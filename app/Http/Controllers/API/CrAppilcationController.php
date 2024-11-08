@@ -652,6 +652,17 @@ class CrAppilcationController extends Controller
             $data_approval['code'] = 'WAKPS';
             $data_approval['application_result'] = 'menunggu kapos';
 
+            $data_application_log = [
+                'CODE' => 'WAKPS',
+                'POSITION' => 'ADMIN',
+                'APPLICATION_APPROVAL_ID' => $applicationId,
+                'ONCHARGE_PERSON' => $request->user()->id,
+                'ONCHARGE_TIME' => Carbon::now(),
+                'APPROVAL_RESULT' => 'menunggu kapos'
+            ];
+    
+            M_ApplicationApprovalLog::create($data_application_log);
+
             $survey_apprval_change = M_SurveyApproval::where('CR_SURVEY_ID', $surveyID)->first();
 
             if ($survey_apprval_change) {
@@ -690,17 +701,6 @@ class CrAppilcationController extends Controller
             ],$data_approval);
 
             M_ApplicationApproval::create($data_approval);
-
-            $data_application_log = [
-                'CODE' => 'WAKPS',
-                'POSITION' => 'ADMIN',
-                'APPLICATION_APPROVAL_ID' => $applicationId,
-                'ONCHARGE_PERSON' => $request->user()->id,
-                'ONCHARGE_TIME' => Carbon::now(),
-                'APPROVAL_RESULT' => 'menunggu kapos'
-            ];
-    
-            M_ApplicationApprovalLog::create($data_application_log);
         } else {
             $checkApproval->update($data_approval);
         }
