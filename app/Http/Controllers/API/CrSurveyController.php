@@ -124,7 +124,7 @@ class CrSurveyController extends Controller
                 'status' => $approval_detail->APPROVAL_RESULT,
                 'status_code' => $approval_detail->CODE
             ],
-            "dokumen_indentitas" => self::attachment($survey_id, "'ktp', 'kk', 'ktp_pasangan'"),
+            "dokumen_indentitas" => $this->attachment($survey_id, "'ktp', 'kk', 'ktp_pasangan'"),
             "dokumen_pendukung" => M_CrSurveyDocument::attachmentGetAll($survey_id, ['other'])??null,
         ];
 
