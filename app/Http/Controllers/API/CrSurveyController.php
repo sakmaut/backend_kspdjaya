@@ -589,6 +589,8 @@ class CrSurveyController extends Controller
                 }
             }
 
+            $this->createCrProspekApproval($request);
+
             DB::commit();
             ActivityLogger::logActivity($request,"Success",200);
             return response()->json(['message' => 'updated successfully'], 200);
