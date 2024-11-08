@@ -35,7 +35,7 @@ Route::middleware(['auth:sanctum', 'check.access'])->group(function () {
     Route::resource('cabang', BranchController::class)->only(['index']);
     Route::resource('cr_application', CrAppilcationController::class)->only(['index']);
     Route::resource('kunjungan', CrSurveyController::class)->only(['index']);
-    Route::get('kunjungan_admin', [CrSurveyController::class, 'showAdmins']);
+    Route::get('kunjungan_admin', [CrAppilcationController::class, 'showAdmins']);
     Route::get('fpk_kapos', [CrAppilcationController::class, 'showKapos']);
     Route::get('fpk_ho', [CrAppilcationController::class, 'showHo']);
     // Route::resource('taksasi', TaksasiController::class)->only(['index']);

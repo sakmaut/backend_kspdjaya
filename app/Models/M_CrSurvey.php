@@ -95,6 +95,7 @@ class M_CrSurvey extends Model
                         ->leftJoin('cr_application', 'cr_application.CR_SURVEY_ID', '=', 'cr_survey.id')
                         ->leftJoin('cr_personal', 'cr_personal.APPLICATIOn_ID', '=', 'cr_application.ID')
                         ->where('cr_survey.branch_id', $branchId)
+                        ->where('survey_approval.CODE', '!=', 'DRSVY')
                         ->whereNull('cr_survey.deleted_at')
                         ->orderBy('cr_survey.visit_date', 'desc')
                         ->get();

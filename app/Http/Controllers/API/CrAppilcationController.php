@@ -3,14 +3,14 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\R_CrProspect;
 use App\Models\M_ApplicationApproval;
+use App\Models\M_ApplicationApprovalLog;
 use App\Models\M_CrApplication;
 use App\Models\M_CrApplicationBank;
 use App\Models\M_CrApplicationGuarantor;
 use App\Models\M_CrApplicationSpouse;
 use App\Models\M_Credit;
-use App\Models\M_CrGuaranteBillyet;
-use App\Models\M_CrGuaranteGold;
 use App\Models\M_CrGuaranteSertification;
 use App\Models\M_CrGuaranteVehicle;
 use App\Models\M_CrOrder;
@@ -21,6 +21,7 @@ use App\Models\M_CrSurveyDocument;
 use App\Models\M_Customer;
 use App\Models\M_CustomerExtra;
 use App\Models\M_SurveyApproval;
+use App\Models\M_SurveyApprovalLog;
 use App\Models\User;
 use Carbon\Carbon;
 use Exception;
@@ -31,13 +32,31 @@ use Ramsey\Uuid\Uuid;
 
 class CrAppilcationController extends Controller
 {
+
     public function index(Request $request)
     {
         try {
             $data = M_CrApplication::fpkListData($request);
-            return response()->json(['message' => 'OK',"status" => 200,'response' => $data], 200);
+            return response()->json(['message' => true,"status" => 200,'response' => $data], 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
+            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+        }
+    }
+
+    public function showAdmins(Request $req){
+        try {
+            $get_branch = $req->user()->branch_id;
+            $data = M_CrSurvey::show_admin($get_branch);
+            $dto = R_CrProspect::collection($data);
+    
+            ActivityLogger::logActivity($req,"Success",200);
+            return response()->json(['message' => true,"status" => 200,'response' => $dto], 200);
+        } catch (QueryException $e) {
+            ActivityLogger::logActivity($req,$e->getMessage(),409);
+            return response()->json(['message' => $e->getMessage(),"status" => 409], 409);
+        } catch (\Exception $e) {
+            ActivityLogger::logActivity($req,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
         }
     }
@@ -45,8 +64,8 @@ class CrAppilcationController extends Controller
     public function showKapos(Request $request)
     {
         try {
-            $data = M_CrApplication::fpkListData($request,'0:draft');
-            return response()->json(['message' => 'OK',"status" => 200,'response' => $data], 200);
+            $data = M_CrApplication::fpkListData($request,'WAKPS','APHO','REORHO');
+            return response()->json(['message' => true,"status" => 200,'response' => $data], 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
@@ -56,8 +75,8 @@ class CrAppilcationController extends Controller
     public function showHo(Request $request)
     {
         try {
-            $data = M_CrApplication::fpkListData($request,'6:closed kapos');
-            return response()->json(['message' => 'OK', "status" => 200, 'response' => $data], 200);
+            $data = M_CrApplication::fpkListData($request,'APKPS','APHO','REORHO');
+            return response()->json(['message' => true, "status" => 200, 'response' => $data], 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
@@ -107,7 +126,7 @@ class CrAppilcationController extends Controller
             // // self::update_cr_prospect($request,$check_prospect_id);
             // self::insert_cr_personal($request,$uuid);
             // self::insert_cr_personal_extra($request,$uuid);
-            self::insert_bank_account($request,$uuid);
+            $this->insert_bank_account($request,$uuid);
     
             DB::commit();
             // ActivityLogger::logActivity($request,"Success",200); 
@@ -139,19 +158,19 @@ class CrAppilcationController extends Controller
             $surveyID = $check_application_id->CR_SURVEY_ID;
             $timenow = Carbon::now();
 
-            self::insert_cr_application($request,$check_application_id);
-            self::insert_cr_personal($request,$id);
-            self::insert_cr_order($request, $surveyID,$id);
-            self::insert_cr_personal_extra($request,$id);
+            $this->insert_cr_application($request,$check_application_id);
+            $this->insert_cr_personal($request,$id);
+            $this->insert_cr_order($request, $surveyID,$id);
+            $this->insert_cr_personal_extra($request,$id);
             if (!empty($request->penjamin)) {
-                self::insert_cr_guarantor($request, $id);
+               $this->insert_cr_guarantor($request, $id);
             }
             if (!empty($request->pasangan)) {
-                self::insert_cr_spouse($request, $id);
+               $this->insert_cr_spouse($request, $id);
             }
-            self::insert_bank_account($request,$id);
-            self::insert_taksasi($request, $surveyID);
-            self::insert_application_approval($id, $surveyID,$request->flag_pengajuan);
+            $this->insert_bank_account($request,$id);
+            $this->insert_taksasi($request, $surveyID);
+            $this->insert_application_approval($request,$id, $surveyID,$request->flag_pengajuan);
 
             if($request->user()->position === 'KAPOS'){
                 $data_approval['application_result'] = '7:resubmit kapos';
@@ -346,7 +365,6 @@ class CrAppilcationController extends Controller
                     }
                 }
             }
-
 
             return response()->json(['message' => 'Updated Successfully',"status" => 200], 200);
         } catch (\Exception $e) {
@@ -629,25 +647,60 @@ class CrAppilcationController extends Controller
         }
     }
 
-    private function insert_application_approval($applicationId, $surveyID,$flag){
+    private function insert_application_approval($request,$applicationId, $surveyID,$flag){
         if($flag === 'yes'){
-            $data_approval['application_result'] = '1:waiting kapos';
+            $data_approval['code'] = 'WAKPS';
+            $data_approval['application_result'] = 'menunggu kapos';
 
-            $approval_change = M_SurveyApproval::where('CR_SURVEY_ID', $surveyID)->first();
-            if ($approval_change) {
-                $approval_change->update(['APPROVAL_RESULT' => '3:waiting kapos']);
-                $approvalLog = new ApprovalLog();
-                $approvalLog->surveyApprovalLog("AUTO_APPROVED_BY_SYSTEM", $approval_change->ID, '3:waiting kapos');
+            $survey_apprval_change = M_SurveyApproval::where('CR_SURVEY_ID', $surveyID)->first();
+
+            if ($survey_apprval_change) {
+                $data_update_approval=[
+                    'CODE' => 'WAKPS',
+                    'ONCHARGE_PERSON' => $request->user()->id,
+                    'ONCHARGE_TIME' => Carbon::now(),
+                    'APPROVAL_RESULT' => 'menunggu kapos'
+                ];
+        
+                $survey_apprval_change->update($data_update_approval);
+        
+                $data_survey_log = [
+                    'CODE' => 'WAKPS',
+                    'SURVEY_APPROVAL_ID' => $surveyID,
+                    'ONCHARGE_PERSON' => $request->user()->id,
+                    'ONCHARGE_TIME' => Carbon::now(),
+                    'APPROVAL_RESULT' =>  'menunggu kapos'
+                ];
+        
+                M_SurveyApprovalLog::create($data_survey_log);
             }
         }else{
-            $data_approval['application_result'] = '0:draft';
+            $data_approval['code'] = 'DROR';
+            $data_approval['application_result'] = 'draf';
         }
 
         $checkApproval= M_ApplicationApproval::where('cr_application_id', $applicationId)->first();
 
         if (!$checkApproval) {
-            $data_approval = array_merge(['ID' => Uuid::uuid7()->toString(), 'cr_application_id' => $applicationId], $data_approval);
+            $data_approval = array_merge(
+            [
+                'id' => Uuid::uuid7()->toString(),
+                'cr_prospect_id' => $surveyID, 
+                'cr_application_id' => $applicationId
+            ],$data_approval);
+
             M_ApplicationApproval::create($data_approval);
+
+            $data_application_log = [
+                'CODE' => 'WAKPS',
+                'POSITION' => 'ADMIN',
+                'APPLICATION_APPROVAL_ID' => $applicationId,
+                'ONCHARGE_PERSON' => $request->user()->id,
+                'ONCHARGE_TIME' => Carbon::now(),
+                'APPROVAL_RESULT' => 'menunggu kapos'
+            ];
+    
+            M_ApplicationApprovalLog::create($data_application_log);
         } else {
             $checkApproval->update($data_approval);
         }
@@ -682,15 +735,7 @@ class CrAppilcationController extends Controller
                     'CREATE_USER' => $request->user()->id,
                 ];
         
-                $fpkCreate =  M_CrApplication::create($data_cr_application);
-
-                $data_approval_fpk =[
-                    'id' => Uuid::uuid7()->toString(),
-                    'cr_application_id' => $fpkCreate->ID,
-                    'application_result' => '0:draft'
-                ];
-
-                M_ApplicationApproval::create($data_approval_fpk);
+                M_CrApplication::create($data_cr_application);
 
                 if(strtolower($check_survey_id->category) == 'ro'){
 
@@ -792,20 +837,11 @@ class CrAppilcationController extends Controller
                     M_CrOrder::create($data_cr_order);
                     M_CrApplicationSpouse::create($data_cr_application_spouse);
                 }
+
+                $this->createApplicationApproval($request,$getSurveyId,$generate_uuid);
             }else{
                 $generate_uuid = $check_prospect_id->ID;
             }
-
-            $approval_change = M_SurveyApproval::where('CR_SURVEY_ID',$getSurveyId)->first();
-
-            $data_update_approval=[
-                'APPROVAL_RESULT' => '2:created_fpk'
-            ];
-
-            $approval_change->update($data_update_approval);
-
-            $approvalLog = new ApprovalLog();
-            $approvalLog->surveyApprovalLog($request->user()->id, $getSurveyId, '2:created_fpk');
 
             return response()->json(['message' => 'OK',"status" => 200,'response' => ['uuid'=>$generate_uuid]], 200);
         } catch (\Exception $e) {
@@ -813,6 +849,54 @@ class CrAppilcationController extends Controller
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
         }
     }
+
+    private function createApplicationApproval($request,$getSurveyId,$fpkCreate = null)
+    {
+        $uuid = Uuid::uuid7()->toString();
+
+        $approval =[
+            'id' => $uuid,
+            'code' => 'CROR',
+            'cr_prospect_id' => $getSurveyId,
+            'cr_application_id' => $fpkCreate,
+            'application_result' => 'order diproses'
+        ];
+
+        M_ApplicationApproval::create($approval);
+
+        $data_application_log = [
+            'CODE' => 'CROR',
+            'POSITION' => 'ADMIN',
+            'APPLICATION_APPROVAL_ID' => $uuid,
+            'ONCHARGE_PERSON' => $request->user()->id,
+            'ONCHARGE_TIME' => Carbon::now(),
+            'ONCHARGE_DESCR' => 'AUTO_APPROVED_BY_SYSTEM',
+            'APPROVAL_RESULT' => 'order diproses'
+        ];
+
+        M_ApplicationApprovalLog::create($data_application_log);
+
+        $survey_apprval_change = M_SurveyApproval::where('CR_SURVEY_ID',$getSurveyId)->first();
+
+        $data_update_approval=[
+            'CODE' => 'CROR',
+            'ONCHARGE_PERSON' => $request->user()->id,
+            'ONCHARGE_TIME' => Carbon::now(),
+            'APPROVAL_RESULT' => 'order diproses'
+        ];
+
+        $survey_apprval_change->update($data_update_approval);
+
+        $data_survey_log = [
+            'CODE' => 'CROR',
+            'SURVEY_APPROVAL_ID' => $getSurveyId,
+            'ONCHARGE_PERSON' => $request->user()->id,
+            'ONCHARGE_TIME' => Carbon::now(),
+            'APPROVAL_RESULT' =>  'order diproses'
+        ];
+
+        M_SurveyApprovalLog::create($data_survey_log);
+    } 
 
     private function resourceDetail($data,$application)
     {
@@ -1124,58 +1208,61 @@ class CrAppilcationController extends Controller
     public function approvalKapos(Request $request)
     {
         try {
+            // Validate the request
             $request->validate([
                 'cr_application_id' => 'required|string',
                 'flag' => 'required|string',
             ]);
-        
+    
+            // Fetch necessary records
             $check_application_id = M_ApplicationApproval::where('cr_application_id', $request->cr_application_id)->first();
-        
             if (!$check_application_id) {
-                throw new Exception("Id FPK Is Not Exist", 404);
+                throw new Exception("Id FPK is not found.", 404);
             }
-        
+    
             $checkApplication = M_CrApplication::where('ID', $request->cr_application_id)->first();
-            $approval_change = M_SurveyApproval::where('CR_SURVEY_ID', $checkApplication->CR_SURVEY_ID)->first();
-        
-            $data_approval = [
-                'cr_application_kapos' => $request->user()->id,
-                'cr_application_kapos_time' => Carbon::now()->format('Y-m-d'),
-                'cr_application_kapos_desc' => $request->keterangan,
+            $surveyApproval = M_SurveyApproval::where('CR_SURVEY_ID', $checkApplication->CR_SURVEY_ID)->first();
+    
+            // Prepare common data
+            $currentTime = Carbon::now();
+            $userId = $request->user()->id;
+            $description = $request->keterangan;
+            $flag = $request->flag;
+    
+            // Define mapping for flag to code and result
+            $approvalDataMap = [
+                'yes' => ['code' => 'APKPS', 'result' => 'disetujui kapos'],
+                'revisi' => ['code' => 'REORKPS', 'result' => 'revisi kapos'],
+                'default' => ['code' => 'CLKPS', 'result' => 'dibatalkan kapos'],
             ];
-
-            $data_approval['cr_application_kapos_note'] = $request->flag;
-
-            switch ($request->flag) {
-                case 'yes':
-                    $data_approval['application_result'] = '2:waiting ho';
-                    $change_approval = ['APPROVAL_RESULT' => '4:waiting ho'];
-                    $approvalLogMessage = '4:waiting ho';
-                    break;
-
-                case 'revisi':
-                    $data_approval['application_result'] = '2.K:revisi admin';
-                    $change_approval = ['APPROVAL_RESULT' => '2.K:revisi admin'];
-                    $approvalLogMessage = '2.K:revisi admin';
-                    break;
-
-                default:
-                    $data_approval['application_result'] = '6:closed kapos';
-                    $change_approval = ['APPROVAL_RESULT' => '5:closed kapos'];
-                    $approvalLogMessage = '5:closed kapos';
-                    break;
-            }
-        
-            $approval_change->update($change_approval);
-            $approvalLog = new ApprovalLog();
-            $approvalLog->surveyApprovalLog($request->user()->id, $approval_change->ID, $approvalLogMessage);
-        
+    
+            // Get corresponding data based on flag
+            $approvalData = $approvalDataMap[$flag] ?? $approvalDataMap['default'];
+    
+            // Prepare approval data for the application
+            $data_approval = [
+                'cr_application_kapos' => $userId,
+                'cr_application_kapos_time' => $currentTime->format('Y-m-d'),
+                'cr_application_kapos_desc' => $description,
+                'cr_application_kapos_note' => $flag,
+                'code' => $approvalData['code'],
+                'application_result' => $approvalData['result'],
+            ];
+    
+            // Create logs and update the status
+            $this->createApplicationApprovalLog($approvalData['code'], $request->cr_application_id, $userId, $currentTime, $description, $approvalData['result'],'KAPOS');
+            $this->updateSurveyApproval($surveyApproval, $approvalData['code'], $userId, $currentTime, $approvalData['result']);
+            $this->createSurveyApprovalLog($approvalData['code'], $checkApplication->CR_SURVEY_ID, $userId, $currentTime, $approvalData['result']);
+    
+            // Update application approval data
             $check_application_id->update($data_approval);
-        
-            return response()->json(['message' => 'Approval Kapos Successfully', "status" => 200], 200);
+    
+            // Return success response
+            return response()->json(['message' => 'Approval Kapos Successfully', 'status' => 200], 200);
+    
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+            return response()->json(['message' => $e->getMessage(), 'status' => 500], 500);
         }
     }
 
@@ -1194,32 +1281,39 @@ class CrAppilcationController extends Controller
             }
         
             $checkApplication = M_CrApplication::where('ID', $request->cr_application_id)->first();
-            $approval_change = M_SurveyApproval::where('CR_SURVEY_ID', $checkApplication->CR_SURVEY_ID)->first();
+            $surveyApproval = M_SurveyApproval::where('CR_SURVEY_ID', $checkApplication->CR_SURVEY_ID)->first();
         
+            $currentTime = Carbon::now();
+            $userId = $request->user()->id;
+            $description = $request->keterangan;
+            $flag = $request->flag;
+    
+            // Define mapping for flag to code and result
+            $approvalDataMap = [
+                'yes' => ['code' => 'APHO', 'result' => 'disetujui ho'],
+                'revisi' => ['code' => 'REORHO', 'result' => 'revisi ho'],
+                'default' => ['code' => 'CLHO', 'result' => 'dibatalkan ho'],
+            ];
+    
+            // Get corresponding data based on flag
+            $approvalData = $approvalDataMap[$flag] ?? $approvalDataMap['default'];
+    
+            // Prepare approval data for the application
             $data_approval = [
-                'cr_application_ho' => $request->user()->id,
-                'cr_application_ho_time' => Carbon::now()->format('Y-m-d'),
-                'cr_application_ho_desc' => $request->keterangan,
-                'cr_application_ho_note' => $request->flag,
+                'cr_application_kapos' => $userId,
+                'cr_application_kapos_time' => $currentTime->format('Y-m-d'),
+                'cr_application_kapos_desc' => $description,
+                'cr_application_kapos_note' => $flag,
+                'code' => $approvalData['code'],
+                'application_result' => $approvalData['result'],
             ];
-            
-            $approvalStatusMap = [
-                'yes' => ['result' => '3:approved ho', 'approval_result' => '6:approved ho'],
-                'revisi' => ['result' => '2.H:revisi admin', 'approval_result' => '2.H:revisi admin'],
-                'no' => ['result' => '4:nego_fpk', 'approval_result' => '7:nego_fpk'],
-            ];
-
-            $status = $approvalStatusMap[$request->flag] ?? ['result' => '5:closed ho', 'approval_result' => '8:closed ho'];
-
-            $data_approval['application_result'] = $status['result'];
-            $change_approval = ['APPROVAL_RESULT' => $status['approval_result']];
-
-            // Update approval status and log the change
-            $approval_change->update($change_approval);
-            $approvalLog = new ApprovalLog();
-            $approvalLog->surveyApprovalLog($request->user()->id, $approval_change->ID, $status['approval_result']);
-
-            // Update application approval
+    
+            // Create logs and update the status
+            $this->createApplicationApprovalLog($approvalData['code'], $request->cr_application_id, $userId, $currentTime, $description, $approvalData['result'],'HO');
+            $this->updateSurveyApproval($surveyApproval, $approvalData['code'], $userId, $currentTime, $approvalData['result']);
+            $this->createSurveyApprovalLog($approvalData['code'], $checkApplication->CR_SURVEY_ID, $userId, $currentTime, $approvalData['result']);
+    
+            // Update application approval data
             $check_application_id->update($data_approval);
         
             return response()->json(['message' => 'Approval Ho Successfully'], 200);
@@ -1227,5 +1321,39 @@ class CrAppilcationController extends Controller
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
+    }
+
+    private function createApplicationApprovalLog($code, $applicationId, $userId, $currentTime, $description, $result,$position)
+    {
+        M_ApplicationApprovalLog::create([
+            'CODE' => $code,
+            'POSITION' => $position,
+            'APPLICATION_APPROVAL_ID' => $applicationId,
+            'ONCHARGE_PERSON' => $userId,
+            'ONCHARGE_TIME' => $currentTime,
+            'ONCHARGE_DESCR' => $description,
+            'APPROVAL_RESULT' => $result,
+        ]);
+    }
+
+    private function updateSurveyApproval($surveyApproval, $code, $userId, $currentTime, $result)
+    {
+        $surveyApproval->update([
+            'CODE' => $code,
+            'ONCHARGE_PERSON' => $userId,
+            'ONCHARGE_TIME' => $currentTime,
+            'APPROVAL_RESULT' => $result,
+        ]);
+    }
+
+    private function createSurveyApprovalLog($code, $surveyId, $userId, $currentTime, $result)
+    {
+        M_SurveyApprovalLog::create([
+            'CODE' => $code,
+            'SURVEY_APPROVAL_ID' => $surveyId,
+            'ONCHARGE_PERSON' => $userId,
+            'ONCHARGE_TIME' => $currentTime,
+            'APPROVAL_RESULT' => $result,
+        ]);
     }
 }

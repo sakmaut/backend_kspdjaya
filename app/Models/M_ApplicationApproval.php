@@ -13,6 +13,7 @@ class M_ApplicationApproval extends Model
     protected $table = 'application_approval';
     protected $fillable = [
         'id',
+        'code',
         'cr_prospect_id' ,
         'cr_application_id' ,
         'cr_prospect_kapos',

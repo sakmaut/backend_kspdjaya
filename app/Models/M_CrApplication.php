@@ -77,9 +77,9 @@ class M_CrApplication extends Model
             't1.ORDER_NUMBER as order_number',
             't3.NAME as cabang',
             't4.fullname as nama_ao',
-            DB::raw("COALESCE(t7.NAME, t2.nama) as nama_debitur"),
-            DB::raw("COALESCE(t1.SUBMISSION_VALUE, t2.plafond) as plafond"),
-            DB::raw("COALESCE(t1.tenor, t2.tenor) as tenor"),
+                DB::raw("COALESCE(t7.NAME, t2.nama) as nama_debitur"),
+                DB::raw("COALESCE(t1.SUBMISSION_VALUE, t2.plafond) as plafond"),
+                DB::raw("COALESCE(t1.tenor, t2.tenor) as tenor"),
             't6.application_result as status'
         )
             ->join('cr_survey as t2', 't2.id', '=', 't1.CR_SURVEY_ID')
@@ -98,7 +98,7 @@ class M_CrApplication extends Model
                 foreach ($params as $param) {
                     $statuses[] = $param;
                 }
-                $query->whereNotIn('t6.application_result', $statuses);
+                $query->whereIn('t6.code', $statuses);
             }
             
 

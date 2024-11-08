@@ -12,6 +12,7 @@ class M_SurveyApprovalLog extends Model
     protected $table = 'survey_approval_log';
     protected $fillable = [
         'ID',
+        'CODE',
         'SURVEY_APPROVAL_ID',
         'ONCHARGE_APPRVL',
         'ONCHARGE_PERSON',

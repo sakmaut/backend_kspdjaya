@@ -11,6 +11,7 @@ use App\Models\M_CrGuaranteVehicle;
 use App\Models\M_CrSurvey;
 use App\Models\M_CrSurveyDocument;
 use App\Models\M_SurveyApproval;
+use App\Models\M_SurveyApprovalLog;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -39,23 +40,6 @@ class CrSurveyController extends Controller
         try {
             $mcf_id = $req->user()->id;
             $data =  $this->CrSurvey->show_mcf($mcf_id);
-            $dto = R_CrProspect::collection($data);
-    
-            ActivityLogger::logActivity($req,"Success",200);
-            return response()->json(['message' => 'OK',"status" => 200,'response' => $dto], 200);
-        } catch (QueryException $e) {
-            ActivityLogger::logActivity($req,$e->getMessage(),409);
-            return response()->json(['message' => $e->getMessage(),"status" => 409], 409);
-        } catch (\Exception $e) {
-            ActivityLogger::logActivity($req,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
-        }
-    }
-
-    public function showAdmins(Request $req){
-        try {
-            $get_branch = $req->user()->branch_id;
-            $data =  $this->CrSurvey->show_admin($get_branch);
             $dto = R_CrProspect::collection($data);
     
             ActivityLogger::logActivity($req,"Success",200);
@@ -304,16 +288,34 @@ class CrSurveyController extends Controller
 
     private function createCrProspekApproval($request)
     {
-        $approvalLog = new ApprovalLog();
-        $result = '1:waiting fpk';
-        $data_approval=[
+        $data=[
             'ID' => $this->uuid,
-            'CR_SURVEY_ID' => $request->id,
-            'APPROVAL_RESULT' => $result
+            'CODE' => $this->uuid,
+            'CR_SURVEY_ID' => $request->id
         ];
 
-        $approval = M_SurveyApproval::create($data_approval);
-        $approvalLog->surveyApprovalLog($request->user()->id, $approval->ID, $result);
+        if(!$request->flag){
+            $data['CODE']='DRSVY';
+            $data['APPROVAL_RESULT']='draf survey';
+        }else{
+            $data['CODE']='WADM';
+            $data['APPROVAL_RESULT']='menunggu admin';
+        }
+
+        $approval = M_SurveyApproval::create($data);
+
+        $data_log = [
+            'ID' => $this->uuid,
+            'CODE' => $data['CODE'],
+            'SURVEY_APPROVAL_ID' => $approval->ID,
+            'ONCHARGE_APPRVL' => 'AUTO_APPROVED_BY_SYSTEM',
+            'ONCHARGE_PERSON' => $request->user()->id,
+            'ONCHARGE_TIME' => Carbon::now(),
+            'ONCHARGE_DESCR' => 'AUTO_APPROVED_BY_SYSTEM',
+            'APPROVAL_RESULT' => $data['APPROVAL_RESULT']
+        ];
+
+        M_SurveyApprovalLog::create($data_log);
     } 
 
     private function insert_guarante($request){

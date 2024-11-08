@@ -12,6 +12,8 @@ class M_ApplicationApprovalLog extends Model
     protected $table = 'application_approval_log';
     protected $fillable = [
         'ID',
+        'CODE',
+        'POSITION',
         'APPLICATION_APPROVAL_ID',
         'ONCHARGE_APPRVL',
         'ONCHARGE_PERSON',
