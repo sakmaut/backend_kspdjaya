@@ -1202,7 +1202,9 @@ class CrAppilcationController extends Controller
             'BPKB_NUMBER' => $request->barang_taksasi['no_bpkb']??null
         ];
 
-        $check->update($data_order);
+        if($check){
+            $check->update($data_order);
+        }
     }
 
     public function approvalKapos(Request $request)
