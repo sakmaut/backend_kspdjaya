@@ -1231,8 +1231,8 @@ class CrAppilcationController extends Controller
     
             // Define mapping for flag to code and result
             $approvalDataMap = [
-                'yes' => ['code' => 'APKPS', 'result' => 'disetujui kapos'],
-                'revisi' => ['code' => 'REORKPS', 'result' => 'revisi kapos'],
+                'yes' => ['code' => 'WAHO', 'result' => 'disetujui,menunggu ho'],
+                'revisi' => ['code' => 'REORKPS', 'result' => 'ada revisi kapos'],
                 'no' => ['code' => 'CLKPS', 'result' => 'dibatalkan kapos'],
             ];
     
@@ -1291,7 +1291,7 @@ class CrAppilcationController extends Controller
             // Define mapping for flag to code and result
             $approvalDataMap = [
                 'yes' => ['code' => 'APHO', 'result' => 'disetujui ho'],
-                'revisi' => ['code' => 'REORHO', 'result' => 'revisi ho'],
+                'revisi' => ['code' => 'REORHO', 'result' => 'ada revisi ho'],
                 'no' => ['code' => 'CLHO', 'result' => 'dibatalkan ho'],
             ];
     
