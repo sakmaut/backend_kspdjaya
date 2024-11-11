@@ -191,7 +191,7 @@ class CrAppilcationController extends Controller
             if (collect($request->jaminan)->isNotEmpty()) {
                 foreach ($request->jaminan as $result) {
  
-                    switch ($result['type']) {
+                    switch (strtolower($result['type'])) {
                         case 'kendaraan':
  
                             $data_array_col = [
@@ -208,9 +208,7 @@ class CrAppilcationController extends Controller
                                 'INVOICE_NUMBER' => $result['atr']['no_faktur'] ?? null,
                                 'STNK_NUMBER' => $result['atr']['no_stnk'] ?? null,
                                 'STNK_VALID_DATE' => $result['atr']['tgl_stnk'] ?? null,
-                                'VALUE' => $result['atr']['nilai'] ?? null,
-                                'MOD_DATE' => $timenow,
-                                'MOD_BY' => $request->user()->id,
+                                'VALUE' => $result['atr']['nilai'] ?? null
                             ];
 
                             if(!isset($result['atr']['id'])){
