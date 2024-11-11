@@ -144,6 +144,39 @@ class CrAppilcationController extends Controller
 
     public function update(Request $request,$id)
     {
+        // $datas = [];
+        // if (collect($request->jaminan)->isNotEmpty()) {
+        //     foreach ($request->jaminan as $result) {
+
+        //         $data_array_col = [
+        //             'TYPE' => $result['atr']['tipe'] ?? null,
+        //             'BRAND' => $result['atr']['merk'] ?? null,
+        //             'PRODUCTION_YEAR' => $result['atr']['tahun'] ?? null,
+        //             'COLOR' => $result['atr']['warna'] ?? null,
+        //             'ON_BEHALF' => $result['atr']['atas_nama'] ?? null,
+        //             'POLICE_NUMBER' => $result['atr']['no_polisi'] ?? null,
+        //             'CHASIS_NUMBER' => $result['atr']['no_rangka'] ?? null,
+        //             'ENGINE_NUMBER' => $result['atr']['no_mesin'] ?? null,
+        //             'BPKB_NUMBER' => $result['atr']['no_bpkb'] ?? null,
+        //             'BPKB_ADDRESS' => $result['atr']['alamat_bpkb'] ?? null,
+        //             'INVOICE_NUMBER' => $result['atr']['no_faktur'] ?? null,
+        //             'STNK_NUMBER' => $result['atr']['no_stnk'] ?? null,
+        //             'STNK_VALID_DATE' => $result['atr']['tgl_stnk'] ?? null,
+        //             'VALUE' => $result['atr']['nilai'] ?? null
+        //         ];
+
+        //         $data_array_col['ID']= Uuid::uuid7()->toString();
+        //         $data_array_col['CR_SURVEY_ID']= $id;
+        //         $data_array_col['HEADER_ID']= $result['counter_id'];
+        //         $data_array_col['CREATE_DATE']= Carbon::now();
+        //         $data_array_col['CREATE_BY']= $request->user()->id;
+
+        //         M_CrGuaranteVehicle::create($data_array_col);
+        // }}
+
+        // return response()->json('ok', 200);
+        // die;
+
         try {
             $request->validate([
                 'flag_pengajuan' => 'required|string',
@@ -214,7 +247,7 @@ class CrAppilcationController extends Controller
                             if(!isset($result['atr']['id'])){
 
                                 $data_array_col['ID']= Uuid::uuid7()->toString();
-                                $data_array_col['CR_SURVEY_ID']= $id;
+                                $data_array_col['CR_SURVEY_ID']= $surveyID;
                                 $data_array_col['HEADER_ID']= $result['counter_id'];
                                 $data_array_col['CREATE_DATE']= $timenow;
                                 $data_array_col['CREATE_BY']= $request->user()->id;
