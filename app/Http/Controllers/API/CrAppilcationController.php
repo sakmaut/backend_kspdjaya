@@ -409,7 +409,7 @@ class CrAppilcationController extends Controller
             $data_cr_application['CREATE_DATE'] = Carbon::now()->format('Y-m-d');
             $data_cr_application['CREATE_USER'] = $request->user()->id;
             $data_cr_application['BRANCH'] = $request->user()->branch_id;
-            $data_cr_application['ORDER_NUMBER'] = $this->createAutoCode(M_CrApplication::class,'ORDER_NUMBER','FPK');
+            $data_cr_application['ORDER_NUMBER'] = $this->createAutoCode(M_CrApplication::class,'ORDER_NUMBER','COR');
             M_CrApplication::create($data_cr_application);
         }else{
             // compareData(M_CrApplication::class,$id,$data_cr_application,$request);
@@ -725,7 +725,7 @@ class CrAppilcationController extends Controller
                 $data_cr_application =[
                     'ID' => $uuid,
                     'CR_SURVEY_ID' => $check_survey_id->id,
-                    'ORDER_NUMBER' => $this->createAutoCode(M_CrApplication::class,'ORDER_NUMBER','FPK'),
+                    'ORDER_NUMBER' => $this->createAutoCode(M_CrApplication::class,'ORDER_NUMBER','COR'),
                     'BRANCH' => $request->user()->branch_id,
                     'TENOR' => $check_survey_id->tenor??null,
                     'VERSION' => 1,
