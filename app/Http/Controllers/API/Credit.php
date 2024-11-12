@@ -475,8 +475,8 @@ class Credit extends Controller
                 foreach ($request->jaminan as $result) {
                     $checkMethod = $this->checkCollateralExists($result['type'],$result['number']);
                     
-                    if ($checkMethod) {
-                        throw new Exception("Ada Jaminan Yang Masih Berjalan");
+                    if ($checkMethod->isNotEmpty()) {
+                        return response()->json(['status' => false, 'message' => "ADA JAMINAN YANG AKTIF BANGSAT","data" => $checkMethod->first()->LOAN_NUMBER], 400);
                     }
                 }
             }
@@ -494,9 +494,10 @@ class Credit extends Controller
         $column = $type === 'kendaraan' ? 'BPKB_NUMBER' : 'NO_SERTIFIKAT';
         
         return DB::table('credit as a')
-                ->leftJoin($table . ' as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
-                ->where('b.' . $column, $no)
-                ->where('a.STATUS', 'A')
-                ->exists();
+                    ->leftJoin($table . ' as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
+                    ->where('b.' . $column, $no)
+                    ->where('a.STATUS', 'A')
+                    ->select('a.LOAN_NUMBER')
+                    ->get();  
     }
 }
