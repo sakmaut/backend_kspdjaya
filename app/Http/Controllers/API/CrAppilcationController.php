@@ -1096,7 +1096,7 @@ class CrAppilcationController extends Controller
                     "no_stnk" => $list->STNK_NUMBER,
                     "tgl_stnk" => $list->STNK_VALID_DATE,
                     "nilai" => (int) $list->VALUE,
-                    "document" => self::attachment_guarante($surveyId,$list->HEADER_ID ,"'no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri'")
+                    "document" => $this->attachment_guarante($surveyId,$list->HEADER_ID ,"'no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri'")
                 ]
             ];    
         }

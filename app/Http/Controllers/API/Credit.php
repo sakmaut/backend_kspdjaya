@@ -7,8 +7,10 @@ use App\Models\M_CrApplication;
 use App\Models\M_CrApplicationGuarantor;
 use App\Models\M_CrApplicationSpouse;
 use App\Models\M_CrCollateral;
+use App\Models\M_CrCollateralSertification;
 use App\Models\M_Credit;
 use App\Models\M_CreditSchedule;
+use App\Models\M_CrGuaranteSertification;
 use App\Models\M_CrGuaranteVehicle;
 use App\Models\M_CrOrder;
 use App\Models\M_CrPersonal;
@@ -43,7 +45,7 @@ class Credit extends Controller
 
             // $data_credit_schedule = generateAmortizationSchedule(7760000, 492000, '2024-09-26', 44, 24);
     
-            return response()->json(self::buildData($request,$check), 200);
+            return response()->json($this->buildData($request,$check), 200);
             // return response()->json( generateCustCode($request, 'credit', 'CUST_CODE'), 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
@@ -64,10 +66,9 @@ class Credit extends Controller
 
     private function buildData($request,$data){
         $cr_personal = M_CrPersonal::where('APPLICATION_ID',$data->ID)->first();
-        $cr_guarante_vehicle = M_CrGuaranteVehicle::where('CR_SURVEY_ID',$data->CR_SURVEY_ID)->first();
         $cr_guarantor = M_CrApplicationGuarantor::where('APPLICATION_ID',$data->ID)->first();
         $cr_spouse = M_CrApplicationSpouse::where('APPLICATION_ID',$data->ID)->first();
-        $pihak1= self::queryKapos($data->BRANCH);
+        $pihak1= $this->queryKapos($data->BRANCH);
         $loan_number = generateCode($request, 'credit', 'LOAN_NUMBER');
 
         $principal = $data->POKOK_PEMBAYARAN;
@@ -104,8 +105,7 @@ class Credit extends Controller
         $cust_code = generateCustCode($request, 'credit', 'CUST_CODE');
 
         if (!$check_exist && $request->flag == 'yes') {
-            self::insert_credit($SET_UUID,$request, $data, $loan_number,$installment_count, $cust_code);
-
+            $this->insert_credit($SET_UUID,$request, $data, $loan_number,$installment_count, $cust_code);
             $no =1;
             foreach ($data_credit_schedule as $list) {
                 $credit_schedule =
@@ -124,10 +124,20 @@ class Credit extends Controller
                 M_CreditSchedule::create($credit_schedule);
             }
             
-            self::insert_customer($request,$data, $cust_code);
-            self::insert_customer_xtra($data, $cust_code);
-            self::insert_collateral($request,$data,$SET_UUID);
+            $this->insert_customer($request,$data, $cust_code);
+            $this->insert_customer_xtra($data, $cust_code);
+            $this->insert_collateral($request,$data,$SET_UUID);
+            $this->insert_collateral_sertification($request,$data,$SET_UUID);
         }
+
+        $guarente_vehicle = M_CrGuaranteVehicle::where('CR_SURVEY_ID',$data->CR_SURVEY_ID)->where(function($query) {
+                                $query->whereNull('DELETED_AT')
+                                    ->orWhere('DELETED_AT', '');
+                            })->get(); 
+        $guarente_sertificat = M_CrGuaranteSertification::where('CR_SURVEY_ID',$data->CR_SURVEY_ID)->where(function($query) {
+                                    $query->whereNull('DELETED_AT')
+                                        ->orWhere('DELETED_AT', '');
+                                })->get(); 
 
         $data = [
             "no_perjanjian" => !$check_exist? $loan_number:$check_exist->LOAN_NUMBER,
@@ -175,19 +185,58 @@ class Credit extends Controller
              "tgl_akhir_pk" => !empty($check_exist)?Carbon::parse($check_exist->END_DATE)->format('Y-m-d'):add_months($set_tgl_awal,$loanTerm),
              "angsuran" =>bilangan($angsuran)??null,
              "opt_periode" => $data->OPT_PERIODE??null,
-             "tipe_jaminan" => $data->CREDIT_TYPE??null,
-             "no_bpkb" =>  $cr_guarante_vehicle->BPKB_NUMBER??null,
-             "atas_nama" => $cr_guarante_vehicle->ON_BEHALF??null,
-             "merk" => $cr_guarante_vehicle->BRAND??null,
-             "type" => $cr_guarante_vehicle->TYPE??null,
-             "tahun" => $cr_guarante_vehicle->PRODUCTION_YEAR??null,
-             "warna" => $cr_guarante_vehicle->COLOR??null,
-             "no_polisi" => $cr_guarante_vehicle->POLICE_NUMBER??null,
-             "no_rangka" =>$cr_guarante_vehicle->CHASIS_NUMBER??null,
-             "no_mesin" => $cr_guarante_vehicle->ENGINE_NUMBER??null,
+             "jaminan" => [],
              "struktur" => $check_exist != null && !empty($check_exist->LOAN_NUMBER)?$schedule:$data_credit_schedule??null
             // "struktur" => $data_credit_schedule ?? null
         ];
+
+        foreach ($guarente_vehicle as $list) {
+            $data['jaminan'][] = [
+                "type" => "kendaraan",
+                'counter_id' => $list->HEADER_ID,
+                "atr" => [ 
+                    'id' => $list->ID,
+                    'status_jaminan' => null,
+                    "tipe" => $list->TYPE,
+                    "merk" => $list->BRAND,
+                    "tahun" => $list->PRODUCTION_YEAR,
+                    "warna" => $list->COLOR,
+                    "atas_nama" => $list->ON_BEHALF,
+                    "no_polisi" => $list->POLICE_NUMBER,
+                    "no_rangka" => $list->CHASIS_NUMBER,
+                    "no_mesin" => $list->ENGINE_NUMBER,
+                    "no_bpkb" => $list->BPKB_NUMBER,
+                    "alamat_bpkb" => $list->BPKB_ADDRESS,
+                    "no_faktur" => $list->INVOICE_NUMBER,
+                    "no_stnk" => $list->STNK_NUMBER,
+                    "tgl_stnk" => $list->STNK_VALID_DATE,
+                    "nilai" => (int) $list->VALUE
+                ]
+            ];    
+        }
+
+        foreach ($guarente_sertificat as $list) {
+            $data['jaminan'][] = [
+                "type" => "sertifikat",
+                'counter_id' => $list->HEADER_ID,
+                "atr" => [ 
+                    'id' => $list->ID,
+                    'status_jaminan' => null,
+                    "no_sertifikat" => $list->NO_SERTIFIKAT,
+                    "status_kepemilikan" => $list->STATUS_KEPEMILIKAN,
+                    "imb" => $list->IMB,
+                    "luas_tanah" => $list->LUAS_TANAH,
+                    "luas_bangunan" => $list->LUAS_BANGUNAN,
+                    "lokasi" => $list->LOKASI,
+                    "provinsi" => $list->PROVINSI,
+                    "kab_kota" => $list->KAB_KOTA,
+                    "kec" => $list->KECAMATAN,
+                    "desa" => $list->DESA,
+                    "atas_nama" => $list->ATAS_NAMA,
+                    "nilai" => (int) $list->NILAI
+                ]
+            ];    
+        }
 
         return $data;
     }
@@ -387,25 +436,67 @@ class Credit extends Controller
         }
     }
 
+    private function insert_collateral_sertification($request,$data,$lastID){
+        $data_collateral = M_CrGuaranteSertification::where('CR_SURVEY_ID',$data->CR_SURVEY_ID)->get();
+
+        if($data_collateral->isNotEmpty()){
+            foreach ($data_collateral as $res) {
+                $data_jaminan = [
+                    'HEADER_ID' => "",
+                    'CR_CREDIT_ID' => $lastID??null,
+                    'STATUS_JAMINAN' => $res->STATUS_JAMINAN,
+                    'NO_SERTIFIKAT' => $res->NO_SERTIFIKAT,
+                    'STATUS_KEPEMILIKAN' => $res->STATUS_KEPEMILIKAN,
+                    'IMB' => $res->IMB,
+                    'LUAS_TANAH' => $res->LUAS_TANAH,
+                    'LUAS_BANGUNAN' => $res->LUAS_BANGUNAN,
+                    'LOKASI' => $res->LOKASI,
+                    'PROVINSI' => $res->PROVINSI,
+                    'KAB_KOTA' => $res->KAB_KOTA,
+                    'KECAMATAN' => $res->KECAMATAN,
+                    'DESA' => $res->DESA,
+                    'ATAS_NAMA' => $res->ATAS_NAMA,
+                    'NILAI' => $res->NILAI,
+                    'COLLATERAL_FLAG' => $data->BRANCH,
+                    'VERSION' => 1,
+                    'CREATE_DATE' => $this->timeNow,
+                    'CREATE_BY' => $request->user()->id,
+                ];
+    
+                M_CrCollateralSertification::create($data_jaminan);
+            }
+        }
+    }
+
     public function checkCollateral(Request $request){
         try {
-            $check = M_CrCollateral::where('BPKB_NUMBER',$request->no_bpkb)->first();
 
-            if (!$check) {
-                throw new Exception("Bpkb Number Is Not Exist", 404);
+            if (collect($request->jaminan)->isNotEmpty()) {
+                foreach ($request->jaminan as $result) {
+                    $checkMethod = $this->checkCollateralExists($result['type'],$result['number']);
+                    
+                    if ($checkMethod) {
+                        throw new Exception("Ada Jaminan Yang Masih Berjalan");
+                    }
+                }
             }
 
-            $credit = M_Credit::where('ID',$check->CR_CREDIT_ID)->first();
-
-            $arrays =[
-                'status' => $credit->STATUS ,
-                'loan_number' => $credit->LOAN_NUMBER
-            ];
-
-            return response()->json( $arrays, 200);
+            return response()->json(['status' => true,'message' =>"Aman Cuk"], 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+            return response()->json(['status' => false, 'message' => $e->getMessage()], 400);
         }
+    }
+
+    private function checkCollateralExists($type, $no)
+    {
+        $table = $type === 'kendaraan' ? 'cr_collateral' : 'cr_collateral_sertification';
+        $column = $type === 'kendaraan' ? 'BPKB_NUMBER' : 'NO_SERTIFIKAT';
+        
+        return DB::table('credit as a')
+                ->leftJoin($table . ' as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
+                ->where('b.' . $column, $no)
+                ->where('a.STATUS', 'A')
+                ->exists();
     }
 }
