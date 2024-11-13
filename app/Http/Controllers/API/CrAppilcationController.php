@@ -102,7 +102,7 @@ class CrAppilcationController extends Controller
 
             $detail_prospect = M_CrSurvey::where('id',$surveyID)->first();
 
-            return response()->json(['message' => 'OK',"status" => 200,'response' =>  self::resourceDetail($detail_prospect,$check_application_id)], 200);
+            return response()->json(['message' => 'OK',"status" => 200,'response' =>  $this->resourceDetail($detail_prospect,$check_application_id)], 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
@@ -1051,8 +1051,8 @@ class CrAppilcationController extends Controller
             "prospect_approval" => [
                 "status" => $approval_detail->application_result == null ?$approval_detail->application_result:""
             ],
-            "dokumen_indentitas" => self::attachment($surveyId, "'ktp', 'kk', 'ktp_pasangan'"),
-            "dokumen_jaminan" => self::attachment($surveyId, "'no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri'"),
+            "dokumen_indentitas" => $this->attachment($surveyId, "'ktp', 'kk', 'ktp_pasangan'"),
+            "dokumen_jaminan" => $this->attachment($surveyId, "'no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri'"),
             "dokumen_pendukung" => M_CrSurveyDocument::attachmentGetAll($surveyId, ['other'])??null,
             "approval" => 
             [
