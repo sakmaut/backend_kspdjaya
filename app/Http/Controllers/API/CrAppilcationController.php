@@ -1300,10 +1300,10 @@ class CrAppilcationController extends Controller
     
             // Prepare approval data for the application
             $data_approval = [
-                'cr_application_kapos' => $userId,
-                'cr_application_kapos_time' => $currentTime->format('Y-m-d'),
-                'cr_application_kapos_desc' => $description,
-                'cr_application_kapos_note' => $flag,
+                'cr_application_ho' => $userId,
+                'cr_application_ho_time' => $currentTime->format('Y-m-d'),
+                'cr_application_ho_desc' => $description,
+                'cr_application_ho_note' => $flag,
                 'code' => $approvalData['code'],
                 'application_result' => $approvalData['result'],
             ];
