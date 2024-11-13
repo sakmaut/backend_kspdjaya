@@ -228,8 +228,8 @@ class CrSurveyController extends Controller
                 throw new Exception("Id Approval Is Exist", 409);
             }
 
-           $this->createCrSurvey($request);
-           $this->createCrProspekApproval($request);
+            $this->createCrSurvey($request);
+            $this->createCrProspekApproval($request);
 
             if (collect($request->jaminan)->isNotEmpty()) {
                $this->insert_guarante($request);
@@ -273,9 +273,9 @@ class CrSurveyController extends Controller
             'kecamatan' => $request->data_nasabah['kecamatan']?? null,
             'kelurahan' => $request->data_nasabah['kelurahan']?? null,
             "work_period" => $request->data_survey['lama_bekerja']?? null,
-            "income_personal" => $request->data_survey['penghasilan']['pribadi']?? null,
-            "income_spouse" =>  $request->data_survey['penghasilan']['pasangan']?? null,
-            "income_other" =>  $request->data_survey['penghasilan']['lainnya']?? null,
+            "income_personal" => $request->data_survey['pendapatan_pribadi']?? null,
+            "income_spouse" =>  $request->data_survey['pendapatan_pasangan']?? null,
+            "income_other" =>  $request->data_survey['pendapatan_lainnya']?? null,
             'usaha' => $request->data_survey['usaha']?? null,
             'sector' => $request->data_survey['sektor']?? null,
             "expenses" => $request->data_survey['pengeluaran']?? null,
