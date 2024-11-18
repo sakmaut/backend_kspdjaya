@@ -178,7 +178,7 @@ class Credit extends Controller
         ];
 
         foreach ($cr_guarantor as $list) {
-            $arrayList['penjamin'][] = [
+            $data['penjamin'][] = [
                 "id" => $list->ID ?? null,
                 "nama" => $list->NAME ?? null,
                 "jenis_kelamin" => $list->GENDER?? null,
