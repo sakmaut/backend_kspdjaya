@@ -64,7 +64,7 @@ class PaymentController extends Controller
                     // Fetch credit and customer details once
                     $credit = M_Credit::where('LOAN_NUMBER', $res['loan_number'])->firstOrFail();
                     $detail_customer = M_Customer::where('CUST_CODE', $credit->CUST_CODE)->firstOrFail();
-                    $customer_detail = self::setCustomerDetail($detail_customer);
+                    $customer_detail =$this->setCustomerDetail($detail_customer);
 
                     $pembayaran[] = [
                         'installment' => $res['angsuran_ke'],
@@ -135,7 +135,7 @@ class PaymentController extends Controller
             $this->updateArrears($loan_number, $tgl_angsuran, $res['bayar_denda'], $res);
         }
     
-        self::createPaymentRecords($request, $res, $tgl_angsuran, $loan_number, $no_inv, $getCodeBranch,$status_paid);
+        $this->createPaymentRecords($request, $res, $tgl_angsuran, $loan_number, $no_inv, $getCodeBranch,$status_paid);
     }
 
     private function updateCreditSchedule($loan_number, $tgl_angsuran, $res)
@@ -465,21 +465,21 @@ class PaymentController extends Controller
 
             if($getPayPrincipal != $getPrincipal && $valBeforePrincipal != 0){
                 $setPrincipal = $valBeforePrincipal - $getPayPrincipal;
-                $data_principal = self::preparePaymentData($uid, 'ANGSURAN_POKOK', $setPrincipal); // Set to PRINCIPAL value
+                $data_principal = $this->preparePaymentData($uid, 'ANGSURAN_POKOK', $setPrincipal); // Set to PRINCIPAL value
                 M_PaymentDetail::create($data_principal);
             }
 
             // Only update interest if it has changed
             if ($getPayInterest !== $getInterest && $valBeforeInterest != null) {
                 $setInterest = $valBeforeInterest - $getPayInterest;
-                $data_interest = self::preparePaymentData($uid, 'ANGSURAN_BUNGA', $setInterest);
+                $data_interest = $this->preparePaymentData($uid, 'ANGSURAN_BUNGA', $setInterest);
                 M_PaymentDetail::create($data_interest);
             }
 
             $bayar_denda = $res['bayar_denda'];
 
             if ($bayar_denda !== 0 && $request->payment_method == 'cash') {
-                $data_denda = self::preparePaymentData($uid, 'DENDA_PINJAMAN', $bayar_denda);
+                $data_denda = $this->preparePaymentData($uid, 'DENDA_PINJAMAN', $bayar_denda);
                 M_PaymentDetail::create($data_denda);
             }
 

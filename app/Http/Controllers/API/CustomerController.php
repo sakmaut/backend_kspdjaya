@@ -119,14 +119,14 @@ class CustomerController extends Controller
                     'tgl_angsuran' => Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y'),
                     'principal' => floatval($res->PRINCIPAL),
                     'interest' => floatval($res->INTEREST),
-                    'installment' => intval($res->INSTALLMENT) - intval($res->PAYMENT_VALUE),
+                    'installment' => floatval($res->INSTALLMENT) - floatval($res->PAYMENT_VALUE),
                     'principal_remains' => floatval($res->PRINCIPAL_REMAINS),
-                    'payment' => intval($res->PAYMENT_VALUE),
-                    'bayar_angsuran' => intval($res->INSTALLMENT) - intval($res->PAYMENT_VALUE),
-                    'bayar_denda' => intval($arrears->PAST_DUE_PENALTY ?? 0) - intval($arrears->PAID_PENALTY ?? 0),
-                    'total_bayar' => intval($res->INSTALLMENT+($arrears->PAST_DUE_PENALTY??0)),
+                    'payment' => floatval($res->PAYMENT_VALUE),
+                    'bayar_angsuran' => floatval($res->INSTALLMENT) - floatval($res->PAYMENT_VALUE),
+                    'bayar_denda' => floatval($arrears->PAST_DUE_PENALTY ?? 0) - floatval($arrears->PAID_PENALTY ?? 0),
+                    'total_bayar' => floatval($res->INSTALLMENT+($arrears->PAST_DUE_PENALTY??0)),
                     'flag' => $res->PAID_FLAG,
-                    'denda' => intval($arrears->PAST_DUE_PENALTY ?? 0) - intval($arrears->PAID_PENALTY ?? 0) 
+                    'denda' => floatval($arrears->PAST_DUE_PENALTY ?? 0) - floatval($arrears->PAID_PENALTY ?? 0) 
                 ];
             }
 
