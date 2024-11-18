@@ -66,7 +66,7 @@ class Credit extends Controller
 
     private function buildData($request,$data){
         $cr_personal = M_CrPersonal::where('APPLICATION_ID',$data->ID)->first();
-        $cr_guarantor = M_CrApplicationGuarantor::where('APPLICATION_ID',$data->ID)->first();
+        $cr_guarantor = M_CrApplicationGuarantor::where('APPLICATION_ID',$data->ID)->get();
         $cr_spouse = M_CrApplicationSpouse::where('APPLICATION_ID',$data->ID)->first();
         $pihak1= $this->queryKapos($data->BRANCH);
         $loan_number = generateCode($request, 'credit', 'LOAN_NUMBER');
