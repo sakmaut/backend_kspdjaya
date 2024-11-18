@@ -158,20 +158,7 @@ class Credit extends Controller
                 "no_identitas" => strtoupper($cr_personal->ID_NUMBER)??null,
                 "alamat" => strtoupper($cr_personal->ADDRESS)??null
              ],
-            "penjamin" => [
-                "nama" => $cr_guarantor->NAME ?? null,
-                "jenis_kelamin" => $cr_guarantor->GENDER?? null,
-                "tempat_lahir" => $cr_guarantor->BIRTHPLACE?? null,
-                "tgl_lahir" =>$cr_guarantor->BIRTHDATE?? null,
-                "alamat" => $cr_guarantor->ADDRESS?? null,
-                "tipe_identitas"  => $cr_guarantor->IDENTIY_TYPE?? null,
-                "no_identitas"  => $cr_guarantor->NUMBER_IDENTITY?? null,
-                "pekerjaan"  => $cr_guarantor->OCCUPATION?? null,
-                "lama_bekerja"  => $cr_guarantor->WORK_PERIOD?? null,
-                "hub_cust" => $cr_guarantor->STATUS_WITH_DEBITUR?? null,
-                "no_hp" => $cr_guarantor->MOBILE_NUMBER?? null,
-                "pendapatan" => $cr_guarantor->INCOME?? null,   
-            ],
+            "penjamin" => [],
             "pasangan" => [
                 "nama_pasangan" =>$cr_spouse->NAME ?? null,
                 "tmptlahir_pasangan" =>$cr_spouse->BIRTHPLACE ?? null,
@@ -189,6 +176,24 @@ class Credit extends Controller
              "struktur" => $check_exist != null && !empty($check_exist->LOAN_NUMBER)?$schedule:$data_credit_schedule??null
             // "struktur" => $data_credit_schedule ?? null
         ];
+
+        foreach ($cr_guarantor as $list) {
+            $arrayList['penjamin'][] = [
+                "id" => $list->ID ?? null,
+                "nama" => $list->NAME ?? null,
+                "jenis_kelamin" => $list->GENDER?? null,
+                "tempat_lahir" => $list->BIRTHPLACE?? null,
+                "tgl_lahir" =>$list->BIRTHDATE?? null,
+                "alamat" => $list->ADDRESS?? null,
+                "tipe_identitas"  => $list->IDENTIY_TYPE?? null,
+                "no_identitas"  => $list->NUMBER_IDENTITY?? null,
+                "pekerjaan"  => $list->OCCUPATION?? null,
+                "lama_bekerja"  => intval($list->WORK_PERIOD)?? null,
+                "hub_cust" => $list->STATUS_WITH_DEBITUR?? null,
+                "no_hp" => $list->MOBILE_NUMBER?? null,
+                "pendapatan" => $list->INCOME?? null,   
+            ];    
+        }
 
         foreach ($guarente_vehicle as $list) {
             $data['jaminan'][] = [
