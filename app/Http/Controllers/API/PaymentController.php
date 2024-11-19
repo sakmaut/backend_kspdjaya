@@ -442,7 +442,7 @@ class PaymentController extends Controller
             'ENTRY_DATE' => now(),
             'TITLE' => 'Angsuran Ke-' . $res['angsuran_ke'],
             'ORIGINAL_AMOUNT' => ($res['bayar_angsuran']+$res['bayar_denda']),
-            'OS_AMOUNT' => $os_amount,
+            'OS_AMOUNT' => $os_amount??0,
             'START_DATE' => $tgl_angsuran,
             'END_DATE' => now(),
             'AUTH_BY' => $request->user()->id,
