@@ -23,12 +23,12 @@ class R_CustomerSearch extends JsonResource
         })->get();
 
         return [
-            "loan_number" => $this->LOAN_NUMBER,
-            "no_kontrak" => $this->ORDER_NUMBER,
-            "nama" => $this->NAME,
-            "no_polisi" => $this->POLICE_NUMBER,
+            "loan_number" => $this->LOAN_NUMBER??null,
+            "no_kontrak" => $this->ORDER_NUMBER??null,
+            "nama" => $this->NAME??null,
+            "no_polisi" => $this->POLICE_NUMBER?? null,
             "alamat" => $this->ADDRESS,
-            "angsuran" => intval($this->INSTALLMENT),
+            "angsuran" => intval($this->INSTALLMENT??null),
             'status' => $data->isEmpty() ? 'LUNAS':'BELUM LUNAS'
         ];
     }

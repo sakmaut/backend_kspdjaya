@@ -50,14 +50,21 @@ class CustomerController extends Controller
                 return [];
             }
             
+            // Start building the query
             $query = DB::table('credit as t0')
-            ->select('t0.LOAN_NUMBER', 't0.INSTALLMENT', 't1.NAME', 't1.ADDRESS', 't2.POLICE_NUMBER', 't0.ORDER_NUMBER')
-            ->join('customer as t1', 't1.CUST_CODE', '=', 't0.CUST_CODE')
-            // ->join('cr_collateral as t2', 't2.CR_CREDIT_ID', '=', 't0.ID')
-            ->distinct();
+                ->select('t0.LOAN_NUMBER', 't0.INSTALLMENT', 't1.NAME', 't1.ADDRESS', 't0.ORDER_NUMBER')
+                ->join('customer as t1', 't1.CUST_CODE', '=', 't0.CUST_CODE')
+                ->distinct();
             
+            // Check if 'no_polisi' parameter exists and has a value
+            if (!is_null($request->no_polisi) && $request->no_polisi !== '') {
+                $query->join('cr_collateral as t2', 't2.CR_CREDIT_ID', '=', 't0.ID');
+                $query->addSelect('t2.POLICE_NUMBER');
+            }
+            
+            // Apply search filters based on provided parameters
             foreach ($searchParams as $param => $column) {
-                if ($request->$param) {
+                if (!is_null($request->$param) && $request->$param !== '') {
                     $query->where($column, 'like', '%' . $request->$param . '%');
                 }
             }
