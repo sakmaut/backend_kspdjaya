@@ -53,7 +53,7 @@ class CustomerController extends Controller
             $query = DB::table('credit as t0')
             ->select('t0.LOAN_NUMBER', 't0.INSTALLMENT', 't1.NAME', 't1.ADDRESS', 't2.POLICE_NUMBER', 't0.ORDER_NUMBER')
             ->join('customer as t1', 't1.CUST_CODE', '=', 't0.CUST_CODE')
-            ->join('cr_collateral as t2', 't2.CR_CREDIT_ID', '=', 't0.ID')
+            // ->join('cr_collateral as t2', 't2.CR_CREDIT_ID', '=', 't0.ID')
             ->distinct();
             
             foreach ($searchParams as $param => $column) {
