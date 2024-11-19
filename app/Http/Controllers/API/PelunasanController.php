@@ -73,12 +73,12 @@ class PelunasanController extends Controller
 
             $processedResults = array_map(function ($item) {
                     return [
-                        'SISA_POKOK' => intval($item->SISA_POKOK),
-                        'BUNGA_BERJALAN' => intval($item->BUNGA_BERJALAN),
-                        'TUNGGAKAN_BUNGA' => intval($item->TUNGGAKAN_BUNGA),
-                        'TUNGGAKAN_DENDA' => intval($item->TUNGGAKAN_DENDA),
-                        'DENDA' => intval($item->DENDA),
-                        'PINALTI' => intval($item->PINALTI),
+                        'SISA_POKOK' => floatval($item->SISA_POKOK),
+                        'BUNGA_BERJALAN' => floatval($item->BUNGA_BERJALAN),
+                        'TUNGGAKAN_BUNGA' => floatval($item->TUNGGAKAN_BUNGA),
+                        'TUNGGAKAN_DENDA' => floatval($item->TUNGGAKAN_DENDA),
+                        'DENDA' => floatval($item->DENDA),
+                        'PINALTI' => floatval($item->PINALTI),
                     ];
                 }, $result);
 
