@@ -47,7 +47,7 @@ class PelunasanController extends Controller
                         b.INT_ARR as TUNGGAKAN_BUNGA,
                         b.TUNGGAKAN_DENDA as TUNGGAKAN_DENDA,
                         b.DENDA_TOTAL as DENDA,
-                        (coalesce(a.PENALTY_RATE,3)/100)*(a.PCPL_ORI-coalesce(a.PAID_PRINCIPAL,0)) as PINALTI,
+                        (coalesce(a.PENALTY_RATE,7.5)/100)*(a.PCPL_ORI-coalesce(a.PAID_PRINCIPAL,0)) as PINALTI,
                         d.DISC_BUNGA
                 from	credit a
                         left join (	select	LOAN_NUMBER, 
