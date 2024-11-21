@@ -411,7 +411,10 @@ class Credit extends Controller
     }
 
     private function insert_collateral($request,$data,$lastID){
-        $data_collateral = M_CrGuaranteVehicle::where('CR_SURVEY_ID',$data->CR_SURVEY_ID)->get();
+        $data_collateral = M_CrGuaranteVehicle::where('CR_SURVEY_ID',$data->CR_SURVEY_ID)->where(function($query) {
+                                $query->whereNull('DELETED_AT')
+                                    ->orWhere('DELETED_AT', '');
+                            })->get(); 
 
         if($data_collateral->isNotEmpty()){
             foreach ($data_collateral as $res) {
@@ -442,7 +445,10 @@ class Credit extends Controller
     }
 
     private function insert_collateral_sertification($request,$data,$lastID){
-        $data_collateral = M_CrGuaranteSertification::where('CR_SURVEY_ID',$data->CR_SURVEY_ID)->get();
+        $data_collateral = M_CrGuaranteSertification::where('CR_SURVEY_ID',$data->CR_SURVEY_ID)->where(function($query) {
+                                $query->whereNull('DELETED_AT')
+                                    ->orWhere('DELETED_AT', '');
+                            })->get(); 
 
         if($data_collateral->isNotEmpty()){
             foreach ($data_collateral as $res) {
