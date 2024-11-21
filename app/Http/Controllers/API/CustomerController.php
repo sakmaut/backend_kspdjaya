@@ -335,22 +335,22 @@ class CustomerController extends Controller
                         "type" => "kendaraan",
                         'counter_id' => $guarantee->HEADER_ID,
                         "atr" => [
-                            'id' => $guarantee->ID,
+                            'id' => $guarantee->ID??null,
                             'status_jaminan' => null,
-                            "tipe" => $guarantee->TYPE,
-                            "merk" => $guarantee->BRAND,
-                            "tahun" => $guarantee->PRODUCTION_YEAR,
-                            "warna" => $guarantee->COLOR,
-                            "atas_nama" => $guarantee->ON_BEHALF,
-                            "no_polisi" => $guarantee->POLICE_NUMBER,
-                            "no_rangka" => $guarantee->CHASIS_NUMBER,
-                            "no_mesin" => $guarantee->ENGINE_NUMBER,
-                            "no_bpkb" => $guarantee->BPKB_NUMBER,
-                            "alamat_bpkb" => $guarantee->BPKB_ADDRESS,
-                            "no_faktur" => $guarantee->INVOICE_NUMBER,
-                            "no_stnk" => $guarantee->STNK_NUMBER,
-                            "tgl_stnk" => $guarantee->STNK_VALID_DATE,
-                            "nilai" => (int)$guarantee->VALUE
+                            "tipe" => $guarantee->TYPE??null,
+                            "merk" => $guarantee->BRANDv,
+                            "tahun" => $guarantee->PRODUCTION_YEAR??null,
+                            "warna" => $guarantee->COLOR??null,
+                            "atas_nama" => $guarantee->ON_BEHALF??null,
+                            "no_polisi" => $guarantee->POLICE_NUMBER??null,
+                            "no_rangka" => $guarantee->CHASIS_NUMBER??null,
+                            "no_mesin" => $guarantee->ENGINE_NUMBER??null,
+                            "no_bpkb" => $guarantee->BPKB_NUMBER??null,
+                            "alamat_bpkb" => $guarantee->BPKB_ADDRESS??null,
+                            "no_faktur" => $guarantee->INVOICE_NUMBER??null,
+                            "no_stnk" => $guarantee->STNK_NUMBER??null,
+                            "tgl_stnk" => $guarantee->STNK_VALID_DATEv,
+                            "nilai" => (int)$guarantee->VALUE??null
                         ]
                     ];
                 }
@@ -358,35 +358,35 @@ class CustomerController extends Controller
                 foreach ($guarente_sertificat as $guarantee) {
                     $jaminan[] = [
                         "type" => "sertifikat",
-                        'counter_id' => $guarantee->HEADER_ID,
+                        'counter_id' => $guarantee->HEADER_ID??null,
                         "atr" => [
-                            'id' => $guarantee->ID,
+                            'id' => $guarantee->ID??null,
                             'status_jaminan' => null,
-                            "no_sertifikat" => $guarantee->NO_SERTIFIKAT,
-                            "status_kepemilikan" => $guarantee->STATUS_KEPEMILIKAN,
-                            "imb" => $guarantee->IMB,
-                            "luas_tanah" => $guarantee->LUAS_TANAH,
-                            "luas_bangunan" => $guarantee->LUAS_BANGUNAN,
-                            "lokasi" => $guarantee->LOKASI,
-                            "provinsi" => $guarantee->PROVINSI,
-                            "kab_kota" => $guarantee->KAB_KOTA,
-                            "kec" => $guarantee->KECAMATAN,
-                            "desa" => $guarantee->DESA,
-                            "atas_nama" => $guarantee->ATAS_NAMA,
-                            "nilai" => (int)$guarantee->NILAI
+                            "no_sertifikat" => $guarantee->NO_SERTIFIKAT??null,
+                            "status_kepemilikan" => $guarantee->STATUS_KEPEMILIKAN??null,
+                            "imb" => $guarantee->IMB??null,
+                            "luas_tanah" => $guarantee->LUAS_TANAH??null,
+                            "luas_bangunan" => $guarantee->LUAS_BANGUNAN??null,
+                            "lokasi" => $guarantee->LOKASI??null,
+                            "provinsi" => $guarantee->PROVINSI??null,
+                            "kab_kota" => $guarantee->KAB_KOTA??null,
+                            "kec" => $guarantee->KECAMATAN??null,
+                            "desa" => $guarantee->DESA??null,
+                            "atas_nama" => $guarantee->ATAS_NAMA??null,
+                            "nilai" => (int)$guarantee->NILAI??null
                         ]
                     ];
                 }
             
                 return [
-                    'no_ktp' => $customer->ID_NUMBER,
-                    'no_kk' => $customer->KK_NUMBER,
-                    'nama' => $customer->NAME,
-                    'tgl_lahir' => $customer->BIRTHDATE,
-                    'alamat' => $customer->ADDRESS,
-                    'rw' => $customer->RW,
-                    'rt' => $customer->RT,
-                    'no_hp' => $customer->PHONE_PERSONAL,
+                    'no_ktp' => $customer->ID_NUMBER??null,
+                    'no_kk' => $customer->KK_NUMBER??null,
+                    'nama' => $customer->NAME??null,
+                    'tgl_lahir' => $customer->BIRTHDATE??null,
+                    'alamat' => $customer->ADDRESS??null,
+                    'rw' => $customer->RW??null,
+                    'rt' => $customer->RT??null,
+                    'no_hp' => $customer->PHONE_PERSONAL??null,
                     'jaminan' => $jaminan
                 ];
             })->toArray(); // Return as array after mapping
