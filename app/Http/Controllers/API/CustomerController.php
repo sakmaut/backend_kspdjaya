@@ -315,65 +315,67 @@ class CustomerController extends Controller
 
             $datas = $data->map(function($customer) {
                 // Fetch both guarantees in one query using JOIN
-                $guarantees = DB::table('credit as a')
+                $guarente_vehicle = DB::table('credit as a')
                                 ->leftJoin('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
+                                ->where('a.CUST_CODE', '=', $customer->CUST_CODE)
+                                ->select('b.*')
+                                ->get();
+
+                $guarente_sertificat = DB::table('credit as a')
                                 ->leftJoin('cr_collateral_sertification as c', 'c.CR_CREDIT_ID', '=', 'a.ID')
                                 ->where('a.CUST_CODE', '=', $customer->CUST_CODE)
-                                ->select('b.*', 'c.*')
+                                ->select('c.*')
                                 ->get();
             
                 $jaminan = [];
             
-                foreach ($guarantees as $guarantee) {
+                foreach ($guarente_vehicle as $guarantee) {
                     // Check if the row is from cr_collateral (vehicle)
-                    if ($guarantee->TABLE_NAME == 'cr_collateral') {
-                        $jaminan[] = [
-                            "type" => "kendaraan",
-                            'counter_id' => $guarantee->HEADER_ID,
-                            "atr" => [
-                                'id' => $guarantee->ID,
-                                'status_jaminan' => null,
-                                "tipe" => $guarantee->TYPE,
-                                "merk" => $guarantee->BRAND,
-                                "tahun" => $guarantee->PRODUCTION_YEAR,
-                                "warna" => $guarantee->COLOR,
-                                "atas_nama" => $guarantee->ON_BEHALF,
-                                "no_polisi" => $guarantee->POLICE_NUMBER,
-                                "no_rangka" => $guarantee->CHASIS_NUMBER,
-                                "no_mesin" => $guarantee->ENGINE_NUMBER,
-                                "no_bpkb" => $guarantee->BPKB_NUMBER,
-                                "alamat_bpkb" => $guarantee->BPKB_ADDRESS,
-                                "no_faktur" => $guarantee->INVOICE_NUMBER,
-                                "no_stnk" => $guarantee->STNK_NUMBER,
-                                "tgl_stnk" => $guarantee->STNK_VALID_DATE,
-                                "nilai" => (int)$guarantee->VALUE
-                            ]
-                        ];
-                    }
-            
-                    // Check if the row is from cr_collateral_sertification (certificate)
-                    if ($guarantee->TABLE_NAME == 'cr_collateral_sertification') {
-                        $jaminan[] = [
-                            "type" => "sertifikat",
-                            'counter_id' => $guarantee->HEADER_ID,
-                            "atr" => [
-                                'id' => $guarantee->ID,
-                                'status_jaminan' => null,
-                                "no_sertifikat" => $guarantee->NO_SERTIFIKAT,
-                                "status_kepemilikan" => $guarantee->STATUS_KEPEMILIKAN,
-                                "imb" => $guarantee->IMB,
-                                "luas_tanah" => $guarantee->LUAS_TANAH,
-                                "luas_bangunan" => $guarantee->LUAS_BANGUNAN,
-                                "lokasi" => $guarantee->LOKASI,
-                                "provinsi" => $guarantee->PROVINSI,
-                                "kab_kota" => $guarantee->KAB_KOTA,
-                                "kec" => $guarantee->KECAMATAN,
-                                "desa" => $guarantee->DESA,
-                                "atas_nama" => $guarantee->ATAS_NAMA,
-                                "nilai" => (int)$guarantee->NILAI
-                            ]
-                        ];
-                    }
+                    $jaminan[] = [
+                        "type" => "kendaraan",
+                        'counter_id' => $guarantee->HEADER_ID,
+                        "atr" => [
+                            'id' => $guarantee->ID,
+                            'status_jaminan' => null,
+                            "tipe" => $guarantee->TYPE,
+                            "merk" => $guarantee->BRAND,
+                            "tahun" => $guarantee->PRODUCTION_YEAR,
+                            "warna" => $guarantee->COLOR,
+                            "atas_nama" => $guarantee->ON_BEHALF,
+                            "no_polisi" => $guarantee->POLICE_NUMBER,
+                            "no_rangka" => $guarantee->CHASIS_NUMBER,
+                            "no_mesin" => $guarantee->ENGINE_NUMBER,
+                            "no_bpkb" => $guarantee->BPKB_NUMBER,
+                            "alamat_bpkb" => $guarantee->BPKB_ADDRESS,
+                            "no_faktur" => $guarantee->INVOICE_NUMBER,
+                            "no_stnk" => $guarantee->STNK_NUMBER,
+                            "tgl_stnk" => $guarantee->STNK_VALID_DATE,
+                            "nilai" => (int)$guarantee->VALUE
+                        ]
+                    ];
+                }
+
+                foreach ($guarente_sertificat as $guarantee) {
+                    $jaminan[] = [
+                        "type" => "sertifikat",
+                        'counter_id' => $guarantee->HEADER_ID,
+                        "atr" => [
+                            'id' => $guarantee->ID,
+                            'status_jaminan' => null,
+                            "no_sertifikat" => $guarantee->NO_SERTIFIKAT,
+                            "status_kepemilikan" => $guarantee->STATUS_KEPEMILIKAN,
+                            "imb" => $guarantee->IMB,
+                            "luas_tanah" => $guarantee->LUAS_TANAH,
+                            "luas_bangunan" => $guarantee->LUAS_BANGUNAN,
+                            "lokasi" => $guarantee->LOKASI,
+                            "provinsi" => $guarantee->PROVINSI,
+                            "kab_kota" => $guarantee->KAB_KOTA,
+                            "kec" => $guarantee->KECAMATAN,
+                            "desa" => $guarantee->DESA,
+                            "atas_nama" => $guarantee->ATAS_NAMA,
+                            "nilai" => (int)$guarantee->NILAI
+                        ]
+                    ];
                 }
             
                 return [
