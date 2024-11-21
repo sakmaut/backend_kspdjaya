@@ -338,7 +338,7 @@ class CustomerController extends Controller
                             'id' => $guarantee->ID??null,
                             'status_jaminan' => null,
                             "tipe" => $guarantee->TYPE??null,
-                            "merk" => $guarantee->BRANDv,
+                            "merk" => $guarantee->BRAND??null,
                             "tahun" => $guarantee->PRODUCTION_YEAR??null,
                             "warna" => $guarantee->COLOR??null,
                             "atas_nama" => $guarantee->ON_BEHALF??null,
