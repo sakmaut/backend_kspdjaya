@@ -349,7 +349,7 @@ class CustomerController extends Controller
                             "alamat_bpkb" => $guarantee->BPKB_ADDRESS??null,
                             "no_faktur" => $guarantee->INVOICE_NUMBER??null,
                             "no_stnk" => $guarantee->STNK_NUMBER??null,
-                            "tgl_stnk" => $guarantee->STNK_VALID_DATEv,
+                            "tgl_stnk" => $guarantee->STNK_VALID_DATE??null,
                             "nilai" => (int)$guarantee->VALUE??null
                         ]
                     ];
