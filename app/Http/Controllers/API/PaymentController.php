@@ -552,6 +552,12 @@ class PaymentController extends Controller
                     'file_attach' => $url ?? ''
                 ];
 
+                $check = M_PaymentAttachment::where('payment_id',$req->uid)->first();
+
+                if($check){
+                    $check->delete();
+                }
+
                 M_PaymentAttachment::create($data_array_attachment);
 
                 DB::commit();
