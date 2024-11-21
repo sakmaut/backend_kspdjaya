@@ -108,15 +108,14 @@ class PaymentController extends Controller
 
             // Save main kwitansi record
             $this->saveKwitansi($request, $customer_detail, $no_inv);
-            // $this->updateTunggakkanBunga($request);
+            $this->updateTunggakkanBunga($request);
 
             // Build response
             $build = $this->buildResponse($request, $customer_detail, $pembayaran, $no_inv, $created_now);
 
             DB::commit();
-            // ActivityLogger::logActivity($request, "Success", 200);
+            ActivityLogger::logActivity($request, "Success", 200);
             return response()->json($build, 200);
-            // return response()->json($this->updateTunggakkanBunga($request), 200);
         }catch (QueryException $e) {
             DB::rollback();
             ActivityLogger::logActivity($request,$e->getMessage(),409);
@@ -305,14 +304,32 @@ class PaymentController extends Controller
     {
         $check_arrears = M_Arrears::where(['STATUS_REC' => 'A'])->get();
 
-        $datas =[];
+        $getTunggakan = $request->tunggakan_denda; // Get the remaining penalty balance from the request
+
         if ($check_arrears->isNotEmpty()) {
-           foreach ($check_arrears as $value) {
-                $datas[] = $value;
-           }
-        }
+            foreach ($check_arrears as $value) {
+                $pasDuePenalty = $value['PAST_DUE_PENALTY']; 
+                $paidPenalty = $value['PAID_PENALTY'];
+                $arrearsId = $value['ID'];
         
-        return $datas;
+                if ($pasDuePenalty != $paidPenalty) {
+                    $remainingPenalty = $pasDuePenalty - $paidPenalty;
+        
+                    if ($getTunggakan >= $remainingPenalty) {
+                        $paidPenalty += $remainingPenalty;
+                        $getTunggakan -= $remainingPenalty;
+                    } else {
+                        $paidPenalty += $getTunggakan;
+                        $getTunggakan = 0;
+                    }
+        
+                    M_Arrears::where('ID', $arrearsId)
+                        ->update([
+                            'PAID_PENALTY' => $paidPenalty,
+                        ]);
+                }
+            }
+        }
     }
 
     private function saveKwitansi($request, $customer_detail, $no_inv)
