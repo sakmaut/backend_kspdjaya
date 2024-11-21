@@ -17,11 +17,9 @@ use App\Models\M_PaymentAttachment;
 use App\Models\M_PaymentDetail;
 use Carbon\Carbon;
 use Exception;
-use Illuminate\Contracts\Cache\Store;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Ramsey\Uuid\Uuid;
 
@@ -515,24 +513,16 @@ class PaymentController extends Controller
         try {
 
             $this->validate($req, [
-                'uid' =>'string'
+                'image' => 'image|mimes:jpg,png,jpeg,gif,svg',
+                'payment_id' =>'string'
             ]);
 
-            if (preg_match('/^data:image\/(\w+);base64,/', $req->image, $type)) {
-                $data = substr($req->image, strpos($req->image, ',') + 1);
-                $data = base64_decode($data);
-    
-                // Generate a unique filename
-                $extension = strtolower($type[1]); // Get the image extension
-                $fileName = Uuid::uuid4()->toString() . '.' . $extension;
-    
-                // Store the image
-                $image_path = Storage::put("public/Payment/{$fileName}", $data);
+            if ($req->hasFile('image')) {
+                $image_path = $req->file('image')->store('public/Payment');
                 $image_path = str_replace('public/', '', $image_path);
-    
-                // Create the URL for the stored image
-                $url = URL::to('/') . '/storage/' .'Payment/'. $fileName;
-    
+
+                $url = URL::to('/') . '/storage/' . $image_path;
+
                 $data_array_attachment = [
                     'id' => Uuid::uuid4()->toString(),
                     'payment_id' => $req->uid,
@@ -542,7 +532,7 @@ class PaymentController extends Controller
                 M_PaymentAttachment::create($data_array_attachment);
 
                 DB::commit();
-                return response()->json(['message' => 'Image upload successfully', "status" => 200, 'response' => $url], 200);
+                return response()->json($url, 200);
             } else {
                 DB::rollback();
                 ActivityLogger::logActivity($req, 'No image file provided', 400);
