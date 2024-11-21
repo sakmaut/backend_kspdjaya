@@ -552,11 +552,6 @@ class PaymentController extends Controller
         DB::beginTransaction();
         try {
 
-            $this->validate($req, [
-                'image' => 'image|mimes:jpg,png,jpeg,gif,svg',
-                'payment_id' =>'string'
-            ]);
-
             if (preg_match('/^data:image\/(\w+);base64,/', $req->image, $type)) {
                 $data = substr($req->image, strpos($req->image, ',') + 1);
                 $data = base64_decode($data);
