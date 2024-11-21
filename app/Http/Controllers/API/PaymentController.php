@@ -515,7 +515,7 @@ class PaymentController extends Controller
         try {
 
             $this->validate($req, [
-                'uid' =>'string'
+                'uid' =>'required|string'
             ]);
 
             $images = $req->images; // Get the images array from the request
