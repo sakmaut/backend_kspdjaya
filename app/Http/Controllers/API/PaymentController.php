@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Ramsey\Uuid\Uuid;
 
@@ -45,75 +46,77 @@ class PaymentController extends Controller
         DB::beginTransaction();
         try {
 
-            $created_now = Carbon::now();
-            $no_inv = generateCode($request, 'kwitansi', 'NO_TRANSAKSI', 'INV');
+            // $created_now = Carbon::now();
+            // $no_inv = generateCode($request, 'kwitansi', 'NO_TRANSAKSI', 'INV');
 
-            // Fetch branch information
-            $getCodeBranch = M_Branch::findOrFail($request->user()->branch_id);
+            // // Fetch branch information
+            // $getCodeBranch = M_Branch::findOrFail($request->user()->branch_id);
 
-            // Initialize variables
-            $customer_detail = [];
-            $pembayaran = [];
+            // // Initialize variables
+            // $customer_detail = [];
+            // $pembayaran = [];
 
-            $request->merge(['approval' => 'approve']);
+            // $request->merge(['approval' => 'approve']);
 
-            // Process payment structures
-            if (isset($request->struktur) && is_array($request->struktur)) {
-                foreach ($request->struktur as $res) {
-                    $check_method_payment = strtolower($request->payment_method) === 'cash';
+            // // Process payment structures
+            // if (isset($request->struktur) && is_array($request->struktur)) {
+            //     foreach ($request->struktur as $res) {
+            //         $check_method_payment = strtolower($request->payment_method) === 'cash';
 
-                    // Fetch credit and customer details once
-                    $credit = M_Credit::where('LOAN_NUMBER', $res['loan_number'])->firstOrFail();
-                    $detail_customer = M_Customer::where('CUST_CODE', $credit->CUST_CODE)->firstOrFail();
-                    $customer_detail =$this->setCustomerDetail($detail_customer);
+            //         // Fetch credit and customer details once
+            //         $credit = M_Credit::where('LOAN_NUMBER', $res['loan_number'])->firstOrFail();
+            //         $detail_customer = M_Customer::where('CUST_CODE', $credit->CUST_CODE)->firstOrFail();
+            //         $customer_detail =$this->setCustomerDetail($detail_customer);
 
-                    $pembayaran[] = [
-                        'installment' => $res['angsuran_ke'],
-                        'title' => 'Angsuran Ke-' . $res['angsuran_ke']
-                    ];
+            //         $pembayaran[] = [
+            //             'installment' => $res['angsuran_ke'],
+            //             'title' => 'Angsuran Ke-' . $res['angsuran_ke']
+            //         ];
             
-                    // Set customer details
-                    $save_kwitansi_detail = [
-                        "no_invoice" => $no_inv,
-                        "key" => $res['key'],
-                        'angsuran_ke' => $res['angsuran_ke'],
-                        'loan_number' => $res['loan_number'],
-                        'tgl_angsuran' => $res['tgl_angsuran'],
-                        'principal' => $res['principal'],
-                        'interest' => $res['interest'],
-                        'installment' => $res['installment'],
-                        'principal_remains' => $res['principal_remains'],
-                        'payment' => $res['payment'],
-                        'bayar_angsuran' => $res['bayar_angsuran'],
-                        "bayar_denda" => $res['bayar_denda'],
-                        "total_bayar" => $res['total_bayar'],
-                        "flag" => '',
-                        "denda" => $res['denda']
-                    ];
+            //         // Set customer details
+            //         $save_kwitansi_detail = [
+            //             "no_invoice" => $no_inv,
+            //             "key" => $res['key'],
+            //             'angsuran_ke' => $res['angsuran_ke'],
+            //             'loan_number' => $res['loan_number'],
+            //             'tgl_angsuran' => $res['tgl_angsuran'],
+            //             'principal' => $res['principal'],
+            //             'interest' => $res['interest'],
+            //             'installment' => $res['installment'],
+            //             'principal_remains' => $res['principal_remains'],
+            //             'payment' => $res['payment'],
+            //             'bayar_angsuran' => $res['bayar_angsuran'],
+            //             "bayar_denda" => $res['bayar_denda'],
+            //             "total_bayar" => $res['total_bayar'],
+            //             "flag" => '',
+            //             "denda" => $res['denda']
+            //         ];
             
-                    M_KwitansiStructurDetail::create($save_kwitansi_detail);
+            //         M_KwitansiStructurDetail::create($save_kwitansi_detail);
 
-                    if ($check_method_payment) {
-                        $this->processPaymentStructure($res, $request, $getCodeBranch, $no_inv,'PAID');
-                    } else {
-                        $tgl_angsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
-                        M_CreditSchedule::where([
-                            'LOAN_NUMBER' => $res['loan_number'],
-                            'PAYMENT_DATE' => $tgl_angsuran
-                        ])->update(['PAID_FLAG' => 'PENDING']);
-                    }
-                }
-            }
+            //         if ($check_method_payment) {
+            //             $this->processPaymentStructure($res, $request, $getCodeBranch, $no_inv,'PAID');
+            //         } else {
+            //             $tgl_angsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
+            //             M_CreditSchedule::where([
+            //                 'LOAN_NUMBER' => $res['loan_number'],
+            //                 'PAYMENT_DATE' => $tgl_angsuran
+            //             ])->update(['PAID_FLAG' => 'PENDING']);
+            //         }
+            //     }
+            // }
 
-            // Save main kwitansi record
-            $this->saveKwitansi($request, $customer_detail, $no_inv);
+            // // Save main kwitansi record
+            // $this->saveKwitansi($request, $customer_detail, $no_inv);
+            // $this->updateTunggakkanBunga($request);
 
             // Build response
-            $build = $this->buildResponse($request, $customer_detail, $pembayaran, $no_inv, $created_now);
+            // $build = $this->buildResponse($request, $customer_detail, $pembayaran, $no_inv, $created_now);
 
             DB::commit();
             // ActivityLogger::logActivity($request, "Success", 200);
-            return response()->json($build, 200);
+            // return response()->json($build, 200);
+            return response()->json($this->updateTunggakkanBunga($request), 200);
         }catch (QueryException $e) {
             DB::rollback();
             ActivityLogger::logActivity($request,$e->getMessage(),409);
@@ -296,6 +299,20 @@ class PaymentController extends Controller
             }
         }
 
+    }
+
+    private function updateTunggakkanBunga($request)
+    {
+        $check_arrears = M_Arrears::where(['STATUS_REC' => 'A'])->get();
+
+        $datas =[];
+        if ($check_arrears->isNotEmpty()) {
+           foreach ($check_arrears as $value) {
+                $datas[] = $value;
+           }
+        }
+        
+        return $datas;
     }
 
     private function saveKwitansi($request, $customer_detail, $no_inv)
@@ -540,12 +557,21 @@ class PaymentController extends Controller
                 'payment_id' =>'string'
             ]);
 
-            if ($req->hasFile('image')) {
-                $image_path = $req->file('image')->store('public/Payment');
+            if (preg_match('/^data:image\/(\w+);base64,/', $req->image, $type)) {
+                $data = substr($req->image, strpos($req->image, ',') + 1);
+                $data = base64_decode($data);
+    
+                // Generate a unique filename
+                $extension = strtolower($type[1]); // Get the image extension
+                $fileName = Uuid::uuid4()->toString() . '.' . $extension;
+    
+                // Store the image
+                $image_path = Storage::put("public/Payment/{$fileName}", $data);
                 $image_path = str_replace('public/', '', $image_path);
-
-                $url = URL::to('/') . '/storage/' . $image_path;
-
+              
+                $url = URL::to('/') . '/storage/' .'Payment/'. $fileName;
+    
+                // Prepare data for database insertion
                 $data_array_attachment = [
                     'id' => Uuid::uuid4()->toString(),
                     'payment_id' => $req->uid,
@@ -559,14 +585,16 @@ class PaymentController extends Controller
                 }
 
                 M_PaymentAttachment::create($data_array_attachment);
-
+    
                 DB::commit();
-                return response()->json($url, 200);
+                return response()->json(['message' => 'Image upload successfully', "status" => 200, 'response' => $url], 200);
             } else {
                 DB::rollback();
                 ActivityLogger::logActivity($req, 'No image file provided', 400);
                 return response()->json(['message' => 'No image file provided', "status" => 400], 400);
             }
+
+           
         } catch (QueryException $e) {
             DB::rollback();
             ActivityLogger::logActivity($req,$e->getMessage(),409);
