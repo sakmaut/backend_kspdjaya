@@ -47,7 +47,8 @@ class PelunasanController extends Controller
                         b.INT_ARR as TUNGGAKAN_BUNGA,
                         b.TUNGGAKAN_DENDA as TUNGGAKAN_DENDA,
                         b.DENDA_TOTAL as DENDA,
-                        (coalesce(a.PENALTY_RATE,3)/100)*(a.PCPL_ORI-coalesce(a.PAID_PRINCIPAL,0)) as PINALTI
+                        (coalesce(a.PENALTY_RATE,3)/100)*(a.PCPL_ORI-coalesce(a.PAID_PRINCIPAL,0)) as PINALTI,
+                        d.DISC_BUNGA
                 from	credit a
                         left join (	select	LOAN_NUMBER, 
                                             sum(coalesce(PAST_DUE_INTRST,0))-sum(coalesce(PAID_INT,0)) as INT_ARR, 
@@ -67,7 +68,15 @@ class PelunasanController extends Controller
                                                                     from	credit_schedule
                                                                     where	LOAN_NUMBER = '{$loan_number}'
                                                                             and PAYMENT_DATE <= now())) c
-                        on c.LOAN_NUMBER = a.LOAN_NUMBER
+                            on c.LOAN_NUMBER = a.LOAN_NUMBER
+                        left join (	select	LOAN_NUMBER, INTEREST-PAYMENT_VALUE_INTEREST as DISC_BUNGA
+                                    from	credit_schedule
+                                    where	LOAN_NUMBER = '{$loan_number}'
+                                            and PAYMENT_DATE = (	select	max(PAYMENT_DATE)
+                                                                    from	credit_schedule
+                                                                    where	LOAN_NUMBER = '{$loan_number}'
+                                                                            and PAYMENT_DATE>now())) d
+                            on d.LOAN_NUMBER = a.LOAN_NUMBER
                 where a.LOAN_NUMBER = '{$loan_number}'"
             );
 
