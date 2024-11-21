@@ -17,9 +17,11 @@ use App\Models\M_PaymentAttachment;
 use App\Models\M_PaymentDetail;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Contracts\Cache\Store;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Ramsey\Uuid\Uuid;
 
@@ -513,31 +515,47 @@ class PaymentController extends Controller
         try {
 
             $this->validate($req, [
-                'image' => 'image|mimes:jpg,png,jpeg,gif,svg',
                 'payment_id' =>'string'
             ]);
 
-            if ($req->hasFile('image')) {
-                $image_path = $req->file('image')->store('public/Payment');
-                $image_path = str_replace('public/', '', $image_path);
+            $images = $req->images; // Get the images array from the request
+            $uploadedUrls = []; // Array
 
-                $url = URL::to('/') . '/storage/' . $image_path;
-
-                $data_array_attachment = [
-                    'id' => Uuid::uuid4()->toString(),
-                    'payment_id' => $req->uid,
-                    'file_attach' => $url ?? ''
-                ];
-
-                M_PaymentAttachment::create($data_array_attachment);
-
-                DB::commit();
-                return response()->json($url, 200);
-            } else {
-                DB::rollback();
-                ActivityLogger::logActivity($req, 'No image file provided', 400);
-                return response()->json(['message' => 'No image file provided', "status" => 400], 400);
+            foreach ($images as $key => $imageData) { // Use $key to maintain index
+                if (preg_match('/^data:image\/(\w+);base64,/', $imageData['image'], $type)) {
+                    $data = substr($imageData['image'], strpos($imageData['image'], ',') + 1);
+                    $data = base64_decode($data);
+            
+                    if ($data === false) {
+                        return response()->json(['message' => 'Image data could not be decoded', 'status' => 400], 400);
+                    }
+            
+                    $extension = strtolower($type[1]);
+                    $fileName = Uuid::uuid4()->toString() . '.' . $extension;
+            
+                    // Store the image
+                    $imagePath = Storage::put("public/Payment/{$fileName}", $data);
+                    $imagePath = str_replace('public/', '', $imagePath);
+            
+                    $url = URL::to('/') . '/storage/Payment/' . $fileName;
+            
+                    $data_array_attachment = [
+                        'id' => Uuid::uuid4()->toString(),
+                        'payment_id' => $req->uid,
+                        'file_attach' => $url ?? ''
+                    ];
+    
+                    M_PaymentAttachment::create($data_array_attachment);
+                    
+                    // Store the uploaded image URL with a key number
+                    DB::commit();
+                    $uploadedUrls["url_{$key}"] = $url; // Use the loop index as the key
+                } else {
+                    return response()->json(['message' => 'No valid image file provided', 'status' => 400], 400);
+                }
             }
+
+            return response()->json(['message' => 'Image upload successfully', "status" => 200, 'response' => $uploadedUrls], 200);
         } catch (QueryException $e) {
             DB::rollback();
             ActivityLogger::logActivity($req,$e->getMessage(),409);
