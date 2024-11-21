@@ -533,7 +533,6 @@ class PaymentController extends Controller
                 // Create the URL for the stored image
                 $url = URL::to('/') . '/storage/' .'Payment/'. $fileName;
     
-                // Prepare data for database insertion
                 $data_array_attachment = [
                     'id' => Uuid::uuid4()->toString(),
                     'payment_id' => $req->uid,
@@ -541,7 +540,7 @@ class PaymentController extends Controller
                 ];
 
                 M_PaymentAttachment::create($data_array_attachment);
-                
+
                 DB::commit();
                 return response()->json(['message' => 'Image upload successfully', "status" => 200, 'response' => $url], 200);
             } else {
