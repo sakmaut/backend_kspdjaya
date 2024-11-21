@@ -541,7 +541,8 @@ class PaymentController extends Controller
                 ];
 
                 M_PaymentAttachment::create($data_array_attachment);
-                    DB::commit();
+                
+                DB::commit();
                 return response()->json(['message' => 'Image upload successfully', "status" => 200, 'response' => $url], 200);
             } else {
                 DB::rollback();
