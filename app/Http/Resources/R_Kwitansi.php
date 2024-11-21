@@ -19,12 +19,11 @@ class R_Kwitansi extends JsonResource
     public function toArray(Request $request): array
     {
         // Retrieve payment and related data
-        $payment = M_Payment::where('INVOICE', $this->NO_TRANSAKSI)->first();
         $details = M_KwitansiStructurDetail::where('no_invoice', $this->NO_TRANSAKSI)
             ->orderBy('angsuran_ke', 'asc')
             ->get();
         $branch = M_Branch::where('ID', $this->BRANCH_CODE)->first();
-        $attachment = $payment ? M_PaymentAttachment::where('payment_id', $payment->NO_TRX)->value('file_attach') : null;
+        $attachment = M_PaymentAttachment::where('payment_id', $this->PAYMENT_ID)->value('file_attach') ?? null;
 
         return [
             "id" => $this->ID,

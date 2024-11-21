@@ -301,6 +301,7 @@ class PaymentController extends Controller
     {
         $save_kwitansi = [
             "PAYMENT_TYPE" => 'angsuran',
+            "PAYMENT_ID" => $request->uid,
             "STTS_PAYMENT" => $request->payment_method == 'cash' ? "PAID" : "PENDING",
             "NO_TRANSAKSI" => $no_inv,
             "LOAN_NUMBER" => $request->no_facility ?? null,
