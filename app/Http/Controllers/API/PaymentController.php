@@ -515,47 +515,39 @@ class PaymentController extends Controller
         try {
 
             $this->validate($req, [
-                'uid' =>'required|string'
+                'uid' =>'string'
             ]);
 
-            $images = $req->images; // Get the images array from the request
-            $uploadedUrls = []; // Array
-
-            foreach ($images as $key => $imageData) { // Use $key to maintain index
-                if (preg_match('/^data:image\/(\w+);base64,/', $imageData['image'], $type)) {
-                    $data = substr($imageData['image'], strpos($imageData['image'], ',') + 1);
-                    $data = base64_decode($data);
-            
-                    if ($data === false) {
-                        return response()->json(['message' => 'Image data could not be decoded', 'status' => 400], 400);
-                    }
-            
-                    $extension = strtolower($type[1]);
-                    $fileName = Uuid::uuid4()->toString() . '.' . $extension;
-            
-                    // Store the image
-                    $imagePath = Storage::put("public/Payment/{$fileName}", $data);
-                    $imagePath = str_replace('public/', '', $imagePath);
-            
-                    $url = URL::to('/') . '/storage/Payment/' . $fileName;
-            
-                    $data_array_attachment = [
-                        'id' => Uuid::uuid4()->toString(),
-                        'payment_id' => $req->uid,
-                        'file_attach' => $url ?? ''
-                    ];
+            if (preg_match('/^data:image\/(\w+);base64,/', $req->image, $type)) {
+                $data = substr($req->image, strpos($req->image, ',') + 1);
+                $data = base64_decode($data);
     
-                    M_PaymentAttachment::create($data_array_attachment);
-                    
-                    // Store the uploaded image URL with a key number
-                    DB::commit();
-                    $uploadedUrls["url_{$key}"] = $url; // Use the loop index as the key
-                } else {
-                    return response()->json(['message' => 'No valid image file provided', 'status' => 400], 400);
-                }
-            }
+                // Generate a unique filename
+                $extension = strtolower($type[1]); // Get the image extension
+                $fileName = Uuid::uuid4()->toString() . '.' . $extension;
+    
+                // Store the image
+                $image_path = Storage::put("public/Payment/{$fileName}", $data);
+                $image_path = str_replace('public/', '', $image_path);
+    
+                // Create the URL for the stored image
+                $url = URL::to('/') . '/storage/' .'Payment/'. $fileName;
+    
+                // Prepare data for database insertion
+                $data_array_attachment = [
+                    'id' => Uuid::uuid4()->toString(),
+                    'payment_id' => $req->uid,
+                    'file_attach' => $url ?? ''
+                ];
 
-            return response()->json(['message' => 'Image upload successfully', "status" => 200, 'response' => $uploadedUrls], 200);
+                M_PaymentAttachment::create($data_array_attachment);
+                    DB::commit();
+                return response()->json(['message' => 'Image upload successfully', "status" => 200, 'response' => $url], 200);
+            } else {
+                DB::rollback();
+                ActivityLogger::logActivity($req, 'No image file provided', 400);
+                return response()->json(['message' => 'No image file provided', "status" => 400], 400);
+            }
         } catch (QueryException $e) {
             DB::rollback();
             ActivityLogger::logActivity($req,$e->getMessage(),409);
