@@ -4,10 +4,14 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\R_Bpkb;
+use App\Models\M_CrApplication;
 use App\Models\M_CrCollateral;
+use App\Models\M_CrCollateralSertification;
 use App\Models\M_Credit;
 use App\Models\M_CrSurvey;
+use App\Models\M_CrSurveyDocument;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class BpkbController extends Controller
 {
@@ -17,20 +21,106 @@ class BpkbController extends Controller
 
             $branch = $request->user()->branch_id;
 
-            // $data = M_Credit::leftJoin('cr_collateral as t2', 't2.CR_CREDIT_ID', '=', 'credit.ID')
-            //                     ->select('credit.BRANCH', 't2.*')
-            //                     ->where('credit.BRANCH',$branch)
-            //                     ->get();
+            $collateral = M_CrCollateral::where('COLLATERAL_FLAG',$branch)->where(function($query) {
+                                $query->whereNull('DELETED_AT')
+                                    ->orWhere('DELETED_AT', '');
+                            })->get(); 
 
-            $data = M_CrCollateral::where('LOCATION_BRANCH',$branch)->get();
+            $collateral_sertificat = M_CrCollateralSertification::where('COLLATERAL_FLAG',$branch)->where(function($query) {
+                                        $query->whereNull('DELETED_AT')
+                                            ->orWhere('DELETED_AT', '');
+                                    })->get(); 
 
-            $dto = R_Bpkb::collection($data);
+            $data = [];
+            foreach ($collateral as $list) {
+
+                $surveyId = M_CrApplication::select('CR_SURVEY_ID')
+                            ->join('credit', 'cr_application.ORDER_NUMBER', '=', 'credit.ORDER_NUMBER')
+                            ->where('credit.ID', $list->CR_CREDIT_ID)
+                            ->first();
+
+                $data[] = [
+                    "type" => "kendaraan",
+                    "atr" => [ 
+                        'id' => $list->ID,
+                        'status_jaminan' => null,
+                        "tipe" => $list->TYPE,
+                        "merk" => $list->BRAND,
+                        "tahun" => $list->PRODUCTION_YEAR,
+                        "warna" => $list->COLOR,
+                        "atas_nama" => $list->ON_BEHALF,
+                        "no_polisi" => $list->POLICE_NUMBER,
+                        "no_rangka" => $list->CHASIS_NUMBER,
+                        "no_mesin" => $list->ENGINE_NUMBER,
+                        "no_bpkb" => $list->BPKB_NUMBER,
+                        "no_stnk" => $list->STNK_NUMBER,
+                        "tgl_stnk" => $list->STNK_VALID_DATE,
+                        "nilai" => (int) $list->VALUE,
+                        "document" => $this->attachment_guarante($surveyId?$surveyId->CR_SURVEY_ID:0,"'no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri'")
+                    ]
+                ];    
+            }
+    
+            foreach ($collateral_sertificat as $list) {
+
+                $surveyId = M_CrApplication::select('CR_SURVEY_ID')
+                                            ->join('credit', 'cr_application.ORDER_NUMBER', '=', 'credit.ORDER_NUMBER')
+                                            ->where('credit.ID', $list->CR_CREDIT_ID)
+                                            ->first();
+
+                $data[] = [
+                    "type" => "sertifikat",
+                    "atr" => [ 
+                        'id' => $list->ID,
+                        'status_jaminan' => null,
+                        "no_sertifikat" => $list->NO_SERTIFIKAT,
+                        "status_kepemilikan" => $list->STATUS_KEPEMILIKAN,
+                        "imb" => $list->IMB,
+                        "luas_tanah" => $list->LUAS_TANAH,
+                        "luas_bangunan" => $list->LUAS_BANGUNAN,
+                        "lokasi" => $list->LOKASI,
+                        "provinsi" => $list->PROVINSI,
+                        "kab_kota" => $list->KAB_KOTA,
+                        "kec" => $list->KECAMATAN,
+                        "desa" => $list->DESA,
+                        "atas_nama" => $list->ATAS_NAMA,
+                        "nilai" => (int) $list->NILAI,
+                        "document" => $this->attachmentSertifikat($surveyId?$surveyId->CR_SURVEY_ID:0, ['sertifikat'])??null,
+                    ]
+                ];    
+            }
 
             ActivityLogger::logActivity($request,"Success",200);
-            return response()->json($dto, 200);
+            return response()->json($data, 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
         }
     }
+
+    public function attachment_guarante($survey_id, $data){
+        $documents = DB::select(
+            "   SELECT *
+                FROM cr_survey_document AS csd
+                WHERE (TYPE, TIMEMILISECOND) IN (
+                    SELECT TYPE, MAX(TIMEMILISECOND)
+                    FROM cr_survey_document
+                    WHERE TYPE IN ($data)
+                        AND CR_SURVEY_ID = '$survey_id'
+                    GROUP BY TYPE
+                )
+                ORDER BY TIMEMILISECOND DESC"
+        );
+    
+        return $documents;        
+    }
+
+    public function attachmentSertifikat($survey_id,$array = []){
+        $attachment = M_CrSurveyDocument::where('CR_SURVEY_ID', $survey_id)
+                    ->whereIn('TYPE', $array)
+                    ->orderBy('TIMEMILISECOND', 'desc')
+                    ->get();
+
+    return $attachment;
+}
 }

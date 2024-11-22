@@ -100,8 +100,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::resource('blacklist', CrBlacklistController::class);
     Route::post('blacklist_detail', [CrBlacklistController::class,'check']);
 
-    Route::resource('bpkb', BpkbController::class);
-    Route::resource('bpkb_transaction', BpkbTransactionController::class);
+    Route::resource('jaminan', BpkbController::class);
+    Route::resource('jaminan_transaction', BpkbTransactionController::class);
     Route::post('change_password', [UsersController::class,'changePassword']);
 
     Route::resource('position',HrPositionController::class);
