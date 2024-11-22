@@ -302,7 +302,7 @@ class PaymentController extends Controller
 
     private function updateTunggakkanBunga($request)
     {
-        $check_arrears = M_Arrears::where('STATUS_REC', 'A')
+        $check_arrears = M_Arrears::where('LOAN_NUMBER', $request->no_facility)
                                     ->select('ID', 'PAST_DUE_PENALTY', 'PAID_PENALTY')
                                     ->get();
 
