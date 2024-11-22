@@ -60,7 +60,7 @@ class BpkbTransactionController extends Controller
                 }
 
                 $check->update([
-                    'CATEGORY' => $request->kategori??null,
+                    'CATEGORY' => $request->type??null,
                     'NOTE' => $request->catatan,
                     'STATUS' => 'APPROVE_HO'
                 ]);
@@ -127,7 +127,7 @@ class BpkbTransactionController extends Controller
                 $data = [
                     'FROM_BRANCH' => $branch,
                     'TO_BRANCH' => $request->tujuan,
-                    'CATEGORY' => $request->kategori??null,
+                    'CATEGORY' => $request->type??null,
                     'NOTE' => $request->catatan,
                     'STATUS' => 'SENDING',
                     'COURIER' => $request->kurir??null,

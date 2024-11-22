@@ -48,7 +48,10 @@ class PelunasanController extends Controller
                         b.TUNGGAKAN_DENDA as TUNGGAKAN_DENDA,
                         b.DENDA_TOTAL as DENDA,
                         (coalesce(a.PENALTY_RATE,7.5)/100)*(a.PCPL_ORI-coalesce(a.PAID_PRINCIPAL,0)) as PINALTI,
-                        d.DISC_BUNGA
+                        (select	sum(INTEREST-PAYMENT_VALUE_INTEREST) as DISC_BUNGA
+                                    from	credit_schedule
+                                    where	LOAN_NUMBER = '{$loan_number}'
+                                            and PAYMENT_DATE > now()) as DISC_BUNGA
                 from	credit a
                         left join (	select	LOAN_NUMBER, 
                                             sum(coalesce(PAST_DUE_INTRST,0))-sum(coalesce(PAID_INT,0)) as INT_ARR, 
