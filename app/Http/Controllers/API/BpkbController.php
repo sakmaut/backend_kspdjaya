@@ -3,13 +3,10 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\R_Bpkb;
 use App\Models\M_Branch;
 use App\Models\M_CrApplication;
 use App\Models\M_CrCollateral;
 use App\Models\M_CrCollateralSertification;
-use App\Models\M_Credit;
-use App\Models\M_CrSurvey;
 use App\Models\M_CrSurveyDocument;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -22,12 +19,12 @@ class BpkbController extends Controller
 
             $branch = $request->user()->branch_id;
 
-            $collateral = M_CrCollateral::where('COLLATERAL_FLAG',$branch)->where(function($query) {
+            $collateral = M_CrCollateral::where('LOCATION_BRANCH',$branch)->where(function($query) {
                                 $query->whereNull('DELETED_AT')
                                     ->orWhere('DELETED_AT', '');
                             })->get(); 
 
-            $collateral_sertificat = M_CrCollateralSertification::where('COLLATERAL_FLAG',$branch)->where(function($query) {
+            $collateral_sertificat = M_CrCollateralSertification::where('LOCATION',$branch)->where(function($query) {
                                         $query->whereNull('DELETED_AT')
                                             ->orWhere('DELETED_AT', '');
                                     })->get(); 
@@ -35,8 +32,9 @@ class BpkbController extends Controller
             $data = [];
             foreach ($collateral as $list) {
 
-                $surveyId = M_CrApplication::select('CR_SURVEY_ID', 'credit.ORDER_NUMBER')
+                $surveyId = M_CrApplication::select('CR_SURVEY_ID', 'credit.ORDER_NUMBER','customer.NAME')
                             ->join('credit', 'cr_application.ORDER_NUMBER', '=', 'credit.ORDER_NUMBER')
+                            ->join('customer', 'credit.CUST_CODE', '=', 'customer.CUST_CODE')
                             ->where('credit.ID', $list->CR_CREDIT_ID)
                             ->first();
 
@@ -44,7 +42,9 @@ class BpkbController extends Controller
 
                 $data[] = [
                     "type" => "kendaraan",
+                    'nama_debitur' => $surveyId->NAME,
                     'order_number' => $surveyId->ORDER_NUMBER,
+                    'no_jaminan' => $list->BPKB_NUMBER,
                     'id' => $list->ID,
                     'status_jaminan' => null,
                     "tipe" => $list->TYPE,
@@ -66,8 +66,9 @@ class BpkbController extends Controller
     
             foreach ($collateral_sertificat as $list) {
 
-                $surveyId = M_CrApplication::select('CR_SURVEY_ID', 'credit.ORDER_NUMBER')
+                $surveyId = M_CrApplication::select('CR_SURVEY_ID', 'credit.ORDER_NUMBER','customer.NAME')
                                             ->join('credit', 'cr_application.ORDER_NUMBER', '=', 'credit.ORDER_NUMBER')
+                                            ->join('customer', 'credit.CUST_CODE', '=', 'customer.CUST_CODE')
                                             ->where('credit.ID', $list->CR_CREDIT_ID)
                                             ->first();
                 
@@ -75,7 +76,9 @@ class BpkbController extends Controller
 
                 $data[] = [
                     "type" => "sertifikat",
+                    'nama_debitur' => $surveyId->NAME,
                     'order_number' => $surveyId->ORDER_NUMBER,
+                    'no_jaminan' => $list->NO_SERTIFIKAT,
                     'id' => $list->ID,
                     'status_jaminan' => null,
                     "no_sertifikat" => $list->NO_SERTIFIKAT,

@@ -18,6 +18,7 @@ use App\Models\M_CrPersonalExtra;
 use App\Models\M_CrSurvey;
 use App\Models\M_Customer;
 use App\Models\M_CustomerExtra;
+use App\Models\M_LocationStatus;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
@@ -432,14 +433,24 @@ class Credit extends Controller
                     'BPKB_NUMBER' => $res->BPKB_NUMBER??null,
                     'STNK_NUMBER' => $res->STNK_NUMBER??null,
                     'VALUE' => $res->VALUE??null,
-                    'LOCATION_BRANCH' => '',
-                    'COLLATERAL_FLAG' => $data->BRANCH,
+                    'LOCATION_BRANCH' => $data->BRANCH,
+                    'COLLATERAL_FLAG' =>'',
                     'VERSION' => 1,
                     'CREATE_DATE' => $this->timeNow,
                     'CREATE_BY' => $request->user()->id,
                 ];
     
-                M_CrCollateral::create($data_jaminan);
+                $execute = M_CrCollateral::create($data_jaminan);
+
+                $log = [
+                    'COLLATERAL_ID' => $execute->ID,
+                    'TYPE' => 'kendaraan',
+                    'LOCATION' => $data->BRANCH,
+                    'CREATE_BY' => $request->user()->id,
+                    'CREATED_AT' => $this->timeNow
+                ];
+
+                M_LocationStatus::create($log);
             }
         }
     }
@@ -468,13 +479,23 @@ class Credit extends Controller
                     'DESA' => $res->DESA,
                     'ATAS_NAMA' => $res->ATAS_NAMA,
                     'NILAI' => $res->NILAI,
-                    'COLLATERAL_FLAG' => $data->BRANCH,
+                    'LOCATION' => $data->BRANCH,
                     'VERSION' => 1,
                     'CREATE_DATE' => $this->timeNow,
                     'CREATE_BY' => $request->user()->id,
                 ];
     
-                M_CrCollateralSertification::create($data_jaminan);
+                $execute =  M_CrCollateralSertification::create($data_jaminan);
+
+                $log = [
+                    'COLLATERAL_ID' => $execute->id,
+                    'TYPE' => 'sertifikat',
+                    'LOCATION' => $data->BRANCH,
+                    'CREATED_BY' => $request->user()->id,
+                    'CREATED_AT' => $this->timeNow
+                ];
+
+                M_LocationStatus::create($log);
             }
         }
     }
