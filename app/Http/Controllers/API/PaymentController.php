@@ -108,7 +108,7 @@ class PaymentController extends Controller
 
             // Save main kwitansi record
             $this->saveKwitansi($request, $customer_detail, $no_inv);
-            $this->updateTunggakkanBunga($request);
+            // $this->updateTunggakkanBunga($request);
 
             // Build response
             $build = $this->buildResponse($request, $customer_detail, $pembayaran, $no_inv, $created_now);
