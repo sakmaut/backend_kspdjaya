@@ -106,18 +106,16 @@ class PaymentController extends Controller
                 }
             }
 
-            // Save main kwitansi record
+            // // Save main kwitansi record
             $this->saveKwitansi($request, $customer_detail, $no_inv);
-            // $this->updateTunggakkanBunga($request);
+            $this->updateTunggakkanBunga($request);
 
-            // Build response
+            // // Build response
             $build = $this->buildResponse($request, $customer_detail, $pembayaran, $no_inv, $created_now);
 
-           
+            DB::commit();
             ActivityLogger::logActivity($request, "Success", 200);
             return response()->json($build, 200);
-            // return response()->json($this->updateTunggakkanBunga($request), 200);
-            DB::commit();
         }catch (QueryException $e) {
             DB::rollback();
             ActivityLogger::logActivity($request,$e->getMessage(),409);
@@ -311,36 +309,33 @@ class PaymentController extends Controller
         $getTunggakan = $request->tunggakan_denda - $request->diskon_tunggakan; 
 
         $updates = [];
-
+       
         if ($check_arrears->isNotEmpty()) {
-            DB::transaction(function () use ($check_arrears, &$getTunggakan, &$updates) {
-                foreach ($check_arrears as $value) {
-                    $pasDuePenalty = $value->PAST_DUE_PENALTY; 
-                    $paidPenalty = $value->PAID_PENALTY;
-                    $arrearsId = $value->ID;
-        
-                    if ($pasDuePenalty != $paidPenalty) {
-                        $remainingPenalty = $pasDuePenalty - $paidPenalty;
-        
-                        if ($getTunggakan >= $remainingPenalty) {
-                            $paidPenalty += $remainingPenalty;
-                            $getTunggakan -= $remainingPenalty;
-                        } else {
-                            $paidPenalty += $getTunggakan;
-                            $getTunggakan = 0;
-                        }
-        
-                        // Store the update in the array
-                        $updates[$arrearsId] = $paidPenalty;
+            foreach ($check_arrears as $value) {
+                $pasDuePenalty = $value->PAST_DUE_PENALTY; 
+                $paidPenalty = $value->PAID_PENALTY;
+                $arrearsId = $value->ID;
+    
+                if ($pasDuePenalty != $paidPenalty) {
+                    $remainingPenalty = $pasDuePenalty - $paidPenalty;
+    
+                    if ($getTunggakan >= $remainingPenalty) {
+                        $paidPenalty += $remainingPenalty;
+                        $getTunggakan -= $remainingPenalty;
+                    } else {
+                        $paidPenalty += $getTunggakan;
+                        $getTunggakan = 0;
                     }
+    
+                    // Store the update in the array
+                    $updates[$arrearsId] = $paidPenalty;
                 }
-        
-                // Perform batch update
-                foreach ($updates as $id => $paidPenalty) {
-                    M_Arrears::where('ID', $id)
-                        ->update(['PAID_PENALTY' => $paidPenalty]);
-                }
-            });
+            }    
+            // Perform batch update
+            foreach ($updates as $id => $paidPenalty) {
+               M_Arrears::where('ID', $id)
+                         ->update(['PAID_PENALTY' => $paidPenalty]);
+            }
         }
     }
 
