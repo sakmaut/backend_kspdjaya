@@ -41,11 +41,6 @@ class PelunasanController extends Controller
 
             $loan_number = $request->loan_number;
 
-            // select	sum(INTEREST-PAYMENT_VALUE_INTEREST) as DISC_BUNGA
-			// 		from	credit_schedule
-			// 		where	LOAN_NUMBER = '{$loan_number}'
-			// 				and PAYMENT_DATE > now()
-
             $result = DB::select(
                 "select	(a.PCPL_ORI-coalesce(a.PAID_PRINCIPAL,0)) as SISA_POKOK,
                         c.BUNGA as BUNGA_BERJALAN,
@@ -85,6 +80,13 @@ class PelunasanController extends Controller
                 where a.LOAN_NUMBER = '{$loan_number}'"
             );
 
+            $query2 = DB::select("
+                    select	sum(INTEREST-PAYMENT_VALUE_INTEREST) as DISC_BUNGA
+					from	credit_schedule
+					where	LOAN_NUMBER = '{$loan_number}'
+							and PAYMENT_DATE>now()
+            ");
+
             $processedResults = array_map(function ($item) {
                 return [
                     'SISA_POKOK' => round(floatval($item->SISA_POKOK), 2),
@@ -95,6 +97,10 @@ class PelunasanController extends Controller
                     'PINALTI' => round(floatval($item->PINALTI), 2),
                 ];
             }, $result);
+
+            if (!empty($query2) && isset($query2[0]->DISC_BUNGA)) {
+                $processedResults['DISC_BUNGA'] = round(floatval($query2[0]->DISC_BUNGA), 2);
+            } 
 
             return response()->json($processedResults, 200);
         } catch (\Exception $e) {
