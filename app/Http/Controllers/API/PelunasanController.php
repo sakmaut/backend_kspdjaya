@@ -108,7 +108,7 @@ class PelunasanController extends Controller
             }
             
             $processedResultsWithDiscBunga = [
-                'results' => $processedResults,
+                $processedResults,
                 'DISC_BUNGA' => $discBunga,
             ];
 
