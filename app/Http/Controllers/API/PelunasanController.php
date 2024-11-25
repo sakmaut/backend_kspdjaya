@@ -100,7 +100,9 @@ class PelunasanController extends Controller
 
             if (!empty($query2) && isset($query2[0]->DISC_BUNGA)) {
                 $processedResults['DISC_BUNGA'] = round(floatval($query2[0]->DISC_BUNGA), 2);
-            } 
+            } else{
+                $processedResults['DISC_BUNGA'] = 0;
+            }
 
             return response()->json($processedResults, 200);
         } catch (\Exception $e) {
