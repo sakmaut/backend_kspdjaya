@@ -98,13 +98,21 @@ class PelunasanController extends Controller
                 ];
             }, $result);
 
+            $discBunga = 0;
             if (!empty($query2) && isset($query2[0]->DISC_BUNGA)) {
-                $processedResults['DISC_BUNGA'] = round(floatval($query2[0]->DISC_BUNGA), 2);
-            } else{
-                $processedResults['DISC_BUNGA'] = 0;
+                $discBunga = round(floatval($query2[0]->DISC_BUNGA), 2);
             }
+        
+            foreach ($processedResults as &$processedResult) {
+                $processedResult['DISC_BUNGA'] = $discBunga;
+            }
+            
+            $processedResultsWithDiscBunga = [
+                'results' => $processedResults,
+                'DISC_BUNGA' => $discBunga,
+            ];
 
-            return response()->json($processedResults, 200);
+            return response()->json($processedResultsWithDiscBunga, 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
