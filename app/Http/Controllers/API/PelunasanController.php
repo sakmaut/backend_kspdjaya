@@ -106,13 +106,8 @@ class PelunasanController extends Controller
             foreach ($processedResults as &$processedResult) {
                 $processedResult['DISC_BUNGA'] = $discBunga;
             }
-            
-            $processedResultsWithDiscBunga = [
-                $processedResults,
-                'DISC_BUNGA' => $discBunga,
-            ];
-
-            return response()->json($processedResultsWithDiscBunga, 200);
+        
+            return response()->json($processedResults, 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
