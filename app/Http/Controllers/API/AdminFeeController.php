@@ -178,6 +178,7 @@ class AdminFeeController extends Controller
                 'plafond' => $request->plafond,
                 'angsuran_type' => $angsuran_type
             ]);
+
     
             return response()->json($show, 200);
         } catch (Exception $e) {
@@ -227,7 +228,6 @@ class AdminFeeController extends Controller
                 $strukturTenors = $this->buildStrukturTenors($value->links, $specificTenor,$plafond,$angsuran_type);
             }
            
-            
             $item = [
                 'id' => $value->id,
                 'tipe' => $value->category,
@@ -273,15 +273,16 @@ class AdminFeeController extends Controller
             $total = 0;
             $tenor_name = $tenor . '_month';
     
-        foreach ($struktur as $s) {
-            $feeName = $s['fee_name'];
-            $feeValue = (float) $s[$tenor_name];
-            $tenorData[$feeName] = $feeValue;
+            foreach ($struktur as $s) {
+                $feeName = $s['fee_name'];
+                $feeValue = (float) $s[$tenor_name];
 
-            if ($feeName !== 'eff_rate') {
-                $total += $feeValue;
-            }
-        }
+                $tenorData[$feeName] = $feeValue;
+
+                if ($feeName !== 'eff_rate') {
+                    $total += $feeValue;
+                }
+            }  
     
             if ($angsuran_type == 'bulanan') {
                 $set_tenor = $tenor;
@@ -309,7 +310,8 @@ class AdminFeeController extends Controller
             }
     
             $eff_rate = $tenorData['eff_rate'];
-            $flat_rate = round(self::calculate_flat_interest($set_tenor, $eff_rate, $angsuran_type), 2);
+
+            $flat_rate = round($this->calculate_flat_interest($set_tenor, $eff_rate, $angsuran_type), 2);
             $pokok_pembayaran = ($plafond + $total);
             $interest_margin = (int)(($flat_rate / 12) * $set_tenor * $pokok_pembayaran / 100);
     
@@ -328,8 +330,17 @@ class AdminFeeController extends Controller
                     $angsuran_calc = ($pokok_pembayaran + $interest_margin) / 3;
                 }
             }
-    
-            $tenorData['angsuran'] = ceil(round($angsuran_calc, 3) / 1000) * 1000;
+
+            $setAngsuran = ceil(round($angsuran_calc, 3) / 1000) * 1000;
+            $pokokPinjaman = $plafond + $total;
+            
+            $number =  round($this->excelRate($set_tenor,-$setAngsuran,$pokokPinjaman )*100,10);
+
+            $tenorData['suku_bunga'] = round((($set_tenor * ($setAngsuran - ($pokokPinjaman / $set_tenor))) / $pokokPinjaman) * 100,2);
+            $tenorData['flat_rate'] = $number;
+            $tenorData['eff_rate'] = round($number*12,8);
+            $eff_rate = $tenorData['eff_rate'];
+            $tenorData['angsuran'] = $setAngsuran;
             $tenorData['total'] = $total;
             $strukturTenors["tenor_$tenor"] = $tenorData;
         }
@@ -382,7 +393,7 @@ class AdminFeeController extends Controller
     
             $set_tenor = ($angsuran_type == 'bulanan' || $specificTenor) ? $tenor : $musimanTenorMapping[$tenor] ?? $tenor;
             $eff_rate = $tenorData['eff_rate'];
-            $flat_rate = round(self::calculate_flat_interest($set_tenor, $eff_rate, $angsuran_type), 2);
+            $flat_rate = round($this->calculate_flat_interest($set_tenor, $eff_rate, $angsuran_type), 2);
             $pokok_pembayaran = ($plafond + $total);
             $interest_margin = (int)(($flat_rate / 12) * $set_tenor * $pokok_pembayaran / 100);
     
@@ -439,4 +450,64 @@ class AdminFeeController extends Controller
             }
         }
     }    
+
+    function excelRate($nper, $pmt, $pv, $fv = 0, $type = 0, $guess = 0.1) {
+        $tolerance = 1.0e-15; // Toleransi tinggi untuk presisi
+        $maxIterations = 500;
+    
+        if ($nper <= 0) {
+            return false;
+        }
+    
+        $rate = $guess;
+        for ($i = 0; $i < $maxIterations; $i++) {
+            $f = $this->calculateRateEquation($rate, $nper, $pmt, $pv, $fv, $type);
+            $df = $this->calculateRateDerivative($rate, $nper, $pmt, $pv, $fv, $type);
+    
+            if (abs($df) < $tolerance) {
+                return false;
+            }
+    
+            $newRate = $rate - $f / $df;
+    
+            // Cek konvergensi
+            if (abs($newRate - $rate) < $tolerance) {
+                return $this->ceilToPrecision($newRate, 10);
+            }
+    
+            $rate = $newRate;
+        }
+    
+        return false;
+    }
+    
+    function calculateRateEquation($rate, $nper, $pmt, $pv, $fv, $type) {
+        if (abs($rate) < 1e-15) {
+            return $pv + $pmt * $nper + $fv;
+        }
+    
+        $pow = pow(1 + $rate, $nper);
+        return $pv * $pow
+             + $pmt * (1 + $rate * $type) * (($pow - 1) / $rate)
+             + $fv;
+    }
+    
+    function calculateRateDerivative($rate, $nper, $pmt, $pv, $fv, $type) {
+        if (abs($rate) < 1e-15) {
+            return $pv * $nper + $pmt * $nper * $type;
+        }
+    
+        $pow1 = pow(1 + $rate, $nper - 1);
+        $pow2 = pow(1 + $rate, $nper);
+    
+        return $pv * $nper * $pow1
+              + $pmt * $type * $nper * (1 + $rate)
+              + $pmt * ($nper * $pow1 - (($pow2 - 1) / ($rate * $rate)));
+    }
+    
+    function ceilToPrecision($number, $precision) {
+        $factor = pow(10, $precision);
+        return ceil($number * $factor) / $factor;
+    }
+    
 }
