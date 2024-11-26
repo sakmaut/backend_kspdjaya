@@ -30,6 +30,7 @@ class M_Kwitansi extends Model
         'KECAMATAN', 
         'METODE_PEMBAYARAN', 
         'PEMBULATAN', 
+        'DISKON', 
         'KEMBALIAN', 
         'JUMLAH_UANG', 
         'TOTAL_BAYAR', 

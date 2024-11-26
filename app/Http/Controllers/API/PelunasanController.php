@@ -217,6 +217,7 @@ class PelunasanController extends Controller
             'KECAE_PEMBAYARAN" => $request->METODE_PEMBAYARAN,
             "TOTAL_BAYAR" => $request->TOTAL_BAYAR,
             "PEMBULATAN" => $request->PEMBULATAN,
+            "DISKON" => $request->PEMBULATAN,
             "KEMBALIAN" => $request->KEMBALIAN,
             "JUMLAH_UANG" => $request->UANG_PELANGGAN,
             "NAMA_BANK" => $request->NAMA_BANK,
@@ -225,6 +226,7 @@ class PelunasanController extends Controller
         ];
     
         M_Kwitansi::create($data);
+
     }
     
     private function determineStatus($request)
