@@ -415,6 +415,15 @@ class AdminFeeController extends Controller
                 }
             }
     
+            $setAngsuran = ceil(round($angsuran_calc, 3) / 1000) * 1000;
+            $pokokPinjaman = $plafond + $total;
+            
+            $number =  round($this->excelRate($set_tenor,-$setAngsuran,$pokokPinjaman )*100,10);
+
+            $tenorData['suku_bunga'] = round((($set_tenor * ($setAngsuran - ($pokokPinjaman / $set_tenor))) / $pokokPinjaman) * 100,2);
+            $tenorData['flat_rate'] = $number;
+            $tenorData['eff_rate'] = round($number*12,8);
+            $eff_rate = $tenorData['eff_rate'];
             $tenorData['angsuran'] = ceil(round($angsuran_calc, 3) / 1000) * 1000;
             $tenorData['total'] = $total;
             $strukturTenors["tenor_$tenor"] = $tenorData;
