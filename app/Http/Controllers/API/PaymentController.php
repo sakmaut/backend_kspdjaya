@@ -360,6 +360,7 @@ class PaymentController extends Controller
             'KECAMATAN' => $customer_detail['kecamatan'],
             "METODE_PEMBAYARAN" => $request->payment_method ?? null,
             "TOTAL_BAYAR" => $request->total_bayar ?? null,
+            "DISKON" => $request->diskon_tunggakan ?? null,
             "PEMBULATAN" => $request->pembulatan ?? null,
             "KEMBALIAN" => $request->kembalian ?? null,
             "JUMLAH_UANG" => $request->jumlah_uang ?? null,
