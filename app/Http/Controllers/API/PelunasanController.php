@@ -81,7 +81,7 @@ class PelunasanController extends Controller
             );
 
             $query2 = DB::select("
-                    select	sum(INTEREST-PAYMENT_VALUE_INTEREST) as DISC_BUNGA
+                    select	sum(INTEREST-coalesce(PAYMENT_VALUE_INTEREST,0)) as DISC_BUNGA
 					from	credit_schedule
 					where	LOAN_NUMBER = '{$loan_number}'
 							and PAYMENT_DATE>now()
