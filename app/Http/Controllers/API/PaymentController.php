@@ -538,9 +538,9 @@ class PaymentController extends Controller
                 $paidPenalty = $bayar_denda !== 0 ? $check_credit->PAID_PINALTY + $bayar_denda : $check_credit->PAID_PINALTY;
 
                 $check_credit->update([
-                    'PAID_PRINCIPAL' => $paidPrincipal,
-                    'PAID_INTEREST' => $paidInterest,
-                    'PAID_PINALTY' => $paidPenalty,
+                    'PAID_PRINCIPAL' => floatval($paidPrincipal),
+                    'PAID_INTEREST' => floatval($paidInterest),
+                    'PAID_PINALTY' => floatval($paidPenalty),
                     'STATUS' => $paidPrincipal == $check_credit->PCPL_ORI?'D':'A'
                 ]);
             }
