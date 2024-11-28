@@ -107,10 +107,10 @@ class CustomerController extends Controller
             $schedule = [];
 
             $data = M_CreditSchedule::where('LOAN_NUMBER', $request->loan_number)
-            ->where(function ($query) {
-                $query->whereNull('PAID_FLAG')
-                    ->orWhere('PAID_FLAG', '<>', 'PAID');
-            })
+            // ->where(function ($query) {
+            //     $query->whereNull('PAID_FLAG')
+            //         ->orWhere('PAID_FLAG', '<>', 'PAID');
+            // })
             ->get();
 
             if ($data->isEmpty()) {
