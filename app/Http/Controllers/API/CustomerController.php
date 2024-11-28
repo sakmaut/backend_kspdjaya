@@ -54,6 +54,7 @@ class CustomerController extends Controller
             $query = DB::table('credit as t0')
                 ->select('t0.LOAN_NUMBER', 't0.INSTALLMENT', 't1.NAME', 't1.ADDRESS', 't0.ORDER_NUMBER')
                 ->join('customer as t1', 't1.CUST_CODE', '=', 't0.CUST_CODE')
+                ->where('t0.STATUS', 'A')
                 ->distinct();
             
             // Check if 'no_polisi' parameter exists and has a value
