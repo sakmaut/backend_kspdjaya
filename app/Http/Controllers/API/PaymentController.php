@@ -540,7 +540,8 @@ class PaymentController extends Controller
                 $check_credit->update([
                     'PAID_PRINCIPAL' => $paidPrincipal,
                     'PAID_INTEREST' => $paidInterest,
-                    'PAID_PINALTY' => $paidPenalty
+                    'PAID_PINALTY' => $paidPenalty,
+                    'STATUS' => $paidPrincipal == $check_credit->PCPL_ORI?'D':'A'
                 ]);
             }
         }
