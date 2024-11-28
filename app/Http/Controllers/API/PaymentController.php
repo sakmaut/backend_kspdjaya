@@ -509,8 +509,8 @@ class PaymentController extends Controller
             $getPrincipal = $credit_schedule->PRINCIPAL;
             $getInterest = $credit_schedule->INTEREST;
 
-            $getPayPrincipal = isset($payments['ANGSURAN_POKOK'])? intval($totalAmount):0;
-            $getPayInterest = isset($payments['ANGSURAN_BUNGA']) ? intval($payments['ANGSURAN_BUNGA']) : 0;
+            $getPayPrincipal = isset($payments['ANGSURAN_POKOK'])? floatval($totalAmount):0;
+            $getPayInterest = isset($payments['ANGSURAN_BUNGA']) ? floatval($payments['ANGSURAN_BUNGA']) : 0;
 
             if($getPayPrincipal != $getPrincipal && $valBeforePrincipal != 0){
                 $setPrincipal = $valBeforePrincipal - $getPayPrincipal;
