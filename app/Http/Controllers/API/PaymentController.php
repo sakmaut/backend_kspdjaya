@@ -473,6 +473,11 @@ class PaymentController extends Controller
             }
         }
 
+        $check_arrears = M_Arrears::where([
+            'LOAN_NUMBER' => $loan_number,
+            'START_DATE' => $tgl_angsuran
+        ])->first();
+
         $payment_record = [
             'ID' => $uid,
             'ACC_KEY' => isset($request->pembayaran)?$request->pembayaran:$kwitansi->METODE_PEMBAYARAN??null,
@@ -489,8 +494,8 @@ class PaymentController extends Controller
             'OS_AMOUNT' => $os_amount??0,
             'START_DATE' => $tgl_angsuran,
             'END_DATE' => now(),
-            'AUTH_BY' => $request->user()->id,
-            'AUTH_DATE' => now(),
+            'USER_ID' => $request->user()->id,
+            'ARREARS_ID' => $check_arrears?$check_arrears->ID:'',
             'BANK_NAME' => round(microtime(true) * 1000)
         ];
 
