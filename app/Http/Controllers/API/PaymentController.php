@@ -537,6 +537,10 @@ class PaymentController extends Controller
                 $paidInterest = isset($setInterest) ? $check_credit->PAID_INTEREST + $setInterest : $check_credit->PAID_INTEREST;
                 $paidPenalty = $bayar_denda !== 0 ? $check_credit->PAID_PINALTY + $bayar_denda : $check_credit->PAID_PINALTY;
 
+                $paidPrincipal = round($paidPrincipal, 2);
+                $paidInterest = round($paidInterest, 2);
+                $paidPenalty = round($paidPenalty, 2);
+
                 $check_credit->update([
                     'PAID_PRINCIPAL' => floatval($paidPrincipal),
                     'PAID_INTEREST' => floatval($paidInterest),
