@@ -103,14 +103,15 @@ class MasterMenuController extends Controller
         DB::beginTransaction();
         try {
             $menu = M_MasterMenu::findOrFail($id);
+            $menu->update([
+                'menu_name' => $req->menu_name,
+                'updated_by' => $req->user()->id,
+                'updated_at' => Carbon::now()->format('Y-m-d H:i:s')
+            ]);
 
-            $req['updated_by'] = $req->user()->id;
-            $req['updated_at'] = Carbon::now()->format('Y-m-d H:i:s');
-
-            $menu->update($req->all());
             DB::commit();
             ActivityLogger::logActivity($req,"Success",200);
-            return response()->json(['message' => 'Master Menu updated successfully', "status" => 200], 200);
+            return response()->json(['message' => 'Master Menu updated successfully'], 200);
         } catch (ModelNotFoundException $e) {
             DB::rollback();
             ActivityLogger::logActivity($req,'Data Not Found',404);
