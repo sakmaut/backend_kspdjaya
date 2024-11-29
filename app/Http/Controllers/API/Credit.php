@@ -79,9 +79,6 @@ class Credit extends Controller
 
         $data_credit_schedule = $this->generateAmortizationSchedule($principal,$angsuran, $set_tgl_awal, $loanTerm);
 
-        return response()->json($data_credit_schedule, 200);
-        die;
-
         $installment_count = count($data_credit_schedule);
 
         $schedule = [];
@@ -119,8 +116,7 @@ class Credit extends Controller
                     'PRINCIPAL' => $list['pokok'],
                     'INTEREST' => $list['bunga'],
                     'INSTALLMENT' => $list['total_angsuran'],
-                    'PRINCIPAL_REMAINS' => $list['baki_debet'],
-                    'PAID_FLAG' => ''
+                    'PRINCIPAL_REMAINS' => $list['baki_debet']
                 ];
 
                 M_CreditSchedule::create($credit_schedule);
@@ -537,34 +533,39 @@ class Credit extends Controller
     }
 
     private function generateAmortizationSchedule($principal, $angsuran, $setDate, $loanTerm) {
+        // Calculate the monthly interest rate (converted)
         $suku_bunga_konversi = round(excelRate($loanTerm, -$angsuran, $principal) * 100, 10) / 100;
-        $angsuran_pokok_bunga = $angsuran;
+        
+        $angsuran_pokok_bunga = $angsuran; // Fixed monthly payment
         $schedule = [];
-        $setDebet = $principal; 
-        $paymentDate = strtotime($setDate);
-        $term = ceil($loanTerm);
+        $setDebet = $principal; // Remaining balance at the start
+        $paymentDate = strtotime($setDate); // Initial payment date
+        $term = ceil($loanTerm); // Total number of payments (rounded)
     
         for ($i = 1; $i <= $term; $i++) {
+            // Calculate interest for this installment
             $interest = round($setDebet * $suku_bunga_konversi, 2);
+            // Calculate principal payment
             $principalPayment = round($angsuran_pokok_bunga - $interest, 2);
     
             if ($i === $term) {
-                // Set principal payment to the remaining balance
-                $principalPayment = round($setDebet, 2); 
-                // Recalculate interest for the last payment
+                // Last installment:
+                // Principal payment is the remaining balance
+                $principalPayment = round($setDebet, 2);
+                // Recalculate interest for the last installment based on remaining balance
                 $interest = round($setDebet * $suku_bunga_konversi, 2);
-                // Total payment for the last installment
+                // Total payment for the last installment is principal + interest
                 $totalPayment = round($principalPayment + $interest, 2);
-                // Set remaining balance to 0.00
-                $setDebet = 0.00; 
+                // Set remaining balance to 0.00 after the last installment
+                $setDebet = 0.00;
             } else {
-                // Update remaining balance
+                // For regular installments, reduce the remaining balance
                 $setDebet = round($setDebet - $principalPayment, 2);
-                // Total payment for regular installments
+                // Regular total payment is fixed
                 $totalPayment = $angsuran_pokok_bunga;
             }
-            
     
+            // Add this installment's data to the schedule
             $schedule[] = [
                 'angsuran_ke' => $i,
                 'tgl_angsuran' => date('Y-m-d', $paymentDate),
@@ -574,10 +575,18 @@ class Credit extends Controller
                 'baki_debet' => floatval($setDebet) // Remaining balance
             ];
     
-            // Move to the next payment date
+            // Move to the next payment date (1 month later)
             $paymentDate = strtotime("+1 month", $paymentDate);
+        }
+    
+        if ($setDebet > 0) {
+            $schedule[$term - 1]['pokok'] += round($setDebet, 2);
+            $schedule[$term - 1]['bunga'] = round($schedule[$term - 1]['total_angsuran'] - $schedule[$term - 1]['pokok'], 2);
+            $schedule[$term - 1]['baki_debet'] = 0.00;
         }
     
         return $schedule;
     }
+    
+      
 }
