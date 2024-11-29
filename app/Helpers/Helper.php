@@ -196,45 +196,6 @@ function add_months($date_str, $months) {
     }
 }
 
-if (!function_exists('generateAmortizationSchedule')) {
-    function generateAmortizationSchedule($principal, $angsuran, $setDate, $loanTerm) {
-        $suku_bunga_konversi = round(excelRate($loanTerm, -$angsuran, $principal) * 100, 10) / 100;
-        $angsuran_pokok_bunga = $angsuran;
-        $schedule = [];
-        $setDebet = $principal;
-        $paymentDate = strtotime($setDate);
-    
-        for ($i = 1; $i <= ceil($loanTerm); $i++) {
-            $interest = round($setDebet * $suku_bunga_konversi, 2);
-            $principalPayment = round($angsuran_pokok_bunga - $interest, 2);
-    
-            // Check if it's the last payment
-            if ($i === ceil($loanTerm)) {
-                // Last payment adjustments
-                $principalPayment = round($setDebet, 2); // Set principal payment to remaining balance
-                $interest = round($setDebet * $suku_bunga_konversi, 2); // Calculate interest for the last payment
-                $totalPayment = round($principalPayment + $interest, 2);
-                $setDebet = 0.00; 
-            } else {
-                $setDebet = round($setDebet - $principalPayment, 2);
-                $totalPayment = $angsuran_pokok_bunga;
-            }
-    
-            $schedule[] = [
-                'angsuran_ke' => $i,
-                'tgl_angsuran' => date('Y-m-d', $paymentDate),
-                'pokok' => floatval($principalPayment),
-                'bunga' => floatval($interest),
-                'total_angsuran' => floatval($totalPayment),
-                'baki_debet' => floatval($setDebet)
-            ];
-    
-            $paymentDate = strtotime("+1 month", $paymentDate);
-        }
-    
-        return $schedule;
-    }
-}
 
 if(!function_exists('bilangan')){
     function bilangan($principal,$currency = true) {
@@ -258,6 +219,7 @@ if(!function_exists('converttodecimal')){
     }
 }
 
+if(!function_exists('excelRate')){
 function excelRate($nper, $pmt, $pv, $fv = 0, $type = 0, $guess = 0.1) {
     $tolerance = 1.0e-15; // Toleransi tinggi untuk presisi
     $maxIterations = 500;
@@ -287,7 +249,9 @@ function excelRate($nper, $pmt, $pv, $fv = 0, $type = 0, $guess = 0.1) {
 
     return false;
 }
+}
 
+if(!function_exists('calculateRateEquation')){
 function calculateRateEquation($rate, $nper, $pmt, $pv, $fv, $type) {
     if (abs($rate) < 1e-15) {
         return $pv + $pmt * $nper + $fv;
@@ -298,7 +262,9 @@ function calculateRateEquation($rate, $nper, $pmt, $pv, $fv, $type) {
          + $pmt * (1 + $rate * $type) * (($pow - 1) / $rate)
          + $fv;
 }
+}
 
+if(!function_exists('calculateRateDerivative')){
 function calculateRateDerivative($rate, $nper, $pmt, $pv, $fv, $type) {
     if (abs($rate) < 1e-15) {
         return $pv * $nper + $pmt * $nper * $type;
@@ -311,8 +277,11 @@ function calculateRateDerivative($rate, $nper, $pmt, $pv, $fv, $type) {
           + $pmt * $type * $nper * (1 + $rate)
           + $pmt * ($nper * $pow1 - (($pow2 - 1) / ($rate * $rate)));
 }
+}
 
+if(!function_exists('ceilToPrecision')){
 function ceilToPrecision($number, $precision) {
     $factor = pow(10, $precision);
     return ceil($number * $factor) / $factor;
+}
 }

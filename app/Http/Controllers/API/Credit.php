@@ -77,24 +77,10 @@ class Credit extends Controller
         $angsuran = $data->INSTALLMENT;
         $set_tgl_awal =$request->tgl_awal;
 
-        // print_r($principal);
-        // echo '<br>';
-        // print_r($angsuran);
-        // echo '<br>';
-        // die;
+        $data_credit_schedule = $this->generateAmortizationSchedule($principal,$angsuran, $set_tgl_awal, $loanTerm);
 
-        $data_credit_schedule = generateAmortizationSchedule($principal,$angsuran, $set_tgl_awal, $loanTerm);
-
-        // foreach ($data_credit_schedule as $installment) {
-        //     echo "Angsuran ke-{$installment['angsuran_ke']}\n";
-        //     echo "Tanggal: {$installment['tgl_angsuran']}\n";
-        //     echo "Pokok: Rp " . number_format($installment['pokok'], 2) . "\n";
-        //     echo "Bunga: Rp " . number_format($installment['bunga'], 2) . "\n";
-        //     echo "Total Angsuran: Rp " . number_format($installment['total_angsuran'], 2) . "\n";
-        //     echo "Sisa Saldo: Rp " . number_format($installment['baki_debet'], 2) . "\n\n";
-        // }
-
-        // die;
+        return response()->json($data_credit_schedule, 200);
+        die;
 
         $installment_count = count($data_credit_schedule);
 
@@ -109,10 +95,10 @@ class Credit extends Controller
                 $schedule[] = [
                     'angsuran_ke' =>  $no++,
                     'tgl_angsuran' => $key['PAYMENT_DATE'],
-                    'pokok' => floatval($key['PRINCIPAL']),
-                    'bunga' => floatval($key['INTEREST']),
-                    'total_angsuran' => floatval($key['INSTALLMENT']),
-                    'baki_debet' => floatval($key['PRINCIPAL_REMAINS'])
+                    'pokok' => $key['PRINCIPAL'],
+                    'bunga' => $key['INTEREST'],
+                    'total_angsuran' => $key['INSTALLMENT'],
+                    'baki_debet' => $key['PRINCIPAL_REMAINS']
                 ];
             }
         }
@@ -546,5 +532,50 @@ class Credit extends Controller
                     ->where('a.STATUS', 'A')
                     ->select('a.LOAN_NUMBER')
                     ->get();  
+    }
+
+    private function generateAmortizationSchedule($principal, $angsuran, $setDate, $loanTerm) {
+        $suku_bunga_konversi = round(excelRate($loanTerm, -$angsuran, $principal) * 100, 10) / 100;
+        $angsuran_pokok_bunga = $angsuran;
+        $schedule = [];
+        $setDebet = $principal; 
+        $paymentDate = strtotime($setDate);
+        $term = ceil($loanTerm);
+    
+        for ($i = 1; $i <= $term; $i++) {
+            $interest = round($setDebet * $suku_bunga_konversi, 2);
+            $principalPayment = round($angsuran_pokok_bunga - $interest, 2);
+    
+            if ($i === $term) {
+                // Set principal payment to the remaining balance
+                $principalPayment = round($setDebet, 2); 
+                // Recalculate interest for the last payment
+                $interest = round($setDebet * $suku_bunga_konversi, 2);
+                // Total payment for the last installment
+                $totalPayment = round($principalPayment + $interest, 2);
+                // Set remaining balance to 0.00
+                $setDebet = 0.00; 
+            } else {
+                // Update remaining balance
+                $setDebet = round($setDebet - $principalPayment, 2);
+                // Total payment for regular installments
+                $totalPayment = $angsuran_pokok_bunga;
+            }
+            
+    
+            $schedule[] = [
+                'angsuran_ke' => $i,
+                'tgl_angsuran' => date('Y-m-d', $paymentDate),
+                'pokok' => floatval($principalPayment), // Principal payment
+                'bunga' => floatval($interest), // Interest payment
+                'total_angsuran' => floatval($totalPayment), // Total payment
+                'baki_debet' => floatval($setDebet) // Remaining balance
+            ];
+    
+            // Move to the next payment date
+            $paymentDate = strtotime("+1 month", $paymentDate);
+        }
+    
+        return $schedule;
     }
 }
