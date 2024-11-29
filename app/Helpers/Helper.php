@@ -154,25 +154,25 @@ if (!function_exists('angkaKeKata')) {
     }
 }
 
-if (!function_exists('calculateRate')) {
-    function calculateRate($nprest, $vlrparc, $vp, $guess = 0.25) {
-        $maxit = 100;
-        $precision = 14;
-        $guess = round($guess,$precision);
-        for ($i=0 ; $i<$maxit ; $i++) {
-            $divdnd = $vlrparc - ( $vlrparc * (pow(1 + $guess , -$nprest)) ) - ($vp * $guess);
-            $divisor = $nprest * $vlrparc * pow(1 + $guess , (-$nprest - 1)) - $vp;
-            $newguess = $guess - ( $divdnd / $divisor );
-            $newguess = round($newguess, $precision);
-            if ($newguess == $guess) {
-                return $newguess;
-            } else {
-                $guess = $newguess;
-            }
-        }
-        return null;
-    }
-}
+// if (!function_exists('calculateRate')) {
+//     function calculateRate($nprest, $vlrparc, $vp, $guess = 0.25) {
+//         $maxit = 100;
+//         $precision = 14;
+//         $guess = round($guess,$precision);
+//         for ($i=0 ; $i<$maxit ; $i++) {
+//             $divdnd = $vlrparc - ( $vlrparc * (pow(1 + $guess , -$nprest)) ) - ($vp * $guess);
+//             $divisor = $nprest * $vlrparc * pow(1 + $guess , (-$nprest - 1)) - $vp;
+//             $newguess = $guess - ( $divdnd / $divisor );
+//             $newguess = round($newguess, $precision);
+//             if ($newguess == $guess) {
+//                 return $newguess;
+//             } else {
+//                 $guess = $newguess;
+//             }
+//         }
+//         return null;
+//     }
+// }
 
 function add_months($date_str, $months) {
     $date = explode('-', $date_str);
@@ -197,103 +197,43 @@ function add_months($date_str, $months) {
 }
 
 if (!function_exists('generateAmortizationSchedule')) {
-    function generateAmortizationSchedule($principal,$angsuran,$setDate,$effRate, $loanTerm) {
-        $suku_bunga_konversi = round(($effRate/12)/100, 10);
+    function generateAmortizationSchedule($principal, $angsuran, $setDate, $loanTerm) {
+        $suku_bunga_konversi = round(excelRate($loanTerm, -$angsuran, $principal) * 100, 10) / 100;
         $angsuran_pokok_bunga = $angsuran;
         $schedule = [];
         $setDebet = $principal;
-        $totalInterest = 0;
         $paymentDate = strtotime($setDate);
     
-        for ($i = 1; $i <= $loanTerm; $i++) {
-            $interest = $setDebet * $suku_bunga_konversi;
-            $principalPayment = $angsuran_pokok_bunga - $interest;
+        for ($i = 1; $i <= ceil($loanTerm); $i++) {
+            $interest = round($setDebet * $suku_bunga_konversi, 2);
+            $principalPayment = round($angsuran_pokok_bunga - $interest, 2);
     
-            if ($setDebet <= $principalPayment) {
-                $principalPayment = $setDebet;
-    
-                $schedule[] = [
-                    'angsuran_ke' =>  $i,
-                    'tgl_angsuran' => date('Y-m-d', $paymentDate),
-                    'pokok' => number_format($principalPayment, 2),
-                    'bunga' => number_format($interest, 2),
-                    'total_angsuran' => number_format($principalPayment + $interest, 2),
-                    'baki_debet' => '0.00'
-                ];
-    
-                break;
+            // Check if it's the last payment
+            if ($i === ceil($loanTerm)) {
+                // Last payment adjustments
+                $principalPayment = round($setDebet, 2); // Set principal payment to remaining balance
+                $interest = round($setDebet * $suku_bunga_konversi, 2); // Calculate interest for the last payment
+                $totalPayment = round($principalPayment + $interest, 2);
+                $setDebet = 0.00; 
+            } else {
+                $setDebet = round($setDebet - $principalPayment, 2);
+                $totalPayment = $angsuran_pokok_bunga;
             }
     
-            $setDebet -= $principalPayment;
-    
             $schedule[] = [
-                'angsuran_ke' =>  $i,
+                'angsuran_ke' => $i,
                 'tgl_angsuran' => date('Y-m-d', $paymentDate),
-                'pokok' => number_format($principalPayment, 2),
-                'bunga' => number_format($interest, 2),
-                'total_angsuran' => number_format($angsuran_pokok_bunga, 2),
-                'baki_debet' => number_format($setDebet, 2)
+                'pokok' => floatval($principalPayment),
+                'bunga' => floatval($interest),
+                'total_angsuran' => floatval($totalPayment),
+                'baki_debet' => floatval($setDebet)
             ];
     
-            $totalInterest += $interest;
             $paymentDate = strtotime("+1 month", $paymentDate);
         }
     
         return $schedule;
     }
-
-    // function generateAmortizationSchedule($principal, $angsuran, $setDate, $effRate, $loanTerm)
-    // {
-    //     $suku_bunga_konversi = round(($effRate / 12) / 100, 10);
-    //     $angsuran_pokok_bunga = $angsuran;
-    //     $schedule = [];
-    //     $setDebet = $principal;
-    //     $totalInterest = 0;
-
-    //     for ($i = 1; $i <= $loanTerm; $i++) {
-    //         $interest = $setDebet * $suku_bunga_konversi;
-    //         $principalPayment = $angsuran_pokok_bunga - $interest;
-
-    //         // Pastikan principalPayment tidak melebihi setDebet
-    //         if ($principalPayment > $setDebet) {
-    //             $principalPayment = $setDebet;
-    //         }
-
-    //         $setDebet -= $principalPayment;
-
-    //         $schedule[] = [
-    //             'angsuran_ke' =>  $i,
-    //             'tgl_angsuran' => add_months($setDate, $i),
-    //             'pokok' => number_format($principalPayment, 2),
-    //             'bunga' => number_format($interest, 2),
-    //             'total_angsuran' => number_format($principalPayment + $interest, 2),
-    //             'baki_debet' => number_format($setDebet, 2)
-    //         ];
-
-    //         $totalInterest += $interest;
-
-    //         // Jika debet sudah 0, berhenti
-    //         if ($setDebet <= 0) {
-    //             break;
-    //         }
-    //     }
-
-    //     // Jika periode angsuran belum mencapai loanTerm, tambahkan periode kosong
-    //     for ($i = count($schedule) + 1; $i <= $loanTerm; $i++) {
-    //         $schedule[] = [
-    //             'angsuran_ke' =>  $i,
-    //             'tgl_angsuran' => add_months($setDate, $i),
-    //             'pokok' => number_format($principalPayment, 2),
-    //             'bunga' => number_format($interest, 2),
-    //             'total_angsuran' => number_format($principalPayment + $interest, 2),
-    //             'baki_debet' => number_format($setDebet, 2)
-    //         ];
-    //     }
-
-    //     return $schedule;
-    // }
-
-
 }
 
 if(!function_exists('bilangan')){
@@ -316,4 +256,63 @@ if(!function_exists('converttodecimal')){
     function converttodecimal($number) {
         return floatval(str_replace(',', '',  $number));
     }
+}
+
+function excelRate($nper, $pmt, $pv, $fv = 0, $type = 0, $guess = 0.1) {
+    $tolerance = 1.0e-15; // Toleransi tinggi untuk presisi
+    $maxIterations = 500;
+
+    if ($nper <= 0) {
+        return false;
+    }
+
+    $rate = $guess;
+    for ($i = 0; $i < $maxIterations; $i++) {
+        $f = calculateRateEquation($rate, $nper, $pmt, $pv, $fv, $type);
+        $df = calculateRateDerivative($rate, $nper, $pmt, $pv, $fv, $type);
+
+        if (abs($df) < $tolerance) {
+            return false;
+        }
+
+        $newRate = $rate - $f / $df;
+
+        // Cek konvergensi
+        if (abs($newRate - $rate) < $tolerance) {
+            return ceilToPrecision($newRate, 10);
+        }
+
+        $rate = $newRate;
+    }
+
+    return false;
+}
+
+function calculateRateEquation($rate, $nper, $pmt, $pv, $fv, $type) {
+    if (abs($rate) < 1e-15) {
+        return $pv + $pmt * $nper + $fv;
+    }
+
+    $pow = pow(1 + $rate, $nper);
+    return $pv * $pow
+         + $pmt * (1 + $rate * $type) * (($pow - 1) / $rate)
+         + $fv;
+}
+
+function calculateRateDerivative($rate, $nper, $pmt, $pv, $fv, $type) {
+    if (abs($rate) < 1e-15) {
+        return $pv * $nper + $pmt * $nper * $type;
+    }
+
+    $pow1 = pow(1 + $rate, $nper - 1);
+    $pow2 = pow(1 + $rate, $nper);
+
+    return $pv * $nper * $pow1
+          + $pmt * $type * $nper * (1 + $rate)
+          + $pmt * ($nper * $pow1 - (($pow2 - 1) / ($rate * $rate)));
+}
+
+function ceilToPrecision($number, $precision) {
+    $factor = pow(10, $precision);
+    return ceil($number * $factor) / $factor;
 }

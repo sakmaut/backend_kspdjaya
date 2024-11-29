@@ -512,11 +512,13 @@ class PaymentController extends Controller
             $getPayPrincipal = isset($payments['ANGSURAN_POKOK'])? floatval($totalAmount):0;
             $getPayInterest = isset($payments['ANGSURAN_BUNGA']) ? floatval($payments['ANGSURAN_BUNGA']) : 0;
 
-            if($getPayPrincipal != $getPrincipal && $valBeforePrincipal != 0){
-                $setPrincipal = $valBeforePrincipal - $getPayPrincipal;
-                $data_principal = $this->preparePaymentData($uid, 'ANGSURAN_POKOK', $setPrincipal); // Set to PRINCIPAL value
+            if ($getPayPrincipal != $getPrincipal && $valBeforePrincipal != 0) {
+                $setPrincipal = bcsub($valBeforePrincipal, $getPayPrincipal, 2);
+                $setPrincipal = ceil($setPrincipal * 100) / 100;
+                $data_principal = $this->preparePaymentData($uid, 'ANGSURAN_POKOK', $setPrincipal);
                 M_PaymentDetail::create($data_principal);
             }
+            
 
             // Only update interest if it has changed
             if ($getPayInterest !== $getInterest && $valBeforeInterest != null) {
@@ -533,21 +535,23 @@ class PaymentController extends Controller
             }
 
             if ($check_credit) {
-                $paidPrincipal = isset($setPrincipal) ? $check_credit->PAID_PRINCIPAL + $setPrincipal : $check_credit->PAID_PRINCIPAL;
-                $paidInterest = isset($setInterest) ? $check_credit->PAID_INTEREST + $setInterest : $check_credit->PAID_INTEREST;
-                $paidPenalty = $bayar_denda !== 0 ? $check_credit->PAID_PINALTY + $bayar_denda : $check_credit->PAID_PINALTY;
-
-                $paidPrincipal = round($paidPrincipal, 2);
-                $paidInterest = round($paidInterest, 2);
-                $paidPenalty = round($paidPenalty, 2);
-
+                // Hitung nilai yang dibayarkan dengan presisi tinggi
+                $paidPrincipal = isset($setPrincipal) ? bcadd($check_credit->PAID_PRINCIPAL ?? '0.00', $setPrincipal, 2) : ($check_credit->PAID_PRINCIPAL ?? '0.00');
+                $paidInterest = isset($setInterest) ? bcadd($check_credit->PAID_INTEREST ?? '0.00', $setInterest, 2) : ($check_credit->PAID_INTEREST ?? '0.00');
+                $paidPenalty = $bayar_denda !== 0 ? bcadd($check_credit->PAID_PINALTY ?? '0.00', $bayar_denda, 2) : ($check_credit->PAID_PINALTY ?? '0.00');
+            
+                // Tentukan status berdasarkan kondisi pelunasan
+                $status = bccomp($paidPrincipal, $check_credit->PCPL_ORI, 2) >= 0 ? 'D' : 'A';
+            
+                // Update database dengan nilai presisi tinggi
                 $check_credit->update([
-                    'PAID_PRINCIPAL' => floatval($paidPrincipal),
-                    'PAID_INTEREST' => floatval($paidInterest),
-                    'PAID_PINALTY' => floatval($paidPenalty),
-                    'STATUS' => $paidPrincipal == $check_credit->PCPL_ORI?'D':'A'
+                    'PAID_PRINCIPAL' => $paidPrincipal,
+                    'PAID_INTEREST' => $paidInterest,
+                    'PAID_PINALTY' => $paidPenalty,
+                    'STATUS' => $status,
                 ]);
             }
+            
         }
     }
 

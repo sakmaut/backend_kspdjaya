@@ -73,13 +73,28 @@ class Credit extends Controller
         $loan_number = generateCode($request, 'credit', 'LOAN_NUMBER');
 
         $principal = $data->POKOK_PEMBAYARAN;
-        // $annualInterestRate = $data->FLAT_RATE;
-        $effRate = $data->EFF_RATE;
         $loanTerm = $data->TENOR;
         $angsuran = $data->INSTALLMENT;
         $set_tgl_awal =$request->tgl_awal;
 
-        $data_credit_schedule = generateAmortizationSchedule($principal,$angsuran, $set_tgl_awal,$effRate, $loanTerm);
+        // print_r($principal);
+        // echo '<br>';
+        // print_r($angsuran);
+        // echo '<br>';
+        // die;
+
+        $data_credit_schedule = generateAmortizationSchedule($principal,$angsuran, $set_tgl_awal, $loanTerm);
+
+        // foreach ($data_credit_schedule as $installment) {
+        //     echo "Angsuran ke-{$installment['angsuran_ke']}\n";
+        //     echo "Tanggal: {$installment['tgl_angsuran']}\n";
+        //     echo "Pokok: Rp " . number_format($installment['pokok'], 2) . "\n";
+        //     echo "Bunga: Rp " . number_format($installment['bunga'], 2) . "\n";
+        //     echo "Total Angsuran: Rp " . number_format($installment['total_angsuran'], 2) . "\n";
+        //     echo "Sisa Saldo: Rp " . number_format($installment['baki_debet'], 2) . "\n\n";
+        // }
+
+        // die;
 
         $installment_count = count($data_credit_schedule);
 
@@ -94,10 +109,10 @@ class Credit extends Controller
                 $schedule[] = [
                     'angsuran_ke' =>  $no++,
                     'tgl_angsuran' => $key['PAYMENT_DATE'],
-                    'pokok' => number_format($key['PRINCIPAL'], 2),
-                    'bunga' => number_format($key['INTEREST'], 2),
-                    'total_angsuran' => number_format($key['INSTALLMENT'], 2),
-                    'baki_debet' => number_format($key['PRINCIPAL_REMAINS'], 2)
+                    'pokok' => floatval($key['PRINCIPAL']),
+                    'bunga' => floatval($key['INTEREST']),
+                    'total_angsuran' => floatval($key['INSTALLMENT']),
+                    'baki_debet' => floatval($key['PRINCIPAL_REMAINS'])
                 ];
             }
         }
@@ -115,10 +130,10 @@ class Credit extends Controller
                     'LOAN_NUMBER' => $loan_number,
                     'INSTALLMENT_COUNT' => $no++,
                     'PAYMENT_DATE' => Carbon::parse($list['tgl_angsuran'])->format('Y-m-d'),
-                    'PRINCIPAL' => converttodecimal($list['pokok']),
-                    'INTEREST' => converttodecimal($list['bunga']),
-                    'INSTALLMENT' => converttodecimal($list['total_angsuran']),
-                    'PRINCIPAL_REMAINS' => converttodecimal($list['baki_debet']),
+                    'PRINCIPAL' => $list['pokok'],
+                    'INTEREST' => $list['bunga'],
+                    'INSTALLMENT' => $list['total_angsuran'],
+                    'PRINCIPAL_REMAINS' => $list['baki_debet'],
                     'PAID_FLAG' => ''
                 ];
 
