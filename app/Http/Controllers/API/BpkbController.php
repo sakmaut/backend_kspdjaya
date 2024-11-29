@@ -38,6 +38,7 @@ class BpkbController extends Controller
                             ->where('credit.ID', $list->CR_CREDIT_ID)
                             ->first();
 
+                $asalBranch = M_Branch::find($list->COLLATERAL_FLAG);
                 $brachName = M_Branch::find($list->LOCATION_BRANCH);
 
                 $data[] = [
@@ -59,6 +60,7 @@ class BpkbController extends Controller
                     "no_stnk" => $list->STNK_NUMBER,
                     "tgl_stnk" => $list->STNK_VALID_DATE,
                     "nilai" => (int) $list->VALUE,
+                    "asal_lokasi" => $asalBranch->NAME??null,
                     "lokasi" => $brachName->NAME??null,
                     "document" => $this->attachment_guarante($surveyId?$surveyId->CR_SURVEY_ID:0,"'no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri'")
                 ];    
