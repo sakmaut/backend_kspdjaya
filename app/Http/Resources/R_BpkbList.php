@@ -37,8 +37,8 @@ class R_BpkbList extends JsonResource
             "admin" => $user->fullname??null,
             "kurir" => $this->COURIER,
             "tgl" => Carbon::parse($this->CREATED_AT)->format('Y-m-d'),
-            "bpkb" => $results,
-            "jml_bpkb" => $results->count(),
+            "jaminan" => $results,
+            "jml_jaminan" => $results->count(),
             "status" => $this->STATUS,
         ];
     }
