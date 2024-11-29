@@ -435,7 +435,6 @@ class Credit extends Controller
                     'STNK_NUMBER' => $res->STNK_NUMBER??null,
                     'VALUE' => $res->VALUE??null,
                     'LOCATION_BRANCH' => $data->BRANCH,
-                    'COLLATERAL_FLAG' =>'',
                     'VERSION' => 1,
                     'CREATE_DATE' => $this->timeNow,
                     'CREATE_BY' => $request->user()->id,
@@ -449,7 +448,8 @@ class Credit extends Controller
                     'LOCATION' => $data->BRANCH,
                     'STATUS' =>'NORMAL',
                     'CREATE_BY' => $request->user()->id,
-                    'CREATED_AT' => $this->timeNow
+                    'CREATED_AT' => $this->timeNow,
+                    'COLLATERAL_FLAG' => $data->BRANCH,
                 ];
 
                 M_LocationStatus::create($log);
@@ -493,7 +493,7 @@ class Credit extends Controller
                     'COLLATERAL_ID' => $execute->id,
                     'TYPE' => 'sertifikat',
                     'STATUS' =>'NORMAL',
-                    'LOCATION' => $data->BRANCH,
+                    'COLLATERAL_FLAG' => $data->BRANCH,
                     'CREATED_BY' => $request->user()->id,
                     'CREATED_AT' => $this->timeNow
                 ];
