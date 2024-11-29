@@ -29,6 +29,7 @@ class M_CrCollateralSertification extends Model
         'NILAI',
         'LOCATION',
         'COLLATERAL_FLAG',
+        'STATUS',
         'VERSION',
         'CREATE_DATE',
         'CREATE_BY',

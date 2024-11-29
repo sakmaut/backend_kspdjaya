@@ -27,6 +27,7 @@ class M_CrCollateral extends Model
        'STNK_NUMBER',
        'VALUE',
        'COLLATERAL_FLAG',
+       'STATUS',
        'VERSION',
        'LOCATION_BRANCH',
        'CREATE_DATE',

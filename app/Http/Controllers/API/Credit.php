@@ -447,6 +447,7 @@ class Credit extends Controller
                     'COLLATERAL_ID' => $execute->ID,
                     'TYPE' => 'kendaraan',
                     'LOCATION' => $data->BRANCH,
+                    'STATUS' =>'NORMAL',
                     'CREATE_BY' => $request->user()->id,
                     'CREATED_AT' => $this->timeNow
                 ];
@@ -491,6 +492,7 @@ class Credit extends Controller
                 $log = [
                     'COLLATERAL_ID' => $execute->id,
                     'TYPE' => 'sertifikat',
+                    'STATUS' =>'NORMAL',
                     'LOCATION' => $data->BRANCH,
                     'CREATED_BY' => $request->user()->id,
                     'CREATED_AT' => $this->timeNow

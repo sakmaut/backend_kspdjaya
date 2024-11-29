@@ -42,11 +42,11 @@ class BpkbController extends Controller
 
                 $data[] = [
                     "type" => "kendaraan",
-                    'nama_debitur' => $surveyId->NAME,
-                    'order_number' => $surveyId->ORDER_NUMBER,
-                    'no_jaminan' => $list->BPKB_NUMBER,
+                    'nama_debitur' => $surveyId->NAME??NULL,
+                    'order_number' => $surveyId->ORDER_NUMBER??NULL,
+                    'no_jaminan' => $list->BPKB_NUMBER??NULL,
                     'id' => $list->ID,
-                    'status_jaminan' => null,
+                    'status_jaminan' => $list->STATUS,
                     "tipe" => $list->TYPE,
                     "merk" => $list->BRAND,
                     "tahun" => $list->PRODUCTION_YEAR,
@@ -76,11 +76,11 @@ class BpkbController extends Controller
 
                 $data[] = [
                     "type" => "sertifikat",
-                    'nama_debitur' => $surveyId->NAME,
-                    'order_number' => $surveyId->ORDER_NUMBER,
-                    'no_jaminan' => $list->NO_SERTIFIKAT,
+                    'nama_debitur' => $surveyId->NAME??NULL,
+                    'order_number' => $surveyId->ORDER_NUMBER??NULL,
+                    'no_jaminan' => $list->NO_SERTIFIKAT??NULL,
                     'id' => $list->ID,
-                    'status_jaminan' => null,
+                    'status_jaminan' => $list->STATUS,
                     "no_sertifikat" => $list->NO_SERTIFIKAT,
                     "status_kepemilikan" => $list->STATUS_KEPEMILIKAN,
                     "imb" => $list->IMB,
