@@ -116,12 +116,12 @@ class BpkbTransactionController extends Controller
                             ]);
                     }
 
-                    if (!empty($collateralIdsToUpdateNo)) {
-                        $collaterals = M_CrCollateral::whereIn('ID', $collateralIdsToUpdateNo)->get();
-                        foreach ($collaterals as $collateral) {
-                            $collateral->update(['LOCATION_BRANCH' => $check->FROM_BRANCH]);
-                        }
-                    }
+                    // if (!empty($collateralIdsToUpdateNo)) {
+                    //     $collaterals = M_CrCollateral::whereIn('ID', $collateralIdsToUpdateNo)->get();
+                    //     foreach ($collaterals as $collateral) {
+                    //         $collateral->update(['LOCATION_BRANCH' => $check->FROM_BRANCH]);
+                    //     }
+                    // }
                 }
             }else{
                 $data = [
