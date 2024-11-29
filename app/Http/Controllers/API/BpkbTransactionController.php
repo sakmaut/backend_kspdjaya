@@ -165,12 +165,12 @@ class BpkbTransactionController extends Controller
                     M_BpkbDetail::insert($details);
     
                     // Retrieve all collaterals in one query
-                    $collaterals = M_CrCollateral::whereIn('ID', $collateralIds)->get();
+                    // $collaterals = M_CrCollateral::whereIn('ID', $collateralIds)->get();
             
-                    // Update collaterals
-                    foreach ($collaterals as $collateral) {
-                        $collateral->update(['LOCATION_BRANCH' => $request->tujuan]);
-                    }
+                    // // Update collaterals
+                    // foreach ($collaterals as $collateral) {
+                    //     $collateral->update(['LOCATION_BRANCH' => $request->tujuan]);
+                    // }
                 }
         
             }
