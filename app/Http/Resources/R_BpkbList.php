@@ -34,6 +34,7 @@ class R_BpkbList extends JsonResource
             "dari_cabang" =>$branch->NAME ??null,
             "ke_cabang" =>  $this->TO_BRANCH,
             "keterangan" => $this->NOTE,
+            "type" => $this->CATEGORY,
             "admin" => $user->fullname??null,
             "kurir" => $this->COURIER,
             "tgl" => Carbon::parse($this->CREATED_AT)->format('Y-m-d'),
