@@ -282,6 +282,6 @@ function calculateRateDerivative($rate, $nper, $pmt, $pv, $fv, $type) {
 if(!function_exists('ceilToPrecision')){
 function ceilToPrecision($number, $precision) {
     $factor = pow(10, $precision);
-    return ceil($number * $factor) / $factor;
+    return round($number * $factor) / $factor;
 }
 }
