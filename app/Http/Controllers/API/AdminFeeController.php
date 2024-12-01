@@ -287,6 +287,7 @@ class AdminFeeController extends Controller
             $set_tenor = $tenor;
 
             $pokok_pembayaran = ($plafond + $total);
+
             $eff_rate = $tenorData['eff_rate'];
             $flat_rate = round($this->calculate_flat_interest($set_tenor, $eff_rate), 2);
             $interest_margin = intval(($flat_rate / 12) * $set_tenor * $pokok_pembayaran / 100);
@@ -300,8 +301,10 @@ class AdminFeeController extends Controller
             $setAngsuran = ceil(round($angsuran_calc, 3) / 1000) * 1000;
 
             $number = excelRate($set_tenor, -$setAngsuran, $pokok_pembayaran) * 100;
+            $suku_bunga = round((($set_tenor * ($setAngsuran - ($pokok_pembayaran / $set_tenor))) / $pokok_pembayaran) * 100, 2);
 
-            $tenorData['suku_bunga'] = round((($set_tenor * ($setAngsuran - ($pokok_pembayaran / $set_tenor))) / $pokok_pembayaran) * 100, 2);
+            $tenorData['suku_bunga'] = $suku_bunga;
+            $tenorData['total_bunga'] =round(($pokok_pembayaran * ($suku_bunga / 100) / 12) * $set_tenor, 2);; 
             $tenorData['flat_rate'] = round($number, 10); 
             $tenorData['eff_rate'] = round($number * 12, 8);
             $tenorData['total'] = $total;

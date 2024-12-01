@@ -728,8 +728,16 @@ class Credit extends Controller
     {
         // Calculate the monthly interest rate (converted)
         $suku_bunga_konversi = round(excelRate($loanTerm, -$angsuran, $principal) * 100, 10) / 100;
-        $suku_bunga = round((($loanTerm * ($angsuran - ($principal / $loanTerm))) / $principal) * 100, 2);
+        // $suku_bunga = round((($loanTerm * ($angsuran - ($principal / $loanTerm))) / $principal) * 100, 2);
+        $suku_bunga = round((($loanTerm * ($angsuran - ($principal / $loanTerm))) / $principal) * 100, 2); // Tambah presisi
         $ttal_bunga = round(($principal * ($suku_bunga / 100) / 12) * $loanTerm, 2); // Total interest for the loan
+
+        print_r('principal = ' . $principal);
+        echo '<br>';
+        print_r('suku_bunga = ' . $suku_bunga);
+        echo '<br>';
+        \print_r('ttal_bunga = ' . $ttal_bunga);
+        die;
 
         $schedule = [];
         $remainingBalance = $principal;
