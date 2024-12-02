@@ -383,11 +383,12 @@ class CrAppilcationController extends Controller
             'PERIOD' => $request->ekstra['periode']??null,
             'INSTALLMENT' => $request->ekstra['angsuran']??null,
             'OPT_PERIODE' =>$request->ekstra['opt_periode']??null,
-            'FLAT_RATE' => $request->ekstra['bunga_flat']??null,
             'EFF_RATE' => $request->ekstra['eff_rate']??null,
+            'FLAT_RATE' => $request->ekstra['flat_rate'] ?? null,
+            'INTEREST_RATE' => $request->ekstra['suku_bunga'] ?? null,
+            'TOTAL_INTEREST' => $request->ekstra['total_bunga'] ?? null,
             'INSTALLMENT_TYPE' => $request->ekstra['jenis_angsuran']??null,
             'TENOR' => $request->ekstra['tenor']??null,
-            // 'ACC_VALUE' => $request->ekstra['nilai_yang_diterima']??null,
             'POKOK_PEMBAYARAN' => $request->ekstra['pokok_pembayaran']??null,
             'NET_ADMIN' => $request->ekstra['net_admin']??null,
             'TOTAL_ADMIN' => $request->ekstra['total']??null,
@@ -413,6 +414,8 @@ class CrAppilcationController extends Controller
             M_CrApplication::create($data_cr_application);
         }else{
             // compareData(M_CrApplication::class,$id,$data_cr_application,$request);
+            $data_cr_application['MOD_DATE'] = Carbon::now()->format('Y-m-d');
+            $data_cr_application['MOD_BY'] = $request->user()->id;
             $applicationModel->update($data_cr_application);
         } 
     }

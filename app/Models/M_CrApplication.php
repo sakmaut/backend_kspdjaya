@@ -27,6 +27,8 @@ class M_CrApplication extends Model
         'OPT_PERIODE',
         'FLAT_RATE',
         'EFF_RATE',
+        'INTEREST_RATE',
+        'TOTAL_INTEREST',
         'INSTALLMENT_TYPE',
         'TENOR',
         'ACC_VALUE',

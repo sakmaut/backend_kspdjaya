@@ -72,12 +72,12 @@ class Credit extends Controller
         $pihak1= $this->queryKapos($data->BRANCH);
         $loan_number = generateCode($request, 'credit', 'LOAN_NUMBER');
 
-        $principal = $data->POKOK_PEMBAYARAN;
-        $loanTerm = $data->TENOR;
-        $angsuran = $data->INSTALLMENT;
         $set_tgl_awal =$request->tgl_awal;
+        $principal = $data->POKOK_PEMBAYARAN;
+        $angsuran = $data->INSTALLMENT;
+        $loanTerm = $data->TENOR;
 
-        $data_credit_schedule = $this->generateAmortizationSchedule($principal,$angsuran, $set_tgl_awal, $loanTerm);
+        $data_credit_schedule = $this->generateAmortizationSchedule($set_tgl_awal,$data);
 
         $installment_count = count($data_credit_schedule);
 
@@ -724,18 +724,20 @@ class Credit extends Controller
     // }
 
 
-    private function generateAmortizationSchedule($principal, $angsuran, $setDate, $loanTerm)
+    private function generateAmortizationSchedule($setDate, $data)
     {
-        // Calculate the monthly interest rate (converted)
-        $suku_bunga_konversi = round(excelRate($loanTerm, -$angsuran, $principal) * 100, 10) / 100;
-        // $suku_bunga = round((($loanTerm * ($angsuran - ($principal / $loanTerm))) / $principal) * 100, 2);
-        $suku_bunga = round((($loanTerm * ($angsuran - ($principal / $loanTerm))) / $principal) * 100, 2); // Tambah presisi
-        $ttal_bunga = round(($principal * ($suku_bunga / 100) / 12) * $loanTerm, 2); // Total interest for the loan
+        // $suku_bunga_konversi = round(excelRate($loanTerm, -$angsuran, $principal) * 100, 10) / 100;
+        // // $suku_bunga = round((($loanTerm * ($angsuran - ($principal / $loanTerm))) / $principal) * 100, 2);
+        // $suku_bunga = round((($loanTerm * ($angsuran - ($principal / $loanTerm))) / $principal) * 100, 2); // Tambah presisi
+        // $ttal_bunga = round(($principal * ($suku_bunga / 100) / 12) * $loanTerm, 2); // Total interest for the loan
 
         $schedule = [];
-        $remainingBalance = $principal;
+        $remainingBalance = $data->POKOK_PEMBAYARAN;
         $paymentDate = strtotime($setDate);
-        $term = ceil($loanTerm);
+        $term = ceil($data->TENOR);
+        $angsuran = $data->INSTALLMENT;
+        $suku_bunga_konversi = ($data->FLAT_RATE/100);
+        $ttal_bunga = $data->TOTAL_INTEREST;
         $totalInterestPaid = 0;
 
         for ($i = 1; $i <= $term; $i++) {
