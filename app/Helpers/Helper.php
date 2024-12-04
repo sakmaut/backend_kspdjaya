@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\M_Branch;
+use App\Models\M_CustomerDocument;
 use App\Models\M_DeuteronomyTransactionLog;
 use App\Models\M_TransactionLog;
 use Illuminate\Http\Request;
@@ -280,8 +281,18 @@ function calculateRateDerivative($rate, $nper, $pmt, $pv, $fv, $type) {
 }
 
 if(!function_exists('ceilToPrecision')){
-function ceilToPrecision($number, $precision) {
-    $factor = pow(10, $precision);
-    return round($number * $factor) / $factor;
+    function ceilToPrecision($number, $precision) {
+        $factor = pow(10, $precision);
+        return round($number * $factor) / $factor;
+    }
 }
+
+if(!function_exists('getCustomerDocument')){
+    function getCustomerDocument($cust_id, $param) {
+        $result = M_CustomerDocument::where('CUSTOMER_ID', $cust_id)
+        ->whereIn('TYPE', $param) 
+        ->get();
+
+        return $result;
+    }
 }

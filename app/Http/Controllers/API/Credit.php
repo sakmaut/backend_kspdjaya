@@ -16,7 +16,9 @@ use App\Models\M_CrOrder;
 use App\Models\M_CrPersonal;
 use App\Models\M_CrPersonalExtra;
 use App\Models\M_CrSurvey;
+use App\Models\M_CrSurveyDocument;
 use App\Models\M_Customer;
+use App\Models\M_CustomerDocument;
 use App\Models\M_CustomerExtra;
 use App\Models\M_LocationStatus;
 use Carbon\Carbon;
@@ -38,15 +40,15 @@ class Credit extends Controller
     public function index(Request $request)
     {
         try {
-            $check = M_CrApplication::where('ORDER_NUMBER',$request->order_number)->first();
+            $data = M_CrApplication::where('ORDER_NUMBER',$request->order_number)->first();
 
-            if (!$check) {
+            if (!$data) {
                 throw new Exception("Order Number Is Not Exist", 404);
             }
 
             // $data_credit_schedule = generateAmortizationSchedule(7760000, 492000, '2024-09-26', 44, 24);
     
-            return response()->json($this->buildData($request,$check), 200);
+            return response()->json($this->buildData($request,$data), 200);
             // return response()->json( generateCustCode($request, 'credit', 'CUST_CODE'), 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
@@ -289,8 +291,19 @@ class Credit extends Controller
 
         $cr_personal = M_CrPersonal::where('APPLICATION_ID',$data->ID)->first();
         $cr_order = M_CrOrder::where('APPLICATION_ID',$data->ID)->first();
-
         $check_customer_ktp = M_Customer::where('ID_NUMBER',$cr_personal->ID_NUMBER)->first();
+
+        $getAttachment = DB::select(
+            "   SELECT TYPE,COUNTER_ID,PATH
+                FROM cr_survey_document AS csd
+                WHERE (TYPE, TIMEMILISECOND) IN (
+                    SELECT TYPE, MAX(TIMEMILISECOND)
+                    FROM cr_survey_document
+                    WHERE  CR_SURVEY_ID = '$data->CR_SURVEY_ID'
+                    GROUP BY TYPE
+                )
+                ORDER BY TIMEMILISECOND DESC"
+        );
 
         $data_customer =[
             'NAME' =>$cr_personal->NAME,
@@ -341,13 +354,31 @@ class Credit extends Controller
             'CREATE_DATE' => Carbon::now(),
             'CREATE_USER' => $request->user()->id,
         ];
-
+        
         if(!$check_customer_ktp){
             $data_customer['ID'] = Uuid::uuid7()->toString();
             $data_customer['CUST_CODE'] = $cust_code;
-            M_Customer::create($data_customer);
+            $last_id = M_Customer::create($data_customer);
+
+            $this->createCustomerDocuments($last_id->ID,$getAttachment);
         }else{
             $check_customer_ktp->update($data_customer);
+            
+            $this->createCustomerDocuments($check_customer_ktp->ID,$getAttachment);
+        }
+    }
+
+    private function createCustomerDocuments($customerId, $attachments) {
+        foreach ($attachments as $res) {
+            $custmer_doc_data = [
+                'CUSTOMER_ID' => $customerId,
+                'TYPE' => $res->TYPE,
+                'COUNTER_ID' => $res->COUNTER_ID,
+                'PATH' => $res->PATH,
+                'TIMESTAMP' => round(microtime(true) * 1000)
+            ];
+    
+            M_CustomerDocument::create($custmer_doc_data);
         }
     }
 

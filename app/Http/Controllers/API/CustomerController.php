@@ -9,7 +9,9 @@ use App\Models\M_Arrears;
 use App\Models\M_CrCollateral;
 use App\Models\M_Credit;
 use App\Models\M_CreditSchedule;
+use App\Models\M_CrSurveyDocument;
 use App\Models\M_Customer;
+use App\Models\M_CustomerDocument;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
@@ -315,7 +317,6 @@ class CustomerController extends Controller
             $data = M_Customer::where('ID_NUMBER', $request->no_ktp)->get();
 
             $datas = $data->map(function($customer) {
-                // Fetch both guarantees in one query using JOIN
                 $guarente_vehicle = DB::table('credit as a')
                                 ->leftJoin('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
                                 ->where('a.CUST_CODE', '=', $customer->CUST_CODE)
@@ -331,7 +332,6 @@ class CustomerController extends Controller
                 $jaminan = [];
             
                 foreach ($guarente_vehicle as $guarantee) {
-                    // Check if the row is from cr_collateral (vehicle)
                     $jaminan[] = [
                         "type" => "kendaraan",
                         'counter_id' => $guarantee->HEADER_ID,
@@ -351,7 +351,8 @@ class CustomerController extends Controller
                             "no_faktur" => $guarantee->INVOICE_NUMBER??null,
                             "no_stnk" => $guarantee->STNK_NUMBER??null,
                             "tgl_stnk" => $guarantee->STNK_VALID_DATE??null,
-                            "nilai" => (int)$guarantee->VALUE??null
+                            "nilai" => (int)$guarantee->VALUE??null,
+                            "document" => getCustomerDocument($customer->ID, ['no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri']),
                         ]
                     ];
                 }
@@ -374,7 +375,8 @@ class CustomerController extends Controller
                             "kec" => $guarantee->KECAMATAN??null,
                             "desa" => $guarantee->DESA??null,
                             "atas_nama" => $guarantee->ATAS_NAMA??null,
-                            "nilai" => (int)$guarantee->NILAI??null
+                            "nilai" => (int)$guarantee->NILAI??null,
+                            "document" => getCustomerDocument($customer->ID, ['sertifikat'])
                         ]
                     ];
                 }
@@ -393,6 +395,7 @@ class CustomerController extends Controller
                     'kelurahan' => $customer->KELURAHAN?? null,
                     'kode_pos' => $customer->ZIP_CODE?? null,
                     'no_hp' => $customer->PHONE_PERSONAL??null,
+                    "dokumen_indentitas" => getCustomerDocument($customer->ID, ['ktp', 'kk', 'ktp_pasangan']),
                     'jaminan' => $jaminan
                 ];
             })->toArray(); // Return as array after mapping
