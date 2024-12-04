@@ -766,7 +766,7 @@ class Credit extends Controller
 
         $schedule = [];
         $remainingBalance = $data->POKOK_PEMBAYARAN;
-        $paymentDate = strtotime(parseDatetoYMD($setDate));
+        $paymentDate = strtotime($setDate);
         $term = ceil($data->TENOR);
         $angsuran = $data->INSTALLMENT;
         $suku_bunga_konversi = ($data->FLAT_RATE/100);
@@ -804,8 +804,8 @@ class Credit extends Controller
             // Add this installment's details to the schedule
             $schedule[] = [
                 'angsuran_ke' => $i,
-                'tgl_angsuran' => date('Y-m-d', $paymentDate),
-                'baki_debet_awal' => floatval($remainingBalance + $principalPayment), // Starting balance
+                'tgl_angsuran' => $paymentDate,
+                'baki_debet_awal' => floatval($remainingBalance + $principalPayment),
                 'pokok' => floatval($principalPayment),
                 'bunga' => floatval($interest),
                 'total_angsuran' => floatval($totalPayment),

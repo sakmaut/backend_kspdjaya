@@ -300,7 +300,7 @@ if(!function_exists('getCustomerDocument')){
 
 if(!function_exists('parseDate')){
     function parseDatetoYMD($date) {
-        $dateTime = DateTime::createFromFormat('Y-d-m', $date);
+        $dateTime = DateTime::createFromFormat('Y-m-d', $date);
         $formattedDate = $dateTime->format('Y-m-d');
 
         return $formattedDate;
