@@ -387,6 +387,11 @@ class CustomerController extends Controller
                     'alamat' => $customer->ADDRESS??null,
                     'rw' => $customer->RW??null,
                     'rt' => $customer->RT??null,
+                    'province' => $customer->PROVINCE?? null,
+                    'city' => $customer->CITY?? null,
+                    'kecamatan' => $customer->KECAMATAN?? null,
+                    'kelurahan' => $customer->KELURAHAN?? null,
+                    'kode_pos' => $customer->ZIP_CODE?? null,
                     'no_hp' => $customer->PHONE_PERSONAL??null,
                     'jaminan' => $jaminan
                 ];
