@@ -309,16 +309,30 @@ if(!function_exists('parseDate')){
 
 if(!function_exists('setPaymentDate')){
     function setPaymentDate($setDate, $monthIncrement = 1) {
-        $newDate = strtotime("+$monthIncrement month", strtotime($setDate));
+        // Convert the input date to a timestamp
+        $timestamp = strtotime($setDate);
+        
+        // Get the day of the month from the input date
+        $dayOfMonth = date('d', $timestamp);
+        
+        // If the day is between 26 and 31, set the date to the 1st of the next month
+        if ($dayOfMonth >= 26) {
+            $timestamp = strtotime("first day of next month", $timestamp);
+        }
     
-        $newMonthLastDay = date('t', $newDate);  // Get the last day of the month
-        $newDateDay = date('d', $newDate);       // Get the current day of the new date
-
+        // Increment the month by the specified amount
+        $newDate = strtotime("+$monthIncrement month", $timestamp);
+        
+        // Get the last day of the new month
+        $newMonthLastDay = date('t', $newDate);
+        // Get the current day of the new date
+        $newDateDay = date('d', $newDate);
+    
         // If the day of the new date is greater than the last day of the new month, set it to the last day of that month
         if ($newDateDay > $newMonthLastDay) {
             $newDate = strtotime("last day of this month", $newDate);
         }
-
+    
         // Return the formatted date
         return date('Y-m-d', $newDate);
     }

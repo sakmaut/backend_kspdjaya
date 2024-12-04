@@ -78,6 +78,8 @@ class Credit extends Controller
         $loanTerm = $data->TENOR;
 
         $data_credit_schedule = $this->generateAmortizationSchedule($set_tgl_awal,$data);
+        return response()->json($data_credit_schedule, 500);
+        die;
 
         $installment_count = count($data_credit_schedule);
 
