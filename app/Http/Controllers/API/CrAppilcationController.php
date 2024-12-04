@@ -88,19 +88,29 @@ class CrAppilcationController extends Controller
         try {
             $check = M_CrApplication::where('CR_SURVEY_ID',$id)->whereNull('deleted_at')->first();
 
+            echo 'aman_1';
+
             if (!$check) {
                 $check_application_id = M_CrApplication::where('ID',$id)->whereNull('deleted_at')->first();
             }else {
                 $check_application_id = $check;
             }
+
+            echo 'aman_2';
             
             $surveyID = $check_application_id->CR_SURVEY_ID;
+
+            echo 'aman_3';
 
             if (!isset($surveyID)  || $surveyID == '') {
                 throw new Exception("Id FPK Is Not Exist", 404);
             }
 
+            echo 'aman_4';
+
             $detail_prospect = M_CrSurvey::where('id',$surveyID)->first();
+
+            echo 'aman_5';
 
             return response()->json(['message' => 'OK',"status" => 200,'response' =>  $this->resourceDetail($detail_prospect,$check_application_id)], 200);
         } catch (\Exception $e) {
