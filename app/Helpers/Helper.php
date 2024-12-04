@@ -291,6 +291,7 @@ if(!function_exists('getCustomerDocument')){
     function getCustomerDocument($cust_id, $param) {
         $result = M_CustomerDocument::where('CUSTOMER_ID', $cust_id)
         ->whereIn('TYPE', $param) 
+        ->orderBy('TIMEMILISECOND', 'DESC')
         ->get();
 
         return $result;
