@@ -297,3 +297,12 @@ if(!function_exists('getCustomerDocument')){
         return $result;
     }
 }
+
+if(!function_exists('parseDate')){
+    function parseDatetoYMD($date) {
+        $dateTime = DateTime::createFromFormat('Y-d-m', $date);
+        $formattedDate = $dateTime->format('Y-m-d');
+
+        return $formattedDate;
+    }
+}

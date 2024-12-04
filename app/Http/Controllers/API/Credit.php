@@ -22,6 +22,7 @@ use App\Models\M_CustomerDocument;
 use App\Models\M_CustomerExtra;
 use App\Models\M_LocationStatus;
 use Carbon\Carbon;
+use DateTime;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -74,7 +75,7 @@ class Credit extends Controller
         $pihak1= $this->queryKapos($data->BRANCH);
         $loan_number = generateCode($request, 'credit', 'LOAN_NUMBER');
 
-        $set_tgl_awal =$request->tgl_awal;
+        $set_tgl_awal = $request->tgl_awal;
         $principal = $data->POKOK_PEMBAYARAN;
         $angsuran = $data->INSTALLMENT;
         $loanTerm = $data->TENOR;
@@ -168,13 +169,12 @@ class Credit extends Controller
             ],
              "pokok_margin" =>bilangan($principal)??null,
              "tenor" => bilangan($data->TENOR,false)??null,
-             "tgl_awal_pk" => !empty($check_exist)?Carbon::parse($check_exist->ENTRY_DATE)->format('Y-m-d'):Carbon::parse($set_tgl_awal)->format('Y-m-d'),
-             "tgl_akhir_pk" => !empty($check_exist)?Carbon::parse($check_exist->END_DATE)->format('Y-m-d'):add_months($set_tgl_awal,$loanTerm),
+             "tgl_awal_pk" => !empty($check_exist)?Carbon::parse($check_exist->ENTRY_DATE)->format('Y-m-d'):parseDatetoYMD($set_tgl_awal),
+             "tgl_akhir_pk" => !empty($check_exist)?Carbon::parse($check_exist->END_DATE)->format('Y-m-d'):add_months(parseDatetoYMD($set_tgl_awal),$loanTerm),
              "angsuran" =>bilangan($angsuran)??null,
              "opt_periode" => $data->OPT_PERIODE??null,
              "jaminan" => [],
              "struktur" => $check_exist != null && !empty($check_exist->LOAN_NUMBER)?$schedule:$data_credit_schedule??null
-            // "struktur" => $data_credit_schedule ?? null
         ];
 
         foreach ($cr_guarantor as $list) {
@@ -250,6 +250,8 @@ class Credit extends Controller
 
         $survey = M_CrSurvey::find($data->CR_SURVEY_ID);
 
+        $setDate = parseDatetoYMD($request->tgl_awal);
+
         $data_credit =[
             'ID' =>  $SET_UUID,
             'LOAN_NUMBER' => $loan_number,
@@ -259,10 +261,10 @@ class Credit extends Controller
             'ORDER_NUMBER' => $data->ORDER_NUMBER,
             'STATUS'  => 'A',
             'MCF_ID'  => $survey->created_by??null,
-            'ENTRY_DATE'  => $request->tgl_awal??null,
+            'ENTRY_DATE'  => $setDate??null,
             'FIRST_ARR_DATE'  => null,
-            'INSTALLMENT_DATE'  => $request->tgl_awal??null,
-            'END_DATE'  => add_months($request->tgl_awal,$data->PERIOD)??null,
+            'INSTALLMENT_DATE'  => $setDate??null,
+            'END_DATE'  => add_months($setDate,$data->PERIOD)??null,
             'PCPL_ORI'  => $data->SUBMISSION_VALUE + ($data->TOTAL_ADMIN ?? 0)??null,
             'PAID_PRINCIPAL'  => null,
             'PAID_INTEREST'  => null,
@@ -363,7 +365,7 @@ class Credit extends Controller
             $this->createCustomerDocuments($last_id->ID,$getAttachment);
         }else{
             $check_customer_ktp->update($data_customer);
-            
+
             $this->createCustomerDocuments($check_customer_ktp->ID,$getAttachment);
         }
     }
