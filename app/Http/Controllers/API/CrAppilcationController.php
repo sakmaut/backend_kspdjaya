@@ -93,9 +93,6 @@ class CrAppilcationController extends Controller
             }else {
                 $check_application_id = $check;
             }
-
-            return response()->json($check_application_id, 200);
-            die;
             
             $surveyID = $check_application_id->CR_SURVEY_ID;
 
