@@ -46,11 +46,8 @@ class Credit extends Controller
             if (!$data) {
                 throw new Exception("Order Number Is Not Exist", 404);
             }
-
-            // $data_credit_schedule = generateAmortizationSchedule(7760000, 492000, '2024-09-26', 44, 24);
     
             return response()->json($this->buildData($request,$data), 200);
-            // return response()->json( generateCustCode($request, 'credit', 'CUST_CODE'), 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
@@ -81,6 +78,8 @@ class Credit extends Controller
         $loanTerm = $data->TENOR;
 
         $data_credit_schedule = $this->generateAmortizationSchedule($set_tgl_awal,$data);
+        return response()->json($data_credit_schedule, 200);
+        die;
 
         $installment_count = count($data_credit_schedule);
 
@@ -115,7 +114,7 @@ class Credit extends Controller
                     'ID' => Uuid::uuid7()->toString(),
                     'LOAN_NUMBER' => $loan_number,
                     'INSTALLMENT_COUNT' => $no++,
-                    'PAYMENT_DATE' => Carbon::parse($list['tgl_angsuran'])->format('Y-m-d'),
+                    'PAYMENT_DATE' => parseDatetoYMD($list['tgl_angsuran']),
                     'PRINCIPAL' => $list['pokok'],
                     'INTEREST' => $list['bunga'],
                     'INSTALLMENT' => $list['total_angsuran'],
@@ -759,14 +758,8 @@ class Credit extends Controller
 
     private function generateAmortizationSchedule($setDate, $data)
     {
-        // $suku_bunga_konversi = round(excelRate($loanTerm, -$angsuran, $principal) * 100, 10) / 100;
-        // // $suku_bunga = round((($loanTerm * ($angsuran - ($principal / $loanTerm))) / $principal) * 100, 2);
-        // $suku_bunga = round((($loanTerm * ($angsuran - ($principal / $loanTerm))) / $principal) * 100, 2); // Tambah presisi
-        // $ttal_bunga = round(($principal * ($suku_bunga / 100) / 12) * $loanTerm, 2); // Total interest for the loan
-
         $schedule = [];
         $remainingBalance = $data->POKOK_PEMBAYARAN;
-        $paymentDate = strtotime($setDate);
         $term = ceil($data->TENOR);
         $angsuran = $data->INSTALLMENT;
         $suku_bunga_konversi = ($data->FLAT_RATE/100);
@@ -774,46 +767,31 @@ class Credit extends Controller
         $totalInterestPaid = 0;
 
         for ($i = 1; $i <= $term; $i++) {
-            // Calculate regular interest
             $interest = round($remainingBalance * $suku_bunga_konversi, 2);
 
-            // Calculate principal payment
             if ($i < $term) {
                 $principalPayment = round($angsuran - $interest, 2);
             } else {
-                // Last installment
-                $principalPayment = round($remainingBalance, 2); // Pay off the remaining balance
-                // Calculate the interest for the last installment
+                $principalPayment = round($remainingBalance, 2);
                 $interest = round($ttal_bunga - $totalInterestPaid, 2);
             }
 
-            // Total payment for this installment
             $totalPayment = round($principalPayment + $interest, 2);
-
-            // Adjust remaining balance
             $remainingBalance = round($remainingBalance - $principalPayment, 2);
-
-            // Accumulate total interest paid
             $totalInterestPaid += $interest;
-
-            // Ensure the last installment results in exactly zero remaining balance
             if ($i == $term) {
                 $remainingBalance = 0.00;
             }
 
-            // Add this installment's details to the schedule
             $schedule[] = [
                 'angsuran_ke' => $i,
-                'tgl_angsuran' => $paymentDate,
+                'tgl_angsuran' => setPaymentDate($setDate, $i), 
                 'baki_debet_awal' => floatval($remainingBalance + $principalPayment),
                 'pokok' => floatval($principalPayment),
                 'bunga' => floatval($interest),
                 'total_angsuran' => floatval($totalPayment),
                 'baki_debet' => floatval($remainingBalance)
             ];
-
-            // Move to the next month
-            $paymentDate = strtotime("+1 month", $paymentDate);
         }
 
         return $schedule;

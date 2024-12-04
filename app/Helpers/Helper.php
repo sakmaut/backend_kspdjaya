@@ -306,3 +306,20 @@ if(!function_exists('parseDate')){
         return $formattedDate;
     }
 }
+
+if(!function_exists('setPaymentDate')){
+    function setPaymentDate($setDate, $monthIncrement = 1) {
+        $newDate = strtotime("+$monthIncrement month", strtotime($setDate));
+    
+        $newMonthLastDay = date('t', $newDate);  // Get the last day of the month
+        $newDateDay = date('d', $newDate);       // Get the current day of the new date
+
+        // If the day of the new date is greater than the last day of the new month, set it to the last day of that month
+        if ($newDateDay > $newMonthLastDay) {
+            $newDate = strtotime("last day of this month", $newDate);
+        }
+
+        // Return the formatted date
+        return date('Y-m-d', $newDate);
+    }
+}
