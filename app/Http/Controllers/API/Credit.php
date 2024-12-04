@@ -766,7 +766,7 @@ class Credit extends Controller
 
         $schedule = [];
         $remainingBalance = $data->POKOK_PEMBAYARAN;
-        $paymentDate = strtotime($setDate);
+        $paymentDate = strtotime(parseDatetoYMD($setDate));
         $term = ceil($data->TENOR);
         $angsuran = $data->INSTALLMENT;
         $suku_bunga_konversi = ($data->FLAT_RATE/100);
