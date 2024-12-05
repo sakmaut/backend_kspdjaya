@@ -142,7 +142,7 @@ class Credit extends Controller
         }
 
         $data = [
-           "no_perjanjian" => $check_exist ? $check_exist->LOAN_NUMBER : ($request->flag == 'yes' ? $loan_number : null),
+           "no_perjanjian" => !$check_exist && $request->flag == 'yes' ? $loan_number: $check_exist->LOAN_NUMBER,
             "cabang" => 'CABANG '.strtoupper($pihak1->name)??null,
             "kota" => strtoupper($pihak1->city)??null,
             "tgl_cetak" => !empty($check_exist)? Carbon::parse($check_exist->CREATED_AT)->format('Y-m-d') : null,
