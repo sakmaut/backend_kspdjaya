@@ -317,11 +317,23 @@ class CustomerController extends Controller
             $data = M_Customer::where('ID_NUMBER', $request->no_ktp)->get();
 
             $datas = $data->map(function($customer) {
+                // $guarente_vehicle = DB::table('credit as a')
+                //                 ->leftJoin('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
+                //                 ->where('a.CUST_CODE', '=', $customer->CUST_CODE)
+                //                 ->select('b.*')
+                //                 ->get();
+
                 $guarente_vehicle = DB::table('credit as a')
-                                ->leftJoin('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
-                                ->where('a.CUST_CODE', '=', $customer->CUST_CODE)
-                                ->select('b.*')
-                                ->get();
+                                        ->leftJoin('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
+                                        ->leftJoin(DB::raw('(SELECT CR_CREDIT_ID, MAX(CREATE_DATE) as latest_created_date
+                                                            FROM cr_collateral
+                                                            GROUP BY CR_CREDIT_ID) as latest'), function($join) {
+                                            $join->on('b.CR_CREDIT_ID', '=', 'latest.CR_CREDIT_ID');
+                                        })
+                                        ->where('a.CUST_CODE', '=', $customer->CUST_CODE)
+                                        ->select('b.*', 'latest.latest_created_date')
+                                        ->orderBy('latest.latest_created_date', 'DESC')
+                                        ->get();
 
                 $guarente_sertificat = DB::table('credit as a')
                                 ->leftJoin('cr_collateral_sertification as c', 'c.CR_CREDIT_ID', '=', 'a.ID')
@@ -332,53 +344,57 @@ class CustomerController extends Controller
                 $jaminan = [];
             
                 foreach ($guarente_vehicle as $guarantee) {
-                    $jaminan[] = [
-                        "type" => "kendaraan",
-                        'counter_id' => $guarantee->HEADER_ID,
-                        "atr" => [
-                            'id' => $guarantee->ID??null,
-                            'status_jaminan' => null,
-                            "tipe" => $guarantee->TYPE??null,
-                            "merk" => $guarantee->BRAND??null,
-                            "tahun" => $guarantee->PRODUCTION_YEAR??null,
-                            "warna" => $guarantee->COLOR??null,
-                            "atas_nama" => $guarantee->ON_BEHALF??null,
-                            "no_polisi" => $guarantee->POLICE_NUMBER??null,
-                            "no_rangka" => $guarantee->CHASIS_NUMBER??null,
-                            "no_mesin" => $guarantee->ENGINE_NUMBER??null,
-                            "no_bpkb" => $guarantee->BPKB_NUMBER??null,
-                            "alamat_bpkb" => $guarantee->BPKB_ADDRESS??null,
-                            "no_faktur" => $guarantee->INVOICE_NUMBER??null,
-                            "no_stnk" => $guarantee->STNK_NUMBER??null,
-                            "tgl_stnk" => $guarantee->STNK_VALID_DATE??null,
-                            "nilai" => (int)$guarantee->VALUE??null,
-                            "document" => getCustomerDocument($customer->ID, ['no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri']),
-                        ]
-                    ];
+                    if (!empty($guarantee) && !empty($guarantee->HEADER_ID)){
+                        $jaminan[] = [
+                            "type" => "kendaraan",
+                            'counter_id' => $guarantee->HEADER_ID,
+                            "atr" => [
+                                'id' => $guarantee->ID??null,
+                                'status_jaminan' => null,
+                                "tipe" => $guarantee->TYPE??null,
+                                "merk" => $guarantee->BRAND??null,
+                                "tahun" => $guarantee->PRODUCTION_YEAR??null,
+                                "warna" => $guarantee->COLOR??null,
+                                "atas_nama" => $guarantee->ON_BEHALF??null,
+                                "no_polisi" => $guarantee->POLICE_NUMBER??null,
+                                "no_rangka" => $guarantee->CHASIS_NUMBER??null,
+                                "no_mesin" => $guarantee->ENGINE_NUMBER??null,
+                                "no_bpkb" => $guarantee->BPKB_NUMBER??null,
+                                "alamat_bpkb" => $guarantee->BPKB_ADDRESS??null,
+                                "no_faktur" => $guarantee->INVOICE_NUMBER??null,
+                                "no_stnk" => $guarantee->STNK_NUMBER??null,
+                                "tgl_stnk" => $guarantee->STNK_VALID_DATE??null,
+                                "nilai" => (int)$guarantee->VALUE??null,
+                                "document" => getCustomerDocument($customer->ID, ['no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri']),
+                            ]
+                        ];
+                    }
                 }
 
-                foreach ($guarente_sertificat as $guarantee) {
-                    $jaminan[] = [
-                        "type" => "sertifikat",
-                        'counter_id' => $guarantee->HEADER_ID??null,
-                        "atr" => [
-                            'id' => $guarantee->ID??null,
-                            'status_jaminan' => null,
-                            "no_sertifikat" => $guarantee->NO_SERTIFIKAT??null,
-                            "status_kepemilikan" => $guarantee->STATUS_KEPEMILIKAN??null,
-                            "imb" => $guarantee->IMB??null,
-                            "luas_tanah" => $guarantee->LUAS_TANAH??null,
-                            "luas_bangunan" => $guarantee->LUAS_BANGUNAN??null,
-                            "lokasi" => $guarantee->LOKASI??null,
-                            "provinsi" => $guarantee->PROVINSI??null,
-                            "kab_kota" => $guarantee->KAB_KOTA??null,
-                            "kec" => $guarantee->KECAMATAN??null,
-                            "desa" => $guarantee->DESA??null,
-                            "atas_nama" => $guarantee->ATAS_NAMA??null,
-                            "nilai" => (int)$guarantee->NILAI??null,
-                            "document" => getCustomerDocument($customer->ID, ['sertifikat'])
-                        ]
-                    ];
+                foreach ($guarente_sertificat as $list) {
+                    if (!empty($list) && !empty($list->HEADER_ID)){
+                        $jaminan[] = [
+                            "type" => "sertifikat",
+                            'counter_id' => $list->HEADER_ID??null,
+                            "atr" => [
+                                'id' => $list->ID??null,
+                                'status_jaminan' => null,
+                                "no_sertifikat" => $list->NO_SERTIFIKAT??null,
+                                "status_kepemilikan" => $list->STATUS_KEPEMILIKAN??null,
+                                "imb" => $list->IMB??null,
+                                "luas_tanah" => $list->LUAS_TANAH??null,
+                                "luas_bangunan" => $list->LUAS_BANGUNAN??null,
+                                "lokasi" => $list->LOKASI??null,
+                                "provinsi" => $list->PROVINSI??null,
+                                "kab_kota" => $list->KAB_KOTA??null,
+                                "kec" => $list->KECAMATAN??null,
+                                "desa" => $list->DESA??null,
+                                "atas_nama" => $list->ATAS_NAMA??null,
+                                "nilai" => (int)$list->NILAI??null,
+                                "document" => getCustomerDocument($customer->ID, ['sertifikat'])
+                            ]
+                        ];
+                    }
                 }
             
                 return [
@@ -398,7 +414,7 @@ class CustomerController extends Controller
                     "dokumen_indentitas" => getCustomerDocument($customer->ID, ['ktp', 'kk', 'ktp_pasangan']),
                     'jaminan' => $jaminan
                 ];
-            })->toArray(); // Return as array after mapping
+            })->toArray();
             
             return response()->json($datas, 200);
         } catch (\Exception $e) {

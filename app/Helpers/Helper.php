@@ -105,7 +105,7 @@ if (!function_exists('generateCustCode')) {
         $branchCodeNumber = $branch->CODE_NUMBER;
     
         $latestRecord = DB::table($table)->latest($column)->first();
-        $lastSequence = $latestRecord ? (int) substr($latestRecord->$column, 7, 5) + 1 : 1;
+        $lastSequence = $latestRecord ? (int) substr($latestRecord->$column, 3, 5) + 1 : 1;
     
 
         $generateCode = sprintf("%s%05d", $branchCodeNumber, $lastSequence);
@@ -289,12 +289,24 @@ if(!function_exists('ceilToPrecision')){
 
 if(!function_exists('getCustomerDocument')){
     function getCustomerDocument($cust_id, $param) {
-        $result = M_CustomerDocument::where('CUSTOMER_ID', $cust_id)
-        ->whereIn('TYPE', $param) 
-        ->orderBy('TIMESTAMP', 'DESC')
-        ->get();
+        $param = implode(',', array_map(function($type) {
+            return "'" . addslashes($type) . "'"; // Escape each type
+        }, $param));
+        
+        $documents = DB::select(
+            "   SELECT *
+                FROM customer_document AS csd
+                WHERE (TYPE, TIMESTAMP) IN (
+                    SELECT TYPE, MAX(TIMESTAMP)
+                    FROM customer_document
+                    WHERE `TYPE` IN ($param)
+                        AND CUSTOMER_ID = '$cust_id'
+                    GROUP BY TYPE
+                )
+                ORDER BY TIMESTAMP DESC"
+        );
 
-        return $result;
+        return $documents;
     }
 }
 

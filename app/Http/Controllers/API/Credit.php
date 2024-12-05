@@ -46,7 +46,7 @@ class Credit extends Controller
             if (!$data) {
                 throw new Exception("Order Number Is Not Exist", 404);
             }
-    
+
             return response()->json($this->buildData($request,$data), 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
@@ -253,12 +253,14 @@ class Credit extends Controller
 
         $setDate = parseDatetoYMD($request->tgl_awal);
 
+        $cr_personal = M_CrPersonal::where('APPLICATION_ID',$data->ID)->first();
+        $check_customer_ktp = M_Customer::where('ID_NUMBER',$cr_personal->ID_NUMBER)->first();
+
         $data_credit =[
             'ID' =>  $SET_UUID,
             'LOAN_NUMBER' => $loan_number,
             'STATUS_REC' => $data->BRANCH,
             'BRANCH'   => $data->BRANCH,
-            'CUST_CODE' => $cust_code,
             'ORDER_NUMBER' => $data->ORDER_NUMBER,
             'STATUS'  => 'A',
             'MCF_ID'  => $survey->created_by??null,
@@ -283,6 +285,13 @@ class Credit extends Controller
             'CREATED_BY' => $request->user()->id,
             'CREATED_AT' => Carbon::now(),
         ];
+
+         
+        if(!$check_customer_ktp){
+            $data_credit['CUST_CODE'] = $cust_code;
+        }else{
+            $data_credit['CUST_CODE'] = $check_customer_ktp->CUST_CODE;
+        }
 
         $credit = M_Credit::create($data_credit);
         $last_id = $credit->id;
