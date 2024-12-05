@@ -18,6 +18,7 @@ use App\Http\Controllers\API\{
     UsersController,
     CrBlacklistController,
     HrPositionController,
+    ListBanController,
     PelunasanController
 };
 use App\Http\Controllers\Welcome;
@@ -106,6 +107,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::resource('position',HrPositionController::class);
     Route::post('checkCollateral', [Credit::class,'checkCollateral']);
+
+    Route::resource('listBan',ListBanController::class);
 });
 
 

@@ -70,8 +70,7 @@ class Credit extends Controller
         $cr_guarantor = M_CrApplicationGuarantor::where('APPLICATION_ID',$data->ID)->get();
         $cr_spouse = M_CrApplicationSpouse::where('APPLICATION_ID',$data->ID)->first();
         $pihak1= $this->queryKapos($data->BRANCH);
-        $loan_number = generateCode($request, 'credit', 'LOAN_NUMBER');
-
+       
         $set_tgl_awal = $request->tgl_awal;
         $principal = $data->POKOK_PEMBAYARAN;
         $angsuran = $data->INSTALLMENT;
@@ -101,6 +100,7 @@ class Credit extends Controller
         }
       
         $SET_UUID = Uuid::uuid7()->toString();
+        $loan_number = generateCode($request, 'credit', 'LOAN_NUMBER');
         $cust_code = generateCustCode($request, 'credit', 'CUST_CODE');
 
         if (!$check_exist && $request->flag == 'yes') {
@@ -138,7 +138,7 @@ class Credit extends Controller
                                 })->get(); 
 
         $data = [
-            "no_perjanjian" => !$check_exist? $loan_number:$check_exist->LOAN_NUMBER,
+            "no_perjanjian" => $check_exist? $check_exist->LOAN_NUMBER:null,
             "cabang" => 'CABANG '.strtoupper($pihak1->name)??null,
             "kota" => strtoupper($pihak1->city)??null,
             "tgl_cetak" => !empty($check_exist)? Carbon::parse($check_exist->CREATED_AT)->format('Y-m-d') : null,
