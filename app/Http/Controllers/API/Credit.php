@@ -102,9 +102,22 @@ class Credit extends Controller
         $SET_UUID = Uuid::uuid7()->toString();
         $loan_number = generateCode($request, 'credit', 'LOAN_NUMBER');
         $cust_code = generateCustCode($request, 'credit', 'CUST_CODE');
+        
+        $guarente_vehicle = M_CrGuaranteVehicle::where('CR_SURVEY_ID',$data->CR_SURVEY_ID)->where(function($query) {
+            $query->whereNull('DELETED_AT')
+                ->orWhere('DELETED_AT', '');
+        })->get(); 
+
+        $guarente_sertificat = M_CrGuaranteSertification::where('CR_SURVEY_ID',$data->CR_SURVEY_ID)->where(function($query) {
+            $query->whereNull('DELETED_AT')
+                ->orWhere('DELETED_AT', '');
+        })->get(); 
+
 
         if (!$check_exist && $request->flag == 'yes') {
+
             $this->insert_credit($SET_UUID,$request, $data, $loan_number,$installment_count, $cust_code);
+
             $no =1;
             foreach ($data_credit_schedule as $list) {
                 $credit_schedule =
@@ -128,17 +141,8 @@ class Credit extends Controller
             $this->insert_collateral_sertification($request,$data,$SET_UUID);
         }
 
-        $guarente_vehicle = M_CrGuaranteVehicle::where('CR_SURVEY_ID',$data->CR_SURVEY_ID)->where(function($query) {
-                                $query->whereNull('DELETED_AT')
-                                    ->orWhere('DELETED_AT', '');
-                            })->get(); 
-        $guarente_sertificat = M_CrGuaranteSertification::where('CR_SURVEY_ID',$data->CR_SURVEY_ID)->where(function($query) {
-                                    $query->whereNull('DELETED_AT')
-                                        ->orWhere('DELETED_AT', '');
-                                })->get(); 
-
         $data = [
-            "no_perjanjian" => $check_exist? $check_exist->LOAN_NUMBER:null,
+           "no_perjanjian" => $check_exist ? $check_exist->LOAN_NUMBER : ($request->flag == 'yes' ? $loan_number : null),
             "cabang" => 'CABANG '.strtoupper($pihak1->name)??null,
             "kota" => strtoupper($pihak1->city)??null,
             "tgl_cetak" => !empty($check_exist)? Carbon::parse($check_exist->CREATED_AT)->format('Y-m-d') : null,
