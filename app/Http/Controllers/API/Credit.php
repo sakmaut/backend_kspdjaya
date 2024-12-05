@@ -142,7 +142,7 @@ class Credit extends Controller
             "cabang" => 'CABANG '.strtoupper($pihak1->name)??null,
             "kota" => strtoupper($pihak1->city)??null,
             "tgl_cetak" => !empty($check_exist)? Carbon::parse($check_exist->CREATED_AT)->format('Y-m-d') : null,
-            "tgl_awal_angsuran" => !empty($check_exist)? Carbon::parse($check_exist->INSTALLMENT_DATE)->format('Y-m-d'):null,
+            "tgl_awal_angsuran" => !empty($check_exist)? Carbon::parse($check_exist->INSTALLMENT_DATE)->format('Y-m-d'): Carbon::parse($set_tgl_awal)->format('Y-m-d'),
             "flag" => !$check_exist?0:1,
              "pihak_1" => [
                 "nama" => strtoupper($pihak1->fullname)??null,
