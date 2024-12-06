@@ -75,10 +75,7 @@ class CrSurveyController extends Controller
         $guarente_vehicle = M_CrGuaranteVehicle::where('CR_SURVEY_ID',$survey_id)->where(function($query) {
                                 $query->whereNull('DELETED_AT')
                                     ->orWhere('DELETED_AT', '');
-                            })->get(); 
-
-        // return response()->json( $guarente_vehicle);
-        // die;
+                            })->get();
         
         $guarente_sertificat = M_CrGuaranteSertification::where('CR_SURVEY_ID',$survey_id)->where(function($query) {
                                     $query->whereNull('DELETED_AT')

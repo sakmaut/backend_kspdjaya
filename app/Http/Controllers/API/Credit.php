@@ -481,10 +481,15 @@ class Credit extends Controller
 
         $doc = $this->attachment_guarante($data->CR_SURVEY_ID ,"'no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri'");
 
+        $setHeaderID = '';
+        foreach ($doc as $res) {
+            $setHeaderID = $res->COUNTER_ID??'';
+        }
+
         if($data_collateral->isNotEmpty()){
             foreach ($data_collateral as $res) {
                 $data_jaminan = [
-                    'HEADER_ID' => "",
+                    'HEADER_ID' =>  $setHeaderID,
                     'CR_CREDIT_ID' => $lastID??null,
                     'TYPE' => $res->TYPE??null,
                     'BRAND' => $res->BRAND??null,
