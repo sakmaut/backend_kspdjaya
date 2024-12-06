@@ -228,6 +228,22 @@ class CrSurveyController extends Controller
                 throw new Exception("Id Approval Is Exist", 409);
             }
 
+            if(!empty($request->dokumen_indentitas)){
+                foreach ($request->dokumen_indentitas as $list) {
+                    $data_array_attachment = [
+                        'ID' => Uuid::uuid4()->toString(),
+                        'CR_SURVEY_ID' => $request->id,
+                        'TYPE' => $list['TYPE'],
+                        'COUNTER_ID' => $list['COUNTER_ID']??'',
+                        'PATH' => $list['PATH'],
+                        'CREATED_BY' => $request->user()->fullname,
+                        'TIMEMILISECOND' => round(microtime(true) * 1000)
+                    ];
+        
+                    M_CrSurveyDocument::create($data_array_attachment);
+                }
+            }
+
             $this->createCrSurvey($request);
             $this->createCrProspekApproval($request);
 
@@ -346,6 +362,27 @@ class CrSurveyController extends Controller
                     ];
     
                     M_CrGuaranteVehicle::create($data_array_col);
+
+                    if(!empty($request->jaminan)){
+                        foreach ($request->jaminan as $res) {
+                            if ($res['type'] == 'kendaraan' && isset($res['atr']['document']) && is_array($res['atr']['document'])) {
+                                foreach ($res['atr']['document'] as $datas) {
+                                    $data_array_attachment = [
+                                        'ID' => Uuid::uuid4()->toString(),
+                                        'CR_SURVEY_ID' => $request->id,
+                                        'TYPE' => $datas['TYPE'],
+                                        'COUNTER_ID' => $datas['COUNTER_ID']??'',
+                                        'PATH' => $datas['PATH'],
+                                        'CREATED_BY' => $request->user()->fullname,
+                                        'TIMEMILISECOND' => round(microtime(true) * 1000)
+                                    ];
+                        
+                                    M_CrSurveyDocument::create($data_array_attachment);
+                                }
+                            }
+                        }
+                    }
+
                     break;
                 case 'sertifikat':
                     $data_array_col = [
@@ -372,6 +409,27 @@ class CrSurveyController extends Controller
                     ];
     
                     M_CrGuaranteSertification::create($data_array_col);
+
+                    if(!empty($request->jaminan)){
+                        foreach ($request->jaminan as $res) {
+                            if ($res['type'] == 'sertifikat' && isset($res['atr']['document']) && is_array($res['atr']['document'])) {
+                                foreach ($res['atr']['document'] as $datas) {
+                                    $data_array_attachment = [
+                                        'ID' => Uuid::uuid4()->toString(),
+                                        'CR_SURVEY_ID' => $request->id,
+                                        'TYPE' => $datas['TYPE'],
+                                        'COUNTER_ID' => $datas['COUNTER_ID']??'',
+                                        'PATH' => $datas['PATH'],
+                                        'CREATED_BY' => $request->user()->fullname,
+                                        'TIMEMILISECOND' => round(microtime(true) * 1000)
+                                    ];
+                        
+                                    M_CrSurveyDocument::create($data_array_attachment);
+                                }
+                            }
+                        }
+                    }
+
                     break;
             }
         }
