@@ -334,38 +334,37 @@ class CrSurveyController extends Controller
     } 
 
     private function insert_guarante($request){
+        if(!empty($request->jaminan)){
+            foreach ($request->jaminan as $result) {
 
-        foreach ($request->jaminan as $result) {
+                switch ($result['type']) {
+                    case 'kendaraan':
+                        $data_array_col = [
+                            'ID' => Uuid::uuid7()->toString(),
+                            'CR_SURVEY_ID' => $request->id,
+                            'HEADER_ID' => $result['counter_id'],
+                            'TYPE' => $result['atr']['tipe'] ?? null,
+                            'BRAND' => $result['atr']['merk'] ?? null,
+                            'PRODUCTION_YEAR' => $result['atr']['tahun'] ?? null,
+                            'COLOR' => $result['atr']['warna'] ?? null,
+                            'ON_BEHALF' => $result['atr']['atas_nama'] ?? null,
+                            'POLICE_NUMBER' => $result['atr']['no_polisi'] ?? null,
+                            'CHASIS_NUMBER' => $result['atr']['no_rangka'] ?? null,
+                            'ENGINE_NUMBER' => $result['atr']['no_mesin'] ?? null,
+                            'BPKB_NUMBER' => $result['atr']['no_bpkb'] ?? null,
+                            'STNK_NUMBER' => $result['atr']['no_stnk'] ?? null,
+                            'STNK_VALID_DATE' => $result['atr']['tgl_stnk'] ?? null,
+                            'VALUE' => $result['atr']['nilai'] ?? null,
+                            'COLLATERAL_FLAG' => "",
+                            'VERSION' => 1,
+                            'CREATE_DATE' => $this->timeNow,
+                            'CREATE_BY' => $request->user()->id,
+                        ];
+        
+                        M_CrGuaranteVehicle::create($data_array_col);
 
-            switch ($result['type']) {
-                case 'kendaraan':
-                    $data_array_col = [
-                        'ID' => Uuid::uuid7()->toString(),
-                        'CR_SURVEY_ID' => $request->id,
-                        'HEADER_ID' => $result['counter_id'],
-                        'TYPE' => $result['atr']['tipe'] ?? null,
-                        'BRAND' => $result['atr']['merk'] ?? null,
-                        'PRODUCTION_YEAR' => $result['atr']['tahun'] ?? null,
-                        'COLOR' => $result['atr']['warna'] ?? null,
-                        'ON_BEHALF' => $result['atr']['atas_nama'] ?? null,
-                        'POLICE_NUMBER' => $result['atr']['no_polisi'] ?? null,
-                        'CHASIS_NUMBER' => $result['atr']['no_rangka'] ?? null,
-                        'ENGINE_NUMBER' => $result['atr']['no_mesin'] ?? null,
-                        'BPKB_NUMBER' => $result['atr']['no_bpkb'] ?? null,
-                        'STNK_NUMBER' => $result['atr']['no_stnk'] ?? null,
-                        'STNK_VALID_DATE' => $result['atr']['tgl_stnk'] ?? null,
-                        'VALUE' => $result['atr']['nilai'] ?? null,
-                        'COLLATERAL_FLAG' => "",
-                        'VERSION' => 1,
-                        'CREATE_DATE' => $this->timeNow,
-                        'CREATE_BY' => $request->user()->id,
-                    ];
-    
-                    M_CrGuaranteVehicle::create($data_array_col);
-
-                    if(!empty($request->jaminan)){
                         foreach ($request->jaminan as $res) {
-                            if ($res['type'] == 'kendaraan' && isset($res['atr']['document']) && is_array($res['atr']['document'])) {
+                            if (!empty($res['atr']['document']) && isset($res['atr']['document']) && is_array($res['atr']['document'])) {
                                 foreach ($res['atr']['document'] as $datas) {
                                     $data_array_attachment = [
                                         'ID' => Uuid::uuid4()->toString(),
@@ -381,38 +380,36 @@ class CrSurveyController extends Controller
                                 }
                             }
                         }
-                    }
 
-                    break;
-                case 'sertifikat':
-                    $data_array_col = [
-                        'ID' => Uuid::uuid7()->toString(),
-                        'HEADER_ID' => $result['counter_id'],
-                        'CR_SURVEY_ID' => $request->id,
-                        'STATUS_JAMINAN' => $result['atr']['status_jaminan'] ?? null,
-                        'NO_SERTIFIKAT' => $result['atr']['no_sertifikat']?? null,
-                        'STATUS_KEPEMILIKAN' => $result['atr']['status_kepemilikan']?? null,
-                        'IMB' => $result['atr']['imb'] ?? null,
-                        'LUAS_TANAH' => $result['atr']['luas_tanah'] ?? null,
-                        'LUAS_BANGUNAN' => $result['atr']['luas_bangunan'] ?? null,
-                        'LOKASI' => $result['atr']['lokasi'] ?? null,
-                        'PROVINSI' => $result['atr']['provinsi'] ?? null,
-                        'KAB_KOTA' => $result['atr']['kab_kota'] ?? null,
-                        'KECAMATAN' => $result['atr']['kec'] ?? null,
-                        'DESA' => $result['atr']['desa'] ?? null,
-                        'ATAS_NAMA' => $result['atr']['atas_nama'] ?? null,
-                        'NILAI' => $result['atr']['nilai'] ?? null,
-                        'COLLATERAL_FLAG' => "",
-                        'VERSION' => 1,
-                        'CREATE_DATE' => $this->timeNow,
-                        'CREATE_BY' => $request->user()->id,
-                    ];
-    
-                    M_CrGuaranteSertification::create($data_array_col);
+                        break;
+                    case 'sertifikat':
+                        $data_array_col = [
+                            'ID' => Uuid::uuid7()->toString(),
+                            'HEADER_ID' => $result['counter_id'],
+                            'CR_SURVEY_ID' => $request->id,
+                            'STATUS_JAMINAN' => $result['atr']['status_jaminan'] ?? null,
+                            'NO_SERTIFIKAT' => $result['atr']['no_sertifikat']?? null,
+                            'STATUS_KEPEMILIKAN' => $result['atr']['status_kepemilikan']?? null,
+                            'IMB' => $result['atr']['imb'] ?? null,
+                            'LUAS_TANAH' => $result['atr']['luas_tanah'] ?? null,
+                            'LUAS_BANGUNAN' => $result['atr']['luas_bangunan'] ?? null,
+                            'LOKASI' => $result['atr']['lokasi'] ?? null,
+                            'PROVINSI' => $result['atr']['provinsi'] ?? null,
+                            'KAB_KOTA' => $result['atr']['kab_kota'] ?? null,
+                            'KECAMATAN' => $result['atr']['kec'] ?? null,
+                            'DESA' => $result['atr']['desa'] ?? null,
+                            'ATAS_NAMA' => $result['atr']['atas_nama'] ?? null,
+                            'NILAI' => $result['atr']['nilai'] ?? null,
+                            'COLLATERAL_FLAG' => "",
+                            'VERSION' => 1,
+                            'CREATE_DATE' => $this->timeNow,
+                            'CREATE_BY' => $request->user()->id,
+                        ];
+        
+                        M_CrGuaranteSertification::create($data_array_col);
 
-                    if(!empty($request->jaminan)){
                         foreach ($request->jaminan as $res) {
-                            if ($res['type'] == 'sertifikat' && isset($res['atr']['document']) && is_array($res['atr']['document'])) {
+                            if (!empty($res['atr']['document']) && isset($res['atr']['document']) && is_array($res['atr']['document'])) {
                                 foreach ($res['atr']['document'] as $datas) {
                                     $data_array_attachment = [
                                         'ID' => Uuid::uuid4()->toString(),
@@ -428,9 +425,9 @@ class CrSurveyController extends Controller
                                 }
                             }
                         }
-                    }
 
-                    break;
+                        break;
+                }
             }
         }
     }
