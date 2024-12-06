@@ -76,6 +76,10 @@ class CrSurveyController extends Controller
                                 $query->whereNull('DELETED_AT')
                                     ->orWhere('DELETED_AT', '');
                             })->get(); 
+
+        return response()->json( $guarente_vehicle);
+        die;
+        
         $guarente_sertificat = M_CrGuaranteSertification::where('CR_SURVEY_ID',$survey_id)->where(function($query) {
                                     $query->whereNull('DELETED_AT')
                                         ->orWhere('DELETED_AT', '');
@@ -227,7 +231,7 @@ class CrSurveyController extends Controller
             if ($check_id_approval->isNotEmpty()) {
                 throw new Exception("Id Approval Is Exist", 409);
             }
-            
+
             if(!empty($request->data_nasabah['dokumen_indentitas'])){
                 foreach ($request->data_nasabah['dokumen_indentitas'] as $list) {
                     $data_array_attachment = [
