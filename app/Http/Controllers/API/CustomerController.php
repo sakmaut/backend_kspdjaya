@@ -320,15 +320,16 @@ class CustomerController extends Controller
 
                 $guarente_vehicle = DB::table('credit as a')
                                         ->leftJoin('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
-                                        ->leftJoin(DB::raw('(SELECT CR_CREDIT_ID, MAX(CREATE_DATE) as latest_created_date
-                                                            FROM cr_collateral
-                                                            GROUP BY CR_CREDIT_ID) as latest'), function($join) {
-                                            $join->on('b.CR_CREDIT_ID', '=', 'latest.CR_CREDIT_ID');
-                                        })
+                                        ->leftJoin(DB::raw('
+                                            cr_collateral as latest'), function($join) {
+                                                $join->on('b.CR_CREDIT_ID', '=', 'latest.CR_CREDIT_ID')
+                                                    ->whereRaw('latest.CREATE_DATE = (SELECT MAX(CREATE_DATE) FROM cr_collateral WHERE CR_CREDIT_ID = b.CR_CREDIT_ID)');
+                                            })
                                         ->where('a.CUST_CODE', '=', $customer->CUST_CODE)
-                                        ->select('b.*', 'latest.latest_created_date')
-                                        ->orderBy('latest.latest_created_date', 'DESC')
+                                        ->select('b.*', 'latest.CREATE_DATE as latest_created_date')
+                                        ->orderByDesc('latest.CREATE_DATE')
                                         ->get();
+
 
                 $guarente_sertificat = DB::table('credit as a')
                                         ->leftJoin('cr_collateral_sertification as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
