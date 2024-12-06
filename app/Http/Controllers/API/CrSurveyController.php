@@ -77,8 +77,8 @@ class CrSurveyController extends Controller
                                     ->orWhere('DELETED_AT', '');
                             })->get(); 
 
-        return response()->json( $guarente_vehicle);
-        die;
+        // return response()->json( $guarente_vehicle);
+        // die;
         
         $guarente_sertificat = M_CrGuaranteSertification::where('CR_SURVEY_ID',$survey_id)->where(function($query) {
                                     $query->whereNull('DELETED_AT')
