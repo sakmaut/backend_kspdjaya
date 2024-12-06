@@ -227,9 +227,9 @@ class CrSurveyController extends Controller
             if ($check_id_approval->isNotEmpty()) {
                 throw new Exception("Id Approval Is Exist", 409);
             }
-
-            if(!empty($request->dokumen_indentitas)){
-                foreach ($request->dokumen_indentitas as $list) {
+            
+            if(!empty($request->data_nasabah['dokumen_indentitas'])){
+                foreach ($request->data_nasabah['dokumen_indentitas'] as $list) {
                     $data_array_attachment = [
                         'ID' => Uuid::uuid4()->toString(),
                         'CR_SURVEY_ID' => $request->id,
