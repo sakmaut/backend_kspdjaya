@@ -101,7 +101,7 @@ class Credit extends Controller
       
         $SET_UUID = Uuid::uuid7()->toString();
         $loan_number = generateCode($request, 'credit', 'LOAN_NUMBER');
-        $cust_code = generateCustCode($request, 'credit', 'CUST_CODE');
+        $cust_code = generateCustCode($request, 'customer', 'CUST_CODE');
         
         $guarente_vehicle = M_CrGuaranteVehicle::where('CR_SURVEY_ID',$data->CR_SURVEY_ID)->where(function($query) {
             $query->whereNull('DELETED_AT')
