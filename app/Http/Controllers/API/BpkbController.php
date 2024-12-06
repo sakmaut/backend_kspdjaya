@@ -7,6 +7,7 @@ use App\Models\M_Branch;
 use App\Models\M_CrApplication;
 use App\Models\M_CrCollateral;
 use App\Models\M_CrCollateralSertification;
+use App\Models\M_Credit;
 use App\Models\M_CrSurveyDocument;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -62,7 +63,7 @@ class BpkbController extends Controller
                     "nilai" => (int) $list->VALUE,
                     "asal_lokasi" => $asalBranch->NAME??null,
                     "lokasi" => $brachName->NAME??null,
-                    "document" => $this->attachment_guarante($surveyId?$surveyId->CR_SURVEY_ID:0,"'no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri'")
+                    "document" => $this->getCollateralDocument($list->ID, ['no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri'])??null,
                 ];    
             }
     
@@ -96,7 +97,7 @@ class BpkbController extends Controller
                     "atas_nama" => $list->ATAS_NAMA,
                     "nilai" => (int) $list->NILAI,
                     "lokasi" => $brachName->NAME??null,
-                    "document" => $this->attachmentSertifikat($surveyId?$surveyId->CR_SURVEY_ID:0, ['sertifikat'])??null,
+                   "document" => getCollateralDocument($list->ID, ['sertifikat'])??null
                 ];    
             }
 
@@ -131,6 +132,16 @@ class BpkbController extends Controller
                     ->orderBy('TIMEMILISECOND', 'desc')
                     ->get();
 
-    return $attachment;
-}
+        return $attachment;
+    }
+
+    function getCollateralDocument($creditID, $param) {
+
+        $documents = DB::table('cr_collateral_document')
+                        ->whereIn('TYPE', $param)
+                        ->where('COLLATERAL_ID', '=', $creditID)
+                        ->get();     
+    
+        return $documents;
+    }
 }

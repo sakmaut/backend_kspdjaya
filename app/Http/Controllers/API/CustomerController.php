@@ -318,31 +318,51 @@ class CustomerController extends Controller
 
             $datas = $data->map(function($customer) {
 
+                // $guarente_vehicle = DB::table('credit as a')
+                //                     ->leftJoin('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
+                //                     ->leftJoin(DB::raw('
+                //                         cr_collateral as latest'), function($join) {
+                //                             $join->on('b.CR_CREDIT_ID', '=', 'latest.CR_CREDIT_ID')
+                //                                 ->whereRaw('latest.CREATE_DATE = (SELECT MAX(CREATE_DATE) FROM cr_collateral WHERE CR_CREDIT_ID = b.CR_CREDIT_ID)');
+                //                         })
+                //                     ->where('a.CUST_CODE', '=', $customer->CUST_CODE)
+                //                     ->select('b.*', 'latest.CREATE_DATE as latest_created_date')
+                //                     ->orderByDesc('latest.CREATE_DATE')
+                //                     ->get();
+
+
+                // $guarente_sertificat = DB::table('credit as a')
+                //                         ->leftJoin('cr_collateral_sertification as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
+                //                         ->leftJoin(DB::raw('(SELECT CR_CREDIT_ID, MAX(CREATE_DATE) as latest_created_date
+                //                                             FROM cr_collateral_sertification
+                //                                             GROUP BY CR_CREDIT_ID) as latest'), function($join) {
+                //                             $join->on('b.CR_CREDIT_ID', '=', 'latest.CR_CREDIT_ID');
+                //                         })
+                //                         ->where('a.CUST_CODE', '=', $customer->CUST_CODE)
+                //                         ->select('b.*', 'latest.latest_created_date')
+                //                         ->orderBy('latest.latest_created_date', 'DESC')
+                //                         ->get();
+
                 $guarente_vehicle = DB::table('credit as a')
                                         ->leftJoin('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
-                                        ->leftJoin(DB::raw('
-                                            cr_collateral as latest'), function($join) {
-                                                $join->on('b.CR_CREDIT_ID', '=', 'latest.CR_CREDIT_ID')
-                                                    ->whereRaw('latest.CREATE_DATE = (SELECT MAX(CREATE_DATE) FROM cr_collateral WHERE CR_CREDIT_ID = b.CR_CREDIT_ID)');
-                                            })
                                         ->where('a.CUST_CODE', '=', $customer->CUST_CODE)
-                                        ->select('b.*', 'latest.CREATE_DATE as latest_created_date')
-                                        ->orderByDesc('latest.CREATE_DATE')
+                                        ->where('a.CREATED_AT', '=', function ($query) {
+                                            $query->select(DB::raw('MAX(CREATED_AT)'))
+                                                ->from('credit');
+                                        })
+                                        ->select('b.*')
                                         ->get();
-
 
                 $guarente_sertificat = DB::table('credit as a')
                                         ->leftJoin('cr_collateral_sertification as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
-                                        ->leftJoin(DB::raw('(SELECT CR_CREDIT_ID, MAX(CREATE_DATE) as latest_created_date
-                                                            FROM cr_collateral_sertification
-                                                            GROUP BY CR_CREDIT_ID) as latest'), function($join) {
-                                            $join->on('b.CR_CREDIT_ID', '=', 'latest.CR_CREDIT_ID');
-                                        })
                                         ->where('a.CUST_CODE', '=', $customer->CUST_CODE)
-                                        ->select('b.*', 'latest.latest_created_date')
-                                        ->orderBy('latest.latest_created_date', 'DESC')
+                                        ->where('a.CREATED_AT', '=', function ($query) {
+                                            $query->select(DB::raw('MAX(CREATED_AT)'))
+                                                ->from('credit');
+                                        })
+                                        ->select('b.*')
                                         ->get();
-            
+
                 $jaminan = [];
             
                 foreach ($guarente_vehicle as $guarantee) {
@@ -367,7 +387,7 @@ class CustomerController extends Controller
                                 "no_stnk" => $guarantee->STNK_NUMBER ?? null,
                                 "tgl_stnk" => $guarantee->STNK_VALID_DATE ?? null,
                                 "nilai" => (int)($guarantee->VALUE ?? 0),
-                                "document" => getCustomerDocument($customer->ID, ['no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri']),
+                                "document" => getCollateralDocument($guarantee->ID, ['no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri']),
                             ]
                         ];
                     }
@@ -394,7 +414,7 @@ class CustomerController extends Controller
                                 "desa" => $list->DESA??null,
                                 "atas_nama" => $list->ATAS_NAMA??null,
                                 "nilai" => (int)$list->NILAI??null,
-                                "document" => getCustomerDocument($customer->ID, ['sertifikat'])
+                                "document" => getCollateralDocument($guarantee->ID, ['sertifikat'])
                             ]
                         ];
                     }
@@ -414,7 +434,7 @@ class CustomerController extends Controller
                     'kelurahan' => $customer->KELURAHAN?? null,
                     'kode_pos' => $customer->ZIP_CODE?? null,
                     'no_hp' => $customer->PHONE_PERSONAL??null,
-                    "dokumen_indentitas" => getCustomerDocument($customer->ID, ['ktp', 'kk', 'ktp_pasangan']),
+                    "dokumen_indentitas" => M_CustomerDocument::where('CUSTOMER_ID',$customer->ID)->get(),
                     'jaminan' => $jaminan
                 ];
             })->toArray();
@@ -425,4 +445,14 @@ class CustomerController extends Controller
             return response()->json(['message' => $e->getMessage()], 500);
         }
     }
+}
+
+function getCollateralDocument($creditID, $param) {
+
+    $documents = DB::table('cr_collateral_document')
+                    ->whereIn('TYPE', $param)
+                    ->where('COLLATERAL_ID', '=', $creditID)
+                    ->get();     
+
+    return $documents;
 }

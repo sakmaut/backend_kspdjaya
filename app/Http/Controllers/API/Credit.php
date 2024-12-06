@@ -7,6 +7,7 @@ use App\Models\M_CrApplication;
 use App\Models\M_CrApplicationGuarantor;
 use App\Models\M_CrApplicationSpouse;
 use App\Models\M_CrCollateral;
+use App\Models\M_CrCollateralDocument;
 use App\Models\M_CrCollateralSertification;
 use App\Models\M_Credit;
 use App\Models\M_CreditSchedule;
@@ -306,12 +307,13 @@ class Credit extends Controller
         $check_customer_ktp = M_Customer::where('ID_NUMBER',$cr_personal->ID_NUMBER)->first();
 
         $getAttachment = DB::select(
-            "   SELECT TYPE,COUNTER_ID,PATH
+            "   SELECT *
                 FROM cr_survey_document AS csd
                 WHERE (TYPE, TIMEMILISECOND) IN (
                     SELECT TYPE, MAX(TIMEMILISECOND)
                     FROM cr_survey_document
-                    WHERE  CR_SURVEY_ID = '$data->CR_SURVEY_ID'
+                    WHERE TYPE IN ('ktp', 'kk', 'ktp_pasangan')
+                        AND CR_SURVEY_ID = '$data->CR_SURVEY_ID'
                     GROUP BY TYPE
                 )
                 ORDER BY TIMEMILISECOND DESC"
@@ -381,6 +383,9 @@ class Credit extends Controller
     }
 
     private function createCustomerDocuments($customerId, $attachments) {
+
+        M_CustomerDocument::where('CUSTOMER_ID', $customerId)->delete();
+
         foreach ($attachments as $res) {
             $custmer_doc_data = [
                 'CUSTOMER_ID' => $customerId,
@@ -451,11 +456,30 @@ class Credit extends Controller
         }
     }
 
+    public function attachment_guarante($survey_id, $data){
+        $documents = DB::select(
+            "   SELECT *
+                FROM cr_survey_document AS csd
+                WHERE (TYPE, TIMEMILISECOND) IN (
+                    SELECT TYPE, MAX(TIMEMILISECOND)
+                    FROM cr_survey_document
+                    WHERE TYPE IN ($data)
+                        AND CR_SURVEY_ID = '$survey_id'
+                    GROUP BY TYPE
+                )
+                ORDER BY TIMEMILISECOND DESC"
+        );
+    
+        return $documents;        
+    }
+
     private function insert_collateral($request,$data,$lastID){
         $data_collateral = M_CrGuaranteVehicle::where('CR_SURVEY_ID',$data->CR_SURVEY_ID)->where(function($query) {
                                 $query->whereNull('DELETED_AT')
                                     ->orWhere('DELETED_AT', '');
                             })->get(); 
+
+        $doc = $this->attachment_guarante($data->CR_SURVEY_ID ,"'no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri'");
 
         if($data_collateral->isNotEmpty()){
             foreach ($data_collateral as $res) {
@@ -474,6 +498,7 @@ class Credit extends Controller
                     'STNK_NUMBER' => $res->STNK_NUMBER??null,
                     'VALUE' => $res->VALUE??null,
                     'LOCATION_BRANCH' => $data->BRANCH,
+                    'COLLATERAL_FLAG' => $data->BRANCH,
                     'VERSION' => 1,
                     'CREATE_DATE' => $this->timeNow,
                     'CREATE_BY' => $request->user()->id,
@@ -492,6 +517,17 @@ class Credit extends Controller
                 ];
 
                 M_LocationStatus::create($log);
+
+                foreach ($doc as $res) {
+                    $custmer_doc_data = [
+                        'COLLATERAL_ID' => $execute->ID,
+                        'TYPE' => $res->TYPE,
+                        'COUNTER_ID' => $res->COUNTER_ID,
+                        'PATH' => $res->PATH
+                    ];
+            
+                    M_CrCollateralDocument::create($custmer_doc_data);
+                }
             }
         }
     }
@@ -501,6 +537,8 @@ class Credit extends Controller
                                 $query->whereNull('DELETED_AT')
                                     ->orWhere('DELETED_AT', '');
                             })->get(); 
+
+        $doc = $this->attachment_guarante($data->CR_SURVEY_ID ,"'sertifikat'");                    
 
         if($data_collateral->isNotEmpty()){
             foreach ($data_collateral as $res) {
@@ -521,6 +559,7 @@ class Credit extends Controller
                     'ATAS_NAMA' => $res->ATAS_NAMA,
                     'NILAI' => $res->NILAI,
                     'LOCATION' => $data->BRANCH,
+                    'COLLATERAL_FLAG' => $data->BRANCH,
                     'VERSION' => 1,
                     'CREATE_DATE' => $this->timeNow,
                     'CREATE_BY' => $request->user()->id,
@@ -538,6 +577,17 @@ class Credit extends Controller
                 ];
 
                 M_LocationStatus::create($log);
+
+                foreach ($doc as $res) {
+                    $custmer_doc_data = [
+                        'COLLATERAL_ID' => $execute->ID,
+                        'TYPE' => $res->TYPE,
+                        'COUNTER_ID' => $res->COUNTER_ID,
+                        'PATH' => $res->PATH
+                    ];
+            
+                    M_CrCollateralDocument::create($custmer_doc_data);
+                }
             }
         }
     }
