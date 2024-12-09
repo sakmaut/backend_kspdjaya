@@ -56,11 +56,12 @@ class M_MasterMenu extends Model
 
      static function queryMenu($req){
         $menuItems = self::query()
-                            ->select('master_menu.*')
-                            ->join('master_users_access_menu as t1', 'master_menu.id', '=', 't1.master_menu_id')
-                            ->where('t1.users_id', $req->user()->id)
-                            ->whereNull('master_menu.deleted_by')
-                            ->get();
+                        ->select('master_menu.*')
+                        ->join('master_users_access_menu as t1', 'master_menu.id', '=', 't1.master_menu_id')
+                        ->where('t1.users_id', $req->user()->id)
+                        ->where('master_menu.deleted_by', null)
+                        ->whereIn('master_menu.status', ['active', 'Active'])
+                        ->get();
         
         return $menuItems;  
     }
