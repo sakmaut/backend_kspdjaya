@@ -72,11 +72,53 @@ class UsersController extends Controller
         return $validation;
     }
 
+    public function storeArray(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+         
+            foreach ($request->all as $list) {
+                $data_array = [
+                    'username' => $list['username'],
+                    'email' => $list['username'] . '@gmail.com',
+                    'password' => bcrypt($list['username']),
+                    'fullname' => $list['username'],
+                    'branch_id' => $list['branch_id'],
+                    'position' => $list['position'],
+                    'no_ktp' => '',
+                    'alamat' =>'',
+                    'gender' => '',
+                    'mobile_number' =>'',
+                    'status' => 'Active',
+                    'created_by' => 'SYSTEM'
+                ];
+            
+                User::create($data_array);
+            } 
+    
+            DB::commit();
+            ActivityLogger::logActivity($request,"Success",200);
+            return response()->json(['message' => 'created successfully',"status" => 200], 200);
+        } catch (ModelNotFoundException $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($request,'Data Not Found',404);
+            return response()->json(['message' => 'Hr Employee Id Not Found', "status" => 404], 404);
+        }catch (QueryException $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($request,$e->getMessage(),409);
+            return response()->json(['message' => $e->getMessage(),"status" => 409], 409);
+        } catch (\Exception $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($request,$e->getMessage(),500);
+            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+        }
+    }
+
     public function store(Request $request)
     {
         DB::beginTransaction();
         try {
-            self::_validate($request);
+            $this->_validate($request);
 
             $check_branch = M_Branch::where('ID', $request->cabang_id)->first();
 
@@ -165,7 +207,7 @@ class UsersController extends Controller
     {
         DB::beginTransaction();
         try {
-            self::_validate($request);
+           $this->_validate($request);
 
             $users = User::findOrFail($id);
 

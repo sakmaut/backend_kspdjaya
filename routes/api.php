@@ -50,6 +50,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Route Group Users
     Route::resource('users', UsersController::class)->except(['index']);
+    Route::post('users_multiple', [UsersController::class, 'storeArray']);
     Route::post('image_upload_employee', [UsersController::class, 'uploadImage']);
 
     // Route Group Branch
