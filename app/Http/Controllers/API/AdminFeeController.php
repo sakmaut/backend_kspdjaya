@@ -225,7 +225,12 @@ class AdminFeeController extends Controller
             if($type == 'fee'){
                 $strukturTenors = $this->buildStrukturTenorsSingle($value->links, $specificTenor,$plafond,$angsuran_type);
             }else{
-                $strukturTenors = $this->buildStrukturTenors($value->links, $specificTenor,$plafond,$angsuran_type);
+                $strukturTenors = $this->buildStrukturBulanan($value->links, $specificTenor,$plafond);
+                // if($angsuran_type === 'bulanan' ){
+                //     $strukturTenors = $this->buildStrukturBulanan($value->links, $specificTenor,$plafond);
+                // }else{
+                //     $strukturTenors = $this->buildStrukturMusiman($value->links, $specificTenor,$plafond);
+                // }
             }
            
             $item = [
@@ -251,18 +256,17 @@ class AdminFeeController extends Controller
         return $data;
     }
 
-    private function buildStrukturTenors($links, $specificTenor = null, $plafond, $angsuran_type)
+    private function buildStrukturBulanan($links, $specificTenor = null, $plafond)
     {
-        $struktur = [];
-        foreach ($links as $link) {
-            $struktur[] = [
+        $struktur = $links->map(function ($link) {
+            return [
                 'fee_name' => $link['fee_name'],
-                '6_month' => $link['6_month'],
-                '12_month' => $link['12_month'],
-                '18_month' => $link['18_month'],
-                '24_month' => $link['24_month'],
+                '6_month' =>  floatval($link['6_month']),
+                '12_month' =>  floatval($link['12_month']),
+                '18_month' =>  floatval($link['18_month']),
+                '24_month' =>  floatval($link['24_month']),
             ];
-        }
+        })->toArray();
 
         $tenors = $specificTenor ? [$specificTenor] : ['6', '12', '18', '24'];
 
@@ -312,6 +316,82 @@ class AdminFeeController extends Controller
             $strukturTenors["tenor_$tenor"] = $tenorData;
         }
 
+        $datas = !empty($plafond) ? $strukturTenors : [];
+
+        return $datas;
+    }
+
+    private function buildStrukturMusiman($links, $specificTenor = null, $plafond)
+    {
+
+        $struktur = $links->map(function ($link) {
+            return [
+                'fee_name' => $link['fee_name'],
+                '6_month' =>  floatval($link['6_month']),
+                '12_month' =>  floatval($link['12_month']),
+                '18_month' =>  floatval($link['18_month']),
+                '24_month' =>  floatval($link['24_month']),
+            ];
+        })->toArray();
+
+        $tenors = $specificTenor ? [$specificTenor] : ['6', '12', '18', '24'];
+
+        $tenorMapping = [
+            '6' => 3,
+            '12' => 6,
+            '18' => 12,
+            '24' => 18,
+        ];
+    
+        $strukturTenors = [];
+    
+        foreach ($tenors as $tenor) {
+            $tenorData = ['tenor' => strval($tenor)];
+            $total = 0;
+            $tenor_name = $tenor . '_month';
+
+            foreach ($struktur as $s) {
+                $feeName = $s['fee_name'];
+                $feeValue = $s[$tenor_name];
+
+                $tenorData[$feeName] = $feeValue;
+
+                if ($feeName !== 'eff_rate') {
+                    $total += $feeValue;
+                }
+            }
+
+            $set_tenor = $tenorMapping[$tenor] ?? null;
+
+            $pokok_pembayaran = ($plafond + $total);
+
+            $eff_rate = $tenorData['eff_rate'];
+            $flat_rate = round($this->calculate_flat_interest($set_tenor, $eff_rate), 2);
+            $interest_margin = intval(($flat_rate / 12) * $set_tenor * $pokok_pembayaran / 100);
+
+            if ($set_tenor == 3 || $set_tenor == 6) {
+                $angsuran_calc = ($pokok_pembayaran + $interest_margin);
+            } elseif ($set_tenor == 12) {
+                $angsuran_calc = ($pokok_pembayaran + $interest_margin) / 2;
+            } elseif ($set_tenor == 18) {
+                $angsuran_calc = ($pokok_pembayaran + $interest_margin) / 3;
+            }
+
+            $setAngsuran = ceil(round($angsuran_calc, 3) / 1000) * 1000;
+
+            $number = excelRate($set_tenor, -$setAngsuran, $pokok_pembayaran) * 100;
+            $suku_bunga = ((12 * ($setAngsuran - ($pokok_pembayaran / $set_tenor))) / $pokok_pembayaran) * 100;
+
+            $tenorData['angsuran'] = $setAngsuran;
+            $tenorData['suku_bunga'] = $suku_bunga;
+            $tenorData['total_bunga'] = round(($pokok_pembayaran * ($suku_bunga / 100) / 12) * $set_tenor,2);
+            $tenorData['flat_rate'] = round($number, 10); 
+            $tenorData['eff_rate'] = $eff_rate;
+            $tenorData['total'] = $total;
+            $tenorData['total_plafond'] = $pokok_pembayaran;
+            $strukturTenors["tenor_$tenor"] = $tenorData;
+        }
+    
         return $strukturTenors;
     }
 
@@ -589,7 +669,6 @@ class AdminFeeController extends Controller
 
     function calculate_flat_interest($tenor, $eff_rate)
     {
-
         $eff_rate_decimal = $eff_rate / 100;
         $monthly_eff_rate = $eff_rate_decimal / 12;
 
@@ -602,95 +681,4 @@ class AdminFeeController extends Controller
             return 0;
         }
     }
-    
-    // function calculate_flat_interestMusiman($tenor, $eff_rate,$angsuran_type) {
-
-    //     $eff_rate_decimal = $eff_rate / 100;
-    //     $monthly_eff_rate = $eff_rate_decimal / 12;
-
-    //     if ($angsuran_type === 'bulanan') {
-    //         $compounded_factor = pow(1 + $monthly_eff_rate, -$tenor);
-    //         $numerator = $tenor * $monthly_eff_rate;
-    //         $denominator = 1 - $compounded_factor;
-    //         if($denominator != 0){
-    //             return (($numerator / $denominator) - 1) * (12 / $tenor) * 100;
-    //         }else{
-    //             return 0;
-    //         }
-    //     } else {
-    //         if ($tenor == 3 || $tenor == 6) {
-    //             return $eff_rate;
-    //         } elseif ($tenor == 12 || $tenor == 18) {
-    //             $compounded_factor = pow(1 + $monthly_eff_rate, -$tenor);
-    //         if($tenor != 0){
-    //             return ((($tenor * $monthly_eff_rate) / (1 - $compounded_factor) - 1) * (12 / $tenor) + 0.1) * 100;
-    //         }else{
-    //             return 0;
-    //         }
-    //         }
-    //     }
-    // }
-
-    // function excelRate($nper, $pmt, $pv, $fv = 0, $type = 0, $guess = 0.1)
-    // {
-    //     $tolerance = 1.0e-15; // Toleransi tinggi untuk presisi
-    //     $maxIterations = 500;
-
-    //     if ($nper <= 0) {
-    //         return false;
-    //     }
-
-    //     $rate = $guess;
-    //     for ($i = 0; $i < $maxIterations; $i++) {
-    //         $f = $this->calculateRateEquation($rate, $nper, $pmt, $pv, $fv, $type);
-    //         $df = $this->calculateRateDerivative($rate, $nper, $pmt, $pv, $fv, $type);
-
-    //         if (abs($df) < $tolerance) {
-    //             return false;
-    //         }
-
-    //         $newRate = $rate - $f / $df;
-
-    //         // Cek konvergensi
-    //         if (abs($newRate - $rate) < $tolerance) {
-    //             return $this->ceilToPrecision($newRate, 10);
-    //         }
-
-    //         $rate = $newRate;
-    //     }
-
-    //     return false;
-    // }
-
-    // function calculateRateEquation($rate, $nper, $pmt, $pv, $fv, $type)
-    // {
-    //     if (abs($rate) < 1e-15) {
-    //         return $pv + $pmt * $nper + $fv;
-    //     }
-
-    //     $pow = pow(1 + $rate, $nper);
-    //     return $pv * $pow
-    //         + $pmt * (1 + $rate * $type) * (($pow - 1) / $rate)
-    //         + $fv;
-    // }
-
-    // function calculateRateDerivative($rate, $nper, $pmt, $pv, $fv, $type)
-    // {
-    //     if (abs($rate) < 1e-15) {
-    //         return $pv * $nper + $pmt * $nper * $type;
-    //     }
-
-    //     $pow1 = pow(1 + $rate, $nper - 1);
-    //     $pow2 = pow(1 + $rate, $nper);
-
-    //     return $pv * $nper * $pow1
-    //         + $pmt * $type * $nper * (1 + $rate)
-    //         + $pmt * ($nper * $pow1 - (($pow2 - 1) / ($rate * $rate)));
-    // }
-
-    // function ceilToPrecision($number, $precision)
-    // {
-    //     $factor = pow(10, $precision);
-    //     return round($number * $factor) / $factor;
-    // }
 }
