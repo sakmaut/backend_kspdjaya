@@ -225,12 +225,11 @@ class AdminFeeController extends Controller
             if($type == 'fee'){
                 $strukturTenors = $this->buildStrukturTenorsSingle($value->links, $specificTenor,$plafond,$angsuran_type);
             }else{
-                $strukturTenors = $this->buildStrukturBulanan($value->links, $specificTenor,$plafond);
-                // if($angsuran_type === 'bulanan' ){
-                //     $strukturTenors = $this->buildStrukturBulanan($value->links, $specificTenor,$plafond);
-                // }else{
-                //     $strukturTenors = $this->buildStrukturMusiman($value->links, $specificTenor,$plafond);
-                // }
+                if($angsuran_type === 'bulanan' ){
+                    $strukturTenors = $this->buildStrukturBulanan($value->links, $specificTenor,$plafond);
+                }else{
+                    $strukturTenors = $this->buildStrukturMusiman($value->links, $specificTenor,$plafond);
+                }
             }
            
             $item = [
@@ -327,21 +326,14 @@ class AdminFeeController extends Controller
         $struktur = $links->map(function ($link) {
             return [
                 'fee_name' => $link['fee_name'],
-                '6_month' =>  floatval($link['6_month']),
-                '12_month' =>  floatval($link['12_month']),
-                '18_month' =>  floatval($link['18_month']),
-                '24_month' =>  floatval($link['24_month']),
+                '3_month' =>  floatval($link['6_month']),
+                '6_month' =>  floatval($link['12_month']),
+                '12_month' =>  floatval($link['18_month']),
+                '18_month' =>  floatval($link['24_month']),
             ];
         })->toArray();
 
-        $tenors = $specificTenor ? [$specificTenor] : ['6', '12', '18', '24'];
-
-        $tenorMapping = [
-            '6' => 3,
-            '12' => 6,
-            '18' => 12,
-            '24' => 18,
-        ];
+        $tenors = $specificTenor ? [$specificTenor] : ['3', '6', '12', '18'];
     
         $strukturTenors = [];
     
@@ -361,34 +353,26 @@ class AdminFeeController extends Controller
                 }
             }
 
-            $set_tenor = $tenorMapping[$tenor] ?? null;
+            $set_tenor = $tenor;
 
             $pokok_pembayaran = ($plafond + $total);
 
-            $eff_rate = $tenorData['eff_rate'];
-            $flat_rate = round($this->calculate_flat_interest($set_tenor, $eff_rate), 2);
-            $interest_margin = intval(($flat_rate / 12) * $set_tenor * $pokok_pembayaran / 100);
-
-            if ($set_tenor == 3 || $set_tenor == 6) {
-                $angsuran_calc = ($pokok_pembayaran + $interest_margin);
-            } elseif ($set_tenor == 12) {
-                $angsuran_calc = ($pokok_pembayaran + $interest_margin) / 2;
-            } elseif ($set_tenor == 18) {
-                $angsuran_calc = ($pokok_pembayaran + $interest_margin) / 3;
+            if ($set_tenor == 12 || $set_tenor == 18) {
+                $eff_rate = $this->calculate($set_tenor, $tenorData['eff_rate']/100)*100;
+            } else{
+                $eff_rate = $tenorData['eff_rate'];
             }
 
-            $setAngsuran = ceil(round($angsuran_calc, 3) / 1000) * 1000;
+            $flat_rate = $this->hitungCicilanFlatRate($pokok_pembayaran,round($eff_rate,2), $set_tenor);
 
-            $number = excelRate($set_tenor, -$setAngsuran, $pokok_pembayaran) * 100;
-            $suku_bunga = ((12 * ($setAngsuran - ($pokok_pembayaran / $set_tenor))) / $pokok_pembayaran) * 100;
+            $angsuran_calc = $this->angsuran($plafond,$total,round($this->calculateBunga($eff_rate,$set_tenor),2),$set_tenor);
 
-            $tenorData['angsuran'] = $setAngsuran;
-            $tenorData['suku_bunga'] = $suku_bunga;
-            $tenorData['total_bunga'] = round(($pokok_pembayaran * ($suku_bunga / 100) / 12) * $set_tenor,2);
-            $tenorData['flat_rate'] = round($number, 10); 
-            $tenorData['eff_rate'] = $eff_rate;
+            $tenorData['tenor'] = $set_tenor;
+            $tenorData['angsuran'] = round($angsuran_calc);
+            $tenorData['eff_rate'] = round($eff_rate,2);
+            $tenorData['flat_rate'] = $flat_rate; 
+            $tenorData['bunga'] =  round($this->calculateBunga($eff_rate,$set_tenor),2); 
             $tenorData['total'] = $total;
-            $tenorData['total_plafond'] = $pokok_pembayaran;
             $strukturTenors["tenor_$tenor"] = $tenorData;
         }
     
@@ -479,6 +463,43 @@ class AdminFeeController extends Controller
         }
 
         return $strukturTenors;
+    }
+
+    function angsuran($pokok,$admin,$bunga,$tenor) {
+        $c68 = 25000000;
+        $c14 = $pokok;
+        if ($tenor == 3 || $tenor == 6) {
+            $c4 = 1;
+        }elseif ($tenor == 12) {
+            $c4 = 2;
+        }else{
+            $c4 = 3;
+        }
+        $c10 = $admin;
+        $c9 = ($bunga/100);
+
+        $result = (($c68 - (($c68 - $c14) - $c10)) + (($c68 - (($c68 - $c14) - $c10)) * $c9)) / $c4;
+
+        $roundedResult = ceil($result / 1000) * 1000;
+    
+        return $roundedResult;
+    }   
+
+    function calculateBunga($flat, $tenor) {
+        return $flat * ($tenor/12);
+    }   
+
+    function calculate($e5, $e7) {
+        return ((($e5 * ($e7 / 12)) / (1 - pow(1 + ($e7 / 12), -$e5))) - 1) * (12 / $e5) + 0.1;
+    }      
+
+    function hitungCicilanFlatRate($plafond, $effRate, $tenor) { 
+        // Calculate annual interest amount
+        $bungaPerTahun = $plafond * ($effRate / 100); 
+    
+        $bungaTotal = round(($bungaPerTahun / 12) * $tenor,-3);
+        
+        return $bungaTotal; 
     }
 
     // private function buildStrukturTenorsMusiman($links, $specificTenor = null, $plafond, $angsuran_type)
