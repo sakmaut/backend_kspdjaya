@@ -372,7 +372,7 @@ class AdminFeeController extends Controller
 
             $flat_rate = $this->hitungCicilanFlatRate($pokok_pembayaran,round($eff_rate,2), $set_tenor);
 
-            $angsuran_calc = $this->angsuran($plafond,$total,round($this->calculateBunga($eff_rate,$set_tenor),2),$set_tenor);
+            $angsuran_calc = $this->angsuran($plafond,$total,$this->calculateBunga($eff_rate,$set_tenor),$set_tenor);
 
             $tenorData['tenor'] = $set_tenor;
             $tenorData['angsuran'] = round($angsuran_calc);
