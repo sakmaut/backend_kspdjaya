@@ -364,7 +364,7 @@ class AdminFeeController extends Controller
 
             $pokok_pembayaran = ($plafond + $total);
 
-            if ($set_tenor == 18 || $set_tenor == 24) {
+            if ($set_tenor == 12 || $set_tenor == 18) {
                 $eff_rate = $this->calculate($set_tenor, $tenorData['eff_rate']/100)*100;
             } else{
                 $eff_rate = $tenorData['eff_rate'];
@@ -473,8 +473,6 @@ class AdminFeeController extends Controller
     }
 
     function angsuran($pokok,$admin,$bunga,$tenor) {
-        $c68 = 25000000;
-        $c14 = $pokok;
 
         if ($tenor == 3 || $tenor == 6) {
             $c4 = 1;
@@ -483,10 +481,8 @@ class AdminFeeController extends Controller
         }else{
             $c4 = 3;
         }
-        $c10 = $admin;
-        $c9 = ($bunga/100);
 
-        $result = (($c68 - (($c68 - $c14) - $c10)) + (($c68 - (($c68 - $c14) - $c10)) * $c9)) / $c4;
+        $result = (($pokok + $admin) * ( 1 + $bunga/100)) / $c4;
 
         $roundedResult = ceil($result / 1000) * 1000;
     
