@@ -217,12 +217,11 @@ class AdminFeeController extends Controller
         $specificTenor = $options['tenor'] ?? null;
         $plafond = $options['plafond'] ?? null;
         $angsuran_type = $options['angsuran_type'] ?? null;
-        $type = $options['type'] ?? null;
 
         $build = [];
 
         foreach ($data as $value) {
-            
+
             if($angsuran_type === 'bulanan' ){
                 $strukturTenors = $this->buildStrukturBulanan($value->links, $specificTenor,$plafond);
             }else{
