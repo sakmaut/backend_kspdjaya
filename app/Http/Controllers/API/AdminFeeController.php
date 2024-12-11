@@ -326,14 +326,14 @@ class AdminFeeController extends Controller
         $struktur = $links->map(function ($link) {
             return [
                 'fee_name' => $link['fee_name'],
-                '3_month' =>  floatval($link['6_month']),
-                '6_month' =>  floatval($link['12_month']),
-                '12_month' =>  floatval($link['18_month']),
-                '18_month' =>  floatval($link['24_month']),
+                '6_month' =>  floatval($link['6_month']),
+                '12_month' =>  floatval($link['12_month']),
+                '18_month' =>  floatval($link['18_month']),
+                '24_month' =>  floatval($link['24_month']),
             ];
         })->toArray();
 
-        $tenors = $specificTenor ? [$specificTenor] : ['3', '6', '12', '18'];
+        $tenors = $specificTenor ? [$specificTenor] : ['6', '12', '18', '24'];
     
         $strukturTenors = [];
     
@@ -353,11 +353,18 @@ class AdminFeeController extends Controller
                 }
             }
 
-            $set_tenor = $tenor;
+            $tenorList = [
+                '6' => 3,
+                '12' => 6,
+                '18' => 12,
+                '24' => 18,
+            ];
+
+            $set_tenor = $tenorList[$tenor]??0;
 
             $pokok_pembayaran = ($plafond + $total);
 
-            if ($set_tenor == 12 || $set_tenor == 18) {
+            if ($set_tenor == 18 || $set_tenor == 24) {
                 $eff_rate = $this->calculate($set_tenor, $tenorData['eff_rate']/100)*100;
             } else{
                 $eff_rate = $tenorData['eff_rate'];
@@ -468,6 +475,7 @@ class AdminFeeController extends Controller
     function angsuran($pokok,$admin,$bunga,$tenor) {
         $c68 = 25000000;
         $c14 = $pokok;
+
         if ($tenor == 3 || $tenor == 6) {
             $c4 = 1;
         }elseif ($tenor == 12) {
