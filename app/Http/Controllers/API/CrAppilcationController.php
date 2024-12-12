@@ -421,7 +421,7 @@ class CrAppilcationController extends Controller
         if(!$applicationModel){
             $data_cr_application['ID'] = Uuid::uuid7()->toString();
             $data_cr_application['CREATE_DATE'] = Carbon::now()->format('Y-m-d');
-            $data_cr_application['CREATE_USER'] = $request->user()->id;
+            $data_cr_application['CREATE_BY'] = $request->user()->id;
             $data_cr_application['BRANCH'] = $request->user()->branch_id;
             $data_cr_application['ORDER_NUMBER'] = $this->createAutoCode(M_CrApplication::class,'ORDER_NUMBER','COR');
             M_CrApplication::create($data_cr_application);
