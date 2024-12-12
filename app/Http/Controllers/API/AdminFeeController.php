@@ -228,7 +228,7 @@ class AdminFeeController extends Controller
         $returnSingle = $options['returnSingle'] ?? false;
         $specificTenor = $options['tenor'] ?? null;
         $plafond = $options['plafond'] ?? null;
-        $angsuran_type = $options['angsuran_type'] ?? null;
+        $angsuran_type = strtolower($options['angsuran_type']) ?? null;
 
         $build = [];
         
@@ -280,7 +280,7 @@ class AdminFeeController extends Controller
         $returnSingle = $options['returnSingle'] ?? false;
         $specificTenor = $options['tenor'] ?? null;
         $plafond = $options['plafond'] ?? null;
-        $angsuran_type = $options['angsuran_type'] ?? null;
+        $angsuran_type = strtolower($options['angsuran_type']) ?? null;
 
         $build = [];
         
