@@ -380,6 +380,10 @@ class CrAppilcationController extends Controller
                 '18' => 12,
                 '24' => 18,
             ];
+
+            $tenor = $tenorLists[$request->ekstra['tenor']];
+        }else{
+            $tenor = $request->ekstra['tenor'];
         }
 
         $data_cr_application =[
@@ -397,7 +401,7 @@ class CrAppilcationController extends Controller
             'INTEREST_RATE' => $request->ekstra['suku_bunga'] ?? null,
             'TOTAL_INTEREST' => $request->ekstra['total_bunga'] ?? null,
             'INSTALLMENT_TYPE' => $request->ekstra['jenis_angsuran']??null,
-            'TENOR' => $tenorLists[$request->ekstra['tenor']]??null,
+            'TENOR' => $tenor??null,
             'POKOK_PEMBAYARAN' => $request->ekstra['pokok_pembayaran']??null,
             'NET_ADMIN' => $request->ekstra['net_admin']??null,
             'TOTAL_ADMIN' => $request->ekstra['total']??null,
