@@ -172,13 +172,21 @@ class AdminFeeController extends Controller
                 $adminFee =$this->adminfee->checkRange($plafond,$angsuran_type);
             }
 
-            $show = $this->buildArray($adminFee,
-            [
-                'returnSingle' => true,
-                'plafond' => $request->plafond,
-                'angsuran_type' => $angsuran_type
-            ]);
-
+            if($angsuran_type === 'musiman'){
+                $show = $this->buildArrayMusiman($adminFee,
+                [
+                    'returnSingle' => true,
+                    'plafond' => $request->plafond,
+                    'angsuran_type' => $angsuran_type
+                ]);
+            }else{
+                $show = $this->buildArray($adminFee,
+                [
+                    'returnSingle' => true,
+                    'plafond' => $request->plafond,
+                    'angsuran_type' => $angsuran_type
+                ]);
+            }
     
             return response()->json($show, 200);
         } catch (Exception $e) {
@@ -196,14 +204,18 @@ class AdminFeeController extends Controller
 
             $adminFee =$this->adminfee->checkRange($plafond,$angsuran_type);
 
-            $show = $this->buildArray($adminFee,
-            [   'returnSingle' => true,
-                'type' => 'fee',
-                'tenor' => $tenor,
-                'angsuran_type' => $angsuran_type,
-                'plafond' => $request->plafond,
-            ]);
-    
+            if($tenor == 0){
+                $show = [];
+            }else{
+                $show = $this->buildArray($adminFee,
+                [   'returnSingle' => true,
+                    'type' => 'fee',
+                    'tenor' => $tenor,
+                    'angsuran_type' => $angsuran_type,
+                    'plafond' => $request->plafond,
+                ]);
+            }
+
             return response()->json($show, 200);
         } catch (Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
@@ -233,7 +245,55 @@ class AdminFeeController extends Controller
                 $strukturTenors = $this->buildStrukturBulanan($value->links, $specificTenor,$plafond);
             }else{
                 $strukturTenors = $this->buildStrukturMusiman($value->links, $tenorList[$specificTenor],$plafond);
-            }   
+            }  
+            
+            $item = [
+                'id' => $value->id,
+                'tipe' => $value->category,
+                'range_start' => (float) $value->start_value,
+                'range_end' => (float) $value->end_value,
+            ];
+
+            if ($specificTenor) {
+                if($angsuran_type === 'bulanan' ){
+                    $item += $strukturTenors["tenor_$specificTenor"];
+                }else{
+                    $tenorKey = $tenorList[$specificTenor]; 
+                    $item += $strukturTenors["tenor_$tenorKey"]; 
+                }
+            } else {
+                $item += $strukturTenors;
+            }
+
+            if ($returnSingle) {
+                return $item;
+            }
+
+            $build[] = $item;
+        }
+
+        return $data;
+    }
+
+    public function buildArrayMusiman($data, $options = [])
+    {
+        $returnSingle = $options['returnSingle'] ?? false;
+        $specificTenor = $options['tenor'] ?? null;
+        $plafond = $options['plafond'] ?? null;
+        $angsuran_type = $options['angsuran_type'] ?? null;
+
+        $build = [];
+        
+        $tenorList = [
+            '3' => 6,
+            '6' => 12,
+            '12' => 18,
+            '18' => 24,
+        ];
+
+        foreach ($data as $value) {
+
+            $strukturTenors = $this->buildStrukturBulanan($value->links, $specificTenor,$plafond);
 
             $item = [
                 'id' => $value->id,
@@ -243,7 +303,12 @@ class AdminFeeController extends Controller
             ];
 
             if ($specificTenor) {
-                $item += $strukturTenors["tenor_$specificTenor"];
+                if($angsuran_type === 'bulanan' ){
+                    $item += $strukturTenors["tenor_$specificTenor"];
+                }else{
+                    $tenorKey = $tenorList[$specificTenor]; 
+                    $item += $strukturTenors["tenor_$tenorKey"]; 
+                }
             } else {
                 $item += $strukturTenors;
             }
