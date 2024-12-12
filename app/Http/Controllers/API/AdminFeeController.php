@@ -226,7 +226,7 @@ class AdminFeeController extends Controller
     public function buildArray($data, $options = [])
     {
         $returnSingle = $options['returnSingle'] ?? false;
-        $specificTenor = $options['tenor'] ?? null;
+        $specificTenor = intval($options['tenor']) ?? null;
         $plafond = $options['plafond'] ?? null;
         $angsuran_type = $options['angsuran_type'] ?? null;
 
@@ -278,7 +278,7 @@ class AdminFeeController extends Controller
     public function buildArrayMusiman($data, $options = [])
     {
         $returnSingle = $options['returnSingle'] ?? false;
-        $specificTenor = $options['tenor'] ?? null;
+        $specificTenor = intval($options['tenor']) ?? null;
         $plafond = $options['plafond'] ?? null;
         $angsuran_type = $options['angsuran_type'] ?? null;
 
