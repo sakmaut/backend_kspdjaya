@@ -210,7 +210,7 @@ class AdminFeeController extends Controller
                 $show = $this->buildArray($adminFee,
                 [   'returnSingle' => true,
                     'type' => 'fee',
-                    'tenor' => $tenor,
+                    'tenor' => intval($tenor),
                     'angsuran_type' => $angsuran_type,
                     'plafond' => $request->plafond,
                 ]);
@@ -226,7 +226,7 @@ class AdminFeeController extends Controller
     public function buildArray($data, $options = [])
     {
         $returnSingle = $options['returnSingle'] ?? false;
-        $specificTenor = intval($options['tenor']) ?? null;
+        $specificTenor = $options['tenor'] ?? null;
         $plafond = $options['plafond'] ?? null;
         $angsuran_type = $options['angsuran_type'] ?? null;
 
@@ -278,7 +278,7 @@ class AdminFeeController extends Controller
     public function buildArrayMusiman($data, $options = [])
     {
         $returnSingle = $options['returnSingle'] ?? false;
-        $specificTenor = intval($options['tenor']) ?? null;
+        $specificTenor = $options['tenor'] ?? null;
         $plafond = $options['plafond'] ?? null;
         $angsuran_type = $options['angsuran_type'] ?? null;
 
