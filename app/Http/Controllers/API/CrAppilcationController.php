@@ -373,7 +373,7 @@ class CrAppilcationController extends Controller
 
     private function insert_cr_application($request,$applicationModel){
 
-        if($request->ekstra['jenis_angsuran'] == 'musiman'){
+        if(strtolower($request->ekstra['jenis_angsuran']) == 'musiman'){
             $tenorLists = [
                 '6' => 3,
                 '12' => 6,
