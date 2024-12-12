@@ -172,7 +172,7 @@ class AdminFeeController extends Controller
                 $adminFee =$this->adminfee->checkRange($plafond,$angsuran_type);
             }
 
-            if($angsuran_type === 'musiman'){
+            if($angsuran_type == 'musiman'){
                 $show = $this->buildArrayMusiman($adminFee,
                 [
                     'returnSingle' => true,
@@ -293,7 +293,7 @@ class AdminFeeController extends Controller
 
         foreach ($data as $value) {
 
-            $strukturTenors = $this->buildStrukturBulanan($value->links, $specificTenor,$plafond);
+            $strukturTenors = $this->buildStrukturMusiman($value->links, $specificTenor,$plafond);
 
             $item = [
                 'id' => $value->id,
