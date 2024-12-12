@@ -164,7 +164,7 @@ class AdminFeeController extends Controller
     {
         try {
             $plafond = (int) $request->plafond / 1000000; 
-            $angsuran_type = $request->jenis_angsuran;
+            $angsuran_type = strtolower($request->jenis_angsuran);
         
             if($plafond == null || $plafond == 0 || empty($plafond)){
                 $adminFee = M_AdminFee::with('links')->get();
@@ -199,7 +199,7 @@ class AdminFeeController extends Controller
     {
         try {
             $plafond = (int) $request->plafond / 1000000; 
-            $angsuran_type = $request->jenis_angsuran;
+            $angsuran_type = strtolower($request->jenis_angsuran);
             $tenor = $request->tenor;
 
             $adminFee =$this->adminfee->checkRange($plafond,$angsuran_type);
