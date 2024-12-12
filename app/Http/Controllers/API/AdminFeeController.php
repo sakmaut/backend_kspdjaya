@@ -340,7 +340,7 @@ class AdminFeeController extends Controller
         $strukturTenors = [];
 
         foreach ($tenors as $tenor) {
-            $tenorData = ['tenor' => intval($tenor)];
+            $tenorData = ['tenor' => strval($tenor)];
             $total = 0;
             $tenor_name = $tenor . '_month';
 
@@ -406,7 +406,7 @@ class AdminFeeController extends Controller
         $strukturTenors = [];
     
         foreach ($tenors as $tenor) {
-            $tenorData = ['tenor' => intval($tenor)];
+            $tenorData = ['tenor' => strval($tenor)];
             $total = 0;
             $tenor_name = $tenor . '_month';
 
