@@ -37,13 +37,14 @@ Route::middleware(['auth:sanctum', 'check.access'])->group(function () {
     Route::resource('cr_application', CrAppilcationController::class)->only(['index']);
     Route::resource('kunjungan', CrSurveyController::class)->only(['index']);
     Route::get('kunjungan_admin', [CrAppilcationController::class, 'showAdmins']);
-    Route::get('fpk_kapos', [CrAppilcationController::class, 'showKapos']);
-    Route::get('fpk_ho', [CrAppilcationController::class, 'showHo']);
+   
     // Route::resource('taksasi', TaksasiController::class)->only(['index']);
 });
 
 Route::middleware('auth:sanctum')->group(function () {
     // Route Group Master Menu
+    Route::get('fpk_kapos', [CrAppilcationController::class, 'showKapos']);
+    Route::get('fpk_ho', [CrAppilcationController::class, 'showHo']);
     Route::resource('menu', MasterMenuController::class);
     Route::get('menu-sub-list', [MasterMenuController::class, 'menuSubList']);
     Route::resource('user_access_menu', UserAccessMenuController::class);
