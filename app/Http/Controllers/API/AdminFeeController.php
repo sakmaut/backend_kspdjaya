@@ -229,7 +229,7 @@ class AdminFeeController extends Controller
 
         foreach ($data as $value) {
 
-            if($angsuran_type === 'bulanan'){
+            if($angsuran_type === 'bulanan' ){
                 $strukturTenors = $this->buildStrukturBulanan($value->links, $specificTenor,$plafond);
             }else{
                 $strukturTenors = $this->buildStrukturMusiman($value->links, $tenorList[$specificTenor],$plafond);
@@ -243,11 +243,7 @@ class AdminFeeController extends Controller
             ];
 
             if ($specificTenor) {
-                if($angsuran_type === 'bulanan'){
-                    $item += $strukturTenors["tenor_$specificTenor"];
-                }else{
-                    $item += $strukturTenors["tenor_{$tenorList[$specificTenor]}"];
-                }
+                $item += $strukturTenors["tenor_$specificTenor"];
             } else {
                 $item += $strukturTenors;
             }
