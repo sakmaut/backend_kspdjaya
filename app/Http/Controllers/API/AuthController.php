@@ -34,6 +34,9 @@ class AuthController extends Controller
             
             $credentials = $request->only('username', 'password');
 
+            $credentials['username'] = strtolower($credentials['username']);
+            $credentials['password'] = strtolower($credentials['password']);
+
             if (!Auth::attempt($credentials)) {
                 $this->logLoginActivity($request, 'Invalid Credential', 401);
                 throw new AuthenticationException('Invalid credentials');
