@@ -746,7 +746,7 @@ class CrAppilcationController extends Controller
                     'TENOR' => $check_survey_id->tenor??null,
                     'VERSION' => 1,
                     'CREATE_DATE' => Carbon::now()->format('Y-m-d'),
-                    'CREATE_USER' => $request->user()->id,
+                    'CREATE_BY' => $request->user()->id,
                 ];
         
                 M_CrApplication::create($data_cr_application);
