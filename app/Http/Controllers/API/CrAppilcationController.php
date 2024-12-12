@@ -373,6 +373,15 @@ class CrAppilcationController extends Controller
 
     private function insert_cr_application($request,$applicationModel){
 
+        if($request->ekstra['jenis_angsuran'] == 'musiman'){
+            $tenorLists = [
+                '6' => 3,
+                '12' => 6,
+                '18' => 12,
+                '24' => 18,
+            ];
+        }
+
         $data_cr_application =[
             'FORM_NUMBER' => '',
             'CUST_CODE' => '',
@@ -388,7 +397,7 @@ class CrAppilcationController extends Controller
             'INTEREST_RATE' => $request->ekstra['suku_bunga'] ?? null,
             'TOTAL_INTEREST' => $request->ekstra['total_bunga'] ?? null,
             'INSTALLMENT_TYPE' => $request->ekstra['jenis_angsuran']??null,
-            'TENOR' => $request->ekstra['tenor']??null,
+            'TENOR' => $tenorLists[$request->ekstra['tenor']]??null,
             'POKOK_PEMBAYARAN' => $request->ekstra['pokok_pembayaran']??null,
             'NET_ADMIN' => $request->ekstra['net_admin']??null,
             'TOTAL_ADMIN' => $request->ekstra['total']??null,

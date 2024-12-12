@@ -886,18 +886,18 @@ class Credit extends Controller
         $totalInterestPaid = 0;
     
         $tenorList = [
+            '3' => 1,
             '6' => 1,
-            '12' => 1,
-            '18' => 2,
-            '24' => 3,
+            '12' => 2,
+            '18' => 3,
         ];
     
-        $tenorLists = [
-            '6' => 3,
-            '12' => 6,
-            '18' => 12,
-            '24' => 18,
-        ];
+        // $tenorLists = [
+        //     '6' => 3,
+        //     '12' => 6,
+        //     '18' => 12,
+        //     '24' => 18,
+        // ];
     
         for ($i = 1; $i <= $tenorList[$term]; $i++) {
             $interest = round($remainingBalance * $suku_bunga_konversi, 2);
@@ -925,7 +925,7 @@ class Credit extends Controller
             }
     
             $schedule[] = [
-                'angsuran_ke' => $i . ' X ' . $tenorLists[$term],
+                'angsuran_ke' => $i . ' X ' . $term,
                 'tgl_angsuran' => setPaymentDate($setDate, $i),
                 'baki_debet_awal' => floatval($remainingBalance + $principalPayment),
                 'pokok' => floatval($principalPayment),
