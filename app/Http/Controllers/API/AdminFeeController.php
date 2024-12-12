@@ -210,7 +210,7 @@ class AdminFeeController extends Controller
                 $show = $this->buildArray($adminFee,
                 [   'returnSingle' => true,
                     'type' => 'fee',
-                    'tenor' => intval($tenor),
+                    'tenor' => (int) $tenor,
                     'angsuran_type' => $angsuran_type,
                     'plafond' => $request->plafond,
                 ]);
@@ -340,7 +340,7 @@ class AdminFeeController extends Controller
         $strukturTenors = [];
 
         foreach ($tenors as $tenor) {
-            $tenorData = ['tenor' => strval($tenor)];
+            $tenorData = ['tenor' => intval($tenor)];
             $total = 0;
             $tenor_name = $tenor . '_month';
 
@@ -406,7 +406,7 @@ class AdminFeeController extends Controller
         $strukturTenors = [];
     
         foreach ($tenors as $tenor) {
-            $tenorData = ['tenor' => strval($tenor)];
+            $tenorData = ['tenor' => intval($tenor)];
             $total = 0;
             $tenor_name = $tenor . '_month';
 
