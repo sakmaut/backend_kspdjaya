@@ -56,13 +56,13 @@ class Credit extends Controller
     }
 
     function queryKapos($branchID){
+
         $result = DB::table('users as a')
-                        ->select('a.id', 'a.fullname', 'a.position', 'a.no_ktp', 'a.alamat', 
+                        ->select('a.fullname', 'a.position', 'a.no_ktp', 'a.alamat', 
                                 'b.address', 'b.name', 'b.city')
                         ->leftJoin('branch as b', 'b.id', '=', 'a.branch_id')
                         ->where('a.position', 'KAPOS')
                         ->where('b.id', $branchID)
-                        ->limit(1)
                         ->first();
 
         return $result;
@@ -159,6 +159,7 @@ class Credit extends Controller
            "no_perjanjian" => !$check_exist && $request->flag == 'yes' ? $loan_number??null: $check_exist->LOAN_NUMBER??null,
             "cabang" => 'CABANG '.strtoupper($pihak1->name)??null,
             "kota" => strtoupper($pihak1->city)??null,
+            "alamat_kantor" => strtoupper($pihak1->address)??null,
             "tgl_cetak" => !empty($check_exist)? Carbon::parse($check_exist->CREATED_AT)->format('Y-m-d') : null,
             "tgl_awal_angsuran" => !empty($check_exist)? Carbon::parse($check_exist->INSTALLMENT_DATE)->format('Y-m-d'): Carbon::parse($set_tgl_awal)->format('Y-m-d'),
             "flag" => !$check_exist?0:1,
@@ -166,8 +167,7 @@ class Credit extends Controller
                 "nama" => strtoupper($pihak1->fullname)??null,
                 "jabatan" => strtoupper($pihak1->position)??null,
                 "no_ktp" => strtoupper($pihak1->no_ktp)??null,
-                "alamat" => strtoupper($pihak1->alamat)??null,
-                "alamat_kantor" => strtoupper($pihak1->address)??null
+                "alamat" => strtoupper($pihak1->alamat)??null
              ],
              "pihak_2" => [
                 "nama" =>strtoupper($cr_personal->NAME)??null,
