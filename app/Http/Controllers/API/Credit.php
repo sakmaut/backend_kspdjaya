@@ -89,10 +89,6 @@ class Credit extends Controller
             $installment_count = count($data_credit_schedule);
         }
 
-        // return response()->json($data_credit_schedule, 200);
-        // die;
-       
-
         $schedule = [];
         $check_exist = M_Credit::where('ORDER_NUMBER', $request->order_number)->first();
 
@@ -288,9 +284,9 @@ class Credit extends Controller
             'DUE_PRINCIPAL'  => null,
             'DUE_INTEREST'  => null,
             'DUE_PENALTY'  => null,
-            'CREDIT_TYPE'  =>$data->CREDIT_TYPE??null,
+            'CREDIT_TYPE'  =>$data->INSTALLMENT_TYPE??null,
             'INSTALLMENT_COUNT'  => $installment_count,
-            'PERIOD'  => $data->PERIOD,
+            'PERIOD'  => $data->TENOR,
             'INSTALLMENT'  => $data->INSTALLMENT,
             'FLAT_RATE'  => $data->FLAT_RATE??null,
             'EFF_RATE'  => $data->EFF_RATE??null,
