@@ -268,20 +268,6 @@ class CrSurveyController extends Controller
 
     private function createCrSurvey($request)
     {
-
-        if(strtolower($request->order['jenis_angsuran']) == 'musiman'){
-            $tenorLists = [
-                '6' => 3,
-                '12' => 6,
-                '18' => 12,
-                '24' => 18,
-            ];
-
-            $tenor = $tenorLists[$request->order['tenor']];
-        }else{
-            $tenor = $request->order['tenor'];
-        }
-
         $data_array = [
             'id' => $request->id,
             'branch_id' => $request->user()->branch_id,
