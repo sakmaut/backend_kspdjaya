@@ -56,12 +56,14 @@ class Credit extends Controller
     }
 
     function queryKapos($branchID){
-        $result = DB::table('users')
-                    ->select('fullname', 'position','no_ktp','alamat', 'branch.address','branch.name','branch.city')
-                    ->join('branch', 'branch.id', '=', 'users.branch_id')
-                    ->where('branch.id', '=', $branchID)
-                    ->where('users.position', '=', 'KAPOS')
-                    ->first();
+        $result = DB::table('users as a')
+                        ->select('a.id', 'a.fullname', 'a.position', 'a.no_ktp', 'a.alamat', 
+                                'b.address', 'b.name', 'b.city')
+                        ->leftJoin('branch as b', 'b.id', '=', 'a.branch_id')
+                        ->where('a.position', 'KAPOS')
+                        ->where('b.id', $branchID)
+                        ->limit(1)
+                        ->first();
 
         return $result;
     }
@@ -149,6 +151,9 @@ class Credit extends Controller
             $this->insert_collateral($request,$data,$SET_UUID);
             $this->insert_collateral_sertification($request,$data,$SET_UUID);
         }
+
+        // ->select('fullname', 'position', 'no_ktp', 'alamat', 'branch.address as branch_address', 'branch.name as branch_name', 'branch.city as branch_city')
+    
 
         $data = [
            "no_perjanjian" => !$check_exist && $request->flag == 'yes' ? $loan_number??null: $check_exist->LOAN_NUMBER??null,
