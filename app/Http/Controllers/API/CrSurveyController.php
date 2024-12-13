@@ -268,13 +268,27 @@ class CrSurveyController extends Controller
 
     private function createCrSurvey($request)
     {
+
+        if(strtolower($request->order['jenis_angsuran']) == 'musiman'){
+            $tenorLists = [
+                '6' => 3,
+                '12' => 6,
+                '18' => 12,
+                '24' => 18,
+            ];
+
+            $tenor = $tenorLists[$request->order['tenor']];
+        }else{
+            $tenor = $request->order['tenor'];
+        }
+
         $data_array = [
             'id' => $request->id,
             'branch_id' => $request->user()->branch_id,
             'visit_date' => isset($request->data_survey['tgl_survey']) && !empty($request->data_survey['tgl_survey'])?$request->data_survey['tgl_survey']:null,
             'tujuan_kredit' => $request->order['tujuan_kredit']?? null,
             'plafond' => $request->order['plafond']?? null,
-            'tenor' => $request->order['tenor']?? null,
+            'tenor' => $tenor ?? null,
             'category' => $request->order['category']?? null,
             'jenis_angsuran' => $request->order['jenis_angsuran']?? null,
             'nama' => $request->data_nasabah['nama']?? null,
