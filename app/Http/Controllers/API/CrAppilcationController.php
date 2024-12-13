@@ -172,21 +172,21 @@ class CrAppilcationController extends Controller
             $this->insert_taksasi($request, $surveyID);
             $this->insert_application_approval($request,$id, $surveyID,$request->flag_pengajuan);
 
-            if($request->user()->position === 'KAPOS'){
-                $data_approval['application_result'] = '7:resubmit kapos';
+            // if($request->user()->position === 'KAPOS'){
+            //     $data_approval['application_result'] = 'DROR';
     
-                $approval_change = M_SurveyApproval::where('CR_SURVEY_ID', $surveyID)->first();
+            //     $approval_change = M_SurveyApproval::where('CR_SURVEY_ID', $surveyID)->first();
 
-                if ($approval_change) {
-                    $approval_change->update(['APPROVAL_RESULT' => '7:resubmit kapos']);
-                    $approvalLog = new ApprovalLog();
-                    $approvalLog->surveyApprovalLog("AUTO_APPROVED_BY_SYSTEM", $approval_change->ID, '7:resubmit kapos');
-                }
+            //     if ($approval_change) {
+            //         $approval_change->update(['APPROVAL_RESULT' => 'DROR']);
+            //         $approvalLog = new ApprovalLog();
+            //         $approvalLog->surveyApprovalLog("AUTO_APPROVED_BY_SYSTEM", $approval_change->ID, 'DROR');
+            //     }
 
-                $checkApproval= M_ApplicationApproval::where('cr_application_id', $id)->first();
+            //     $checkApproval= M_ApplicationApproval::where('cr_application_id', $id)->first();
     
-                $checkApproval->update($data_approval);
-            }
+            //     $checkApproval->update($data_approval);
+            // }
 
             if (collect($request->jaminan)->isNotEmpty()) {
                 foreach ($request->jaminan as $result) {
