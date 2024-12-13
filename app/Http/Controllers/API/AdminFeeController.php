@@ -401,12 +401,19 @@ class AdminFeeController extends Controller
             ];
         })->toArray();
 
+        $tenorList = [
+            '6' => 3,
+            '12' => 6,
+            '18' => 12,
+            '24' => 18,
+        ];
+
         $tenors = $specificTenor ? [$specificTenor] : ['6', '12', '18', '24'];
     
         $strukturTenors = [];
     
         foreach ($tenors as $tenor) {
-            $tenorData = ['tenor' => strval($tenor)];
+            $tenorData = ['tenor' => strval($tenorList[$tenor])];
             $total = 0;
             $tenor_name = $tenor . '_month';
 
@@ -420,13 +427,6 @@ class AdminFeeController extends Controller
                     $total += $feeValue;
                 }
             }
-
-            $tenorList = [
-                '6' => 3,
-                '12' => 6,
-                '18' => 12,
-                '24' => 18,
-            ];
 
             $set_tenor = $tenorList[$tenor]??0;
 
