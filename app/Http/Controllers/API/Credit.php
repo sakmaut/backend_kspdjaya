@@ -81,7 +81,7 @@ class Credit extends Controller
 
         $type = $data->INSTALLMENT_TYPE;
       
-        if ($type == 'bulanan') {
+        if (strtolower($type) == 'bulanan') {
             $data_credit_schedule = $this->generateAmortizationSchedule($set_tgl_awal,$data);
 
             $installment_count = count($data_credit_schedule);
@@ -90,6 +90,9 @@ class Credit extends Controller
 
             $installment_count = count($data_credit_schedule);
         }
+
+        return response()->json($data_credit_schedule);
+        die;
 
         $schedule = [];
         $check_exist = M_Credit::where('ORDER_NUMBER', $request->order_number)->first();
@@ -151,10 +154,7 @@ class Credit extends Controller
             $this->insert_collateral($request,$data,$SET_UUID);
             $this->insert_collateral_sertification($request,$data,$SET_UUID);
         }
-
-        // ->select('fullname', 'position', 'no_ktp', 'alamat', 'branch.address as branch_address', 'branch.name as branch_name', 'branch.city as branch_city')
     
-
         $data = [
            "no_perjanjian" => !$check_exist && $request->flag == 'yes' ? $loan_number??null: $check_exist->LOAN_NUMBER??null,
             "cabang" => 'CABANG '.strtoupper($pihak1->name)??null,
@@ -834,7 +834,6 @@ class Credit extends Controller
     //     return $schedule;
     // }
 
-
     private function generateAmortizationSchedule($setDate, $data)
     {
         $schedule = [];
@@ -885,57 +884,44 @@ class Credit extends Controller
         $suku_bunga_konversi = ($data->FLAT_RATE / 100);
         $ttal_bunga = $data->TOTAL_INTEREST;
         $totalInterestPaid = 0;
-    
+
         $tenorList = [
             '3' => 1,
             '6' => 1,
             '12' => 2,
-            '18' => 3,
+            '18' => 3
         ];
-    
-        // $tenorLists = [
-        //     '6' => 3,
-        //     '12' => 6,
-        //     '18' => 12,
-        //     '24' => 18,
-        // ];
-    
-        for ($i = 1; $i <= $tenorList[$term]; $i++) {
+
+        $term = $tenorList[$term] ?? 0;
+
+        for ($i = 1; $i <= $term; $i++) {
             $interest = round($remainingBalance * $suku_bunga_konversi, 2);
-    
+
             if ($i < $term) {
                 $principalPayment = round($angsuran - $interest, 2);
             } else {
                 $principalPayment = round($remainingBalance, 2);
                 $interest = round($ttal_bunga - $totalInterestPaid, 2);
             }
-    
+
             $totalPayment = round($principalPayment + $interest, 2);
             $remainingBalance = round($remainingBalance - $principalPayment, 2);
             $totalInterestPaid += $interest;
-            
             if ($i == $term) {
                 $remainingBalance = 0.00;
             }
-    
-            // Check if $tenorList[$term] is 1, then set baki_debet as plafond + interest
-            if ($tenorList[$term] == 1) {
-                $bakiDebet = floatval($principalPayment + $interest);  // Use plafond + interest
-            } else {
-                $bakiDebet = floatval($remainingBalance);  // Use regular remaining balance
-            }
-    
+
             $schedule[] = [
-                'angsuran_ke' => $i . ' X ' . $term,
+                'angsuran_ke' => $i,
                 'tgl_angsuran' => setPaymentDate($setDate, $i),
                 'baki_debet_awal' => floatval($remainingBalance + $principalPayment),
                 'pokok' => floatval($principalPayment),
                 'bunga' => floatval($interest),
                 'total_angsuran' => floatval($totalPayment),
-                'baki_debet' => $bakiDebet
+                'baki_debet' => floatval($remainingBalance)
             ];
         }
-    
+
         return $schedule;
     }
     
