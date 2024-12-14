@@ -744,6 +744,7 @@ class CrAppilcationController extends Controller
                     'ORDER_NUMBER' => $this->createAutoCode(M_CrApplication::class,'ORDER_NUMBER','COR'),
                     'BRANCH' => $request->user()->branch_id,
                     'TENOR' => $check_survey_id->tenor??null,
+                    'INSTALLMENT_TYPE' => $check_survey_id->jenis_angsuran ?? null,
                     'VERSION' => 1,
                     'CREATE_DATE' => Carbon::now()->format('Y-m-d'),
                     'CREATE_BY' => $request->user()->id,
