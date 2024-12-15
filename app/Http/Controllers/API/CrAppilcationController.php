@@ -744,6 +744,7 @@ class CrAppilcationController extends Controller
                     'ORDER_NUMBER' => $this->createAutoCode(M_CrApplication::class,'ORDER_NUMBER','COR'),
                     'BRANCH' => $request->user()->branch_id,
                     'TENOR' => $check_survey_id->tenor??null,
+                    'INSTALLMENT_TYPE' => $check_survey_id->jenis_angsuran ?? null,
                     'VERSION' => 1,
                     'CREATE_DATE' => Carbon::now()->format('Y-m-d'),
                     'CREATE_BY' => $request->user()->id,
@@ -1052,7 +1053,7 @@ class CrAppilcationController extends Controller
             ],
             "info_bank" =>[],
             "ekstra" =>[
-                'jenis_angsuran' => empty($application->INSTALLMENT_TYPE)?$cr_survey->jenis_angsuran:$application->INSTALLMENT_TYPE,
+                'jenis_angsuran' => strtolower(empty($application->INSTALLMENT_TYPE)?$cr_survey->jenis_angsuran:$application->INSTALLMENT_TYPE),
                 'tenor' => $application->TENOR,
                 "nilai_yang_diterima" => $applicationDetail->SUBMISSION_VALUE == ''?(int) $data->plafond:(int)$applicationDetail->SUBMISSION_VALUE?? null,
                 "total"=> (int)$applicationDetail->TOTAL_ADMIN?? null,
