@@ -30,6 +30,7 @@ class R_CrProspect extends JsonResource
         $data = [
             'id' => $this->id,
             "flag" => !$check_exist?0:1,
+            "jenis_angsuran" => $this->jenis_angsuran,
             'order_number' => $this->order_number,
             'visit_date' => $this->visit_date  == null ? null :date('d-m-Y', strtotime($this->visit_date)),
             'nama_debitur' => $this->nama_debitur,

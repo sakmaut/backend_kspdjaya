@@ -66,6 +66,7 @@ class M_CrSurvey extends Model
     public static function show_mcf($mcfId){
 
         $query = self::select(  'cr_survey.id as id',
+                                'cr_survey.jenis_angsuran',
                                 'cr_survey.visit_date',
                                 DB::raw("COALESCE(cr_personal.NAME, cr_survey.nama) as nama_debitur"),
                                 'cr_survey.alamat',
