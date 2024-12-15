@@ -941,6 +941,7 @@ class CrAppilcationController extends Controller
             'survey_id' => $surveyId,
             'order_number' => $application->ORDER_NUMBER,
             "flag" => !$check_exist?0:1,
+            'jenis_angsuran' => empty($application->INSTALLMENT_TYPE)?$cr_survey->jenis_angsuran??'':$application->INSTALLMENT_TYPE??'',
             'pelanggan' =>[
                 "nama" => $cr_personal->NAME ?? ( $data->nama?? ''),
                 "nama_panggilan" => $cr_personal->ALIAS ?? null,

@@ -85,6 +85,7 @@ class CrSurveyController extends Controller
         
         $arrayList = [
             'id' => $survey_id,
+            'jenis_angsuran' => $data->jenis_angsuran??'',
             'data_order' =>[
                 'tujuan_kredit' => $data->tujuan_kredit,
                 'plafond' => (int) $data->plafond,
