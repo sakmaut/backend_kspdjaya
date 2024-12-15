@@ -86,6 +86,7 @@ class M_CrSurvey extends Model
     public static function show_admin($branchId){
 
         $query = self::select(  'cr_survey.id as id',
+                                'cr_survey.jenis_angsuran',
                                 'cr_application.ORDER_NUMBER as order_number',
                                 'cr_survey.visit_date',
                                 DB::raw("COALESCE(cr_personal.NAME, cr_survey.nama) as nama_debitur"),
