@@ -60,7 +60,7 @@ if (!function_exists('compareData')) {
 }
 
 if (!function_exists('generateCode')) {
-    function generateCode($request, $table, $column, $prefix = '') {
+    function generateCode($request, $table, $column) {
         // Get branch ID from the user request
         $branchId = $request->user()->branch_id;
         
@@ -76,25 +76,16 @@ if (!function_exists('generateCode')) {
     
         // Retrieve the latest record from the table based on the column
         $latestRecord = DB::table($table)
-                            ->select($column)
-                            ->orderByRaw("CAST(SUBSTRING($column, LENGTH($column) - 5 + 1) AS UNSIGNED) DESC")
-                            ->first();
-        // Initialize the last sequence as 1
+            ->select($column)
+            ->where($column, 'like', $branchCodeNumber.'%') // Filters records with the branch code prefix
+            ->orderByRaw("CAST(SUBSTRING($column, LENGTH(?) + 1) AS UNSIGNED) DESC", [$branchCodeNumber]) // Use ? placeholder for safe substitution
+            ->first();
+    
+        // If latestRecord is null, start from 00001
         $lastSequence = 1;
     
-        // If the latest record exists and the column value is properly structured
-        if ($latestRecord && isset($latestRecord->$column)) {
-            // Extract the last 5 digits from the column value
-            $codeValue = $latestRecord->$column;
-    
-            // Check if the code is long enough to extract the last 5 digits
-            if (strlen($codeValue) >= 5) {
-                $lastSequenceCode = substr($codeValue, -5);  // Extract the last 5 digits
-                // Ensure the extracted part is numeric and increment it
-                if (is_numeric($lastSequenceCode)) {
-                    $lastSequence = (int) $lastSequenceCode + 1;
-                }
-            }
+        if ($latestRecord) {
+            $lastSequence = (int) substr($latestRecord->$column, strlen($branchCodeNumber) + 7, 5) + 1;
         }
     
         // Get current year and month
@@ -103,13 +94,10 @@ if (!function_exists('generateCode')) {
         $month = $currentDate->format('m');
     
         // Generate the code based on the presence of the prefix
-        $generateCode = $prefix !== '' && $prefix !== null
-            ? sprintf("%s%s%s%s%05d", $prefix, $branchCodeNumber, $year, $month, $lastSequence)
-            : sprintf("%s%s%s%05d", $branchCodeNumber, $year, $month, $lastSequence);
+        $generateCode = sprintf("%s%s%s%05d", $branchCodeNumber, $year, $month, $lastSequence);
     
         return $generateCode;
     }
-    
 }
 
 if (!function_exists('generateCustCode')) {
@@ -123,8 +111,18 @@ if (!function_exists('generateCustCode')) {
     
         $branchCodeNumber = $branch->CODE_NUMBER;
     
-        $latestRecord = DB::table($table)->latest($column)->first();
-        $lastSequence = $latestRecord ? (int) substr($latestRecord->$column, 3, 5) + 1 : 1;
+        $latestRecord = DB::table($table)
+                            ->select($column)
+                            ->where($column, 'like', $branchCodeNumber.'%') // Filters records with the branch code prefix
+                            ->orderByRaw("CAST(SUBSTRING($column, LENGTH(?) + 1) AS UNSIGNED) DESC", [$branchCodeNumber]) // Use ? placeholder for safe substitution
+                            ->first();
+
+
+        $lastSequence = 1;
+
+        if ($latestRecord) {
+            $lastSequence = (int) substr($latestRecord->$column, strlen($branchCodeNumber) + 3, 5) + 1;
+        }
     
 
         $generateCode = sprintf("%s%05d", $branchCodeNumber, $lastSequence);
