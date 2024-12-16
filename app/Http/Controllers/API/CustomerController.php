@@ -39,6 +39,9 @@ class CustomerController extends Controller
     public function searchCustomer(Request $request)
     {
         try {
+
+            $getBranch = $request->user()->branch_id;
+
             $searchParams = [
                 'nama' => 't1.NAME',
                 'no_kontrak' => 't0.LOAN_NUMBER',
@@ -57,6 +60,7 @@ class CustomerController extends Controller
                 ->select('t0.LOAN_NUMBER', 't0.INSTALLMENT', 't1.NAME', 't1.ADDRESS', 't0.ORDER_NUMBER')
                 ->join('customer as t1', 't1.CUST_CODE', '=', 't0.CUST_CODE')
                 ->where('t0.STATUS', 'A')
+                ->where('t0.BRANCH', $getBranch )
                 ->distinct();
             
             // Check if 'no_polisi' parameter exists and has a value
