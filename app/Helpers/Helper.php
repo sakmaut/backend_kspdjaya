@@ -63,6 +63,7 @@ if (!function_exists('generateCode')) {
     function generateCode($request, $table, $column, $prefix = '') {
         // Get branch ID from the user request
         $branchId = $request->user()->branch_id;
+        
         // Find branch based on the branch ID
         $branch = M_Branch::find($branchId);
     
@@ -74,9 +75,27 @@ if (!function_exists('generateCode')) {
         $branchCodeNumber = $branch->CODE_NUMBER;
     
         // Retrieve the latest record from the table based on the column
-        $latestRecord = DB::table($table)->latest($column)->first();
-        // Extract the last sequence number from the column value (if exists)
-        $lastSequence = $latestRecord ? (int) substr($latestRecord->$column, -5) + 1 : 1;
+        $latestRecord = DB::table($table)
+                            ->select($column)
+                            ->orderByRaw("CAST(SUBSTRING($column, LENGTH($column) - 5 + 1) AS UNSIGNED) DESC")
+                            ->first();
+        // Initialize the last sequence as 1
+        $lastSequence = 1;
+    
+        // If the latest record exists and the column value is properly structured
+        if ($latestRecord && isset($latestRecord->$column)) {
+            // Extract the last 5 digits from the column value
+            $codeValue = $latestRecord->$column;
+    
+            // Check if the code is long enough to extract the last 5 digits
+            if (strlen($codeValue) >= 5) {
+                $lastSequenceCode = substr($codeValue, -5);  // Extract the last 5 digits
+                // Ensure the extracted part is numeric and increment it
+                if (is_numeric($lastSequenceCode)) {
+                    $lastSequence = (int) $lastSequenceCode + 1;
+                }
+            }
+        }
     
         // Get current year and month
         $currentDate = Carbon::now();
