@@ -876,55 +876,68 @@ class Credit extends Controller
     }
 
     private function generateAmortizationScheduleMusiman($setDate, $data)
-    {
+    { 
         $schedule = [];
-        $remainingBalance = $data->POKOK_PEMBAYARAN;
-        $term = ceil($data->TENOR);
-        $angsuran = $data->INSTALLMENT;
-        $suku_bunga_konversi = ($data->FLAT_RATE / 100);
-        $ttal_bunga = $data->TOTAL_INTEREST;
-        $totalInterestPaid = 0;
-
+        $remainingBalance = $data->POKOK_PEMBAYARAN;  // Initial loan amount (POKOK_PEMBAYARAN)
+        $term = ceil($data->TENOR);  // Loan term in months (TENOR)
+        $angsuran = $data->INSTALLMENT;  // Monthly installment (INSTALLMENT)
+        $suku_bunga_konversi = round($data->FLAT_RATE / 100, 10);  // Monthly interest rate (FLAT_RATE divided by 100)
+        $ttal_bunga = $data->TOTAL_INTEREST;  // Total interest (TOTAL_INTEREST)
+        $totalInterestPaid = 0;  // Total interest paid so far
+    
         $tenorList = [
             '3' => 1,
             '6' => 1,
             '12' => 2,
             '18' => 3
         ];
-
+    
         $term = $tenorList[$term] ?? 0;
 
-        for ($i = 1; $i <= $term; $i++) {
-            $interest = round($remainingBalance * $suku_bunga_konversi, 2);
+        $monthsToAdd = ($data->TENOR/$tenorList[$data->TENOR]) ?? 0;
 
+        $startDate = new DateTime($setDate);
+    
+        for ($i = 1; $i <= $term; $i++) {
+            
+            $interest = round($remainingBalance * $suku_bunga_konversi, 2);
+          
             if ($i < $term) {
                 $principalPayment = round($angsuran - $interest, 2);
             } else {
                 $principalPayment = round($remainingBalance, 2);
                 $interest = round($ttal_bunga - $totalInterestPaid, 2);
             }
-
+    
             $totalPayment = round($principalPayment + $interest, 2);
             $remainingBalance = round($remainingBalance - $principalPayment, 2);
             $totalInterestPaid += $interest;
+
             if ($i == $term) {
                 $remainingBalance = 0.00;
             }
 
+            $paymentDate = clone $startDate;
+
+            $paymentDate->modify("+{$monthsToAdd} months");
+    
+            // Format the date as required (e.g., 'Y-m-d')
+            $formattedPaymentDate = $paymentDate->format('Y-m-d');
+
             $schedule[] = [
                 'angsuran_ke' => $i,
-                'tgl_angsuran' => setPaymentDate($setDate, $i),
-                'baki_debet_awal' => floatval($remainingBalance + $principalPayment),
+                'tgl_angsuran' => $formattedPaymentDate,
                 'pokok' => floatval($principalPayment),
                 'bunga' => floatval($interest),
                 'total_angsuran' => floatval($totalPayment),
                 'baki_debet' => floatval($remainingBalance)
             ];
+    
+            $startDate = $paymentDate;
         }
-
+    
         return $schedule;
     }
     
-
 
 }
