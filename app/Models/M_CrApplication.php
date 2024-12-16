@@ -79,9 +79,10 @@ class M_CrApplication extends Model
             't1.ORDER_NUMBER as order_number',
             't3.NAME as cabang',
             't4.fullname as nama_ao',
-                DB::raw("COALESCE(t7.NAME, t2.nama) as nama_debitur"),
-                DB::raw("COALESCE(t1.SUBMISSION_VALUE, t2.plafond) as plafond"),
-                DB::raw("COALESCE(t1.tenor, t2.tenor) as tenor"),
+            DB::raw("COALESCE(t8.INSTALLMENT_TYPE, t2.jenis_angsuran) as jenis_angsuran"),
+            DB::raw("COALESCE(t7.NAME, t2.nama) as nama_debitur"),
+            DB::raw("COALESCE(t1.SUBMISSION_VALUE, t2.plafond) as plafond"),
+            DB::raw("COALESCE(t1.tenor, t2.tenor) as tenor"),
             't6.application_result as status',
             't6.code as status_code'
         )
@@ -90,6 +91,7 @@ class M_CrApplication extends Model
             ->join('users as t4', 't4.id', '=', 't2.created_by')
             ->join('application_approval as t6', 't6.cr_application_id', '=', 't1.ID')
             ->join('cr_personal as t7', 't7.APPLICATION_ID', '=', 't1.ID')
+            ->join('cr_application as t8', 't8.CR_SURVEY_ID', '=', 't2.ID')
             ->orderBy('t1.CREATE_DATE', 'desc');
 
             if($getPosition !== 'HO'){
