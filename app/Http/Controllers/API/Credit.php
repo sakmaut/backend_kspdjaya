@@ -91,9 +91,6 @@ class Credit extends Controller
             $installment_count = count($data_credit_schedule);
         }
 
-        return response()->json($data_credit_schedule);
-        die;
-
         $schedule = [];
         $check_exist = M_Credit::where('ORDER_NUMBER', $request->order_number)->first();
 
