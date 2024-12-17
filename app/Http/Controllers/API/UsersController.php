@@ -211,6 +211,27 @@ class UsersController extends Controller
 
             $users = User::findOrFail($id);
 
+            // $dataJabatan = ['ADMIN', 'MCF', 'HO', 'KAPOS'];
+
+            // if (!in_array($request->jabatan, $dataJabatan)) {
+            //     throw new Exception("Jabatan Not Found", 404);
+            // }
+
+            // if ($users->position != $request->jabatan) {
+            //     $getMenu = M_JabatanAccessMenu::where('jabatan', $request->jabatan)->get();
+
+            //     M_MasterUserAccessMenu::where('users_id', $id)->delete();
+
+            //     foreach ($getMenu as $list) {
+            //         M_MasterUserAccessMenu::create([
+            //             'id' => Uuid::uuid7()->toString(),
+            //             'master_menu_id' => $list['master_menu_id'],
+            //             'users_id' => $id,
+            //             'created_by' => $request->user()->id
+            //         ]);
+            //     }
+            // }
+
             $data_user = [
                 'username' => $request->username,
                 'fullname' => $request->nama,
@@ -335,23 +356,30 @@ class UsersController extends Controller
     {
         DB::beginTransaction();
         try {    
-
-            $request->validate([
-                'username' => 'required|string',
-                'password' => 'required|string'
-            ]);
-
-            $user_query = User::where('username',$request->username)->first();
-
-            if(!$user_query){
-                throw new Exception('User Not Found');
+            $credentials = $request->only('username', 'password');
+            
+            if (!Auth::guard('web')->attempt($credentials)) {
+                return response()->json(['message' => 'Invalid Credential', 'status' => 401], 401);
             }
 
-            $user_query->update(['password' => bcrypt($request->password)]);
-          
+            $user = $request->user();
+
+            $user_query = User::where('id',$user->id)->first();
+
+            $user_query->update(['password' => $request->new_password]);
+            $user->tokens()->delete();
+    
             DB::commit();
-            ActivityLogger::logActivity($request,"Success",200);
+            // ActivityLogger::logActivity($request,"Success",200);
             return response()->json(['message' => 'change password successfully'], 200);
+        } catch (ModelNotFoundException $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($request,'Data Not Found',404);
+            return response()->json(['message' => 'Hr Employee Id Not Found', "status" => 404], 404);
+        }catch (QueryException $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($request,$e->getMessage(),409);
+            return response()->json(['message' => $e->getMessage(),"status" => 409], 409);
         } catch (\Exception $e) {
             DB::rollback();
             ActivityLogger::logActivity($request,$e->getMessage(),500);
