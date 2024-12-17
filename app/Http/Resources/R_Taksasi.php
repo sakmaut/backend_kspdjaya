@@ -5,6 +5,7 @@ namespace App\Http\Resources;
 use App\Models\M_TaksasiPrice;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\DB;
 
 class R_Taksasi extends JsonResource
 {
@@ -25,12 +26,22 @@ class R_Taksasi extends JsonResource
                                             return $item;
                                         });
 
+        $min_max_year = DB::table('taksasi_price')
+                            ->where('taksasi_id', $this->id)
+                            ->selectRaw('MIN(year) as min_year, MAX(year) as max_year')
+                            ->first();
+                                    
+        $min_year = $min_max_year->min_year;
+        $max_year = $min_max_year->max_year;              
+
         return [
            'id' => $this->id,
             "brand" => $this->brand,
             "code" => $this->code,
             "model" => $this->model,
             "descr" => $this->descr,
+            "dari" => (int)$min_year,
+            "sampai" => (int)$max_year,
             'price' => $taksasi_price
         ];
     }
