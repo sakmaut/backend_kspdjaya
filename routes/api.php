@@ -106,6 +106,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::resource('jaminan', BpkbController::class);
     Route::resource('jaminan_transaction', BpkbTransactionController::class);
     Route::post('change_password', [UsersController::class,'changePassword']);
+    Route::post('reset_password', [UsersController::class,'resetPassword']);
 
     Route::resource('position',HrPositionController::class);
     Route::post('checkCollateral', [Credit::class,'checkCollateral']);

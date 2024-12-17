@@ -387,4 +387,29 @@ class UsersController extends Controller
         }
     }
 
+    public function resetPassword(Request $request)
+    {
+        DB::beginTransaction();
+        try {    
+            $request->validate([
+                'username' => 'required|string'
+            ]);
+
+            $user_query = User::where('username',$request->username)->first();
+
+            if(!$user_query){
+                throw new Exception('User Not Found');
+            }
+
+            $user_query->update(['password' => bcrypt($request->username)]);
+    
+            DB::commit();
+            return response()->json(['message' => 'reset password successfully'], 200);
+        } catch (\Exception $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($request,$e->getMessage(),500);
+            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+        }
+    }
+
 }
