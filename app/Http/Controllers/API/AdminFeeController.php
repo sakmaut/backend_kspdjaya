@@ -343,7 +343,8 @@ class AdminFeeController extends Controller
             $pokok_pembayaran = ($plafond + $total);
 
             $eff_rate = $tenorData['eff_rate'];
-            $flat_rate = round($this->calculate_flat_interest($set_tenor, $eff_rate), 2);
+            // $flat_rate = round($this->calculate_flat_interest($set_tenor, $eff_rate), 2);
+            $flat_rate =(($set_tenor * (($eff_rate/100)/12)/(1-pow((1+(($eff_rate/100)/12)),(-$set_tenor))))-1)*(12/$set_tenor)*100;
             $interest_margin = intval(($flat_rate / 12) * $set_tenor * $pokok_pembayaran / 100);
 
             if (!in_array($set_tenor, ['6', '12', '18', '24'])) {
