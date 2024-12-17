@@ -18,7 +18,12 @@ class R_Taksasi extends JsonResource
 
         $taksasi_price = M_TaksasiPrice::where('taksasi_id', $this->id)
                                         ->select('year as name', 'price as harga')
-                                        ->get();
+                                        ->get()
+                                        ->map(function ($item) {
+                                            $item->name = (int) $item->name;
+                                            $item->harga = (int) $item->harga;
+                                            return $item;
+                                        });
 
         return [
            'id' => $this->id,
