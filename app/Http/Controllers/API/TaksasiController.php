@@ -185,10 +185,10 @@ class TaksasiController extends Controller
         try {
 
             $data_taksasi =[
-                'brand'=> $request->brand,
-                'code'=> $request->code,
-                'model'=> $request->model,
-                'descr'=> $request->descr,
+                'brand'=> strtoupper($request->brand),
+                'code'=> strtoupper($request->code),
+                'model'=> strtoupper($request->model),
+                'descr'=> strtoupper($request->descr),
                 'create_by'=>$request->user()->id,
                 'create_at'=>$this->timeNow
             ];
