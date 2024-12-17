@@ -228,12 +228,24 @@ class AdminFeeController extends Controller
         $returnSingle = $options['returnSingle'] ?? false;
         $specificTenor = $options['tenor'] ?? null;
         $plafond = $options['plafond'] ?? null;
+        $angsuran_type = $options['angsuran_type']??null;
 
         $build = [];
 
+        $tenorList = [
+            '3' => 6,
+            '6' => 12,
+            '12' => 18,
+            '18' => 24,
+        ];
+
         foreach ($data as $value) {
 
-            $strukturTenors = $this->buildStrukturBulanan($value->links, $specificTenor,$plafond);
+            if($angsuran_type === 'bulanan' ){
+                $strukturTenors = $this->buildStrukturBulanan($value->links, $specificTenor,$plafond);
+            }else{
+                $strukturTenors = $this->buildStrukturMusiman($value->links, $tenorList[$specificTenor],$plafond);
+            }  
             
             $item = [
                 'id' => $value->id,
@@ -243,7 +255,12 @@ class AdminFeeController extends Controller
             ];
 
             if ($specificTenor) {
-                $item += $strukturTenors["tenor_$specificTenor"];
+                if($angsuran_type === 'bulanan' ){
+                    $item += $strukturTenors["tenor_$specificTenor"];
+                }else{
+                    $tenorKey = $tenorList[$specificTenor]; 
+                    $item += $strukturTenors["tenor_$tenorKey"]; 
+                }
             } else {
                 $item += $strukturTenors;
             }
