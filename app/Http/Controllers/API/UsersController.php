@@ -355,37 +355,26 @@ class UsersController extends Controller
     public function changePassword(Request $request)
     {
         DB::beginTransaction();
-        try {    
-            $credentials = $request->only('username', 'password');
-            
-            if (!Auth::guard('web')->attempt($credentials)) {
-                return response()->json(['message' => 'Invalid Credential', 'status' => 401], 401);
+        try {
+            // Autentikasi pengguna
+            if (!Auth::guard('web')->attempt($request->only('username', 'password'))) {
+                return response()->json(['message' => 'Invalid Credential'], 401);
             }
-
-            $user = $request->user();
-
-            $user_query = User::where('id',$user->id)->first();
-
-            $user_query->update(['password' => $request->new_password]);
-            $user->tokens()->delete();
+    
+            // Perbarui kata sandi
+            $request->user()->update(['password' => bcrypt($request->new_password)]);
+            $request->user()->tokens()->delete();
     
             DB::commit();
-            // ActivityLogger::logActivity($request,"Success",200);
-            return response()->json(['message' => 'change password successfully'], 200);
-        } catch (ModelNotFoundException $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($request,'Data Not Found',404);
-            return response()->json(['message' => 'Hr Employee Id Not Found', "status" => 404], 404);
-        }catch (QueryException $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($request,$e->getMessage(),409);
-            return response()->json(['message' => $e->getMessage(),"status" => 409], 409);
+            ActivityLogger::logActivity($request, "Success", 200);
+            return response()->json(['message' => 'Kata sandi berhasil diperbarui'], 200);
         } catch (\Exception $e) {
             DB::rollback();
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage()], 500);
         }
     }
+    
 
     public function resetPassword(Request $request)
     {
