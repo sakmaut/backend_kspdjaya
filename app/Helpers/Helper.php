@@ -61,74 +61,48 @@ if (!function_exists('compareData')) {
 
 if (!function_exists('generateCode')) {
     function generateCode($request, $table, $column) {
-        // Get branch ID from the user request
         $branchId = $request->user()->branch_id;
-        
-        // Find branch based on the branch ID
         $branch = M_Branch::find($branchId);
     
         if (!$branch) {
-            throw new Exception("Branch not found.");
+            throw new Exception("Cabang tidak ditemukan.");
         }
     
-        // Get the branch code number
         $branchCodeNumber = $branch->CODE_NUMBER;
-    
-        // Retrieve the latest record from the table based on the column
         $latestRecord = DB::table($table)
             ->select($column)
-            ->where($column, 'like', $branchCodeNumber.'%') // Filters records with the branch code prefix
-            ->orderByRaw("CAST(SUBSTRING($column, LENGTH(?) + 1) AS UNSIGNED) DESC", [$branchCodeNumber]) // Use ? placeholder for safe substitution
+            ->where($column, 'like', $branchCodeNumber.'%')
+            ->orderByRaw("CAST(SUBSTRING($column, LENGTH(?)+1) AS UNSIGNED) DESC", [$branchCodeNumber])
             ->first();
     
-        // If latestRecord is null, start from 00001
-        $lastSequence = 1;
+        $lastSequence = $latestRecord ? (int) substr($latestRecord->$column, strlen($branchCodeNumber) + 7, 5) + 1 : 1;
     
-        if ($latestRecord) {
-            $lastSequence = (int) substr($latestRecord->$column, strlen($branchCodeNumber) + 7, 5) + 1;
-        }
-    
-        // Get current year and month
         $currentDate = Carbon::now();
         $year = $currentDate->format('y');
         $month = $currentDate->format('m');
     
-        // Generate the code based on the presence of the prefix
-        $generateCode = sprintf("%s%s%s%05d", $branchCodeNumber, $year, $month, $lastSequence);
-    
-        return $generateCode;
+        return sprintf("%s%s%s%05d", $branchCodeNumber, $year, $month, $lastSequence);
     }
 }
 
 if (!function_exists('generateCustCode')) {
     function generateCustCode($request, $table, $column) {
-        $branchId = $request->user()->branch_id;
-        $branch = M_Branch::find($branchId);
-    
+        $branch = M_Branch::find($request->user()->branch_id);
+        
         if (!$branch) {
-            throw new Exception("Branch not found.");
+            throw new Exception("Cabang tidak ditemukan.");
         }
     
         $branchCodeNumber = $branch->CODE_NUMBER;
-    
         $latestRecord = DB::table($table)
-                            ->select($column)
-                            ->where($column, 'like', $branchCodeNumber.'%') // Filters records with the branch code prefix
-                            ->orderByRaw("CAST(SUBSTRING($column, LENGTH(?) + 1) AS UNSIGNED) DESC", [$branchCodeNumber]) // Use ? placeholder for safe substitution
-                            ->first();
-
-
-        $lastSequence = 1;
-
-        if ($latestRecord) {
-            $lastSequence = (int) substr($latestRecord->$column, strlen($branchCodeNumber) + 3, 5) + 1;
-        }
+            ->where($column, 'like', $branchCodeNumber.'%')
+            ->orderByRaw("CAST(SUBSTRING($column, LENGTH(?) + 1) AS UNSIGNED) DESC", [$branchCodeNumber])
+            ->first();
     
-
-        $generateCode = sprintf("%s%05d", $branchCodeNumber, $lastSequence);
+        $lastSequence = ($latestRecord ? (int) substr($latestRecord->$column, strlen($branchCodeNumber) + 3, 5) : 0) + 1;
     
-        return $generateCode;
-    }
+        return sprintf("%s%05d", $branchCodeNumber, $lastSequence);
+    }     
 }
 
 
