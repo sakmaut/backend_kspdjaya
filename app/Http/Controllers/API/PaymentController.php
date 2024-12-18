@@ -396,7 +396,7 @@ class PaymentController extends Controller
     {
         return [
             "no_transaksi" => $no_inv,
-            'cust_code' => $customer_detail['cust_code'],
+            'cust_code' => $customer_detail['CUST_CODE'],
             'nama' => $customer_detail['NAME'],
             'alamat' => $customer_detail['ADDRESS'],
             'rt' => $customer_detail['RT'],
