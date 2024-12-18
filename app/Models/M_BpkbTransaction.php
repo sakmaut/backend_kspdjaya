@@ -12,6 +12,7 @@ class M_BpkbTransaction extends Model
     protected $table = 'bpkb_transaction';
     protected $fillable = [
         'ID',
+        'TRX_CODE',
         'FROM_BRANCH',
         'TO_BRANCH',
         'CATEGORY',

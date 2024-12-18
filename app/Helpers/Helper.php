@@ -85,6 +85,40 @@ if (!function_exists('generateCode')) {
     }
 }
 
+if (!function_exists('generateCodePrefix')) {
+    function generateCodePrefix($request, $table, $column, $prefix) {
+        // Get the branch ID and find the branch
+        $branchId = $request->user()->branch_id;
+        $branch = M_Branch::findOrFail($branchId);
+        $branchCodeNumber = $branch->CODE_NUMBER;
+    
+        // Handle null prefix with a default empty string
+        $prefix = $prefix ?? '';
+    
+        // Calculate total prefix length including hyphen
+        $prefixWithHyphen = $prefix . '-';
+    
+        // Query to find the latest record, ensuring proper numerical sorting
+        $latestRecord = DB::table($table)
+            ->select($column)
+            ->where($column, 'like', '%' . $branchCodeNumber . '%')
+            ->orderByRaw("CAST(SUBSTRING($column, -5) AS UNSIGNED) DESC")
+            ->first();
+    
+        // Extract last sequence dynamically based on calculated prefix length
+        $lastSequence = $latestRecord 
+            ? (int) substr($latestRecord->$column, -5) + 1 
+            : 1;
+    
+        // Current date
+        $year = date('y');
+        $month = date('m');
+    
+        // Generate and return the code
+        return sprintf("%s%s%s%s%05d", $prefixWithHyphen, $branchCodeNumber, $year, $month, $lastSequence);
+    }
+}
+
 if (!function_exists('generateCustCode')) {
     function generateCustCode($request, $table, $column) {
         $branch = M_Branch::find($request->user()->branch_id);

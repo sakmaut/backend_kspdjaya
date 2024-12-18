@@ -31,6 +31,7 @@ class R_BpkbList extends JsonResource
 
         return [
             "id" => $this->ID,
+            "trx_code" =>$this->TRX_CODE ??null,
             "dari_cabang" =>$branch->NAME ??null,
             "ke_cabang" =>  $this->TO_BRANCH,
             "keterangan" => $this->NOTE,

@@ -125,6 +125,7 @@ class BpkbTransactionController extends Controller
                 }
             }else{
                 $data = [
+                    'TRX_CODE' => generateCodePrefix($request, 'bpkb_transaction', 'TRX_CODE','JMN'),
                     'FROM_BRANCH' => $branch,
                     'TO_BRANCH' => $request->tujuan,
                     'CATEGORY' => $request->type??null,
@@ -158,19 +159,12 @@ class BpkbTransactionController extends Controller
                             'ID' => Uuid::uuid7()->toString(),
                             'BPKB_TRANSACTION_ID' => $transaction->ID,
                             'COLLATERAL_ID' => $res['id'],
+                            'STATUS' => 'SENDING'
                         ];
                         $collateralIds[] = $res['id'];
                     }
     
                     M_BpkbDetail::insert($details);
-    
-                    // Retrieve all collaterals in one query
-                    // $collaterals = M_CrCollateral::whereIn('ID', $collateralIds)->get();
-            
-                    // // Update collaterals
-                    // foreach ($collaterals as $collateral) {
-                    //     $collateral->update(['LOCATION_BRANCH' => $request->tujuan]);
-                    // }
                 }
         
             }
