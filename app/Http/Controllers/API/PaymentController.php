@@ -58,23 +58,30 @@ class PaymentController extends Controller
 
             $request->merge(['approval' => 'approve']);
 
-            // Process payment structures
+            $addAnsguran = [];
+
             if (isset($request->struktur) && is_array($request->struktur)) {
+
+                // Collect all unique installments and ensure they are sequential
+                $addAnsguran = array_map(fn($res) => $res['angsuran_ke'], $request->struktur);
+                $uniqueInstallments = array_unique($addAnsguran);
+                sort($uniqueInstallments);
+                
+                $isSequential = $uniqueInstallments === range(1, count($uniqueInstallments));
+                if (!$isSequential) {
+                    throw new \Exception("Installments tidak berurutan: " . implode(', ', $addAnsguran));
+                }
+            
+                // Process each installment
                 foreach ($request->struktur as $res) {
                     $check_method_payment = strtolower($request->payment_method) === 'cash';
-
-                    // Fetch credit and customer details once
+                    
                     $credit = M_Credit::where('LOAN_NUMBER', $res['loan_number'])->firstOrFail();
                     $detail_customer = M_Customer::where('CUST_CODE', $credit->CUST_CODE)->firstOrFail();
-                    $customer_detail =$this->setCustomerDetail($detail_customer);
-
-                    $pembayaran[] = [
-                        'installment' => $res['angsuran_ke'],
-                        'title' => 'Angsuran Ke-' . $res['angsuran_ke']
-                    ];
+                    $this->setCustomerDetail($detail_customer);
             
-                    // Set customer details
-                    $save_kwitansi_detail = [
+                    // Save Kwitansi Detail
+                    M_KwitansiStructurDetail::create([
                         "no_invoice" => $no_inv,
                         "key" => $res['key'],
                         'angsuran_ke' => $res['angsuran_ke'],
@@ -90,12 +97,11 @@ class PaymentController extends Controller
                         "total_bayar" => $res['total_bayar'],
                         "flag" => '',
                         "denda" => $res['denda']
-                    ];
+                    ]);
             
-                    M_KwitansiStructurDetail::create($save_kwitansi_detail);
-
+                    // Handle payment processing
                     if ($check_method_payment) {
-                        $this->processPaymentStructure($res, $request, $getCodeBranch, $no_inv,'PAID');
+                        $this->processPaymentStructure($res, $request, $getCodeBranch, $no_inv, 'PAID');
                     } else {
                         $tgl_angsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
                         M_CreditSchedule::where([
@@ -105,8 +111,7 @@ class PaymentController extends Controller
                     }
                 }
             }
-
-            // // Save main kwitansi record
+            
             $this->saveKwitansi($request, $customer_detail, $no_inv);
             $this->updateTunggakkanBunga($request);
 
