@@ -69,7 +69,7 @@ class PaymentController extends Controller
                 
                 $isSequential = $uniqueInstallments === range(1, count($uniqueInstallments));
                 if (!$isSequential) {
-                    throw new \Exception("Installments tidak berurutan: " . implode(', ', $addAnsguran));
+                    return response()->json("Installments tidak berurutan: " . implode(', ', $addAnsguran), 200);
                 }
             
                 // Process each installment
