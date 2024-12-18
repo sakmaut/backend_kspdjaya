@@ -62,24 +62,43 @@ class PaymentController extends Controller
 
             if (isset($request->struktur) && is_array($request->struktur)) {
 
-                // Collect all unique installments and ensure they are sequential
                 $addAnsguran = array_map(fn($res) => $res['angsuran_ke'], $request->struktur);
                 $uniqueInstallments = array_unique($addAnsguran);
                 sort($uniqueInstallments);
                 
-                $isSequential = $uniqueInstallments === range(1, count($uniqueInstallments));
+                // Get the minimum value of the installments to compare the sequence
+                $minInstallment = min($uniqueInstallments);
+                $isSequential = $uniqueInstallments === range($minInstallment, $minInstallment + count($uniqueInstallments) - 1);
+                
                 if (!$isSequential) {
-                    return response()->json("Installments tidak berurutan: " . implode(', ', $addAnsguran), 200);
+                    throw new Exception("Installments tidak berurutan: " . implode(', ', $addAnsguran));
                 }
-            
+                
                 // Process each installment
                 foreach ($request->struktur as $res) {
                     $check_method_payment = strtolower($request->payment_method) === 'cash';
+
+                    if ($res['angsuran_ke'] && $res['angsuran_ke'] != 1) {
+                        $previousAngsuranKe = $res['angsuran_ke'] - 1;
+
+                        $checkBeforeInstallment = M_KwitansiStructurDetail::where('loan_number', $res['loan_number'])
+                                                          ->where('angsuran_ke', $previousAngsuranKe)
+                                                          ->first();
+
+                        if (!$checkBeforeInstallment) {
+                            throw new Exception("Installment {$previousAngsuranKe} not found. Cannot process installment {$res['angsuran_ke']}.");
+                        }
+                    }
                     
-                    $credit = M_Credit::where('LOAN_NUMBER', $res['loan_number'])->firstOrFail();
+                    $credit = M_Credit::where('LOAN_NUMBER', $res['loan_number'])->first();
+
+                    if (!$credit) {
+                        throw new Exception('Loan Number No Exist in Record');
+                    }
+
                     $detail_customer = M_Customer::where('CUST_CODE', $credit->CUST_CODE)->firstOrFail();
                     $this->setCustomerDetail($detail_customer);
-            
+
                     // Save Kwitansi Detail
                     M_KwitansiStructurDetail::create([
                         "no_invoice" => $no_inv,
@@ -115,16 +134,11 @@ class PaymentController extends Controller
             $this->saveKwitansi($request, $customer_detail, $no_inv);
             $this->updateTunggakkanBunga($request);
 
-            // // Build response
             $build = $this->buildResponse($request, $customer_detail, $pembayaran, $no_inv, $created_now);
 
             DB::commit();
             ActivityLogger::logActivity($request, "Success", 200);
             return response()->json($build, 200);
-        }catch (QueryException $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($request,$e->getMessage(),409);
-            return response()->json(['message' => $e->getMessage()], 409);
         } catch (\Exception $e) {
             DB::rollback();
             ActivityLogger::logActivity($request,$e->getMessage(),500);
