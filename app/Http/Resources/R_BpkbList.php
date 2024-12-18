@@ -22,11 +22,22 @@ class R_BpkbList extends JsonResource
 
         $branch = M_Branch::where('ID',$this->FROM_BRANCH)->first();
         $results = DB::table('bpkb_detail as a')
-                    ->leftJoin('cr_collateral as b','b.ID', '=', 'a.COLLATERAL_ID')
-                    ->leftJoin('credit as c','c.ID', '=', 'b.CR_CREDIT_ID')
-                    ->where('a.BPKB_TRANSACTION_ID', $this->ID)
-                    ->select('b.ID as id','b.POLICE_NUMBER', 'b.ON_BEHALF', 'b.CHASIS_NUMBER', 'b.ENGINE_NUMBER', 'b.BPKB_NUMBER', 'b.STNK_NUMBER','a.STATUS','c.LOAN_NUMBER')
-                    ->get();
+                        ->leftJoin('cr_collateral as b', 'b.ID', '=', 'a.COLLATERAL_ID')
+                        ->leftJoin('credit as c', 'c.ID', '=', 'b.CR_CREDIT_ID')
+                        ->where('a.BPKB_TRANSACTION_ID', $this->ID)
+                        ->select(
+                            'b.ID as id', 
+                            'b.POLICE_NUMBER', 
+                            'b.ON_BEHALF', 
+                            'b.CHASIS_NUMBER', 
+                            'b.ENGINE_NUMBER', 
+                            'b.BPKB_NUMBER', 
+                            'b.STNK_NUMBER',
+                            'a.STATUS', 
+                            'c.LOAN_NUMBER'
+                        )
+                        ->get();
+    
 
         $user = User::where('id',$this->CREATED_BY)->first();
 

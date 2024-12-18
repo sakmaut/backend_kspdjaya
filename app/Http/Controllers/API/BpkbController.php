@@ -33,22 +33,24 @@ class BpkbController extends Controller
             $data = [];
             foreach ($collateral as $list) {
 
-                $surveyId = M_CrApplication::select('CR_SURVEY_ID', 'credit.ORDER_NUMBER','customer.NAME')
-                            ->join('credit', 'cr_application.ORDER_NUMBER', '=', 'credit.ORDER_NUMBER')
-                            ->join('customer', 'credit.CUST_CODE', '=', 'customer.CUST_CODE')
-                            ->where('credit.ID', $list->CR_CREDIT_ID)
+                $surveyId = DB::table('credit as a')
+                            ->leftJoin('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
+                            ->leftJoin('cr_collateral as c', 'c.CR_CREDIT_ID', '=', 'a.ID')
+                            ->leftJoin('bpkb_detail as d', 'd.COLLATERAL_ID', '=', 'c.ID')
+                            ->select('a.LOAN_NUMBER', 'b.NAME', 'd.STATUS')
+                            ->where('a.ID', '=', $list->CR_CREDIT_ID)
                             ->first();
-
+                        
                 $asalBranch = M_Branch::find($list->COLLATERAL_FLAG);
                 $brachName = M_Branch::find($list->LOCATION_BRANCH);
 
                 $data[] = [
                     "type" => "kendaraan",
                     'nama_debitur' => $surveyId->NAME??NULL,
-                    'order_number' => $surveyId->ORDER_NUMBER??NULL,
+                    'order_number' => $surveyId->LOAN_NUMBER??NULL,
                     'no_jaminan' => $list->BPKB_NUMBER??NULL,
                     'id' => $list->ID,
-                    'status_jaminan' => $list->STATUS,
+                    'status_jaminan' => $surveyId->STATUS,
                     "tipe" => $list->TYPE,
                     "merk" => $list->BRAND,
                     "tahun" => $list->PRODUCTION_YEAR,
@@ -69,21 +71,23 @@ class BpkbController extends Controller
     
             foreach ($collateral_sertificat as $list) {
 
-                $surveyId = M_CrApplication::select('CR_SURVEY_ID', 'credit.ORDER_NUMBER','customer.NAME')
-                                            ->join('credit', 'cr_application.ORDER_NUMBER', '=', 'credit.ORDER_NUMBER')
-                                            ->join('customer', 'credit.CUST_CODE', '=', 'customer.CUST_CODE')
-                                            ->where('credit.ID', $list->CR_CREDIT_ID)
-                                            ->first();
+                $surveyId = DB::table('credit as a')
+                                ->leftJoin('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
+                                ->leftJoin('cr_collateral as c', 'c.CR_CREDIT_ID', '=', 'a.ID')
+                                ->leftJoin('bpkb_detail as d', 'd.COLLATERAL_ID', '=', 'c.ID')
+                                ->select('a.LOAN_NUMBER', 'b.NAME', 'd.STATUS')
+                                ->where('a.ID', '=', $list->CR_CREDIT_ID)
+                                ->first();
                 
                 $brachName = M_Branch::find($list->LOCATION_BRANCH);
 
                 $data[] = [
                     "type" => "sertifikat",
                     'nama_debitur' => $surveyId->NAME??NULL,
-                    'order_number' => $surveyId->ORDER_NUMBER??NULL,
+                    'order_number' => $surveyId->LOAN_NUMBER??NULL,
                     'no_jaminan' => $list->NO_SERTIFIKAT??NULL,
                     'id' => $list->ID,
-                    'status_jaminan' => $list->STATUS,
+                    'status_jaminan' => $surveyId->STATUS,
                     "no_sertifikat" => $list->NO_SERTIFIKAT,
                     "status_kepemilikan" => $list->STATUS_KEPEMILIKAN,
                     "imb" => $list->IMB,
