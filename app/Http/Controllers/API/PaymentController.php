@@ -131,10 +131,10 @@ class PaymentController extends Controller
                 }
             }
             
-            $this->saveKwitansi($request, $customer_detail, $no_inv);
+            $this->saveKwitansi($request, $detail_customer, $no_inv);
             $this->updateTunggakkanBunga($request);
 
-            $build = $this->buildResponse($request, $customer_detail, $pembayaran, $no_inv, $created_now);
+            $build = $this->buildResponse($request, $detail_customer, $pembayaran, $no_inv, $created_now);
 
             DB::commit();
             ActivityLogger::logActivity($request, "Success", 200);
@@ -360,6 +360,7 @@ class PaymentController extends Controller
 
     private function saveKwitansi($request, $customer_detail, $no_inv)
     {
+
         $save_kwitansi = [
             "PAYMENT_TYPE" => 'angsuran',
             "PAYMENT_ID" => $request->uid,
@@ -367,16 +368,16 @@ class PaymentController extends Controller
             "NO_TRANSAKSI" => $no_inv,
             "LOAN_NUMBER" => $request->no_facility ?? null,
             "TGL_TRANSAKSI" => Carbon::now()->format('d-m-Y'),
-            'CUST_CODE' => $customer_detail['cust_code'],
+            'CUST_CODE' => $customer_detail['CUST_CODE'],
             'BRANCH_CODE' => $request->user()->branch_id,
-            'NAMA' => $customer_detail['nama'],
-            'ALAMAT' => $customer_detail['alamat'],
-            'RT' => $customer_detail['rt'],
-            'RW' => $customer_detail['rw'],
-            'PROVINSI' => $customer_detail['provinsi'],
-            'KOTA' => $customer_detail['kota'],
-            'KELURAHAN' => $customer_detail['kelurahan'],
-            'KECAMATAN' => $customer_detail['kecamatan'],
+            'NAMA' => $customer_detail['NAME'],
+            'ALAMAT' => $customer_detail['ADDRESS'],
+            'RT' => $customer_detail['RT'],
+            'RW' => $customer_detail['RW'],
+            'PROVINSI' => $customer_detail['PROVINCE'],
+            'KOTA' => $customer_detail['CITY'],
+            'KELURAHAN' => $customer_detail['KELURAHAN'],
+            'KECAMATAN' => $customer_detail['KECAMATAN'],
             "METODE_PEMBAYARAN" => $request->payment_method ?? null,
             "TOTAL_BAYAR" => $request->total_bayar ?? null,
             "DISKON" => $request->diskon_tunggakan ?? null,
@@ -396,14 +397,14 @@ class PaymentController extends Controller
         return [
             "no_transaksi" => $no_inv,
             'cust_code' => $customer_detail['cust_code'],
-            'nama' => $customer_detail['nama'],
-            'alamat' => $customer_detail['alamat'],
-            'rt' => $customer_detail['rt'],
-            'rw' => $customer_detail['rw'],
-            'provinsi' => $customer_detail['provinsi'],
-            'kota' => $customer_detail['kota'],
-            'kelurahan' => $customer_detail['kelurahan'],
-            'kecamatan' => $customer_detail['kecamatan'],
+            'nama' => $customer_detail['NAME'],
+            'alamat' => $customer_detail['ADDRESS'],
+            'rt' => $customer_detail['RT'],
+            'rw' => $customer_detail['RW'],
+            'provinsi' => $customer_detail['PROVINCE'],
+            'kota' => $customer_detail['CITY'],
+            'kelurahan' => $customer_detail['KELURAHAN'],
+            'kecamatan' => $customer_detail['KECAMATAN'],
             "tgl_transaksi" => Carbon::now()->format('d-m-Y'),
             "payment_method" => $request->payment_method,
             "nama_bank" => $request->nama_bank,
