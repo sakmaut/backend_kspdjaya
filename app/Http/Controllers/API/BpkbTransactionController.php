@@ -248,7 +248,7 @@ class BpkbTransactionController extends Controller
                 'ONCHARGE_APPRVL' => $approvalData['code'],
                 'ONCHARGE_PERSON' => $request->user()->id,
                 'ONCHARGE_TIME' => Carbon::now(),
-                'ONCHARGE_DESCR' => '',
+                'ONCHARGE_DESCR' => $request->keterangan??'',
                 'APPROVAL_RESULT' => $approvalData['result']
             ];
              
