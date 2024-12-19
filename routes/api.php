@@ -33,7 +33,6 @@ Route::get('welcome', [Welcome::class, 'index']);
 
 Route::middleware(['auth:sanctum', 'check.access'])->group(function () {
     Route::resource('users', UsersController::class)->only(['index']);
-    Route::resource('cabang', BranchController::class)->only(['index']);
     Route::resource('cr_application', CrAppilcationController::class)->only(['index']);
     Route::resource('kunjungan', CrSurveyController::class)->only(['index']);
     Route::get('kunjungan_admin', [CrAppilcationController::class, 'showAdmins']);
@@ -55,7 +54,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('image_upload_employee', [UsersController::class, 'uploadImage']);
 
     // Route Group Branch
-    Route::resource('cabang', BranchController::class)->except(['index']);
+    Route::resource('cabang', BranchController::class);
 
     // Route Group Cr Application
     Route::resource('cr_application', CrAppilcationController::class)->except(['index']);
