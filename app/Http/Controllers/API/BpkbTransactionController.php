@@ -229,7 +229,7 @@ class BpkbTransactionController extends Controller
                     // Perform a single update for all collaterals
                     if (!empty($collateralIds)) {
                         M_CrCollateral::whereIn('ID', $collateralIds)
-                            ->update(['LOCATION_BRANCH' => 'HO']);
+                            ->update(['LOCATION_BRANCH' => $request->user()->branch_id]);
                     }
                 }
             }
