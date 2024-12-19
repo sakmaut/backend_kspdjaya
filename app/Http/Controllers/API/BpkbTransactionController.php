@@ -47,7 +47,7 @@ class BpkbTransactionController extends Controller
         DB::beginTransaction();
         try {
 
-            if(empty($request->bpkb) && !is_array($request->bpkb)){
+            if (!isset($request->bpkb) || empty($request->bpkb)) {
                 throw new Exception("bpkb not found!!!");
             }
 
