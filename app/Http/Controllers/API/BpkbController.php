@@ -25,7 +25,7 @@ class BpkbController extends Controller
                                     ->orWhere('DELETED_AT', '');
                             })->get(); 
 
-            $collateral_sertificat = M_CrCollateralSertification::where('LOCATION_BRANCH',$branch)->where(function($query) {
+            $collateral_sertificat = M_CrCollateralSertification::where('LOCATION',$branch)->where(function($query) {
                                         $query->whereNull('DELETED_AT')
                                             ->orWhere('DELETED_AT', '');
                                     })->get(); 
