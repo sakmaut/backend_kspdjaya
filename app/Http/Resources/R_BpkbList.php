@@ -40,12 +40,13 @@ class R_BpkbList extends JsonResource
     
 
         $user = User::where('id',$this->CREATED_BY)->first();
+        $toBranch = M_Branch::find($this->TO_BRANCH);
 
         return [
             "id" => $this->ID,
             "trx_code" =>$this->TRX_CODE ??null,
             "dari_cabang" =>$branch->NAME ??null,
-            "ke_cabang" =>  $this->TO_BRANCH,
+            "ke_cabang" =>  $toBranch->NAME??null,
             "keterangan" => $this->NOTE,
             "type" => strtoupper($this->CATEGORY),
             "admin" => $user->fullname??null,
