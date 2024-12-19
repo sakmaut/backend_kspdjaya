@@ -26,7 +26,7 @@ class R_BpkbList extends JsonResource
                         ->leftJoin('credit as c', 'c.ID', '=', 'b.CR_CREDIT_ID')
                         ->where('a.BPKB_TRANSACTION_ID', $this->ID)
                         ->select(
-                            'b.ID as id', 
+                            'a.ID as id', 
                             'b.POLICE_NUMBER', 
                             'b.ON_BEHALF', 
                             'b.CHASIS_NUMBER', 
