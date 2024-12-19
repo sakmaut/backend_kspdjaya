@@ -202,34 +202,37 @@ class BpkbTransactionController extends Controller
                 throw new Exception("no surat is not found.", 404);
             }
 
-            $check->update([
-                'STATUS' => 'NORMAL',
-            ]);
+            $flag = $request->flag;
 
-            if(!empty($request->bpkb) && is_array($request->bpkb)){
-    
-                foreach ($request->bpkb as $res) {
+            if($flag == 'yes'){
 
-                    $bpkbDetail  = M_BpkbDetail::where('ID', $res['id'])->first();
+                $check->update([
+                    'STATUS' => 'NORMAL',
+                ]);
 
-                    if (!$bpkbDetail) {
-                        throw new Exception("bpkb detail is not found.", 404);
-                    }
-
-                    $bpkbDetail->update([
-                        'STATUS' => 'NORMAL'
-                    ]);
-
-                    if($res['flag'] == 'check'){
-                        M_CrCollateral::where('ID', $bpkbDetail->COLLATERAL_ID)
-                            ->update([
-                                'LOCATION_BRANCH' => 'HO'
-                            ]);
+                if (!empty($request->jaminan) && is_array($request->jaminan)) {
+                    // Get the transaction ID once
+                    $transactionId = $check->ID;
+                    
+                    // Batch update BPKB details to NORMAL status
+                    M_BpkbDetail::where('BPKB_TRANSACTION_ID', $transactionId)
+                        ->update(['STATUS' => 'NORMAL']);
+                    
+                    // Fetch all relevant BPKB details in a single query
+                    $bpkbDetails = M_BpkbDetail::whereIn('ID', $request->jaminan)
+                        ->select('ID', 'COLLATERAL_ID')
+                        ->get();
+                    
+                    // Extract all collateral IDs
+                    $collateralIds = $bpkbDetails->pluck('COLLATERAL_ID')->toArray();
+                    
+                    // Perform a single update for all collaterals
+                    if (!empty($collateralIds)) {
+                        M_CrCollateral::whereIn('ID', $collateralIds)
+                            ->update(['LOCATION_BRANCH' => 'HO']);
                     }
                 }
             }
-
-            $flag = $request->flag;
     
             $approvalDataMap = [
                 'yes' => ['code' => 'APHO', 'result' => 'disetujui ho'],
