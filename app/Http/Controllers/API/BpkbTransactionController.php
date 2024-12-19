@@ -216,7 +216,7 @@ class BpkbTransactionController extends Controller
                     
                     // Batch update BPKB details to NORMAL status
                     M_BpkbDetail::where('BPKB_TRANSACTION_ID', $transactionId)
-                        ->update(['STATUS' => 'NORMAL']);
+                        ->update(['STATUS' => 'SELESAI']);
                     
                     // Fetch all relevant BPKB details in a single query
                     $bpkbDetails = M_BpkbDetail::whereIn('ID', $request->jaminan)

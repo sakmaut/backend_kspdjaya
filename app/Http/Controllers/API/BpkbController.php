@@ -64,7 +64,7 @@ class BpkbController extends Controller
                     "tgl_stnk" => $list->STNK_VALID_DATE,
                     "nilai" => (int) $list->VALUE,
                     "asal_lokasi" => $asalBranch->NAME??null,
-                    "lokasi" => $brachName->NAME??null,
+                    "lokasi" => $brachName->NAME??$list->LOCATION_BRANCH,
                     "document" => $this->getCollateralDocument($list->ID, ['no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri'])??null,
                 ];    
             }
