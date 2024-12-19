@@ -16,7 +16,7 @@ class R_DetailProfile extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $branch = M_Branch::find($request->user()->id);
+        $branch = M_Branch::find($request->user()->branch_id);
         
         return [
             'id' => $request->user()->id,
