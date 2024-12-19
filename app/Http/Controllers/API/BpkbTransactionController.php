@@ -46,6 +46,11 @@ class BpkbTransactionController extends Controller
     {
         DB::beginTransaction();
         try {
+
+            if(empty($request->bpkb) && !is_array($request->bpkb)){
+                throw new Exception("bpkb not found!!!");
+            }
+
             $user = $request->user();
             $position = $user->position??null;
             $branch = $user->branch_id??null;
