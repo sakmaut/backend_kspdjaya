@@ -219,11 +219,13 @@ class BpkbTransactionController extends Controller
                     $bpkbDetail->update([
                         'STATUS' => 'NORMAL'
                     ]);
-                
-                    M_CrCollateral::where('ID', $bpkbDetail->COLLATERAL_ID)
-                        ->update([
-                            'LOCATION_BRANCH' => 'HO'
-                        ]);
+
+                    if($res['flag'] == 'check'){
+                        M_CrCollateral::where('ID', $bpkbDetail->COLLATERAL_ID)
+                            ->update([
+                                'LOCATION_BRANCH' => 'HO'
+                            ]);
+                    }
                 }
             }
 
