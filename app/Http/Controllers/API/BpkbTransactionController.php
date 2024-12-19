@@ -188,35 +188,73 @@ class BpkbTransactionController extends Controller
         }
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function approval(Request $request)
     {
-        //
-    }
+        try {
+            $request->validate([
+                'no_surat' => 'required|string',
+                'flag' => 'required|string',
+            ]);
+     
+            $check = M_BpkbTransaction::where('TRX_CODE', $request->no_surat)->first();
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
+            if (!$check) {
+                throw new Exception("no surat is not found.", 404);
+            }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
+            $check->update([
+                'STATUS' => 'NORMAL',
+            ]);
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+            if(!empty($request->bpkb) && is_array($request->bpkb)){
+    
+                foreach ($request->bpkb as $res) {
+
+                    $bpkbDetail  = M_BpkbDetail::where('ID', $res['id'])->first();
+
+                    if (!$bpkbDetail) {
+                        throw new Exception("bpkb detail is not found.", 404);
+                    }
+
+                    $bpkbDetail->update([
+                        'STATUS' => 'NORMAL'
+                    ]);
+                
+                    M_CrCollateral::where('ID', $bpkbDetail->COLLATERAL_ID)
+                        ->update([
+                            'LOCATION_BRANCH' => 'HO'
+                        ]);
+                }
+            }
+
+            $flag = $request->flag;
+    
+            $approvalDataMap = [
+                'yes' => ['code' => 'APHO', 'result' => 'disetujui ho'],
+                'revisi' => ['code' => 'REORHO', 'result' => 'ada revisi ho'],
+                'no' => ['code' => 'CLHO', 'result' => 'dibatalkan ho'],
+            ];
+    
+            $approvalData = $approvalDataMap[$flag] ?? $approvalDataMap['no'];
+
+            $data_log = [
+                'ID' => Uuid::uuid7()->toString(),
+                'BPKB_TRANSACTION_ID' => $check->ID,
+                'ONCHARGE_APPRVL' => $approvalData['code'],
+                'ONCHARGE_PERSON' => $request->user()->id,
+                'ONCHARGE_TIME' => Carbon::now(),
+                'ONCHARGE_DESCR' => '',
+                'APPROVAL_RESULT' => $approvalData['result']
+            ];
+             
+            M_BpkbApproval::create($data_log);
+    
+            // Return success response
+            return response()->json(['message' => 'Approval Successfully'], 200);
+    
+        } catch (\Exception $e) {
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), 'status' => 500], 500);
+        }
     }
 }
