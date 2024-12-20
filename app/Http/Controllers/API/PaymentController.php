@@ -47,7 +47,7 @@ class PaymentController extends Controller
         try {
 
             $created_now = Carbon::now();
-            $no_inv = generateCode($request, 'kwitansi', 'NO_TRANSAKSI', 'INV');
+            $no_inv = generateCodeKwitansi($request, 'kwitansi', 'NO_TRANSAKSI', 'INV');
 
             // Fetch branch information
             $getCodeBranch = M_Branch::findOrFail($request->user()->branch_id);
