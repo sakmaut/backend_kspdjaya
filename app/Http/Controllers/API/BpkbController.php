@@ -218,12 +218,16 @@ class BpkbController extends Controller
 
             $branch = $request->user()->branch_id;
 
-            $collateral = M_CrCollateral::where('COLLATERAL_FLAG',$branch)->where(function($query) {
+            $collateral = M_CrCollateral::where('COLLATERAL_FLAG',$branch)
+                                ->where('LOCATION_BRANCH', '<>', $branch)
+                                ->where(function($query) {
                                 $query->whereNull('DELETED_AT')
                                     ->orWhere('DELETED_AT', '');
                             })->get(); 
 
-            $collateral_sertificat = M_CrCollateralSertification::where('COLLATERAL_FLAG',$branch)->where(function($query) {
+            $collateral_sertificat = M_CrCollateralSertification::where('COLLATERAL_FLAG',$branch)
+                                        ->where('LOCATION', '<>', $branch)
+                                        ->where(function($query) {
                                         $query->whereNull('DELETED_AT')
                                             ->orWhere('DELETED_AT', '');
                                     })->get(); 
