@@ -13,7 +13,18 @@ class ListBanController extends Controller
         try {
             $arusKas = $this->queryArusKas();
 
-            return response()->json($arusKas, 200);
+            $datas = array_map(function($list) {
+                return [
+                    'JENIS' => $list->JENIS,
+                    'TYPE' => $list->JENIS == 'PENCAIRAN'?"MASUK":"KELUAR",
+                    'BRANCH' => $list->BRANCH,
+                    'ENTRY_DATE' => $list->ENTRY_DATE,
+                    'ORIGINAL_AMOUNT' => $list->ORIGINAL_AMOUNT
+                ];
+            }, $arusKas);
+
+            
+            return response()->json($datas, 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
