@@ -30,7 +30,7 @@ class ListBanController extends Controller
                     'JENIS' => $list->JENIS,
                     'TYPE' => $list->JENIS == 'PENCAIRAN'?"CASH-OUT":"CASH-IN",
                     'BRANCH' => $branch->NAME??null,
-                    'ENTRY_DATE' => $list->ENTRY_DATE,
+                    'ENTRY_DATE' => date('Y-m-d',strtotime($list->ENTRY_DATE)),
                     'ORIGINAL_AMOUNT' => floatval($list->ORIGINAL_AMOUNT)
                 ];
             }, $arusKas);
