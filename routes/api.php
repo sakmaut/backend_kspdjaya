@@ -114,7 +114,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::resource('position',HrPositionController::class);
     Route::post('checkCollateral', [Credit::class,'checkCollateral']);
 
-    Route::resource('listBan',ListBanController::class);
+    Route::resource('arus_kas',ListBanController::class);
 });
 
 

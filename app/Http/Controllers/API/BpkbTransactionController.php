@@ -64,19 +64,34 @@ class BpkbTransactionController extends Controller
             }
 
             $user = $request->user();
-            $position = $user->position??null;
             $branch = $user->branch_id??null;
 
-            $data = [
-                'TRX_CODE' => generateCodePrefix($request, 'bpkb_transaction', 'TRX_CODE','JMN'),
-                'FROM_BRANCH' => $branch,
-                'TO_BRANCH' => $request->tujuan,
-                'CATEGORY' => $request->type??null,
-                'NOTE' => $request->catatan,
-                'STATUS' => 'SENDING',
-                'COURIER' => $request->kurir??null,
-                'CREATED_BY' => $user->id
-            ];
+            if($request->type == 'send'){
+                $data = [
+                    'TRX_CODE' => generateCodePrefix($request, 'bpkb_transaction', 'TRX_CODE','JMN'),
+                    'FROM_BRANCH' => $branch,
+                    'TO_BRANCH' => $request->tujuan,
+                    'CATEGORY' => $request->type??null,
+                    'NOTE' => $request->catatan,
+                    'STATUS' => 'SENDING',
+                    'COURIER' => $request->kurir??null,
+                    'CREATED_BY' => $user->id
+                ];
+            }else{
+
+                $coll = M_CrCollateral::where()->first();
+
+                $data = [
+                    'TRX_CODE' => generateCodePrefix($request, 'bpkb_transaction', 'TRX_CODE','JMN'),
+                    'FROM_BRANCH' => '',
+                    'TO_BRANCH' => $branch,
+                    'CATEGORY' => $request->type??null,
+                    'NOTE' => $request->catatan,
+                    'STATUS' => 'REQUEST',
+                    'COURIER' => $request->kurir??null,
+                    'CREATED_BY' => $user->id
+                ];
+            }
 
             $transaction = M_BpkbTransaction::create($data);
             $id = $transaction->ID;
