@@ -120,71 +120,50 @@ class UsersController extends Controller
         try {
             $this->_validate($request);
 
+            $users = User::where('username', $request->username)->first();
+
+            if ($users) {
+                throw new Exception("Username Is Exist", 404);
+            }
+
             $check_branch = M_Branch::where('ID', $request->cabang_id)->first();
 
             if (!$check_branch) {
                 throw new Exception("Id Branch Not Found", 404);
             }
 
-            // $dataJabatan = ['ADMIN','MCF','HO','KAPOS','SUPERADMIN'];
-
-            // if (!in_array($request->jabatan, $dataJabatan)) {
-            //     throw new Exception("Jabatan Not Found", 404);
-            // }
-
             $data_array = [
-                'username' => $request->username,
+                'username' => $request->username??'',
                 'email' => $request->username . '@gmail.com',
                 'password' => bcrypt($request->password),
-                'fullname' => $request->nama,
-                'branch_id' => $request->cabang_id,
-                'position' => $request->jabatan,
-                'no_ktp' => $request->no_ktp,
-                'alamat' => $request->alamat,
-                'gender' => $request->gender,
-                'mobile_number' => $request->no_hp,
-                'status' => $request->status == ''?'Active':$request->status,
+                'fullname' => $request->nama??'',
+                'branch_id' => $request->cabang_id??'',
+                'position' => $request->jabatan??'',
+                'no_ktp' => $request->no_ktp??'',
+                'alamat' => $request->alamat??'',
+                'gender' => $request->gender??'',
+                'mobile_number' => $request->no_hp??'',
+                'status' => $request->status == ''?'active':$request->status,
                 'created_by' => $request->user()->id
             ];
         
             $userID = User::create($data_array);
 
-            // $getMenu = M_JabatanAccessMenu::where('jabatan', $request->jabatan)->get();
+            $getMenu = M_JabatanAccessMenu::where('jabatan', $request->jabatan)->get();
 
-            // if ($getMenu->isEmpty()) {
-            //     throw new Exception("Jabatan Access Menu Kosong", 404);
-            // }
+            if (!$getMenu->isEmpty()) {
+                foreach ($getMenu as $list) {
+                    $data_menu = [
+                        'id' => Uuid::uuid7()->toString(),
+                        'master_menu_id' => $list['master_menu_id'],
+                        'users_id' => $userID->id,
+                        'created_by' => $request->user()->id
+                    ];
 
-            // foreach ($getMenu as $list) {
-            //     $data_menu = [
-            //         'id' => Uuid::uuid7()->toString(),
-            //         'master_menu_id' => $list['master_menu_id'],
-            //         'users_id' => $userID->id,
-            //         'created_by' => $request->user()->id
-            //     ];
+                    M_MasterUserAccessMenu::create($data_menu);
+                }
+            }
 
-            //     M_MasterUserAccessMenu::create($data_menu);
-            // }
-
-            $data_menu = [
-                'id' => Uuid::uuid7()->toString(),
-                'master_menu_id' => '2e7c4719-026a-48af-9662-fe33237da116',
-                'users_id' => $userID->id,
-                'created_by' => $request->user()->id
-            ];
-    
-            M_MasterUserAccessMenu::create($data_menu);
-
-            $data_rolling = [
-                'id' => Uuid::uuid7()->toString(),
-                'users_id' => $userID->id,
-                'position' => $request->jabatan,
-                'branch' => $request->cabang_id,
-                'created_by' => $request->user()->id
-            ];
-
-            M_HrRolling::create($data_rolling);
-    
             DB::commit();
             ActivityLogger::logActivity($request,"Success",200);
             return response()->json(['message' => 'created successfully',"status" => 200], 200);
@@ -211,26 +190,30 @@ class UsersController extends Controller
 
             $users = User::findOrFail($id);
 
-            // $dataJabatan = ['ADMIN', 'MCF', 'HO', 'KAPOS'];
+            $users = User::where('username', $request->username)
+                            ->where('id', '!=', $id)
+                            ->first();
 
-            // if (!in_array($request->jabatan, $dataJabatan)) {
-            //     throw new Exception("Jabatan Not Found", 404);
-            // }
+            if ($users) {
+                throw new Exception("Username Is Exist", 404);
+            }
 
-            // if ($users->position != $request->jabatan) {
-            //     $getMenu = M_JabatanAccessMenu::where('jabatan', $request->jabatan)->get();
+            $getMenu = M_JabatanAccessMenu::where('jabatan', $request->jabatan)->get();
 
-            //     M_MasterUserAccessMenu::where('users_id', $id)->delete();
+            if ($users->position != $request->jabatan) {
+                $getMenu = M_JabatanAccessMenu::where('jabatan', $request->jabatan)->get();
 
-            //     foreach ($getMenu as $list) {
-            //         M_MasterUserAccessMenu::create([
-            //             'id' => Uuid::uuid7()->toString(),
-            //             'master_menu_id' => $list['master_menu_id'],
-            //             'users_id' => $id,
-            //             'created_by' => $request->user()->id
-            //         ]);
-            //     }
-            // }
+                M_MasterUserAccessMenu::where('users_id', $id)->delete();
+
+                foreach ($getMenu as $list) {
+                    M_MasterUserAccessMenu::create([
+                        'id' => Uuid::uuid7()->toString(),
+                        'master_menu_id' => $list['master_menu_id'],
+                        'users_id' => $id,
+                        'created_by' => $request->user()->id
+                    ]);
+                }
+            }
 
             $data_user = [
                 'username' => $request->username,
@@ -250,16 +233,6 @@ class UsersController extends Controller
 
             if (isset($request->password) && !empty($request->password)) {
                 $data_user['password'] = bcrypt($request->password);
-            }
-
-            if ($users->position != $request->jabatan || $users->branch_id != $request->cabang_id) {
-                M_HrRolling::create([
-                    'id' => Uuid::uuid7()->toString(),
-                    'users_id' => $id,
-                    'position' => $request->jabatan,
-                    'branch' => $request->cabang_id,
-                    'created_by' => $request->user()->id
-                ]);
             }
 
             $users->update($data_user);
