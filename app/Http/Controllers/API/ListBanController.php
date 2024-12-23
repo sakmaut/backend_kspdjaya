@@ -16,7 +16,7 @@ class ListBanController extends Controller
             $datas = array_map(function($list) {
                 return [
                     'JENIS' => $list->JENIS,
-                    'TYPE' => $list->JENIS == 'PENCAIRAN'?"MASUK":"KELUAR",
+                    'TYPE' => $list->JENIS == 'PENCAIRAN'?"CASH-OUT":"CASH-IN",
                     'BRANCH' => $list->BRANCH,
                     'ENTRY_DATE' => $list->ENTRY_DATE,
                     'ORIGINAL_AMOUNT' => $list->ORIGINAL_AMOUNT
