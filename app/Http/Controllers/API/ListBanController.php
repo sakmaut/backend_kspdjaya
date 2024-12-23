@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Models\M_Branch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -14,10 +15,13 @@ class ListBanController extends Controller
             $arusKas = $this->queryArusKas();
 
             $datas = array_map(function($list) {
+
+                $branch = M_Branch::where('CODE_NUMBER',$list->BRANCH)->first();
+
                 return [
                     'JENIS' => $list->JENIS,
                     'TYPE' => $list->JENIS == 'PENCAIRAN'?"CASH-OUT":"CASH-IN",
-                    'BRANCH' => $list->BRANCH,
+                    'BRANCH' => $branch->NAME,
                     'ENTRY_DATE' => $list->ENTRY_DATE,
                     'ORIGINAL_AMOUNT' => $list->ORIGINAL_AMOUNT
                 ];
