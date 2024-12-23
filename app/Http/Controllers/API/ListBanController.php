@@ -21,7 +21,7 @@ class ListBanController extends Controller
                 return [
                     'JENIS' => $list->JENIS,
                     'TYPE' => $list->JENIS == 'PENCAIRAN'?"CASH-OUT":"CASH-IN",
-                    'BRANCH' => $branch->NAME,
+                    'BRANCH' => $branch->NAME??null,
                     'ENTRY_DATE' => $list->ENTRY_DATE,
                     'ORIGINAL_AMOUNT' => $list->ORIGINAL_AMOUNT
                 ];
