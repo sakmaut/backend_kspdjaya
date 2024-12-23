@@ -11,16 +11,16 @@ class ListBanController extends Controller
     public function index(Request $request)
     {
         try {
-            $data = $this->queryListBan();
+            $arusKas = $this->queryArusKas();
 
-            return response()->json($data, 200);
+            return response()->json($arusKas, 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
 
-    private function queryListBan(){
+    private function queryArusKas(){
         $result = DB::select(
                 "select case when c.ID is not null and a.ACC_KEYS like '%POKOK%' then 'TUNGGAKAN_POKOK'
                             when c.ID is not null and a.ACC_KEYS like '%BUNGA%' then 'TUNGGAKAN_BUNGA'
@@ -30,7 +30,14 @@ class ListBanController extends Controller
                         b.BRANCH, b.ENTRY_DATE, a.ORIGINAL_AMOUNT
                 from payment_detail a
                     inner join payment b on b.ID = a.PAYMENT_ID
-                    left join arrears c on c.ID = b.ARREARS_ID"
+                    left join arrears c on c.ID = b.ARREARS_ID
+                union
+
+                SELECT 	'PENCAIRAN' as JENIS, b.CODE_NUMBER as BRANCH,a.CREATED_AT as ENTRY_DATE,a.PCPL_ORI as ORIGINAL_AMOUNT
+                FROM 	credit a 
+                        inner join branch b on b.id = a.BRANCH
+                WHERE 	a.STATUS = 'A';
+                "
         );
 
         return $result;
