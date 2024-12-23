@@ -12,7 +12,15 @@ class ListBanController extends Controller
     public function index(Request $request)
     {
         try {
-            $arusKas = $this->queryArusKas();
+
+            if(isset($request->dari) || isset($request->sampai)){
+                $dateFrom = $request->dari;
+                $dateTo = $request->sampai;
+                $arusKas = $this->queryArusKas($dateFrom, $dateTo);
+            }else{
+                $date = isset($request->dari) ? $request->dari : now();
+                $arusKas = $this->queryArusKas($date);
+            }
 
             $datas = array_map(function($list) {
 
@@ -35,25 +43,46 @@ class ListBanController extends Controller
         }
     }
 
-    private function queryArusKas(){
-        $result = DB::select(
-                "select case when c.ID is not null and a.ACC_KEYS like '%POKOK%' then 'TUNGGAKAN_POKOK'
-                            when c.ID is not null and a.ACC_KEYS like '%BUNGA%' then 'TUNGGAKAN_BUNGA'
-                            when c.ID is null and a.ACC_KEYS like '%POKOK%' then 'BAYAR_POKOK'
-                            when c.ID is null and a.ACC_KEYS like '%BUNGA%' then 'TUNGGAKAN_BUNGA'
-                            else 'BAYAR_LAINNYA' end as JENIS, 
-                        b.BRANCH, b.ENTRY_DATE, a.ORIGINAL_AMOUNT
-                from payment_detail a
-                    inner join payment b on b.ID = a.PAYMENT_ID
-                    left join arrears c on c.ID = b.ARREARS_ID
-                union
+    private function queryArusKas($dateFrom = null, $dateTo = null) {
 
-                SELECT 	'PENCAIRAN' as JENIS, b.CODE_NUMBER as BRANCH,a.CREATED_AT as ENTRY_DATE,a.PCPL_ORI as ORIGINAL_AMOUNT
-                FROM 	credit a 
-                        inner join branch b on b.id = a.BRANCH
-                WHERE 	a.STATUS = 'A';
-                "
-        );
+        $query = "SELECT * 
+              FROM (
+                    SELECT 
+                        CASE 
+                            WHEN c.ID IS NOT NULL AND a.ACC_KEYS LIKE '%POKOK%' THEN 'TUNGGAKAN_POKOK'
+                            WHEN c.ID IS NOT NULL AND a.ACC_KEYS LIKE '%BUNGA%' THEN 'TUNGGAKAN_BUNGA'
+                            WHEN c.ID IS NULL AND a.ACC_KEYS LIKE '%POKOK%' THEN 'BAYAR_POKOK'
+                            WHEN c.ID IS NULL AND a.ACC_KEYS LIKE '%BUNGA%' THEN 'TUNGGAKAN_BUNGA'
+                            ELSE 'BAYAR_LAINNYA' 
+                        END AS JENIS, 
+                        b.BRANCH, b.ENTRY_DATE, a.ORIGINAL_AMOUNT
+                    FROM 
+                        payment_detail a
+                        INNER JOIN payment b ON b.ID = a.PAYMENT_ID
+                        LEFT JOIN arrears c ON c.ID = b.ARREARS_ID
+                    UNION
+                    SELECT 
+                        'PENCAIRAN' AS JENIS, 
+                        b.CODE_NUMBER AS BRANCH,
+                        a.CREATED_AT AS ENTRY_DATE,
+                        a.PCPL_ORI AS ORIGINAL_AMOUNT
+                    FROM 
+                        credit a
+                        INNER JOIN branch b ON b.id = a.BRANCH
+                    WHERE 
+                        a.STATUS = 'A'
+              ) AS query";
+
+            if ($dateFrom && $dateTo) {
+                $query .= " WHERE (ENTRY_DATE LIKE :dateFrom OR ENTRY_DATE LIKE :dateTo)";
+                $result = DB::select($query, [
+                    'dateFrom' => $dateFrom . '%', 
+                    'dateTo' => $dateTo . '%' 
+                ]);
+            } else {
+                $query .= " WHERE ENTRY_DATE LIKE :date";
+                $result = DB::select($query, ['date' => "%$dateFrom%"]);
+            };
 
         return $result;
     }
