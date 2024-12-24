@@ -19,7 +19,8 @@ use App\Http\Controllers\API\{
     CrBlacklistController,
     HrPositionController,
     ListBanController,
-    PelunasanController
+    PelunasanController,
+    ReportController
 };
 use App\Http\Controllers\Welcome;
 use Illuminate\Http\Request;
@@ -115,6 +116,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('checkCollateral', [Credit::class,'checkCollateral']);
 
     Route::post('arus_kas',[ListBanController::class,'index']);
+
+    //Report
+    Route::get('creditReport', [ReportController::class,'pinjaman']);
+    Route::get('customerReport', [ReportController::class,'debitur']);
+    Route::get('collateralReport', [ReportController::class,'jaminan']);
+    Route::get('paymentReport', [ReportController::class,'pembayaran']);
+    Route::get('arrearsReport', [ReportController::class,'tunggakkan']);
 });
 
 
