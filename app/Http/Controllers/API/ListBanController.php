@@ -12,14 +12,15 @@ class ListBanController extends Controller
     public function index(Request $request)
     {
         try {
+            $cabangId = $request->cabang_id;
 
             if ((isset($request->dari) && !empty($request->dari) && $request->dari !== null) || ( isset($request->sampai) && !empty($request->sampai) && $request->sampai !== null)) {
                 $dateFrom = $request->dari;
                 $dateTo = $request->sampai;
-                $arusKas = $this->queryArusKas($dateFrom, $dateTo);
+                $arusKas = $this->queryArusKas($cabangId,$dateFrom, $dateTo);
             }else{
                 $date = isset($request->dari) ? $request->dari : now();
-                $arusKas = $this->queryArusKas($date);
+                $arusKas = $this->queryArusKas($cabangId,$date);
             }
 
             $datas = array_map(function($list) {
@@ -43,7 +44,7 @@ class ListBanController extends Controller
         }
     }
 
-    private function queryArusKas($dateFrom = null, $dateTo = null) {
+    private function queryArusKas($cabangId = null,$dateFrom = null, $dateTo = null) {
 
         $query = "SELECT * 
               FROM (
@@ -55,14 +56,16 @@ class ListBanController extends Controller
                             WHEN c.ID IS NULL AND a.ACC_KEYS LIKE '%BUNGA%' THEN 'TUNGGAKAN_BUNGA'
                             ELSE 'BAYAR_LAINNYA' 
                         END AS JENIS, 
-                        b.BRANCH, b.ENTRY_DATE, a.ORIGINAL_AMOUNT
+                        b.BRANCH, d.ID AS BRANCH_ID, b.ENTRY_DATE, a.ORIGINAL_AMOUNT
                     FROM 
                         payment_detail a
                         INNER JOIN payment b ON b.ID = a.PAYMENT_ID
                         LEFT JOIN arrears c ON c.ID = b.ARREARS_ID
+                        LEFT JOIN branch d on d.CODE_NUMBER = b.BRANCH
                     UNION
                     SELECT 
                         'PENCAIRAN' AS JENIS, 
+                        b.ID AS BRANCH_ID,
                         b.CODE_NUMBER AS BRANCH,
                         a.CREATED_AT AS ENTRY_DATE,
                         a.PCPL_ORI AS ORIGINAL_AMOUNT
@@ -73,13 +76,23 @@ class ListBanController extends Controller
                         a.STATUS = 'A'
               ) AS query";
 
+            $params = [];
+
             if ($dateFrom && $dateTo) {
-                $query .= " WHERE DATE_FORMAT(ENTRY_DATE, '%Y-%m-%d') BETWEEN ? AND ?";
-                $result = DB::select($query, [$dateFrom, $dateTo]);
-            } else {
-                $query .= " WHERE DATE_FORMAT(ENTRY_DATE, '%Y-%m-%d') = :date";
-                $result = DB::select($query, ['date' => $dateFrom]); 
-            };
+                $query .= " WHERE DATE_FORMAT(ENTRY_DATE, '%Y-%m-%d') BETWEEN :dateFrom AND :dateTo";
+                $params['dateFrom'] = $dateFrom;
+                $params['dateTo'] = $dateTo;
+            } elseif ($dateFrom) {
+                $query .= " WHERE DATE_FORMAT(ENTRY_DATE, '%Y-%m-%d') = :dateFrom";
+                $params['dateFrom'] = $dateFrom;
+            }
+
+            if ($cabangId != null && !empty($cabangId)) {
+                $query .= " AND BRANCH_ID = :cabangId";
+                $params['cabangId'] = $cabangId;
+            }
+
+            $result = DB::select($query, $params);
 
         return $result;
     }
