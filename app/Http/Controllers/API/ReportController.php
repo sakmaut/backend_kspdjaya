@@ -119,6 +119,9 @@ class ReportController extends Controller
 
             $results = $results->map(function ($item) {
                 $item->COLLATERAL_TYPE = 'kendaraan';
+                $item->COLLATERAL_FLAG = M_Branch::find($item->COLLATERAL_FLAG)->NAME ?? '';
+                $item->LOCATION_BRANCH = M_Branch::find($item->LOCATION_BRANCH)->NAME??'';
+                $item->VALUE = floatval($item->VALUE);
                 return collect($item->toArray())->except([
                     'CREATE_DATE',
                     'CREATE_BY',
@@ -132,6 +135,9 @@ class ReportController extends Controller
 
             $results2 = $results2->map(function ($item) {
                 $item->COLLATERAL_TYPE = 'sertifikat';
+                $item->COLLATERAL_FLAG = M_Branch::find($item->COLLATERAL_FLAG)->NAME ?? '';
+                $item->LOCATION = M_Branch::find($item->LOCATION)->NAME ?? '';
+                $item->NILAI = floatval($item->NILAI);
                 return collect($item->toArray())->except([
                     'CREATE_DATE',
                     'CREATE_BY',
@@ -152,12 +158,24 @@ class ReportController extends Controller
         }
     }
 
-    public function pembayaran(Request $request)
+    public function pembayaran(Request $request,$id)
     {
         try {
-            $results = M_Payment::all();
+            $results = M_Payment::where('LOAN_NUM',$id)->first();
+
+            if(!$results){
+                $allData = [];
+            }else{
+                $branch = M_Branch::where('CODE_NUMBER', $results->BRANCH)->first();
+                $results->BRANCH = $branch->NAME ?? '';
+                $results->ORIGINAL_AMOUNT = floatval($results->ORIGINAL_AMOUNT);
+                $results->OS_AMOUNT = floatval($results->OS_AMOUNT);
+                $results->USER_ID = User::find($results->USER_ID)->fullname ?? '';
+
+                $allData = [$results];
+            }
            
-            return response()->json($results, 200);
+            return response()->json($allData, 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
