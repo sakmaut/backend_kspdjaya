@@ -13,7 +13,7 @@ class ListBanController extends Controller
     {
         try {
 
-            if(isset($request->dari) || isset($request->sampai)){
+            if ((isset($request->dari) && !empty($request->dari) && $request->dari !== null) || ( isset($request->sampai) && !empty($request->sampai) && $request->sampai !== null)) {
                 $dateFrom = $request->dari;
                 $dateTo = $request->sampai;
                 $arusKas = $this->queryArusKas($dateFrom, $dateTo);
