@@ -187,15 +187,21 @@ class ReportController extends Controller
                 $item->COLLATERAL_FLAG = M_Branch::find($item->COLLATERAL_FLAG)->NAME ?? '';
                 $item->LOCATION_BRANCH = M_Branch::find($item->LOCATION_BRANCH)->NAME??'';
                 $item->VALUE = floatval($item->VALUE);
-                return collect($item->toArray())->except([
+                // Convert null values to empty strings for all keys
+                $itemArray = $item->toArray();
+                $itemArray = array_map(function ($value) {
+                        return $value === null ? '' : $value;
+                    }, $itemArray);
+
+                return collect($itemArray)->except([
                     'CREATE_DATE',
                     'CREATE_BY',
                     'MOD_DATE',
-                    'MOD_BY', 
+                    'MOD_BY',
                     'DELETED_AT',
                     'DELETED_BY',
                     'VERSION'
-                ]); 
+                ]);
             })->values();
 
             $results2 = $results2->map(function ($item) {
@@ -203,15 +209,21 @@ class ReportController extends Controller
                 $item->COLLATERAL_FLAG = M_Branch::find($item->COLLATERAL_FLAG)->NAME ?? '';
                 $item->LOCATION = M_Branch::find($item->LOCATION)->NAME ?? '';
                 $item->NILAI = floatval($item->NILAI);
-                return collect($item->toArray())->except([
+                // Convert null values to empty strings for all keys
+                $itemArray = $item->toArray();
+                $itemArray = array_map(function ($value) {
+                        return $value === null ? '' : $value;
+                    }, $itemArray);
+
+                return collect($itemArray)->except([
                     'CREATE_DATE',
                     'CREATE_BY',
                     'MOD_DATE',
-                    'MOD_BY', 
+                    'MOD_BY',
                     'DELETED_AT',
                     'DELETED_BY',
                     'VERSION'
-                ]); 
+                ]);
             })->values();
             
             $mergedResults = $results->merge($results2);
