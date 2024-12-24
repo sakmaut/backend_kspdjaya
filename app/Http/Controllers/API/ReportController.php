@@ -52,10 +52,10 @@ class ReportController extends Controller
         }
     }
 
-    public function pinjaman(Request $request)
+    public function pinjaman(Request $request,$id)
     {
         try {
-            $results = M_Credit::where('ID')->get();
+            $results = M_Credit::where('ID',$id)->first();
 
             return response()->json($results, 200);
         } catch (\Exception $e) {
