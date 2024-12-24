@@ -37,15 +37,15 @@ class ReportController extends Controller
 
             $mapping = $results->map(function($list){
                 return [
-                    'credit_id' => $list->creditId,
-                    'loan_number' => $list->LOAN_NUMBER,
-                    'order_number' => $list->ORDER_NUMBER,
-                    'cust_id' => $list->custId,
-                    'cust_code' => $list->CUST_CODE,
-                    'customer_name' => $list->customer_name,
-                    'police_number' => $list->POLICE_NUMBER,
-                    'entry_date' => date('Y-m-d',strtotime($list->INSTALLMENT_DATE)),
-                    'branch_name' => $list->branch_name,
+                    'credit_id' => $list->creditId??'',
+                    'loan_number' => $list-> LOAN_NUMBER ?? '',
+                    'order_number' => $list-> ORDER_NUMBER ?? '',
+                    'cust_id' => $list-> custId ?? '',
+                    'cust_code' => $list-> CUST_CODE ?? '',
+                    'customer_name' => $list-> customer_name ?? '',
+                    'police_number' => $list-> POLICE_NUMBER ?? '',
+                    'entry_date' => date('Y-m-d',strtotime($list->INSTALLMENT_DATE)) ?? '',
+                    'branch_name' => $list-> branch_name ?? '',
                 ];
             });
 
@@ -65,22 +65,22 @@ class ReportController extends Controller
                 $buildArray = [];
             }else{
                 $buildArray =[
-                    'status' => $results->STATUS,
-                    'loan_number' => $results->LOAN_NUMBER,
-                    'cust_code' => $results->CUST_CODE,
+                    'status' => $results->STATUS??'',
+                    'loan_number' => $results-> LOAN_NUMBER ?? '',
+                    'cust_code' => $results-> CUST_CODE ?? '',
                     'branch_name' => M_Branch::find($results->BRANCH)->NAME??'',
-                    'order_number' => $results->ORDER_NUMBER,
-                    'credit_type' => $results->CREDIT_TYPE,
-                    'tenor' => (int)$results->PERIOD,
-                    'installment_date' => date('Y-m-d',strtotime($results->INSTALLMENT_DATE)),
-                    'installment' => floatval($results->INSTALLMENT),
-                    'pcpl_ori' => floatval($results->PCPL_ORI),
-                    'paid_principal' => floatval($results->PAID_PRINCIPAL),
-                    'paid_interest' => floatval($results->PAID_INTEREST),
-                    'paid_penalty' => floatval($results->PAID_PENALTY),
+                    'order_number' => $results-> ORDER_NUMBER ?? '',
+                    'credit_type' => $results-> CREDIT_TYPE ?? '',
+                    'tenor' => (int)$results-> PERIOD ?? 0,
+                    'installment_date' => date('Y-m-d',strtotime($results->INSTALLMENT_DATE)) ?? '',
+                    'installment' => floatval($results->INSTALLMENT) ?? 0,
+                    'pcpl_ori' => floatval($results->PCPL_ORI) ?? 0,
+                    'paid_principal' => floatval($results->PAID_PRINCIPAL) ?? 0,
+                    'paid_interest' => floatval($results->PAID_INTEREST) ?? 0,
+                    'paid_penalty' => floatval($results->PAID_PENALTY) ?? 0,
                     'mcf_name' => User::find($results->MCF_ID)->fullname??'',
                     'created_by' => User::find($results->CREATED_BY)->fullname??'',
-                    'created_at' => date('Y-m-d',strtotime($results->CREATED_AT))
+                    'created_at' => date('Y-m-d',strtotime($results->CREATED_AT)) ??''
                 ];
             }
 
@@ -233,8 +233,8 @@ class ReportController extends Controller
             }else{
                 $branch = M_Branch::where('CODE_NUMBER', $results->BRANCH)->first();
                 $results->BRANCH = $branch->NAME ?? '';
-                $results->ORIGINAL_AMOUNT = floatval($results->ORIGINAL_AMOUNT);
-                $results->OS_AMOUNT = floatval($results->OS_AMOUNT);
+                $results->ORIGINAL_AMOUNT = floatval($results->ORIGINAL_AMOUNT) ?? 0;
+                $results->OS_AMOUNT = floatval($results->OS_AMOUNT) ?? 0;
                 $results->USER_ID = User::find($results->USER_ID)->fullname ?? '';
 
                 $allData = [$results];
