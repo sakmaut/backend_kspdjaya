@@ -13,6 +13,45 @@ use Illuminate\Support\Facades\DB;
 
 class ReportController extends Controller
 {
+
+    public function inquiryList(Request $request)
+    {
+        try {
+            $results = DB::table('credit as a')
+                            ->leftJoin('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
+                            ->leftJoin('cr_collateral as c', 'c.CR_CREDIT_ID', '=', 'a.ID')
+                            ->leftJoin('branch as d', 'd.ID', '=', 'a.BRANCH')
+                            ->select(   'a.ID as creditId',
+                                        'a.ORDER_NUMBER', 
+                                        'b.ID as custId', 
+                                        'b.CUST_CODE', 
+                                        'b.NAME as customer_name',
+                                        'c.POLICE_NUMBER', 
+                                        'a.INSTALLMENT_DATE', 
+                                        'd.NAME as branch_name')
+                            ->orderBy('a.ORDER_NUMBER', 'asc')
+                            ->get();
+
+            $mapping = $results->map(function($list){
+                return [
+                    'credit_id' => $list->creditId,
+                    'order_number' => $list->ORDER_NUMBER,
+                    'cust_id' => $list->custId,
+                    'cust_code' => $list->CUST_CODE,
+                    'customer_name' => $list->customer_name,
+                    'police_number' => $list->POLICE_NUMBER,
+                    'entry_date' => date('Y-m-d',strtotime($list->INSTALLMENT_DATE)),
+                    'branch_name' => $list->branch_name,
+                ];
+            });
+
+            return response()->json($mapping, 200);
+        } catch (\Exception $e) {
+            ActivityLogger::logActivity($request,$e->getMessage(),500);
+            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+        }
+    }
+
     public function pinjaman(Request $request)
     {
         try {
