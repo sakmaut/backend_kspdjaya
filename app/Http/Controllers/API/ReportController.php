@@ -55,13 +55,7 @@ class ReportController extends Controller
     public function pinjaman(Request $request)
     {
         try {
-            $results = DB::table('credit as a')
-                            ->leftJoin('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
-                            ->leftJoin('cr_collateral as c', 'c.CR_CREDIT_ID', '=', 'a.ID')
-                            ->leftJoin('branch as d', 'd.ID', '=', 'a.BRANCH')
-                            ->select('a.ORDER_NUMBER', 'b.NAME as customer_name', 'c.POLICE_NUMBER', 'a.ENTRY_DATE', 'd.NAME as branch_name')
-                            ->orderBy('a.ORDER_NUMBER', 'asc')
-                            ->get();
+            $results = M_Credit::where('ID')->get();
 
             return response()->json($results, 200);
         } catch (\Exception $e) {
@@ -70,13 +64,19 @@ class ReportController extends Controller
         }
     }
 
-    public function debitur(Request $request)
+    public function debitur(Request $request,$id)
     {
         try {
+
             $results = DB::table('customer as a')
                         ->leftJoin('customer_extra as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
                         ->select('a.*', 'b.*')
-                        ->get();
+                        ->where('a.ID', $id)
+                        ->first();
+
+            if(!$results){
+                $results = [];
+            }
 
             return response()->json($results, 200);
         } catch (\Exception $e) {
