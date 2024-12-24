@@ -56,7 +56,10 @@ class ListBanController extends Controller
                             WHEN c.ID IS NULL AND a.ACC_KEYS LIKE '%BUNGA%' THEN 'TUNGGAKAN_BUNGA'
                             ELSE 'BAYAR_LAINNYA' 
                         END AS JENIS, 
-                        b.BRANCH, d.ID AS BRANCH_ID, b.ENTRY_DATE, a.ORIGINAL_AMOUNT
+                        b.BRANCH AS BRANCH, 
+                        d.ID AS BRANCH_ID, 
+                        b.ENTRY_DATE, 
+                        a.ORIGINAL_AMOUNT
                     FROM 
                         payment_detail a
                         INNER JOIN payment b ON b.ID = a.PAYMENT_ID
@@ -65,8 +68,8 @@ class ListBanController extends Controller
                     UNION
                     SELECT 
                         'PENCAIRAN' AS JENIS, 
-                        b.ID AS BRANCH_ID,
                         b.CODE_NUMBER AS BRANCH,
+                        b.ID AS BRANCH_ID, 
                         a.CREATED_AT AS ENTRY_DATE,
                         a.PCPL_ORI AS ORIGINAL_AMOUNT
                     FROM 
