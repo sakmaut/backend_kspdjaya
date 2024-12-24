@@ -94,7 +94,6 @@ class ReportController extends Controller
     public function debitur(Request $request,$id)
     {
         try {
-
             $results = DB::table('customer as a')
                         ->leftJoin('customer_extra as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
                         ->select('a.*', 'b.*')
@@ -120,13 +119,29 @@ class ReportController extends Controller
 
             $results = $results->map(function ($item) {
                 $item->COLLATERAL_TYPE = 'kendaraan';
-                return $item;
-            });
-        
+                return collect($item->toArray())->except([
+                    'CREATE_DATE',
+                    'CREATE_BY',
+                    'MOD_DATE',
+                    'MOD_BY', 
+                    'DELETED_AT',
+                    'DELETED_BY',
+                    'VERSION'
+                ]); 
+            })->values();
+
             $results2 = $results2->map(function ($item) {
                 $item->COLLATERAL_TYPE = 'sertifikat';
-                return $item;
-            });
+                return collect($item->toArray())->except([
+                    'CREATE_DATE',
+                    'CREATE_BY',
+                    'MOD_DATE',
+                    'MOD_BY', 
+                    'DELETED_AT',
+                    'DELETED_BY',
+                    'VERSION'
+                ]); 
+            })->values();
             
             $mergedResults = $results->merge($results2);
 
