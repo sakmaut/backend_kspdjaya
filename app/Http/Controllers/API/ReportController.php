@@ -22,6 +22,7 @@ class ReportController extends Controller
                             ->leftJoin('cr_collateral as c', 'c.CR_CREDIT_ID', '=', 'a.ID')
                             ->leftJoin('branch as d', 'd.ID', '=', 'a.BRANCH')
                             ->select(   'a.ID as creditId',
+                                        'a.LOAN_NUMBER', 
                                         'a.ORDER_NUMBER', 
                                         'b.ID as custId', 
                                         'b.CUST_CODE', 
@@ -35,6 +36,7 @@ class ReportController extends Controller
             $mapping = $results->map(function($list){
                 return [
                     'credit_id' => $list->creditId,
+                    'loan_number' => $list->LOAN_NUMBER,
                     'order_number' => $list->ORDER_NUMBER,
                     'cust_id' => $list->custId,
                     'cust_code' => $list->CUST_CODE,
