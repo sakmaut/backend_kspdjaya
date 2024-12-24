@@ -74,14 +74,11 @@ class ListBanController extends Controller
               ) AS query";
 
             if ($dateFrom && $dateTo) {
-                $query .= " WHERE (ENTRY_DATE LIKE :dateFrom OR ENTRY_DATE LIKE :dateTo)";
-                $result = DB::select($query, [
-                    'dateFrom' => $dateFrom . '%', 
-                    'dateTo' => $dateTo . '%' 
-                ]);
+                $query .= " WHERE DATE_FORMAT(ENTRY_DATE, '%Y-%m-%d') BETWEEN ? AND ?";
+                $result = DB::select($query, [$dateFrom, $dateTo]);
             } else {
-                $query .= " WHERE ENTRY_DATE LIKE :date";
-                $result = DB::select($query, ['date' => "%$dateFrom%"]);
+                $query .= " WHERE DATE_FORMAT(ENTRY_DATE, '%Y-%m-%d') = :date";
+                $result = DB::select($query, ['date' => $dateFrom]); 
             };
 
         return $result;
