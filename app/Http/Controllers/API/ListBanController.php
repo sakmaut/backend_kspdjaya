@@ -85,13 +85,14 @@ class ListBanController extends Controller
                 $query .= " WHERE DATE_FORMAT(ENTRY_DATE, '%Y-%m-%d') BETWEEN :dateFrom AND :dateTo";
                 $params['dateFrom'] = $dateFrom;
                 $params['dateTo'] = $dateTo;
-            } elseif ($dateFrom) {
+            } else {
                 $query .= " WHERE DATE_FORMAT(ENTRY_DATE, '%Y-%m-%d') = :dateFrom";
                 $params['dateFrom'] = $dateFrom;
             }
 
-            if ($cabangId != null && !empty($cabangId)) {
-                $query .= " AND BRANCH_ID = :cabangId";
+            if (!empty($cabangId)) {
+                $query .= empty($params) ? " WHERE" : " AND";
+                $query .= " BRANCH_ID = :cabangId";
                 $params['cabangId'] = $cabangId;
             }
 
