@@ -85,11 +85,11 @@ class ReportController extends Controller
         }
     }
 
-    public function jaminan(Request $request)
+    public function jaminan(Request $request,$id)
     {
         try {
-            $results = M_CrCollateral::all();
-            $results2 = M_CrCollateralSertification::all();
+            $results = M_CrCollateral::where('CR_CREDIT_ID',$id)->get();
+            $results2 = M_CrCollateralSertification::where('CR_CREDIT_ID',$id)->get();
 
             $results = $results->map(function ($item) {
                 $item->COLLATERAL_TYPE = 'kendaraan';
@@ -101,7 +101,6 @@ class ReportController extends Controller
                 return $item;
             });
             
-            // Now, you can merge both collections if needed
             $mergedResults = $results->merge($results2);
 
             return response()->json($mergedResults, 200);
