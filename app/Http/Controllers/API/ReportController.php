@@ -102,6 +102,71 @@ class ReportController extends Controller
 
             if(!$results){
                 $results = [];
+            }else{
+                $results = [
+                    'pelanggan' => [
+                        "nama" => $results->NAME ?? '',
+                        "nama_panggilan" => $results->ALIAS ?? '',
+                        "jenis_kelamin" => $results->GENDER ?? '',
+                        "tempat_lahir" => $results->BIRTHPLACE ?? '',
+                        "tgl_lahir" => date('Y-m-d',strtotime($results->BIRTHDATE)),
+                        "gol_darah" => $results->BLOOD_TYPE ?? '',
+                        "status_kawin" => $results->MARTIAL_STATUS ?? '',
+                        "tgl_kawin" => $results->MARTIAL_DATE ?? '',
+                        "tipe_identitas" => $results->ID_TYPE ?? '',
+                        "no_identitas" => $results->ID_NUMBER ?? '',
+                        "no_kk" => $results->KK_NUMBER ?? '',
+                        "tgl_terbit_identitas" => date('Y-m-d', strtotime($results->ID_ISSUE_DATE))?? '',
+                        "masa_berlaku_identitas" => date('Y-m-d', strtotime($results->ID_VALID_DATE)) ?? '',
+                        "no_kk" => $results->KK??'',
+                        "warganegara" => $results->CITIZEN ?? ''
+                    ],
+                    'alamat_identitas' => [
+                        "alamat" => $results->ADDRESS ?? '',
+                        "rt" => $results->RT ?? '',
+                        "rw" => $results->RW ?? '',
+                        "provinsi" => $results->PROVINCE ?? '',
+                        "kota" => $results->CITY ?? '',
+                        "kelurahan" => $results->KELURAHAN ?? '',
+                        "kecamatan" => $results->KECAMATAN ?? '',
+                        "kode_pos" => $results->ZIP_CODE ?? ''
+                    ],
+                    'alamat_tagih' => [
+                        "alamat" => $results->INS_ADDRESS ?? '',
+                        "rt" => $results->INS_RT ?? '',
+                        "rw" => $results->INS_RW ?? '',
+                        "provinsi" => $results->INS_PROVINCE ?? '',
+                        "kota" => $results->INS_CITY ?? '',
+                        "kelurahan" => $results->INS_KELURAHAN ?? '',
+                        "kecamatan" => $results->INS_KECAMATAN ?? '',
+                        "kode_pos" => $results->INS_ZIP_CODE ?? ''
+                    ],
+                    'pekerjaan' => [
+                        "pekerjaan" => $results->OCCUPATION ?? '',
+                        "pekerjaan_id" => $results->OCCUPATION_ON_ID ?? '',
+                        "agama" => $results->RELIGION ?? '',
+                        "pendidikan" => $results->EDUCATION ?? '',
+                        "status_rumah" => $results->PROPERTY_STATUS ?? '',
+                        "telepon_rumah" => $results->PHONE_HOUSE ?? '',
+                        "telepon_selular" =>  $results->PHONE_PERSONAL ?? '',
+                        "telepon_kantor" => $results->PHONE_OFFICE ?? '',
+                        "ekstra1" => $results->EXT_1 ?? '',
+                        "ekstra2" => $results->EXT_2 ?? ''
+                    ],
+                    'kerabat_darurat' => [
+                        "nama"  => $results->EMERGENCY_NAME ?? '',
+                        "alamat"  => $results->EMERGENCY_ADDRESS ?? '',
+                        "rt"  => $results->EMERGENCY_RT ?? '',
+                        "rw"  => $results->EMERGENCY_RW ?? '',
+                        "provinsi" => $results->EMERGENCY_PROVINCE ?? '',
+                        "kota" => $results->EMERGENCY_CITY ?? '',
+                        "kelurahan" => $results->EMERGENCY_KELURAHAN ?? '',
+                        "kecamatan" => $results->EMERGENCY_KECAMATAN ?? '',
+                        "kode_pos" => $results->EMERGENCY_ZIP_CODE ?? '',
+                        "no_telp" => $results->EMERGENCY_PHONE_HOUSE ?? '',
+                        "no_hp" => $results->EMERGENCY_PHONE_PERSONAL ?? '',
+                    ]
+                ];
             }
 
             return response()->json($results, 200);
