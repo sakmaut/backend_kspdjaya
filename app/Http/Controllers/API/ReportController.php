@@ -9,6 +9,9 @@ use App\Models\M_CrCollateral;
 use App\Models\M_CrCollateralSertification;
 use App\Models\M_Credit;
 use App\Models\M_Payment;
+use App\Models\M_PaymentApproval;
+use App\Models\M_PaymentAttachment;
+use App\Models\M_PaymentDetail;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -248,6 +251,9 @@ class ReportController extends Controller
                 $results->ORIGINAL_AMOUNT = floatval($results->ORIGINAL_AMOUNT) ?? 0;
                 $results->OS_AMOUNT = floatval($results->OS_AMOUNT) ?? 0;
                 $results->USER_ID = User::find($results->USER_ID)->fullname ?? '';
+                $results->APPROVAL = M_PaymentApproval::where('PAYMENT_ID', $results->ID)->get() ?? '';
+                $results->ATTACHMENT = M_PaymentAttachment::where('payment_id', $results->ID)->get()?? '';
+                $results->DETAIL = M_PaymentDetail::where('PAYMENT_ID', $results->ID)->get() ?? '';
 
                 $allData = [$results];
             }
