@@ -123,7 +123,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('customerReport/{id}', [ReportController::class,'debitur']);
     Route::get('collateralReport/{id}', [ReportController::class,'jaminan']);
     Route::get('paymentReport/{id}', [ReportController::class,'pembayaran']);
-    Route::get('arrearsReport', [ReportController::class,'tunggakkan']);
+    Route::get('arrearsReport/{id}', [ReportController::class,'tunggakkan']);
 });
 
 

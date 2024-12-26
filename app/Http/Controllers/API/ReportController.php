@@ -265,12 +265,18 @@ class ReportController extends Controller
         }
     }
 
-    public function tunggakkan(Request $request)
+    public function tunggakkan(Request $request,$id)
     {
         try {
-            $results = M_Arrears::all();
+            $results = M_Arrears::where('LOAN_NUMBER', $id)->first();
+
+            if (!$results) {
+                $allData = [];
+            } else {
+                $allData = $results;
+            }
            
-            return response()->json($results, 200);
+            return response()->json($allData, 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
