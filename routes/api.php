@@ -106,6 +106,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::resource('jaminan', BpkbController::class);
     Route::resource('jaminan_transaction', BpkbTransactionController::class);
     Route::post('jaminan_approval', [BpkbTransactionController::class,'approval']);
+    Route::post('update_jaminan_transaction', [BpkbTransactionController::class,'update_status']);
     Route::get('jaminan_list_approval', [BpkbTransactionController::class,'listApproval']);
     Route::get('forpostjaminan', [BpkbController::class,'forpostjaminan']);
     Route::get('forgetjaminan', [BpkbController::class,'forgetjaminan']);

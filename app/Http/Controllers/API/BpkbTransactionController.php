@@ -216,6 +216,50 @@ class BpkbTransactionController extends Controller
         }
     }
 
+    public function update_status(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+
+            if (!isset($request->collateral_id) || empty($request->collateral_id) || !is_array($request->collateral_id) ) {
+                throw new Exception("collateral id not found!!!");
+            }
+
+            $user = $request->user();
+
+            foreach ($request->collateral_id as $list) {
+                $check = M_BpkbDetail::where('COLLATERAL_ID',$list)->first();
+
+                if($check){
+                    $check->update(['STATUS' => strtoupper($request->status)]);
+
+                    $data_approval = [
+                        'BPKB_TRANSACTION_ID' => $check->BPKB_TRANSACTION_ID??'',
+                        'ONCHARGE_APPRVL' => strtoupper($request->status),
+                        'ONCHARGE_PERSON' => $user->id,
+                        'ONCHARGE_TIME' => Carbon::now(),
+                        'ONCHARGE_DESCR' => $request->catatan,
+                        'APPROVAL_RESULT' => strtoupper($request->status)
+                    ];
+        
+                    M_BpkbApproval::create($data_approval);
+                }
+            }      
+
+            DB::commit();
+            ActivityLogger::logActivity($request,"Success",200);
+            return response()->json(['message' => 'created successfully'], 200);
+        }catch (QueryException $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($request,$e->getMessage(),409);
+            return response()->json(['message' => $e->getMessage(),"status" => 409], 409);
+        } catch (\Exception $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($request,$e->getMessage(),500);
+            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+        }
+    }
+
     public function approval(Request $request)
     {
         try {
