@@ -34,8 +34,12 @@ class DemoCron extends Command
     public function handle()
     {
         try {
+
+            // $setDAte = DB::raw('CURDATE()');
+            $setDate = '2023-11-11';
+
             $query = DB::table('credit_schedule')
-                        ->where('PAYMENT_DATE', '<=', DB::raw('CURDATE()'))
+                        ->where('PAYMENT_DATE', '<=', $setDate)
                         ->where(function ($query) {
                             $query->whereNull('PAID_FLAG')
                                 ->orWhere('PAID_FLAG', '=', '');
