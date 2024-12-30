@@ -321,8 +321,13 @@ class TaksasiController extends Controller
 
             if ($result->isNotEmpty()) {
 
-               $result->map(function($list) use ($request){
+                $max = DB::table('taksasi_bak')
+                            ->select(DB::raw('max(coalesce(count, 0)) as htung'))
+                            ->first();
+                            
+               $result->map(function($list) use ($request,$max){
                     $log =[
+                        'count'=> $max->htung + 1,
                         'brand'=> $list->brand,
                         'code'=> $list->code,
                         'model'=> $list->model,

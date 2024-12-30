@@ -13,6 +13,7 @@ class M_TaksasiBak extends Model
 
     protected $fillable = [
         'id',
+        'count',
         'brand',
         'code',
         'model',
