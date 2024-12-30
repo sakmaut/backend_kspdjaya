@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('taksasi', function (Blueprint $table) {
+        Schema::create('taksasi_bak', function (Blueprint $table) {
             $table->string('id')->primary();
             $table->string('brand')->nullable();
             $table->string('code')->nullable();
