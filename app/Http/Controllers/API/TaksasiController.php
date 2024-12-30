@@ -357,14 +357,14 @@ class TaksasiController extends Controller
                     
                     $insertData[] = [
                         'id' => $uuid,
-                        'brand' => $vehicle['brand'],
-                        'code' => $vehicle['vehicle'],
-                        'model' => $vehicle['type'] . ' ' . $vehicle['model'],
-                        'descr' => $vehicle['descr'],
+                        'brand' => $vehicle['brand']??'',
+                        'code' => $vehicle['vehicle']??'',
+                        'model' => $vehicle['type']??'',
+                        'descr' => $vehicle['model']??'',
                         'year' => [
                             [
-                                'year' => $vehicle['year'],
-                                'price' => $vehicle['price']
+                                'year' => $vehicle['year']??'',
+                                'price' => $vehicle['price']??''
                             ]
                         ],
                         'create_by' => $request->user()->id,
@@ -380,8 +380,8 @@ class TaksasiController extends Controller
                     
                     if ($existingIndex !== false) {
                         $insertData[$existingIndex]['year'][] = [
-                            'year' => $vehicle['year'],
-                            'price' => $vehicle['price']
+                            'year' => $vehicle['year']??'',
+                            'price' => $vehicle['price']??''
                         ];
                     }
                 }
