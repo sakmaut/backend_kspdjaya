@@ -35,8 +35,8 @@ class DemoCron extends Command
     {
         try {
 
-            // $setDAte = DB::raw('CURDATE()');
-            $setDate = '2023-12-16';
+            $setDate = DB::raw('CURDATE()');
+            // $setDate = '2023-12-16';
 
             $query = DB::table('credit_schedule')
                         ->where('PAYMENT_DATE', '<=', $setDate)
@@ -58,8 +58,8 @@ class DemoCron extends Command
             $arrearsData = [];
             foreach ($query as $result) {
                 $date = date('Y-m-d');
-                $dateCurrnt = date('2023-12-16');
-                $daysDiff = (strtotime($dateCurrnt) - strtotime($result->PAYMENT_DATE)) / (60 * 60 * 24);
+                // $date = date($setDate);
+                $daysDiff = (strtotime($date) - strtotime($result->PAYMENT_DATE)) / (60 * 60 * 24);
                 $pastDuePenalty = $result->INSTALLMENT * ($daysDiff * 0.005);
     
                 $arrearsData[] = [
