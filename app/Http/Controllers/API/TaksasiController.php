@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\R_Taksasi;
 use App\Models\M_Taksasi;
+use App\Models\M_TaksasiBak;
 use App\Models\M_TaksasiPrice;
 use Carbon\Carbon;
 use Exception;
@@ -12,6 +13,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Ramsey\Uuid\Uuid;
 
 class TaksasiController extends Controller
 {
@@ -294,6 +296,121 @@ class TaksasiController extends Controller
         } catch (\Exception $e) {
             DB::rollback();
             ActivityLogger::logActivity($req,$e->getMessage(),500);
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function updateAll(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+
+            $vehicles = collect($request->json()->all()); 
+
+            if ($vehicles->isEmpty()) {
+                return response()->json(['error' => 'No taksasi data provided'], 400);
+            }
+
+            $result = DB::table('taksasi as a')
+                        ->leftJoin('taksasi_price as b', 'b.taksasi_id', '=', 'a.id')
+                        ->select('a.brand', 'a.code', 'a.model', 'a.descr', 'b.year', 'b.price')
+                        ->orderBy('a.brand')
+                        ->orderBy('a.code')
+                        ->orderBy('b.year', 'asc')
+                        ->get();
+
+            if ($result->isNotEmpty()) {
+
+               $result->map(function($list) use ($request){
+                    $log =[
+                        'brand'=> $list->brand,
+                        'code'=> $list->code,
+                        'model'=> $list->model,
+                        'descr'=> $list->descr,
+                        'year'=> $list->year,
+                        'price'=> $list->price,
+                        'created_by'=>$request->user()->id,
+                        'created_at'=>$this->timeNow
+                    ];
+    
+                    M_TaksasiBak::create($log);
+                });  
+                
+                M_Taksasi::query()->delete(); 
+                M_TaksasiPrice::query()->delete(); 
+            }
+
+            $insertData = [];
+            $dataExist = [];
+
+            foreach ($vehicles as $vehicle) {
+                $uuid = Uuid::uuid7()->toString();
+
+                $uniqueKey = $vehicle['vehicle'] . '-' . $vehicle['type'] . ' ' . $vehicle['model'];
+
+                if (!in_array($uniqueKey, $dataExist)) {
+                    
+                    $insertData[] = [
+                        'id' => $uuid,
+                        'brand' => $vehicle['brand'],
+                        'code' => $vehicle['vehicle'],
+                        'model' => $vehicle['type'] . ' ' . $vehicle['model'],
+                        'descr' => $vehicle['descr'],
+                        'year' => [
+                            [
+                                'year' => $vehicle['year'],
+                                'price' => $vehicle['price']
+                            ]
+                        ],
+                        'create_by' => $request->user()->id,
+                        'create_at' => now(),
+                    ];
+
+                    // Track the vehicle to prevent duplicate entries
+                    $dataExist[] = $uniqueKey;
+                } else {
+                    $existingIndex = array_search($uniqueKey, array_map(function($item) use ($vehicle) {
+                        return $item['code'] . '-' . $item['model'];
+                    }, $insertData));
+                    
+                    if ($existingIndex !== false) {
+                        $insertData[$existingIndex]['year'][] = [
+                            'year' => $vehicle['year'],
+                            'price' => $vehicle['price']
+                        ];
+                    }
+                }
+            }
+            
+            if (count($insertData) > 0) {
+                foreach ($insertData as $data) {
+                    M_Taksasi::insert([
+                        'id' => $data['id'],
+                        'brand' => $data['brand'],
+                        'code' => $data['code'],
+                        'model' => $data['model'],
+                        'descr' => $data['descr'],
+                        'create_by' => $data['create_by'],
+                        'create_at' => $data['create_at'],
+                    ]);
+            
+                    foreach ($data['year'] as $yearData) {
+                        M_TaksasiPrice::insert([
+                            'id' => Uuid::uuid7()->toString(),
+                            'taksasi_id' => $data['id'],
+                            'year' => $yearData['year'],
+                            'price' => $yearData['price']
+                        ]);
+                    }
+                }
+            }
+
+            DB::commit();
+            ActivityLogger::logActivity($request,"Success",200);
+            return response()->json(['message' => 'updated successfully'], 200);
+        } catch (\Exception $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage()], 500);
         }
     }

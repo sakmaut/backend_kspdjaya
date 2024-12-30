@@ -85,6 +85,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('taksasi_code_model', [TaksasiController::class, 'codeModelList']);
     Route::post('taksasi_year', [TaksasiController::class, 'year']);
     Route::post('taksasi_price', [TaksasiController::class, 'price']);
+    Route::post('taksasi_dump', [TaksasiController::class, 'updateAll']);
 
     Route::resource('customer', CustomerController::class);
     Route::post('search_customer', [CustomerController::class,'searchCustomer']);

@@ -6,10 +6,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
-class M_Taksasi extends Model
+class M_TaksasiBak extends Model
 {
     use HasFactory;
-    protected $table = 'taksasi';
+    protected $table = 'taksasi_bak';
 
     protected $fillable = [
         'id',
@@ -19,12 +19,8 @@ class M_Taksasi extends Model
         'descr',
         'year',
         'price',
-        'create_at',
-        'create_by',
-        'updated_at',
-        'updated_by',
-        'deleted_at',
-        'deleted_by'
+        'created_at',
+        'created_by'
     ];
 
     protected $guarded = [];
@@ -40,10 +36,5 @@ class M_Taksasi extends Model
                 $model->setAttribute($model->getKeyName(), Str::uuid()->toString());
             }
         });
-    }
-
-    public function taksasi_price()
-    {
-        return $this->hasMany(M_TaksasiPrice::class,'taksasi_id');
     }
 }
