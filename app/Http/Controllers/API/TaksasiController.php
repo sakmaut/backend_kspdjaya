@@ -347,46 +347,54 @@ class TaksasiController extends Controller
 
             $insertData = [];
             $dataExist = [];
-
+            
             foreach ($vehicles as $vehicle) {
                 $uuid = Uuid::uuid7()->toString();
-
-                $uniqueKey = $vehicle['brand']. '-' .$vehicle['vehicle'] . '-' . $vehicle['type'] . ' ' . $vehicle['model'];
-
-                if (!in_array($uniqueKey, $dataExist)) {
-
-                    $formattedPrice = number_format(floatval(str_replace(',', '', $vehicle['price'] ?? '0')), 0, '.', '');
-                    
+                
+                // Create a unique key using all relevant fields
+                $uniqueKey = $vehicle['brand'] . '-' . $vehicle['vehicle'] . '-' . $vehicle['type'] . '-' . $vehicle['model'];
+                
+                // Format the price consistently
+                $formattedPrice = number_format(floatval(str_replace(',', '', $vehicle['price'] ?? '0')), 0, '.', '');
+                
+                if (!isset($dataExist[$uniqueKey])) {
+                    // First occurrence of this vehicle combination
                     $insertData[] = [
                         'id' => $uuid,
-                        'brand' => $vehicle['brand']??'',
-                        'code' => $vehicle['vehicle']??'',
-                        'model' => $vehicle['type']??'',
-                        'descr' => $vehicle['model']??'',
+                        'brand' => $vehicle['brand'] ?? '',
+                        'code' => $vehicle['vehicle'] ?? '',
+                        'model' => $vehicle['type'] ?? '',
+                        'descr' => $vehicle['model'] ?? '',
                         'year' => [
                             [
-                                'year' => $vehicle['year']??'',
-                                'price' => $formattedPrice??0
+                                'year' => $vehicle['year'] ?? '',
+                                'price' => $formattedPrice
                             ]
                         ],
                         'create_by' => $request->user()->id,
                         'create_at' => now(),
                     ];
-
-                    // Track the vehicle to prevent duplicate entries
-                    $dataExist[] = $uniqueKey;
-                } else {
-                    $existingIndex = array_search($uniqueKey, array_map(function($item) use ($vehicle) {
-                        return $item['code'] . '-' . $item['model'];
-                    }, $insertData));
                     
-                    if ($existingIndex !== false) {
-
-                        $formattedPrice = number_format(floatval(str_replace(',', '', $vehicle['price'] ?? '0')), 0, '.', '');
-
+                    // Store the index of this entry
+                    $dataExist[$uniqueKey] = count($insertData) - 1;
+                } else {
+                    // Vehicle combination already exists, add new year and price
+                    $existingIndex = $dataExist[$uniqueKey];
+                    
+                    // Check if this year entry already exists
+                    $yearExists = false;
+                    foreach ($insertData[$existingIndex]['year'] as $yearEntry) {
+                        if ($yearEntry['year'] === $vehicle['year']) {
+                            $yearExists = true;
+                            break;
+                        }
+                    }
+                    
+                    // Only add if this year doesn't exist yet
+                    if (!$yearExists) {
                         $insertData[$existingIndex]['year'][] = [
-                            'year' => $vehicle['year']??'',
-                            'price' => $formattedPrice??0
+                            'year' => $vehicle['year'] ?? '',
+                            'price' => $formattedPrice
                         ];
                     }
                 }
