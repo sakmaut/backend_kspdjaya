@@ -327,7 +327,7 @@ class TaksasiController extends Controller
 
                $result->map(function($list) use ($request,$max){
                     $log =[
-                        'count'=> $max->htung??0 + 1,
+                        'count'=> intval($max->htung??0) + 1,
                         'brand'=> $list->brand,
                         'code'=> $list->code,
                         'model'=> $list->model,
@@ -351,9 +351,11 @@ class TaksasiController extends Controller
             foreach ($vehicles as $vehicle) {
                 $uuid = Uuid::uuid7()->toString();
 
-                $uniqueKey = $vehicle['vehicle'] . '-' . $vehicle['type'] . ' ' . $vehicle['model'];
+                $uniqueKey = $vehicle['brand']. '-' .$vehicle['vehicle'] . '-' . $vehicle['type'] . ' ' . $vehicle['model'];
 
                 if (!in_array($uniqueKey, $dataExist)) {
+
+                    $formattedPrice = number_format(floatval(str_replace(',', '', $vehicle['price'] ?? '0')), 0, '.', '');
                     
                     $insertData[] = [
                         'id' => $uuid,
@@ -364,7 +366,7 @@ class TaksasiController extends Controller
                         'year' => [
                             [
                                 'year' => $vehicle['year']??'',
-                                'price' => $vehicle['price']??0
+                                'price' => $formattedPrice??0
                             ]
                         ],
                         'create_by' => $request->user()->id,
@@ -379,9 +381,12 @@ class TaksasiController extends Controller
                     }, $insertData));
                     
                     if ($existingIndex !== false) {
+
+                        $formattedPrice = number_format(floatval(str_replace(',', '', $vehicle['price'] ?? '0')), 0, '.', '');
+
                         $insertData[$existingIndex]['year'][] = [
                             'year' => $vehicle['year']??'',
-                            'price' => $vehicle['price']??0
+                            'price' => $formattedPrice??0
                         ];
                     }
                 }
@@ -403,7 +408,7 @@ class TaksasiController extends Controller
                         M_TaksasiPrice::insert([
                             'id' => Uuid::uuid7()->toString(),
                             'taksasi_id' => $data['id'],
-                            'year' => $yearData['year']??0,
+                            'year' => $yearData['year']??'',
                             'price' => $yearData['price']??0
                         ]);
                     }
