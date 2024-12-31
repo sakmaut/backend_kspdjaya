@@ -364,7 +364,7 @@ class TaksasiController extends Controller
                         'year' => [
                             [
                                 'year' => $vehicle['year']??'',
-                                'price' => $vehicle['price']??''
+                                'price' => $vehicle['price']??0
                             ]
                         ],
                         'create_by' => $request->user()->id,
@@ -381,7 +381,7 @@ class TaksasiController extends Controller
                     if ($existingIndex !== false) {
                         $insertData[$existingIndex]['year'][] = [
                             'year' => $vehicle['year']??'',
-                            'price' => $vehicle['price']??''
+                            'price' => $vehicle['price']??0
                         ];
                     }
                 }
@@ -403,8 +403,8 @@ class TaksasiController extends Controller
                         M_TaksasiPrice::insert([
                             'id' => Uuid::uuid7()->toString(),
                             'taksasi_id' => $data['id'],
-                            'year' => $yearData['year'],
-                            'price' => $yearData['price']
+                            'year' => $yearData['year']??0,
+                            'price' => $yearData['price']??0
                         ]);
                     }
                 }
