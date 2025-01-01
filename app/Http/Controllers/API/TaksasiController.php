@@ -440,7 +440,7 @@ class TaksasiController extends Controller
 
             $result = DB::table('taksasi as a')
                             ->leftJoin('taksasi_price as b', 'b.taksasi_id', '=', 'a.id')
-                            ->select('a.brand', 'a.code', 'a.model', 'a.descr', 'b.year', 'b.price')
+                            ->select('a.brand', 'a.code', 'a.model', 'a.descr', 'b.year', DB::raw('CAST(b.price AS UNSIGNED) AS price'))
                             ->orderBy('a.brand')
                             ->orderBy('a.code')
                             ->orderBy('b.year', 'asc')
