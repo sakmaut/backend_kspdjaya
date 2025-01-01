@@ -432,4 +432,27 @@ class TaksasiController extends Controller
             return response()->json(['message' => $e->getMessage()], 500);
         }
     }
+
+    public function download(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+
+            $result = DB::table('taksasi as a')
+                            ->leftJoin('taksasi_price as b', 'b.taksasi_id', '=', 'a.id')
+                            ->select('a.brand', 'a.code', 'a.model', 'a.descr', 'b.year', 'b.price')
+                            ->orderBy('a.brand')
+                            ->orderBy('a.code')
+                            ->orderBy('b.year', 'asc')
+                            ->get();
+
+            DB::commit();
+            ActivityLogger::logActivity($request, "Success", 200);
+            return response()->json($result, 200);
+        } catch (\Exception $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+    }
 }
