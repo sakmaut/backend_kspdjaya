@@ -119,6 +119,50 @@ if (!function_exists('generateCodePrefix')) {
     }
 }
 
+if (!function_exists('generateCodeJaminan')) {
+    function generateCodeJaminan($request, $table, $column, $prefix) {
+        static $counter = 0;  // Static variable to maintain count between function calls
+        
+        $branchId = $request->user()->branch_id;
+        $branch = M_Branch::findOrFail($branchId);
+        $branchCodeNumber = $branch->CODE_NUMBER;
+        
+        // Handle null prefix with a default empty string
+        $prefix = $prefix ?? '';
+        
+        // Calculate total prefix length including hyphen
+        $prefixWithHyphen = $prefix ? $prefix . '-' : '';
+        
+        if ($counter === 0) {
+            // Only query the database for the first call
+            $latestRecord = DB::table($table)
+                ->select($column)
+                ->where($column, 'like', '%' . $branchCodeNumber . '%')
+                ->orderByRaw("CAST(SUBSTRING($column, -5) AS UNSIGNED) DESC")
+                ->first();
+            
+            // Extract last sequence dynamically based on calculated prefix length
+            $lastSequence = $latestRecord
+                ? (int) substr($latestRecord->$column, -5)
+                : 0;
+                
+            $counter = $lastSequence;
+        }
+        
+        // Increment counter for each call
+        $counter++;
+        
+        // Current year and month with leading zeroes for consistent length
+        $year = date('y');  // Two digits of the current year
+        $month = date('m'); // Two digits of the current month
+        
+        // Format the code: prefix, branch code, year, month, and sequence
+        $newCode = sprintf("%s%s%s%s%05d", $prefixWithHyphen, $branchCodeNumber, $year, $month, $counter);
+        
+        return $newCode;
+    }
+}
+
 if (!function_exists('generateCodeKwitansi')) {
     function generateCodeKwitansi($request, $table, $column, $prefix) {
         // Get the branch ID and find the branch
