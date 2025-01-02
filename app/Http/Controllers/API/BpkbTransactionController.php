@@ -379,46 +379,51 @@ class BpkbTransactionController extends Controller
             $transactions = [];
             $approvals = [];
             $details = [];
+            $groupedByBranch = [];
             
+            // First, group collaterals by branch
             foreach ($combinedCollaterals as $key => $list) {
-                $uuid = Uuid::uuid7()->toString();
+                $branch = $list['LOCATION_BRANCH'] ?? $list['LOCATION'] ?? '';
+                $groupedByBranch[$branch][] = $list;
+            }
             
-                $data = [
+            // Then create transactions for each group
+            foreach ($groupedByBranch as $fromBranch => $collaterals) {
+                $uuid = Uuid::uuid7()->toString();
+                
+                // Create single transaction for this branch
+                $transactions[] = [
                     'ID' => $uuid,
                     'TRX_CODE' => generateCodeJaminan($request, 'bpkb_transaction', 'TRX_CODE', 'JMN'),
-                    'FROM_BRANCH' => $list['LOCATION_BRANCH'] ?? $list['LOCATION'] ?? '',
+                    'FROM_BRANCH' => $fromBranch,
                     'TO_BRANCH' => $branch,
                     'CATEGORY' => strtolower($status),
-                    'NOTE' => $request->catatan??'',
+                    'NOTE' => $request->catatan ?? '',
                     'STATUS' => $status,
                     'COURIER' => "",
                     'CREATED_BY' => $user->id
                 ];
-            
-                // Add the transaction data to the array
-                $transactions[] = $data;
-            
-                // Prepare approval data and assign the correct transaction ID
-                $data_approval = [
+                
+                // Create single approval for this branch
+                $approvals[] = [
                     'ID' => Uuid::uuid7()->toString(),
-                    'BPKB_TRANSACTION_ID' => $uuid, // Set the unique transaction ID here
+                    'BPKB_TRANSACTION_ID' => $uuid,
                     'ONCHARGE_APPRVL' => strtolower($status),
                     'ONCHARGE_PERSON' => $user->id,
                     'ONCHARGE_TIME' => Carbon::now(),
                     'ONCHARGE_DESCR' => $request->catatan,
                     'APPROVAL_RESULT' => $status
                 ];
-            
-                // Add the approval data to the array
-                $approvals[] = $data_approval;
-            
-                // Prepare details data and assign the correct transaction ID
-                $details[] = [
-                    'ID' => Uuid::uuid7()->toString(),
-                    'BPKB_TRANSACTION_ID' => $uuid, // Set the unique transaction ID here as well
-                    'COLLATERAL_ID' => $list['ID'],
-                    'STATUS' => $status
-                ];
+                
+                // Create details for each collateral in this branch
+                foreach ($collaterals as $list) {
+                    $details[] = [
+                        'ID' => Uuid::uuid7()->toString(),
+                        'BPKB_TRANSACTION_ID' => $uuid,
+                        'COLLATERAL_ID' => $list['ID'],
+                        'STATUS' => $status
+                    ];
+                }
             }
             
             M_BpkbTransaction::insert($transactions); 
