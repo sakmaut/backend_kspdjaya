@@ -22,10 +22,12 @@ class BpkbTransactionController extends Controller
     {
         try {
             $user = $request->user();
-            $position = $user->position??null;
             $branch = $user->branch_id??null;
-            
-            $data = M_BpkbTransaction::where('FROM_BRANCH',$branch)->get();
+
+            $data = M_BpkbTransaction::leftJoin('users as b', 'b.id', '=', 'bpkb_transaction.CREATED_BY')
+                        ->where('b.branch_id', '=', $branch)
+                        ->select('bpkb_transaction.*', 'b.branch_id')
+                        ->get();
 
             $dto = R_BpkbList::collection($data);
 
