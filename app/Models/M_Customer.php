@@ -77,4 +77,16 @@ class M_Customer extends Model
             }
         });
     }
+
+    // In M_Customer model
+    public function credit()
+    {
+        return $this->hasOne(M_Credit::class, 'CUST_CODE', 'CUST_CODE');
+    }
+
+    // In M_Credit model
+    public function collateral()
+    {
+        return $this->hasOne(M_CrCollateral::class, 'CR_CREDIT_ID', 'ID');
+    }
 }

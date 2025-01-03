@@ -22,11 +22,17 @@ class CustomerController extends Controller
     public function index(Request $request)
     {
         try {
-            $data = M_Customer::all()->map(function ($customer) {
-                $credit = M_Credit::where('CUST_CODE',$customer->CUST_CODE)->first();
-                $customer->jaminan = M_CrCollateral::where('CR_CREDIT_ID', $credit->ID)->first();
-                return $customer;
-            });
+            $data = M_Customer::with(['credit', 'credit.collateral'])
+                                ->get()
+                                ->map(function ($customer) {
+                                    $credit = $customer->credit;
+                                    if ($credit && $credit->collateral) {
+                                        $customer->jaminan = $credit->collateral;
+                                    }
+                            
+                                    return $customer;
+                                });
+        
 
             ActivityLogger::logActivity($request,"Success",200);
             return response()->json($data, 200);
