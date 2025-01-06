@@ -22,36 +22,17 @@ class CustomerController extends Controller
     public function index(Request $request)
     {
         try {
-            $customers = M_Customer::paginate(10);
 
-            $customers->getCollection()->transform(function ($customer) {
-                $credit = M_Credit::where('CUST_CODE', $customer->CUST_CODE)->first();
-        
-                if (!empty($credit->ID)) {
-                    $customer->jaminan = M_CrCollateral::where('CR_CREDIT_ID', $credit->ID)->first();
-                }
-        
-                return $customer;
-            });
-
-            ActivityLogger::logActivity($request,"Success",200);
-            return response()->json($customers, 200);
-        } catch (\Exception $e) {
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
-        }
-    }
-
-    public function searchAllCustomer(Request $request)
-    {
-        try {
-
-            $search = $request->search;
-
-            $customers = M_Customer::where('CUST_CODE', 'LIKE', "%{$search}%")
-                                    ->orWhere(DB::raw("CONCAT(NAME, ' ', ALIAS)"), 'LIKE', "%{$search}%") 
-                                    ->orWhere('MOTHER_NAME', 'LIKE', "%{$search}%")
-                                    ->paginate(10);
+            $search = $request->get('search');
+            
+            if(isset($search)){
+                $customers = M_Customer::where('CUST_CODE', 'LIKE', "%{$search}%")
+                                        ->orWhere(DB::raw("CONCAT(NAME, ' ', ALIAS)"), 'LIKE', "%{$search}%") 
+                                        ->orWhere('MOTHER_NAME', 'LIKE', "%{$search}%")
+                                        ->paginate(10);
+            }else{
+                $customers = M_Customer::paginate(10);
+            }
 
             $customers->getCollection()->transform(function ($customer) {
                 $credit = M_Credit::where('CUST_CODE', $customer->CUST_CODE)->first();
