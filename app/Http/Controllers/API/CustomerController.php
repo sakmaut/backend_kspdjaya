@@ -127,12 +127,25 @@ class CustomerController extends Controller
         try {
             $schedule = [];
 
-            $data = M_CreditSchedule::where('LOAN_NUMBER', $request->loan_number)
-            ->where(function ($query) {
-                $query->whereNull('PAID_FLAG')
-                    ->orWhere('PAID_FLAG', '<>', 'PAID');
-            })
-            ->get();
+            // $data = M_CreditSchedule::where('LOAN_NUMBER', $request->loan_number)
+            // ->where(function ($query) {
+            //     $query->whereNull('PAID_FLAG')
+            //         ->orWhere('PAID_FLAG', '<>', 'PAID');
+            // })
+            // ->get();
+
+            $data = DB::table('credit_schedule as a')
+                        ->leftJoin('arrears as b', function($join) {
+                            $join->on('b.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
+                                ->where('b.STATUS_REC', '=', 'A');
+                        })
+                        ->where('a.LOAN_NUMBER', $request->loan_number)
+                        ->where(function ($query) {
+                            $query->whereNull('a.PAID_FLAG')
+                                ->orWhere('a.PAID_FLAG', '!=', 'PAID');
+                        })
+                        ->select('a.*', 'b.PAST_DUE_PENALTY', 'b.PAID_PENALTY')
+                        ->get();
 
             if ($data->isEmpty()) {
                 throw new Exception("Loan Number Is Not Exist");
@@ -140,7 +153,7 @@ class CustomerController extends Controller
 
             $j = 0;
             foreach ($data as $res) {
-                $arrears = M_Arrears::where(['LOAN_NUMBER' => $res->LOAN_NUMBER,'START_DATE' => $res->PAYMENT_DATE])->first();
+                // $arrears = M_Arrears::where(['LOAN_NUMBER' => $res->LOAN_NUMBER,'START_DATE' => $res->PAYMENT_DATE])->first();
 
                 $schedule[]=[
                     'key' => $j++,
@@ -153,10 +166,10 @@ class CustomerController extends Controller
                     'principal_remains' => floatval($res->PRINCIPAL_REMAINS),
                     'payment' => floatval($res->PAYMENT_VALUE),
                     'bayar_angsuran' => floatval($res->INSTALLMENT) - floatval($res->PAYMENT_VALUE),
-                    'bayar_denda' => floatval($arrears->PAST_DUE_PENALTY ?? 0) - floatval($arrears->PAID_PENALTY ?? 0),
-                    'total_bayar' => floatval($res->INSTALLMENT+($arrears->PAST_DUE_PENALTY??0)),
+                    'bayar_denda' => floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->PAID_PENALTY ?? 0),
+                    'total_bayar' => floatval($res->INSTALLMENT+($res->PAST_DUE_PENALTY??0)),
                     'flag' => $res->PAID_FLAG,
-                    'denda' => floatval($arrears->PAST_DUE_PENALTY ?? 0) - floatval($arrears->PAID_PENALTY ?? 0) 
+                    'denda' => floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->PAID_PENALTY ?? 0) 
                 ];
             }
 
