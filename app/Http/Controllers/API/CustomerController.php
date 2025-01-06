@@ -22,7 +22,7 @@ class CustomerController extends Controller
     public function index(Request $request)
     {
         try {
-            $customers = M_Customer::paginate(50);
+            $customers = M_Customer::paginate(10);
 
             $customers->getCollection()->transform(function ($customer) {
                 $credit = M_Credit::where('CUST_CODE', $customer->CUST_CODE)->first();
