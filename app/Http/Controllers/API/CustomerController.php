@@ -140,7 +140,7 @@ class CustomerController extends Controller
                         ->leftJoin('arrears as b', function($join) {
                             $join->on('b.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
                                 ->where('b.STATUS_REC', '=', 'A')
-                                ->whereRaw('b.START_DATE = a.PAYMENT_DATE'); // Correcting the join condition
+                                ->whereRaw('b.START_DATE = a.PAYMENT_DATE');
                         })
                         ->where('a.LOAN_NUMBER', $request->loan_number)
                         ->where(function ($query) {
@@ -148,6 +148,7 @@ class CustomerController extends Controller
                                 ->orWhere('a.PAID_FLAG', '!=', 'PAID');
                         })
                         ->select('a.*', 'b.PAST_DUE_PENALTY', 'b.PAID_PENALTY')
+                        ->orderBy("a.INSTALLMENT_COUNT","ASC")
                         ->get();
 
 
