@@ -270,7 +270,7 @@ class Credit extends Controller
         $data_credit =[
             'ID' =>  $SET_UUID,
             'LOAN_NUMBER' => $loan_number,
-            'STATUS_REC' => $data->BRANCH,
+            'STATUS_REC' => 'AC',
             'BRANCH'   => $data->BRANCH,
             'ORDER_NUMBER' => $data->ORDER_NUMBER,
             'STATUS'  => 'A',
