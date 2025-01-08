@@ -345,7 +345,6 @@ class BpkbTransactionController extends Controller
 
             $getCollateralId= $request->collateral_id;
             $user = $request->user();
-            $branch = $user->branch_id ?? null;
             $status = "REQUEST";
 
             if (!is_array($getCollateralId) || empty($getCollateralId)) {
@@ -398,7 +397,7 @@ class BpkbTransactionController extends Controller
                     'ID' => $uuid,
                     'TRX_CODE' => generateCodeJaminan($request, 'bpkb_transaction', 'TRX_CODE', 'JMN'),
                     'FROM_BRANCH' => $fromBranch,
-                    'TO_BRANCH' => $branch,
+                    'TO_BRANCH' => $user->branch_id ?? null,
                     'CATEGORY' => strtolower($status),
                     'NOTE' => $request->catatan ?? '',
                     'STATUS' => $status,
