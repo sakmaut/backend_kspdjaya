@@ -34,10 +34,6 @@ Route::get('welcome', [Welcome::class, 'index']);
 
 Route::middleware(['auth:sanctum', 'check.access'])->group(function () {
     Route::resource('users', UsersController::class)->only(['index']);
-    Route::resource('cr_application', CrAppilcationController::class)->only(['index']);
-    Route::resource('kunjungan', CrSurveyController::class)->only(['index']);
-    Route::get('kunjungan_admin', [CrAppilcationController::class, 'showAdmins']);
-   
     // Route::resource('taksasi', TaksasiController::class)->only(['index']);
 });
 
@@ -48,6 +44,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::resource('menu', MasterMenuController::class);
     Route::get('menu-sub-list', [MasterMenuController::class, 'menuSubList']);
     Route::resource('user_access_menu', UserAccessMenuController::class);
+
+    Route::resource('cr_application', CrAppilcationController::class)->only(['index']);
+    Route::resource('kunjungan', CrSurveyController::class)->only(['index']);
+    Route::get('kunjungan_admin', [CrAppilcationController::class, 'showAdmins']);
 
     // Route Group Users
     Route::resource('users', UsersController::class)->except(['index']);
@@ -98,6 +98,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::resource('payment', PaymentController::class);
     Route::post('payment_attachment', [PaymentController::class, 'upload']);
     Route::post('payment_approval', [PaymentController::class, 'approval']);
+    Route::post('payment_cancel', [PaymentController::class, 'cancel']);
 
     Route::post('pelunasan', [PelunasanController::class, 'checkCredit']);
     Route::post('payment_pelunasan', [PelunasanController::class, 'processPayment']);

@@ -4,6 +4,8 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\R_CreditCancelLog;
+use App\Models\M_ApplicationApproval;
+use App\Models\M_ApplicationApprovalLog;
 use App\Models\M_CrApplication;
 use App\Models\M_CrApplicationGuarantor;
 use App\Models\M_CrApplicationSpouse;
@@ -24,6 +26,8 @@ use App\Models\M_Customer;
 use App\Models\M_CustomerDocument;
 use App\Models\M_CustomerExtra;
 use App\Models\M_LocationStatus;
+use App\Models\M_SurveyApproval;
+use App\Models\M_SurveyApprovalLog;
 use Carbon\Carbon;
 use DateTime;
 use Exception;
@@ -992,6 +996,56 @@ class Credit extends Controller
                             'ONCHARGE_FLAG' => $request->flag,
                         ]
                     );
+
+                    $checkSurveyId = M_CrApplication::where('ORDER_NUMBER',$check->ORDER_NUMBER)->first();
+
+                    if($checkSurveyId){
+                        $updateApproval = M_ApplicationApproval::where('cr_application_id',$checkSurveyId->ID)->first();
+
+                        if($updateApproval){
+                            $updateApproval->update([
+                                'code' => 'CANCELHO', 
+                                'cr_prospect_id' => $checkSurveyId->CR_SURVEY_ID??null, 
+                                'cr_application_id' => $checkSurveyId->ID??null,
+                                'cr_application_ho' => $request->user()->id,
+                                'cr_application_ho_time' => Carbon::now()->format('Y-m-d'),
+                                'cr_application_ho_desc' => $request->descr_ho??'',
+                                'application_result' => 'cancel pk',
+                            ]);
+                            
+                            $data_application_log = [
+                                'CODE' => 'CANCELHO',
+                                'POSITION' => $request->user()->position??null,
+                                'APPLICATION_APPROVAL_ID' => $checkSurveyId->CR_SURVEY_ID??null,
+                                'ONCHARGE_PERSON' => $request->user()->id,
+                                'ONCHARGE_TIME' => Carbon::now(),
+                                'APPROVAL_RESULT' => 'cancel pk'
+                            ];
+                    
+                            M_ApplicationApprovalLog::create($data_application_log);
+                        }
+
+                        $survey_apprval_change = M_SurveyApproval::where('CR_SURVEY_ID',$checkSurveyId->CR_SURVEY_ID)->first();
+
+                        if($survey_apprval_change){
+                            $survey_apprval_change->update([
+                                'CODE' => 'CANCELHO',
+                                'ONCHARGE_PERSON' => $request->user()->id,
+                                'ONCHARGE_DESCR' => $request->descr_ho??'',
+                                'ONCHARGE_TIME' => Carbon::now(),
+                                'APPROVAL_RESULT' => 'cancel pk'
+                            ]);
+                    
+                            M_SurveyApprovalLog::create([
+                                'CODE' => 'CANCELHO',
+                                'SURVEY_APPROVAL_ID' => $checkSurveyId->CR_SURVEY_ID,
+                                'ONCHARGE_PERSON' => $request->user()->id,
+                                'ONCHARGE_TIME' => Carbon::now(),
+                                'APPROVAL_RESULT' =>  'cancel pk'
+                            ]);
+                        }
+                    }
+
                 }else{
                     throw new Exception("User Not Authorized To Approve", 404);
                 }
