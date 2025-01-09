@@ -1019,7 +1019,7 @@ class Credit extends Controller
             $this->updateSurveyApproval($request, $updateProsessRequest,'CANCELHO','cancel pk');
         }
 
-        if (strtolower($request->user()->position) === 'ho') {
+        if (strtolower($request->user()->position) === 'ho' && isset($request->flag) && !empty($request->flag) ) {
             return $this->processHoApproval($request, $check);
         }
 
@@ -1045,19 +1045,15 @@ class Credit extends Controller
             ]);
         }
 
-        if (strtolower($request->flag) === 'yes' && isset($request->flag) && !empty($request->flag)) {
+        if (strtolower($request->flag) === 'yes') {
             $checkSurveyId = M_CrApplication::where('ORDER_NUMBER', $check->ORDER_NUMBER)->first();
             if ($checkSurveyId) {
                 $this->updateApplicationApproval($request, $checkSurveyId,'REQCANCELHO','menunggu cancel pk');
                 $this->updateSurveyApproval($request, $checkSurveyId,'REQCANCELHO','menunggu cancel pk');
             }
-
-            return response()->json(['message' => "Success Cancel PK"], 200);
-        }else{
-            return response()->json(['message' => "Flag Not Found"], 200);
         }
 
-       
+        return response()->json(['message' => "Success Cancel PK"], 200);
     }
 
     private function updateApplicationApproval(Request $request, $application,$code,$descr)
