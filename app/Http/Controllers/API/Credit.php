@@ -949,7 +949,6 @@ class Credit extends Controller
             
             $request->validate([
                 'order_number' => 'required|string',
-                'descr' => 'required|string',
                 'req_flag' => 'required|string',
             ]);
 
