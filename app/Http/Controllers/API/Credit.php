@@ -996,53 +996,55 @@ class Credit extends Controller
                             'ONCHARGE_FLAG' => $request->flag,
                         ]
                     );
-
-                    $checkSurveyId = M_CrApplication::where('ORDER_NUMBER',$check->ORDER_NUMBER)->first();
-
-                    if($checkSurveyId){
-                        $updateApproval = M_ApplicationApproval::where('cr_application_id',$checkSurveyId->ID)->first();
-
-                        if($updateApproval){
-                            $updateApproval->update([
-                                'code' => 'CANCELHO', 
-                                'cr_prospect_id' => $checkSurveyId->CR_SURVEY_ID??null, 
-                                'cr_application_id' => $checkSurveyId->ID??null,
-                                'cr_application_ho' => $request->user()->id,
-                                'cr_application_ho_time' => Carbon::now()->format('Y-m-d'),
-                                'cr_application_ho_desc' => $request->descr_ho??'',
-                                'application_result' => 'cancel pk',
-                            ]);
-                            
-                            $data_application_log = [
-                                'CODE' => 'CANCELHO',
-                                'POSITION' => $request->user()->position??null,
-                                'APPLICATION_APPROVAL_ID' => $checkSurveyId->CR_SURVEY_ID??null,
-                                'ONCHARGE_PERSON' => $request->user()->id,
-                                'ONCHARGE_TIME' => Carbon::now(),
-                                'APPROVAL_RESULT' => 'cancel pk'
-                            ];
                     
-                            M_ApplicationApprovalLog::create($data_application_log);
-                        }
+                    if(strtolower($request->flag) == 'yes'){
+                        $checkSurveyId = M_CrApplication::where('ORDER_NUMBER',$check->ORDER_NUMBER)->first();
 
-                        $survey_apprval_change = M_SurveyApproval::where('CR_SURVEY_ID',$checkSurveyId->CR_SURVEY_ID)->first();
+                        if($checkSurveyId){
+                            $updateApproval = M_ApplicationApproval::where('cr_application_id',$checkSurveyId->ID)->first();
 
-                        if($survey_apprval_change){
-                            $survey_apprval_change->update([
-                                'CODE' => 'CANCELHO',
-                                'ONCHARGE_PERSON' => $request->user()->id,
-                                'ONCHARGE_DESCR' => $request->descr_ho??'',
-                                'ONCHARGE_TIME' => Carbon::now(),
-                                'APPROVAL_RESULT' => 'cancel pk'
-                            ]);
-                    
-                            M_SurveyApprovalLog::create([
-                                'CODE' => 'CANCELHO',
-                                'SURVEY_APPROVAL_ID' => $checkSurveyId->CR_SURVEY_ID,
-                                'ONCHARGE_PERSON' => $request->user()->id,
-                                'ONCHARGE_TIME' => Carbon::now(),
-                                'APPROVAL_RESULT' =>  'cancel pk'
-                            ]);
+                            if($updateApproval){
+                                $updateApproval->update([
+                                    'code' => 'CANCELHO', 
+                                    'cr_prospect_id' => $checkSurveyId->CR_SURVEY_ID??null, 
+                                    'cr_application_id' => $checkSurveyId->ID??null,
+                                    'cr_application_ho' => $request->user()->id,
+                                    'cr_application_ho_time' => Carbon::now()->format('Y-m-d'),
+                                    'cr_application_ho_desc' => $request->descr_ho??'',
+                                    'application_result' => 'cancel pk',
+                                ]);
+                                
+                                $data_application_log = [
+                                    'CODE' => 'CANCELHO',
+                                    'POSITION' => $request->user()->position??null,
+                                    'APPLICATION_APPROVAL_ID' => $checkSurveyId->CR_SURVEY_ID??null,
+                                    'ONCHARGE_PERSON' => $request->user()->id,
+                                    'ONCHARGE_TIME' => Carbon::now(),
+                                    'APPROVAL_RESULT' => 'cancel pk'
+                                ];
+                        
+                                M_ApplicationApprovalLog::create($data_application_log);
+                            }
+
+                            $survey_apprval_change = M_SurveyApproval::where('CR_SURVEY_ID',$checkSurveyId->CR_SURVEY_ID)->first();
+
+                            if($survey_apprval_change){
+                                $survey_apprval_change->update([
+                                    'CODE' => 'CANCELHO',
+                                    'ONCHARGE_PERSON' => $request->user()->id,
+                                    'ONCHARGE_DESCR' => $request->descr_ho??'',
+                                    'ONCHARGE_TIME' => Carbon::now(),
+                                    'APPROVAL_RESULT' => 'cancel pk'
+                                ]);
+                        
+                                M_SurveyApprovalLog::create([
+                                    'CODE' => 'CANCELHO',
+                                    'SURVEY_APPROVAL_ID' => $checkSurveyId->CR_SURVEY_ID,
+                                    'ONCHARGE_PERSON' => $request->user()->id,
+                                    'ONCHARGE_TIME' => Carbon::now(),
+                                    'APPROVAL_RESULT' =>  'cancel pk'
+                                ]);
+                            }
                         }
                     }
 
