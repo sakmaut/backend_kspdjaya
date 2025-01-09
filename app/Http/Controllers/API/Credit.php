@@ -183,6 +183,7 @@ class Credit extends Controller
             ],
              "pokok_margin" =>bilangan($principal)??null,
              "tenor" => bilangan($data->TENOR,false)??null,
+             "credit_id" => !empty($check_exist)?$check_exist->ID:null,
              "tgl_awal_pk" => !empty($check_exist)?Carbon::parse($check_exist->ENTRY_DATE)->format('Y-m-d'):parseDatetoYMD($set_tgl_awal),
              "tgl_akhir_pk" => !empty($check_exist)?Carbon::parse($check_exist->END_DATE)->format('Y-m-d'):add_months(parseDatetoYMD($set_tgl_awal),$loanTerm),
              "angsuran" =>bilangan($angsuran)??null,
