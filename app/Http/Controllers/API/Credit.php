@@ -1013,17 +1013,15 @@ class Credit extends Controller
             'REQUEST_DESCR' => $request->descr,
         ]);
 
-        $updateProsessRequest = M_CrApplication::where('ORDER_NUMBER', $check->ORDER_NUMBER)->first();
-        if ($updateProsessRequest) {
-            $this->updateApplicationApproval($request, $updateProsessRequest,'CANCELHO','cancel pk');
-            $this->updateSurveyApproval($request, $updateProsessRequest,'CANCELHO','cancel pk');
-        }
-
         if (strtolower($request->user()->position) === 'ho' && isset($request->flag) && !empty($request->flag) ) {
             return $this->processHoApproval($request, $check);
-        }
 
-        throw new Exception("User Not Authorized To Approve", 404);
+            $updateProsessRequest = M_CrApplication::where('ORDER_NUMBER', $check->ORDER_NUMBER)->first();
+            if ($updateProsessRequest) {
+                $this->updateApplicationApproval($request, $updateProsessRequest,'CANCELHO','cancel pk');
+                $this->updateSurveyApproval($request, $updateProsessRequest,'CANCELHO','cancel pk');
+            }
+        }
     }
 
     private function processHoApproval(Request $request, $check)
