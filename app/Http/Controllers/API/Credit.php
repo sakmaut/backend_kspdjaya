@@ -1033,7 +1033,54 @@ class Credit extends Controller
                         'REQUEST_DATE' => Carbon::now(),
                         'REQUEST_DESCR' => $request->descr,
                     ]);
+
+                    $updateProsessRequest = M_CrApplication::where('ORDER_NUMBER',$check->ORDER_NUMBER)->first();
         
+                    if($updateProsessRequest){
+                        $updateApproval1 = M_ApplicationApproval::where('cr_application_id',$updateProsessRequest->ID)->first();
+
+                        if($updateApproval1){
+                            $updateApproval1->update([
+                                'code' => 'REQCANCELHO', 
+                                'cr_prospect_id' => $updateProsessRequest->CR_SURVEY_ID??null, 
+                                'cr_application_id' => $updateProsessRequest->ID??null,
+                                'cr_application_ho' => $request->user()->id,
+                                'cr_application_ho_time' => Carbon::now()->format('Y-m-d'),
+                                'cr_application_ho_desc' => $request->descr_ho??'',
+                                'application_result' => 'menunggu cancel pk',
+                            ]);
+                    
+                            M_ApplicationApprovalLog::create([
+                                'CODE' => 'REQCANCELHO',
+                                'POSITION' => $request->user()->position??null,
+                                'APPLICATION_APPROVAL_ID' => $updateProsessRequest->ID??null,
+                                'ONCHARGE_PERSON' => $request->user()->id,
+                                'ONCHARGE_TIME' => Carbon::now(),
+                                'APPROVAL_RESULT' => 'menunggu cancel pk'
+                            ]);
+                        }
+
+                        $survey_apprval_change1 = M_SurveyApproval::where('CR_SURVEY_ID',$updateProsessRequest->CR_SURVEY_ID)->first();
+
+                        if($survey_apprval_change1){
+                            $survey_apprval_change1->update([
+                                'CODE' => 'REQCANCELHO',
+                                'ONCHARGE_PERSON' => $request->user()->id,
+                                'ONCHARGE_DESCR' => $request->descr_ho??'',
+                                'ONCHARGE_TIME' => Carbon::now(),
+                                'APPROVAL_RESULT' => 'menunggu cancel pk'
+                            ]);
+                    
+                            M_SurveyApprovalLog::create([
+                                'CODE' => 'REQCANCELHO',
+                                'SURVEY_APPROVAL_ID' => $updateProsessRequest->CR_SURVEY_ID,
+                                'ONCHARGE_PERSON' => $request->user()->id,
+                                'ONCHARGE_TIME' => Carbon::now(),
+                                'APPROVAL_RESULT' =>  'menunggu cancel pk'
+                            ]);
+                        }
+                    }
+
                     if(isset($request->flag) && !empty($request->flag)){
                         if(strtolower($request->user()->position) == 'ho'){
                             $check->update(
@@ -1075,7 +1122,7 @@ class Credit extends Controller
                                         $data_application_log = [
                                             'CODE' => 'CANCELHO',
                                             'POSITION' => $request->user()->position??null,
-                                            'APPLICATION_APPROVAL_ID' => $checkSurveyId->CR_SURVEY_ID??null,
+                                            'APPLICATION_APPROVAL_ID' => $checkSurveyId->ID??null,
                                             'ONCHARGE_PERSON' => $request->user()->id,
                                             'ONCHARGE_TIME' => Carbon::now(),
                                             'APPROVAL_RESULT' => 'cancel pk'
