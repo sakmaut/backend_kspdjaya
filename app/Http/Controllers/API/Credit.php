@@ -943,7 +943,7 @@ class Credit extends Controller
         return $schedule;
     }
 
-    public function pkCancel(Request $request)
+    public function pkCancelOLD(Request $request)
     { 
         try {
             
@@ -1170,7 +1170,168 @@ class Credit extends Controller
         }
 
     }
-    
+
+    public function pkCancel(Request $request)
+    {
+        try {
+            $request->validate([
+                'order_number' => 'required|string',
+                'descr' => 'required|string',
+                'req_flag' => 'required|string',
+            ]);
+
+            $orderNumber = $request->order_number;
+            $reqFlag = $request->req_flag;
+
+            // Handle 'revisi' request
+            if ($reqFlag === 'revisi') {
+                return $this->handleRevisi($request, $orderNumber);
+            }
+
+            // Handle 'cancel' request
+            if ($reqFlag === 'cancel') {
+                return $this->handleCancel($request, $orderNumber);
+            }
+
+            throw new Exception("Request Flag Not Valid", 404);
+
+        } catch (\Exception $e) {
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+        }
+    }
+
+    private function handleRevisi(Request $request, string $orderNumber)
+    {
+        $check = M_Credit::where('ORDER_NUMBER', $orderNumber)->first();
+
+        if ($check) {
+            throw new Exception("Order Number Has Created PK, You Must Cancelled", 404);
+        }
+
+        $checkOrderNumber = M_CrApplication::where('ORDER_NUMBER', $orderNumber)->first();
+        if (!$checkOrderNumber) {
+            throw new Exception("Order Number {$orderNumber} No Exist", 404);
+        }
+
+        $this->updateApplicationApproval($request, $checkOrderNumber,'REORADM','revisi admin');
+        $this->updateSurveyApproval($request, $checkOrderNumber,'REORADM','revisi admin');
+
+        return response()->json(['message' => "Success Revisi PK"], 200);
+    }
+
+    private function handleCancel(Request $request, string $orderNumber)
+    {
+        $check = M_Credit::where([
+            'ORDER_NUMBER' => $orderNumber,
+            'STATUS' => 'A'
+        ])->whereNull('DELETED_BY')
+        ->whereNull('DELETED_AT')
+        ->first();
+
+        if (!$check) {
+            throw new Exception("Credit ID Not Exist", 404);
+        }
+
+        M_CreditCancelLog::create([
+            'CREDIT_ID' => $orderNumber,
+            'REQUEST_FLAG' => "CANCEL",
+            'REQUEST_BY' => $request->user()->id,
+            'REQUEST_BRANCH' => $request->user()->branch_id,
+            'REQUEST_DATE' => Carbon::now(),
+            'REQUEST_DESCR' => $request->descr,
+        ]);
+
+        $updateProsessRequest = M_CrApplication::where('ORDER_NUMBER', $check->ORDER_NUMBER)->first();
+        if ($updateProsessRequest) {
+            $this->updateApplicationApproval($request, $updateProsessRequest,'CANCELHO','cancel pk');
+            $this->updateSurveyApproval($request, $updateProsessRequest,'CANCELHO','cancel pk');
+        }
+
+        if (strtolower($request->user()->position) === 'ho') {
+            return $this->processHoApproval($request, $check);
+        }
+
+        throw new Exception("User Not Authorized To Approve", 404);
+    }
+
+    private function processHoApproval(Request $request, $check)
+    {
+        $check->update([
+            'STATUS' => 'C',
+            'DELETED_BY' => $request->user()->id,
+            'DELETED_AT' => Carbon::now(),
+        ]);
+
+        $checkCreditCancel = M_CreditCancelLog::where('CREDIT_ID', $check->ORDER_NUMBER)->first();
+
+        if($checkCreditCancel){
+            $checkCreditCancel->update([
+                'ONCHARGE_DESCR' => $request->descr_ho ?? '',
+                'ONCHARGE_PERSON' => $request->user()->id,
+                'ONCHARGE_TIME' => Carbon::now(),
+                'ONCHARGE_FLAG' => $request->flag,
+            ]);
+        }
+
+        if (strtolower($request->flag) === 'yes') {
+            $checkSurveyId = M_CrApplication::where('ORDER_NUMBER', $check->ORDER_NUMBER)->first();
+            if ($checkSurveyId) {
+                $this->updateApplicationApproval($request, $checkSurveyId,'REQCANCELHO','menunggu cancel pk');
+                $this->updateSurveyApproval($request, $checkSurveyId,'REQCANCELHO','menunggu cancel pk');
+            }
+        }
+
+        return response()->json(['message' => "Success Cancel PK"], 200);
+    }
+
+    private function updateApplicationApproval(Request $request, $application,$code,$descr)
+    {
+        $approval = M_ApplicationApproval::where('cr_application_id', $application->ID)->first();
+        if ($approval) {
+            $approval->update([
+                'code' => $code,
+                'cr_prospect_id' => $application->CR_SURVEY_ID ?? null,
+                'cr_application_id' => $application->ID??null,
+                'application_result' => $descr,
+                'cr_application_ho' => $request->user()->id,
+                'cr_application_ho_time' => Carbon::now()->format('Y-m-d'),
+                'cr_application_ho_desc' => $request->descr_ho ?? '',
+            ]);
+
+            M_ApplicationApprovalLog::create([
+                'CODE' => $code,
+                'POSITION' => $request->user()->position ?? null,
+                'APPLICATION_APPROVAL_ID' => $application->ID ?? null,
+                'ONCHARGE_PERSON' => $request->user()->id,
+                'ONCHARGE_TIME' => Carbon::now(),
+                'APPROVAL_RESULT' => $descr,
+            ]);
+        }
+    }
+
+    private function updateSurveyApproval(Request $request, $application,$code,$descr)
+    {
+        $surveyApproval = M_SurveyApproval::where('CR_SURVEY_ID', $application->CR_SURVEY_ID)->first();
+        if ($surveyApproval) {
+            $surveyApproval->update([
+                'CODE' => $code,
+                'ONCHARGE_PERSON' => $request->user()->id,
+                'ONCHARGE_DESCR' => $request->descr_ho ?? '',
+                'ONCHARGE_TIME' => Carbon::now(),
+                'APPROVAL_RESULT' => $descr,
+            ]);
+
+            M_SurveyApprovalLog::create([
+                'CODE' => $code,
+                'SURVEY_APPROVAL_ID' => $application->CR_SURVEY_ID,
+                'ONCHARGE_PERSON' => $request->user()->id,
+                'ONCHARGE_TIME' => Carbon::now(),
+                'APPROVAL_RESULT' => $descr,
+            ]);
+        }
+    }
+
     public function pkCancelList(Request $request)
     {
         try {
