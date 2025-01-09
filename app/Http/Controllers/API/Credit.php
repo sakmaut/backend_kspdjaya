@@ -1013,14 +1013,14 @@ class Credit extends Controller
             'REQUEST_DESCR' => $request->descr,
         ]);
 
+        $checkSurveyId = M_CrApplication::where('ORDER_NUMBER', $check->ORDER_NUMBER)->first();
+        if ($checkSurveyId) {
+            $this->updateApplicationApproval($request, $checkSurveyId,'REQCANCELHO','menunggu cancel pk');
+            $this->updateSurveyApproval($request, $checkSurveyId,'REQCANCELHO','menunggu cancel pk');
+        }
+
         if (strtolower($request->user()->position) === 'ho' && isset($request->flag) && !empty($request->flag) ) {
             return $this->processHoApproval($request, $check);
-
-            $updateProsessRequest = M_CrApplication::where('ORDER_NUMBER', $check->ORDER_NUMBER)->first();
-            if ($updateProsessRequest) {
-                $this->updateApplicationApproval($request, $updateProsessRequest,'CANCELHO','cancel pk');
-                $this->updateSurveyApproval($request, $updateProsessRequest,'CANCELHO','cancel pk');
-            }
         }
     }
 
@@ -1044,10 +1044,10 @@ class Credit extends Controller
         }
 
         if (strtolower($request->flag) === 'yes') {
-            $checkSurveyId = M_CrApplication::where('ORDER_NUMBER', $check->ORDER_NUMBER)->first();
-            if ($checkSurveyId) {
-                $this->updateApplicationApproval($request, $checkSurveyId,'REQCANCELHO','menunggu cancel pk');
-                $this->updateSurveyApproval($request, $checkSurveyId,'REQCANCELHO','menunggu cancel pk');
+            $updateProsessRequest = M_CrApplication::where('ORDER_NUMBER', $check->ORDER_NUMBER)->first();
+            if ($updateProsessRequest) {
+                $this->updateApplicationApproval($request, $updateProsessRequest,'CANCELHO','cancel pk');
+                $this->updateSurveyApproval($request, $updateProsessRequest,'CANCELHO','cancel pk');
             }
         }
 
