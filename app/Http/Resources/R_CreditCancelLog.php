@@ -25,6 +25,7 @@ class R_CreditCancelLog extends JsonResource
 
         return [
             "id" => $this->ID,
+            "order_number" =>$credit->ORDER_NUMBER ??null,
             "no_kontrak" =>$credit->LOAN_NUMBER ??null,
             "tgl_kontrak" =>$credit->ENTRY_DATE ??null,
             "request_by" => User::find($this->REQUEST_BY)->fullname ??null,
