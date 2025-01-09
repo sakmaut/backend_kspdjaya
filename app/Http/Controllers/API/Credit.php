@@ -10,6 +10,7 @@ use App\Models\M_CrCollateral;
 use App\Models\M_CrCollateralDocument;
 use App\Models\M_CrCollateralSertification;
 use App\Models\M_Credit;
+use App\Models\M_CreditCancelLog;
 use App\Models\M_CreditSchedule;
 use App\Models\M_CrGuaranteSertification;
 use App\Models\M_CrGuaranteVehicle;
@@ -934,6 +935,44 @@ class Credit extends Controller
         }
     
         return $schedule;
+    }
+
+    public function pkCancel(Request $request)
+    { 
+        try {
+            
+            $request->validate([
+                'credit_id' => 'required|string',
+                'descr' => 'required|string',
+            ]);
+
+            $check = M_Credit::find($request->credit_id);
+
+            if(!$check){
+                throw new Exception("Credit ID Not Exist", 404);
+            }
+
+            $check->update(
+                [
+                    'STATUS' => 'C',
+                    'DELETED_BY' => $request->user()->id,
+                    'DELETED_AT' => Carbon::now(),
+                ]
+            );
+
+            M_CreditCancelLog::create([
+                'CREDIT_ID' => $check->ID,
+                'ONCHARGE_DESCR' => $request->descr,
+                'ONCHARGE_PERSON' => $request->user()->id,
+                'ONCHARGE_TIME' => Carbon::now(),
+            ]);
+
+            return response()->json(['message' => "Success Cancel PK"], 200);
+        } catch (\Exception $e) {
+            ActivityLogger::logActivity($request,$e->getMessage(),500);
+            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+        }
+
     }
     
 
