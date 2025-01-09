@@ -1027,7 +1027,7 @@ class Credit extends Controller
                     }
 
                     M_CreditCancelLog::create([
-                        'CREDIT_ID' => $request->ORDER_NUMBER,
+                        'CREDIT_ID' => $request->order_number,
                         'REQUEST_FLAG' => "CANCEL",
                         'REQUEST_BY' => $request->user()->id??null,
                         'REQUEST_BRANCH' => $request->user()->branch_id??null,
