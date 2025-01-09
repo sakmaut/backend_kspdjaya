@@ -946,26 +946,54 @@ class Credit extends Controller
                 'descr' => 'required|string',
             ]);
 
-            $check = M_Credit::find($request->credit_id);
+            $check = M_Credit::where([
+                'ID' => $request->credit_id,
+                'STATUS' => 'A'
+            ])
+            ->where(function ($query) {
+                $query->whereNull('deleted_by')
+                      ->orWhere('deleted_by', '')
+                      ->whereNull('deleted_at')
+                      ->orWhere('deleted_at', '');
+            })
+            ->first();
 
             if(!$check){
                 throw new Exception("Credit ID Not Exist", 404);
             }
 
-            $check->update(
-                [
-                    'STATUS' => 'C',
-                    'DELETED_BY' => $request->user()->id,
-                    'DELETED_AT' => Carbon::now(),
-                ]
-            );
-
             M_CreditCancelLog::create([
-                'CREDIT_ID' => $check->ID,
-                'ONCHARGE_DESCR' => $request->descr,
-                'ONCHARGE_PERSON' => $request->user()->id,
-                'ONCHARGE_TIME' => Carbon::now(),
+                'CREDIT_ID' => $request->credit_id,
+                'REQUEST_BY' => $request->user()->id??null,
+                'REQUEST_BRANCH' => $request->user()->branch_id??null,
+                'REQUEST_DATE' => Carbon::now(),
+                'REQUEST_DESCR' => $request->descr,
             ]);
+
+            if(isset($request->flag) && !empty($request->flag)){
+                if(strtolower($request->user()->position) == 'ho'){
+                    $check->update(
+                        [
+                            'STATUS' => 'C',
+                            'DELETED_BY' => $request->user()->id,
+                            'DELETED_AT' => Carbon::now(),
+                        ]
+                    );
+    
+                    $checkCreditCancel = M_CreditCancelLog::where('CREDIT_ID',$request->credit_id)->first();
+    
+                    $checkCreditCancel->update(
+                        [
+                            'ONCHARGE_DESCR' => $request->descr_ho??'',
+                            'ONCHARGE_PERSON' => $request->user()->id,
+                            'ONCHARGE_TIME' => Carbon::now(),
+                            'ONCHARGE_FLAG' => $request->flag,
+                        ]
+                    );
+                }else{
+                    throw new Exception("User Not Authorized To Approve", 404);
+                }
+            }
 
             return response()->json(['message' => "Success Cancel PK"], 200);
         } catch (\Exception $e) {

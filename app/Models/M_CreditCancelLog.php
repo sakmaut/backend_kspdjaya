@@ -13,9 +13,14 @@ class M_CreditCancelLog extends Model
     protected $fillable = [ 
         'ID',
         'CREDIT_ID',
-        'ONCHARGE_DESCR',
+        'REQUEST_BY',
+        'REQUEST_BRANCH',
+        'REQUEST_DATE',
+        'REQUEST_DESCR',
         'ONCHARGE_PERSON',
         'ONCHARGE_TIME',
+        'ONCHARGE_DESCR',
+        'ONCHARGE_FLAG',
     ];
     protected $guarded = [];
     public $incrementing = false;
