@@ -948,108 +948,170 @@ class Credit extends Controller
         try {
             
             $request->validate([
-                'credit_id' => 'required|string',
+                'order_number' => 'required|string',
                 'descr' => 'required|string',
+                'req_flag' => 'required|string',
             ]);
 
-            $check = M_Credit::where([
-                'ID' => $request->credit_id,
-                'STATUS' => 'A'
-            ])
-            ->where(function ($query) {
-                $query->whereNull('DELETED_BY')
-                      ->orWhere('DELETED_BY', '')
-                      ->whereNull('DELETED_AT')
-                      ->orWhere('DELETED_AT', '');
-            })
-            ->first();
+            if(isset($request->req_flag) && !empty($request->req_flag)){
+                if($request->req_flag == 'revisi'){
 
-            if(!$check){
-                throw new Exception("Credit ID Not Exist", 404);
-            }
-
-            M_CreditCancelLog::create([
-                'CREDIT_ID' => $request->credit_id,
-                'REQUEST_BY' => $request->user()->id??null,
-                'REQUEST_BRANCH' => $request->user()->branch_id??null,
-                'REQUEST_DATE' => Carbon::now(),
-                'REQUEST_DESCR' => $request->descr,
-            ]);
-
-            if(isset($request->flag) && !empty($request->flag)){
-                if(strtolower($request->user()->position) == 'ho'){
-                    $check->update(
-                        [
-                            'STATUS' => 'C',
-                            'DELETED_BY' => $request->user()->id,
-                            'DELETED_AT' => Carbon::now(),
-                        ]
-                    );
-    
-                    $checkCreditCancel = M_CreditCancelLog::where('CREDIT_ID',$request->credit_id)->first();
-    
-                    $checkCreditCancel->update(
-                        [
-                            'ONCHARGE_DESCR' => $request->descr_ho??'',
-                            'ONCHARGE_PERSON' => $request->user()->id,
-                            'ONCHARGE_TIME' => Carbon::now(),
-                            'ONCHARGE_FLAG' => $request->flag,
-                        ]
-                    );
-                    
-                    if(strtolower($request->flag) == 'yes'){
-                        $checkSurveyId = M_CrApplication::where('ORDER_NUMBER',$check->ORDER_NUMBER)->first();
-
-                        if($checkSurveyId){
-                            $updateApproval = M_ApplicationApproval::where('cr_application_id',$checkSurveyId->ID)->first();
-
-                            if($updateApproval){
-                                $updateApproval->update([
-                                    'code' => 'CANCELHO', 
-                                    'cr_prospect_id' => $checkSurveyId->CR_SURVEY_ID??null, 
-                                    'cr_application_id' => $checkSurveyId->ID??null,
-                                    'cr_application_ho' => $request->user()->id,
-                                    'cr_application_ho_time' => Carbon::now()->format('Y-m-d'),
-                                    'cr_application_ho_desc' => $request->descr_ho??'',
-                                    'application_result' => 'cancel pk',
-                                ]);
-                                
-                                $data_application_log = [
-                                    'CODE' => 'CANCELHO',
-                                    'POSITION' => $request->user()->position??null,
-                                    'APPLICATION_APPROVAL_ID' => $checkSurveyId->CR_SURVEY_ID??null,
-                                    'ONCHARGE_PERSON' => $request->user()->id,
-                                    'ONCHARGE_TIME' => Carbon::now(),
-                                    'APPROVAL_RESULT' => 'cancel pk'
-                                ];
-                        
-                                M_ApplicationApprovalLog::create($data_application_log);
-                            }
-
-                            $survey_apprval_change = M_SurveyApproval::where('CR_SURVEY_ID',$checkSurveyId->CR_SURVEY_ID)->first();
-
-                            if($survey_apprval_change){
-                                $survey_apprval_change->update([
-                                    'CODE' => 'CANCELHO',
-                                    'ONCHARGE_PERSON' => $request->user()->id,
-                                    'ONCHARGE_DESCR' => $request->descr_ho??'',
-                                    'ONCHARGE_TIME' => Carbon::now(),
-                                    'APPROVAL_RESULT' => 'cancel pk'
-                                ]);
-                        
-                                M_SurveyApprovalLog::create([
-                                    'CODE' => 'CANCELHO',
-                                    'SURVEY_APPROVAL_ID' => $checkSurveyId->CR_SURVEY_ID,
-                                    'ONCHARGE_PERSON' => $request->user()->id,
-                                    'ONCHARGE_TIME' => Carbon::now(),
-                                    'APPROVAL_RESULT' =>  'cancel pk'
-                                ]);
-                            }
-                        }
+                    $check = M_Credit::where([
+                        'ORDER_NUMBER' => $request->order_number
+                    ])->first();
+        
+                    if($check){
+                        throw new Exception("Order Number Has Created PK,You Must Cancelled", 404);
                     }
 
+                    $checkOrderNumber = M_CrApplication::where('ORDER_NUMBER',$request->order_number)->first();
+
+                    if($checkOrderNumber){
+                        $updateApproval = M_ApplicationApproval::where('cr_application_id',$checkOrderNumber->ID)->first();
+
+                        if($updateApproval){
+                            $updateApproval->update([
+                                'code' => 'REORADM',
+                                'cr_prospect_id' => $checkOrderNumber->CR_SURVEY_ID??null, 
+                                'cr_application_id' => $checkOrderNumber->ID??null,
+                                'application_result' => 'revisi admin'
+                            ]);
+                    
+                            M_ApplicationApprovalLog::create([
+                                'CODE' => 'REORADM',
+                                'POSITION' => $request->user()->position??null,
+                                'APPLICATION_APPROVAL_ID' => $checkOrderNumber->ID??null,
+                                'ONCHARGE_PERSON' => $request->user()->id,
+                                'ONCHARGE_TIME' => Carbon::now(),
+                                'APPROVAL_RESULT' => 'revisi admin'
+                            ]);
+                        }
+
+                        $survey_apprval_change = M_SurveyApproval::where('CR_SURVEY_ID',$checkOrderNumber->CR_SURVEY_ID)->first();
+
+                        if($survey_apprval_change){
+                            $survey_apprval_change->update([
+                                'CODE' => 'REORADM',
+                                'ONCHARGE_PERSON' => $request->user()->id,
+                                'ONCHARGE_DESCR' => $request->descr_ho??'',
+                                'ONCHARGE_TIME' => Carbon::now(),
+                                'APPROVAL_RESULT' => 'revisi admin'
+                            ]);
+                    
+                            M_SurveyApprovalLog::create([
+                                'CODE' => 'REORADM',
+                                'SURVEY_APPROVAL_ID' => $checkOrderNumber->CR_SURVEY_ID,
+                                'ONCHARGE_PERSON' => $request->user()->id,
+                                'ONCHARGE_TIME' => Carbon::now(),
+                                'APPROVAL_RESULT' =>  'revisi admin'
+                            ]);
+                        }
+                    }else{
+                        throw new Exception("Oder Number {$request->order_number} No Exist", 404);
+                    }
+                }elseif ($request->req_flag == 'cancel') {
+                    $check = M_Credit::where([
+                        'ORDER_NUMBER' => $request->order_number,
+                        'STATUS' => 'A'
+                    ])
+                    ->where(function ($query) {
+                        $query->whereNull('DELETED_BY')
+                              ->orWhere('DELETED_BY', '')
+                              ->whereNull('DELETED_AT')
+                              ->orWhere('DELETED_AT', '');
+                    })
+                    ->first();
+        
+                    if(!$check){
+                        throw new Exception("Credit ID Not Exist", 404);
+                    }
+
+                    M_CreditCancelLog::create([
+                        'CREDIT_ID' => $request->credit_id,
+                        'REQUEST_BY' => $request->user()->id??null,
+                        'REQUEST_BRANCH' => $request->user()->branch_id??null,
+                        'REQUEST_DATE' => Carbon::now(),
+                        'REQUEST_DESCR' => $request->descr,
+                    ]);
+        
+                    if(isset($request->flag) && !empty($request->flag)){
+                        if(strtolower($request->user()->position) == 'ho'){
+                            $check->update(
+                                [
+                                    'STATUS' => 'C',
+                                    'DELETED_BY' => $request->user()->id,
+                                    'DELETED_AT' => Carbon::now(),
+                                ]
+                            );
+            
+                            $checkCreditCancel = M_CreditCancelLog::where('CREDIT_ID',$request->credit_id)->first();
+            
+                            $checkCreditCancel->update(
+                                [
+                                    'ONCHARGE_DESCR' => $request->descr_ho??'',
+                                    'ONCHARGE_PERSON' => $request->user()->id,
+                                    'ONCHARGE_TIME' => Carbon::now(),
+                                    'ONCHARGE_FLAG' => $request->flag,
+                                ]
+                            );
+                            
+                            if(strtolower($request->flag) == 'yes'){
+                                $checkSurveyId = M_CrApplication::where('ORDER_NUMBER',$check->ORDER_NUMBER)->first();
+        
+                                if($checkSurveyId){
+                                    $updateApproval = M_ApplicationApproval::where('cr_application_id',$checkSurveyId->ID)->first();
+        
+                                    if($updateApproval){
+                                        $updateApproval->update([
+                                            'code' => 'CANCELHO', 
+                                            'cr_prospect_id' => $checkSurveyId->CR_SURVEY_ID??null, 
+                                            'cr_application_id' => $checkSurveyId->ID??null,
+                                            'cr_application_ho' => $request->user()->id,
+                                            'cr_application_ho_time' => Carbon::now()->format('Y-m-d'),
+                                            'cr_application_ho_desc' => $request->descr_ho??'',
+                                            'application_result' => 'cancel pk',
+                                        ]);
+                                        
+                                        $data_application_log = [
+                                            'CODE' => 'CANCELHO',
+                                            'POSITION' => $request->user()->position??null,
+                                            'APPLICATION_APPROVAL_ID' => $checkSurveyId->CR_SURVEY_ID??null,
+                                            'ONCHARGE_PERSON' => $request->user()->id,
+                                            'ONCHARGE_TIME' => Carbon::now(),
+                                            'APPROVAL_RESULT' => 'cancel pk'
+                                        ];
+                                
+                                        M_ApplicationApprovalLog::create($data_application_log);
+                                    }
+        
+                                    $survey_apprval_change = M_SurveyApproval::where('CR_SURVEY_ID',$checkSurveyId->CR_SURVEY_ID)->first();
+        
+                                    if($survey_apprval_change){
+                                        $survey_apprval_change->update([
+                                            'CODE' => 'CANCELHO',
+                                            'ONCHARGE_PERSON' => $request->user()->id,
+                                            'ONCHARGE_DESCR' => $request->descr_ho??'',
+                                            'ONCHARGE_TIME' => Carbon::now(),
+                                            'APPROVAL_RESULT' => 'cancel pk'
+                                        ]);
+                                
+                                        M_SurveyApprovalLog::create([
+                                            'CODE' => 'CANCELHO',
+                                            'SURVEY_APPROVAL_ID' => $checkSurveyId->CR_SURVEY_ID,
+                                            'ONCHARGE_PERSON' => $request->user()->id,
+                                            'ONCHARGE_TIME' => Carbon::now(),
+                                            'APPROVAL_RESULT' =>  'cancel pk'
+                                        ]);
+                                    }
+                                }
+                            }
+        
+                        }else{
+                            throw new Exception("User Not Authorized To Approve", 404);
+                        }
+                    }
                 }else{
-                    throw new Exception("User Not Authorized To Approve", 404);
+                    throw new Exception("Request Flag Not Valid", 404);
                 }
             }
 

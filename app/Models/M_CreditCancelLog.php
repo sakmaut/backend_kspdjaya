@@ -13,6 +13,7 @@ class M_CreditCancelLog extends Model
     protected $fillable = [ 
         'ID',
         'CREDIT_ID',
+        'REQUEST_FLAG',
         'REQUEST_BY',
         'REQUEST_BRANCH',
         'REQUEST_DATE',
