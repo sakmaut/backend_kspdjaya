@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\R_CreditCancelLog;
 use App\Models\M_CrApplication;
 use App\Models\M_CrApplicationGuarantor;
 use App\Models\M_CrApplicationSpouse;
@@ -951,10 +952,10 @@ class Credit extends Controller
                 'STATUS' => 'A'
             ])
             ->where(function ($query) {
-                $query->whereNull('deleted_by')
-                      ->orWhere('deleted_by', '')
-                      ->whereNull('deleted_at')
-                      ->orWhere('deleted_at', '');
+                $query->whereNull('DELETED_BY')
+                      ->orWhere('DELETED_BY', '')
+                      ->whereNull('DELETED_AT')
+                      ->orWhere('DELETED_AT', '');
             })
             ->first();
 
@@ -1003,5 +1004,17 @@ class Credit extends Controller
 
     }
     
+    public function pkCancelList(Request $request)
+    {
+        try {
+            $data = M_CreditCancelLog::all();
+            $dto = R_CreditCancelLog::collection($data);
+
+            return response()->json($dto, 200);
+        } catch (\Exception $e) {
+            ActivityLogger::logActivity($request,$e->getMessage(),500);
+            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+        }
+    }
 
 }

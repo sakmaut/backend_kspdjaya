@@ -76,6 +76,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Credit
     Route::post('pk', [Credit::class, 'index']);
     Route::post('pk_cancel', [Credit::class, 'pkCancel']);
+    Route::get('pk_cancel_list', [Credit::class, 'pkCancelList']);
     Route::resource('admin_fee', AdminFeeController::class);
     Route::post('fee_survey', [AdminFeeController::class, 'fee_survey']);
     Route::post('fee', [AdminFeeController::class, 'fee']);
