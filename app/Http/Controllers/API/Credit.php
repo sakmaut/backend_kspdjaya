@@ -1045,15 +1045,19 @@ class Credit extends Controller
             ]);
         }
 
-        if (strtolower($request->flag) === 'yes') {
+        if (strtolower($request->flag) === 'yes' && isset($request->flag) && !empty($request->flag)) {
             $checkSurveyId = M_CrApplication::where('ORDER_NUMBER', $check->ORDER_NUMBER)->first();
             if ($checkSurveyId) {
                 $this->updateApplicationApproval($request, $checkSurveyId,'REQCANCELHO','menunggu cancel pk');
                 $this->updateSurveyApproval($request, $checkSurveyId,'REQCANCELHO','menunggu cancel pk');
             }
+
+            return response()->json(['message' => "Success Cancel PK"], 200);
+        }else{
+            return response()->json(['message' => "Flag Not Found"], 200);
         }
 
-        return response()->json(['message' => "Success Cancel PK"], 200);
+       
     }
 
     private function updateApplicationApproval(Request $request, $application,$code,$descr)
