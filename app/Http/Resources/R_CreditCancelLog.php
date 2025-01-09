@@ -21,7 +21,7 @@ class R_CreditCancelLog extends JsonResource
     public function toArray(Request $request): array
     {
 
-        $credit = M_Credit::where('ORDER_NUMBER',$this->ORDER_NUMBER)->first();
+        $credit = M_Credit::where('ORDER_NUMBER',$this->CREDIT_ID)->first();
 
         return [
             "id" => $this->ID,
