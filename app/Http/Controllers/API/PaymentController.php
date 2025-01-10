@@ -14,6 +14,7 @@ use App\Models\M_KwitansiStructurDetail;
 use App\Models\M_Payment;
 use App\Models\M_PaymentApproval;
 use App\Models\M_PaymentAttachment;
+use App\Models\M_PaymentCancelLog;
 use App\Models\M_PaymentDetail;
 use Carbon\Carbon;
 use Exception;
@@ -714,4 +715,128 @@ class PaymentController extends Controller
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     } 
+
+    public function cancel(Request $request)
+    {
+        try {
+
+            $request->validate([
+                'no_invoice' => 'required|string',
+                'flag' => 'in:yes,no',
+            ]);
+
+            $no_invoice = $request->no_invoice;
+            $flag = $request->flag;
+
+            $check = M_Kwitansi::where([
+                'NO_TRANSAKSI' => $no_invoice,
+                'STTS_PAYMENT' => 'PAID'
+            ])->first();
+
+            if (!$check) {
+                throw new Exception("Kwitansi Number Not Exist", 404);
+            }
+
+            M_PaymentCancelLog::create([
+                'INVOICE_NUMBER' => $no_invoice??'',
+                'REQUEST_BY' => $request->user()->id??'',
+                'REQUEST_BRANCH' => $request->user()->branch_id??'',
+                'REQUEST_POSITION' => $request->user()->position??'',
+                'REQUEST_DESCR' => $request->descr??'',
+                'REQUEST_DATE' => Carbon::now()
+            ]);
+
+            if (strtolower($request->user()->position) === 'ho' && isset($flag) && !empty($flag) ) {
+                return $this->processHoApproval($request, $check);
+            }else{
+                throw new Exception("This User Not Authorization", 404);
+            }
+
+            return response()->json(['message' => "Invoice Number {$no_invoice} Cancel Success"], 500);
+        } catch (\Exception $e) {
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+        }
+    }
+
+    private function processHoApproval(Request $request, $check)
+    {
+        if (strtolower($request->flag) === 'yes') {
+
+            $check->update([
+                'STTS_PAYMENT' => 'CANCEL'  
+            ]);
+            
+            $paymentCheck = DB::table('payment as a')
+                            ->leftJoin('payment_detail as b', 'b.PAYMENT_ID', '=', 'a.ID')
+                            ->select('a.*', 'b.ACC_KEYS', 'b.ORIGINAL_AMOUNT as amount')
+                            ->where('INVOICE', $request->no_invoice)
+                            ->get();
+
+            $paymentTotal = M_Payment::select(DB::raw('SUM(ORIGINAL_AMOUNT) as total_credit'))->where('INVOICE', $request->no_invoice)->first();
+
+            $loan_number = '';
+            $ttalCredit = floatval($paymentTotal->total_credit??00);
+            $creditSchedule = [];
+            foreach ($paymentCheck as $list) {
+
+                M_Payment::where('INVOICE', $request->no_invoice)
+                ->update([
+                    'STTS_RCRD' => 'CANCEL'
+                ]);
+
+               $loan_number = $list->LOAN_NUM;
+
+               if (!isset($creditSchedule[$list->START_DATE])) {
+                    $creditSchedule[$list->START_DATE] = [
+                        'LOAN_NUMBER' => $list->LOAN_NUM,
+                        'PAYMENT_DATE' => date('Y-m-d', strtotime($list->START_DATE)),
+                        'PRINCIPAL' => [],
+                        'INTEREST' => [],
+                    ];
+                }
+
+                if ($list->ACC_KEYS === 'ANGSURAN_POKOK') {
+                    $creditSchedule[$list->START_DATE]['PRINCIPAL'] = $list->amount;
+                } elseif ($list->ACC_KEYS === 'ANGSURAN_BUNGA') {
+                    $creditSchedule[$list->START_DATE]['INTEREST'] = $list->amount;
+                }
+            } 
+
+            $creditCheck = M_Credit::where('LOAN_NUMBER', $loan_number)
+                                    ->whereIn('STATUS', ['A', 'D'])
+                                    ->first();
+    
+            if($creditCheck){
+                $creditCheck->update([
+                    'STATUS' => 'A',
+                    'PAID_PRINCIPAL' => floatval($creditCheck->PAID_PRINCIPAL??0)-floatval($ttalCredit??0),
+                    'MOD_USER' => $request->user()->id,
+                    'MOD_DATE' => Carbon::now(),
+                ]);
+            }else{
+                throw new Exception("Loan Number Credit Not Exist", 404);
+            }
+
+            if(!empty($creditSchedule)){
+                foreach ($creditSchedule as $resList) {
+                    $creditScheduleCheck = M_CreditSchedule::where([
+                        'LOAN_NUMBER' => $loan_number,
+                        'PAYMENT_DATE' => $resList['PAYMENT_DATE']
+                    ])->first();
+
+                    if($creditScheduleCheck){
+                        $creditScheduleCheck->update([
+                            'PAID_FLAG' => '',
+                            'PAYMENT_VALUE_PRINCIPAL' =>  floatval($creditScheduleCheck->PAYMENT_VALUE_PRINCIPAL??0) -  floatval($resList['PRINCIPAL']??0),
+                            'PAYMENT_VALUE_INTEREST' =>  floatval($creditScheduleCheck->PAYMENT_VALUE_INTEREST??0) -  floatval($resList['INTEREST']??0)
+                        ]);
+                    }
+                }
+            }
+        }
+
+        return response()->json(['message' => "Success Cancel Order"], 200);
+    }
+
 }

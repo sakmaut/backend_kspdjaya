@@ -1005,12 +1005,12 @@ class Credit extends Controller
         }
 
         M_CreditCancelLog::create([
-            'CREDIT_ID' => $orderNumber,
+            'CREDIT_ID' => $orderNumber??'',
             'REQUEST_FLAG' => "CANCEL",
-            'REQUEST_BY' => $request->user()->id,
-            'REQUEST_BRANCH' => $request->user()->branch_id,
+            'REQUEST_BY' => $request->user()->id??'',
+            'REQUEST_BRANCH' => $request->user()->branch_id??'',
             'REQUEST_DATE' => Carbon::now(),
-            'REQUEST_DESCR' => $request->descr,
+            'REQUEST_DESCR' => $request->descr??'',
         ]);
 
         $checkSurveyId = M_CrApplication::where('ORDER_NUMBER', $check->ORDER_NUMBER)->first();
@@ -1026,24 +1026,25 @@ class Credit extends Controller
 
     private function processHoApproval(Request $request, $check)
     {
-        $check->update([
-            'STATUS' => 'C',
-            'DELETED_BY' => $request->user()->id,
-            'DELETED_AT' => Carbon::now(),
-        ]);
-
-        $checkCreditCancel = M_CreditCancelLog::where('CREDIT_ID', $check->ORDER_NUMBER)->first();
-
-        if($checkCreditCancel){
-            $checkCreditCancel->update([
-                'ONCHARGE_DESCR' => $request->descr_ho ?? '',
-                'ONCHARGE_PERSON' => $request->user()->id,
-                'ONCHARGE_TIME' => Carbon::now(),
-                'ONCHARGE_FLAG' => $request->flag,
-            ]);
-        }
-
         if (strtolower($request->flag) === 'yes') {
+
+            $check->update([
+                'STATUS' => 'C',
+                'DELETED_BY' => $request->user()->id,
+                'DELETED_AT' => Carbon::now(),
+            ]);
+    
+            $checkCreditCancel = M_CreditCancelLog::where('CREDIT_ID', $check->ORDER_NUMBER)->first();
+    
+            if($checkCreditCancel){
+                $checkCreditCancel->update([
+                    'ONCHARGE_DESCR' => $request->descr_ho ?? '',
+                    'ONCHARGE_PERSON' => $request->user()->id,
+                    'ONCHARGE_TIME' => Carbon::now(),
+                    'ONCHARGE_FLAG' => $request->flag,
+                ]);
+            }
+
             $updateProsessRequest = M_CrApplication::where('ORDER_NUMBER', $check->ORDER_NUMBER)->first();
             if ($updateProsessRequest) {
                 $this->updateApplicationApproval($request, $updateProsessRequest,'CANCELHO','cancel order');
