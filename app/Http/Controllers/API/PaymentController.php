@@ -720,7 +720,6 @@ class PaymentController extends Controller
     public function cancel(Request $request)
     {
         try {
-
             $request->validate([
                 'no_invoice' => 'required|string',
                 'flag' => 'in:yes,no',
@@ -772,10 +771,8 @@ class PaymentController extends Controller
                             ->where('INVOICE', $request->no_invoice)
                             ->get();
 
-            $paymentTotal = M_Payment::select(DB::raw('SUM(ORIGINAL_AMOUNT) as total_credit'))->where('INVOICE', $request->no_invoice)->first();
-
             $loan_number = '';
-            $ttalCredit = floatval($paymentTotal->total_credit??00);
+            $totalPrincipal = 0;
             $creditSchedule = [];
             foreach ($paymentCheck as $list) {
 
@@ -790,6 +787,7 @@ class PaymentController extends Controller
                     $creditSchedule[$list->START_DATE] = [
                         'LOAN_NUMBER' => $list->LOAN_NUM,
                         'PAYMENT_DATE' => date('Y-m-d', strtotime($list->START_DATE)),
+                        'AMOUNT' => $list->ORIGINAL_AMOUNT,
                         'PRINCIPAL' => [],
                         'INTEREST' => [],
                     ];
@@ -800,7 +798,13 @@ class PaymentController extends Controller
                 } elseif ($list->ACC_KEYS === 'ANGSURAN_BUNGA') {
                     $creditSchedule[$list->START_DATE]['INTEREST'] = $list->amount;
                 }
-            } 
+            }
+
+            foreach ($creditSchedule as $schedule) {
+                $totalPrincipal += $schedule['PRINCIPAL'];
+            }
+
+            $setPrincipal = round($totalPrincipal, 2);
 
             $creditCheck = M_Credit::where('LOAN_NUMBER', $loan_number)
                                     ->whereIn('STATUS', ['A', 'D'])
@@ -809,12 +813,10 @@ class PaymentController extends Controller
             if($creditCheck){
                 $creditCheck->update([
                     'STATUS' => 'A',
-                    'PAID_PRINCIPAL' => floatval($creditCheck->PAID_PRINCIPAL??0)-floatval($ttalCredit??0),
+                    'PAID_PRINCIPAL' => floatval($creditCheck->PAID_PRINCIPAL??0)-floatval($setPrincipal??0),
                     'MOD_USER' => $request->user()->id,
                     'MOD_DATE' => Carbon::now(),
                 ]);
-            }else{
-                throw new Exception("Loan Number Credit Not Exist", 404);
             }
 
             if(!empty($creditSchedule)){
@@ -828,7 +830,8 @@ class PaymentController extends Controller
                         $creditScheduleCheck->update([
                             'PAID_FLAG' => '',
                             'PAYMENT_VALUE_PRINCIPAL' =>  floatval($creditScheduleCheck->PAYMENT_VALUE_PRINCIPAL??0) -  floatval($resList['PRINCIPAL']??0),
-                            'PAYMENT_VALUE_INTEREST' =>  floatval($creditScheduleCheck->PAYMENT_VALUE_INTEREST??0) -  floatval($resList['INTEREST']??0)
+                            'PAYMENT_VALUE_INTEREST' =>  floatval($creditScheduleCheck->PAYMENT_VALUE_INTEREST??0) -  floatval($resList['INTEREST']??0),
+                            'PAYMENT_VALUE' => floatval($creditScheduleCheck->PAYMENT_VALUE ?? 0) - floatval($resList['AMOUNT'] ?? 0)
                         ]);
                     }
                 }
