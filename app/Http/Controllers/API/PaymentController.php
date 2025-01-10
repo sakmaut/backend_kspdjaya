@@ -835,6 +835,17 @@ class PaymentController extends Controller
             }
         }
 
+        $checkCreditCancel = M_PaymentCancelLog::where('INVOICE_NUMBER', $request->no_invoice)->first();
+    
+        if($checkCreditCancel){
+            $checkCreditCancel->update([
+                'ONCHARGE_DESCR' => $request->descr_ho ?? '',
+                'ONCHARGE_PERSON' => $request->user()->id,
+                'ONCHARGE_TIME' => Carbon::now(),
+                'ONCHARGE_FLAG' => $request->flag??'',
+            ]);
+        }
+
         return response()->json(['message' => "Success Cancel Order"], 200);
     }
 
