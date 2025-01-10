@@ -1050,6 +1050,49 @@ class Credit extends Controller
                 $this->updateApplicationApproval($request, $updateProsessRequest,'CANCELHO','cancel order');
                 $this->updateSurveyApproval($request, $updateProsessRequest,'CANCELHO','cancel order');
             }
+        }elseif(strtolower($request->flag) === 'no'){
+            $application = M_CrApplication::where('ORDER_NUMBER', $check->ORDER_NUMBER)->first();
+
+            $approval = M_ApplicationApproval::where('cr_application_id', $application->ID)->first();
+            if ($approval) {
+                $approval->update([
+                    'code' => 'APHO',
+                    'cr_prospect_id' => $application->CR_SURVEY_ID ?? null,
+                    'cr_application_id' => $application->ID??null,
+                    'application_result' => 'disetujui ho',
+                    'cr_application_ho' => $request->user()->id,
+                    'cr_application_ho_time' => Carbon::now()->format('Y-m-d'),
+                    'cr_application_ho_desc' => $request->descr_ho ?? '',
+                ]);
+    
+                M_ApplicationApprovalLog::create([
+                    'CODE' => 'CANCELREQADM',
+                    'POSITION' => $request->user()->position ?? null,
+                    'APPLICATION_APPROVAL_ID' => $application->ID ?? null,
+                    'ONCHARGE_PERSON' => $request->user()->id,
+                    'ONCHARGE_TIME' => Carbon::now(),
+                    'APPROVAL_RESULT' => 'request order cancel ditolak ho',
+                ]);
+            }
+
+            $surveyApproval = M_SurveyApproval::where('CR_SURVEY_ID', $application->CR_SURVEY_ID)->first();
+            if ($surveyApproval) {
+                $surveyApproval->update([
+                    'CODE' => 'APHO',
+                    'ONCHARGE_PERSON' => $request->user()->id,
+                    'ONCHARGE_DESCR' => $request->descr_ho ?? '',
+                    'ONCHARGE_TIME' => Carbon::now(),
+                    'APPROVAL_RESULT' => 'disetujui ho',
+                ]);
+    
+                M_SurveyApprovalLog::create([
+                    'CODE' => 'CANCELREQADM',
+                    'SURVEY_APPROVAL_ID' => $application->CR_SURVEY_ID,
+                    'ONCHARGE_PERSON' => $request->user()->id,
+                    'ONCHARGE_TIME' => Carbon::now(),
+                    'APPROVAL_RESULT' => 'request order cancel ditolak ho',
+                ]);
+            }
         }
 
         return response()->json(['message' => "Success Cancel Order"], 200);
