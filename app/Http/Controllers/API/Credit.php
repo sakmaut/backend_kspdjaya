@@ -977,7 +977,7 @@ class Credit extends Controller
         $check = M_Credit::where('ORDER_NUMBER', $orderNumber)->first();
 
         if ($check) {
-            throw new Exception("Order Number Has Created PK, You Must Cancelled", 404);
+            throw new Exception("Order Number Has Created Order, You Must Cancelled", 404);
         }
 
         $checkOrderNumber = M_CrApplication::where('ORDER_NUMBER', $orderNumber)->first();
@@ -988,7 +988,7 @@ class Credit extends Controller
         $this->updateApplicationApproval($request, $checkOrderNumber,'REORADM','revisi admin');
         $this->updateSurveyApproval($request, $checkOrderNumber,'REORADM','revisi admin');
 
-        return response()->json(['message' => "Success Revisi PK"], 200);
+        return response()->json(['message' => "Success Revisi Order"], 200);
     }
 
     private function handleCancel(Request $request, string $orderNumber)
@@ -1001,7 +1001,7 @@ class Credit extends Controller
         ->first();
 
         if (!$check) {
-            throw new Exception("Credit ID Not Exist", 404);
+            throw new Exception("Order Number Not Exist", 404);
         }
 
         M_CreditCancelLog::create([
@@ -1015,8 +1015,8 @@ class Credit extends Controller
 
         $checkSurveyId = M_CrApplication::where('ORDER_NUMBER', $check->ORDER_NUMBER)->first();
         if ($checkSurveyId) {
-            $this->updateApplicationApproval($request, $checkSurveyId,'REQCANCELHO','menunggu cancel pk');
-            $this->updateSurveyApproval($request, $checkSurveyId,'REQCANCELHO','menunggu cancel pk');
+            $this->updateApplicationApproval($request, $checkSurveyId,'REQCANCELHO','menunggu cancel order');
+            $this->updateSurveyApproval($request, $checkSurveyId,'REQCANCELHO','menunggu cancel order');
         }
 
         if (strtolower($request->user()->position) === 'ho' && isset($request->flag) && !empty($request->flag) ) {
@@ -1046,12 +1046,12 @@ class Credit extends Controller
         if (strtolower($request->flag) === 'yes') {
             $updateProsessRequest = M_CrApplication::where('ORDER_NUMBER', $check->ORDER_NUMBER)->first();
             if ($updateProsessRequest) {
-                $this->updateApplicationApproval($request, $updateProsessRequest,'CANCELHO','cancel pk');
-                $this->updateSurveyApproval($request, $updateProsessRequest,'CANCELHO','cancel pk');
+                $this->updateApplicationApproval($request, $updateProsessRequest,'CANCELHO','cancel order');
+                $this->updateSurveyApproval($request, $updateProsessRequest,'CANCELHO','cancel order');
             }
         }
 
-        return response()->json(['message' => "Success Cancel PK"], 200);
+        return response()->json(['message' => "Success Cancel Order"], 200);
     }
 
     private function updateApplicationApproval(Request $request, $application,$code,$descr)
