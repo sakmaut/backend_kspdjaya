@@ -751,7 +751,7 @@ class PaymentController extends Controller
                 return $this->processHoApproval($request, $check);
             }
 
-            return response()->json(['message' => "Invoice Number {$no_invoice} Cancel Success"], 500);
+            return response()->json(['message' => "Invoice Number {$no_invoice} Cancel Success"], 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
