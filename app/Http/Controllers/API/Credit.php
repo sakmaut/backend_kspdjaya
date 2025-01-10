@@ -1104,7 +1104,16 @@ class Credit extends Controller
     public function pkCancelList(Request $request)
     {
         try {
-            $data = M_CreditCancelLog::all();
+            $data = M_CreditCancelLog::where(function($query) {
+                        $query->whereNull('ONCHARGE_PERSON')
+                            ->orWhere('ONCHARGE_PERSON', '');
+                    })
+                    ->where(function($query) {
+                        $query->whereNull('ONCHARGE_TIME')
+                            ->orWhere('ONCHARGE_TIME', '');
+                    })
+                    ->get();
+
             $dto = R_CreditCancelLog::collection($data);
 
             return response()->json($dto, 200);
