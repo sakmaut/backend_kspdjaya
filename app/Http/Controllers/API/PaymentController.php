@@ -749,8 +749,6 @@ class PaymentController extends Controller
 
             if (strtolower($request->user()->position) === 'ho' && isset($flag) && !empty($flag) ) {
                 return $this->processHoApproval($request, $check);
-            }else{
-                throw new Exception("This User Not Authorization", 404);
             }
 
             return response()->json(['message' => "Invoice Number {$no_invoice} Cancel Success"], 500);
