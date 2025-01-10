@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\R_Kwitansi;
+use App\Http\Resources\R_PaymentCancelLog;
 use App\Models\M_Arrears;
 use App\Models\M_Branch;
 use App\Models\M_Credit;
@@ -837,6 +838,28 @@ class PaymentController extends Controller
         }
 
         return response()->json(['message' => "Success Cancel Order"], 200);
+    }
+
+    public function cancelList(Request $request)
+    {
+        try {
+            $data = M_PaymentCancelLog::where(function($query) {
+                        $query->whereNull('ONCHARGE_PERSON')
+                            ->orWhere('ONCHARGE_PERSON', '');
+                    })
+                    ->where(function($query) {
+                        $query->whereNull('ONCHARGE_TIME')
+                            ->orWhere('ONCHARGE_TIME', '');
+                    })
+                    ->get();
+
+            $dto = R_PaymentCancelLog::collection($data);
+
+            return response()->json($dto, 200);
+        } catch (\Exception $e) {
+            ActivityLogger::logActivity($request,$e->getMessage(),500);
+            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+        }
     }
 
 }
