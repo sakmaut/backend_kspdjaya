@@ -769,14 +769,15 @@ class PaymentController extends Controller
             ]);
             
             $paymentCheck = DB::table('payment as a')
-                            ->leftJoin('payment_detail as b', 'b.PAYMENT_ID', '=', 'a.ID')
-                            ->select('a.*', 'b.ACC_KEYS', 'b.ORIGINAL_AMOUNT as amount')
-                            ->where('INVOICE', $request->no_invoice)
-                            ->get();
+                                ->leftJoin('payment_detail as b', 'b.PAYMENT_ID', '=', 'a.ID')
+                                ->select('a.LOAN_NUM','a.START_DATE' ,'a.ORIGINAL_AMOUNT','b.ACC_KEYS', 'b.ORIGINAL_AMOUNT as amount')
+                                ->where('INVOICE', $request->no_invoice)
+                                ->get();
 
             $loan_number = '';
             $totalPrincipal = 0;
             $totalInterest = 0;
+            $totalPenalty = 0;
             $creditSchedule = [];
             foreach ($paymentCheck as $list) {
 
@@ -794,19 +795,27 @@ class PaymentController extends Controller
                         'AMOUNT' => $list->ORIGINAL_AMOUNT,
                         'PRINCIPAL' => [],
                         'INTEREST' => [],
+                        'PENALTY' => []
                     ];
                 }
 
-                if ($list->ACC_KEYS === 'ANGSURAN_POKOK') {
-                    $creditSchedule[$list->START_DATE]['PRINCIPAL'] = $list->amount;
-                } elseif ($list->ACC_KEYS === 'ANGSURAN_BUNGA') {
-                    $creditSchedule[$list->START_DATE]['INTEREST'] = $list->amount;
+                switch ($list->ACC_KEYS) {
+                    case 'ANGSURAN_POKOK':
+                        $creditSchedule[$list->START_DATE]['PRINCIPAL'] = $list->amount;
+                        break;
+                    case 'ANGSURAN_BUNGA':
+                        $creditSchedule[$list->START_DATE]['INTEREST'] = $list->amount;
+                        break;
+                    case 'DENDA_PINJAMAN':
+                        $creditSchedule[$list->START_DATE]['PENALTY'] = $list->amount;
+                        break;
                 }
             }
 
             foreach ($creditSchedule as $schedule) {
                 $totalPrincipal += $schedule['PRINCIPAL'];
                 $totalInterest += $schedule['INTEREST'];
+                $totalPenalty += $schedule['PENALTY'];
             }
 
             $setPrincipal = round($totalPrincipal, 2);
@@ -820,6 +829,7 @@ class PaymentController extends Controller
                     'STATUS' => 'A',
                     'PAID_PRINCIPAL' => floatval($creditCheck->PAID_PRINCIPAL??0)-floatval($setPrincipal??0),
                     'PAID_INTEREST' => floatval($creditCheck->PAID_INTEREST??0)-floatval($totalInterest??0),
+                    'PAID_PENALTY' => floatval($creditCheck->PAID_PENALTY??0)-floatval($totalPenalty??0),
                     'MOD_USER' => $request->user()->id,
                     'MOD_DATE' => Carbon::now(),
                 ]);
@@ -838,6 +848,20 @@ class PaymentController extends Controller
                             'PAYMENT_VALUE_PRINCIPAL' =>  floatval($creditScheduleCheck->PAYMENT_VALUE_PRINCIPAL??0) -  floatval($resList['PRINCIPAL']??0),
                             'PAYMENT_VALUE_INTEREST' =>  floatval($creditScheduleCheck->PAYMENT_VALUE_INTEREST??0) -  floatval($resList['INTEREST']??0),
                             'PAYMENT_VALUE' => floatval($creditScheduleCheck->PAYMENT_VALUE ?? 0) - floatval($resList['AMOUNT'] ?? 0)
+                        ]);
+                    }
+
+                    $arrearsCheck = M_Arrears::where([
+                        'LOAN_NUMBER' => $loan_number,
+                        'START_DATE' => $resList['PAYMENT_DATE']
+                    ])->first();
+
+                    if($arrearsCheck){
+                        $arrearsCheck->update([
+                            'STATUS_REC' => 'A',
+                            'PAID_PCPL' =>  floatval($arrearsCheck->PAID_PCPL??0) -  floatval($resList['PRINCIPAL']??0),
+                            'PAID_INT' =>  floatval($arrearsCheck->PAID_INT??0) -  floatval($resList['INTEREST']??0),
+                            'PAID_PENALTY' => floatval($arrearsCheck->PAID_PENALTY ?? 0) - floatval($resList['PENALTY'] ?? 0)
                         ]);
                     }
                 }
