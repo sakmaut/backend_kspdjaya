@@ -84,7 +84,7 @@ class ActivityLogger extends Controller
             'browser' => $request->header('User-Agent'),
         ];
 
-        $path = 'logs/authentication/login';
+        $path = 'logs/authentication';
 
         $logString = "[" . Carbon::now()->toDateTimeString() . "] " . json_encode($logData) . PHP_EOL;
         
@@ -116,7 +116,7 @@ class ActivityLogger extends Controller
             'browser' => $request->header('User-Agent'),
         ];
 
-        $path = 'logs/authentication/login';
+        $path = 'logs/authentication';
 
         $logString = "[" . Carbon::now()->toDateTimeString() . "] " . json_encode($logData) . PHP_EOL;
         
