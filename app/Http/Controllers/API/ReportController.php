@@ -121,7 +121,7 @@ class ReportController extends Controller
                         "no_kk" => $results->KK_NUMBER ?? '',
                         "tgl_terbit_identitas" => date('Y-m-d', strtotime($results->ID_ISSUE_DATE))?? '',
                         "masa_berlaku_identitas" => date('Y-m-d', strtotime($results->ID_VALID_DATE)) ?? '',
-                        "no_kk" => $results->KK??'',
+                        "no_kk" => $results->KK_NUMBER??'',
                         "warganegara" => $results->CITIZEN ?? ''
                     ],
                     'alamat_identitas' => [
