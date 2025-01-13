@@ -736,14 +736,18 @@ class PaymentController extends Controller
                 throw new Exception("Kwitansi Number Not Exist", 404);
             }
 
-            M_PaymentCancelLog::create([
-                'INVOICE_NUMBER' => $no_invoice??'',
-                'REQUEST_BY' => $request->user()->id??'',
-                'REQUEST_BRANCH' => $request->user()->branch_id??'',
-                'REQUEST_POSITION' => $request->user()->position??'',
-                'REQUEST_DESCR' => $request->descr??'',
-                'REQUEST_DATE' => Carbon::now()
-            ]);
+            $checkPaymentLog = M_PaymentCancelLog::where('INVOICE_NUMBER',$no_invoice)->first();
+
+            if(!$checkPaymentLog){
+                M_PaymentCancelLog::create([
+                    'INVOICE_NUMBER' => $no_invoice??'',
+                    'REQUEST_BY' => $request->user()->id??'',
+                    'REQUEST_BRANCH' => $request->user()->branch_id??'',
+                    'REQUEST_POSITION' => $request->user()->position??'',
+                    'REQUEST_DESCR' => $request->descr??'',
+                    'REQUEST_DATE' => Carbon::now()
+                ]);
+            }
 
             if (strtolower($request->user()->position) === 'ho' && isset($flag) && !empty($flag) ) {
                 return $this->processHoApproval($request, $check);
