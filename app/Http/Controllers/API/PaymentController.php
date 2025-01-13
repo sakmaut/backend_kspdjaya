@@ -60,37 +60,37 @@ class PaymentController extends Controller
 
             $request->merge(['approval' => 'approve']);
 
-            $addAnsguran = [];
+            // $addAnsguran = [];
 
             if (isset($request->struktur) && is_array($request->struktur)) {
 
-                $addAnsguran = array_map(fn($res) => $res['angsuran_ke'], $request->struktur);
-                $uniqueInstallments = array_unique($addAnsguran);
-                sort($uniqueInstallments);
+                // $addAnsguran = array_map(fn($res) => $res['angsuran_ke'], $request->struktur);
+                // $uniqueInstallments = array_unique($addAnsguran);
+                // sort($uniqueInstallments);
                 
-                // Get the minimum value of the installments to compare the sequence
-                $minInstallment = min($uniqueInstallments);
-                $isSequential = $uniqueInstallments === range($minInstallment, $minInstallment + count($uniqueInstallments) - 1);
+                // // Get the minimum value of the installments to compare the sequence
+                // $minInstallment = min($uniqueInstallments);
+                // $isSequential = $uniqueInstallments === range($minInstallment, $minInstallment + count($uniqueInstallments) - 1);
                 
-                if (!$isSequential) {
-                    throw new Exception("Installments tidak berurutan: " . implode(', ', $addAnsguran));
-                }
+                // if (!$isSequential) {
+                //     throw new Exception("Installments tidak berurutan: " . implode(', ', $addAnsguran));
+                // }
                 
                 // Process each installment
                 foreach ($request->struktur as $res) {
                     $check_method_payment = strtolower($request->payment_method) === 'cash';
 
-                    if ($res['angsuran_ke'] && $res['angsuran_ke'] != 1) {
-                        $previousAngsuranKe = $res['angsuran_ke'] - 1;
+                    // if ($res['angsuran_ke'] && $res['angsuran_ke'] != 1) {
+                    //     $previousAngsuranKe = $res['angsuran_ke'] - 1;
 
-                        $checkBeforeInstallment = M_KwitansiStructurDetail::where('loan_number', $res['loan_number'])
-                                                          ->where('angsuran_ke', $previousAngsuranKe)
-                                                          ->first();
+                    //     $checkBeforeInstallment = M_KwitansiStructurDetail::where('loan_number', $res['loan_number'])
+                    //                                       ->where('angsuran_ke', $previousAngsuranKe)
+                    //                                       ->first();
 
-                        if (!$checkBeforeInstallment) {
-                            throw new Exception("Installment {$previousAngsuranKe} not found. Cannot process installment {$res['angsuran_ke']}.");
-                        }
-                    }
+                    //     if (!$checkBeforeInstallment) {
+                    //         throw new Exception("Installment {$previousAngsuranKe} not found. Cannot process installment {$res['angsuran_ke']}.");
+                    //     }
+                    // }
                     
                     $credit = M_Credit::where('LOAN_NUMBER', $res['loan_number'])->first();
 
