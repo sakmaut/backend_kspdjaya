@@ -542,7 +542,7 @@ class PaymentController extends Controller
                 M_PaymentDetail::create($data_principal);
             }
             
-            if ($getPayInterest !== $getInterest && $paidFlag != 'PAID') {
+            if ($getPayInterest !== $getInterest) {
                 $setInterest = $valBeforeInterest - $getPayInterest;
                 $data_interest = $this->preparePaymentData($uid, 'ANGSURAN_BUNGA', $setInterest);
                 M_PaymentDetail::create($data_interest);
