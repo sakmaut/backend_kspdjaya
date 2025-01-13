@@ -55,7 +55,7 @@ class AuthController extends Controller
 
             $token = $this->generateToken($user);
 
-            $this->logLoginActivity($request, 'Success', 200);
+            $this->logLoginActivity($request, 'Success '.$token, 200);
             return response()->json(['token' => $token], 200);
 
         } catch (\Exception $e) {
