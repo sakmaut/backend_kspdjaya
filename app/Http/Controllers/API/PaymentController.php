@@ -772,6 +772,7 @@ class PaymentController extends Controller
 
             $loan_number = '';
             $totalPrincipal = 0;
+            $totalInterest = 0;
             $creditSchedule = [];
             foreach ($paymentCheck as $list) {
 
@@ -801,6 +802,7 @@ class PaymentController extends Controller
 
             foreach ($creditSchedule as $schedule) {
                 $totalPrincipal += $schedule['PRINCIPAL'];
+                $totalInterest += $schedule['INTEREST'];
             }
 
             $setPrincipal = round($totalPrincipal, 2);
@@ -813,6 +815,7 @@ class PaymentController extends Controller
                 $creditCheck->update([
                     'STATUS' => 'A',
                     'PAID_PRINCIPAL' => floatval($creditCheck->PAID_PRINCIPAL??0)-floatval($setPrincipal??0),
+                    'PAID_INTEREST' => floatval($creditCheck->PAID_INTEREST??0)-floatval($totalInterest??0),
                     'MOD_USER' => $request->user()->id,
                     'MOD_DATE' => Carbon::now(),
                 ]);
