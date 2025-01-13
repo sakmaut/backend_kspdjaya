@@ -530,20 +530,19 @@ class PaymentController extends Controller
             $valBeforeInterest = $credit_schedule->PAYMENT_VALUE_INTEREST;
             $getPrincipal = $credit_schedule->PRINCIPAL;
             $getInterest = $credit_schedule->INTEREST;
+            $paidFlag = $credit_schedule->PAID_FLAG;
 
             $getPayPrincipal = isset($payments['ANGSURAN_POKOK'])? floatval($totalAmount):0;
             $getPayInterest = isset($payments['ANGSURAN_BUNGA']) ? floatval($payments['ANGSURAN_BUNGA']) : 0;
 
-            if ($getPayPrincipal != $getPrincipal && $valBeforePrincipal != 0) {
+            if ($getPayPrincipal != $getPrincipal && $paidFlag != 'PAID') {
                 $setPrincipal = bcsub($valBeforePrincipal, $getPayPrincipal, 2);
                 $setPrincipal = ceil($setPrincipal * 100) / 100;
                 $data_principal = $this->preparePaymentData($uid, 'ANGSURAN_POKOK', $setPrincipal);
                 M_PaymentDetail::create($data_principal);
             }
             
-
-            // Only update interest if it has changed
-            if ($getPayInterest !== $getInterest && $valBeforeInterest != null) {
+            if ($getPayInterest !== $getInterest && $paidFlag != 'PAID') {
                 $setInterest = $valBeforeInterest - $getPayInterest;
                 $data_interest = $this->preparePaymentData($uid, 'ANGSURAN_BUNGA', $setInterest);
                 M_PaymentDetail::create($data_interest);
@@ -551,7 +550,7 @@ class PaymentController extends Controller
 
             $bayar_denda = $res['bayar_denda'];
 
-            if ($bayar_denda !== 0 && $request->payment_method == 'cash') {
+            if ($bayar_denda != 0 && $request->payment_method == 'cash') {
                 $data_denda = $this->preparePaymentData($uid, 'DENDA_PINJAMAN', $bayar_denda);
                 M_PaymentDetail::create($data_denda);
             }
