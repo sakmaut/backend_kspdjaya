@@ -6,6 +6,7 @@ use App\Http\Controllers\API\{
     BpkbController,
     BpkbTransactionController,
     BranchController,
+    CollateralController,
     CrAppilcationController,
     Credit,
     CrSurveyController,
@@ -132,6 +133,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('collateralReport/{id}', [ReportController::class,'jaminan']);
     Route::get('paymentReport/{id}', [ReportController::class,'pembayaran']);
     Route::get('arrearsReport/{id}', [ReportController::class,'tunggakkan']);
+
+    Route::resource('collateral',CollateralController::class);
 });
 
 
