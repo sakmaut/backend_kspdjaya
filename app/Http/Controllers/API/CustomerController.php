@@ -56,47 +56,32 @@ class CustomerController extends Controller
     {
         try {
 
-            $getBranch = $request->user()->branch_id;
+            $results = [];
+            if(!empty($request->nama) || !empty($request->no_kontrak) || !empty($request->no_polisi)){
+                $query = DB::table('credit as a')
+                            ->distinct()
+                            ->select('a.STATUS', 'a.LOAN_NUMBER', 'a.ORDER_NUMBER', 'c.NAME', 'c.ALIAS', 'c.ADDRESS', 'b.POLICE_NUMBER', 'a.INSTALLMENT')
+                            ->join('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
+                            ->join('customer as c', 'c.CUST_CODE', '=', 'a.CUST_CODE')
+                            ->where('a.STATUS', '!=', 'A');
 
-            $searchParams = [
-                'nama' => 't1.NAME',
-                'no_kontrak' => 't0.LOAN_NUMBER',
-                'no_polisi' => 't2.POLICE_NUMBER',
-            ];
-            
-            // Check if all search parameters are null
-            if (array_reduce(array_keys($searchParams), function ($carry, $param) use ($request) {
-                return $carry && is_null($request->$param);
-            }, true)) {
-                return [];
-            }
-            
-            // Start building the query
-            $query = DB::table('credit as t0')
-                ->select('t0.LOAN_NUMBER', 't0.INSTALLMENT', 't1.NAME', 't1.ADDRESS', 't0.ORDER_NUMBER')
-                ->join('customer as t1', 't1.CUST_CODE', '=', 't0.CUST_CODE')
-                ->where('t0.STATUS', 'A')
-                ->distinct();
-            
-            // Check if 'no_polisi' parameter exists and has a value
-            if (!is_null($request->no_polisi) && $request->no_polisi !== '') {
-                $query->join('cr_collateral as t2', 't2.CR_CREDIT_ID', '=', 't0.ID');
-                $query->addSelect('t2.POLICE_NUMBER');
-            }
-            
-            // Apply search filters based on provided parameters
-            foreach ($searchParams as $param => $column) {
-                if (!is_null($request->$param) && $request->$param !== '') {
-                    $query->where($column, 'like', '%' . $request->$param . '%');
+                if(!empty($request->nama)){
+                    $query ->where(DB::raw("CONCAT(c.NAME, ' ', c.ALIAS)"), 'LIKE', "%{$request->nama}%");
                 }
+
+                if(!empty($request->no_kontrak)){
+                    $query ->where('a.LOAN_NUMBER', 'LIKE', "%{$request->no_kontrak}%");
+                }
+
+                if(!empty($request->no_polisi)){
+                    $query ->where('b.POLICE_NUMBER', 'LIKE', "%{$request->no_polisi}%");
+                }
+
+                $results = $query->get();
             }
-            
-            $results = $query->get();
-            
-    
+
             $dto = R_CustomerSearch::collection($results);
 
-            // ActivityLogger::logActivity($request,"Success",200);
             return response()->json($dto, 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
