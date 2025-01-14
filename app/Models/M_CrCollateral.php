@@ -52,4 +52,9 @@ class M_CrCollateral extends Model
             }
         });
     }
+
+    public function credit()
+    {
+        return $this->belongsTo(Credit::class, 'CR_CREDIT_ID', 'ID');
+    }
 }
