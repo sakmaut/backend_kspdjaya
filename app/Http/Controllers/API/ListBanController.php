@@ -100,4 +100,47 @@ class ListBanController extends Controller
 
         return $result;
     }
+
+    public function listBan() {
+
+        $query = "SELECT    a.NAME, b.LOAN_NUMBER, c.NAME, b.CREATED_AT,
+                            c.INS_ADDRESS, c.ZIP_CODE, c.PHONE_HOUSE,
+                            c.PHONE_PERSONAL, c.OCCUPATION, d.fullname,
+                            f.survey_note, b.PCPL_ORI, e.TOTAL_ADMIN, b.PERIOD,
+                            DATEDIFF(b.FIRST_ARR_DATE,now()) as OVERDUE,
+                            99 as CYCLE, b.STATUS_REC,
+                            b.PAID_PRINCIPAL, b.PAID_INTEREST,
+                            b.PAID_PRINCIPAL+b.PAID_INTEREST as PAID_TOTAL,
+                            (b.PCPL_ORI-b.PAID_PRINCIPAL) as OUTSTANDING,
+                            b.INSTALLMENT, b.INSTALLMENT_DATE,
+                            b.FIRST_ARR_DATE, ' ' as COLLECTOR,
+                            GROUP_CONCAT(concat(g.BRAND,' ',g.TYPE)) as COLLATERAL,
+                            GROUP_CONCAT(g.POLICE_NUMBER) as POLICE_NUMBER,
+                            GROUP_CONCAT(g.ENGINE_NUMBER) as ENGINE_NUMBER,
+                            GROUP_CONCAT(g.CHASIS_NUMBER) as CHASIS_NUMBER,
+                            GROUP_CONCAT(g.PRODUCTION_YEAR) as PRODUCTION_YEAR,
+                            SUM(g.VALUE) as TOTAL_NILAI_JAMINAN,b.CUST_CODE
+                FROM    branch a
+                        inner join credit b on b.BRANCH = a.ID
+                        left join customer c on c.CUST_CODE = b.CUST_CODE
+                        left join users d on d.id = b.MCF_ID
+                        left join cr_application e on e.ORDER_NUMBER = b.ORDER_NUMBER
+                        left join cr_survey f on f.id = e.CR_SURVEY_ID
+                        left join cr_collateral g on g.CR_CREDIT_ID = b.ID
+                GROUP   BY  a.NAME, b.LOAN_NUMBER, c.NAME, b.CREATED_AT,
+                            c.INS_ADDRESS, c.ZIP_CODE, c.PHONE_HOUSE,
+                            c.PHONE_PERSONAL, c.OCCUPATION, d.fullname,
+                            f.survey_note, b.PCPL_ORI, e.TOTAL_ADMIN, b.PERIOD,
+                            DATEDIFF(b.FIRST_ARR_DATE,now()),
+                            b.STATUS_REC, b.PAID_PRINCIPAL, b.PAID_INTEREST,
+                            b.PAID_PRINCIPAL+b.PAID_INTEREST,
+                            (b.PCPL_ORI-b.PAID_PRINCIPAL),
+                            b.INSTALLMENT, b.INSTALLMENT_DATE,
+                            b.FIRST_ARR_DATE, b.CUST_CODE";
+
+
+        $results = DB::select($query);
+
+        return $results;
+    }
 }

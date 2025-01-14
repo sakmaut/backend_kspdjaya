@@ -42,48 +42,21 @@ class CollateralController extends Controller
                 });
             }
 
-            $collateral = $collateral->paginate(10);  
+            $collateral = $collateral->paginate(10); 
+            $collateralSertification = $collateralSertification->paginate(10);  
 
-            $collateralData = $collateral->getCollection()->transform(function ($list) {
-                return [
-                    "type" => "kendaraan",
-                    'id' => $list->ID,
-                    "tipe" => $list->TYPE,
-                    "merk" => $list->BRAND,
-                    "tahun" => $list->PRODUCTION_YEAR,
-                    "warna" => $list->COLOR,
-                    "atas_nama" => $list->ON_BEHALF,
-                    "no_polisi" => $list->POLICE_NUMBER,
-                    "no_rangka" => $list->CHASIS_NUMBER,
-                    "no_mesin" => $list->ENGINE_NUMBER,
-                    "no_bpkb" => $list->BPKB_NUMBER,
-                    "no_stnk" => $list->STNK_NUMBER,
-                    "tgl_stnk" => $list->STNK_VALID_DATE,
-                    "nilai" => (int) $list->VALUE,
-                    "asal_lokasi" => M_Branch::find($list->COLLATERAL_FLAG)->NAME??null,
-                    "lokasi" => M_Branch::find($list->LOCATION_BRANCH)->NAME??$list->LOCATION_BRANCH,
-                ];
-            });
-
-            $collateralSertificatData = $collateralSertification->getCollection()->transform(function ($list) {
-                return [
-                  "type" => "sertifikat",
-                    'id' => $list->ID,
-                    "no_sertifikat" => $list->NO_SERTIFIKAT,
-                    "status_kepemilikan" => $list->STATUS_KEPEMILIKAN,
-                    "imb" => $list->IMB,
-                    "luas_tanah" => $list->LUAS_TANAH,
-                    "luas_bangunan" => $list->LUAS_BANGUNAN,
-                    "lokasi" => $list->LOKASI,
-                    "provinsi" => $list->PROVINSI,
-                    "kab_kota" => $list->KAB_KOTA,
-                    "kec" => $list->KECAMATAN,
-                    "desa" => $list->DESA,
-                    "atas_nama" => $list->ATAS_NAMA,
-                    "nilai" => (int) $list->NILAI,
-                    "lokasi" => M_Branch::find($list->LOCATION_BRANCH)->NAME??null
-                ];
-            });
+            if ($collateral->isNotEmpty()) {
+                $collateralData = $collateral->getCollection()->transform(function ($list) {
+                    $this->collateralField($list);
+                });
+            } 
+            
+            // Check if $collateralSertification is not empty or null before processing
+            if ($collateralSertification->isNotEmpty()) {
+                $collateralSertificatData = $collateralSertification->getCollection()->transform(function ($list) {
+                    $this->collateralSertificationField($list);
+                });
+            }
     
             $data = array_merge($collateralData->toArray(), $collateralSertificatData->toArray());
 
@@ -110,5 +83,69 @@ class CollateralController extends Controller
             ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
         }
+    }
+
+    public function show(Request $req,$id)
+    {
+        try {
+            $checkCollateral = M_CrCollateral::where('id',$id)->first();
+            $checkCollateralSertification = M_CrCollateralSertification::where('id',$id)->first();
+
+            if($checkCollateral){
+               $this->collateralField($checkCollateral);
+            }
+
+            if($checkCollateralSertification){
+                $this->collateralSertificationField($checkCollateralSertification);
+            }
+          
+
+            ActivityLogger::logActivity($req,"Success",200);
+            return response()->json('', 200);
+        }  catch (\Exception $e) {
+            ActivityLogger::logActivity($req,$e->getMessage(),500);
+            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+        }
+    }
+
+    private function collateralField($list){
+        return [
+            "type" => "kendaraan",
+            'id' => $list->ID,
+            "tipe" => $list->TYPE,
+            "merk" => $list->BRAND,
+            "tahun" => $list->PRODUCTION_YEAR,
+            "warna" => $list->COLOR,
+            "atas_nama" => $list->ON_BEHALF,
+            "no_polisi" => $list->POLICE_NUMBER,
+            "no_rangka" => $list->CHASIS_NUMBER,
+            "no_mesin" => $list->ENGINE_NUMBER,
+            "no_bpkb" => $list->BPKB_NUMBER,
+            "no_stnk" => $list->STNK_NUMBER,
+            "tgl_stnk" => $list->STNK_VALID_DATE,
+            "nilai" => (int) $list->VALUE,
+            "asal_lokasi" => M_Branch::find($list->COLLATERAL_FLAG)->NAME??null,
+            "lokasi" => M_Branch::find($list->LOCATION_BRANCH)->NAME??$list->LOCATION_BRANCH,
+        ];
+    }
+
+    private function collateralSertificationField($list){
+        return [
+            "type" => "sertifikat",
+            'id' => $list->ID,
+            "no_sertifikat" => $list->NO_SERTIFIKAT,
+            "status_kepemilikan" => $list->STATUS_KEPEMILIKAN,
+            "imb" => $list->IMB,
+            "luas_tanah" => $list->LUAS_TANAH,
+            "luas_bangunan" => $list->LUAS_BANGUNAN,
+            "lokasi" => $list->LOKASI,
+            "provinsi" => $list->PROVINSI,
+            "kab_kota" => $list->KAB_KOTA,
+            "kec" => $list->KECAMATAN,
+            "desa" => $list->DESA,
+            "atas_nama" => $list->ATAS_NAMA,
+            "nilai" => (int) $list->NILAI,
+            "lokasi" => M_Branch::find($list->LOCATION_BRANCH)->NAME??null
+        ];
     }
 }
