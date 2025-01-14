@@ -1072,6 +1072,7 @@ class CrAppilcationController extends Controller
             "dokumen_indentitas" => $this->attachment($surveyId, "'ktp', 'kk', 'ktp_pasangan'"),
             "dokumen_jaminan" => $this->attachment($surveyId, "'no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri'"),
             "dokumen_pendukung" => M_CrSurveyDocument::attachmentGetAll($surveyId, ['other'])??null,
+            "dokumen_order" => $this->attachment($surveyId, "'sp', 'pk', 'dok'"),
             "approval" => 
             [
                 'status' => $approval->application_result??null,
