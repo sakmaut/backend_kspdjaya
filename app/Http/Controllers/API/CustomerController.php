@@ -63,7 +63,7 @@ class CustomerController extends Controller
                             ->select('a.STATUS', 'a.LOAN_NUMBER', 'a.ORDER_NUMBER', 'c.NAME', 'c.ALIAS', 'c.ADDRESS', 'b.POLICE_NUMBER', 'a.INSTALLMENT')
                             ->join('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
                             ->join('customer as c', 'c.CUST_CODE', '=', 'a.CUST_CODE')
-                            ->where('a.STATUS', '!=', 'A');
+                            ->where('a.STATUS', '!=', 'D');
 
                 if(!empty($request->nama)){
                     $query ->where(DB::raw("CONCAT(c.NAME, ' ', c.ALIAS)"), 'LIKE', "%{$request->nama}%");
