@@ -25,7 +25,6 @@ class R_CrProspect extends JsonResource
     {
         $stts_approval = M_SurveyApproval::where('CR_SURVEY_ID',$this->id)->first();
         $check_exist = M_Credit::where('ORDER_NUMBER',$this->order_number)->first();
-        $attachment = M_CrSurveyDocument::where(['CR_SURVEY_ID' => $this->id,'TYPE' => 'berkas pencairan'])->get();
 
         $data = [
             'id' => $this->id,
@@ -40,9 +39,26 @@ class R_CrProspect extends JsonResource
             'plafond' => $this->plafond,
             'status' => ($stts_approval)?$stts_approval->APPROVAL_RESULT:'',
             'status_code' => ($stts_approval)?$stts_approval->CODE:'',
-            'attachment' => $attachment
+            'attachment' => $this->attachment($this->id, "'sp', 'pk', 'dok'")
         ];
         
         return $data;
+    }
+
+    public function attachment($survey_id, $data){
+        $documents = DB::select(
+            "   SELECT *
+                FROM cr_survey_document AS csd
+                WHERE (TYPE, TIMEMILISECOND) IN (
+                    SELECT TYPE, MAX(TIMEMILISECOND)
+                    FROM cr_survey_document
+                    WHERE TYPE IN ($data)
+                        AND CR_SURVEY_ID = '$survey_id'
+                    GROUP BY TYPE
+                )
+                ORDER BY TIMEMILISECOND DESC"
+        );
+    
+        return $documents;        
     }
 }
