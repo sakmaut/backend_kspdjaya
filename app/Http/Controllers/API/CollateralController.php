@@ -42,29 +42,41 @@ class CollateralController extends Controller
                 });
             }
 
-            $collateral = $collateral->paginate(10); 
-            $collateralSertification = $collateralSertification->paginate(10);  
-
-            if ($collateral->isNotEmpty()) {
-                $collateralData = $collateral->getCollection()->transform(function ($list) {
-                    $this->collateralField($list);
+            $collateralData = [];
+            if ($collateral->count() > 0) {
+                $collateral = $collateral->paginate(10);
+                $collateralData = $collateral->getCollection()->map(function ($list) {
+                    $this->collateralField($list);  // Apply necessary transformation
+                    return $list;  // Ensure the transformed item is returned
                 });
-            } 
-            
-            // Check if $collateralSertification is not empty or null before processing
-            if ($collateralSertification->isNotEmpty()) {
-                $collateralSertificatData = $collateralSertification->getCollection()->transform(function ($list) {
-                    $this->collateralSertificationField($list);
-                });
+                // Convert the collection to an array
+                $collateralData = $collateralData->toArray(); 
             }
-    
-            $data = array_merge($collateralData->toArray(), $collateralSertificatData->toArray());
+
+            $collateralSertificatData = [];
+            if ($collateralSertification->count() > 0) {
+                $collateralSertification = $collateralSertification->paginate(10);
+                $collateralSertificatData = $collateralSertification->getCollection()->map(function ($list) {
+                    $this->collateralSertificationField($list);  // Apply necessary transformation
+                    return $list;  // Ensure the transformed item is returned
+                });
+                // Convert the collection to an array
+                $collateralSertificatData = $collateralSertificatData->toArray(); 
+            }
+
+            // Now you can merge the arrays properly
+            $data = array_merge($collateralData, $collateralSertificatData);
 
             $response = [
+                'current_page' => max($collateral->currentPage(), $collateralSertification->currentPage()),
                 'data' => $data,
+                "first_page_url" => "http://127.0.0.1:8000/collateral?page=1",
+                "from" => 1,
+                "last_page" => 3,
+                "last_page_url" => "http://127.0.0.1:8000/collateral?page=3",
                 'pagination' => [
                     'total' => $collateral->total() + $collateralSertification->total(), // Total combined
-                    'current_page' => max($collateral->currentPage(), $collateralSertification->currentPage()),
+                    
                     'last_page' => max($collateral->lastPage(), $collateralSertification->lastPage()),
                     'per_page' => 10,
                     'from' => $collateral->firstItem(),
