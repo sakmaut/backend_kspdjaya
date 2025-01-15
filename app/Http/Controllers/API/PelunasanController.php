@@ -177,7 +177,7 @@ class PelunasanController extends Controller
                 'PAID_PCPL' => $payment_value_principal,
                 'PAID_INT' => $payment_value_interest,
                 'PAID_PENALTY' => $payment_penalty,
-                'STATUS_REC' => (abs($payment_value_principal - $res['PAST_DUE_PCPL']) <= $tolerance) && (abs($payment_value_interest - $res['PAST_DUE_INTRST']) <= $tolerance) ? 'D' : 'A'
+                'STATUS_REC' => (abs($payment_value_principal - $res['PAST_DUE_PCPL']) <= $tolerance) && (abs($payment_value_interest - $res['PAST_DUE_INTRST']) <= $tolerance) ? 'S' : 'A'
             ]);
     
             if ($bayarPokok <= 0 && $bayarBunga <= 0) {
