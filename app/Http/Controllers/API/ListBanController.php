@@ -158,7 +158,7 @@ class ListBanController extends Controller
                             b.PAID_PRINCIPAL+b.PAID_INTEREST,
                             (b.PCPL_ORI-b.PAID_PRINCIPAL),
                             b.INSTALLMENT, b.INSTALLMENT_DATE,
-                            b.FIRST_ARR_DATE, b.CUST_CODE";
+                            b.FIRST_ARR_DATE, b.CUST_CODE LIMIT 10";
 
 
         $results = DB::select($query);
