@@ -102,108 +102,45 @@ class ListBanController extends Controller
     }
 
     public function listBan() {
-        try {
-            $query = "SELECT    a.CODE as KODE, 
-                                a.NAME as CABANG, 
-                                b.LOAN_NUMBER as NO_KONTRAK, 
-                                c.NAME as NAMA_PELANGGAN, 
-                                DATE_FORMAT(b.CREATED_AT, '%d-%m-%y') as TGL_BOOKING,
-                                c.INS_ADDRESS, 
-                                c.ZIP_CODE, 
-                                c.PHONE_HOUSE,
-                                c.PHONE_PERSONAL, 
-                                c.OCCUPATION, 
-                                d.fullname,
-                                f.survey_note, 
-                                b.PCPL_ORI,
-                                b.PERIOD, 
-                                e.INSTALLMENT_TYPE, 
-                                e.TOTAL_ADMIN, 
-                                DATEDIFF(b.FIRST_ARR_DATE,now()) as OVERDUE,
-                                99 as CYCLE, 
-                                b.STATUS_REC,
-                                b.PAID_PRINCIPAL,
-                                b.PAID_INTEREST,
-                                b.PAID_PRINCIPAL+b.PAID_INTEREST as PAID_TOTAL,
-                                (b.PCPL_ORI-b.PAID_PRINCIPAL) as OUTSTANDING,
-                                b.INSTALLMENT,
-                                b.INSTALLMENT_DATE,
-                                b.FIRST_ARR_DATE, 
-                                ' ' as COLLECTOR,
-                                GROUP_CONCAT(concat(g.BRAND,' ',g.TYPE)) as COLLATERAL,
-                                GROUP_CONCAT(g.POLICE_NUMBER) as POLICE_NUMBER,
-                                GROUP_CONCAT(g.ENGINE_NUMBER) as ENGINE_NUMBER,
-                                GROUP_CONCAT(g.CHASIS_NUMBER) as CHASIS_NUMBER,
-                                GROUP_CONCAT(g.PRODUCTION_YEAR) as PRODUCTION_YEAR,
-                                SUM(g.VALUE) as TOTAL_NILAI_JAMINAN,
-                                b.CUST_CODE
-                    FROM    branch a
-                            inner join credit b on b.BRANCH = a.ID
-                            left join customer c on c.CUST_CODE = b.CUST_CODE
-                            left join users d on d.id = b.MCF_ID
-                            left join cr_application e on e.ORDER_NUMBER = b.ORDER_NUMBER
-                            left join cr_survey f on f.id = e.CR_SURVEY_ID
-                            left join cr_collateral g on g.CR_CREDIT_ID = b.ID
-                    GROUP   BY  a.CODE, 
-                                a.NAME, 
-                                b.LOAN_NUMBER, 
-                                c.NAME, 
-                                b.CREATED_AT,
-                                c.INS_ADDRESS, 
-                                c.ZIP_CODE, c.PHONE_HOUSE,
-                                c.PHONE_PERSONAL, c.OCCUPATION, d.fullname,
-                                f.survey_note, b.PCPL_ORI, e.TOTAL_ADMIN,e.INSTALLMENT_TYPE, b.PERIOD,
-                                DATEDIFF(b.FIRST_ARR_DATE,now()),
-                                b.STATUS_REC, b.PAID_PRINCIPAL, b.PAID_INTEREST,
-                                b.PAID_PRINCIPAL+b.PAID_INTEREST,
-                                (b.PCPL_ORI-b.PAID_PRINCIPAL),
-                                b.INSTALLMENT, b.INSTALLMENT_DATE,
-                                b.FIRST_ARR_DATE, b.CUST_CODE";
+
+        $query = "SELECT    a.NAME, b.LOAN_NUMBER, c.NAME, b.CREATED_AT,
+                            c.INS_ADDRESS, c.ZIP_CODE, c.PHONE_HOUSE,
+                            c.PHONE_PERSONAL, c.OCCUPATION, d.fullname,
+                            f.survey_note, b.PCPL_ORI, e.TOTAL_ADMIN, b.PERIOD,
+                            DATEDIFF(b.FIRST_ARR_DATE,now()) as OVERDUE,
+                            99 as CYCLE, b.STATUS_REC,
+                            b.PAID_PRINCIPAL, b.PAID_INTEREST,
+                            b.PAID_PRINCIPAL+b.PAID_INTEREST as PAID_TOTAL,
+                            (b.PCPL_ORI-b.PAID_PRINCIPAL) as OUTSTANDING,
+                            b.INSTALLMENT, b.INSTALLMENT_DATE,
+                            b.FIRST_ARR_DATE, ' ' as COLLECTOR,
+                            GROUP_CONCAT(concat(g.BRAND,' ',g.TYPE)) as COLLATERAL,
+                            GROUP_CONCAT(g.POLICE_NUMBER) as POLICE_NUMBER,
+                            GROUP_CONCAT(g.ENGINE_NUMBER) as ENGINE_NUMBER,
+                            GROUP_CONCAT(g.CHASIS_NUMBER) as CHASIS_NUMBER,
+                            GROUP_CONCAT(g.PRODUCTION_YEAR) as PRODUCTION_YEAR,
+                            SUM(g.VALUE) as TOTAL_NILAI_JAMINAN,b.CUST_CODE
+                FROM    branch a
+                        inner join credit b on b.BRANCH = a.ID
+                        left join customer c on c.CUST_CODE = b.CUST_CODE
+                        left join users d on d.id = b.MCF_ID
+                        left join cr_application e on e.ORDER_NUMBER = b.ORDER_NUMBER
+                        left join cr_survey f on f.id = e.CR_SURVEY_ID
+                        left join cr_collateral g on g.CR_CREDIT_ID = b.ID
+                GROUP   BY  a.NAME, b.LOAN_NUMBER, c.NAME, b.CREATED_AT,
+                            c.INS_ADDRESS, c.ZIP_CODE, c.PHONE_HOUSE,
+                            c.PHONE_PERSONAL, c.OCCUPATION, d.fullname,
+                            f.survey_note, b.PCPL_ORI, e.TOTAL_ADMIN, b.PERIOD,
+                            DATEDIFF(b.FIRST_ARR_DATE,now()),
+                            b.STATUS_REC, b.PAID_PRINCIPAL, b.PAID_INTEREST,
+                            b.PAID_PRINCIPAL+b.PAID_INTEREST,
+                            (b.PCPL_ORI-b.PAID_PRINCIPAL),
+                            b.INSTALLMENT, b.INSTALLMENT_DATE,
+                            b.FIRST_ARR_DATE, b.CUST_CODE";
 
 
-            $results = DB::select($query);
+        $results = DB::select($query);
 
-            // $build = [];
-            // foreach ($results as $result) {
-            //     $build[] =[
-            //         // "KODE" => $result->CODE??'',
-            //         // "CABANG" => $result->cabang??'',
-            //         // "NO KONTRAK" => $result->LOAN_NUMBER??'',
-            //         // "NAMA PELANGGAN" => $result->NAME??'',
-            //         // "TGL BOOKING" => isset($result->CREATED_AT) && !empty($result->CREATED_AT) ? date("d-m-Y", strtotime($result->CREATED_AT)) : '',
-            //         // "ALAMAT TAGIH" => $result->INS_ADDRESS??'',
-            //         // "KODE POS" => $result->ZIP_CODE??'',
-            //         // "NO TELP" => $result->PHONE_HOUSE??'',
-            //         // "NO HP" => $result->PHONE_PERSONAL??'',
-            //         // "PEKERJAAN" => $result->OCCUPATION??'',
-            //         // "SURVEYOR" => $result->fullname??'',
-            //         // "CATT SURVEY" => $result->survey_note??'',
-            //         // "PKK HUTANG" => $result->PCPL_ORI??'',
-            //         // "JML ANGS" => $result->PERIOD??'',
-            //         // "PERIOD" => $result->INSTALLMENT_TYPE??'',
-            //         // "OVERDUE" => $result->OVERDUE??'',
-            //         // "CYCLE" => $result->CYCLE??'',
-            //         // "STS KONTRAK" => $result->STATUS_REC??'',
-            //         // "OUTS PKK AKHIR" => $result->PAID_PRINCIPAL??'',
-            //         // "OUTS BNG_AKHIR" => $result->PAID_INTEREST??'',
-            //         // "ANGSURAN" =>  $result->INSTALLMENT??'',
-            //         // "JTH TEMPO AWAL" => date("d-m-Y",strtotime( $result->INSTALLMENT_DATE))??'',
-            //         // "JTH TEMPO AKHIR" => date("d-m-Y",strtotime( $result->INSTALLMENT_DATE))??'',
-            //         // "NAMA BRG" =>  "SEPEDA MOTOR",
-            //         // "TIPE BRG" =>  $result->COLLATERAL??'',
-            //         // "NO POL" =>  $result->POLICE_NUMBER??'',
-            //         // "NO MESIN" =>  $result->ENGINE_NUMBER??'',
-            //         // "NO RANGKA" =>  $result->CHASIS_NUMBER??'',
-            //         // "TAHUN" =>  $result->PRODUCTION_YEAR??'',
-            //         // "NILAI PINJAMAN" =>  $result->TOTAL_NILAI_JAMINAN??'',
-            //         // "ADMIN" =>  $result->TOTAL_ADMIN??'',
-            //         // "CUST_ID" =>  $result->CUST_CODE??'',
-            //     ] ;
-            // }
-
-            return $results;
-        }catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
-        }
+        return $results;
     }
 }
