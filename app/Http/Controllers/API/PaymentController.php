@@ -261,6 +261,7 @@ class PaymentController extends Controller
             $valBeforeInterest = $check_arrears->PAID_INT;
             $getPrincipal = $check_arrears->PAST_DUE_PCPL;
             $getInterest = $check_arrears->PAST_DUE_INTRST;
+            $getPenalty = $check_arrears->PAST_DUE_PENALTY;
 
             // Determine the new principal payment value
             $new_payment_value_principal = $valBeforePrincipal;
@@ -285,37 +286,32 @@ class PaymentController extends Controller
                 $remaining_payment = $byr_angsuran;
             }
 
-            // Update interest with remaining payment only if principal is fully paid
             if ($new_payment_value_principal == $getPrincipal) {
-                // Only update interest if it has not reached the max
                 if ($valBeforeInterest < $getInterest) {
                     $new_payment_value_interest = min($valBeforeInterest + $remaining_payment, $getInterest);
                 }
             }
 
-            // Prepare updates only if values have changed
             $updates = [];
             if ($new_payment_value_principal !== $valBeforePrincipal) {
                 $updates['PAID_PCPL'] = $new_payment_value_principal;
             }
 
-            // Only update interest if it has changed
             if ($new_payment_value_interest !== $valBeforeInterest) {
                 $updates['PAID_INT'] = $new_payment_value_interest;
             }
 
             $updates['PAID_PENALTY'] = $new_penalty;
             
-            // Update the schedule if there are any changes
             if (!empty($updates)) {
                 $check_arrears->update($updates);
             }
 
-            $total1= floatval($new_payment_value_principal) + floatval($new_payment_value_interest);
-            $total2= floatval($getPrincipal) + floatval($getInterest);
+            $total1= floatval($new_payment_value_principal) + floatval($new_payment_value_interest) + floatval($new_penalty);
+            $total2= floatval($getPrincipal) + floatval($getInterest) + floatval($getPenalty);
 
             if ($total1 == $total2) {
-                $check_arrears->update(['STATUS_REC' => 'D']);
+                $check_arrears->update(['STATUS_REC' => 'S']);
             }
         }
 
@@ -561,8 +557,21 @@ class PaymentController extends Controller
                 $paidInterest = isset($setInterest) ? bcadd($check_credit->PAID_INTEREST ?? '0.00', $setInterest, 2) : ($check_credit->PAID_INTEREST ?? '0.00');
                 $paidPenalty = $bayar_denda !== 0 ? bcadd($check_credit->PAID_PINALTY ?? '0.00', $bayar_denda, 2) : ($check_credit->PAID_PINALTY ?? '0.00');
             
-                // Tentukan status berdasarkan kondisi pelunasan
-                $status = bccomp($paidPrincipal, $check_credit->PCPL_ORI, 2) >= 0 ? 'D' : 'A';
+                $checkCreditSchedule = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)
+                                        ->where(function ($query) {
+                                            $query->where('PAID_FLAG', '')
+                                                ->orWhereNull('PAID_FLAG');
+                                        })
+                                        ->first();
+
+                $checkArrears = M_Arrears::where([
+                    'LOAN_NUMBER' => $loan_number,
+                    'STATUS_REC' => 'A'
+                ])->first();
+
+
+                // $status = bccomp($paidPrincipal, $check_credit->PCPL_ORI, 2) >= 0 ? 'D' : 'A';
+                $status = (!$checkCreditSchedule && !$checkArrears) ? 'D' : 'A';
             
                 // Update database dengan nilai presisi tinggi
                 $check_credit->update([
