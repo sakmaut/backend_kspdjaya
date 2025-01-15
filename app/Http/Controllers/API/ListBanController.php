@@ -111,9 +111,9 @@ class ListBanController extends Controller
                             ->leftJoin('cr_survey as f', 'f.id', '=', 'e.CR_SURVEY_ID')
                             ->leftJoin('cr_collateral as g', 'g.CR_CREDIT_ID', '=', 'b.ID')
                         ->select(
-                            'a.CODE',
-                            'a.NAME as branch',
-                            'b.LOAN_NUMBER',
+                            'a.CODE as KODE',
+                            'a.NAME as CABANG',
+                            'b.LOAN_NUMBER as NO_KONTRAK',
                             'c.NAME as customer_name',
                             'b.CREATED_AT',
                             'c.INS_ADDRESS',
@@ -176,45 +176,45 @@ class ListBanController extends Controller
                         )
                         ->get();
 
-            $build = [];
-            foreach ($results as $result) {
-                $build[] =[
-                    "KODE" => $result->CODE??'',
-                    "CABANG" => $result->cabang??'',
-                    "NO_KONTRAK" => $result->LOAN_NUMBER??'',
-                    // "NAMA PELANGGAN" => $result->NAME??'',
-                    // "TGL BOOKING" => isset($result->CREATED_AT) && !empty($result->CREATED_AT) ? date("d-m-Y", strtotime($result->CREATED_AT)) : '',
-                    // "ALAMAT TAGIH" => $result->INS_ADDRESS??'',
-                    // "KODE POS" => $result->ZIP_CODE??'',
-                    // "NO TELP" => $result->PHONE_HOUSE??'',
-                    // "NO HP" => $result->PHONE_PERSONAL??'',
-                    // "PEKERJAAN" => $result->OCCUPATION??'',
-                    // "SURVEYOR" => $result->fullname??'',
-                    // "CATT SURVEY" => $result->survey_note??'',
-                    // "PKK HUTANG" => $result->PCPL_ORI??'',
-                    // "JML ANGS" => $result->PERIOD??'',
-                    // "PERIOD" => $result->INSTALLMENT_TYPE??'',
-                    // "OVERDUE" => $result->OVERDUE??'',
-                    // "CYCLE" => $result->CYCLE??'',
-                    // "STS KONTRAK" => $result->STATUS_REC??'',
-                    // "OUTS PKK AKHIR" => $result->PAID_PRINCIPAL??'',
-                    // "OUTS BNG_AKHIR" => $result->PAID_INTEREST??'',
-                    // "ANGSURAN" =>  $result->INSTALLMENT??'',
-                    // "JTH TEMPO AWAL" => date("d-m-Y",strtotime( $result->INSTALLMENT_DATE))??'',
-                    // "JTH TEMPO AKHIR" => date("d-m-Y",strtotime( $result->INSTALLMENT_DATE))??'',
-                    // "NAMA BRG" =>  "SEPEDA MOTOR",
-                    // "TIPE BRG" =>  $result->COLLATERAL??'',
-                    // "NO POL" =>  $result->POLICE_NUMBER??'',
-                    // "NO MESIN" =>  $result->ENGINE_NUMBER??'',
-                    // "NO RANGKA" =>  $result->CHASIS_NUMBER??'',
-                    // "TAHUN" =>  $result->PRODUCTION_YEAR??'',
-                    // "NILAI PINJAMAN" =>  $result->TOTAL_NILAI_JAMINAN??'',
-                    // "ADMIN" =>  $result->TOTAL_ADMIN??'',
-                    // "CUST_ID" =>  $result->CUST_CODE??'',
-                ] ;
-            }
+            // $build = [];
+            // foreach ($results as $result) {
+            //     $build[] =[
+            //         "KODE" => $result->CODE??'',
+            //         "CABANG" => $result->cabang??'',
+            //         "NO_KONTRAK" => $result->LOAN_NUMBER??'',
+            //         // "NAMA PELANGGAN" => $result->NAME??'',
+            //         // "TGL BOOKING" => isset($result->CREATED_AT) && !empty($result->CREATED_AT) ? date("d-m-Y", strtotime($result->CREATED_AT)) : '',
+            //         // "ALAMAT TAGIH" => $result->INS_ADDRESS??'',
+            //         // "KODE POS" => $result->ZIP_CODE??'',
+            //         // "NO TELP" => $result->PHONE_HOUSE??'',
+            //         // "NO HP" => $result->PHONE_PERSONAL??'',
+            //         // "PEKERJAAN" => $result->OCCUPATION??'',
+            //         // "SURVEYOR" => $result->fullname??'',
+            //         // "CATT SURVEY" => $result->survey_note??'',
+            //         // "PKK HUTANG" => $result->PCPL_ORI??'',
+            //         // "JML ANGS" => $result->PERIOD??'',
+            //         // "PERIOD" => $result->INSTALLMENT_TYPE??'',
+            //         // "OVERDUE" => $result->OVERDUE??'',
+            //         // "CYCLE" => $result->CYCLE??'',
+            //         // "STS KONTRAK" => $result->STATUS_REC??'',
+            //         // "OUTS PKK AKHIR" => $result->PAID_PRINCIPAL??'',
+            //         // "OUTS BNG_AKHIR" => $result->PAID_INTEREST??'',
+            //         // "ANGSURAN" =>  $result->INSTALLMENT??'',
+            //         // "JTH TEMPO AWAL" => date("d-m-Y",strtotime( $result->INSTALLMENT_DATE))??'',
+            //         // "JTH TEMPO AKHIR" => date("d-m-Y",strtotime( $result->INSTALLMENT_DATE))??'',
+            //         // "NAMA BRG" =>  "SEPEDA MOTOR",
+            //         // "TIPE BRG" =>  $result->COLLATERAL??'',
+            //         // "NO POL" =>  $result->POLICE_NUMBER??'',
+            //         // "NO MESIN" =>  $result->ENGINE_NUMBER??'',
+            //         // "NO RANGKA" =>  $result->CHASIS_NUMBER??'',
+            //         // "TAHUN" =>  $result->PRODUCTION_YEAR??'',
+            //         // "NILAI PINJAMAN" =>  $result->TOTAL_NILAI_JAMINAN??'',
+            //         // "ADMIN" =>  $result->TOTAL_ADMIN??'',
+            //         // "CUST_ID" =>  $result->CUST_CODE??'',
+            //     ] ;
+            // }
 
-            return response()->json($build, 200);           
+            return response()->json($results, 200);           
         }catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
