@@ -103,7 +103,7 @@ class ListBanController extends Controller
 
     public function listBan() {
 
-        $query = "SELECT    a.NAME, b.LOAN_NUMBER, c.NAME, b.CREATED_AT,
+        $query = "SELECT    a.NAME as CABANG, b.LOAN_NUMBER, c.NAME, b.CREATED_AT,
                             c.INS_ADDRESS, c.ZIP_CODE, c.PHONE_HOUSE,
                             c.PHONE_PERSONAL, c.OCCUPATION, d.fullname,
                             f.survey_note, b.PCPL_ORI, e.TOTAL_ADMIN, b.PERIOD,
