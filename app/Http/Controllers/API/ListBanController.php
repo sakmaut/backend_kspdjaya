@@ -103,7 +103,8 @@ class ListBanController extends Controller
 
     public function listBan() {
 
-        $query = "SELECT    a.NAME as cabang, 
+        $query = "SELECT    a.CODE, 
+                            a.NAME as cabang, 
                             b.LOAN_NUMBER, 
                             c.NAME, 
                             b.CREATED_AT,
@@ -161,8 +162,9 @@ class ListBanController extends Controller
         $build = [];
         foreach ($results as $result) {
             $build[] =[
-                "NAMA CABANG" => $result->cabang,
-                "NO CABANG" => $result->LOAN_NUMBER,
+                "KODE" => $result->CODE,
+                "CABANG" => $result->cabang,
+                "NO KONTRAK" => $result->LOAN_NUMBER,
                 "NAMA PELANGGAN" => $result->NAME,
                 "TGL BOOKING" => date("d-m-Y",strtotime($result->CREATED_AT)),
                 "ALAMAT TAGIH" => $result->INS_ADDRESS,
