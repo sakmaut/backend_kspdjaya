@@ -15,82 +15,82 @@ class CollateralController extends Controller
         try {
 
             $search = $request->get('search');
-            
-            $collateral = M_CrCollateral::where(function($query) {
-                                $query->whereNull('DELETED_AT')
-                                    ->orWhere('DELETED_AT', '');
-                            });  
+            $type = $request->get('type');
 
-            $collateralSertification = M_CrCollateralSertification::where(function($query) {
-                                        $query->whereNull('DELETED_AT')
-                                            ->orWhere('DELETED_AT', '');
-                                    })->paginate(10); 
+            switch ($type) {
+                case 'kendaraan':
+                    $collateral = M_CrCollateral::where(function($query) {
+                        $query->whereNull('DELETED_AT')
+                            ->orWhere('DELETED_AT', '');
+                    });  
 
-            if(isset($search)){
-                $collateral->where(function($query) use ($search) {
-                    $query->where('ON_BEHALF', 'LIKE', "%{$search}%")
-                        ->orWhere('POLICE_NUMBER', 'LIKE', "%{$search}%")
-                        ->orWhere('CHASIS_NUMBER', 'LIKE', "%{$search}%")
-                        ->orWhere('ENGINE_NUMBER', 'LIKE', "%{$search}%")
-                        ->orWhere('BPKB_NUMBER', 'LIKE', "%{$search}%")
-                        ->orWhere('STNK_NUMBER', 'LIKE', "%{$search}%");
-                });
+                    if(isset($search)){
+                        $collateral->where(function($query) use ($search) {
+                            $query->where('ON_BEHALF', 'LIKE', "%{$search}%")
+                                ->orWhere('POLICE_NUMBER', 'LIKE', "%{$search}%")
+                                ->orWhere('CHASIS_NUMBER', 'LIKE', "%{$search}%")
+                                ->orWhere('ENGINE_NUMBER', 'LIKE', "%{$search}%")
+                                ->orWhere('BPKB_NUMBER', 'LIKE', "%{$search}%")
+                                ->orWhere('STNK_NUMBER', 'LIKE', "%{$search}%");
+                        });
+                    }
 
-                $collateralSertification->where(function($query) use ($search) {
-                    $query->where('NO_SERTIFIKAT', 'LIKE', "%{$search}%")
-                        ->orWhere('ATAS_NAMA', 'LIKE', "%{$search}%");
-                });
-            }
+                    if ($collateral->count() > 0) {
+                        $collateral = $collateral->paginate(10);
 
-            $collateralData = [];
-            if ($collateral->count() > 0) {
-                $collateral = $collateral->paginate(10);
-                $collateralData = $collateral->getCollection()->map(function ($list) {
-                    $this->collateralField($list);  // Apply necessary transformation
-                    return $list;  // Ensure the transformed item is returned
-                });
-                // Convert the collection to an array
-                $collateralData = $collateralData->toArray(); 
-            }
-
-            $collateralSertificatData = [];
-            if ($collateralSertification->count() > 0) {
-                $collateralSertification = $collateralSertification->paginate(10);
-                $collateralSertificatData = $collateralSertification->getCollection()->map(function ($list) {
-                    $this->collateralSertificationField($list);  // Apply necessary transformation
-                    return $list;  // Ensure the transformed item is returned
-                });
-                // Convert the collection to an array
-                $collateralSertificatData = $collateralSertificatData->toArray(); 
-            }
-
-            // Now you can merge the arrays properly
-            $data = array_merge($collateralData, $collateralSertificatData);
-
-            $response = [
-                'current_page' => max($collateral->currentPage(), $collateralSertification->currentPage()),
-                'data' => $data,
-                "first_page_url" => "http://127.0.0.1:8000/collateral?page=1",
-                "from" => 1,
-                "last_page" => 3,
-                "last_page_url" => "http://127.0.0.1:8000/collateral?page=3",
-                'pagination' => [
-                    'total' => $collateral->total() + $collateralSertification->total(), // Total combined
+                        $collateralData = $collateral->getCollection()->transform(function ($list) {
+                            return $this->collateralField($list);
+                        });
                     
-                    'last_page' => max($collateral->lastPage(), $collateralSertification->lastPage()),
-                    'per_page' => 10,
-                    'from' => $collateral->firstItem(),
-                    'to' => $collateral->lastItem(),
-                    'links' => [
-                        'first' => $collateral->url(1),
-                        'last' => $collateral->url($collateral->lastPage()),
-                        'prev' => $collateral->previousPageUrl(),
-                        'next' => $collateral->nextPageUrl(),
-                    ],
-                ],
-            ];
+                        $collateralData = $collateralData->toArray();
 
-            return response()->json($response, 200);
+                        return response()->json([
+                            'data' => $collateralData,
+                            'pagination' => $this->pagination($collateral),
+                        ], 200);  
+                    }
+  
+                    break;
+                default:
+                     return response()->json([],200);
+                    break;
+            }
+
+            // $collateralSertification = M_CrCollateralSertification::where(function($query) {
+            //                             $query->whereNull('DELETED_AT')
+            //                                 ->orWhere('DELETED_AT', '');
+            //                 }); 
+
+            // if(isset($search)){
+            //     $collateral->where(function($query) use ($search) {
+            //         $query->where('ON_BEHALF', 'LIKE', "%{$search}%")
+            //             ->orWhere('POLICE_NUMBER', 'LIKE', "%{$search}%")
+            //             ->orWhere('CHASIS_NUMBER', 'LIKE', "%{$search}%")
+            //             ->orWhere('ENGINE_NUMBER', 'LIKE', "%{$search}%")
+            //             ->orWhere('BPKB_NUMBER', 'LIKE', "%{$search}%")
+            //             ->orWhere('STNK_NUMBER', 'LIKE', "%{$search}%");
+            //     });
+
+            //     $collateralSertification->where(function($query) use ($search) {
+            //         $query->where('NO_SERTIFIKAT', 'LIKE', "%{$search}%")
+            //             ->orWhere('ATAS_NAMA', 'LIKE', "%{$search}%");
+            //     });
+            // }
+
+            // $collateralSertificatData = [];
+            // if ($collateralSertification->count() > 0) {
+            //     $collateralSertification = $collateralSertification->paginate(10);
+            //     $collateralSertificatData = $collateralSertification->getCollection()->map(function ($list) {
+            //         $this->collateralSertificationField($list);  // Apply necessary transformation
+            //         return $list;  // Ensure the transformed item is returned
+            //     });
+            //     // Convert the collection to an array
+            //     $collateralSertificatData = $collateralSertificatData->toArray(); 
+            // }
+
+            // // Now you can merge the arrays properly
+            // $data = array_merge($collateralData, $collateralSertificatData);
+            
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
@@ -159,5 +159,49 @@ class CollateralController extends Controller
             "nilai" => (int) $list->NILAI,
             "lokasi" => M_Branch::find($list->LOCATION_BRANCH)->NAME??null
         ];
+    }
+
+    private function pagination($collateral){
+         return [
+            'current_page' => $collateral->currentPage(),
+            'total_pages' => $collateral->lastPage(),
+            'total_items' => $collateral->total(),
+            'per_page' => $collateral->perPage(),
+            'next_page_url' => $collateral->nextPageUrl(),
+            'prev_page_url' => $collateral->previousPageUrl(),
+            'first_page_url' => $collateral->url(1),
+            'last_page_url' => $collateral->url($collateral->lastPage()),
+            'links' => $this->getPaginationLinks($collateral)
+        ];
+    }
+
+    private function getPaginationLinks($paginator)
+    {
+        $links = [];
+
+        // Previous link
+        $links[] = [
+            'url' => $paginator->previousPageUrl(),
+            'label' => 'Previous',
+            'active' => false
+        ];
+
+        // Page links
+        for ($page = 1; $page <= $paginator->lastPage(); $page++) {
+            $links[] = [
+                'url' => $paginator->url($page),
+                'label' => (string) $page,
+                'active' => $page == $paginator->currentPage()
+            ];
+        }
+
+        // Next link
+        $links[] = [
+            'url' => $paginator->nextPageUrl(),
+            'label' => 'Next',
+            'active' => false
+        ];
+
+        return $links;
     }
 }
