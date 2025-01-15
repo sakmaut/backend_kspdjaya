@@ -171,7 +171,7 @@ class ListBanController extends Controller
                 "NO KONTRAK" => $result->LOAN_NUMBER??'',
                 "NAMA PELANGGAN" => $result->NAME??'',
                 "TGL BOOKING" => isset($result->CREATED_AT) && !empty($result->CREATED_AT) ? date("d-m-Y", strtotime($result->CREATED_AT)) : '',
-                "ALAMAT TAGIH" => $result->INS_ADDRESS??'',
+                // "ALAMAT TAGIH" => $result->INS_ADDRESS??'',
                 // "KODE POS" => $result->ZIP_CODE??'',
                 // "NO TELP" => $result->PHONE_HOUSE??'',
                 // "NO HP" => $result->PHONE_PERSONAL??'',
