@@ -102,6 +102,7 @@ class ListBanController extends Controller
     }
 
     public function listBan() {
+        ini_set('memory_limit', '256M');
         try {
             $results = DB::table('branch as a')
                             ->join('credit as b', 'b.BRANCH', '=', 'a.ID')
