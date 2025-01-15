@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\M_Branch;
 use App\Models\M_CrCollateral;
 use App\Models\M_CrCollateralSertification;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CollateralController extends Controller
 {
@@ -51,45 +53,38 @@ class CollateralController extends Controller
                     }
   
                     break;
+                case 'sertifikat':
+                    $collateralSertification = M_CrCollateralSertification::where(function($query) {
+                                $query->whereNull('DELETED_AT')
+                                    ->orWhere('DELETED_AT', '');
+                    }); 
+
+                    if(isset($search)){
+                        $collateralSertification->where(function($query) use ($search) {
+                            $query->where('NO_SERTIFIKAT', 'LIKE', "%{$search}%")
+                                ->orWhere('ATAS_NAMA', 'LIKE', "%{$search}%");
+                        });
+                    }
+
+                    if ($collateralSertification->count() > 0) {
+                        $collateralSertification = $collateralSertification->paginate(10);
+                        $collateralSertificatData = $collateralSertification->getCollection()->transform(function ($list) {
+                            return $this->collateralSertificationField($list);
+                        });
+        
+                        $collateralSertificatData = $collateralSertificatData->toArray(); 
+
+                        return response()->json([
+                            'data' => $collateralSertificatData,
+                            'pagination' => $this->pagination($collateralSertification),
+                        ], 200);  
+                    }
+    
+                    break;
                 default:
                      return response()->json([],200);
                     break;
             }
-
-            // $collateralSertification = M_CrCollateralSertification::where(function($query) {
-            //                             $query->whereNull('DELETED_AT')
-            //                                 ->orWhere('DELETED_AT', '');
-            //                 }); 
-
-            // if(isset($search)){
-            //     $collateral->where(function($query) use ($search) {
-            //         $query->where('ON_BEHALF', 'LIKE', "%{$search}%")
-            //             ->orWhere('POLICE_NUMBER', 'LIKE', "%{$search}%")
-            //             ->orWhere('CHASIS_NUMBER', 'LIKE', "%{$search}%")
-            //             ->orWhere('ENGINE_NUMBER', 'LIKE', "%{$search}%")
-            //             ->orWhere('BPKB_NUMBER', 'LIKE', "%{$search}%")
-            //             ->orWhere('STNK_NUMBER', 'LIKE', "%{$search}%");
-            //     });
-
-            //     $collateralSertification->where(function($query) use ($search) {
-            //         $query->where('NO_SERTIFIKAT', 'LIKE', "%{$search}%")
-            //             ->orWhere('ATAS_NAMA', 'LIKE', "%{$search}%");
-            //     });
-            // }
-
-            // $collateralSertificatData = [];
-            // if ($collateralSertification->count() > 0) {
-            //     $collateralSertification = $collateralSertification->paginate(10);
-            //     $collateralSertificatData = $collateralSertification->getCollection()->map(function ($list) {
-            //         $this->collateralSertificationField($list);  // Apply necessary transformation
-            //         return $list;  // Ensure the transformed item is returned
-            //     });
-            //     // Convert the collection to an array
-            //     $collateralSertificatData = $collateralSertificatData->toArray(); 
-            // }
-
-            // // Now you can merge the arrays properly
-            // $data = array_merge($collateralData, $collateralSertificatData);
             
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
@@ -104,19 +99,78 @@ class CollateralController extends Controller
             $checkCollateralSertification = M_CrCollateralSertification::where('id',$id)->first();
 
             if($checkCollateral){
-               $this->collateralField($checkCollateral);
+                $datas = $this->collateralField($checkCollateral);
             }
 
             if($checkCollateralSertification){
-                $this->collateralSertificationField($checkCollateralSertification);
+                $datas = $this->collateralSertificationField($checkCollateralSertification);
             }
           
-
-            ActivityLogger::logActivity($req,"Success",200);
-            return response()->json('', 200);
+            return response()->json($datas, 200);
         }  catch (\Exception $e) {
             ActivityLogger::logActivity($req,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+        }
+    }
+
+    public function update(Request $request,$id)
+    {
+        DB::beginTransaction();
+        try {
+            $checkCollateral = M_CrCollateral::where('id',$id)->first();
+            $checkCollateralSertification = M_CrCollateralSertification::where('id',$id)->first();
+
+            if($checkCollateral){
+
+                $data = [
+                    'BRAND' => $request->merk??'',
+                    'TYPE' => $request->tipe??'',
+                    'PRODUCTION_YEAR' => $request->tahun??'',
+                    'COLOR' => $request->warna??'',
+                    'ON_BEHALF' => $request->atas_nama??'',
+                    'POLICE_NUMBER' => $request->no_polisi??'',
+                    'CHASIS_NUMBER' => $request->no_rangka??'',
+                    'ENGINE_NUMBER' => $request->no_mesin??'',
+                    'BPKB_NUMBER' => $request->no_bpkb??'',
+                    'STNK_NUMBER' => $request->no_stnk??'',
+                    'MOD_DATE' => Carbon::now()->format('Y-m-d H:i:s')??'',
+                    'MOD_BY' => $request->user()->id??'',
+                ];
+
+                $checkCollateral->update($data);
+
+                compareData(M_CrCollateral::class,$id,$data,$request);
+            }
+
+            if($checkCollateralSertification){
+
+                $data = [
+                    'NO_SERTIFIKAT' => $request->no_sertifikat,
+                    'STATUS_KEPEMILIKAN' => $request->status_kepemilikan,
+                    'IMB' => $request->imb,
+                    'LUAS_TANAH' => $request->luas_tanah,
+                    'LUAS_BANGUNAN' => $request->luas_bangunan,
+                    'LOKASI' => $request->lokasi,
+                    'PROVINSI' => $request->provinsi,
+                    'KAB_KOTA' => $request->kab_kota,
+                    'KECAMATAN' => $request->kec,
+                    'DESA' => $request->desa,
+                    'ATAS_NAMA' => $request->atas_nama,
+                    'MOD_DATE' => Carbon::now()->format('Y-m-d H:i:s'),
+                    'MOD_BY' => $request->user()->id,
+                ];
+
+                $checkCollateralSertification->update($data);
+                compareData(M_CrCollateral::class,$id,$data,$request);
+            }
+
+            DB::commit();
+            ActivityLogger::logActivity($request,"Success",200);
+            return response()->json(['message' => 'Cabang updated successfully', "status" => 200], 200);
+        }  catch (\Exception $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($request,$e->getMessage(),500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
 
