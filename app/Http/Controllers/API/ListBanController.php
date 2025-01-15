@@ -103,23 +103,39 @@ class ListBanController extends Controller
 
     public function listBan() {
 
-        $query = "SELECT    a.NAME, b.LOAN_NUMBER, c.NAME, b.CREATED_AT,
-                            c.INS_ADDRESS, c.ZIP_CODE, c.PHONE_HOUSE,
-                            c.PHONE_PERSONAL, c.OCCUPATION, d.fullname,
-                            f.survey_note, b.PCPL_ORI, e.TOTAL_ADMIN, b.PERIOD,
+        $query = "SELECT    a.NAME as cabang, 
+                            b.LOAN_NUMBER, 
+                            c.NAME, 
+                            b.CREATED_AT,
+                            c.INS_ADDRESS, 
+                            c.ZIP_CODE, 
+                            c.PHONE_HOUSE,
+                            c.PHONE_PERSONAL, 
+                            c.OCCUPATION, 
+                            d.fullname,
+                            f.survey_note, 
+                            b.PCPL_ORI,
+                            b.PERIOD, 
+                            e.INSTALLMENT_TYPE, 
+                            e.TOTAL_ADMIN, 
                             DATEDIFF(b.FIRST_ARR_DATE,now()) as OVERDUE,
-                            99 as CYCLE, b.STATUS_REC,
-                            b.PAID_PRINCIPAL, b.PAID_INTEREST,
+                            99 as CYCLE, 
+                            b.STATUS_REC,
+                            b.PAID_PRINCIPAL,
+                            b.PAID_INTEREST,
                             b.PAID_PRINCIPAL+b.PAID_INTEREST as PAID_TOTAL,
                             (b.PCPL_ORI-b.PAID_PRINCIPAL) as OUTSTANDING,
-                            b.INSTALLMENT, b.INSTALLMENT_DATE,
-                            b.FIRST_ARR_DATE, ' ' as COLLECTOR,
+                            b.INSTALLMENT,
+                            b.INSTALLMENT_DATE,
+                            b.FIRST_ARR_DATE, 
+                            ' ' as COLLECTOR,
                             GROUP_CONCAT(concat(g.BRAND,' ',g.TYPE)) as COLLATERAL,
                             GROUP_CONCAT(g.POLICE_NUMBER) as POLICE_NUMBER,
                             GROUP_CONCAT(g.ENGINE_NUMBER) as ENGINE_NUMBER,
                             GROUP_CONCAT(g.CHASIS_NUMBER) as CHASIS_NUMBER,
                             GROUP_CONCAT(g.PRODUCTION_YEAR) as PRODUCTION_YEAR,
-                            SUM(g.VALUE) as TOTAL_NILAI_JAMINAN,b.CUST_CODE
+                            SUM(g.VALUE) as TOTAL_NILAI_JAMINAN,
+                            b.CUST_CODE
                 FROM    branch a
                         inner join credit b on b.BRANCH = a.ID
                         left join customer c on c.CUST_CODE = b.CUST_CODE
@@ -145,7 +161,37 @@ class ListBanController extends Controller
         $build = [];
         foreach ($results as $result) {
             $build[] =[
-                "NAMA CABANG" =>$result->NAME
+                "NAMA CABANG" => $result->cabang,
+                "NO CABANG" => $result->LOAN_NUMBER,
+                "NAMA PELANGGAN" => $result->NAME,
+                "TGL BOOKING" => date("d-m-Y",strtotime($result->CREATED_AT)),
+                "ALAMAT TAGIH" => $result->INS_ADDRESS,
+                "KODE POS" => $result->ZIP_CODE,
+                "NO TELP" => $result->PHONE_HOUSE,
+                "NO HP" => $result->PHONE_PERSONAL,
+                "PEKERJAAN" => $result->OCCUPATION,
+                "SURVEYOR" => $result->fullname,
+                "CATT SURVEY" => $result->survey_note,
+                "PKK HUTANG" => $result->PCPL_ORI,
+                "JML ANGS" => $result->PERIOD,
+                "PERIOD" => $result->INSTALLMENT_TYPE,
+                "OVERDUE" => $result->OVERDUE,
+                "CYCLE" => $result->CYCLE,
+                "STS KONTRAK" => $result->STATUS_REC,
+                "OUTS PKK AKHIR" => $result->PAID_PRINCIPAL,
+                "OUTS BNG_AKHIR" => $result->PAID_INTEREST,
+                "ANGSURAN" =>  $result->INSTALLMENT,
+                "JTH TEMPO AWAL" => date("d-m-Y",strtotime( $result->INSTALLMENT_DATE)),
+                "JTH TEMPO AKHIR" => date("d-m-Y",strtotime( $result->INSTALLMENT_DATE)),
+                "NAMA BRG" =>  "SEPEDA MOTOR",
+                "TIPE BRG" =>  $result->COLLATERAL,
+                "NO POL" =>  $result->POLICE_NUMBER,
+                "NO MESIN" =>  $result->ENGINE_NUMBER,
+                "NO RANGKA" =>  $result->CHASIS_NUMBER,
+                "TAHUN" =>  $result->PRODUCTION_YEAR,
+                "NILAI PINJAMAN" =>  $result->TOTAL_NILAI_JAMINAN,
+                "ADMIN" =>  $result->TOTAL_ADMIN,
+                "CUST_ID" =>  $result->CUST_CODE,
             ] ;
         }
 
