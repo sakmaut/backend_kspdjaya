@@ -144,10 +144,15 @@ class ListBanController extends Controller
                         left join cr_application e on e.ORDER_NUMBER = b.ORDER_NUMBER
                         left join cr_survey f on f.id = e.CR_SURVEY_ID
                         left join cr_collateral g on g.CR_CREDIT_ID = b.ID
-                GROUP   BY  a.NAME, b.LOAN_NUMBER, c.NAME, b.CREATED_AT,
-                            c.INS_ADDRESS, c.ZIP_CODE, c.PHONE_HOUSE,
+                GROUP   BY  a.CODE, 
+                            a.NAME, 
+                            b.LOAN_NUMBER, 
+                            c.NAME, 
+                            b.CREATED_AT,
+                            c.INS_ADDRESS, 
+                            c.ZIP_CODE, c.PHONE_HOUSE,
                             c.PHONE_PERSONAL, c.OCCUPATION, d.fullname,
-                            f.survey_note, b.PCPL_ORI, e.TOTAL_ADMIN, b.PERIOD,
+                            f.survey_note, b.PCPL_ORI, e.TOTAL_ADMIN,e.INSTALLMENT_TYPE, b.PERIOD,
                             DATEDIFF(b.FIRST_ARR_DATE,now()),
                             b.STATUS_REC, b.PAID_PRINCIPAL, b.PAID_INTEREST,
                             b.PAID_PRINCIPAL+b.PAID_INTEREST,
