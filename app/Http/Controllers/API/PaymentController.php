@@ -134,7 +134,11 @@ class PaymentController extends Controller
             }
             
             $this->saveKwitansi($request, $detail_customer, $no_inv);
-            $this->updateTunggakkanBunga($request);
+
+            if($request->penangguhan_denda != 'yes'){
+                $this->updateTunggakkanBunga($request);
+            }
+
 
             $build = $this->buildResponse($request, $detail_customer, $pembayaran, $no_inv, $created_now);
 
@@ -452,9 +456,8 @@ class PaymentController extends Controller
         
         $payments = [];
 
-        $totalAmount = 0; // To store the sum of ORIGINAL_AMOUNT
+        $totalAmount = 0;
         foreach ($getPayments as $payment) {
-            // Build the array
             $payments[$payment->ACC_KEYS] = $payment->ORIGINAL_AMOUNT;
             
             if ($payment->ACC_KEYS === 'ANGSURAN_POKOK') {
@@ -507,6 +510,7 @@ class PaymentController extends Controller
             'LOAN_NUM' => $loan_number,
             'VALUE_DATE' => null,
             'ENTRY_DATE' => now(),
+            'SUSPENSION_PENALTY_FLAG' => $request->penangguhan_denda??'',
             'TITLE' => 'Angsuran Ke-' . $res['angsuran_ke'],
             'ORIGINAL_AMOUNT' => ($res['bayar_angsuran']+$res['bayar_denda']),
             'OS_AMOUNT' => $os_amount??0,
@@ -546,13 +550,12 @@ class PaymentController extends Controller
 
             $bayar_denda = $res['bayar_denda'];
 
-            if ($bayar_denda != 0 && $request->payment_method == 'cash') {
+            if ($bayar_denda != 0 && $request->payment_method == 'cash' && $request->penangguhan_denda == 'yes') {
                 $data_denda = $this->preparePaymentData($uid, 'DENDA_PINJAMAN', $bayar_denda);
                 M_PaymentDetail::create($data_denda);
             }
 
             if ($check_credit) {
-                // Hitung nilai yang dibayarkan dengan presisi tinggi
                 $paidPrincipal = isset($setPrincipal) ? bcadd($check_credit->PAID_PRINCIPAL ?? '0.00', $setPrincipal, 2) : ($check_credit->PAID_PRINCIPAL ?? '0.00');
                 $paidInterest = isset($setInterest) ? bcadd($check_credit->PAID_INTEREST ?? '0.00', $setInterest, 2) : ($check_credit->PAID_INTEREST ?? '0.00');
                 $paidPenalty = $bayar_denda !== 0 ? bcadd($check_credit->PAID_PINALTY ?? '0.00', $bayar_denda, 2) : ($check_credit->PAID_PINALTY ?? '0.00');

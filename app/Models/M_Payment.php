@@ -25,6 +25,7 @@ class M_Payment extends Model
         'TITLE',
         'ORIGINAL_AMOUNT',
         'OS_AMOUNT',
+        'SUSPENSION_PENALTY_FLAG',
         'CALC_DAYS',
         'SETTLE_ACCOUNT',
         'START_DATE',
