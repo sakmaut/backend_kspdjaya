@@ -550,7 +550,7 @@ class PaymentController extends Controller
 
             $bayar_denda = $res['bayar_denda'];
 
-            if ($bayar_denda != 0 && $request->payment_method == 'cash' && $request->penangguhan_denda == 'yes') {
+            if ($bayar_denda != 0 || $request->penangguhan_denda == 'yes') {
                 $data_denda = $this->preparePaymentData($uid, 'DENDA_PINJAMAN', $bayar_denda);
                 M_PaymentDetail::create($data_denda);
             }
