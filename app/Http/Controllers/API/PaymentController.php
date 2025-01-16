@@ -765,7 +765,7 @@ class PaymentController extends Controller
             }
 
             if (strtolower($request->user()->position) == 'ho' && isset($flag) || !empty($flag) ) {
-                return $this->processHoApproval($request, $check);
+                $this->processHoApproval($request, $check);
             }
 
             DB::commit();
@@ -898,8 +898,6 @@ class PaymentController extends Controller
                 'ONCHARGE_FLAG' => $request->flag??'',
             ]);
         }
-
-        return response()->json(['message' => "Success Cancel Order"], 200);
     }
 
     public function cancelList(Request $request)
