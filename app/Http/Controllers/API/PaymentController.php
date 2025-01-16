@@ -810,9 +810,9 @@ class PaymentController extends Controller
                         'LOAN_NUMBER' => $list->LOAN_NUM,
                         'PAYMENT_DATE' => date('Y-m-d', strtotime($list->START_DATE)),
                         'AMOUNT' => $list->ORIGINAL_AMOUNT,
-                        'PRINCIPAL' => [],
-                        'INTEREST' => [],
-                        'PENALTY' => []
+                        'PRINCIPAL' => 0, 
+                        'INTEREST' => 0,  
+                        'PENALTY' => 0
                     ];
                 }
 
