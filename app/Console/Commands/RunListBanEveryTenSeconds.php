@@ -1,26 +1,32 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Console\Commands;
 
-use App\Models\M_Arrears;
-use App\Models\M_Branch;
-use App\Models\M_CrPersonal;
-use App\Models\M_CrProspect;
-use App\Models\M_DeuteronomyTransactionLog;
+use App\Http\Controllers\API\ListBanController;
 use Carbon\Carbon;
-use Exception;
-use Illuminate\Http\Request;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use Ramsey\Uuid\Uuid;
-use Image;
-use Illuminate\Support\Facades\URL;
 
-class Welcome extends Controller
+class RunListBanEveryTenSeconds extends Command
 {
-    public function index(Request $request)
+    /**
+     * The name and signature of the console command.
+     *
+     * @var string
+     */
+    protected $signature = 'run:listban-every-ten-seconds';
+
+    /**
+     * The console command description.
+     *
+     * @var string
+     */
+    protected $description = 'Command description';
+
+    public function handle()
     {
-       try {
-        $results = DB::table('branch as a')
+        try {
+            $results = DB::table('branch as a')
                             ->join('credit as b', 'b.BRANCH', '=', 'a.ID')
                             ->leftJoin('customer as c', 'c.CUST_CODE', '=', 'b.CUST_CODE')
                             ->leftJoin('users as d', 'd.id', '=', 'b.MCF_ID')
@@ -91,59 +97,55 @@ class Welcome extends Controller
                             'b.FIRST_ARR_DATE',
                             'b.CUST_CODE'
                         )
-                        ->limit(1)
                         ->get();
 
-                $build = [];
-                foreach ($results as $result) {
-                    $build[] =[
-                            "KODE" => $result->CODE??'',
-                            "CABANG" => $result->cabang??'',
-                            "NO KONTRAK" => $result->LOAN_NUMBER??'',
-                            "NAMA PELANGGAN" => $result->NAME??'',
-                            "TGL BOOKING" => isset($result->CREATED_AT) && !empty($result->CREATED_AT) ? date("d-m-Y", strtotime($result->CREATED_AT)) : '',
-                            "ALAMAT TAGIH" => $result->INS_ADDRESS??'',
-                            "KODE POS" => $result->ZIP_CODE??'',
-                            "NO TELP" => $result->PHONE_HOUSE??'',
-                            "NO HP" => $result->PHONE_PERSONAL??'',
-                            "PEKERJAAN" => $result->OCCUPATION??'',
-                            "SURVEYOR" => $result->fullname??'',
-                            "CATT SURVEY" => $result->survey_note??'',
-                            "PKK HUTANG" => $result->PCPL_ORI??'',
-                            "JML ANGS" => $result->PERIOD??'',
-                            "PERIOD" => $result->INSTALLMENT_TYPE??'',
-                            "OVERDUE" => $result->OVERDUE??'',
-                            "CYCLE" => $result->CYCLE??'',
-                            "STS KONTRAK" => $result->STATUS_REC??'',
-                            "OUTS PKK AKHIR" => $result->PAID_PRINCIPAL??'',
-                            "OUTS BNG_AKHIR" => $result->PAID_INTEREST??'',
-                            "ANGSURAN" =>  $result->INSTALLMENT??'',
-                            "JTH TEMPO AWAL" => date("d-m-Y",strtotime( $result->INSTALLMENT_DATE))??'',
-                            "JTH TEMPO AKHIR" => date("d-m-Y",strtotime( $result->INSTALLMENT_DATE))??'',
-                            "NAMA BRG" =>  "SEPEDA MOTOR",
-                            "TIPE BRG" =>  $result->COLLATERAL??'',
-                            "NO POL" =>  $result->POLICE_NUMBER??'',
-                            "NO MESIN" =>  $result->ENGINE_NUMBER??'',
-                            "NO RANGKA" =>  $result->CHASIS_NUMBER??'',
-                            "TAHUN" =>  $result->PRODUCTION_YEAR??'',
-                            "NILAI PINJAMAN" =>  $result->TOTAL_NILAI_JAMINAN??'',
-                            "ADMIN" =>  $result->TOTAL_ADMIN??'',
-                            "CUST_ID" =>  $result->CUST_CODE??'',
-                     ] ;
-                }
+            $build = [];
+            foreach ($results as $result) {
+                $build[] =[
+                    "KODE" => $result->CODE??'',
+                    "CABANG" => $result->cabang??'',
+                    "NO KONTRAK" => $result->LOAN_NUMBER??'',
+                    "NAMA PELANGGAN" => $result->NAME??'',
+                    "TGL BOOKING" => isset($result->CREATED_AT) && !empty($result->CREATED_AT) ? date("d-m-Y", strtotime($result->CREATED_AT)) : '',
+                    "ALAMAT TAGIH" => $result->INS_ADDRESS??'',
+                    "KODE POS" => $result->ZIP_CODE??'',
+                    "NO TELP" => $result->PHONE_HOUSE??'',
+                    "NO HP" => $result->PHONE_PERSONAL??'',
+                    "PEKERJAAN" => $result->OCCUPATION??'',
+                    "SURVEYOR" => $result->fullname??'',
+                    "CATT SURVEY" => $result->survey_note??'',
+                    "PKK HUTANG" => $result->PCPL_ORI??'',
+                    "JML ANGS" => $result->PERIOD??'',
+                    "PERIOD" => $result->INSTALLMENT_TYPE??'',
+                    "OVERDUE" => $result->OVERDUE??'',
+                    "CYCLE" => $result->CYCLE??'',
+                    "STS KONTRAK" => $result->STATUS_REC??'',
+                    "OUTS PKK AKHIR" => $result->PAID_PRINCIPAL??'',
+                    "OUTS BNG_AKHIR" => $result->PAID_INTEREST??'',
+                    "ANGSURAN" =>  $result->INSTALLMENT??'',
+                    "JTH TEMPO AWAL" => date("d-m-Y",strtotime( $result->INSTALLMENT_DATE))??'',
+                    "JTH TEMPO AKHIR" => date("d-m-Y",strtotime( $result->INSTALLMENT_DATE))??'',
+                    "NAMA BRG" =>  "SEPEDA MOTOR",
+                    "TIPE BRG" =>  $result->COLLATERAL??'',
+                    "NO POL" =>  $result->POLICE_NUMBER??'',
+                    "NO MESIN" =>  $result->ENGINE_NUMBER??'',
+                    "NO RANGKA" =>  $result->CHASIS_NUMBER??'',
+                    "TAHUN" =>  $result->PRODUCTION_YEAR??'',
+                    "NILAI PINJAMAN" =>  $result->TOTAL_NILAI_JAMINAN??'',
+                    "ADMIN" =>  $result->TOTAL_ADMIN??'',
+                    "CUST_ID" =>  $result->CUST_CODE??'',
+                ] ;
+            }
 
-                if (!empty($build)) {
-                    $dataString = print_r($build, true);
-
-                    $filename = storage_path('logs/lisban/listban_' . Carbon::now()->format('Y-m-d_H-i-s') . '.txt');
-
-                    file_put_contents($filename, $dataString . "\n", FILE_APPEND);
-                }
-
-            return response()->json('ok', 200);
-       } catch (\Throwable $e) {
-            return response()->json($e->getMessage(), 500);
-       }
+            if (!empty($build)) {
+                $dataString = print_r($build, true);
+            
+                $filename = storage_path('logs/lisban/listban_' . Carbon::now()->format('Y-m-d_H-i-s') . '.txt');
+            
+                file_put_contents($filename, $dataString . "\n", FILE_APPEND);
+            }
+        } catch (\Exception $e) {
+            return response()->json('Internal Server Error', 500);
+        }
     }
-   
 }

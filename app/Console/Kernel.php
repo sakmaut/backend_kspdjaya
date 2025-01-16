@@ -11,12 +11,14 @@ class Kernel extends ConsoleKernel
 
     protected $commands = [
         Commands\DemoCron::class,
+        \App\Console\Commands\RunListBanEveryTenSeconds::class,
     ];
 
     protected function schedule(Schedule $schedule): void
     {
         // $schedule->command('demo:cron')->dailyAt('01:00');
         // $schedule->command('demo:cron')->dailyAt('15:43');
+        // $schedule->command('run:listban-every-ten-seconds')->everyMinute();
     }
 
     /**
