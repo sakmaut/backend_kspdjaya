@@ -830,9 +830,9 @@ class PaymentController extends Controller
             }
 
             foreach ($creditSchedule as $schedule) {
-                $totalPrincipal += $schedule['PRINCIPAL'];
-                $totalInterest += $schedule['INTEREST'];
-                $totalPenalty += $schedule['PENALTY'];
+                $totalPrincipal += $schedule['PRINCIPAL']??0;
+                $totalInterest += $schedule['INTEREST']??0;
+                $totalPenalty += $schedule['PENALTY']??0;
             }
 
             $setPrincipal = round($totalPrincipal, 2);
