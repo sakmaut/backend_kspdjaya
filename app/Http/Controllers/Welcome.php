@@ -91,7 +91,7 @@ class Welcome extends Controller
                             'b.FIRST_ARR_DATE',
                             'b.CUST_CODE'
                         )
-                        ->limit(1)
+                        ->limit(5)
                         ->get();
 
                 $build = [];
@@ -134,11 +134,12 @@ class Welcome extends Controller
 
                 if (!empty($build)) {
                     $dataString = print_r($build, true);
-
+                
                     $filename = storage_path('logs/lisban/listban_' . Carbon::now()->format('Y-m-d_H-i-s') . '.txt');
-
-                    file_put_contents($filename, $dataString . "\n", FILE_APPEND);
+            
+                    file_put_contents($filename, $dataString . "\n");
                 }
+                
 
             return response()->json('ok', 200);
        } catch (\Throwable $e) {
