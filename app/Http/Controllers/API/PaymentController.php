@@ -818,21 +818,21 @@ class PaymentController extends Controller
 
                 switch ($list->ACC_KEYS) {
                     case 'ANGSURAN_POKOK':
-                        $creditSchedule[$list->START_DATE]['PRINCIPAL'] = $list->amount;
+                        $creditSchedule[$list->START_DATE]['PRINCIPAL'] = $list->amount??0;
                         break;
                     case 'ANGSURAN_BUNGA':
-                        $creditSchedule[$list->START_DATE]['INTEREST'] = $list->amount;
+                        $creditSchedule[$list->START_DATE]['INTEREST'] = $list->amount??0;
                         break;
                     case 'DENDA_PINJAMAN':
-                        $creditSchedule[$list->START_DATE]['PENALTY'] = $list->amount;
+                        $creditSchedule[$list->START_DATE]['PENALTY'] = $list->amount??0;
                         break;
                 }
             }
 
             foreach ($creditSchedule as $schedule) {
-                $totalPrincipal += $schedule['PRINCIPAL']??0;
-                $totalInterest += $schedule['INTEREST']??0;
-                $totalPenalty += $schedule['PENALTY']??0;
+                $totalPrincipal += $schedule['PRINCIPAL'];
+                $totalInterest += $schedule['INTEREST'];
+                $totalPenalty += $schedule['PENALTY'];
             }
 
             $setPrincipal = round($totalPrincipal, 2);
@@ -844,7 +844,7 @@ class PaymentController extends Controller
             if($creditCheck){
                 $creditCheck->update([
                     'STATUS' => 'A',
-                    'PAID_PRINCIPAL' => floatval($creditCheck->PAID_PRINCIPAL??0)-floatval($setPrincipal??0),
+                    'PAID_PRINCIPAL' => floatval($creditCheck->PAID_PRINCIPAL)-floatval($setPrincipal??0),
                     'PAID_INTEREST' => floatval($creditCheck->PAID_INTEREST??0)-floatval($totalInterest??0),
                     'PAID_PENALTY' => floatval($creditCheck->PAID_PENALTY??0)-floatval($totalPenalty??0),
                     'MOD_USER' => $request->user()->id,
