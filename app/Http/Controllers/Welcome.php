@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Ramsey\Uuid\Uuid;
 use Image;
 use Illuminate\Support\Facades\URL;
@@ -133,11 +134,11 @@ class Welcome extends Controller
                 }
 
                 if (!empty($build)) {
-                    $dataString = print_r($build, true);
-                
-                    $filename = storage_path('logs/lisban/listban_' . Carbon::now()->format('Y-m-d_H-i-s') . '.txt');
-            
-                    file_put_contents($filename, $dataString . "\n");
+                    // Define the file path
+                    $filename = storage_path('logs/lisban/listban_' . Carbon::now()->format('Y-m-d') . '.txt');
+        
+                    // Save the data as JSON
+                    file_put_contents($filename, json_encode($build, JSON_PRETTY_PRINT) . "\n");
                 }
                 
 
@@ -146,5 +147,31 @@ class Welcome extends Controller
             return response()->json($e->getMessage(), 500);
        }
     }
+
+    // public function index(Request $request)
+    // {
+    //     $filename = storage_path('logs/lisban/listban_' . Carbon::now()->format('Y-m-d') . '.txt');
+
+    //     if (file_exists($filename)) {
+    //         // Read the contents of the file
+    //         $fileContents = file_get_contents($filename);
+        
+    //         // Clean up the array string to make it evaluable
+    //         $arrayString = trim($fileContents); 
+        
+    //         // Evaluate the array (this is dangerous if the data is not trusted)
+    //         $dataArray = null;
+    //         eval("\$dataArray = $arrayString;");
+        
+    //         // If evaluation is successful, process it
+    //         if (is_array($dataArray)) {
+    //             return response()->json($dataArray, 200);
+    //         } else {
+    //             return response()->json(['error' => 'Invalid PHP array format'], 500);
+    //         }
+    //     } else {
+    //         return response()->json(['error' => 'File not found'], 404);
+    //     }
+    // }
    
 }
