@@ -94,8 +94,46 @@ class Welcome extends Controller
                         ->limit(5)
                         ->get();
 
-                if (!empty($results)) {
-                    $dataString = print_r($results, true);
+                $build = [];
+                foreach ($results as $result) {
+                    $build[] =[
+                            "KODE" => $result->CODE??'',
+                            "CABANG" => $result->cabang??'',
+                            "NO_KONTRAK" => $result->LOAN_NUMBER??'',
+                            "NAMA_PELANGGAN" => $result->NAME??'',
+                            "TGL_BOOKING" => isset($result->CREATED_AT) && !empty($result->CREATED_AT) ? date("d-m-Y", strtotime($result->CREATED_AT)) : '',
+                            "ALAMAT_TAGIH" => $result->INS_ADDRESS??'',
+                            "KODE_POS" => $result->ZIP_CODE??'',
+                            "NO_TELP" => $result->PHONE_HOUSE??'',
+                            "NO_HP" => $result->PHONE_PERSONAL??'',
+                            "PEKERJAAN" => $result->OCCUPATION??'',
+                            "SURVEYOR" => $result->fullname??'',
+                            "CATT_SURVEY" => $result->survey_note??'',
+                            "PKK_HUTANG" => $result->PCPL_ORI??'',
+                            "JML_ANGS" => $result->PERIOD??'',
+                            "PERIOD" => $result->INSTALLMENT_TYPE??'',
+                            "OVERDUE" => $result->OVERDUE??'',
+                            "CYCLE" => $result->CYCLE??'',
+                            "STS_KONTRAK" => $result->STATUS_REC??'',
+                            "OUTS_PKK_AKHIR" => $result->PAID_PRINCIPAL??'',
+                            "OUTS_BNG_AKHIR" => $result->PAID_INTEREST??'',
+                            "ANGSURAN" =>  $result->INSTALLMENT??'',
+                            "JTH_TEMPO_AWAL" => date("d-m-Y",strtotime( $result->INSTALLMENT_DATE))??'',
+                            "JTH_TEMPO_AKHIR" => date("d-m-Y",strtotime( $result->INSTALLMENT_DATE))??'',
+                            "NAMA_BRG" =>  "SEPEDA MOTOR",
+                            "TIPE_BRG" =>  $result->COLLATERAL??'',
+                            "NO_POL" =>  $result->POLICE_NUMBER??'',
+                            "NO_MESIN" =>  $result->ENGINE_NUMBER??'',
+                            "NO_RANGKA" =>  $result->CHASIS_NUMBER??'',
+                            "TAHUN" =>  $result->PRODUCTION_YEAR??'',
+                            "NILAI_PINJAMAN" =>  $result->TOTAL_NILAI_JAMINAN??'',
+                            "ADMIN" =>  $result->TOTAL_ADMIN??'',
+                            "CUST_ID" =>  $result->CUST_CODE??'',
+                     ] ;
+                }
+
+                if (!empty($build)) {
+                    $dataString = print_r($build, true);
                 
                     $filename = storage_path('logs/lisban/listban_' . Carbon::now()->format('Y-m-d_H-i-s') . '.txt');
             

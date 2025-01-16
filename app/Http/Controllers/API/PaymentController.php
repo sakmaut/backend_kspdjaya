@@ -675,6 +675,7 @@ class PaymentController extends Controller
 
     public function approval(Request $request)
     {
+        DB::beginTransaction();
         try {
 
             $getCodeBranch = M_Branch::findOrFail($request->user()->branch_id);
@@ -720,9 +721,10 @@ class PaymentController extends Controller
             ];
 
             M_PaymentApproval::create($data_approval);
-
+            DB::commit();
             return response()->json(['message' => 'success'], 200);
         } catch (\Exception $e) {
+            DB::rollback();
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
@@ -730,6 +732,7 @@ class PaymentController extends Controller
 
     public function cancel(Request $request)
     {
+        DB::beginTransaction();
         try {
             $request->validate([
                 'no_invoice' => 'required|string',
@@ -765,8 +768,10 @@ class PaymentController extends Controller
                 return $this->processHoApproval($request, $check);
             }
 
+            DB::commit();
             return response()->json(['message' => "Invoice Number {$no_invoice} Cancel Success"], 200);
         } catch (\Exception $e) {
+            DB::rollback();
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
