@@ -18,7 +18,7 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->command('demo:cron')->dailyAt('01:00');
         // $schedule->command('demo:cron')->dailyAt('15:43');
-        // $schedule->command('run:listban-every-ten-seconds')->everyMinute();
+        $schedule->command('run:listban-every-ten-seconds')->everyMinute();
     }
 
     /**
