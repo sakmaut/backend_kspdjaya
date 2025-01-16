@@ -764,7 +764,7 @@ class PaymentController extends Controller
                 ]);
             }
 
-            if (strtolower($request->user()->position) === 'ho' && isset($flag) && !empty($flag) ) {
+            if (strtolower($request->user()->position) == 'ho' && isset($flag) || !empty($flag) ) {
                 return $this->processHoApproval($request, $check);
             }
 
@@ -788,7 +788,7 @@ class PaymentController extends Controller
             $paymentCheck = DB::table('payment as a')
                                 ->leftJoin('payment_detail as b', 'b.PAYMENT_ID', '=', 'a.ID')
                                 ->select('a.LOAN_NUM','a.START_DATE' ,'a.ORIGINAL_AMOUNT','b.ACC_KEYS', 'b.ORIGINAL_AMOUNT as amount')
-                                ->where('INVOICE', $request->no_invoice)
+                                ->where('a.INVOICE', $request->no_invoice)
                                 ->get();
 
             $loan_number = '';
@@ -796,39 +796,42 @@ class PaymentController extends Controller
             $totalInterest = 0;
             $totalPenalty = 0;
             $creditSchedule = [];
-            foreach ($paymentCheck as $list) {
 
-                M_Payment::where('INVOICE', $request->no_invoice)
-                ->update([
-                    'STTS_RCRD' => 'CANCEL'
-                ]);
+            if(!empty($paymentCheck)){
+                foreach ($paymentCheck as $list) {
 
-               $loan_number = $list->LOAN_NUM;
-
-               if (!isset($creditSchedule[$list->START_DATE])) {
-                    $creditSchedule[$list->START_DATE] = [
-                        'LOAN_NUMBER' => $list->LOAN_NUM,
-                        'PAYMENT_DATE' => date('Y-m-d', strtotime($list->START_DATE)),
-                        'AMOUNT' => $list->ORIGINAL_AMOUNT,
-                        'PRINCIPAL' => 0, 
-                        'INTEREST' => 0,  
-                        'PENALTY' => 0
-                    ];
-                }
-
-                switch ($list->ACC_KEYS) {
-                    case 'ANGSURAN_POKOK':
-                        $creditSchedule[$list->START_DATE]['PRINCIPAL'] = $list->amount??0;
-                        break;
-                    case 'ANGSURAN_BUNGA':
-                        $creditSchedule[$list->START_DATE]['INTEREST'] = $list->amount??0;
-                        break;
-                    case 'DENDA_PINJAMAN':
-                        $creditSchedule[$list->START_DATE]['PENALTY'] = $list->amount??0;
-                        break;
+                    M_Payment::where('INVOICE', $request->no_invoice)
+                                ->update([
+                                    'STTS_RCRD' => 'CANCEL'
+                                ]);
+    
+                   $loan_number = $list->LOAN_NUM;
+    
+                   if (!isset($creditSchedule[$list->START_DATE])) {
+                        $creditSchedule[$list->START_DATE] = [
+                            'LOAN_NUMBER' => $list->LOAN_NUM,
+                            'PAYMENT_DATE' => date('Y-m-d', strtotime($list->START_DATE)),
+                            'AMOUNT' => $list->ORIGINAL_AMOUNT,
+                            'PRINCIPAL' => 0, 
+                            'INTEREST' => 0,  
+                            'PENALTY' => 0
+                        ];
+                    }
+    
+                    switch ($list->ACC_KEYS) {
+                        case 'ANGSURAN_POKOK':
+                            $creditSchedule[$list->START_DATE]['PRINCIPAL'] = $list->amount??0;
+                            break;
+                        case 'ANGSURAN_BUNGA':
+                            $creditSchedule[$list->START_DATE]['INTEREST'] = $list->amount??0;
+                            break;
+                        case 'DENDA_PINJAMAN':
+                            $creditSchedule[$list->START_DATE]['PENALTY'] = $list->amount??0;
+                            break;
+                    }
                 }
             }
-
+            
             foreach ($creditSchedule as $schedule) {
                 $totalPrincipal += $schedule['PRINCIPAL'];
                 $totalInterest += $schedule['INTEREST'];
