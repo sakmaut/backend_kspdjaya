@@ -128,13 +128,6 @@ class CustomerController extends Controller
         try {
             $schedule = [];
 
-            // $data = M_CreditSchedule::where('LOAN_NUMBER', $request->loan_number)
-            // ->where(function ($query) {
-            //     $query->whereNull('PAID_FLAG')
-            //         ->orWhere('PAID_FLAG', '<>', 'PAID');
-            // })
-            // ->get();
-
             $loanNumber = $request->loan_number;
 
             $data = DB::table('credit_schedule as a')
@@ -142,7 +135,7 @@ class CustomerController extends Controller
                             $join->on('b.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
                                 ->whereRaw('b.START_DATE = a.PAYMENT_DATE');
                         })
-                        ->where('a.LOAN_NUMBER', $request->loan_number)
+                        ->where('a.LOAN_NUMBER', $loanNumber)
                         ->where('b.STATUS_REC', '=', 'A')
                         ->select('a.*', 'b.PAST_DUE_PENALTY', 'b.PAID_PENALTY')
                         ->orderBy("a.INSTALLMENT_COUNT","ASC")
@@ -154,8 +147,6 @@ class CustomerController extends Controller
 
             $j = 0;
             foreach ($data as $res) {
-                // $arrears = M_Arrears::where(['LOAN_NUMBER' => $res->LOAN_NUMBER,'START_DATE' => $res->PAYMENT_DATE])->first();
-
                 $schedule[]=[
                     'key' => $j++,
                     'angsuran_ke' =>  $res->INSTALLMENT_COUNT,
@@ -174,169 +165,6 @@ class CustomerController extends Controller
                 ];
             }
 
-            // if (isset($request->jumlah_uang)) {
-            //     $data = M_CreditSchedule::where('loan_number',$request->loan_number)->get();
-            //     // $paymentAmount = $request->jumlah_uang;
-
-            //     // $j = 0;
-            //     // foreach ($data as $scheduleItem) {
-            //     //     $initialPaymentValue = $scheduleItem->PAYMENT_VALUE;
-            //     //     $arrears = M_Arrears::where(['LOAN_NUMBER' => $scheduleItem->LOAN_NUMBER, 'START_DATE' => $scheduleItem->PAYMENT_DATE])->first();
-                
-            //     //     if ($paymentAmount > 0) {
-            //     //         $installment = $scheduleItem->INSTALLMENT;
-            //     //         $remainingPayment = $installment - $scheduleItem->PAYMENT_VALUE;
-                
-            //     //         // Pay the installment first
-            //     //         if ($remainingPayment > 0) {
-            //     //             $paymentValue = min($paymentAmount, $remainingPayment);
-            //     //             $scheduleItem->PAYMENT_VALUE += $paymentValue;
-            //     //             $paymentAmount -= $paymentValue;
-            //     //         }
-                
-            //     //         // After paying the installment, check if there's enough to pay the penalty
-            //     //         $penaltyPaid = 0;
-            //     //         if ($scheduleItem->PAYMENT_VALUE == $installment && $arrears && $paymentAmount > 0) {
-            //     //             $penalty = $arrears->PAST_DUE_PENALTY ?? 0;
-                
-            //     //             if ($paymentAmount >= $penalty) {
-            //     //                 $penaltyPaid = $penalty;
-            //     //                 $scheduleItem->PAYMENT_VALUE += $penalty;
-            //     //                 $paymentAmount -= $penalty;
-            //     //             } else {
-            //     //                 // If there's not enough to cover the full penalty, pay only what's remaining
-            //     //                 $penaltyPaid = $paymentAmount;
-            //     //                 $scheduleItem->PAYMENT_VALUE += $paymentAmount;
-            //     //                 $paymentAmount = 0;
-            //     //             }
-            //     //         }
-                
-            //     //         // Mark as paid if both installment and penalty (if applicable) are fully covered
-            //     //         if ($scheduleItem->PAYMENT_VALUE >= $installment + ($arrears->PAST_DUE_PENALTY ?? 0)) {
-            //     //             $scheduleItem->PAID_FLAG = 'PAID';
-            //     //         }
-            //     //     }
-                
-            //     //     // Calculate beforePastDue (without deducting penalty from installment if payment is insufficient)
-            //     //     if ($arrears) {
-            //     //         $beforePastDue = $scheduleItem->PAYMENT_VALUE - $penaltyPaid; // Do not reduce by penalty if insufficient
-            //     //     } else {
-            //     //         $beforePastDue = $scheduleItem->PAYMENT_VALUE;
-            //     //     }
-                
-            //     //     // Calculate values for after_payment and penalty (denda)
-            //     //     $after_value = intval($scheduleItem->PAYMENT_VALUE - $initialPaymentValue);
-            //     //     $denda = $after_value - $beforePastDue;
-                
-            //     //     // Store the current schedule details
-            //     //     $schedule[] = [
-            //     //         'key' => $j++,
-            //     //         'id_structur' => $scheduleItem->INSTALLMENT_COUNT . '-' . $after_value,
-            //     //         'angsuran_ke' => $scheduleItem->INSTALLMENT_COUNT,
-            //     //         'loan_number' => $scheduleItem->LOAN_NUMBER,
-            //     //         'tgl_angsuran' => Carbon::parse($scheduleItem->PAYMENT_DATE)->format('d-m-Y'),
-            //     //         'principal' => intval($scheduleItem->PRINCIPAL),
-            //     //         'interest' => intval($scheduleItem->INTEREST),
-            //     //         'installment' => intval($scheduleItem->INSTALLMENT),
-            //     //         'principal_remains' => intval($scheduleItem->PRINCIPAL_REMAINS),
-            //     //         'before_payment' => intval($initialPaymentValue),
-            //     //         'after_payment' => $after_value,
-            //     //         'bayar_angsuran' => $beforePastDue, // Reflect the full installment payment without penalty deduction if insufficient
-            //     //         'bayar_denda' => $denda,
-            //     //         'payment' => intval($scheduleItem->PAYMENT_VALUE),
-            //     //         'flag' => $scheduleItem->PAID_FLAG,
-            //     //         'denda' => intval($arrears->PAST_DUE_PENALTY ?? null)
-            //     //     ];
-            //     // }
-
-            //     $paymentAmount = $request->jumlah_uang;
-
-            //     $j = 0;
-            //     foreach ($data as $scheduleItem) {
-            //         $initialPaymentValue = $scheduleItem->PAYMENT_VALUE;
-            //         $arrears = M_Arrears::where(['LOAN_NUMBER' => $scheduleItem->LOAN_NUMBER, 'START_DATE' => $scheduleItem->PAYMENT_DATE])->first();
-
-            //         if ($paymentAmount > 0) {
-            //             $installment = $scheduleItem->INSTALLMENT;
-            //             $penalty = $arrears->PAST_DUE_PENALTY ?? 0;
-            //             $totalDue = $installment + $penalty;
-
-            //             if ($paymentAmount >= $totalDue) {
-            //                 $scheduleItem->PAYMENT_VALUE += $totalDue;
-            //                 $paymentAmount -= $totalDue;
-            //                 $bayar_angsuran = $installment;
-            //                 $bayar_denda = $penalty;
-            //                 $scheduleItem->PAID_FLAG = 'PAID';
-            //             } else {
-            //                 $bayar_angsuran = min($paymentAmount, $installment);
-            //                 $bayar_denda = min($paymentAmount - $bayar_angsuran, $penalty);
-            //                 $scheduleItem->PAYMENT_VALUE += $bayar_angsuran + $bayar_denda;
-            //                 $paymentAmount = 0;
-            //                 $scheduleItem->PAID_FLAG = '';
-            //             }
-            //         } else {
-            //             $bayar_angsuran = 0;
-            //             $bayar_denda = 0;
-            //             $scheduleItem->PAID_FLAG = '';
-            //         }
-
-            //         // Calculate beforePastDue (without deducting penalty from installment if payment is insufficient)
-            //         if ($arrears) {
-            //             $beforePastDue = $scheduleItem->PAYMENT_VALUE - $bayar_denda; // Do not reduce by penalty if insufficient
-            //         } else {
-            //             $beforePastDue = $scheduleItem->PAYMENT_VALUE;
-            //         }
-
-            //         // Calculate values for after_payment and penalty (denda)
-            //         $after_value = intval($scheduleItem->PAYMENT_VALUE - $initialPaymentValue);
-            //         $denda = $after_value - $beforePastDue;
-
-            //         // Store the current schedule details
-            //         $schedule[] = [
-            //             'key' => $j++,
-            //             'jumlah_uang' => $request->jumlah_uang,
-            //             'id_structur' => $scheduleItem->INSTALLMENT_COUNT . '-' . $after_value,
-            //             'angsuran_ke' => $scheduleItem->INSTALLMENT_COUNT,
-            //             'loan_number' => $scheduleItem->LOAN_NUMBER,
-            //             'tgl_angsuran' => Carbon::parse($scheduleItem->PAYMENT_DATE)->format('d-m-Y'),
-            //             'principal' => intval($scheduleItem->PRINCIPAL),
-            //             'interest' => intval($scheduleItem->INTEREST),
-            //             'installment' => intval($scheduleItem->INSTALLMENT),
-            //             'principal_remains' => intval($scheduleItem->PRINCIPAL_REMAINS),
-            //             'before_payment' => intval($initialPaymentValue),
-            //             'after_payment' => intval($after_value),
-            //             'bayar_angsuran' => intval($bayar_angsuran),
-            //             'bayar_denda' => intval($bayar_denda),
-            //             'payment' => intval($scheduleItem->PAYMENT_VALUE),
-            //             'flag' => $scheduleItem->PAID_FLAG,
-            //             'denda' => intval($arrears->PAST_DUE_PENALTY ?? null)
-            //         ];
-            //     }
-
-            //     // $paymentFor = [];
-            //     // foreach ($schedule as $key => $value) {
-            //     //     if ($value['flag'] == 'PAID') {
-            //     //         $paymentFor[] = [
-            //     //             'angsuran_ke' => $value['angsuran_ke'],
-            //     //             'loan_number' => $value['loan_number'],
-            //     //             'tgl_angsuran' => $value['tgl_angsuran'],
-            //     //             'principal' => $value['principal'],
-            //     //             'interest' => $value['interest'],
-            //     //             'installment' => $value['installment'],
-            //     //             'principal_remains' => $value['principal_remains'],
-            //     //             'payment' => $value['payment'],
-            //     //             'flag' => $value['flag']
-            //     //         ];
-            //     //     }
-            //     // }
-
-            //     // foreach ($schedule as $key => $value) {
-            //     //     $schedule['payment_for'] = $paymentFor;
-            //     // }
-            // }else{
-               
-            // }
-
             return response()->json($schedule, 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
@@ -350,31 +178,6 @@ class CustomerController extends Controller
             $data = M_Customer::where('ID_NUMBER', $request->no_ktp)->get();
 
             $datas = $data->map(function($customer) {
-
-                // $guarente_vehicle = DB::table('credit as a')
-                //                     ->leftJoin('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
-                //                     ->leftJoin(DB::raw('
-                //                         cr_collateral as latest'), function($join) {
-                //                             $join->on('b.CR_CREDIT_ID', '=', 'latest.CR_CREDIT_ID')
-                //                                 ->whereRaw('latest.CREATE_DATE = (SELECT MAX(CREATE_DATE) FROM cr_collateral WHERE CR_CREDIT_ID = b.CR_CREDIT_ID)');
-                //                         })
-                //                     ->where('a.CUST_CODE', '=', $customer->CUST_CODE)
-                //                     ->select('b.*', 'latest.CREATE_DATE as latest_created_date')
-                //                     ->orderByDesc('latest.CREATE_DATE')
-                //                     ->get();
-
-
-                // $guarente_sertificat = DB::table('credit as a')
-                //                         ->leftJoin('cr_collateral_sertification as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
-                //                         ->leftJoin(DB::raw('(SELECT CR_CREDIT_ID, MAX(CREATE_DATE) as latest_created_date
-                //                                             FROM cr_collateral_sertification
-                //                                             GROUP BY CR_CREDIT_ID) as latest'), function($join) {
-                //                             $join->on('b.CR_CREDIT_ID', '=', 'latest.CR_CREDIT_ID');
-                //                         })
-                //                         ->where('a.CUST_CODE', '=', $customer->CUST_CODE)
-                //                         ->select('b.*', 'latest.latest_created_date')
-                //                         ->orderBy('latest.latest_created_date', 'DESC')
-                //                         ->get();
 
                 $guarente_vehicle = DB::table('credit as a')
                                         ->leftJoin('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
@@ -420,7 +223,7 @@ class CustomerController extends Controller
                                 "no_stnk" => $guarantee->STNK_NUMBER ?? null,
                                 "tgl_stnk" => $guarantee->STNK_VALID_DATE ?? null,
                                 "nilai" => (int)($guarantee->VALUE ?? 0),
-                                "document" => getCollateralDocument($guarantee->ID, ['no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri']),
+                                "document" => $this->getCollateralDocument($guarantee->ID, ['no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri']),
                             ]
                         ];
                     }
@@ -447,7 +250,7 @@ class CustomerController extends Controller
                                 "desa" => $list->DESA??null,
                                 "atas_nama" => $list->ATAS_NAMA??null,
                                 "nilai" => (int)$list->NILAI??null,
-                                "document" => getCollateralDocument($guarantee->ID, ['sertifikat'])
+                                "document" => $this->getCollateralDocument($guarantee->ID, ['sertifikat'])
                             ]
                         ];
                     }
@@ -478,14 +281,15 @@ class CustomerController extends Controller
             return response()->json(['message' => $e->getMessage()], 500);
         }
     }
+
+    public function getCollateralDocument($creditID, $param) {
+
+        $documents = DB::table('cr_collateral_document')
+                        ->whereIn('TYPE', $param)
+                        ->where('COLLATERAL_ID', '=', $creditID)
+                        ->get();     
+    
+        return $documents;
+    }    
 }
 
-function getCollateralDocument($creditID, $param) {
-
-    $documents = DB::table('cr_collateral_document')
-                    ->whereIn('TYPE', $param)
-                    ->where('COLLATERAL_ID', '=', $creditID)
-                    ->get();     
-
-    return $documents;
-}

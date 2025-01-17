@@ -20,8 +20,11 @@ class R_Kwitansi extends JsonResource
     {
         // Retrieve payment and related data
         $details = M_KwitansiStructurDetail::where('no_invoice', $this->NO_TRANSAKSI)
-            ->orderByRaw('CAST(angsuran_ke AS SIGNED) ASC')
-            ->get();
+                                            ->where('installment', '!=', 0)
+                                            ->where('bayar_denda', '!=', 0)
+                                            ->orderByRaw('CAST(angsuran_ke AS SIGNED) ASC')
+                                            ->get();
+
         $branch = M_Branch::where('ID', $this->BRANCH_CODE)->first();
         $attachment = M_PaymentAttachment::where('payment_id', $this->PAYMENT_ID)->value('file_attach') ?? null;
 

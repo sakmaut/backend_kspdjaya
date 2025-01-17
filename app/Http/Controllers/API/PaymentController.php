@@ -75,34 +75,32 @@ class PaymentController extends Controller
 
                     $this->setCustomerDetail($detail_customer);
 
-                    if($res['bayar_angsuran'] != '0' && $res['flag'] != 'PAID'){
-                        M_KwitansiStructurDetail::create([
-                            "no_invoice" => $no_inv,
-                            "key" => $res['key'],
-                            'angsuran_ke' => $res['angsuran_ke'],
-                            'loan_number' => $res['loan_number'],
-                            'tgl_angsuran' => $res['tgl_angsuran'],
-                            'principal' => $res['principal'],
-                            'interest' => $res['interest'],
-                            'installment' => $res['installment'],
-                            'principal_remains' => $res['principal_remains'],
-                            'payment' => $res['payment'],
-                            'bayar_angsuran' => $res['bayar_angsuran'],
-                            "bayar_denda" => $res['bayar_denda'],
-                            "total_bayar" => $res['total_bayar'],
-                            "flag" => '',
-                            "denda" => $res['denda']
-                        ]);
-                
-                        if ($check_method_payment) {
-                            $this->processPaymentStructure($res, $request, $getCodeBranch, $no_inv);
-                        } else {
-                            $tgl_angsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
-                            M_CreditSchedule::where([
-                                'LOAN_NUMBER' => $res['loan_number'],
-                                'PAYMENT_DATE' => $tgl_angsuran
-                            ])->update(['PAID_FLAG' => 'PENDING']);
-                        }
+                    M_KwitansiStructurDetail::create([
+                        "no_invoice" => $no_inv,
+                        "key" => $res['key'],
+                        'angsuran_ke' => $res['angsuran_ke'],
+                        'loan_number' => $res['loan_number'],
+                        'tgl_angsuran' => $res['tgl_angsuran'],
+                        'principal' => $res['principal'],
+                        'interest' => $res['interest'],
+                        'installment' => $res['installment'],
+                        'principal_remains' => $res['principal_remains'],
+                        'payment' => $res['payment'],
+                        'bayar_angsuran' => $res['bayar_angsuran'],
+                        "bayar_denda" => $res['bayar_denda'],
+                        "total_bayar" => $res['total_bayar'],
+                        "flag" => '',
+                        "denda" => $res['denda']
+                    ]);
+            
+                    if ($check_method_payment) {
+                        $this->processPaymentStructure($res, $request, $getCodeBranch, $no_inv);
+                    } else {
+                        $tgl_angsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
+                        M_CreditSchedule::where([
+                            'LOAN_NUMBER' => $res['loan_number'],
+                            'PAYMENT_DATE' => $tgl_angsuran
+                        ])->update(['PAID_FLAG' => 'PENDING']);
                     }
                 }
             }
@@ -155,60 +153,47 @@ class PaymentController extends Controller
             $getPrincipal = $credit_schedule->PRINCIPAL;
             $getInterest = $credit_schedule->INTEREST;
 
-            // Determine the new principal payment value
             $new_payment_value_principal = $valBeforePrincipal;
             $new_payment_value_interest = $valBeforeInterest;
 
-            // Check if principal has already reached the maximum
             if ($valBeforePrincipal < $getPrincipal) {
-                // Calculate how much can still be added to the principal
                 $remaining_to_principal = $getPrincipal - $valBeforePrincipal;
 
                 if ($byr_angsuran >= $remaining_to_principal) {
-                    // If the payment covers the remaining principal
-                    $new_payment_value_principal = $getPrincipal; // Set to maximum
-                    $remaining_payment = $byr_angsuran - $remaining_to_principal; // Remaining payment goes to interest
+                    $new_payment_value_principal = $getPrincipal;
+                    $remaining_payment = $byr_angsuran - $remaining_to_principal;
                 } else {
-                    // If the payment is less than the remaining principal
-                    $new_payment_value_principal += $byr_angsuran; // Add to principal
-                    $remaining_payment = 0; // No remaining payment to apply to interest
+                    $new_payment_value_principal += $byr_angsuran; 
+                    $remaining_payment = 0; 
                 }
             } else {
-                // If principal is already at maximum, we add all to interest
                 $remaining_payment = $byr_angsuran;
             }
 
-            // Update interest with remaining payment only if principal is fully paid
             if ($new_payment_value_principal == $getPrincipal) {
-                // Only update interest if it has not reached the max
                 if ($valBeforeInterest < $getInterest) {
                     $new_payment_value_interest = min($valBeforeInterest + $remaining_payment, $getInterest);
                 }
             }
 
-            // Prepare updates only if values have changed
             $updates = [];
             if ($new_payment_value_principal !== $valBeforePrincipal) {
                 $updates['PAYMENT_VALUE_PRINCIPAL'] = $new_payment_value_principal;
             }
 
-            // Only update interest if it has changed
             if ($new_payment_value_interest !== $valBeforeInterest) {
                 $updates['PAYMENT_VALUE_INTEREST'] = $new_payment_value_interest;
             }
 
-            // Calculate insufficient payment
             $total_paid = $new_payment_value_principal + $new_payment_value_interest;
 
             $insufficient_payment = ($getPrincipal > $new_payment_value_principal || $getInterest > $new_payment_value_interest)
                 ? ($total_paid - $credit_schedule->INSTALLMENT)
                 : 0;
 
-            // Prepare the update data
             $updates['INSUFFICIENT_PAYMENT'] = $insufficient_payment;
             $updates['PAYMENT_VALUE'] = $payment_value;
 
-            // Update the schedule if there are any changes
             if (!empty($updates)) {
                 $credit_schedule->update($updates);
             }
@@ -226,10 +211,8 @@ class PaymentController extends Controller
         ])->first();
 
         if ($check_arrears) {
-            // Get the current value of PAID_PENALTY
             $current_penalty = $check_arrears->PAID_PENALTY;
 
-            // Sum the current penalty with the new value
             $new_penalty = $current_penalty + $bayar_denda;
 
             $byr_angsuran = $res['bayar_angsuran'];
@@ -240,26 +223,20 @@ class PaymentController extends Controller
             $getInterest = $check_arrears->PAST_DUE_INTRST;
             $getPenalty = $check_arrears->PAST_DUE_PENALTY;
 
-            // Determine the new principal payment value
             $new_payment_value_principal = $valBeforePrincipal;
             $new_payment_value_interest = $valBeforeInterest;
 
-            // Check if principal has already reached the maximum
             if ($valBeforePrincipal < $getPrincipal) {
-                // Calculate how much can still be added to the principal
                 $remaining_to_principal = $getPrincipal - $valBeforePrincipal;
 
                 if ($byr_angsuran >= $remaining_to_principal) {
-                    // If the payment covers the remaining principal
-                    $new_payment_value_principal = $getPrincipal; // Set to maximum
-                    $remaining_payment = $byr_angsuran - $remaining_to_principal; // Remaining payment goes to interest
+                    $new_payment_value_principal = $getPrincipal;
+                    $remaining_payment = $byr_angsuran - $remaining_to_principal;
                 } else {
-                    // If the payment is less than the remaining principal
-                    $new_payment_value_principal += $byr_angsuran; // Add to principal
-                    $remaining_payment = 0; // No remaining payment to apply to interest
+                    $new_payment_value_principal += $byr_angsuran;
+                    $remaining_payment = 0;
                 }
             } else {
-                // If principal is already at maximum, we add all to interest
                 $remaining_payment = $byr_angsuran;
             }
 
@@ -320,12 +297,11 @@ class PaymentController extends Controller
                         $paidPenalty += $getTunggakan;
                         $getTunggakan = 0;
                     }
-    
-                    // Store the update in the array
+
                     $updates[$arrearsId] = $paidPenalty;
                 }
             }    
-            // Perform batch update
+          
             foreach ($updates as $id => $paidPenalty) {
                M_Arrears::where('ID', $id)
                          ->update(['PAID_PENALTY' => $paidPenalty]);
@@ -501,20 +477,22 @@ class PaymentController extends Controller
             $valBeforeInterest = $credit_schedule->PAYMENT_VALUE_INTEREST;
             $getPrincipal = $credit_schedule->PRINCIPAL;
 
-            $statusPaid = $credit_schedule->PAID_FLAG;
-
             $getPayPrincipal = isset($payments['ANGSURAN_POKOK'])? floatval($totalAmount):0;
             $getPayInterest = isset($payments['ANGSURAN_BUNGA']) ? floatval($payments['ANGSURAN_BUNGA']) : 0;
 
-            if($statusPaid != 'PAID'){
-                $setPrincipal = bcsub($valBeforePrincipal, $getPayPrincipal, 2);
-                $setPrincipal = ceil($setPrincipal * 100) / 100;
-                $data_principal = $this->preparePaymentData($uid, 'ANGSURAN_POKOK', $setPrincipal);
-                M_PaymentDetail::create($data_principal);
-
-                $setInterest = $valBeforeInterest - $getPayInterest;
-                $data_interest = $this->preparePaymentData($uid, 'ANGSURAN_BUNGA', $setInterest);
-                M_PaymentDetail::create($data_interest);
+            if($res['bayar_angsuran'] != '0'){
+                if ($getPayPrincipal != $getPrincipal) {
+                    $setPrincipal = bcsub($valBeforePrincipal, $getPayPrincipal, 2);
+                    $setPrincipal = ceil($setPrincipal * 100) / 100;
+                    $data_principal = $this->preparePaymentData($uid, 'ANGSURAN_POKOK', $setPrincipal);
+                    M_PaymentDetail::create($data_principal);
+                }
+                
+                if ($getPayInterest !== $getInterest) {
+                    $setInterest = $valBeforeInterest - $getPayInterest;
+                    $data_interest = $this->preparePaymentData($uid, 'ANGSURAN_BUNGA', $setInterest);
+                    M_PaymentDetail::create($data_interest);
+                }
             }
 
             $bayar_denda = $res['bayar_denda'];
