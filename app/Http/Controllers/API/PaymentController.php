@@ -523,7 +523,7 @@ class PaymentController extends Controller
                 M_PaymentDetail::create($data_denda);
             }
 
-            if ($check_credit) {
+            if ($check_credit && $statusPaid != 'PAID') {
                 $paidPrincipal = isset($setPrincipal) ? bcadd($check_credit->PAID_PRINCIPAL ?? '0.00', $setPrincipal, 2) : ($check_credit->PAID_PRINCIPAL ?? '0.00');
                 $paidInterest = isset($setInterest) ? bcadd($check_credit->PAID_INTEREST ?? '0.00', $setInterest, 2) : ($check_credit->PAID_INTEREST ?? '0.00');
                 $paidPenalty = isset($setPenalty) ? $setPenalty : 0;
