@@ -152,7 +152,6 @@ class CustomerController extends Controller
                         ->orderBy("a.INSTALLMENT_COUNT","ASC")
                         ->get();
 
-
             if ($data->isEmpty()) {
                 throw new Exception("Loan Number Is Not Exist");
             }
