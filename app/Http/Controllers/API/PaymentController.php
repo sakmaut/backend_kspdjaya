@@ -57,8 +57,8 @@ class PaymentController extends Controller
             $request->merge(['approval' => 'approve']);
 
             if (isset($request->struktur) && is_array($request->struktur)) {
-
                 foreach ($request->struktur as $res) {
+
                     $check_method_payment = strtolower($request->payment_method) === 'cash';
                     
                     $credit = M_Credit::where('LOAN_NUMBER', $res['loan_number'])->first();
@@ -75,32 +75,34 @@ class PaymentController extends Controller
 
                     $this->setCustomerDetail($detail_customer);
 
-                    M_KwitansiStructurDetail::create([
-                        "no_invoice" => $no_inv,
-                        "key" => $res['key'],
-                        'angsuran_ke' => $res['angsuran_ke'],
-                        'loan_number' => $res['loan_number'],
-                        'tgl_angsuran' => $res['tgl_angsuran'],
-                        'principal' => $res['principal'],
-                        'interest' => $res['interest'],
-                        'installment' => $res['installment'],
-                        'principal_remains' => $res['principal_remains'],
-                        'payment' => $res['payment'],
-                        'bayar_angsuran' => $res['bayar_angsuran'],
-                        "bayar_denda" => $res['bayar_denda'],
-                        "total_bayar" => $res['total_bayar'],
-                        "flag" => '',
-                        "denda" => $res['denda']
-                    ]);
-            
-                    if ($check_method_payment) {
-                        $this->processPaymentStructure($res, $request, $getCodeBranch, $no_inv);
-                    } else {
-                        $tgl_angsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
-                        M_CreditSchedule::where([
-                            'LOAN_NUMBER' => $res['loan_number'],
-                            'PAYMENT_DATE' => $tgl_angsuran
-                        ])->update(['PAID_FLAG' => 'PENDING']);
+                    if($res['bayar_angsuran'] != '0' && $res['flag'] != 'PAID'){
+                        M_KwitansiStructurDetail::create([
+                            "no_invoice" => $no_inv,
+                            "key" => $res['key'],
+                            'angsuran_ke' => $res['angsuran_ke'],
+                            'loan_number' => $res['loan_number'],
+                            'tgl_angsuran' => $res['tgl_angsuran'],
+                            'principal' => $res['principal'],
+                            'interest' => $res['interest'],
+                            'installment' => $res['installment'],
+                            'principal_remains' => $res['principal_remains'],
+                            'payment' => $res['payment'],
+                            'bayar_angsuran' => $res['bayar_angsuran'],
+                            "bayar_denda" => $res['bayar_denda'],
+                            "total_bayar" => $res['total_bayar'],
+                            "flag" => '',
+                            "denda" => $res['denda']
+                        ]);
+                
+                        if ($check_method_payment) {
+                            $this->processPaymentStructure($res, $request, $getCodeBranch, $no_inv);
+                        } else {
+                            $tgl_angsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
+                            M_CreditSchedule::where([
+                                'LOAN_NUMBER' => $res['loan_number'],
+                                'PAYMENT_DATE' => $tgl_angsuran
+                            ])->update(['PAID_FLAG' => 'PENDING']);
+                        }
                     }
                 }
             }
@@ -523,7 +525,7 @@ class PaymentController extends Controller
                 M_PaymentDetail::create($data_denda);
             }
 
-            if ($check_credit && $statusPaid != 'PAID') {
+            if ($check_credit) {
                 $paidPrincipal = isset($setPrincipal) ? bcadd($check_credit->PAID_PRINCIPAL ?? '0.00', $setPrincipal, 2) : ($check_credit->PAID_PRINCIPAL ?? '0.00');
                 $paidInterest = isset($setInterest) ? bcadd($check_credit->PAID_INTEREST ?? '0.00', $setInterest, 2) : ($check_credit->PAID_INTEREST ?? '0.00');
                 $paidPenalty = isset($setPenalty) ? $setPenalty : 0;
