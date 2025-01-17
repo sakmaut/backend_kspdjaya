@@ -137,7 +137,7 @@ class CustomerController extends Controller
                         })
                         ->where('a.LOAN_NUMBER', $loanNumber)
                         ->where('b.STATUS_REC', '=', 'A')
-                        ->select('a.*', 'b.PAST_DUE_PENALTY', 'b.PAID_PENALTY')
+                        ->select('a.*', 'b.ID as id_arrear', 'b.PAST_DUE_PENALTY', 'b.PAID_PENALTY')
                         ->orderBy("a.INSTALLMENT_COUNT","ASC")
                         ->get();
 
@@ -160,6 +160,7 @@ class CustomerController extends Controller
                     'bayar_angsuran' => floatval($res->INSTALLMENT) - floatval($res->PAYMENT_VALUE),
                     'bayar_denda' => floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->PAID_PENALTY ?? 0),
                     'total_bayar' => floatval($res->INSTALLMENT+($res->PAST_DUE_PENALTY??0)),
+                    'id_arrear' => $res->id_arrear??'',
                     'flag' => $res->PAID_FLAG,
                     'denda' => floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->PAID_PENALTY ?? 0) 
                 ];
