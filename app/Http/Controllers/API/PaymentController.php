@@ -532,12 +532,11 @@ class PaymentController extends Controller
             $valBeforeInterest = $credit_schedule->PAYMENT_VALUE_INTEREST;
             $getPrincipal = $credit_schedule->PRINCIPAL;
             $getInterest = $credit_schedule->INTEREST;
-            $paidFlag = $credit_schedule->PAID_FLAG;
 
             $getPayPrincipal = isset($payments['ANGSURAN_POKOK'])? floatval($totalAmount):0;
             $getPayInterest = isset($payments['ANGSURAN_BUNGA']) ? floatval($payments['ANGSURAN_BUNGA']) : 0;
 
-            if ($getPayPrincipal != $getPrincipal && $paidFlag != 'PAID') {
+            if ($getPayPrincipal != $getPrincipal) {
                 $setPrincipal = bcsub($valBeforePrincipal, $getPayPrincipal, 2);
                 $setPrincipal = ceil($setPrincipal * 100) / 100;
                 $data_principal = $this->preparePaymentData($uid, 'ANGSURAN_POKOK', $setPrincipal);
@@ -554,13 +553,14 @@ class PaymentController extends Controller
 
             if ($bayar_denda != 0 || $request->penangguhan_denda == 'yes') {
                 $data_denda = $this->preparePaymentData($uid, 'DENDA_PINJAMAN', $bayar_denda);
+                $setPenalty = floatval($check_credit->PAID_PINALTY??0) + floatval($bayar_denda??0);
                 M_PaymentDetail::create($data_denda);
             }
 
             if ($check_credit) {
                 $paidPrincipal = isset($setPrincipal) ? bcadd($check_credit->PAID_PRINCIPAL ?? '0.00', $setPrincipal, 2) : ($check_credit->PAID_PRINCIPAL ?? '0.00');
                 $paidInterest = isset($setInterest) ? bcadd($check_credit->PAID_INTEREST ?? '0.00', $setInterest, 2) : ($check_credit->PAID_INTEREST ?? '0.00');
-                $paidPenalty = $bayar_denda !== 0 ? bcadd($check_credit->PAID_PINALTY ?? '0.00', $bayar_denda, 2) : ($check_credit->PAID_PINALTY ?? '0.00');
+                $paidPenalty = isset($setPenalty) ? $setPenalty : 0;
             
                 $checkCreditSchedule = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)
                                         ->where(function ($query) {
