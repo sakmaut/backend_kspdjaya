@@ -765,7 +765,7 @@ class PaymentController extends Controller
             }
 
             if (strtolower($request->user()->position) == 'ho' && isset($flag) || !empty($flag) ) {
-                $this->processHoApproval($request, $check);
+                 $this->processHoApproval($request, $check);
             }
 
             DB::commit();
@@ -811,7 +811,7 @@ class PaymentController extends Controller
                         $creditSchedule[$list->START_DATE] = [
                             'LOAN_NUMBER' => $list->LOAN_NUM,
                             'PAYMENT_DATE' => date('Y-m-d', strtotime($list->START_DATE)),
-                            'AMOUNT' => $list->ORIGINAL_AMOUNT,
+                            'AMOUNT' => floatval($list->ORIGINAL_AMOUNT),
                             'PRINCIPAL' => 0, 
                             'INTEREST' => 0,  
                             'PENALTY' => 0
@@ -831,7 +831,7 @@ class PaymentController extends Controller
                     }
                 }
             }
-            
+
             foreach ($creditSchedule as $schedule) {
                 $totalPrincipal += $schedule['PRINCIPAL'];
                 $totalInterest += $schedule['INTEREST'];
