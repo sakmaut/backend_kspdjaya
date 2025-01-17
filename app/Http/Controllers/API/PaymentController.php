@@ -98,10 +98,14 @@ class PaymentController extends Controller
                         throw new Exception('Loan Number No Exist in Record');
                     }
 
-                    $detail_customer = M_Customer::where('CUST_CODE', $credit->CUST_CODE)->firstOrFail();
+                    $detail_customer = M_Customer::where('CUST_CODE', $credit->CUST_CODE)->first();
+
+                    if (!$detail_customer) {
+                        throw new Exception('Customer No Exist in Record');
+                    }
+
                     $this->setCustomerDetail($detail_customer);
 
-                    // Save Kwitansi Detail
                     M_KwitansiStructurDetail::create([
                         "no_invoice" => $no_inv,
                         "key" => $res['key'],
@@ -120,7 +124,6 @@ class PaymentController extends Controller
                         "denda" => $res['denda']
                     ]);
             
-                    // Handle payment processing
                     if ($check_method_payment) {
                         $this->processPaymentStructure($res, $request, $getCodeBranch, $no_inv, 'PAID');
                     } else {
@@ -138,7 +141,6 @@ class PaymentController extends Controller
             if($request->penangguhan_denda != 'yes'){
                 $this->updateTunggakkanBunga($request);
             }
-
 
             $build = $this->buildResponse($request, $detail_customer, $pembayaran, $no_inv, $created_now);
 
