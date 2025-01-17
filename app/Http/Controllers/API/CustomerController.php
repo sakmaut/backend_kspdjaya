@@ -76,18 +76,23 @@ class CustomerController extends Controller
                 ->leftJoin('customer as c', 'c.CUST_CODE', '=', 'a.CUST_CODE')
                 ->where('a.STATUS', '!=', 'D');
         
-            // Apply search filters using when() for cleaner conditional queries
-            $query->when($request->nama, function ($query, $nama) {
-                return $query->where(DB::raw("CONCAT(c.NAME, ' ', c.ALIAS)"), 'LIKE', "%{$nama}%");
-            });
-        
-            $query->when($request->no_kontrak, function ($query, $no_kontrak) {
-                return $query->where('a.LOAN_NUMBER', 'LIKE', "%{$no_kontrak}%");
-            });
-        
-            $query->when($request->no_polisi, function ($query, $no_polisi) {
-                return $query->where('b.POLICE_NUMBER', 'LIKE', "%{$no_polisi}%");
-            });
+            if(!empty($request->nama)){
+                $query->when($request->nama, function ($query, $nama) {
+                    return $query->where(DB::raw("CONCAT(c.NAME, ' ', c.ALIAS)"), 'LIKE', "%{$nama}%");
+                });
+            }
+
+            if(!empty($request->no_kontrak)){
+                $query->when($request->no_kontrak, function ($query, $no_kontrak) {
+                    return $query->where('a.LOAN_NUMBER', 'LIKE', "%{$no_kontrak}%");
+                });    
+            }
+
+            if(!empty($request->no_polisi)){
+                $query->when($request->no_polisi, function ($query, $no_polisi) {
+                    return $query->where('b.POLICE_NUMBER', 'LIKE', "%{$no_polisi}%");
+                });
+            }
         
             $results = $query->get();
 
