@@ -476,28 +476,28 @@ class PaymentController extends Controller
             $valBeforePrincipal = $credit_schedule->PAYMENT_VALUE_PRINCIPAL;
             $valBeforeInterest = $credit_schedule->PAYMENT_VALUE_INTEREST;
             $getPrincipal = $credit_schedule->PRINCIPAL;
+            $getInterest = $credit_schedule->INTEREST;
 
             $getPayPrincipal = isset($payments['ANGSURAN_POKOK'])? floatval($totalAmount):0;
             $getPayInterest = isset($payments['ANGSURAN_BUNGA']) ? floatval($payments['ANGSURAN_BUNGA']) : 0;
 
-            if($res['bayar_angsuran'] != '0'){
-                if ($getPayPrincipal != $getPrincipal) {
-                    $setPrincipal = bcsub($valBeforePrincipal, $getPayPrincipal, 2);
-                    $setPrincipal = ceil($setPrincipal * 100) / 100;
-                    $data_principal = $this->preparePaymentData($uid, 'ANGSURAN_POKOK', $setPrincipal);
-                    M_PaymentDetail::create($data_principal);
-                }
-                
-                if ($getPayInterest !== $getInterest) {
-                    $setInterest = $valBeforeInterest - $getPayInterest;
-                    $data_interest = $this->preparePaymentData($uid, 'ANGSURAN_BUNGA', $setInterest);
-                    M_PaymentDetail::create($data_interest);
-                }
+            if ($getPayPrincipal != $getPrincipal || $getPayPrincipal == $getPrincipal) {
+                $setPrincipal = bcsub($valBeforePrincipal, $getPayPrincipal, 2);
+                $setPrincipal = ceil($setPrincipal * 100) / 100;
+               
+                $data_principal = $this->preparePaymentData($uid, 'ANGSURAN_POKOK', $setPrincipal);
+                M_PaymentDetail::create($data_principal);
+            }
+            
+            if ($getPayInterest != $getInterest || $getPayInterest == $getInterest) {
+                $setInterest = $valBeforeInterest - $getPayInterest;
+                $data_interest = $this->preparePaymentData($uid, 'ANGSURAN_BUNGA', $setInterest);
+                M_PaymentDetail::create($data_interest);
             }
 
             $bayar_denda = $res['bayar_denda'];
 
-            if ($bayar_denda != 0 && $request->penangguhan_denda == '' || !isset($request->penangguhan_denda)) {
+            if ($bayar_denda != 0) {
                 $data_denda = $this->preparePaymentData($uid, 'DENDA_PINJAMAN', $bayar_denda);
                 $setPenalty = floatval($check_credit->PAID_PINALTY??0) + floatval($bayar_denda??0);
                 M_PaymentDetail::create($data_denda);
