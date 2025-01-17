@@ -497,7 +497,7 @@ class PaymentController extends Controller
 
             $bayar_denda = $res['bayar_denda'];
 
-            if ($bayar_denda != 0) {
+            if ($bayar_denda != 0 && !isset($request->penangguhan_denda)) {
                 $data_denda = $this->preparePaymentData($uid, 'DENDA_PINJAMAN', $bayar_denda);
                 $setPenalty = floatval($check_credit->PAID_PINALTY??0) + floatval($bayar_denda??0);
                 M_PaymentDetail::create($data_denda);
