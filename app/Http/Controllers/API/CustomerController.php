@@ -138,15 +138,18 @@ class CustomerController extends Controller
             $loanNumber = $request->loan_number;
 
             $data = DB::table('credit_schedule as a')
-                        ->select(DB::raw('DISTINCT a.*'), 'b.PAST_DUE_PENALTY', 'b.PAID_PENALTY', 'b.STATUS_REC')
-                        ->leftJoin('arrears as b', 'b.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
-                        ->where('a.LOAN_NUMBER', '11105240000119')
-                        ->where(function($query) {
-                            $query->whereNull('a.PAID_FLAG')
-                                ->orWhere('a.PAID_FLAG', '!=', '');
+                        ->leftJoin('arrears as b', function($join) {
+                            $join->on('b.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
+                                ->where('b.STATUS_REC', '=', 'A')
+                                ->whereRaw('b.START_DATE = a.PAYMENT_DATE');
                         })
-                        ->where('b.STATUS_REC', 'A')
-                        ->orderBy('a.INSTALLMENT_COUNT', 'asc')
+                        ->where('a.LOAN_NUMBER', $request->loan_number)
+                        ->where(function ($query) {
+                            $query->whereNull('a.PAID_FLAG')
+                                ->orWhere('a.PAID_FLAG', '!=', 'PAID');
+                        })
+                        ->select('a.*', 'b.PAST_DUE_PENALTY', 'b.PAID_PENALTY')
+                        ->orderBy("a.INSTALLMENT_COUNT","ASC")
                         ->get();
 
 
