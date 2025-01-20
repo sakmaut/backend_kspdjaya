@@ -54,30 +54,26 @@ class PaymentController extends Controller
             $getCodeBranch = M_Branch::findOrFail($request->user()->branch_id);
             $pembayaran = [];
 
-            $detail_customer = DB::table('credit as c')
-                                ->join('customer as c2', 'c2.CUST_CODE', '=', 'c.CUST_CODE')
-                                ->where('c.LOAN_NUMBER', $request->no_facility)
-                                ->select([
-                                    'c2.CUST_CODE',
-                                    'c2.NAME',
-                                    'c2.ADDRESS',
-                                    'c2.RT',
-                                    'c2.RW',
-                                    'c2.PROVINCE',
-                                    'c2.CITY',
-                                    'c2.KELURAHAN',
-                                    'c2.KECAMATAN'
-                                ])
-                                ->first();
-
-            if (!$detail_customer) {
-                throw new Exception('Customer No Exist in Record');
-            }
-
-            $this->setCustomerDetail($detail_customer);
+            $customer_data = null; 
 
             if (isset($request->struktur) && is_array($request->struktur)) {
                 foreach ($request->struktur as $res) {
+
+                    if (isset($res['customer']) && !empty($res['customer'])) {
+                        if (empty($detail_customer)) {
+                            $customer_data = [
+                                'cust_code' => $res['customer']['CUST_CODE'],
+                                'nama' => $res['customer']['NAME'],
+                                'alamat' => $res['customer']['ADDRESS'],
+                                'rt' => $res['customer']['RT'],
+                                'rw' => $res['customer']['RW'],
+                                'provinsi' => $res['customer']['PROVINCE'],
+                                'kota' => $res['customer']['CITY'],
+                                'kelurahan' => $res['customer']['KELURAHAN'],
+                                'kecamatan' => $res['customer']['KECAMATAN'],
+                            ];
+                        }
+                    }
 
                     $check_method_payment = strtolower($request->payment_method) === 'cash';
 
@@ -111,13 +107,13 @@ class PaymentController extends Controller
                 }
             }
             
-            $this->saveKwitansi($request, $detail_customer, $no_inv);
+            $this->saveKwitansi($request, $customer_data, $no_inv);
 
             if($request->penangguhan_denda != 'yes'){
                 $this->updateTunggakkanBunga($request);
             }
 
-            $build = $this->buildResponse($request, $detail_customer, $pembayaran, $no_inv, $created_now);
+            $build = $this->buildResponse($request, $customer_data, $pembayaran, $no_inv, $created_now);
 
             DB::commit();
             ActivityLogger::logActivity($request, "Success", 200);
@@ -340,16 +336,16 @@ class PaymentController extends Controller
             "NO_TRANSAKSI" => $no_inv,
             "LOAN_NUMBER" => $request->no_facility ?? null,
             "TGL_TRANSAKSI" => Carbon::now()->format('d-m-Y'),
-            'CUST_CODE' => $customer_detail->CUST_CODE,
             'BRANCH_CODE' => $request->user()->branch_id,
-            'NAMA' => $customer_detail->NAME,
-            'ALAMAT' => $customer_detail->ADDRESS,
-            'RT' => $customer_detail->RT,
-            'RW' => $customer_detail->RW,
-            'PROVINSI' => $customer_detail->PROVINCE,
-            'KOTA' => $customer_detail->CITY,
-            'KELURAHAN' => $customer_detail->KELURAHAN,
-            'KECAMATAN' => $customer_detail->KECAMATAN,
+            'CUST_CODE' => $customer_detail['cust_code']??'',
+            'NAMA' => $customer_detail['nama']??'',
+            'ALAMAT' => $customer_detail['alamat']??'',
+            'RT' => $customer_detail['rt']??'',
+            'RW' => $customer_detail['rw']??'',
+            'PROVINSI' => $customer_detail['provinsi']??'',
+            'KOTA' => $customer_detail['kota']??'',
+            'KELURAHAN' => $customer_detail['kelurahan']??'',
+            'KECAMATAN' => $customer_detail['kecamatan']??'',
             "METODE_PEMBAYARAN" => $request->payment_method ?? null,
             "TOTAL_BAYAR" => $request->total_bayar ?? null,
             "DISKON" => $request->diskon_tunggakan ?? null,
@@ -368,15 +364,15 @@ class PaymentController extends Controller
     {
         return [
             "no_transaksi" => $no_inv,
-            'cust_code' => $customer_detail->CUST_CODE,
-            'nama' => $customer_detail->NAME,
-            'alamat' => $customer_detail->ADDRESS,
-            'rt' => $customer_detail->RT,
-            'rw' => $customer_detail->RW,
-            'provinsi' => $customer_detail->PROVINCE,
-            'kota' => $customer_detail->CITY,
-            'kelurahan' => $customer_detail->KELURAHAN,
-            'kecamatan' => $customer_detail->KECAMATAN,
+            'cust_code' => $customer_detail['cust_code']??'',
+            'nama' => $customer_detail['nama']??'',
+            'alamat' => $customer_detail['alamat']??'',
+            'rt' => $customer_detail['rt']??'',
+            'rw' => $customer_detail['rw']??'',
+            'provinsi' => $customer_detail['provinsi']??'',
+            'kota' => $customer_detail['kota']??'',
+            'kelurahan' => $customer_detail['kelurahan']??'',
+            'kecamatan' => $customer_detail['kecamatan']??'',
             "tgl_transaksi" => Carbon::now()->format('d-m-Y'),
             "payment_method" => $request->payment_method,
             "nama_bank" => $request->nama_bank,
@@ -392,20 +388,6 @@ class PaymentController extends Controller
         ];
     }
 
-    function setCustomerDetail($customer)
-    {
-        return [
-            'cust_code' => $customer->CUST_CODE,
-            'nama' => $customer->NAME,
-            'alamat' => $customer->ADDRESS,
-            'rt' => $customer->RT,
-            'rw' => $customer->RW,
-            'provinsi' => $customer->PROVINCE,
-            'kota' => $customer->CITY,
-            'kelurahan' => $customer->KELURAHAN,
-            'kecamatan' => $customer->KECAMATAN,
-        ];
-    }
 
     function createPaymentRecords($request, $res, $tgl_angsuran, $loan_number, $no_inv, $branch,$uid)
     {
