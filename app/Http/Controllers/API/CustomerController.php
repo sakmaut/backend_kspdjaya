@@ -145,11 +145,28 @@ class CustomerController extends Controller
                 throw new Exception("Loan Number Is Not Exist");
             }
 
+            $getCustomer = M_Credit::where('LOAN_NUMBER', $loanNumber)
+                                    ->with(['customer' => function ($query) {
+                                        $query->select(
+                                            'CUST_CODE',
+                                            'NAME',
+                                            'ADDRESS',
+                                            'RT',
+                                            'RW',
+                                            'PROVINCE',
+                                            'CITY',
+                                            'KELURAHAN',
+                                            'KECAMATAN'
+                                        );
+                                    }])
+                                    ->get()
+                                    ->pluck('customer'); 
+
             $j = 0;
             foreach ($data as $res) {
                 $schedule[]=[
                     'key' => $j++,
-                    'angsuran_ke' =>  $res->INSTALLMENT_COUNT,
+                    'angsuran_ke' => $res->INSTALLMENT_COUNT,
                     'loan_number' => $res->LOAN_NUMBER,
                     'tgl_angsuran' => Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y'),
                     'principal' => floatval($res->PRINCIPAL),
@@ -162,7 +179,8 @@ class CustomerController extends Controller
                     'total_bayar' => floatval($res->INSTALLMENT+($res->PAST_DUE_PENALTY??0)),
                     'id_arrear' => $res->id_arrear??'',
                     'flag' => $res->PAID_FLAG,
-                    'denda' => floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->PAID_PENALTY ?? 0) 
+                    'denda' => floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->PAID_PENALTY ?? 0) ,
+                    'customer' => $getCustomer
                 ];
             }
 
