@@ -93,6 +93,7 @@ class M_CrApplication extends Model
             }
 
             $query->groupBy(
+                    't1.id',
                     't1.ORDER_NUMBER',
                     't3.NAME',
                     't4.fullname',
@@ -106,6 +107,7 @@ class M_CrApplication extends Model
                 )
                 ->orderBy('t1.CREATE_DATE', 'desc')
                 ->select(
+                    't1.id',
                     't1.ORDER_NUMBER as order_number',
                     't3.NAME as cabang',
                     't4.fullname as nama_ao',
