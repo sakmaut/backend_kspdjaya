@@ -374,7 +374,7 @@ class PaymentController extends Controller
             'kota' => $customer_detail['kota']??'',
             'kelurahan' => $customer_detail['kelurahan']??'',
             'kecamatan' => $customer_detail['kecamatan']??'',
-            "tgl_transaksi" => Carbon::now()->format('d-m-Y'),
+            "tgl_transaksi" => Carbon::parse($this->CREATED_AT)->format('d-m-Y H:i:s'),
             "payment_method" => $request->payment_method,
             "nama_bank" => $request->nama_bank,
             "no_rekening" => $request->no_rekening,
@@ -384,8 +384,7 @@ class PaymentController extends Controller
             "kembalian" => $request->kembalian,
             "jumlah_uang" => $request->jumlah_uang,
             "terbilang" => bilangan($request->total_bayar) ?? null,
-            "created_by" => $request->user()->fullname,
-            "created_at" => Carbon::parse($created_now)->format('d-m-Y')
+            "created_by" => $request->user()->fullname
         ];
     }
 
