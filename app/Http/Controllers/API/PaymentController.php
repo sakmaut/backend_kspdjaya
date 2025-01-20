@@ -48,11 +48,9 @@ class PaymentController extends Controller
         DB::beginTransaction();
         try {
 
-            $created_now = Carbon::now();
             $no_inv = generateCodeKwitansi($request, 'kwitansi', 'NO_TRANSAKSI', 'INV');
 
             $getCodeBranch = M_Branch::findOrFail($request->user()->branch_id);
-            $pembayaran = [];
 
             $customer_data = null; 
 
@@ -113,11 +111,13 @@ class PaymentController extends Controller
                 $this->updateTunggakkanBunga($request);
             }
 
-            $build = $this->buildResponse($request, $customer_data, $pembayaran, $no_inv, $created_now);
+            $data = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
+
+            $dto = new R_Kwitansi($data);
 
             DB::commit();
             ActivityLogger::logActivity($request, "Success", 200);
-            return response()->json($build, 200);
+            return response()->json($dto, 200);
         } catch (\Exception $e) {
             DB::rollback();
             ActivityLogger::logActivity($request,$e->getMessage(),500);
@@ -360,34 +360,6 @@ class PaymentController extends Controller
 
         M_Kwitansi::create($save_kwitansi);
     }
-
-    private function buildResponse($request, $customer_detail, $pembayaran, $no_inv, $created_now)
-    {
-        return [
-            "no_transaksi" => $no_inv,
-            'cust_code' => $customer_detail['cust_code']??'',
-            'nama' => $customer_detail['nama']??'',
-            'alamat' => $customer_detail['alamat']??'',
-            'rt' => $customer_detail['rt']??'',
-            'rw' => $customer_detail['rw']??'',
-            'provinsi' => $customer_detail['provinsi']??'',
-            'kota' => $customer_detail['kota']??'',
-            'kelurahan' => $customer_detail['kelurahan']??'',
-            'kecamatan' => $customer_detail['kecamatan']??'',
-            "tgl_transaksi" => Carbon::parse($this->CREATED_AT)->format('d-m-Y H:i:s'),
-            "payment_method" => $request->payment_method,
-            "nama_bank" => $request->nama_bank,
-            "no_rekening" => $request->no_rekening,
-            "bukti_transfer" => '',
-            "pembayaran" => $pembayaran,
-            "pembulatan" => $request->pembulatan,
-            "kembalian" => $request->kembalian,
-            "jumlah_uang" => $request->jumlah_uang,
-            "terbilang" => bilangan($request->total_bayar) ?? null,
-            "created_by" => $request->user()->fullname
-        ];
-    }
-
 
     function createPaymentRecords($request, $res, $tgl_angsuran, $loan_number, $no_inv, $branch,$uid)
     {
