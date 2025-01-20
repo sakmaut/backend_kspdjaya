@@ -120,7 +120,7 @@ class PelunasanController extends Controller
         try {
             $loan_number = $request->LOAN_NUMBER;
             $uid = Uuid::uuid7()->toString();
-            $no_inv = generateCode($request, 'payment', 'INVOICE', 'INV');
+            $no_inv = generateCodeKwitansi($request, 'kwitansi', 'NO_TRANSAKSI', 'INV');
     
             M_CreditSchedule::where('LOAN_NUMBER', $loan_number)->firstOrFail();
             $credit = M_Credit::where('LOAN_NUMBER', $loan_number)->firstOrFail();

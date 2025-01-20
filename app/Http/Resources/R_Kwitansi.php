@@ -21,6 +21,7 @@ class R_Kwitansi extends JsonResource
     {
         // Retrieve payment and related data
         $details = M_KwitansiStructurDetail::where('no_invoice', $this->NO_TRANSAKSI)
+                                            ->where('installment','!=','0')
                                             ->orderByRaw('CAST(angsuran_ke AS SIGNED) ASC')
                                             ->get();
 
