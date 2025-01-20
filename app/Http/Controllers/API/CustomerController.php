@@ -165,6 +165,9 @@ class CustomerController extends Controller
 
             $j = 0;
             foreach ($data as $res) {
+
+                $installment = floatval($res->INSTALLMENT) - floatval($res->PAYMENT_VALUE);
+
                 $schedule[]=[
                     'key' => $j++,
                     'angsuran_ke' => $res->INSTALLMENT_COUNT,
@@ -172,11 +175,11 @@ class CustomerController extends Controller
                     'tgl_angsuran' => Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y'),
                     'principal' => floatval($res->PRINCIPAL),
                     'interest' => floatval($res->INTEREST),
-                    'installment' => floatval($res->INSTALLMENT) - floatval($res->PAYMENT_VALUE),
+                    'installment' => $installment,
                     'principal_remains' => floatval($res->PRINCIPAL_REMAINS),
                     'payment' => floatval($res->PAYMENT_VALUE),
                     'bayar_angsuran' => floatval($res->INSTALLMENT) - floatval($res->PAYMENT_VALUE),
-                    'bayar_denda' => floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->PAID_PENALTY ?? 0),
+                    'bayar_denda' => $installment == 0 ? 0 :floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->PAID_PENALTY ?? 0),
                     'total_bayar' => floatval($res->INSTALLMENT+($res->PAST_DUE_PENALTY??0)),
                     'id_arrear' => $res->id_arrear??'',
                     'flag' => $res->PAID_FLAG,

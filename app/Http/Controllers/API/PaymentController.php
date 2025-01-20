@@ -272,7 +272,8 @@ class PaymentController extends Controller
             $this->addCreditPaid($loan_number, ['BAYAR_DENDA' => $bayar_denda]);
 
             $updates['PAID_PENALTY'] = $new_penalty;
-            $updates['END_DATE'] = now();            
+            $updates['END_DATE'] = now();   
+            $updates['UPDATED_AT'] = now();           
             
             if (!empty($updates)) {
                 $check_arrears->update($updates);
@@ -624,7 +625,7 @@ class PaymentController extends Controller
             }
 
             if (strtolower($request->user()->position) == 'ho' && isset($flag) || !empty($flag) ) {
-                 $this->processHoApproval($request, $check);
+                $this->processHoApproval($request, $check);
             }
 
             DB::commit();
@@ -670,24 +671,27 @@ class PaymentController extends Controller
                         $creditSchedule[$list->START_DATE] = [
                             'LOAN_NUMBER' => $list->LOAN_NUM,
                             'PAYMENT_DATE' => date('Y-m-d', strtotime($list->START_DATE)),
-                            'AMOUNT' => floatval($list->ORIGINAL_AMOUNT),
+                            'AMOUNT' => 0,
                             'PRINCIPAL' => 0, 
                             'INTEREST' => 0,  
                             'PENALTY' => 0
                         ];
                     }
-    
-                    switch ($list->ACC_KEYS) {
-                        case 'ANGSURAN_POKOK':
-                            $creditSchedule[$list->START_DATE]['PRINCIPAL'] = $list->amount??0;
-                            break;
-                        case 'ANGSURAN_BUNGA':
-                            $creditSchedule[$list->START_DATE]['INTEREST'] = $list->amount??0;
-                            break;
-                        case 'DENDA_PINJAMAN':
-                            $creditSchedule[$list->START_DATE]['PENALTY'] = $list->amount??0;
-                            break;
+
+                    if ($list->ACC_KEYS === 'ANGSURAN_POKOK') {
+                        $creditSchedule[$list->START_DATE]['PRINCIPAL'] += floatval($list->amount);
                     }
+                    
+                    elseif ($list->ACC_KEYS === 'ANGSURAN_BUNGA') {
+                        $creditSchedule[$list->START_DATE]['INTEREST'] += floatval($list->amount);
+                    }
+                    
+                    elseif ($list->ACC_KEYS === 'BAYAR_DENDA') {
+                        $creditSchedule[$list->START_DATE]['PENALTY'] += floatval($list->amount);
+                    }
+            
+                    $creditSchedule[$list->START_DATE]['AMOUNT'] = $creditSchedule[$list->START_DATE]['PRINCIPAL'] + $creditSchedule[$list->START_DATE]['INTEREST'];
+
                 }
             }
 
@@ -726,6 +730,7 @@ class PaymentController extends Controller
                             'PAID_FLAG' => '',
                             'PAYMENT_VALUE_PRINCIPAL' =>  floatval($creditScheduleCheck->PAYMENT_VALUE_PRINCIPAL??0) -  floatval($resList['PRINCIPAL']??0),
                             'PAYMENT_VALUE_INTEREST' =>  floatval($creditScheduleCheck->PAYMENT_VALUE_INTEREST??0) -  floatval($resList['INTEREST']??0),
+                            'INSUFFICIENT_PAYMENT' =>  ((floatval($resList['PRINCIPAL']??0)  + floatval($resList['INTEREST']??0)) - $creditScheduleCheck->INSTALLMENT??00) -  floatval($creditScheduleCheck->INSUFFICIENT_PAYMENT??0),
                             'PAYMENT_VALUE' => floatval($creditScheduleCheck->PAYMENT_VALUE ?? 0) - floatval($resList['AMOUNT'] ?? 0)
                         ]);
                     }
