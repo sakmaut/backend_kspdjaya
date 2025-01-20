@@ -61,7 +61,7 @@ class R_Kwitansi extends JsonResource
         //     "STATUS" => $this->STTS_PAYMENT ?? null,
         //     "created_by" => $this->CREATED_BY,
         //     "created_at" => $this->CREATED_AT,
-        ];
+        // ];
     }
 
 }
