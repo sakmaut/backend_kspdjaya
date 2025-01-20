@@ -34,9 +34,11 @@ class PaymentController extends Controller
         try {
             $data = M_Kwitansi::where('PAYMENT_TYPE', 'angsuran')->get();
 
-            $dto = R_Kwitansi::collection($data);
+            
 
-            return response()->json($dto, 200);
+            // $dto = R_Kwitansi::collection($data);
+
+            return response()->json($data, 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
