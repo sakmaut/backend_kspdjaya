@@ -74,25 +74,11 @@ class M_CrApplication extends Model
         $getBranch = $request->user()->branch_id;
 
         $query = DB::table('cr_application as t1')
-        ->select(
-            't1.id',
-            't1.ORDER_NUMBER as order_number',
-            't3.NAME as cabang',
-            't4.fullname as nama_ao',
-            DB::raw("COALESCE(t8.INSTALLMENT_TYPE, t2.jenis_angsuran) as jenis_angsuran"),
-            DB::raw("COALESCE(t7.NAME, t2.nama) as nama_debitur"),
-            DB::raw("COALESCE(t1.SUBMISSION_VALUE, t2.plafond) as plafond"),
-            DB::raw("COALESCE(t1.tenor, t2.tenor) as tenor"),
-            't6.application_result as status',
-            't6.code as status_code'
-        )
             ->join('cr_survey as t2', 't2.id', '=', 't1.CR_SURVEY_ID')
             ->join('branch as t3', 't3.ID', '=', 't1.BRANCH')
             ->join('users as t4', 't4.id', '=', 't2.created_by')
             ->join('application_approval as t6', 't6.cr_application_id', '=', 't1.ID')
-            ->join('cr_personal as t7', 't7.APPLICATION_ID', '=', 't1.ID')
-            ->join('cr_application as t8', 't8.CR_SURVEY_ID', '=', 't2.ID')
-            ->orderBy('t1.CREATE_DATE', 'desc');
+            ->join('cr_personal as t7', 't7.APPLICATION_ID', '=', 't1.ID');
 
             if($getPosition !== 'HO'){
                 $query->where('t1.BRANCH', $getBranch);
@@ -105,8 +91,32 @@ class M_CrApplication extends Model
                 }
                 $query->whereIn('t6.code', $statuses);
             }
-            
 
+            $query->groupBy(
+                    't1.ORDER_NUMBER',
+                    't3.NAME',
+                    't4.fullname',
+                    DB::raw('COALESCE(t1.INSTALLMENT_TYPE, t2.jenis_angsuran)'),
+                    DB::raw('COALESCE(t7.NAME, t2.nama)'),
+                    DB::raw('COALESCE(t1.SUBMISSION_VALUE, t2.plafond)'),
+                    DB::raw('COALESCE(t1.tenor, t2.tenor)'),
+                    't6.application_result',
+                    't6.code',
+                    't1.CREATE_DATE'
+                )
+                ->orderBy('t1.CREATE_DATE', 'desc')
+                ->select(
+                    't1.ORDER_NUMBER as order_number',
+                    't3.NAME as cabang',
+                    't4.fullname as nama_ao',
+                    DB::raw('COALESCE(t1.INSTALLMENT_TYPE, t2.jenis_angsuran) as jenis_angsuran'),
+                    DB::raw('COALESCE(t7.NAME, t2.nama) as nama_debitur'),
+                    DB::raw('COALESCE(t1.SUBMISSION_VALUE, t2.plafond) as plafond'),
+                    DB::raw('COALESCE(t1.tenor, t2.tenor) as tenor'),
+                    't6.application_result as status',
+                    't6.code as status_code'
+                );
+            
         return $query->get();
     }
 }
