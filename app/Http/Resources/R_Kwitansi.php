@@ -6,6 +6,7 @@ use App\Models\M_Branch;
 use App\Models\M_KwitansiStructurDetail;
 use App\Models\M_Payment;
 use App\Models\M_PaymentAttachment;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -40,7 +41,7 @@ class R_Kwitansi extends JsonResource
             "kota" => $this->KOTA,
             "kelurahan" => $this->KELURAHAN,
             "kecamatan" => $this->KECAMATAN,
-            "tgl_transaksi" => $this->TGL_TRANSAKSI,
+            "tgl_transaksi" => Carbon::parse($this->CREATED_AT)->format('d-m-Y H:i:s'),
             "payment_method" => $this->METODE_PEMBAYARAN,
             "nama_bank" => $this->NAMA_BANK,
             "no_rekening" => $this->NO_REKENING,
@@ -57,7 +58,6 @@ class R_Kwitansi extends JsonResource
             'struktur' => $details,
             "STATUS" => $this->STTS_PAYMENT ?? null,
             "created_by" => $this->CREATED_BY,
-            "created_at" => $this->CREATED_AT,
         ];
     }
 
