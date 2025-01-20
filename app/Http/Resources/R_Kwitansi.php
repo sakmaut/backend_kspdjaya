@@ -22,7 +22,7 @@ class R_Kwitansi extends JsonResource
         $details = M_KwitansiStructurDetail::where('no_invoice', $this->NO_TRANSAKSI)
                                             ->where('installment', '!=', '0')
                                             ->orderByRaw('CAST(angsuran_ke AS SIGNED) ASC')
-                                            ->toArray();
+                                            ->get();
 
         return $details;
 
