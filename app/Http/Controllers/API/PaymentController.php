@@ -275,7 +275,7 @@ class PaymentController extends Controller
             M_PaymentDetail::create($data);
             $this->addCreditPaid($loan_number, ['BAYAR_DENDA' => $bayar_denda]);
 
-            $updates['PAID_PENALTY'] = $new_penalty;
+            $updates['PAID_PENALTY'] = $bayar_denda != 0 ? $new_penalty : $getPenalty;
             $updates['END_DATE'] = now();   
             $updates['UPDATED_AT'] = now();           
             
