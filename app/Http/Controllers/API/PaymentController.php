@@ -144,8 +144,9 @@ class PaymentController extends Controller
         ])->first();
 
         $byr_angsuran = $res['bayar_angsuran'];
+        $flag = $res['flag'];
 
-        if ($credit_schedule && $byr_angsuran != 0) {
+        if ($credit_schedule && $byr_angsuran != 0 && $flag != 'PAID') {
             
             $payment_value = $byr_angsuran + $credit_schedule->PAYMENT_VALUE;
 
