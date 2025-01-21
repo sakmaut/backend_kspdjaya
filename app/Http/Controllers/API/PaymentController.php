@@ -224,7 +224,7 @@ class PaymentController extends Controller
         $byr_angsuran = $res['bayar_angsuran'];
         $bayar_denda = $res['bayar_denda'];
 
-        if ($check_arrears && $bayar_denda != 0) {
+        if ($check_arrears) {
             $current_penalty = $check_arrears->PAID_PENALTY;
 
             $new_penalty = $current_penalty + $bayar_denda;
@@ -712,11 +712,19 @@ class PaymentController extends Controller
                     ])->first();
 
                     if($arrearsCheck){
+
                         $arrearsCheck->update([
-                            'STATUS_REC' => 'A',
-                            'PAID_PCPL' =>  floatval($arrearsCheck->PAID_PCPL??0) -  floatval($resList['PRINCIPAL']??0),
-                            'PAID_INT' =>  floatval($arrearsCheck->PAID_INT??0) -  floatval($resList['INTEREST']??0),
-                            'PAID_PENALTY' => floatval($arrearsCheck->PAID_PENALTY ?? 0) - floatval($resList['PENALTY'] ?? 0)
+                            'PAID_PCPL' => $resList['PRINCIPAL'] != 0 ? floatval($arrearsCheck->PAID_PCPL ?? 0) - floatval($resList['PRINCIPAL'] ?? 0) : floatval($arrearsCheck->PAID_PCPL ?? 0),
+                            'PAID_INT' => $resList['INTEREST'] != 0 ? floatval($arrearsCheck->PAID_INT ?? 0) - floatval($resList['INTEREST'] ?? 0) : floatval($arrearsCheck->PAID_INT ?? 0),
+                            'PAID_PENALTY' => $resList['PENALTY'] != 0 ? floatval($arrearsCheck->PAID_PENALTY ?? 0) - floatval($resList['PENALTY'] ?? 0) : floatval($arrearsCheck->PAID_PENALTY ?? 0),
+                        ]);
+                        
+                        $setStatus = $arrearsCheck->PAST_DUE_PCPL == $arrearsCheck->PAID_PCPL && 
+                                     $arrearsCheck->PAST_DUE_INTRST == $arrearsCheck->PAID_INT && 
+                                     $arrearsCheck->PAST_DUE_PENALTY == $arrearsCheck->PAID_PENALTY;
+                        
+                        $arrearsCheck->update([
+                            'STATUS_REC' => $setStatus ? 'S' : 'A', 
                         ]);
                     }
                 }
