@@ -702,7 +702,7 @@ class PaymentController extends Controller
                             'PAYMENT_VALUE_INTEREST' => $resList['INTEREST'] != 0 ? floatval($creditScheduleCheck->PAYMENT_VALUE_INTEREST??0) -  floatval($resList['INTEREST']??0):floatval($creditScheduleCheck->PAYMENT_VALUE_INTEREST??0),
                             'INSUFFICIENT_PAYMENT' => $resList['AMOUNT'] != 0 ? ((floatval($resList['PRINCIPAL']??0)  + floatval($resList['INTEREST']??0)) - $creditScheduleCheck->INSTALLMENT??0) -  floatval($creditScheduleCheck->INSUFFICIENT_PAYMENT??0):floatval($creditScheduleCheck->INSUFFICIENT_PAYMENT??0),
                             'PAYMENT_VALUE' => $resList['AMOUNT'] != 0 ? floatval($creditScheduleCheck->PAYMENT_VALUE ?? 0) - floatval($resList['AMOUNT'] ?? 0):floatval($creditScheduleCheck->PAYMENT_VALUE ?? 0),
-                            'PAID_FLAG' => $creditScheduleCheck->INSTALLMENT == $creditScheduleCheck->PAYMENT_VALUE_PRINCIPAL ? 'PAID' :''
+                            'PAID_FLAG' => floatval($creditScheduleCheck->INSTALLMENT) == floatval($creditScheduleCheck->PAYMENT_VALUE_PRINCIPAL) ? 'PAID' :''
                         ]);
                     }
 
