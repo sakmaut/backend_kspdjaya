@@ -32,7 +32,7 @@ class R_Kwitansi extends JsonResource
                                                     'principal_remains',
                                                     'payment', 
                                                     'bayar_angsuran',
-                                                     DB::raw('COALESCE(bayar_denda, 0) as bayar_denda'), 
+                                                     DB::raw('COALESCE(bayar_denda, "0") as bayar_denda'), 
                                                     'total_bayar',
                                                     'flag', 
                                                     'denda')
