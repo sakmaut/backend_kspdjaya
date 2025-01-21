@@ -53,6 +53,7 @@ class PaymentController extends Controller
             $getCodeBranch = M_Branch::findOrFail($request->user()->branch_id);
 
             $customer_data = null; 
+            $this->saveKwitansi($request, $customer_data, $no_inv);
 
             if (isset($request->struktur) && is_array($request->struktur)) {
                 foreach ($request->struktur as $res) {
@@ -104,12 +105,8 @@ class PaymentController extends Controller
                     }
                 }
             }
-            
-            $this->saveKwitansi($request, $customer_data, $no_inv);
 
-            if($request->penangguhan_denda != 'yes'){
-                $this->updateTunggakkanBunga($request);
-            }
+            // $this->updateTunggakkanBunga($request);
 
             $data = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
 
@@ -132,7 +129,13 @@ class PaymentController extends Controller
         $uid = Uuid::uuid7()->toString();
 
         $this->updateCreditSchedule($loan_number, $tgl_angsuran, $res,$uid);
-        $this->updateArrears($loan_number, $tgl_angsuran, $res,$uid);
+
+        if($request->diskon_tunggakan != 0 || $request->diskon_tunggakan != ''){
+            $this->updateDiscountArrears($loan_number, $tgl_angsuran, $res,$uid);
+        }else{
+            $this->updateArrears($loan_number, $tgl_angsuran, $res,$uid);
+        }
+
         $this->createPaymentRecords($request, $res, $tgl_angsuran, $loan_number, $no_inv, $getCodeBranch,$uid);
     }
 
@@ -213,6 +216,79 @@ class PaymentController extends Controller
             $credit_schedule->update(['PAID_FLAG' => $credit_schedule->PAYMENT_VALUE >= $credit_schedule->INSTALLMENT ? 'PAID' : '']);
 
         }
+    }
+
+    private function updateDiscountArrears($loan_number, $tgl_angsuran,$res,$uid)
+    {
+        $check_arrears = M_Arrears::where([
+            'LOAN_NUMBER' => $loan_number,
+            'START_DATE' => $tgl_angsuran
+        ])->first();
+
+        $byr_angsuran = $res['bayar_angsuran'];
+        $bayar_denda = $res['bayar_denda'];
+
+        if ($check_arrears) {
+            $current_penalty = $check_arrears->PAID_PENALTY;
+
+            $new_penalty = $current_penalty + $bayar_denda;
+
+            $valBeforePrincipal = $check_arrears->PAID_PCPL;
+            $valBeforeInterest = $check_arrears->PAID_INT;
+            $getPrincipal = $check_arrears->PAST_DUE_PCPL;
+            $getInterest = $check_arrears->PAST_DUE_INTRST;
+            $getPenalty = $check_arrears->PAST_DUE_PENALTY;
+
+            $new_payment_value_principal = $valBeforePrincipal;
+            $new_payment_value_interest = $valBeforeInterest;
+
+            if ($valBeforePrincipal < $getPrincipal) {
+                $remaining_to_principal = $getPrincipal - $valBeforePrincipal;
+
+                if ($byr_angsuran >= $remaining_to_principal) {
+                    $new_payment_value_principal = $getPrincipal;
+                    $remaining_payment = $byr_angsuran - $remaining_to_principal;
+                } else {
+                    $new_payment_value_principal += $byr_angsuran;
+                    $remaining_payment = 0;
+                }
+            } else {
+                $remaining_payment = $byr_angsuran;
+            }
+
+            if ($new_payment_value_principal == $getPrincipal) {
+                if ($valBeforeInterest < $getInterest) {
+                    $new_payment_value_interest = min($valBeforeInterest + $remaining_payment, $getInterest);
+                }
+            }
+
+            $updates = [];
+            if ($new_payment_value_principal !== $valBeforePrincipal) {
+                $updates['PAID_PCPL'] = $new_payment_value_principal;
+            }
+
+            if ($new_payment_value_interest !== $valBeforeInterest) {
+                $updates['PAID_INT'] = $new_payment_value_interest;
+            }
+
+            $data = $this->preparePaymentData($uid, 'BAYAR_DENDA', $bayar_denda);
+            M_PaymentDetail::create($data);
+            $this->addCreditPaid($loan_number, ['BAYAR_DENDA' => $bayar_denda]);
+
+            $updates['PAID_PENALTY'] = $new_penalty;
+            $updates['END_DATE'] = now();   
+            $updates['UPDATED_AT'] = now();           
+            
+            if (!empty($updates)) {
+                $check_arrears->update($updates);
+            }
+
+            $total1= floatval($new_payment_value_principal) + floatval($new_payment_value_interest) + floatval($new_penalty);
+            $total2= floatval($getPrincipal) + floatval($getInterest) + floatval($getPenalty);
+
+            $check_arrears->update(['STATUS_REC' => 'D']);
+        }
+
     }
 
     private function updateArrears($loan_number, $tgl_angsuran,$res,$uid)
