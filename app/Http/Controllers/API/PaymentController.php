@@ -47,7 +47,6 @@ class PaymentController extends Controller
     {
         DB::beginTransaction();
         try {
-
             $no_inv = generateCodeKwitansi($request, 'kwitansi', 'NO_TRANSAKSI', 'INV');
 
             $getCodeBranch = M_Branch::findOrFail($request->user()->branch_id);
@@ -105,6 +104,8 @@ class PaymentController extends Controller
                     }
                 }
             }
+
+            $this->updateCredit($request->no_facility);
 
             $data = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
 
@@ -213,6 +214,31 @@ class PaymentController extends Controller
 
             $credit_schedule->update(['PAID_FLAG' => $credit_schedule->PAYMENT_VALUE >= $credit_schedule->INSTALLMENT ? 'PAID' : '']);
 
+        }
+    }
+
+    private function updateCredit($loan_number){
+
+        $check_credit = M_Credit::where(['LOAN_NUMBER' => $loan_number])->first();
+
+        $checkCreditSchedule = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)
+            ->where(function ($query) {
+                $query->where('PAID_FLAG', '')
+                ->orWhereNull('PAID_FLAG');
+            })
+            ->first();
+
+        $checkArrears = M_Arrears::where([
+            'LOAN_NUMBER' => $loan_number,
+            'STATUS_REC' => 'A'
+        ])->first();
+
+        $status = !$checkCreditSchedule && !$checkArrears ? 'D' : 'A';
+
+        if ($check_credit) {
+            $check_credit->update([
+                'STATUS' => $status,
+            ]);
         }
     }
 
@@ -480,25 +506,10 @@ class PaymentController extends Controller
                 $paidInterest = isset($data['ANGSURAN_BUNGA']) ? $data['ANGSURAN_BUNGA'] :0;
                 $paidPenalty = isset($data['BAYAR_DENDA'])? $data['BAYAR_DENDA'] : 0;
 
-                $checkCreditSchedule = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)
-                    ->where(function ($query) {
-                        $query->where('PAID_FLAG', '')
-                        ->orWhereNull('PAID_FLAG');
-                    })
-                    ->first();
-
-                $checkArrears = M_Arrears::where([
-                    'LOAN_NUMBER' => $loan_number,
-                    'STATUS_REC' => 'A'
-                ])->first();
-
-                $status = !$checkCreditSchedule && !$checkArrears ? 'D' : 'A';
-
                 $check_credit->update([
                     'PAID_PRINCIPAL' => floatval($check_credit->PAID_PRINCIPAL) + floatval($paidPrincipal),
                     'PAID_INTEREST' => floatval($check_credit->PAID_INTEREST) + floatval($paidInterest),
-                    'PAID_PENALTY' => floatval($check_credit->PAID_PENALTY) + floatval($paidPenalty),
-                    'STATUS' => $status,
+                    'PAID_PENALTY' => floatval($check_credit->PAID_PENALTY) + floatval($paidPenalty)
                 ]);
             }
     }
