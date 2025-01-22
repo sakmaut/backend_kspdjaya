@@ -9,6 +9,7 @@ use App\Models\M_PaymentAttachment;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\DB;
 
 class R_Kwitansi extends JsonResource
 {
@@ -19,14 +20,31 @@ class R_Kwitansi extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        // Retrieve payment and related data
-        $details = M_KwitansiStructurDetail::where('no_invoice', $this->NO_TRANSAKSI)
+        $details = M_KwitansiStructurDetail::select('id', 
+                                                    'no_invoice', 
+                                                    'key',
+                                                    'angsuran_ke', 
+                                                    'loan_number', 
+                                                    'tgl_angsuran', 
+                                                    'principal', 
+                                                    'interest', 
+                                                    'installment', 
+                                                    'principal_remains',
+                                                    'payment', 
+                                                    'bayar_angsuran',
+                                                    DB::raw('CASE WHEN bayar_denda = 0 THEN 0 ELSE COALESCE(bayar_denda, 0) END as bayar_denda'),
+                                                    'total_bayar',
+                                                    'flag', 
+                                                    'denda')
+                                            ->where('no_invoice', $this->NO_TRANSAKSI)
                                             ->where(function($query) {
                                                 $query->where('installment', '<>', 0)
                                                     ->orWhere('bayar_denda', '<>', 0);
                                             })
                                             ->orderByRaw('CAST(angsuran_ke AS SIGNED) ASC')
                                             ->get();
+                                        
+        
 
         $branch = M_Branch::where('ID', $this->BRANCH_CODE)->first();
         $attachment = M_PaymentAttachment::where('payment_id', $this->PAYMENT_ID)->value('file_attach') ?? null;
@@ -51,8 +69,8 @@ class R_Kwitansi extends JsonResource
             "no_rekening" => $this->NO_REKENING,
             "bukti_transfer" => $this->BUKTI_TRANSFER,
             'installment' => $details->pluck('angsuran_ke')->implode(','),
-            'bayar_angsuran' => $details->sum(fn($item) => (float) $item->bayar_angsuran),
-            'bayar_denda' => $details->sum(fn($item) => (float) $item->bayar_denda),
+            'bayar_angsuran' => $details->sum(fn($item) => (float) $item->bayar_angsuran) ?: 0,
+            'bayar_denda' => $details->sum(fn($item) => (float) $item->bayar_denda) ?: 0,
             "pembulatan" => intval($this->PEMBULATAN ?? 0),
             "kembalian" => intval($this->KEMBALIAN ?? 0),
             "total_bayar" => intval($this->TOTAL_BAYAR ?? 0),
