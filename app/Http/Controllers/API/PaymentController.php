@@ -106,8 +106,6 @@ class PaymentController extends Controller
                 }
             }
 
-            // $this->updateTunggakkanBunga($request);
-
             $data = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
 
             $dto = new R_Kwitansi($data);
@@ -494,7 +492,7 @@ class PaymentController extends Controller
                     'STATUS_REC' => 'A'
                 ])->first();
 
-                $status = (!$checkCreditSchedule && !$checkArrears) ? 'D' : 'A';
+                $status = !$checkCreditSchedule && !$checkArrears ? 'D' : 'A';
 
                 $check_credit->update([
                     'PAID_PRINCIPAL' => floatval($check_credit->PAID_PRINCIPAL) + floatval($paidPrincipal),
