@@ -712,6 +712,7 @@ class PaymentController extends Controller
             $totalPrincipal = 0;
             $totalInterest = 0;
             $totalPenalty = 0;
+            $totalPaidPenalty = 0;
             $creditSchedule = [];
 
             if(!empty($paymentCheck)){
@@ -731,7 +732,8 @@ class PaymentController extends Controller
                             'AMOUNT' => 0,
                             'PRINCIPAL' => 0, 
                             'INTEREST' => 0,  
-                            'PENALTY' => 0
+                            'PENALTY' => 0,
+                            'PAID_PENALTY' => 0
                         ];
                     }
 
@@ -746,6 +748,10 @@ class PaymentController extends Controller
                     elseif ($list->ACC_KEYS === 'BAYAR_DENDA' || $list->ACC_KEYS === 'DISKON_DENDA') {
                         $creditSchedule[$list->START_DATE]['PENALTY'] += floatval($list->amount);
                     }
+
+                    elseif ($list->ACC_KEYS === 'BAYAR_DENDA') {
+                        $creditSchedule[$list->START_DATE]['PAID_PENALTY'] += floatval($list->amount);
+                    }
             
                     $creditSchedule[$list->START_DATE]['AMOUNT'] = $creditSchedule[$list->START_DATE]['PRINCIPAL'] + $creditSchedule[$list->START_DATE]['INTEREST'];
 
@@ -756,6 +762,7 @@ class PaymentController extends Controller
                 $totalPrincipal += $schedule['PRINCIPAL'];
                 $totalInterest += $schedule['INTEREST'];
                 $totalPenalty += $schedule['PENALTY'];
+                $totalPaidPenalty += $schedule['PAID_PENALTY'];
             }
 
             $setPrincipal = round($totalPrincipal, 2);
@@ -769,7 +776,7 @@ class PaymentController extends Controller
                     'STATUS' => 'A',
                     'PAID_PRINCIPAL' => floatval($creditCheck->PAID_PRINCIPAL)-floatval($setPrincipal??0),
                     'PAID_INTEREST' => floatval($creditCheck->PAID_INTEREST??0)-floatval($totalInterest??0),
-                    'PAID_PENALTY' => floatval($creditCheck->PAID_PENALTY??0)-floatval($totalPenalty??0),
+                    'PAID_PENALTY' => floatval($creditCheck->PAID_PENALTY??0)-floatval($totalPaidPenalty??0),
                     'MOD_USER' => $request->user()->id,
                     'MOD_DATE' => Carbon::now(),
                 ]);
