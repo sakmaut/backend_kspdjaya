@@ -229,10 +229,6 @@ class PaymentController extends Controller
         $bayar_denda = $res['bayar_denda'];
 
         if ($check_arrears) {
-            $current_penalty = $check_arrears->PAID_PENALTY;
-
-            $new_penalty = $current_penalty + $bayar_denda;
-
             $valBeforePrincipal = $check_arrears->PAID_PCPL;
             $valBeforeInterest = $check_arrears->PAID_INT;
             $getPrincipal = $check_arrears->PAST_DUE_PCPL;
@@ -271,11 +267,20 @@ class PaymentController extends Controller
                 $updates['PAID_INT'] = $new_payment_value_interest;
             }
 
-            $data = $this->preparePaymentData($uid, 'BAYAR_DENDA', $bayar_denda);
-            M_PaymentDetail::create($data);
-            $this->addCreditPaid($loan_number, ['BAYAR_DENDA' => $bayar_denda]);
+            if($bayar_denda != 0){
+                $paymentData = $this->preparePaymentData($uid, 'BAYAR_DENDA', $bayar_denda);
+                M_PaymentDetail::create($paymentData);
+                $this->addCreditPaid($loan_number, ['BAYAR_DENDA' => $bayar_denda]);
+            }
 
-            $updates['PAID_PENALTY'] = $bayar_denda != 0 ? $new_penalty : $getPenalty;
+            $remainingPenalty = floatval($getPenalty) - floatval($bayar_denda);
+            if ($remainingPenalty > 0) {
+                $discountPaymentData = $this->preparePaymentData($uid, 'DISKON_DENDA', $remainingPenalty);
+                M_PaymentDetail::create($discountPaymentData);
+                $this->addCreditPaid($loan_number, ['DISKON_DENDA' => $remainingPenalty]);
+            }
+
+            $updates['PAID_PENALTY'] = $getPenalty;
             $updates['END_DATE'] = now();   
             $updates['UPDATED_AT'] = now();           
             
@@ -283,10 +288,7 @@ class PaymentController extends Controller
                 $check_arrears->update($updates);
             }
 
-            $total1= floatval($new_payment_value_principal) + floatval($new_payment_value_interest) + floatval($new_penalty);
-            $total2= floatval($getPrincipal) + floatval($getInterest) + floatval($getPenalty);
-
-            $check_arrears->update(['STATUS_REC' => 'D']);
+            $check_arrears->update(['STATUS_REC' =>$remainingPenalty > 0 ? 'D' : 'S']);
         }
 
     }
@@ -440,29 +442,27 @@ class PaymentController extends Controller
 
     function createPaymentRecords($request, $res, $tgl_angsuran, $loan_number, $no_inv, $branch,$uid)
     {
-        if($res['bayar_angsuran'] != 0 && $res['flag'] != 'PAID' || $res['bayar_denda'] != 0){
-            M_Payment::create([
-                'ID' => $uid,
-                'ACC_KEY' => $request->pembayaran ?? '',
-                'STTS_RCRD' => 'PAID',
-                'INVOICE' => $no_inv,
-                'NO_TRX' => $request->uid,
-                'PAYMENT_METHOD' => $request->payment_method,
-                'BRANCH' => $branch->CODE_NUMBER,
-                'LOAN_NUM' => $loan_number,
-                'VALUE_DATE' => null,
-                'ENTRY_DATE' => now(),
-                'SUSPENSION_PENALTY_FLAG' => $request->penangguhan_denda ?? '',
-                'TITLE' => 'Angsuran Ke-' . $res['angsuran_ke'],
-                'ORIGINAL_AMOUNT' => ($res['bayar_angsuran'] + $res['bayar_denda']),
-                'OS_AMOUNT' => $os_amount ?? 0,
-                'START_DATE' => $tgl_angsuran,
-                'END_DATE' => now(),
-                'USER_ID' => $request->user()->id,
-                'ARREARS_ID' => $res['id_arrear'] ?? '',
-                'BANK_NAME' => round(microtime(true) * 1000)
-            ]);
-        }
+        M_Payment::create([
+            'ID' => $uid,
+            'ACC_KEY' => $res['flag'] == 'PAID' ? 'angsuran_denda' : $request->pembayaran ?? '',
+            'STTS_RCRD' => 'PAID',
+            'INVOICE' => $no_inv,
+            'NO_TRX' => $request->uid,
+            'PAYMENT_METHOD' => $request->payment_method,
+            'BRANCH' => $branch->CODE_NUMBER,
+            'LOAN_NUM' => $loan_number,
+            'VALUE_DATE' => null,
+            'ENTRY_DATE' => now(),
+            'SUSPENSION_PENALTY_FLAG' => $request->penangguhan_denda ?? '',
+            'TITLE' => 'Angsuran Ke-' . $res['angsuran_ke'],
+            'ORIGINAL_AMOUNT' => ($res['bayar_angsuran'] + $res['bayar_denda']),
+            'OS_AMOUNT' => $os_amount ?? 0,
+            'START_DATE' => $tgl_angsuran,
+            'END_DATE' => now(),
+            'USER_ID' => $request->user()->id,
+            'ARREARS_ID' => $res['id_arrear'] ?? '',
+            'BANK_NAME' => round(microtime(true) * 1000)
+        ]);
     }
 
     function preparePaymentData($payment_id,$acc_key, $amount)
