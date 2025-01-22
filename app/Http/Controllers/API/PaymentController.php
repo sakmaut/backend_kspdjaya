@@ -747,9 +747,9 @@ class PaymentController extends Controller
 
                     elseif ($list->ACC_KEYS === 'BAYAR_DENDA') {
                         $creditSchedule[$list->START_DATE]['PAID_PENALTY'] += floatval($list->amount);
+                        $creditSchedule[$list->START_DATE]['PENALTY'] += floatval($list->amount);
                     }
-                    
-                    elseif ($list->ACC_KEYS === 'BAYAR_DENDA' || $list->ACC_KEYS === 'DISKON_DENDA') {
+                    elseif ($list->ACC_KEYS === 'DISKON_DENDA') {
                         $creditSchedule[$list->START_DATE]['PENALTY'] += floatval($list->amount);
                     }
             
