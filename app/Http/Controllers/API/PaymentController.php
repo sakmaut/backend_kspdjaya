@@ -52,6 +52,8 @@ class PaymentController extends Controller
             $getCodeBranch = M_Branch::findOrFail($request->user()->branch_id);
 
             $customer_data = null; 
+            $check_method_payment = strtolower($request->payment_method) === 'cash';
+            
             $this->saveKwitansi($request, $customer_data, $no_inv);
 
             if (isset($request->struktur) && is_array($request->struktur)) {
@@ -72,8 +74,6 @@ class PaymentController extends Controller
                             ];
                         }
                     }
-
-                    $check_method_payment = strtolower($request->payment_method) === 'cash';
 
                     M_KwitansiStructurDetail::create([
                         "no_invoice" => $no_inv,
@@ -97,10 +97,13 @@ class PaymentController extends Controller
                         $this->processPaymentStructure($res, $request, $getCodeBranch, $no_inv);
                     } else {
                         $tgl_angsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
-                        M_CreditSchedule::where([
-                            'LOAN_NUMBER' => $res['loan_number'],
-                            'PAYMENT_DATE' => $tgl_angsuran
-                        ])->update(['PAID_FLAG' => 'PENDING']);
+
+                        if($res['installment'] != 0 && $res['bayar_angsuran'] != 0){
+                            M_CreditSchedule::where([
+                                'LOAN_NUMBER' => $res['loan_number'],
+                                'PAYMENT_DATE' => $tgl_angsuran
+                            ])->update(['PAID_FLAG' => 'PENDING']);
+                        }
                     }
                 }
             }

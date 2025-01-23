@@ -122,33 +122,221 @@ class PelunasanController extends Controller
             $uid = Uuid::uuid7()->toString();
             $no_inv = generateCodeKwitansi($request, 'kwitansi', 'NO_TRANSAKSI', 'INV');
     
-            M_CreditSchedule::where('LOAN_NUMBER', $loan_number)->firstOrFail();
             $credit = M_Credit::where('LOAN_NUMBER', $loan_number)->firstOrFail();
+
             $detail_customer = M_Customer::where('CUST_CODE', $credit->CUST_CODE)->firstOrFail();
-    
-            $this->updateCredit($credit, $request);
-            $this->saveReceipt($request, $detail_customer, $no_inv);
+
+            // $kwitansi = $this->saveKwitansi($request, $detail_customer, $no_inv);
             
-            $status = $this->determineStatus($request);
-            $creditSchedule = $this->getCreditSchedule($loan_number);
-            $arrears = $this->getArrears($loan_number);
+            $discounts = $request->only(['DISKON_POKOK', 'DISKON_PINALTI', 'DISKON_BUNGA', 'DISKON_DENDA']);
+
+            if (array_sum($discounts) > 0){
+                $status = "PENDING";
+            }elseif (strtolower($request->METODE_PEMBAYARAN) === 'transfer') {
+                $status = "PENDING";
+            }else{
+                $status = "PAID";
+            }
     
-            $payment_record = $this->preparePaymentRecord($request, $uid, $no_inv, $status, $creditSchedule);
-            M_Payment::create($payment_record);
+            $getCodeBranch = M_Branch::findOrFail($request->user()->branch_id);
+            // $installmentCounts = $creditSchedule->pluck('INSTALLMENT_COUNT')->join(',');
+        
+            // M_Payment::create([
+            //     'ID' => $uid,
+            //     'ACC_KEY' => 'pelunasan',
+            //     'STTS_RCRD' => $status,
+            //     'INVOICE' => $no_inv,
+            //     'NO_TRX' => $request->uid,
+            //     'PAYMENT_METHOD' => $request->METODE_PEMBAYARAN,
+            //     'BRANCH' => $getCodeBranch->CODE_NUMBER,
+            //     'LOAN_NUM' => $request->LOAN_NUMBER,
+            //     'ENTRY_DATE' => Carbon::now(),
+            //     'TITLE' => 'pelunasan',
+            //     'ORIGINAL_AMOUNT' => $request->TOTAL_BAYAR,
+            //     'OS_AMOUNT' => 0,
+            //     'AUTH_BY' => $request->user()->id,
+            //     'AUTH_DATE' => Carbon::now()
+            // ]);
     
-            $this->handlePaymentsAndDiscounts($uid, $request);
+            // $payments = [
+            //     'BAYAR_POKOK' => 'BAYAR PELUNASAN POKOK',
+            //     'BAYAR_BUNGA' => 'BAYAR PELUNASAN BUNGA',
+            //     'BAYAR_PINALTI' => 'BAYAR PELUNASAN PINALTY',
+            //     'BAYAR_DENDA' => 'BAYAR PELUNASAN DENDA'
+            // ];
+        
+            // foreach ($payments as $key => $description) {
+            //     if ($request->$key != 0) {
+            //         $data = $this->preparePaymentData($uid, $description, $request->$key);
+            //         M_PaymentDetail::create($data);
+            //     }
+            // }
+        
+            // $discounts = [
+            //     'DISKON_POKOK' => 'DISKON POKOK',
+            //     'DISKON_BUNGA' => 'DISKON BUNGA',
+            //     'DISKON_PINALTI' => 'DISKON PINALTY',
+            //     'DISKON_DENDA' => 'DISKON DENDA'
+            // ];
+        
+            // foreach ($discounts as $key => $description) {
+            //     if ($request->$key != 0) {
+            //         $data = $this->preparePaymentData($uid, $description, $request->$key);
+            //         M_PaymentDetail::create($data);
+            //     }
+            // }
+
+            $creditSchedule = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)
+                                            ->where(function($query) {
+                                                $query->where('PAID_FLAG', '!=', 'PAID')->orWhereNull('PAID_FLAG');
+                                            })->get();
+
+            $bayarPokok = $request->BAYAR_POKOK;
+            $bayarDiscountPokok = $request->DISKON_POKOK;
+            $bayarBunga = $request->BAYAR_BUNGA;
+            $bayarDiscountBunga = $request->DISKON_BUNGA;
+
+            $remaining_discount = $bayarDiscountPokok; 
+            $remaining_discount_bunga = $bayarDiscountBunga;
+
+            foreach ($creditSchedule as $res) {
+                // Get current values
+                $valBeforePrincipal = $res['PAYMENT_VALUE_PRINCIPAL'];
+                $valBeforeInterest = $res['PAYMENT_VALUE_INTEREST'];
+                $getPrincipal = $res['PRINCIPAL'];
+                $getInterest = $res['INTEREST'];
+
+                // Initialize new payment values
+                $new_payment_value_principal = $valBeforePrincipal;
+
+                // Apply principal payment logic
+                if ($valBeforePrincipal < $getPrincipal) {
+                    $remaining_to_principal = $getPrincipal - $valBeforePrincipal;
+
+                    // If bayarPokok is enough to cover the remaining principal
+                    if ($bayarPokok >= $remaining_to_principal) {
+                        $new_payment_value_principal = $getPrincipal;
+                        $bayarPokok -= $remaining_to_principal;
+                    } else {
+                        $new_payment_value_principal += $bayarPokok;
+                        $bayarPokok = 0;  // No more bayarPokok to apply
+                    }
+
+                    // Prepare update array for principal
+                    $updates = [];
+                    if ($new_payment_value_principal !== $valBeforePrincipal) {
+                        $updates['PAYMENT_VALUE_PRINCIPAL'] = $new_payment_value_principal;
+                    }
+
+                    if ($remaining_discount > 0) {
+                        // Calculate remaining principal that can still be discounted
+                        $remaining_to_principal_for_discount = $getPrincipal - $new_payment_value_principal;
+
+                        // If the remaining discount can cover the remaining principal
+                        if ($remaining_discount >= $remaining_to_principal_for_discount) {
+                            $updates['DISCOUNT_PRINCIPAL'] = $remaining_to_principal_for_discount;
+                            $new_payment_value_principal += $remaining_to_principal_for_discount; // Apply discount
+                            $remaining_discount -= $remaining_to_principal_for_discount; // Reduce the discount
+                        } else {
+                            // If the discount can't fully cover the remaining principal
+                            $updates['DISCOUNT_PRINCIPAL'] = $remaining_discount;
+                            $new_payment_value_principal += $remaining_discount; // Apply discount
+                            $remaining_discount = 0; // No more discount left
+                        }
+                    }
+
+                    if ($valBeforeInterest < $getInterest) {
+                        $remaining_to_interest = $getInterest - $valBeforeInterest;
+                        $interestUpdates = $this->hitungBunga($bayarBunga, $remaining_to_interest, $remaining_discount_bunga, $res);
+                        $bayarBunga = $interestUpdates['bayarBunga']; // Update the remaining bayarBunga
+                        $remaining_discount_bunga = $interestUpdates['remaining_discount_bunga']; // Update the remaining discount for bunga
+                    }
+
+                    if (!empty($updates)) {
+                        $res->update($updates);
+                    }
+                }
+
+                $res->update(['PAID_FLAG' =>'PAID']);
+                if ($remaining_discount <= 0) {
+                    break;
+                }                
+            }
+
+            // $arrears =  M_Arrears::where(['LOAN_NUMBER' => $loan_number,'STATUS_REC' => 'A'])->get();
+                 
+            // $bayarDenda = $request->BAYAR_DENDA;
+            // $bayarDiscountDenda = $request->DISKON_DENDA;
+
+            // foreach ($arrears as $list) {
+            //         $current_penalty = $check_arrears->PAID_PENALTY;
+        
+            //         $new_penalty = $current_penalty + $bayar_denda;
+        
+            //         $valBeforePrincipal = $check_arrears->PAID_PCPL;
+            //         $valBeforeInterest = $check_arrears->PAID_INT;
+            //         $getPrincipal = $check_arrears->PAST_DUE_PCPL;
+            //         $getInterest = $check_arrears->PAST_DUE_INTRST;
+            //         $getPenalty = $check_arrears->PAST_DUE_PENALTY;
+        
+            //         $new_payment_value_principal = $valBeforePrincipal;
+            //         $new_payment_value_interest = $valBeforeInterest;
+        
+            //         if ($valBeforePrincipal < $getPrincipal) {
+            //             $remaining_to_principal = $getPrincipal - $valBeforePrincipal;
+        
+            //             if ($byr_angsuran >= $remaining_to_principal) {
+            //                 $new_payment_value_principal = $getPrincipal;
+            //                 $remaining_payment = $byr_angsuran - $remaining_to_principal;
+            //             } else {
+            //                 $new_payment_value_principal += $byr_angsuran;
+            //                 $remaining_payment = 0;
+            //             }
+            //         } else {
+            //             $remaining_payment = $byr_angsuran;
+            //         }
+        
+            //         if ($new_payment_value_principal == $getPrincipal) {
+            //             if ($valBeforeInterest < $getInterest) {
+            //                 $new_payment_value_interest = min($valBeforeInterest + $remaining_payment, $getInterest);
+            //             }
+            //         }
+        
+            //         $updates = [];
+            //         if ($new_payment_value_principal !== $valBeforePrincipal) {
+            //             $updates['PAID_PCPL'] = $new_payment_value_principal;
+            //         }
+        
+            //         if ($new_payment_value_interest !== $valBeforeInterest) {
+            //             $updates['PAID_INT'] = $new_payment_value_interest;
+            //         }
+        
+            //         $data = $this->preparePaymentData($uid, 'BAYAR_DENDA', $bayar_denda);
+            //         M_PaymentDetail::create($data);
+            //         $this->addCreditPaid($loan_number, ['BAYAR_DENDA' => $bayar_denda]);
+        
+            //         $updates['PAID_PENALTY'] = $new_penalty;
+            //         $updates['END_DATE'] = now();   
+            //         $updates['UPDATED_AT'] = now();           
+                    
+            //         if (!empty($updates)) {
+            //             $check_arrears->update($updates);
+            //         }
+        
+            //         $total1= floatval($new_payment_value_principal) + floatval($new_payment_value_interest) + floatval($new_penalty);
+            //         $total2= floatval($getPrincipal) + floatval($getInterest) + floatval($getPenalty);
+        
+            //         if ($total1 == $total2) {
+            //             $check_arrears->update(['STATUS_REC' => 'S']);
+            //         }
+            // }
+            
+
     
-            $this->processInstallments($creditSchedule, $request);
-            $this->processArrears($arrears, $request);
-    
-            $response = $this->prepareResponse($no_inv, $detail_customer, $request);
+            // $response = $this->prepareResponse($no_inv, $detail_customer, $request);
             DB::commit();
     
-            return response()->json($response, 200);
-        } catch (QueryException $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($request, $e->getMessage(), 409);
-            return response()->json(['message' => $e->getMessage()], 409);
+            return response()->json('ok', 200);
         } catch (\Exception $e) {
             DB::rollback();
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
@@ -156,34 +344,50 @@ class PelunasanController extends Controller
         }
     }
 
-    private function processArrears($arrears, $request)
+    function hitungBunga($bayarBunga, $remaining_to_interest, $remaining_discount_bunga, $res)
     {
-        $bayarPokok = $request->input('BAYAR_POKOK');
-        $bayarBunga = $request->input('BAYAR_BUNGA');
-        $bayarPinalty = $request->input('BAYAR_PINALTI');
-    
-        $tolerance = 0.3;
-        foreach ($arrears as $res) {
-            $payment_value_principal = min($bayarPokok, $res['PAST_DUE_PCPL']);
-            $bayarPokok -= $payment_value_principal;
-    
-            $payment_value_interest = min($bayarBunga, $res['PAST_DUE_INTRST']);
-            $bayarBunga -= $payment_value_interest;
+        $new_payment_value_interest = $res['PAYMENT_VALUE_INTEREST'];
+        $interestUpdates = [];
 
-            $payment_penalty = min($bayarPinalty, $res['PAST_DUE_PENALTY']);
-            $bayarPinalty -= $payment_penalty;
-    
-            $res->update([
-                'PAID_PCPL' => $payment_value_principal,
-                'PAID_INT' => $payment_value_interest,
-                'PAID_PENALTY' => $payment_penalty,
-                'STATUS_REC' => (abs($payment_value_principal - $res['PAST_DUE_PCPL']) <= $tolerance) && (abs($payment_value_interest - $res['PAST_DUE_INTRST']) <= $tolerance) ? 'S' : 'A'
-            ]);
-    
-            if ($bayarPokok <= 0 && $bayarBunga <= 0) {
-                break;
+        // If bayarBunga is enough to cover the remaining interest
+        if ($bayarBunga >= $remaining_to_interest) {
+            $new_payment_value_interest = $res['INTEREST'];
+            $bayarBunga -= $remaining_to_interest;
+        } else {
+            $new_payment_value_interest += $bayarBunga;
+            $bayarBunga = 0;  // No more bayarBunga to apply
+        }
+
+        if ($new_payment_value_interest !== $res['PAYMENT_VALUE_INTEREST']) {
+            $interestUpdates['PAYMENT_VALUE_INTEREST'] = $new_payment_value_interest;
+        }
+
+        // Apply discount to bunga
+        if ($remaining_discount_bunga > 0) {
+            $remaining_to_interest_for_discount = $res['INTEREST'] - $new_payment_value_interest;
+
+            // If the remaining discount can cover the remaining interest
+            if ($remaining_discount_bunga >= $remaining_to_interest_for_discount) {
+                $interestUpdates['DISCOUNT_INTEREST'] = $remaining_to_interest_for_discount;
+                $new_payment_value_interest += $remaining_to_interest_for_discount; // Apply discount
+                $remaining_discount_bunga -= $remaining_to_interest_for_discount; // Reduce the discount
+            } else {
+                // If the discount can't fully cover the remaining interest
+                $interestUpdates['DISCOUNT_INTEREST'] = $remaining_discount_bunga;
+                $new_payment_value_interest += $remaining_discount_bunga; // Apply discount
+                $remaining_discount_bunga = 0; // No more discount left
             }
         }
+
+        // Update the record if there are any changes
+        if (!empty($interestUpdates)) {
+            $res->update($interestUpdates);
+        }
+
+        return [
+            'bayarBunga' => $bayarBunga,
+            'remaining_discount_bunga' => $remaining_discount_bunga
+        ];
     }
     
     private function updateCredit($credit, $request)
@@ -196,7 +400,7 @@ class PelunasanController extends Controller
         ]);
     }
     
-    private function saveReceipt($request, $customer, $no_inv)
+    private function saveKwitansi($request, $customer, $no_inv)
     {
         $data = [
             "PAYMENT_TYPE" => 'pelunasan',
@@ -226,89 +430,6 @@ class PelunasanController extends Controller
         ];
     
         M_Kwitansi::create($data);
-
-    }
-    
-    private function determineStatus($request)
-    {
-        $discounts = $request->only(['DISKON_POKOK', 'DISKON_PINALTI', 'DISKON_BUNGA', 'DISKON_DENDA']);
-
-        if (array_sum($discounts) > 0){
-            $val = "PENDING";
-        }elseif (strtolower($request->METODE_PEMBAYARAN) === 'transfer') {
-            $val = "PENDING";
-        }else{
-            $val = "PAID";
-        }
-
-        return $val ;
-    }
-    
-    private function getCreditSchedule($loan_number)
-    {
-        return M_CreditSchedule::where('LOAN_NUMBER', $loan_number)
-            ->where(function($query) {
-                $query->where('PAID_FLAG', '!=', 'PAID')->orWhereNull('PAID_FLAG');
-            })->get();
-    }
-
-    private function getArrears($loan_number)
-    {
-        return M_Arrears::where(['LOAN_NUMBER' => $loan_number,'STATUS_REC' => 'A'])->get();
-    }
-    
-    private function preparePaymentRecord($request, $uid, $no_inv, $status, $creditSchedule)
-    {
-        $getCodeBranch = M_Branch::findOrFail($request->user()->branch_id);
-        $installmentCounts = $creditSchedule->pluck('INSTALLMENT_COUNT')->join(',');
-    
-        return [
-            'ID' => $uid,
-            'ACC_KEY' => 'pelunasan',
-            'STTS_RCRD' => $status,
-            'INVOICE' => $no_inv,
-            'NO_TRX' => $request->uid,
-            'PAYMENT_METHOD' => $request->METODE_PEMBAYARAN,
-            'BRANCH' => $getCodeBranch->CODE_NUMBER,
-            'LOAN_NUM' => $request->LOAN_NUMBER,
-            'ENTRY_DATE' => Carbon::now(),
-            'TITLE' => 'Angsuran Ke-' . $installmentCounts,
-            'ORIGINAL_AMOUNT' => $request->TOTAL_BAYAR,
-            'OS_AMOUNT' => 0,
-            'AUTH_BY' => $request->user()->id,
-            'AUTH_DATE' => Carbon::now()
-        ];
-    }
-    
-    private function handlePaymentsAndDiscounts($uid, $request)
-    {
-        $payments = [
-            'BAYAR_POKOK' => 'PELUNASAN POKOK',
-            'BAYAR_BUNGA' => 'BAYAR PELUNASAN BUNGA',
-            'BAYAR_PINALTI' => 'BAYAR PELUNASAN PINALTY',
-            'BAYAR_DENDA' => 'BAYAR PELUNASAN DENDA'
-        ];
-    
-        foreach ($payments as $key => $description) {
-            if ($request->$key != 0) {
-                $data = $this->preparePaymentData($uid, $description, $request->$key);
-                M_PaymentDetail::create($data);
-            }
-        }
-    
-        $discounts = [
-            'DISKON_POKOK' => 'DISKON POKOK',
-            'DISKON_BUNGA' => 'DISKON BUNGA',
-            'DISKON_PINALTI' => 'DISKON PINALTY',
-            'DISKON_DENDA' => 'DISKON DENDA'
-        ];
-    
-        foreach ($discounts as $key => $description) {
-            if ($request->$key != 0) {
-                $data = $this->preparePaymentData($uid, $description, $request->$key);
-                M_PaymentDetail::create($data);
-            }
-        }
     }
 
     function preparePaymentData($payment_id,$acc_key, $amount)
@@ -318,32 +439,6 @@ class PelunasanController extends Controller
             'ACC_KEYS' => $acc_key,
             'ORIGINAL_AMOUNT' => $amount
         ];
-    }
-    
-    private function processInstallments($creditSchedule, $request)
-    {
-        $bayarPokok = $request->input('BAYAR_POKOK');
-        $bayarBunga = $request->input('BAYAR_BUNGA');
-    
-        $tolerance = 0.3;
-        foreach ($creditSchedule as $res) {
-            $payment_value_principal = min($bayarPokok, $res['PRINCIPAL']);
-            $bayarPokok -= $payment_value_principal;
-    
-            $payment_value_interest = min($bayarBunga, $res['INTEREST']);
-            $bayarBunga -= $payment_value_interest;
-    
-            $res->update([
-                'PAYMENT_VALUE_PRINCIPAL' => $payment_value_principal,
-                'PAYMENT_VALUE_INTEREST' => $payment_value_interest,
-                'PAYMENT_VALUE' => $payment_value_principal + $payment_value_interest,
-                'PAID_FLAG' => abs($payment_value_principal - $res['PRINCIPAL']) <= $tolerance ? 'PAID' : ''
-            ]);
-    
-            if ($bayarPokok <= 0 && $bayarBunga <= 0) {
-                break;
-            }
-        }
     }
     
     private function prepareResponse($no_inv, $customer, $request)
