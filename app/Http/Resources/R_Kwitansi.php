@@ -82,7 +82,7 @@ class R_Kwitansi extends JsonResource
             'struktur' => $details,
             "STATUS" => $this->STTS_PAYMENT ?? null,
             "created_by" => $this->CREATED_BY,
-            "print_ke" =>  $logPrint->COUNT??'',
+            "print_ke" =>  intval($logPrint->COUNT)??'',
         ];
     }
 
