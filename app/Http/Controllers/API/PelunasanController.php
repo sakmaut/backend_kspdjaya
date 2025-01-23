@@ -122,8 +122,8 @@ class PelunasanController extends Controller
             $uid = Uuid::uuid7()->toString();
             $no_inv = generateCodeKwitansi($request, 'kwitansi', 'NO_TRANSAKSI', 'INV');
     
-            M_CreditSchedule::where('LOAN_NUMBER', $loan_number)->firstOrFail();
             $credit = M_Credit::where('LOAN_NUMBER', $loan_number)->firstOrFail();
+            
             $detail_customer = M_Customer::where('CUST_CODE', $credit->CUST_CODE)->firstOrFail();
     
             $this->updateCredit($credit, $request);
@@ -145,10 +145,6 @@ class PelunasanController extends Controller
             DB::commit();
     
             return response()->json($response, 200);
-        } catch (QueryException $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($request, $e->getMessage(), 409);
-            return response()->json(['message' => $e->getMessage()], 409);
         } catch (\Exception $e) {
             DB::rollback();
             ActivityLogger::logActivity($request, $e->getMessage(), 500);

@@ -46,38 +46,54 @@ class ListBanController extends Controller
 
     private function queryArusKas($cabangId = null,$dateFrom = null, $dateTo = null) {
 
-        $query = "SELECT * 
-              FROM (
-                    SELECT 
-                        CASE 
-                            WHEN c.ID IS NOT NULL AND a.ACC_KEYS LIKE '%POKOK%' THEN 'TUNGGAKAN_POKOK'
-                            WHEN c.ID IS NOT NULL AND a.ACC_KEYS LIKE '%BUNGA%' THEN 'TUNGGAKAN_BUNGA'
-                            WHEN c.ID IS NULL AND a.ACC_KEYS LIKE '%POKOK%' THEN 'BAYAR_POKOK'
-                            WHEN c.ID IS NULL AND a.ACC_KEYS LIKE '%BUNGA%' THEN 'TUNGGAKAN_BUNGA'
-                            ELSE 'BAYAR_LAINNYA' 
-                        END AS JENIS, 
-                        b.BRANCH AS BRANCH, 
-                        d.ID AS BRANCH_ID, 
-                        b.ENTRY_DATE, 
-                        a.ORIGINAL_AMOUNT
-                    FROM 
-                        payment_detail a
-                        INNER JOIN payment b ON b.ID = a.PAYMENT_ID
-                        LEFT JOIN arrears c ON c.ID = b.ARREARS_ID
-                        LEFT JOIN branch d on d.CODE_NUMBER = b.BRANCH
-                    UNION
-                    SELECT 
-                        'PENCAIRAN' AS JENIS, 
-                        b.CODE_NUMBER AS BRANCH,
-                        b.ID AS BRANCH_ID, 
-                        a.CREATED_AT AS ENTRY_DATE,
-                        a.PCPL_ORI AS ORIGINAL_AMOUNT
-                    FROM 
-                        credit a
-                        INNER JOIN branch b ON b.id = a.BRANCH
-                    WHERE 
-                        a.STATUS = 'A'
-              ) AS query";
+        $query = "  SELECT 
+                        b.JENIS,
+                        b.BRANCH,
+                        b.BRANCH_ID,
+                        b.ENTRY_DATE,
+                        b.ORIGINAL_AMOUNT,
+                        b.LOAN_NUM,
+                        concat(b3.NAME,' ',b3.ALIAS) as PELANGGAN,
+                        b.PAYMENT_METHOD
+                    FROM (
+                        SELECT 
+                            CASE 
+                                WHEN c.ID IS NOT NULL AND a.ACC_KEYS LIKE '%POKOK%' THEN 'TUNGGAKAN_POKOK'
+                                WHEN c.ID IS NOT NULL AND a.ACC_KEYS LIKE '%BUNGA%' THEN 'TUNGGAKAN_BUNGA'
+                                WHEN c.ID IS NULL AND a.ACC_KEYS LIKE '%POKOK%' THEN 'BAYAR_POKOK'
+                                WHEN c.ID IS NULL AND a.ACC_KEYS LIKE '%BUNGA%' THEN 'TUNGGAKAN_BUNGA'
+                                ELSE 'BAYAR_LAINNYA' 
+                            END AS JENIS, 
+                            b.BRANCH AS BRANCH, 
+                            d.ID AS BRANCH_ID, 
+                            b.ENTRY_DATE, 
+                            a.ORIGINAL_AMOUNT,
+                            b.LOAN_NUM,
+                            b.PAYMENT_METHOD
+                        FROM 
+                            payment_detail a
+                            INNER JOIN payment b ON b.ID = a.PAYMENT_ID
+                            LEFT JOIN arrears c ON c.ID = b.ARREARS_ID
+                            LEFT JOIN branch d ON d.CODE_NUMBER = b.BRANCH
+
+                        UNION ALL
+
+                        SELECT 
+                            'PENCAIRAN' AS JENIS, 
+                            b.CODE_NUMBER AS BRANCH,
+                            b.ID AS BRANCH_ID, 
+                            a.CREATED_AT AS ENTRY_DATE,
+                            a.PCPL_ORI AS ORIGINAL_AMOUNT,
+                            a.LOAN_NUMBER AS LOAN_NUM,
+                            'cash' as PAYMENT_METHOD
+                        FROM 
+                            credit a
+                            INNER JOIN branch b ON b.id = a.BRANCH
+                        WHERE 
+                            a.STATUS = 'A'
+                    ) AS b
+                    INNER JOIN credit b2 ON b2.LOAN_NUMBER = b.LOAN_NUM
+                    INNER JOIN customer b3 on b3.CUST_CODE = b2.CUST_CODE;";
 
             $params = [];
 
