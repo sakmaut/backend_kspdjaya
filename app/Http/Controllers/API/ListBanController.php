@@ -93,7 +93,8 @@ class ListBanController extends Controller
                             a.STATUS = 'A'
                     ) AS b
                     INNER JOIN credit b2 ON b2.LOAN_NUMBER = b.LOAN_NUM
-                    INNER JOIN customer b3 on b3.CUST_CODE = b2.CUST_CODE";
+                    INNER JOIN customer b3 on b3.CUST_CODE = b2.CUST_CODE
+                    WHERE (1=1)";
 
             $params = [];
 
