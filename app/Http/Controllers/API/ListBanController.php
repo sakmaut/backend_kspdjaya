@@ -63,7 +63,7 @@ class ListBanController extends Controller
                                 WHEN c.ID IS NOT NULL AND a.ACC_KEYS LIKE '%POKOK%' THEN 'TUNGGAKAN_POKOK'
                                 WHEN c.ID IS NOT NULL AND a.ACC_KEYS LIKE '%BUNGA%' THEN 'TUNGGAKAN_BUNGA'
                                 WHEN c.ID IS NULL AND a.ACC_KEYS LIKE '%POKOK%' THEN 'BAYAR_POKOK'
-                                WHEN c.ID IS NULL AND a.ACC_KEYS LIKE '%BUNGA%' THEN 'TUNGGAKAN_BUNGA'
+                                WHEN c.ID IS NULL AND a.ACC_KEYS LIKE '%BUNGA%' THEN 'BAYAR_BUNGA'
                                 ELSE 'BAYAR_LAINNYA' 
                             END AS JENIS, 
                             b.BRANCH AS BRANCH, 
