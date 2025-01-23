@@ -31,8 +31,10 @@ class ListBanController extends Controller
                     'JENIS' => $list->JENIS,
                     'TYPE' => $list->JENIS == 'PENCAIRAN'?"CASH-OUT":"CASH-IN",
                     'BRANCH' => $branch->NAME??null,
-                    'ENTRY_DATE' => date('Y-m-d',strtotime($list->ENTRY_DATE)),
-                    'ORIGINAL_AMOUNT' => floatval($list->ORIGINAL_AMOUNT)
+                    'ENTRY_DATE' => $list->ENTRY_DATE,
+                    'ORIGINAL_AMOUNT' => floatval($list->ORIGINAL_AMOUNT),
+                    'PELANGGAN' => $list->PELANGGAN,
+                    'PAYMENT_METHOD' => $list->PAYMENT_METHOD
                 ];
             }, $arusKas);
 
@@ -93,8 +95,7 @@ class ListBanController extends Controller
                             a.STATUS = 'A'
                     ) AS b
                     INNER JOIN credit b2 ON b2.LOAN_NUMBER = b.LOAN_NUM
-                    INNER JOIN customer b3 on b3.CUST_CODE = b2.CUST_CODE
-                    WHERE (1=1)";
+                    INNER JOIN customer b3 on b3.CUST_CODE = b2.CUST_CODE";
 
             $params = [];
 
