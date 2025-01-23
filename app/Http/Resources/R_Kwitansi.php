@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Models\M_Branch;
 use App\Models\M_KwitansiStructurDetail;
+use App\Models\M_LogPrint;
 use App\Models\M_Payment;
 use App\Models\M_PaymentAttachment;
 use Carbon\Carbon;
@@ -48,6 +49,7 @@ class R_Kwitansi extends JsonResource
 
         $branch = M_Branch::where('ID', $this->BRANCH_CODE)->first();
         $attachment = M_PaymentAttachment::where('payment_id', $this->PAYMENT_ID)->value('file_attach') ?? null;
+        $logPrint = M_LogPrint::where('ID', $this->NO_TRANSAKSI)->first();
 
         return [
             "id" => $this->ID,
@@ -80,6 +82,7 @@ class R_Kwitansi extends JsonResource
             'struktur' => $details,
             "STATUS" => $this->STTS_PAYMENT ?? null,
             "created_by" => $this->CREATED_BY,
+            "print_ke" =>  $logPrint->COUNT??'',
         ];
     }
 

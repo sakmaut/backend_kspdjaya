@@ -20,6 +20,7 @@ use App\Http\Controllers\API\{
     CrBlacklistController,
     HrPositionController,
     ListBanController,
+    LogPrintController,
     PelunasanController,
     ReportController
 };
@@ -136,6 +137,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('arrearsReport/{id}', [ReportController::class,'tunggakkan']);
 
     Route::resource('collateral',CollateralController::class);
+    Route::resource('log_print',LogPrintController::class);
 });
 
 
