@@ -55,7 +55,7 @@ class ListBanController extends Controller
                         b.ENTRY_DATE,
                         b.ORIGINAL_AMOUNT,
                         b.LOAN_NUM,
-                        concat(b3.NAME,' ',b3.ALIAS) as PELANGGAN,
+                        concat(b3.NAME,' (',b3.ALIAS,')') as PELANGGAN,
                         b.PAYMENT_METHOD
                     FROM (
                         SELECT 
