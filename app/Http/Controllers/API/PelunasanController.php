@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\R_KwitansiPelunasan;
 use App\Http\Resources\R_Pelunasan;
 use App\Models\M_Arrears;
 use App\Models\M_Branch;
@@ -13,13 +14,9 @@ use App\Models\M_Kwitansi;
 use App\Models\M_Payment;
 use App\Models\M_PaymentDetail;
 use Carbon\Carbon;
-use Exception;
-use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Ramsey\Uuid\Uuid;
-
-use function Intervention\Image\flop;
 
 class PelunasanController extends Controller
 {
@@ -122,56 +119,31 @@ class PelunasanController extends Controller
         try {
             $loan_number = $request->LOAN_NUMBER;
             $uid = Uuid::uuid7()->toString();
+            $request->merge(['payment_id' => $uid]);
             $no_inv = generateCodeKwitansi($request, 'kwitansi', 'NO_TRANSAKSI', 'INV');
     
             $credit = M_Credit::where('LOAN_NUMBER', $loan_number)->firstOrFail();
 
             $detail_customer = M_Customer::where('CUST_CODE', $credit->CUST_CODE)->firstOrFail();
-
-            // $kwitansi = $this->saveKwitansi($request, $detail_customer, $no_inv);
             
             $discounts = $request->only(['DISKON_POKOK', 'DISKON_PINALTI', 'DISKON_BUNGA', 'DISKON_DENDA']);
 
-            if (array_sum($discounts) > 0){
-                $status = "PENDING";
-            }elseif (strtolower($request->METODE_PEMBAYARAN) === 'transfer') {
-                $status = "PENDING";
-            }else{
-                $status = "PAID";
-            }
-    
-            $getCodeBranch = M_Branch::findOrFail($request->user()->branch_id);
-            // $installmentCounts = $creditSchedule->pluck('INSTALLMENT_COUNT')->join(',');
+            $status = "PAID";
 
-            $getStartDate = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)
-                            ->where(function($query) {
-                                $query->where('PAID_FLAG', '!=', 'PAID')->orWhereNull('PAID_FLAG');
-                            })
-                            ->orderBy('PAYMENT_DATE', 'asc')
-                            ->first(); 
-        
-        //    $payment =  M_Payment::create([
-        //         'ID' => $uid,
-        //         'ACC_KEY' => 'pelunasan',
-        //         'STTS_RCRD' => $status,
-        //         'INVOICE' => $no_inv,
-        //         'NO_TRX' => $request->uid,
-        //         'PAYMENT_METHOD' => $request->METODE_PEMBAYARAN,
-        //         'BRANCH' => $getCodeBranch->CODE_NUMBER,
-        //         'LOAN_NUM' => $request->LOAN_NUMBER,
-        //         'START_DATE' => $getStartDate->PAYMENT_DATE??null,
-        //         'ENTRY_DATE' => Carbon::now(),
-        //         'TITLE' => 'pelunasan',
-        //         'ORIGINAL_AMOUNT' => $request->TOTAL_BAYAR,
-        //         'OS_AMOUNT' => 0,
-        //         'AUTH_BY' => $request->user()->id,
-        //         'AUTH_DATE' => Carbon::now()
-        //     ]);
-    
-        //    $this->createPaymentDetails($request,$uid);
-        //    $this->creditScheculeRepayment($request,$loan_number);
-           $this->arrearsRepayment($request,$loan_number);
-          
+            if (array_sum($discounts) > 0 || strtolower($request->METODE_PEMBAYARAN) === 'transfer') {
+                $status = "PENDING";
+            }
+             
+            // $this->saveKwitansi($request, $detail_customer, $no_inv, $status);
+            
+            // if ($status === "PAID") {
+            //     $this->proccess($request, $loan_number, $uid, $no_inv, $status);
+            // }
+
+            // $data = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
+
+            // $dto = new R_KwitansiPelunasan($data);
+            $this->proccess($request, $loan_number, $uid, $no_inv, $status);
             DB::commit();
             return response()->json('', 200);
         } catch (\Exception $e) {
@@ -179,6 +151,39 @@ class PelunasanController extends Controller
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage()], 500);
         }
+    }
+
+    function proccess($request,$loan_number,$uid,$no_inv,$status){
+        $getCodeBranch = M_Branch::findOrFail($request->user()->branch_id);
+
+        $getStartDate = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)
+                        ->where(function($query) {
+                            $query->where('PAID_FLAG', '!=', 'PAID')->orWhereNull('PAID_FLAG');
+                        })
+                        ->orderBy('PAYMENT_DATE', 'asc')
+                        ->first(); 
+    
+        // M_Payment::create([
+        //     'ID' => $uid,
+        //     'ACC_KEY' => 'pelunasan',
+        //     'STTS_RCRD' => $status,
+        //     'INVOICE' => $no_inv,
+        //     'NO_TRX' => $request->uid,
+        //     'PAYMENT_METHOD' => $request->METODE_PEMBAYARAN,
+        //     'BRANCH' => $getCodeBranch->CODE_NUMBER,
+        //     'LOAN_NUM' => $request->LOAN_NUMBER,
+        //     'START_DATE' => $getStartDate->PAYMENT_DATE??null,
+        //     'ENTRY_DATE' => Carbon::now(),
+        //     'TITLE' => 'pelunasan',
+        //     'ORIGINAL_AMOUNT' => $request->TOTAL_BAYAR,
+        //     'OS_AMOUNT' => 0,
+        //     'AUTH_BY' => $request->user()->id,
+        //     'AUTH_DATE' => Carbon::now()
+        // ]);
+
+        // $this->createPaymentDetails($request,$uid);
+        $this->creditScheculeRepayment($request,$loan_number);
+        // $this->arrearsRepayment($request,$loan_number);
     }
 
     function creditScheculeRepayment($request,$loan_number){
@@ -219,24 +224,34 @@ class PelunasanController extends Controller
 
                 $updates = [];
                 if ($new_payment_value_principal !== $valBeforePrincipal) {
-                    $updates['PAYMENT_VALUE_PRINCIPAL'] = $new_payment_value_principal;
+                    $updates[' '] = $new_payment_value_principal;
                 }
 
                 if ($remaining_discount > 0) {
-                    // Calculate remaining principal that can still be discounted
                     $remaining_to_principal_for_discount = $getPrincipal - $new_payment_value_principal;
 
-                    // If the remaining discount can cover the remaining principal
+
                     if ($remaining_discount >= $remaining_to_principal_for_discount) {
                         $updates['DISCOUNT_PRINCIPAL'] = $remaining_to_principal_for_discount;
-                        $new_payment_value_principal += $remaining_to_principal_for_discount; // Apply discount
-                        $remaining_discount -= $remaining_to_principal_for_discount; // Reduce the discount
+                        $new_payment_value_principal += $remaining_to_principal_for_discount; 
+                        $remaining_discount -= $remaining_to_principal_for_discount;
                     } else {
-                        // If the discount can't fully cover the remaining principal
                         $updates['DISCOUNT_PRINCIPAL'] = $remaining_discount;
-                        $new_payment_value_principal += $remaining_discount; // Apply discount
-                        $remaining_discount = 0; // No more discount left
+                        $new_payment_value_principal += $remaining_discount;
+                        $remaining_discount = 0;
                     }
+                }
+
+                $total_payment_value_principal = $new_payment_value_principal;
+                $total_discount_principal = $updates['DISCOUNT_PRINCIPAL'] ?? 0;
+
+                $credit = M_Credit::where('LOAN_NUMBER',$loan_number)->first();
+
+                if($credit){
+                    $credit->update([
+                        'PAYMENT_VALUE_PRINCIPAL' => $total_payment_value_principal, 
+                        'DISCOUNT_PRINCIPAL' => $total_discount_principal, 
+                    ]);
                 }
 
                 if ($valBeforeInterest < $getInterest) {
@@ -244,7 +259,7 @@ class PelunasanController extends Controller
                     $interestUpdates = $this->hitungBunga($bayarBunga, $remaining_to_interest, $remaining_discount_bunga, $res);
                     $bayarBunga = $interestUpdates['bayarBunga'];
                     $remaining_discount_bunga = $interestUpdates['remaining_discount_bunga'];
-                }
+                }                
 
                 if (!empty($updates)) {
                     $res->update($updates);
@@ -472,24 +487,15 @@ class PelunasanController extends Controller
         ];
     }
     
-    private function updateCredit($credit, $request)
-    {
-        $credit->update([
-            'PAID_PRINCIPAL' => $request->BAYAR_POKOK,
-            'PAID_INTEREST' => $request->BAYAR_BUNGA,
-            'PAID_PINALTY' => $request->BAYAR_PINALTI,
-            'STATUS' => $credit->PCPL_ORI == $request->BAYAR_POKOK ? 'D' : 'A'
-        ]);
-    }
-    
-    private function saveKwitansi($request, $customer, $no_inv)
+    private function saveKwitansi($request, $customer, $no_inv,$status)
     {
         $data = [
             "PAYMENT_TYPE" => 'pelunasan',
-            "STTS_PAYMENT" => $request->METODE_PEMBAYARAN == 'cash' ? "PAID" : "PENDING",
+            "PAYMENT_ID" => $request->payment_id,
+            "STTS_PAYMENT" => $status,
             "NO_TRANSAKSI" => $no_inv,
             "LOAN_NUMBER" => $request->LOAN_NUMBER,
-            "TGL_TRANSAKSI" => Carbon::now()->format('d-m-Y'),
+            "TGL_TRANSAKSI" => Carbon::now(),
             'CUST_CODE' => $customer->CUST_CODE,
             'BRANCH_CODE' => $request->user()->branch_id,
             'NAMA' => $customer->NAME,
@@ -552,35 +558,18 @@ class PelunasanController extends Controller
             'ORIGINAL_AMOUNT' => $amount
         ];
     }
-    
-    private function prepareResponse($no_inv, $customer, $request)
+
+    function updateCredit($loan_number,$key,$value)
     {
-        return [
-            "no_transaksi" => $no_inv,
-            'cust_code' => $customer->CUST_CODE,
-            'nama' => $customer->NAME,
-            'alamat' => $customer->ADDRESS,
-            'rt' => $customer->RT,
-            'rw' => $customer->RW,
-            'provinsi' => $customer->PROVINCE,
-            'kota' => $customer->CITY,
-            'kelurahan' => $customer->KELURAHAN,
-            'kecamatan' => $customer->KECAMATAN,
-            "tgl_transaksi" => Carbon::now()->format('d-m-Y'),
-            "payment_method" => $request->METODE_PEMBAYARAN,
-            "nama_bank" => $request->NAMA_BANK,
-            "no_rekening" => $request->NO_REKENING,
-            "bukti_transfer" => '',
-            "pembayaran" => 'PELUNASAN',
-            "pembulatan" => $request->PEMBULATAN,
-            "kembalian" => $request->KEMBALIAN,
-            "jumlah_uang" => $request->UANG_PELANGGAN,
-            "terbilang" => bilangan($request->TOTAL_BAYAR) ?? null,
-            "created_by" => $request->user()->fullname,
-            "created_at" => Carbon::parse(Carbon::now())->format('d-m-Y')
-        ];
+
+        $credit = M_Credit::where('LOAN_NUMBER',$loan_number)->first();
+
+        if($credit){
+            $credit->update([
+                $key => $value
+            ]);
+        }
     }
-    
 }
 
 
