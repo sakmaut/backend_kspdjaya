@@ -131,15 +131,16 @@ class CustomerController extends Controller
             $loanNumber = $request->loan_number;
 
             $data = DB::table('credit_schedule as a')
-                        ->leftJoin('arrears as b', function($join) {
-                            $join->on('b.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
-                                ->whereRaw('b.START_DATE = a.PAYMENT_DATE');
-                        })
-                        ->where('a.LOAN_NUMBER', $loanNumber)
-                        ->where('b.STATUS_REC', '=', 'A')
-                        ->select('a.*', 'b.ID as id_arrear', 'b.PAST_DUE_PENALTY', 'b.PAID_PENALTY')
-                        ->orderBy("a.INSTALLMENT_COUNT","ASC")
-                        ->get();
+                            ->leftJoin('arrears as b', function($join) {
+                                $join->on('b.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
+                                    ->whereRaw('b.START_DATE = a.PAYMENT_DATE')
+                                    ->where('b.STATUS_REC', '=', 'A');
+                            })
+                            ->where('a.LOAN_NUMBER', '11000190000001')
+                            ->select('a.*', 'b.ID as id_arrear', 'b.PAST_DUE_PENALTY', 'b.PAID_PENALTY')
+                            ->orderBy('a.INSTALLMENT_COUNT', 'ASC')
+                            ->get();
+        
 
             if ($data->isEmpty()) {
                 throw new Exception("Loan Number Is Not Exist");
