@@ -136,7 +136,7 @@ class CustomerController extends Controller
                                     ->whereRaw('b.START_DATE = a.PAYMENT_DATE')
                                     ->where('b.STATUS_REC', '=', 'A');
                             })
-                            ->where('a.LOAN_NUMBER', '11000190000001')
+                            ->where('a.LOAN_NUMBER', $loanNumber)
                             ->select('a.*', 'b.ID as id_arrear', 'b.PAST_DUE_PENALTY', 'b.PAID_PENALTY')
                             ->orderBy('a.INSTALLMENT_COUNT', 'ASC')
                             ->get();
