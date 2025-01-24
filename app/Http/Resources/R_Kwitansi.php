@@ -3,6 +3,8 @@
 namespace App\Http\Resources;
 
 use App\Models\M_Branch;
+use App\Models\M_Credit;
+use App\Models\M_Customer;
 use App\Models\M_KwitansiStructurDetail;
 use App\Models\M_LogPrint;
 use App\Models\M_Payment;
@@ -51,21 +53,24 @@ class R_Kwitansi extends JsonResource
         $attachment = M_PaymentAttachment::where('payment_id', $this->PAYMENT_ID)->value('file_attach') ?? null;
         $logPrint = M_LogPrint::where('ID', $this->NO_TRANSAKSI)->first();
 
+        $credit = M_Credit::where('LOAN_NUMBER', $this->LOAN_NUMBER)->first();
+        $getCustomer = M_Customer::where('CUST_CODE', $credit->CUST_CODE)->first();
+
         return [
             "id" => $this->ID,
             "payment_id" => $this->PAYMENT_ID,
             "no_transaksi" => $this->NO_TRANSAKSI,
             "no_fasilitas" => $this->LOAN_NUMBER,
             "cabang" => $branch->NAME ?? null,
-            "cust_code" => $this->CUST_CODE,
-            "nama" => $this->NAMA,
-            "alamat" => $this->ALAMAT,
-            "rt" => $this->RT,
-            "rw" => $this->RW,
-            "provinsi" => $this->PROVINSI,
-            "kota" => $this->KOTA,
-            "kelurahan" => $this->KELURAHAN,
-            "kecamatan" => $this->KECAMATAN,
+            "cust_code" => $this->CUST_CODE??$getCustomer->CUST_CODE,
+            "nama" => $this->NAMA??$getCustomer->NAMA,
+            "alamat" => $this->ALAMAT??$getCustomer->ALAMAT,
+            "rt" => $this->RT??$getCustomer->RT,
+            "rw" => $this->RW??$getCustomer->RW,
+            "provinsi" => $this->PROVINSI??$getCustomer->PROVINSI,
+            "kota" => $this->KOTA??$getCustomer->KOTA,
+            "kelurahan" => $this->KELURAHAN??$getCustomer->KELURAHAN,
+            "kecamatan" => $this->KECAMATAN??$getCustomer->KECAMATAN,
             "tgl_transaksi" => Carbon::parse($this->CREATED_AT)->format('d-m-Y H:i:s'),
             "payment_method" => $this->METODE_PEMBAYARAN,
             "nama_bank" => $this->NAMA_BANK,
