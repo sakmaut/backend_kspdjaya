@@ -133,19 +133,19 @@ class PelunasanController extends Controller
             if (array_sum($discounts) > 0 || strtolower($request->METODE_PEMBAYARAN) === 'transfer') {
                 $status = "PENDING";
             }
-             
-            // $this->saveKwitansi($request, $detail_customer, $no_inv, $status);
-            
-            // if ($status === "PAID") {
-            //     $this->proccess($request, $loan_number, $uid, $no_inv, $status);
-            // }
 
-            // $data = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
+            $this->saveKwitansi($request, $detail_customer, $no_inv, $status);
 
-            // $dto = new R_KwitansiPelunasan($data);
-            $this->proccess($request, $loan_number, $uid, $no_inv, $status);
+            if ($status === "PAID") {
+                $this->proccess($request, $loan_number, $uid, $no_inv, $status);
+            }
+
+            $data = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
+
+            $dto = new R_KwitansiPelunasan($data);
+           
             DB::commit();
-            return response()->json('', 200);
+            return response()->json($dto, 200);
         } catch (\Exception $e) {
             DB::rollback();
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
@@ -163,27 +163,53 @@ class PelunasanController extends Controller
                         ->orderBy('PAYMENT_DATE', 'asc')
                         ->first(); 
     
-        // M_Payment::create([
-        //     'ID' => $uid,
-        //     'ACC_KEY' => 'pelunasan',
-        //     'STTS_RCRD' => $status,
-        //     'INVOICE' => $no_inv,
-        //     'NO_TRX' => $request->uid,
-        //     'PAYMENT_METHOD' => $request->METODE_PEMBAYARAN,
-        //     'BRANCH' => $getCodeBranch->CODE_NUMBER,
-        //     'LOAN_NUM' => $request->LOAN_NUMBER,
-        //     'START_DATE' => $getStartDate->PAYMENT_DATE??null,
-        //     'ENTRY_DATE' => Carbon::now(),
-        //     'TITLE' => 'pelunasan',
-        //     'ORIGINAL_AMOUNT' => $request->TOTAL_BAYAR,
-        //     'OS_AMOUNT' => 0,
-        //     'AUTH_BY' => $request->user()->id,
-        //     'AUTH_DATE' => Carbon::now()
-        // ]);
+        M_Payment::create([
+            'ID' => $uid,
+            'ACC_KEY' => 'pelunasan',
+            'STTS_RCRD' => $status,
+            'INVOICE' => $no_inv,
+            'NO_TRX' => $request->uid,
+            'PAYMENT_METHOD' => $request->METODE_PEMBAYARAN,
+            'BRANCH' => $getCodeBranch->CODE_NUMBER,
+            'LOAN_NUM' => $request->LOAN_NUMBER,
+            'START_DATE' => $getStartDate->PAYMENT_DATE??null,
+            'ENTRY_DATE' => Carbon::now(),
+            'TITLE' => 'pelunasan',
+            'ORIGINAL_AMOUNT' => $request->TOTAL_BAYAR,
+            'OS_AMOUNT' => 0,
+            'AUTH_BY' => $request->user()->id,
+            'AUTH_DATE' => Carbon::now()
+        ]);
 
-        // $this->createPaymentDetails($request,$uid);
+        $this->createPaymentDetails($request,$uid);
+        $this->updateCredit($request,$loan_number);
         $this->creditScheculeRepayment($request,$loan_number);
-        // $this->arrearsRepayment($request,$loan_number);
+        $this->arrearsRepayment($request,$loan_number);
+    }
+
+    function updateCredit($request,$loan_number){
+    
+        $bayarPokok = $request->BAYAR_POKOK;
+        $bayarDiscountPokok = $request->DISKON_POKOK;
+        $bayarBunga = $request->BAYAR_BUNGA;
+        $bayarDiscountBunga = $request->DISKON_BUNGA;
+        $bayarDenda = $request->BAYAR_DENDA;
+        $bayarDiscountDenda = $request->DISKON_DENDA;
+
+        $credit = M_Credit::where('LOAN_NUMBER',$loan_number)->first();
+
+        if($credit){
+            $credit->update([
+                'PAID_PRINCIPAL' => floatval($credit->PAID_PRINCIPAL) + floatval($bayarPokok), 
+                'PAID_INTEREST' => floatval($credit->PAID_INTEREST) + floatval($bayarBunga), 
+                'DISCOUNT_PRINCIPAL' => floatval($credit->DISCOUNT_PRINCIPAL) + floatval($bayarDiscountPokok), 
+                'DISCOUNT_INTEREST' => floatval($credit->DISCOUNT_INTEREST) + floatval($bayarDiscountBunga), 
+                'PAID_PENALTY' => floatval($credit->PAID_PENALTY) + floatval($bayarDenda), 
+                'DISCOUNT_PENALTY' => floatval($credit->DISCOUNT_PENALTY) + floatval($bayarDiscountDenda), 
+                'STATUS' => 'D',
+                'END_DATE' => now()
+            ]);
+        }
     }
 
     function creditScheculeRepayment($request,$loan_number){
@@ -224,7 +250,7 @@ class PelunasanController extends Controller
 
                 $updates = [];
                 if ($new_payment_value_principal !== $valBeforePrincipal) {
-                    $updates[' '] = $new_payment_value_principal;
+                    $updates['PAYMENT_VALUE_PRINCIPAL'] = $new_payment_value_principal;
                 }
 
                 if ($remaining_discount > 0) {
@@ -240,18 +266,6 @@ class PelunasanController extends Controller
                         $new_payment_value_principal += $remaining_discount;
                         $remaining_discount = 0;
                     }
-                }
-
-                $total_payment_value_principal = $new_payment_value_principal;
-                $total_discount_principal = $updates['DISCOUNT_PRINCIPAL'] ?? 0;
-
-                $credit = M_Credit::where('LOAN_NUMBER',$loan_number)->first();
-
-                if($credit){
-                    $credit->update([
-                        'PAYMENT_VALUE_PRINCIPAL' => $total_payment_value_principal, 
-                        'DISCOUNT_PRINCIPAL' => $total_discount_principal, 
-                    ]);
                 }
 
                 if ($valBeforeInterest < $getInterest) {
@@ -276,7 +290,7 @@ class PelunasanController extends Controller
                 'PAID_FLAG' => $checkPaid? 'PAID':''
             ]);
 
-            if ($remaining_discount <= 0) {
+            if ($remaining_discount <= 0 && $bayarDiscountPokok != 0) {
                 break;
             }                
         }
@@ -389,7 +403,7 @@ class PelunasanController extends Controller
 
             $checkStatus = floatval($getPrincipal) == floatval($valBeforePrincipal) ;
             $res->update(['END_DATE' =>now(),'STATUS_REC' => $checkStatus ? 'S' :'D']);
-            if ($remaining_discount <= 0) {
+            if ($remaining_discount <= 0 && $bayarDiscountPokok != 0) {
                 break;
             }                
         }
@@ -557,18 +571,6 @@ class PelunasanController extends Controller
             'ACC_KEYS' => $acc_key,
             'ORIGINAL_AMOUNT' => $amount
         ];
-    }
-
-    function updateCredit($loan_number,$key,$value)
-    {
-
-        $credit = M_Credit::where('LOAN_NUMBER',$loan_number)->first();
-
-        if($credit){
-            $credit->update([
-                $key => $value
-            ]);
-        }
     }
 }
 
