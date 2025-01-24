@@ -54,8 +54,6 @@ class PaymentController extends Controller
             $customer_data = null; 
             $check_method_payment = strtolower($request->payment_method) === 'cash';
             
-            $this->saveKwitansi($request, $customer_data, $no_inv);
-
             if (isset($request->struktur) && is_array($request->struktur)) {
                 foreach ($request->struktur as $res) {
 
@@ -107,6 +105,8 @@ class PaymentController extends Controller
                     }
                 }
             }
+
+            $this->saveKwitansi($request, $customer_data, $no_inv);
 
             $this->updateCredit($request->no_facility);
 
