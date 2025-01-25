@@ -133,7 +133,7 @@ class CustomerController extends Controller
             $data = DB::table('credit_schedule as a')
                             ->leftJoin('arrears as b', function($join) {
                                 $join->on('b.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
-                                    ->whereRaw('b.START_DATE = a.PAYMENT_DATE');
+                                     ->on('b.START_DATE = a.PAYMENT_DATE');
                             })
                             ->where('a.LOAN_NUMBER', $loanNumber)
                             ->where(function ($query) {
