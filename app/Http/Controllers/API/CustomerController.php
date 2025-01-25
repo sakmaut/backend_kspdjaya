@@ -136,14 +136,26 @@ class CustomerController extends Controller
                             ->on('b.START_DATE', '=', 'a.PAYMENT_DATE');
                         })
                         ->where('a.LOAN_NUMBER', $loanNumber)
-                        ->where('a.STATUS_PAID','!=', 'PAID')
-                        ->where('b.STATUS_REC', 'A')
                         ->where(function ($query) {
-                            $query->where('b.PAST_DUE_PENALTY', '!=', 0)
-                            ->orWhereNotNull('b.PAST_DUE_PENALTY');
+                            $query->where('a.PAID_FLAG', '!=', 'PAID')
+                                ->orWhereNotIn('b.STATUS_REC', ['S', 'D']);
                         })
                         ->orderBy('a.INSTALLMENT_COUNT', 'ASC')
-                        ->select('a.*', 'b.ID as id_arrear', 'b.PAST_DUE_PENALTY', 'b.PAID_PENALTY')
+                        ->select(   'a.LOAN_NUMBER',
+                                    'a.INSTALLMENT_COUNT',
+                                    'a.PAYMENT_DATE',
+                                    'a.PRINCIPAL',
+                                    'a.INTEREST',
+                                    'a.INSTALLMENT',
+                                    'a.PRINCIPAL_REMAINS',
+                                    'a.PAYMENT_VALUE_PRINCIPAL',
+                                    'a.PAYMENT_VALUE_INTEREST',
+                                    'a.PAYMENT_VALUE',
+                                    'a.PAID_FLAG',
+                                    'b.STATUS_REC', 
+                                    'b.ID as id_arrear', 
+                                    'b.PAST_DUE_PENALTY', 
+                                    'b.PAID_PENALTY')
                         ->get();
         
 
@@ -174,6 +186,16 @@ class CustomerController extends Controller
 
                 $installment = floatval($res->INSTALLMENT) - floatval($res->PAYMENT_VALUE);
 
+                if (!empty($res->STATUS_REC)) {
+                    $cekStatus = $res->STATUS_REC;
+                } else {
+                    $cekStatus = $res->PAID_FLAG;
+                }
+
+                if ($res->PAID_FLAG == 'PAID' && ($res->STATUS_REC == 'D' || $res->STATUS_REC == 'S')) {
+                    $cekStatus = 'PAID';
+                }
+
                 $schedule[]=[
                     'key' => $j++,
                     'angsuran_ke' => $res->INSTALLMENT_COUNT,
@@ -188,7 +210,7 @@ class CustomerController extends Controller
                     'bayar_denda' => $installment == 0 ? 0 :floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->PAID_PENALTY ?? 0),
                     'total_bayar' => floatval($res->INSTALLMENT+($res->PAST_DUE_PENALTY??0)),
                     'id_arrear' => $res->id_arrear??'',
-                    'flag' => $res->PAID_FLAG,
+                    'flag' => $cekStatus??'',
                     'denda' => floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->PAID_PENALTY ?? 0) ,
                     'customer' => $getCustomer
                 ];
