@@ -136,6 +136,7 @@ class CustomerController extends Controller
                             ->on('b.START_DATE', '=', 'a.PAYMENT_DATE');
                         })
                         ->where('a.LOAN_NUMBER', $loanNumber)
+                        ->where('a.STATUS_PAID','!=', 'PAID')
                         ->where('b.STATUS_REC', 'A')
                         ->where(function ($query) {
                             $query->where('b.PAST_DUE_PENALTY', '!=', 0)
