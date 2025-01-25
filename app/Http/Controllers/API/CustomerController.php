@@ -135,7 +135,7 @@ class CustomerController extends Controller
                                 $join->on('b.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
                                     ->whereRaw('b.START_DATE = a.PAYMENT_DATE')
                                     ->where('b.STATUS_REC', '=', 'A')
-                                    ->where('b.PAST_DUE_PENALTY', '!=', 0);
+                                    ->where('b.PAST_DUE_PENALTY', '!=', '0');
                             })
                             ->where('a.LOAN_NUMBER', $loanNumber)
                             ->select('a.*', 'b.ID as id_arrear', 'b.PAST_DUE_PENALTY', 'b.PAID_PENALTY')
