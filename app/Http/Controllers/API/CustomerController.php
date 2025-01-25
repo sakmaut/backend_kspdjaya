@@ -142,7 +142,7 @@ class CustomerController extends Controller
                             ->orWhereNotNull('b.PAST_DUE_PENALTY');
                         })
                         ->orderBy('a.INSTALLMENT_COUNT', 'ASC')
-                        ->select('a.INSTALLMENT_COUNT', 'b.PAST_DUE_PENALTY')
+                        ->select('a.*', 'b.ID as id_arrear', 'b.PAST_DUE_PENALTY', 'b.PAID_PENALTY')
                         ->get();
         
 
