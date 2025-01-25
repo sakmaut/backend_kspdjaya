@@ -133,11 +133,13 @@ class CustomerController extends Controller
             $data = DB::table('credit_schedule as a')
                             ->leftJoin('arrears as b', function($join) {
                                 $join->on('b.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
-                                    ->whereRaw('b.START_DATE = a.PAYMENT_DATE')
-                                    ->where('b.STATUS_REC', '=', 'A')
-                                    ->where('b.PAST_DUE_PENALTY', '!=', '0');
+                                    ->whereRaw('b.START_DATE = a.PAYMENT_DATE');
                             })
                             ->where('a.LOAN_NUMBER', $loanNumber)
+                            ->where(function ($query) {
+                                $query->where('b.PAST_DUE_PENALTY', '!=', 0)
+                                    ->orWhereNotNull('b.PAST_DUE_PENALTY');
+                            })
                             ->select('a.*', 'b.ID as id_arrear', 'b.PAST_DUE_PENALTY', 'b.PAID_PENALTY')
                             ->orderBy('a.INSTALLMENT_COUNT', 'ASC')
                             ->get();
