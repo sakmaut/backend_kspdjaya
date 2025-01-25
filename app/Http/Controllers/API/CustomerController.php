@@ -130,19 +130,20 @@ class CustomerController extends Controller
 
             $loanNumber = $request->loan_number;
 
-            $data = DB::table('credit_schedule as a')
-                            ->leftJoin('arrears as b', function($join) {
-                                $join->on('b.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
-                                     ->on('b.START_DATE = a.PAYMENT_DATE');
-                            })
-                            ->where('a.LOAN_NUMBER', $loanNumber)
-                            ->where(function ($query) {
-                                $query->where('b.PAST_DUE_PENALTY', '!=', 0)
-                                    ->orWhereNotNull('b.PAST_DUE_PENALTY');
-                            })
-                            ->select('a.*', 'b.ID as id_arrear', 'b.PAST_DUE_PENALTY', 'b.PAID_PENALTY')
-                            ->orderBy('a.INSTALLMENT_COUNT', 'ASC')
-                            ->get();
+            $data = DB::table('credit_schedule AS a')
+                        ->leftJoin('arrears AS b', function ($join) {
+                            $join->on('b.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
+                            ->on('b.START_DATE', '=', 'a.PAYMENT_DATE');
+                        })
+                        ->where('a.LOAN_NUMBER', $loanNumber)
+                        ->where('b.STATUS_REC', 'A')
+                        ->where(function ($query) {
+                            $query->where('b.PAST_DUE_PENALTY', '!=', 0)
+                            ->orWhereNotNull('b.PAST_DUE_PENALTY');
+                        })
+                        ->orderBy('a.INSTALLMENT_COUNT', 'ASC')
+                        ->select('a.INSTALLMENT_COUNT', 'b.PAST_DUE_PENALTY')
+                        ->get();
         
 
             if ($data->isEmpty()) {
