@@ -182,56 +182,54 @@ class ReportController extends Controller
     public function jaminan(Request $request,$id)
     {
         try {
-            $results = M_CrCollateral::where('CR_CREDIT_ID',$id)->get();
-            $results2 = M_CrCollateralSertification::where('CR_CREDIT_ID',$id)->get();
+            $collaterals = [];
 
-            $results = $results->map(function ($item) {
-                $item->COLLATERAL_TYPE = 'kendaraan';
-                $item->COLLATERAL_FLAG = M_Branch::find($item->COLLATERAL_FLAG)->NAME ?? '';
-                $item->LOCATION_BRANCH = M_Branch::find($item->LOCATION_BRANCH)->NAME??'';
-                $item->VALUE = floatval($item->VALUE);
-                // Convert null values to empty strings for all keys
-                $itemArray = $item->toArray();
-                $itemArray = array_map(function ($value) {
-                        return $value === null ? '' : $value;
-                    }, $itemArray);
+            $collateral = M_CrCollateral::where('CR_CREDIT_ID', $id)->get();
 
-                return collect($itemArray)->except([
-                    'CREATE_DATE',
-                    'CREATE_BY',
-                    'MOD_DATE',
-                    'MOD_BY',
-                    'DELETED_AT',
-                    'DELETED_BY',
-                    'VERSION'
-                ]);
-            })->values();
+            if ($collateral->isNotEmpty()) {
+                $collaterals = $collateral->map(function ($item) {
+                    return [
+                        'JENIS JAMINAN' => 'KENDARAAN',
+                        'MERK' => $item['BRAND'],
+                        'TIPE' => $item['TYPE'],
+                        'TAHUN' => $item['PRODUCTION_YEAR'],
+                        'WARNA' => $item['COLOR'],
+                        'ATAS NAMA' => $item['ON_BEHALF'],
+                        'NO POLISI' => $item['POLICE_NUMBER'],
+                        'NO RANGKA' => $item['CHASIS_NUMBER'],
+                        'NO MESIN' => $item['ENGINE_NUMBER'],
+                        'NO BPKB' => $item['BPKB_NUMBER'],
+                        'NO STNK' => $item['STNK_NUMBER'],
+                        'HARGA JAMINAN' => 'IDR ' . number_format(floatval($item['VALUE'])),
+                        'LOKASI' => M_Branch::find($item['LOCATION_BRANCH'])->NAME ?? '',
+                    ];
+                })->values()->toArray();
+            } else {
+                $col_sertificat = M_CrCollateralSertification::where('CR_CREDIT_ID', $id)->get();
 
-            $results2 = $results2->map(function ($item) {
-                $item->COLLATERAL_TYPE = 'sertifikat';
-                $item->COLLATERAL_FLAG = M_Branch::find($item->COLLATERAL_FLAG)->NAME ?? '';
-                $item->LOCATION = M_Branch::find($item->LOCATION)->NAME ?? '';
-                $item->NILAI = floatval($item->NILAI);
-                // Convert null values to empty strings for all keys
-                $itemArray = $item->toArray();
-                $itemArray = array_map(function ($value) {
-                        return $value === null ? '' : $value;
-                    }, $itemArray);
+                if ($col_sertificat->isNotEmpty()) {
+                    $collaterals = $col_sertificat->map(function ($item) {
+                        return [
+                            'JENIS JAMINAN' => 'SERTIFIKAT',
+                            'NO SERTIFIKAT' => $item['NO_SERTIFIKAT'],
+                            'STATUS KEPEMILIKAN' => $item['STATUS_KEPEMILIKAN'],
+                            'IMB' => $item['IMB'],
+                            'LUAS TANAH' => $item['LUAS_TANAH'],
+                            'LUAS BANGUNAN' => $item['LUAS_BANGUNAN'],
+                            'LOKASI' => $item['LOKASI'],
+                            'PROVINSI' => $item['PROVINSI'],
+                            'KAB/KOTA' => $item['KAB_KOTA'],
+                            'KECAMATAN' => $item['KECAMATAN'],
+                            'KELURAHAN/DESA' => $item['DESA'],
+                            'ATAS NAMA' => $item['ATAS_NAMA'],
+                            'NILAI' => 'IDR ' . number_format(floatval($item['NILAI'])),
+                            'LOKASI' => M_Branch::find($item['LOCATION'])->NAME ?? '',
+                        ];
+                    })->values()->toArray();
+                }
+            }
 
-                return collect($itemArray)->except([
-                    'CREATE_DATE',
-                    'CREATE_BY',
-                    'MOD_DATE',
-                    'MOD_BY',
-                    'DELETED_AT',
-                    'DELETED_BY',
-                    'VERSION'
-                ]);
-            })->values();
-            
-            $mergedResults = $results->merge($results2);
-
-            return response()->json($mergedResults, 200);
+            return response()->json($collaterals, 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
