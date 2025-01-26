@@ -186,10 +186,10 @@ class CustomerController extends Controller
 
                 $installment = floatval($res->INSTALLMENT) - floatval($res->PAYMENT_VALUE);
 
-                if (!empty($res->PAID_FLAG)) {
-                    $cekStatus = $res->PAID_FLAG;
-                } else {
+                if (!empty($res->STATUS_REC) && $res->STATUS_REC == 'PENDING') {
                     $cekStatus = $res->STATUS_REC;
+                } else {
+                    $cekStatus = $res->PAID_FLAG;
                 }
 
                 if ($res->PAID_FLAG == 'PAID' && ($res->STATUS_REC == 'D' || $res->STATUS_REC == 'S')) {
