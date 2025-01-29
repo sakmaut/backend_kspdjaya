@@ -91,7 +91,7 @@ class PaymentController extends Controller
                         "denda" => $res['denda'] ?? ''
                     ]);
 
-                    if ($check_method_payment) {
+                    if ($check_method_payment && strtolower($request->bayar_dengan_diskon) != 'ya') {
                         $this->processPaymentStructure($res, $request, $getCodeBranch, $no_inv);
                     } else {
                         $tgl_angsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
