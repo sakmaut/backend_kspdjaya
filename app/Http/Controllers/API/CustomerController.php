@@ -157,10 +157,10 @@ class CustomerController extends Controller
                                     'b.PAST_DUE_PENALTY', 
                                     'b.PAID_PENALTY')
                         ->get();
-        
+
 
             if ($data->isEmpty()) {
-                throw new Exception("Loan Number Is Not Exist");
+                return $schedule;
             }
 
             $getCustomer = M_Credit::where('LOAN_NUMBER', $loanNumber)
