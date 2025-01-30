@@ -658,20 +658,21 @@ class PaymentController extends Controller
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
-    } 
+    }
 
     public function cancel(Request $request)
     {
+        $request->validate([
+            'no_invoice' => 'required|string',
+            'flag' => 'in:yes,no',
+        ]);
+
+        $no_invoice = $request->no_invoice;
+        $flag = $request->flag;
+
         DB::beginTransaction();
         try {
-            $request->validate([
-                'no_invoice' => 'required|string',
-                'flag' => 'in:yes,no',
-            ]);
-
-            $no_invoice = $request->no_invoice;
-            $flag = $request->flag;
-
+            // Check if the invoice exists and is paid
             $check = M_Kwitansi::where([
                 'NO_TRANSAKSI' => $no_invoice,
                 'STTS_PAYMENT' => 'PAID'
@@ -681,20 +682,21 @@ class PaymentController extends Controller
                 throw new Exception("Kwitansi Number Not Exist", 404);
             }
 
-            $checkPaymentLog = M_PaymentCancelLog::where('INVOICE_NUMBER',$no_invoice)->first();
-
-            if(!$checkPaymentLog){
+            // Log the cancellation request if not already logged
+            $checkPaymentLog = M_PaymentCancelLog::where('INVOICE_NUMBER', $no_invoice)->first();
+            if (!$checkPaymentLog) {
                 M_PaymentCancelLog::create([
-                    'INVOICE_NUMBER' => $no_invoice??'',
-                    'REQUEST_BY' => $request->user()->id??'',
-                    'REQUEST_BRANCH' => $request->user()->branch_id??'',
-                    'REQUEST_POSITION' => $request->user()->position??'',
-                    'REQUEST_DESCR' => $request->descr??'',
+                    'INVOICE_NUMBER' => $no_invoice ?? '',
+                    'REQUEST_BY' => $request->user()->id ?? '',
+                    'REQUEST_BRANCH' => $request->user()->branch_id ?? '',
+                    'REQUEST_POSITION' => $request->user()->position ?? '',
+                    'REQUEST_DESCR' => $request->descr ?? '',
                     'REQUEST_DATE' => Carbon::now()
                 ]);
             }
 
-            if (strtolower($request->user()->position) == 'ho' && isset($flag) || !empty($flag) ) {
+            // Process HO approval if applicable
+            if (strtolower($request->user()->position) == 'ho' && isset($flag) && !empty($flag)) {
                 $this->processHoApproval($request, $check);
             }
 
@@ -710,14 +712,15 @@ class PaymentController extends Controller
     private function processHoApproval(Request $request, $check)
     {
         if (strtolower($request->flag) === 'yes') {
-
+            // Update the status of the invoice
             $check->update([
-                'STTS_PAYMENT' => 'CANCEL'  
+                'STTS_PAYMENT' => 'CANCEL'
             ]);
-            
+
+            // Fetch payment details
             $paymentCheck = DB::table('payment as a')
                                 ->leftJoin('payment_detail as b', 'b.PAYMENT_ID', '=', 'a.ID')
-                                ->select('a.LOAN_NUM','a.START_DATE' ,'a.ORIGINAL_AMOUNT','b.ACC_KEYS', 'b.ORIGINAL_AMOUNT as amount')
+                                ->select('a.LOAN_NUM', 'a.START_DATE', 'a.ORIGINAL_AMOUNT', 'b.ACC_KEYS', 'b.ORIGINAL_AMOUNT as amount')
                                 ->where('a.INVOICE', $request->no_invoice)
                                 ->get();
 
@@ -728,49 +731,50 @@ class PaymentController extends Controller
             $totalPaidPenalty = 0;
             $creditSchedule = [];
 
-            if(!empty($paymentCheck)){
+            if (!empty($paymentCheck)) {
                 foreach ($paymentCheck as $list) {
-
+                    // Update payment status
                     M_Payment::where('INVOICE', $request->no_invoice)
-                                ->update([
-                                    'STTS_RCRD' => 'CANCEL'
-                                ]);
-    
-                   $loan_number = $list->LOAN_NUM;
-    
-                   if (!isset($creditSchedule[$list->START_DATE])) {
+                        ->update([
+                            'STTS_RCRD' => 'CANCEL'
+                        ]);
+
+                    $loan_number = $list->LOAN_NUM;
+
+                    if (!isset($creditSchedule[$list->START_DATE])) {
                         $creditSchedule[$list->START_DATE] = [
                             'LOAN_NUMBER' => $list->LOAN_NUM,
                             'PAYMENT_DATE' => date('Y-m-d', strtotime($list->START_DATE)),
                             'AMOUNT' => 0,
-                            'PRINCIPAL' => 0, 
-                            'INTEREST' => 0,  
+                            'PRINCIPAL' => 0,
+                            'INTEREST' => 0,
                             'PENALTY' => 0,
                             'PAID_PENALTY' => 0
                         ];
                     }
 
-                    if ($list->ACC_KEYS === 'ANGSURAN_POKOK') {
-                        $creditSchedule[$list->START_DATE]['PRINCIPAL'] += floatval($list->amount);
-                    }
-                    
-                    elseif ($list->ACC_KEYS === 'ANGSURAN_BUNGA') {
-                        $creditSchedule[$list->START_DATE]['INTEREST'] += floatval($list->amount);
+                    // Update credit schedule based on ACC_KEYS
+                    switch ($list->ACC_KEYS) {
+                        case 'ANGSURAN_POKOK':
+                            $creditSchedule[$list->START_DATE]['PRINCIPAL'] += floatval($list->amount);
+                            break;
+                        case 'ANGSURAN_BUNGA':
+                            $creditSchedule[$list->START_DATE]['INTEREST'] += floatval($list->amount);
+                            break;
+                        case 'BAYAR_DENDA':
+                            $creditSchedule[$list->START_DATE]['PAID_PENALTY'] += floatval($list->amount);
+                            $creditSchedule[$list->START_DATE]['PENALTY'] += floatval($list->amount);
+                            break;
+                        case 'DISKON_DENDA':
+                            $creditSchedule[$list->START_DATE]['PENALTY'] += floatval($list->amount);
+                            break;
                     }
 
-                    elseif ($list->ACC_KEYS === 'BAYAR_DENDA') {
-                        $creditSchedule[$list->START_DATE]['PAID_PENALTY'] += floatval($list->amount);
-                        $creditSchedule[$list->START_DATE]['PENALTY'] += floatval($list->amount);
-                    }
-                    elseif ($list->ACC_KEYS === 'DISKON_DENDA') {
-                        $creditSchedule[$list->START_DATE]['PENALTY'] += floatval($list->amount);
-                    }
-            
                     $creditSchedule[$list->START_DATE]['AMOUNT'] = $creditSchedule[$list->START_DATE]['PRINCIPAL'] + $creditSchedule[$list->START_DATE]['INTEREST'];
-
                 }
             }
 
+            // Calculate totals
             foreach ($creditSchedule as $schedule) {
                 $totalPrincipal += $schedule['PRINCIPAL'];
                 $totalInterest += $schedule['INTEREST'];
@@ -780,35 +784,37 @@ class PaymentController extends Controller
 
             $setPrincipal = round($totalPrincipal, 2);
 
+            // Update credit record
             $creditCheck = M_Credit::where('LOAN_NUMBER', $loan_number)
-                                    ->whereIn('STATUS', ['A', 'D'])
-                                    ->first();
-    
-            if($creditCheck){
+                ->whereIn('STATUS', ['A', 'D'])
+                ->first();
+
+            if ($creditCheck) {
                 $creditCheck->update([
                     'STATUS' => 'A',
-                    'PAID_PRINCIPAL' => floatval($creditCheck->PAID_PRINCIPAL)-floatval($setPrincipal??0),
-                    'PAID_INTEREST' => floatval($creditCheck->PAID_INTEREST??0)-floatval($totalInterest??0),
-                    'PAID_PENALTY' => floatval($creditCheck->PAID_PENALTY??0)-floatval($totalPaidPenalty??0),
+                    'PAID_PRINCIPAL' => floatval($creditCheck->PAID_PRINCIPAL) - floatval($setPrincipal ?? 0),
+                    'PAID_INTEREST' => floatval($creditCheck->PAID_INTEREST ?? 0) - floatval($totalInterest ?? 0),
+                    'PAID_PENALTY' => floatval($creditCheck->PAID_PENALTY ?? 0) - floatval($totalPaidPenalty ?? 0),
                     'MOD_USER' => $request->user()->id,
                     'MOD_DATE' => Carbon::now(),
                 ]);
             }
 
-            if(!empty($creditSchedule)){
+            // Update credit schedule and arrears
+            if (!empty($creditSchedule)) {
                 foreach ($creditSchedule as $resList) {
                     $creditScheduleCheck = M_CreditSchedule::where([
                         'LOAN_NUMBER' => $loan_number,
                         'PAYMENT_DATE' => $resList['PAYMENT_DATE']
                     ])->first();
 
-                    if($creditScheduleCheck){
+                    if ($creditScheduleCheck) {
                         $creditScheduleCheck->update([
-                            'PAYMENT_VALUE_PRINCIPAL' => $resList['PRINCIPAL'] != 0 ?  floatval($creditScheduleCheck->PAYMENT_VALUE_PRINCIPAL??0) -  floatval($resList['PRINCIPAL']??0):floatval($creditScheduleCheck->PAYMENT_VALUE_PRINCIPAL ?? 0),
-                            'PAYMENT_VALUE_INTEREST' => $resList['INTEREST'] != 0 ? floatval($creditScheduleCheck->PAYMENT_VALUE_INTEREST??0) -  floatval($resList['INTEREST']??0):floatval($creditScheduleCheck->PAYMENT_VALUE_INTEREST??0),
-                            'INSUFFICIENT_PAYMENT' => $resList['AMOUNT'] != 0 ? ((floatval($resList['PRINCIPAL']??0)  + floatval($resList['INTEREST']??0)) - $creditScheduleCheck->INSTALLMENT??0) -  floatval($creditScheduleCheck->INSUFFICIENT_PAYMENT??0):floatval($creditScheduleCheck->INSUFFICIENT_PAYMENT??0),
-                            'PAYMENT_VALUE' => $resList['AMOUNT'] != 0 ? floatval($creditScheduleCheck->PAYMENT_VALUE ?? 0) - floatval($resList['AMOUNT'] ?? 0):floatval($creditScheduleCheck->PAYMENT_VALUE ?? 0),
-                            'PAID_FLAG' => $resList['PRINCIPAL'] == 0 && $resList['INTEREST'] == 0 ? 'PAID' :''
+                            'PAYMENT_VALUE_PRINCIPAL' => $resList['PRINCIPAL'] != 0 ? floatval($creditScheduleCheck->PAYMENT_VALUE_PRINCIPAL ?? 0) - floatval($resList['PRINCIPAL'] ?? 0) : floatval($creditScheduleCheck->PAYMENT_VALUE_PRINCIPAL ?? 0),
+                            'PAYMENT_VALUE_INTEREST' => $resList['INTEREST'] != 0 ? floatval($creditScheduleCheck->PAYMENT_VALUE_INTEREST ?? 0) - floatval($resList['INTEREST'] ?? 0) : floatval($creditScheduleCheck->PAYMENT_VALUE_INTEREST ?? 0),
+                            'INSUFFICIENT_PAYMENT' => $resList['AMOUNT'] != 0 ? ((floatval($resList['PRINCIPAL'] ?? 0) + floatval($resList['INTEREST'] ?? 0)) - $creditScheduleCheck->INSTALLMENT ?? 0) - floatval($creditScheduleCheck->INSUFFICIENT_PAYMENT ?? 0) : floatval($creditScheduleCheck->INSUFFICIENT_PAYMENT ?? 0),
+                            'PAYMENT_VALUE' => $resList['AMOUNT'] != 0 ? floatval($creditScheduleCheck->PAYMENT_VALUE ?? 0) - floatval($resList['AMOUNT'] ?? 0) : floatval($creditScheduleCheck->PAYMENT_VALUE ?? 0),
+                            'PAID_FLAG' => $resList['PRINCIPAL'] == 0 && $resList['INTEREST'] == 0 ? 'PAID' : ''
                         ]);
                     }
 
@@ -817,34 +823,33 @@ class PaymentController extends Controller
                         'START_DATE' => $resList['PAYMENT_DATE']
                     ])->first();
 
-                    if($arrearsCheck){
-
+                    if ($arrearsCheck) {
                         $arrearsCheck->update([
                             'PAID_PCPL' => $resList['PRINCIPAL'] != 0 ? floatval($arrearsCheck->PAID_PCPL ?? 0) - floatval($resList['PRINCIPAL'] ?? 0) : floatval($arrearsCheck->PAID_PCPL ?? 0),
                             'PAID_INT' => $resList['INTEREST'] != 0 ? floatval($arrearsCheck->PAID_INT ?? 0) - floatval($resList['INTEREST'] ?? 0) : floatval($arrearsCheck->PAID_INT ?? 0),
                             'PAID_PENALTY' => $resList['PENALTY'] != 0 ? floatval($arrearsCheck->PAID_PENALTY ?? 0) - floatval($resList['PENALTY'] ?? 0) : floatval($arrearsCheck->PAID_PENALTY ?? 0),
                         ]);
-                        
-                        $setStatus = $arrearsCheck->PAST_DUE_PCPL == $arrearsCheck->PAID_PCPL && 
-                                     $arrearsCheck->PAST_DUE_INTRST == $arrearsCheck->PAID_INT && 
-                                     $arrearsCheck->PAST_DUE_PENALTY == $arrearsCheck->PAID_PENALTY;
-                        
+
+                        $setStatus = $arrearsCheck->PAST_DUE_PCPL == $arrearsCheck->PAID_PCPL &&
+                            $arrearsCheck->PAST_DUE_INTRST == $arrearsCheck->PAID_INT &&
+                            $arrearsCheck->PAST_DUE_PENALTY == $arrearsCheck->PAID_PENALTY;
+
                         $arrearsCheck->update([
-                            'STATUS_REC' => $setStatus ? 'S' : 'A', 
+                            'STATUS_REC' => $setStatus ? 'S' : 'A',
                         ]);
                     }
                 }
             }
         }
 
+        // Update cancellation log
         $checkCreditCancel = M_PaymentCancelLog::where('INVOICE_NUMBER', $request->no_invoice)->first();
-    
-        if($checkCreditCancel){
+        if ($checkCreditCancel) {
             $checkCreditCancel->update([
                 'ONCHARGE_DESCR' => $request->descr_ho ?? '',
                 'ONCHARGE_PERSON' => $request->user()->id,
                 'ONCHARGE_TIME' => Carbon::now(),
-                'ONCHARGE_FLAG' => $request->flag??'',
+                'ONCHARGE_FLAG' => $request->flag ?? '',
             ]);
         }
     }
@@ -852,22 +857,22 @@ class PaymentController extends Controller
     public function cancelList(Request $request)
     {
         try {
-            $data = M_PaymentCancelLog::where(function($query) {
-                        $query->whereNull('ONCHARGE_PERSON')
-                            ->orWhere('ONCHARGE_PERSON', '');
-                    })
-                    ->where(function($query) {
-                        $query->whereNull('ONCHARGE_TIME')
-                            ->orWhere('ONCHARGE_TIME', '');
-                    })
-                    ->get();
+            $data = M_PaymentCancelLog::where(function ($query) {
+                $query->whereNull('ONCHARGE_PERSON')
+                ->orWhere('ONCHARGE_PERSON', '');
+            })
+                ->where(function ($query) {
+                    $query->whereNull('ONCHARGE_TIME')
+                    ->orWhere('ONCHARGE_TIME', '');
+                })
+                ->get();
 
             $dto = R_PaymentCancelLog::collection($data);
 
             return response()->json($dto, 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
 
