@@ -88,7 +88,8 @@ class PaymentController extends Controller
                         "bayar_denda" => $res['bayar_denda'] ?? '',
                         "total_bayar" => $res['total_bayar'] ?? '',
                         "flag" => $res['flag']??'',
-                        "denda" => $res['denda'] ?? ''
+                        "denda" => $res['denda'] ?? '',
+                        "diskon_denda" => strtolower($request->bayar_dengan_diskon) == 'ya' ? 1 : 0
                     ]);
 
                     if ($check_method_payment && strtolower($request->bayar_dengan_diskon) != 'ya') {
@@ -103,13 +104,10 @@ class PaymentController extends Controller
                             ])->update(['PAID_FLAG' => 'PENDING']);
                         }
 
-                        if ($res['bayar_denda'] != 0) {
-                            M_Arrears::where([
-                                'LOAN_NUMBER' => $res['loan_number'],
-                                'START_DATE' => $tgl_angsuran
-                            ])->update(['STATUS_REC' => 'PENDING']);
-                        }
-
+                        M_Arrears::where([
+                            'LOAN_NUMBER' => $res['loan_number'],
+                            'START_DATE' => $tgl_angsuran
+                        ])->update(['STATUS_REC' => 'PENDING']);
                     }
                 }
             }
@@ -140,7 +138,7 @@ class PaymentController extends Controller
 
         $this->updateCreditSchedule($loan_number, $tgl_angsuran, $res,$uid);
 
-        if(strtolower($request->bayar_dengan_diskon) == 'ya' && isset($request->bayar_dengan_diskon) && $request->bayar_dengan_diskon != ''){
+        if(strtolower($request->bayar_dengan_diskon) == 'ya' && isset($request->bayar_dengan_diskon) && $request->bayar_dengan_diskon != '' || $request->diskon_denda == 1){
             $this->updateDiscountArrears($loan_number, $tgl_angsuran, $res,$uid);
         }else{
             $this->updateArrears($loan_number, $tgl_angsuran, $res,$uid);
@@ -302,11 +300,9 @@ class PaymentController extends Controller
                 $updates['PAID_INT'] = $new_payment_value_interest;
             }
 
-            if($bayar_denda != 0){
-                $paymentData = $this->preparePaymentData($uid, 'BAYAR_DENDA', $bayar_denda);
-                M_PaymentDetail::create($paymentData);
-                $this->addCreditPaid($loan_number, ['BAYAR_DENDA' => $bayar_denda]);
-            }
+            $paymentData = $this->preparePaymentData($uid, 'BAYAR_DENDA', $bayar_denda);
+            M_PaymentDetail::create($paymentData);
+            $this->addCreditPaid($loan_number, ['BAYAR_DENDA' => $bayar_denda]);
 
             $remainingPenalty = floatval($getPenalty) - floatval($bayar_denda);
             if ($remainingPenalty > 0) {
@@ -322,7 +318,7 @@ class PaymentController extends Controller
                 $check_arrears->update($updates);
             }
 
-            $check_arrears->update(['STATUS_REC' =>$remainingPenalty > 0 ? 'D' : 'S']);
+            $check_arrears->update(['STATUS_REC' => $remainingPenalty > 0 ? 'D' : 'S']);
         }
 
     }

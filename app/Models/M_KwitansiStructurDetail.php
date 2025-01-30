@@ -24,6 +24,7 @@ class M_KwitansiStructurDetail extends Model
         'payment',
         'bayar_angsuran',
         'bayar_denda',
+        'diskon_denda',
         'total_bayar',
         'flag',
         'denda'
