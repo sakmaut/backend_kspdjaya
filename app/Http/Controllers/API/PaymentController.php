@@ -711,83 +711,24 @@ class PaymentController extends Controller
 
     private function processHoApproval(Request $request, $check)
     {
+
         if (strtolower($request->flag) === 'yes') {
-            // Update the status of the invoice
             $check->update([
                 'STTS_PAYMENT' => 'CANCEL'
             ]);
 
-            // Fetch payment details
-            $paymentCheck = DB::table('payment as a')
-                                ->leftJoin('payment_detail as b', 'b.PAYMENT_ID', '=', 'a.ID')
-                                ->select('a.LOAN_NUM', 'a.START_DATE', 'a.ORIGINAL_AMOUNT', 'b.ACC_KEYS', 'b.ORIGINAL_AMOUNT as amount')
-                                ->where('a.INVOICE', $request->no_invoice)
-                                ->get();
-
-            $loan_number = '';
-            $totalPrincipal = 0;
-            $totalInterest = 0;
-            $totalPenalty = 0;
-            $totalPaidPenalty = 0;
-            $creditSchedule = [];
-
-            if (!empty($paymentCheck)) {
-                foreach ($paymentCheck as $list) {
-                    // Update payment status
-                    M_Payment::where('INVOICE', $request->no_invoice)
-                        ->update([
-                            'STTS_RCRD' => 'CANCEL'
-                        ]);
-
-                    $loan_number = $list->LOAN_NUM;
-
-                    if (!isset($creditSchedule[$list->START_DATE])) {
-                        $creditSchedule[$list->START_DATE] = [
-                            'LOAN_NUMBER' => $list->LOAN_NUM,
-                            'PAYMENT_DATE' => date('Y-m-d', strtotime($list->START_DATE)),
-                            'AMOUNT' => 0,
-                            'PRINCIPAL' => 0,
-                            'INTEREST' => 0,
-                            'PENALTY' => 0,
-                            'PAID_PENALTY' => 0
-                        ];
-                    }
-
-                    // Update credit schedule based on ACC_KEYS
-                    switch ($list->ACC_KEYS) {
-                        case 'ANGSURAN_POKOK':
-                            $creditSchedule[$list->START_DATE]['PRINCIPAL'] += floatval($list->amount);
-                            break;
-                        case 'ANGSURAN_BUNGA':
-                            $creditSchedule[$list->START_DATE]['INTEREST'] += floatval($list->amount);
-                            break;
-                        case 'BAYAR_DENDA':
-                            $creditSchedule[$list->START_DATE]['PAID_PENALTY'] += floatval($list->amount);
-                            $creditSchedule[$list->START_DATE]['PENALTY'] += floatval($list->amount);
-                            break;
-                        case 'DISKON_DENDA':
-                            $creditSchedule[$list->START_DATE]['PENALTY'] += floatval($list->amount);
-                            break;
-                    }
-
-                    $creditSchedule[$list->START_DATE]['AMOUNT'] = $creditSchedule[$list->START_DATE]['PRINCIPAL'] + $creditSchedule[$list->START_DATE]['INTEREST'];
-                }
-            }
-
-            // Calculate totals
-            foreach ($creditSchedule as $schedule) {
-                $totalPrincipal += $schedule['PRINCIPAL'];
-                $totalInterest += $schedule['INTEREST'];
-                $totalPenalty += $schedule['PENALTY'];
-                $totalPaidPenalty += $schedule['PAID_PENALTY'];
-            }
+            $loan_number = $request->value['loan_number'];
+            $totalPrincipal = $request->value['totalPrincipal'];
+            $totalInterest = $request->value['totalInterest'];
+            $totalPaidPenalty = $request->value['totalPaidPenalty'];
+            $creditSchedule = $request->value['creditSchedule'];
 
             $setPrincipal = round($totalPrincipal, 2);
 
             // Update credit record
             $creditCheck = M_Credit::where('LOAN_NUMBER', $loan_number)
-                ->whereIn('STATUS', ['A', 'D'])
-                ->first();
+                                    ->whereIn('STATUS', ['A', 'D'])
+                                    ->first();
 
             if ($creditCheck) {
                 $creditCheck->update([
@@ -857,15 +798,31 @@ class PaymentController extends Controller
     public function cancelList(Request $request)
     {
         try {
-            $data = M_PaymentCancelLog::where(function ($query) {
-                $query->whereNull('ONCHARGE_PERSON')
-                ->orWhere('ONCHARGE_PERSON', '');
-            })
-                ->where(function ($query) {
-                    $query->whereNull('ONCHARGE_TIME')
-                    ->orWhere('ONCHARGE_TIME', '');
-                })
-                ->get();
+            $data = DB::table('payment_cancel_log as a')
+                        ->select(
+                            'a.ID',
+                            'a.INVOICE_NUMBER',
+                            'a.REQUEST_BY',
+                            'a.REQUEST_BRANCH',
+                            'a.REQUEST_POSITION',
+                            'a.REQUEST_DATE',
+                            'a.ONCHARGE_PERSON',
+                            'a.ONCHARGE_TIME',
+                            'a.ONCHARGE_DESCR',
+                            'a.ONCHARGE_FLAG',
+                            'b.LOAN_NUMBER',
+                            'b.TGL_TRANSAKSI'
+                        )
+                        ->leftJoin('kwitansi as b', 'b.NO_TRANSAKSI', '=', 'a.INVOICE_NUMBER')
+                        ->where(function ($query) {
+                            $query->whereNull('a.ONCHARGE_PERSON')
+                            ->orWhere('a.ONCHARGE_PERSON', '');
+                        })
+                        ->where(function ($query) {
+                            $query->whereNull('a.ONCHARGE_TIME')
+                            ->orWhere('a.ONCHARGE_TIME', '');
+                        })
+                        ->get();
 
             $dto = R_PaymentCancelLog::collection($data);
 
