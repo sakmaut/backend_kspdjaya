@@ -118,6 +118,7 @@ class PelunasanController extends Controller
     {
         DB::beginTransaction();
         try {
+
             $loan_number = $request->LOAN_NUMBER;
             
             $no_inv = generateCodeKwitansi($request, 'kwitansi', 'NO_TRANSAKSI', 'INV');
@@ -161,12 +162,20 @@ class PelunasanController extends Controller
     }
 
     function proccess($request,$loan_number,$no_inv,$status,$creditSchedule){
+        $uuidArray = [];
+
         foreach ($creditSchedule as $res) {
+            // Generate a unique UUID for each schedule entry
             $uid = Uuid::uuid7()->toString();
+
+            // Process the payment for the current schedule entry
             $this->proccessPayment($request, $uid, $no_inv, $status, $res);
-            $this->creditScheculeRepayment($request,$uid, $res);
-            $this->arrearsRepayment($request, $loan_number, $uid);
+
+            // Add the generated UUID to the array
+            $uuidArray[] = $uid;
         }
+        $this->creditScheculeRepayment($request, $uuidArray, $res); 
+
     }
 
     function proccessPayment($request,$uid,$no_inv,$status, $res){
@@ -215,7 +224,7 @@ class PelunasanController extends Controller
         }
     }
 
-    function creditScheculeRepayment($request,$uid,$res){
+    function creditScheculeRepayment($request,$uid, $creditSchedule){
 
         $bayarPokok = $request->BAYAR_POKOK;
         $bayarDiscountPokok = $request->DISKON_POKOK;
@@ -225,87 +234,87 @@ class PelunasanController extends Controller
         $remaining_discount = $bayarDiscountPokok; 
         $remaining_discount_bunga = $bayarDiscountBunga;
 
-        $valBeforePrincipal = $res['PAYMENT_VALUE_PRINCIPAL'];
-        $valBeforeInterest = $res['PAYMENT_VALUE_INTEREST'];
-        $getPrincipal = $res['PRINCIPAL'];
-        $getInterest = $res['INTEREST'];
-        $getDiscountPrincipal = $res['DISCOUNT_PRINCIPAL'];
-        $getDiscountInterest = $res['DISCOUNT_INTEREST'];
-        $getInstallment = $res['INSTALLMENT'];
+        foreach ($creditSchedule as $res) {
+            $valBeforePrincipal = $res['PAYMENT_VALUE_PRINCIPAL'];
+            $valBeforeInterest = $res['PAYMENT_VALUE_INTEREST'];
+            $getPrincipal = $res['PRINCIPAL'];
+            $getInterest = $res['INTEREST'];
+            $getDiscountPrincipal = $res['DISCOUNT_PRINCIPAL'];
+            $getDiscountInterest = $res['DISCOUNT_INTEREST'];
+            $getInstallment = $res['INSTALLMENT'];
 
-        $new_payment_value_principal = $valBeforePrincipal;
+            $new_payment_value_principal = $valBeforePrincipal;
 
-        if ($valBeforePrincipal < $getPrincipal) {
-            $remaining_to_principal = $getPrincipal - $valBeforePrincipal;
+            if ($valBeforePrincipal < $getPrincipal) {
+                $remaining_to_principal = $getPrincipal - $valBeforePrincipal;
 
-            if ($bayarPokok >= $remaining_to_principal) {
-                $new_payment_value_principal = $getPrincipal;
-                $bayarPokok -= $remaining_to_principal;
-            } else {
-                $new_payment_value_principal += $bayarPokok;
-                $bayarPokok = 0;
-            }
-
-            $updates = [];
-            if ($new_payment_value_principal !== $valBeforePrincipal) {
-                $updates['PAYMENT_VALUE_PRINCIPAL'] = $new_payment_value_principal;
-                $discountPaymentData = $this->preparePaymentData($uid, 'BAYAR_PELUNASAN_POKOK', $new_payment_value_principal);
-                M_PaymentDetail::create($discountPaymentData);
-            }
-
-            if ($remaining_discount > 0) {
-                $remaining_to_principal_for_discount = $getPrincipal - $new_payment_value_principal;
-
-
-                if ($remaining_discount >= $remaining_to_principal_for_discount) {
-                    $updates['DISCOUNT_PRINCIPAL'] = $remaining_to_principal_for_discount;
-
-                    $discountPaymentData = $this->preparePaymentData($uid, 'DISKON_POKOK', $remaining_to_principal_for_discount);
-                    M_PaymentDetail::create($discountPaymentData);
-
-                    $new_payment_value_principal += $remaining_to_principal_for_discount;
-                    $remaining_discount -= $remaining_to_principal_for_discount;
+                if ($bayarPokok >= $remaining_to_principal) {
+                    $new_payment_value_principal = $getPrincipal;
+                    $bayarPokok -= $remaining_to_principal;
                 } else {
-                    $updates['DISCOUNT_PRINCIPAL'] = $remaining_discount;
+                    $new_payment_value_principal += $bayarPokok;
+                    $bayarPokok = 0;
+                }
 
-                    $discountPaymentData = $this->preparePaymentData($uid, 'DISKON_POKOK', $remaining_discount);
+                $updates = [];
+                if ($new_payment_value_principal != $valBeforePrincipal) {
+                    $updates['PAYMENT_VALUE_PRINCIPAL'] = $new_payment_value_principal;
+                    $discountPaymentData = $this->preparePaymentData($uid, 'BAYAR_PELUNASAN_POKOK', $new_payment_value_principal);
                     M_PaymentDetail::create($discountPaymentData);
+                }
 
-                    $new_payment_value_principal += $remaining_discount;
-                    $remaining_discount = 0;
+                // Apply discounts to remaining principal
+                if ($remaining_discount > 0) {
+                    $remaining_to_principal_for_discount = $getPrincipal - $new_payment_value_principal;
+
+                    if ($remaining_discount >= $remaining_to_principal_for_discount) {
+                        $updates['DISCOUNT_PRINCIPAL'] = $remaining_to_principal_for_discount;
+                        $discountPaymentData = $this->preparePaymentData($uid, 'DISKON_POKOK', $remaining_to_principal_for_discount);
+                        M_PaymentDetail::create($discountPaymentData);
+
+                        $new_payment_value_principal += $remaining_to_principal_for_discount;
+                        $remaining_discount -= $remaining_to_principal_for_discount;
+                    } else {
+                        $updates['DISCOUNT_PRINCIPAL'] = $remaining_discount;
+                        $discountPaymentData = $this->preparePaymentData($uid, 'DISKON_POKOK', $remaining_discount);
+                        M_PaymentDetail::create($discountPaymentData);
+
+                        $new_payment_value_principal += $remaining_discount;
+                        $remaining_discount = 0;
+                    }
+                }
+
+                // if ($valBeforeInterest < $getInterest) {
+                //     $remaining_to_interest = $getInterest - $valBeforeInterest;
+                //     $interestUpdates = $this->hitungBunga($bayarBunga, $remaining_to_interest, $remaining_discount_bunga, $res,$uid);
+                //     $bayarBunga = $interestUpdates['bayarBunga'];
+                //     $remaining_discount_bunga = $interestUpdates['remaining_discount_bunga'];
+                // }
+
+                if (!empty($updates)) {
+                    $res->update($updates);
                 }
             }
 
-            if ($valBeforeInterest < $getInterest) {
-                $remaining_to_interest = $getInterest - $valBeforeInterest;
-                $interestUpdates = $this->hitungBunga($bayarBunga, $remaining_to_interest, $remaining_discount_bunga, $res,$uid);
-                $bayarBunga = $interestUpdates['bayarBunga'];
-                $remaining_discount_bunga = $interestUpdates['remaining_discount_bunga'];
-            }
+            $sumAll = floatval($valBeforePrincipal) + floatval($valBeforeInterest) + floatval($getPrincipal) + floatval($getInterest) + floatval($getDiscountPrincipal) + floatval($getDiscountInterest);
+            $checkPaid = floatval($getInstallment) == floatval($sumAll);
+            $insufficient = floatval($getInstallment) == floatval($checkPaid);
 
-            if (!empty($updates)) {
-                $res->update($updates);
-            }
-        }
+            $res->update([
+                'INSUFFICIENT_PAYMENT' => $insufficient ? 0 : $insufficient,
+                'PAYMENT_VALUE' => $sumAll,
+                'PAID_FLAG' => $checkPaid ? 'PAID' : ''
+            ]);
 
-        $sumAll = floatval($valBeforePrincipal) + floatval($valBeforeInterest) + floatval($getPrincipal) + floatval($getInterest) + floatval($getDiscountPrincipal) + floatval($getDiscountInterest);
-        $checkPaid = floatval($getInstallment) == floatval($sumAll);
-        $insufficient = floatval($getInstallment) == floatval($checkPaid);
-
-        $res->update([
-            'INSUFFICIENT_PAYMENT' => $insufficient ? 0 : $insufficient,
-            'PAYMENT_VALUE' => $sumAll,
-            'PAID_FLAG' => $checkPaid ? 'PAID' : ''
-        ]);
-
-        if ($remaining_discount <= 0 && $bayarDiscountPokok != 0) {
-            return;
-        }      
+            // if ($remaining_discount <= 0) {
+            //     break;
+            // }      
+         }
     }
 
-    function arrearsRepayment($request,$loan_number,$uid){
+    function arrearsRepayment($request,$loan_number,$uid,$getData){
 
-        $arrears = M_Arrears::where(['LOAN_NUMBER' => $loan_number, 'STATUS_REC' => 'A'])->get();
+        $arrears = M_Arrears::where(['LOAN_NUMBER' => $loan_number, 'STATUS_REC' => 'A', 'START_DATE' => $getData['PAYMENT_DATE']])->get();
 
         $bayarDenda = $request->BAYAR_DENDA;
         $bayarDiscountDenda = $request->DISKON_DENDA;
@@ -410,8 +419,7 @@ class PelunasanController extends Controller
                 }
             }   
 
-            $checkStatus = floatval($getPrincipal) == floatval($valBeforePrincipal) ;
-            $res->update(['END_DATE' =>now(),'STATUS_REC' => $checkStatus ? 'S' :'D']);
+            $res->update(['END_DATE' =>now(),'STATUS_REC' => $request->DISKON_DENDA == 0 ? 'S' :'D']);
             if ($remaining_discount <= 0 && $bayarDiscountPokok != 0) {
                 break;
             }                
@@ -551,36 +559,6 @@ class PelunasanController extends Controller
         ];
     
         M_Kwitansi::create($data);
-    }
-
-    function createPaymentDetails($request,$uid){
-        $payments = [
-            'BAYAR_POKOK' => 'BAYAR PELUNASAN POKOK',
-            'BAYAR_BUNGA' => 'BAYAR PELUNASAN BUNGA',
-            'BAYAR_PINALTI' => 'BAYAR PELUNASAN PINALTY',
-            'BAYAR_DENDA' => 'BAYAR PELUNASAN DENDA'
-        ];
-    
-        foreach ($payments as $key => $description) {
-            if ($request->$key != 0) {
-                $data = $this->preparePaymentData($uid, $description, $request->$key);
-                M_PaymentDetail::create($data);
-            }
-        }
-    
-        $discounts = [
-            'DISKON_POKOK' => 'DISKON POKOK',
-            'DISKON_BUNGA' => 'DISKON BUNGA',
-            'DISKON_PINALTI' => 'DISKON PINALTY',
-            'DISKON_DENDA' => 'DISKON DENDA'
-        ];
-    
-        foreach ($discounts as $key => $description) {
-            if ($request->$key != 0) {
-                $data = $this->preparePaymentData($uid, $description, $request->$key);
-                M_PaymentDetail::create($data);
-            }
-        } 
     }
 
     function preparePaymentData($payment_id,$acc_key, $amount)

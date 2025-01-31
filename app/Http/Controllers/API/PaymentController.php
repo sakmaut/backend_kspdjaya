@@ -137,7 +137,7 @@ class PaymentController extends Controller
 
         $this->updateCreditSchedule($loan_number, $tgl_angsuran, $res,$uid);
 
-        if((strtolower($request->bayar_dengan_diskon) == 'ya' && isset($request->bayar_dengan_diskon) && $request->bayar_dengan_diskon != '') || $res['diskon_denda'] == 1){
+        if((strtolower($request->bayar_dengan_diskon) == 'ya' && isset($request->bayar_dengan_diskon) && $request->bayar_dengan_diskon != '') || isset($res['diskon_denda']) && $res['diskon_denda'] == 1){
             $this->updateDiscountArrears($loan_number, $tgl_angsuran, $res,$uid);
         }else{
             $this->updateArrears($loan_number, $tgl_angsuran, $res,$uid);
