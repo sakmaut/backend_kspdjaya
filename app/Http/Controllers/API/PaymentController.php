@@ -104,11 +104,14 @@ class PaymentController extends Controller
                             ])->update(['PAID_FLAG' => 'PENDING']);
                         }
 
-                        M_Arrears::where([
-                            'LOAN_NUMBER' => $res['loan_number'],
-                            'START_DATE' => $tgl_angsuran,
-                            'STATUS_REC' => 'A'
-                        ])->update(['STATUS_REC' => 'PENDING']);
+                        if($res['bayar_denda'] != 0){
+                            M_Arrears::where([
+                                'LOAN_NUMBER' => $res['loan_number'],
+                                'START_DATE' => $tgl_angsuran,
+                                'STATUS_REC' => 'A'
+                            ])->update(['STATUS_REC' => 'PENDING']);
+                        }
+                        
                     }
                 }
             }
