@@ -142,11 +142,24 @@ class PelunasanController extends Controller
                 $status = "PENDING";
             }
 
-            $this->saveKwitansi($request, $detail_customer, $no_inv, $status);
-            $this->proccess($request, $loan_number, $no_inv, $status, $creditSchedule);
-            // if ($status === "PAID") {
-            //     $this->proccess($request, $loan_number, $no_inv, $status,$creditSchedule);
-            // }
+            if (!M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->exists()) {
+                $this->saveKwitansi($request, $detail_customer, $no_inv, $status);
+            }
+
+            if ($status === "PAID") {
+                $this->proccess($request, $loan_number, $no_inv, $status,$creditSchedule);
+            }else{
+                foreach ($creditSchedule as $res) {
+
+                    $res->update(['PAID_FLAG' => 'PENDING']);
+
+                    M_Arrears::where([
+                        'LOAN_NUMBER' => $res['LOAN_NUMBER'],
+                        'START_DATE' => $res['PAYMENT_DATE'],
+                        'STATUS_REC' => 'A'
+                    ])->update(['STATUS_REC' => 'PENDING']);
+                }               
+            }
 
             $data = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
 
@@ -162,20 +175,17 @@ class PelunasanController extends Controller
     }
 
     function proccess($request,$loan_number,$no_inv,$status,$creditSchedule){
-        $uuidArray = [];
+
+        $uids = [];
 
         foreach ($creditSchedule as $res) {
-            // Generate a unique UUID for each schedule entry
             $uid = Uuid::uuid7()->toString();
-
-            // Process the payment for the current schedule entry
+            $uids[] = $uid;
             $this->proccessPayment($request, $uid, $no_inv, $status, $res);
-
-            // Add the generated UUID to the array
-            $uuidArray[] = $uid;
         }
-        $this->creditScheculeRepayment($request, $uuidArray, $res); 
 
+        $this->creditScheculeRepayment($request, $uids, $creditSchedule);
+        $this->arrearsRepayment($request,$loan_number, $uids); 
     }
 
     function proccessPayment($request,$uid,$no_inv,$status, $res){
@@ -224,7 +234,7 @@ class PelunasanController extends Controller
         }
     }
 
-    function creditScheculeRepayment($request,$uid, $creditSchedule){
+    function creditScheculeRepayment($request, $uids, $creditSchedule){
 
         $bayarPokok = $request->BAYAR_POKOK;
         $bayarDiscountPokok = $request->DISKON_POKOK;
@@ -234,7 +244,10 @@ class PelunasanController extends Controller
         $remaining_discount = $bayarDiscountPokok; 
         $remaining_discount_bunga = $bayarDiscountBunga;
 
-        foreach ($creditSchedule as $res) {
+        foreach ($creditSchedule as $index => $res) {
+
+            $uid = $uids[$index];
+
             $valBeforePrincipal = $res['PAYMENT_VALUE_PRINCIPAL'];
             $valBeforeInterest = $res['PAYMENT_VALUE_INTEREST'];
             $getPrincipal = $res['PRINCIPAL'];
@@ -284,12 +297,12 @@ class PelunasanController extends Controller
                     }
                 }
 
-                // if ($valBeforeInterest < $getInterest) {
-                //     $remaining_to_interest = $getInterest - $valBeforeInterest;
-                //     $interestUpdates = $this->hitungBunga($bayarBunga, $remaining_to_interest, $remaining_discount_bunga, $res,$uid);
-                //     $bayarBunga = $interestUpdates['bayarBunga'];
-                //     $remaining_discount_bunga = $interestUpdates['remaining_discount_bunga'];
-                // }
+                if ($valBeforeInterest < $getInterest) {
+                    $remaining_to_interest = $getInterest - $valBeforeInterest;
+                    $interestUpdates = $this->hitungBunga($bayarBunga, $remaining_to_interest, $remaining_discount_bunga, $res,$uid);
+                    $bayarBunga = $interestUpdates['bayarBunga'];
+                    $remaining_discount_bunga = $interestUpdates['remaining_discount_bunga'];
+                }
 
                 if (!empty($updates)) {
                     $res->update($updates);
@@ -312,9 +325,9 @@ class PelunasanController extends Controller
          }
     }
 
-    function arrearsRepayment($request,$loan_number,$uid,$getData){
+    function arrearsRepayment($request,$loan_number, $uids){
 
-        $arrears = M_Arrears::where(['LOAN_NUMBER' => $loan_number, 'STATUS_REC' => 'A', 'START_DATE' => $getData['PAYMENT_DATE']])->get();
+        $arrears = M_Arrears::where(['LOAN_NUMBER' => $loan_number, 'STATUS_REC' => 'A'])->get();
 
         $bayarDenda = $request->BAYAR_DENDA;
         $bayarDiscountDenda = $request->DISKON_DENDA;
@@ -327,7 +340,10 @@ class PelunasanController extends Controller
         $remaining_discount_bunga = $bayarDiscountBunga;
         $remaining_discount_denda = $bayarDiscountDenda;
 
-        foreach ($arrears as $res) {
+        foreach ($arrears as $index => $res) {
+
+            $uid = $uids[$index];
+
             $valBeforePrincipal = $res['PAID_PCPL'];
             $valBeforeInterest = $res['PAID_INT'];
             $getPrincipal = $res['PAST_DUE_PCPL'];
@@ -403,11 +419,15 @@ class PelunasanController extends Controller
                         // If the remaining discount can cover the remaining penalty
                         if ($remaining_discount_denda >= $remaining_to_penalty_for_discount) {
                             $updates['WOFF_PENALTY'] = $remaining_to_penalty_for_discount;
+                            $discountPaymentData = $this->preparePaymentData($uid, 'DISKON_DENDA', $remaining_to_penalty_for_discount);
+                            M_PaymentDetail::create($discountPaymentData);
                             $new_payment_value_penalty += $remaining_to_penalty_for_discount; // Apply discount
                             $remaining_discount_denda -= $remaining_to_penalty_for_discount; // Reduce the discount
                         } else {
                             // If the discount can't fully cover the remaining penalty
                             $updates['WOFF_PENALTY'] = $remaining_discount_denda;
+                            $discountPaymentData = $this->preparePaymentData($uid, 'DISKON_DENDA', $remaining_discount_denda);
+                            M_PaymentDetail::create($discountPaymentData);
                             $new_payment_value_penalty += $remaining_discount_denda; // Apply discount
                             $remaining_discount_denda = 0; // No more discount left
                         }
