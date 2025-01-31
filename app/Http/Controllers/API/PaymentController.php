@@ -428,7 +428,8 @@ class PaymentController extends Controller
             "JUMLAH_UANG" => $request->jumlah_uang ?? null,
             "NAMA_BANK" => $request->nama_bank ?? null,
             "NO_REKENING" => $request->no_rekening ?? null,
-            "CREATED_BY" => $request->user()->fullname
+            "CREATED_BY" => $request->user()->fullname,
+            "CREATED_AT" => Carbon::now()
         ];
 
         M_Kwitansi::create($save_kwitansi);
