@@ -73,11 +73,12 @@ class PaymentController extends Controller
                         }
                     }
 
-                    M_KwitansiStructurDetail::create([
-                        "no_invoice" => $no_inv,
-                        "key" => $res['key'] ?? '',
+                    M_KwitansiStructurDetail::firstOrCreate([
+                        'no_invoice' => $no_inv,
+                        'key' => $res['key'] ?? '',
+                        'loan_number' => $res['loan_number'] ?? ''
+                    ], [
                         'angsuran_ke' => $res['angsuran_ke'] ?? '',
-                        'loan_number' => $res['loan_number'] ?? '',
                         'tgl_angsuran' => $res['tgl_angsuran'] ?? '',
                         'principal' => $res['principal'] ?? '',
                         'interest' => $res['interest'] ?? '',
@@ -85,11 +86,11 @@ class PaymentController extends Controller
                         'principal_remains' => $res['principal_remains'] ?? '',
                         'payment' => $res['payment'] ?? '',
                         'bayar_angsuran' => $res['bayar_angsuran'] ?? '',
-                        "bayar_denda" => $res['bayar_denda'] ?? '',
-                        "total_bayar" => $res['total_bayar'] ?? '',
-                        "flag" => $res['flag']??'',
-                        "denda" => $res['denda'] ?? '',
-                        "diskon_denda" => strtolower($request->bayar_dengan_diskon) == 'ya' ? 1 : 0
+                        'bayar_denda' => $res['bayar_denda'] ?? '',
+                        'total_bayar' => $res['total_bayar'] ?? '',
+                        'flag' => $res['flag'] ?? '',
+                        'denda' => $res['denda'] ?? '',
+                        'diskon_denda' => strtolower($request->bayar_dengan_diskon) == 'ya' ? 1 : 0
                     ]);
 
                     if ($check_method_payment && strtolower($request->bayar_dengan_diskon) != 'ya') {
@@ -104,7 +105,7 @@ class PaymentController extends Controller
                             ])->update(['PAID_FLAG' => 'PENDING']);
                         }
 
-                        if($res['bayar_denda'] != 0){
+                        if($res['bayar_denda'] != 0 || (isset($res['diskon_denda']) && $res['diskon_denda'] == 1)){
                             M_Arrears::where([
                                 'LOAN_NUMBER' => $res['loan_number'],
                                 'START_DATE' => $tgl_angsuran,
@@ -116,10 +117,11 @@ class PaymentController extends Controller
                 }
             }
 
-            $this->saveKwitansi($request, $customer_data, $no_inv);
+            if (!M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->exists()) {
+                $this->saveKwitansi($request, $customer_data, $no_inv);
+            }
 
             $data = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
-
             $dto = new R_Kwitansi($data);
 
             DB::commit();
@@ -335,7 +337,7 @@ class PaymentController extends Controller
         $byr_angsuran = $res['bayar_angsuran'];
         $bayar_denda = $res['bayar_denda'];
 
-        if ($check_arrears) {
+        if ($check_arrears && $res['bayar_denda'] != 0) {
             $current_penalty = $check_arrears->PAID_PENALTY;
 
             $new_penalty = $current_penalty + $bayar_denda;
@@ -398,7 +400,6 @@ class PaymentController extends Controller
                 $check_arrears->update(['STATUS_REC' => 'S']);
             }
         }
-
     }
 
     private function saveKwitansi($request, $customer_detail, $no_inv)
