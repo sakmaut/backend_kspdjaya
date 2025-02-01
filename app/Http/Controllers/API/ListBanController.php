@@ -166,6 +166,7 @@ class ListBanController extends Controller
                             DB::raw('SUM(g.VALUE) as TOTAL_NILAI_JAMINAN'),
                             'b.CUST_CODE'
                         )
+                        ->where('b.CREATED_AT', '>=', DB::raw('DATE_SUB(NOW(), INTERVAL 1 MONTH)'))
                         ->groupBy(
                             'a.CODE',
                             'a.NAME',
