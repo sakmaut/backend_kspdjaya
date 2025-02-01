@@ -32,11 +32,19 @@ class PaymentController extends Controller
 
     public function index(Request $request){
         try {
-            $data = M_Kwitansi::where('CREATED_AT', '>=', Carbon::now()->subWeeks(2))
-                                ->orderBy('CREATED_AT', 'DESC')
-                                ->get();
 
-            $dto = R_Kwitansi::collection($data);
+            $getPosition = $request->user()->position;
+            $getBranch = $request->user()->branch_id;
+
+            $data = M_Kwitansi::where('CREATED_AT', '>=', Carbon::now()->subWeeks(2))
+                                ->orderBy('CREATED_AT', 'DESC');
+
+            if (strtolower($getPosition) == 'ho') {
+                $data = $data->where('BRANCH_CODE', '=', $getBranch);
+            }
+
+            $dto = R_Kwitansi::collection($data->get());
+
 
             return response()->json($dto, 200);
         } catch (\Exception $e) {
