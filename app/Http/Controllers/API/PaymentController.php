@@ -32,7 +32,9 @@ class PaymentController extends Controller
 
     public function index(Request $request){
         try {
-            $data = M_Kwitansi::orderBy('CREATED_AT', 'DESC')->get();
+            $data = M_Kwitansi::where('CREATED_AT', '>=', Carbon::now()->subWeeks(2))
+                                ->orderBy('CREATED_AT', 'DESC')
+                                ->get();
 
             $dto = R_Kwitansi::collection($data);
 
