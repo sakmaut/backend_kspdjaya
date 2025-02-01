@@ -39,7 +39,7 @@ class PaymentController extends Controller
             $data = M_Kwitansi::where('CREATED_AT', '>=', Carbon::now()->subWeeks(2))
                                 ->orderBy('CREATED_AT', 'DESC');
 
-            if (strtolower($getPosition) == 'ho') {
+            if (strtolower($getPosition) != 'ho') {
                 $data = $data->where('BRANCH_CODE', '=', $getBranch);
             }
 
