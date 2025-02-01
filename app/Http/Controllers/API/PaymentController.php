@@ -119,9 +119,7 @@ class PaymentController extends Controller
                 }
             }
 
-            if (!M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->exists()) {
-                $this->saveKwitansi($request, $customer_data, $no_inv);
-            }
+            $this->saveKwitansi($request, $customer_data, $no_inv);
 
             $data = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
             $dto = new R_Kwitansi($data);
@@ -435,7 +433,10 @@ class PaymentController extends Controller
             "CREATED_AT" => Carbon::now()
         ];
 
-        M_Kwitansi::create($save_kwitansi);
+        M_Kwitansi::firstOrCreate(
+            ['NO_TRANSAKSI' => $no_inv],
+            $save_kwitansi
+        );
     }
 
     function createPaymentRecords($request, $res, $tgl_angsuran, $loan_number, $no_inv, $branch,$uid)

@@ -13,6 +13,7 @@ use App\Models\M_PaymentApproval;
 use App\Models\M_PaymentAttachment;
 use App\Models\M_PaymentDetail;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -278,6 +279,105 @@ class ReportController extends Controller
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+        }
+    }
+
+    public function strukturCredit(Request $request)
+    {
+        try {
+            $schedule = [];
+
+            $loanNumber = $request->loan_number;
+
+            $data = DB::table('credit_schedule AS a')
+            ->leftJoin('arrears AS b', function ($join) {
+                $join->on('b.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
+                ->on('b.START_DATE', '=', 'a.PAYMENT_DATE');
+            })
+                ->where('a.LOAN_NUMBER', $loanNumber)
+                ->where(function ($query) {
+                    $query->where('a.PAID_FLAG', '!=', 'PAID')
+                    ->orWhereNotIn('b.STATUS_REC', ['S', 'D']);
+                })
+                ->orderBy('a.INSTALLMENT_COUNT', 'ASC')
+                ->select(
+                    'a.LOAN_NUMBER',
+                    'a.INSTALLMENT_COUNT',
+                    'a.PAYMENT_DATE',
+                    'a.PRINCIPAL',
+                    'a.INTEREST',
+                    'a.INSTALLMENT',
+                    'a.PRINCIPAL_REMAINS',
+                    'a.PAYMENT_VALUE_PRINCIPAL',
+                    'a.PAYMENT_VALUE_INTEREST',
+                    'a.PAYMENT_VALUE',
+                    'a.PAID_FLAG',
+                    'b.STATUS_REC',
+                    'b.ID as id_arrear',
+                    'b.PAST_DUE_PENALTY',
+                    'b.PAID_PENALTY'
+                )
+                ->get();
+
+
+            if ($data->isEmpty()) {
+                return $schedule;
+            }
+
+            $getCustomer = M_Credit::where('LOAN_NUMBER', $loanNumber)
+                ->with(['customer' => function ($query) {
+                    $query->select(
+                        'CUST_CODE',
+                        'NAME',
+                        'ADDRESS',
+                        'RT',
+                        'RW',
+                        'PROVINCE',
+                        'CITY',
+                        'KELURAHAN',
+                        'KECAMATAN'
+                    );
+                }])
+                ->first()
+                ->customer;
+
+
+            $j = 0;
+            foreach ($data as $res) {
+
+                $installment = floatval($res->INSTALLMENT) - floatval($res->PAYMENT_VALUE);
+
+                if (!empty($res->STATUS_REC) && $res->STATUS_REC == 'PENDING') {
+                    $cekStatus = $res->STATUS_REC;
+                } else {
+                    $cekStatus = $res->PAID_FLAG;
+                }
+
+                if ($res->PAID_FLAG == 'PAID' && ($res->STATUS_REC == 'D' || $res->STATUS_REC == 'S')) {
+                    $cekStatus = 'PAID';
+                }
+
+                $schedule[] = [
+                    'KE' => $res->INSTALLMENT_COUNT,
+                    'LOAN NUMBER' => $res->LOAN_NUMBER,
+                    'TGL ANGSURAN' => Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y'),
+                    'POKOK' => floatval($res->PRINCIPAL),
+                    'BUNGA' => floatval($res->INTEREST),
+                    'ANGSURAN' => $installment,
+                    'BAKI DEBET' => floatval($res->PRINCIPAL_REMAINS),
+                    'payment' => floatval($res->PAYMENT_VALUE),
+                    'bayar_angsuran' => floatval($res->INSTALLMENT) - floatval($res->PAYMENT_VALUE),
+                    'bayar_denda' => $installment == 0 ? 0 : floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->PAID_PENALTY ?? 0),
+                    'total_bayar' => floatval($res->INSTALLMENT + ($res->PAST_DUE_PENALTY ?? 0)),
+                    'id_arrear' => $res->id_arrear ?? '',
+                    'denda' => floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->PAID_PENALTY ?? 0)
+                ];
+            }
+
+            return response()->json($schedule, 200);
+        } catch (\Exception $e) {
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage()], 500);
         }
     }
 }

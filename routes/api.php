@@ -131,6 +131,7 @@ Route::middleware('auth:sanctum')->group(function () {
     //Report
     Route::get('inquiryList', [ReportController::class,'inquiryList']);
     Route::get('creditReport/{id}', [ReportController::class,'pinjaman']);
+    Route::get('strukturCredit/{id}', [ReportController::class, 'strukturCredit']);
     Route::get('customerReport/{id}', [ReportController::class,'debitur']);
     Route::get('collateralReport/{id}', [ReportController::class,'jaminan']);
     Route::get('paymentReport/{id}', [ReportController::class,'pembayaran']);
