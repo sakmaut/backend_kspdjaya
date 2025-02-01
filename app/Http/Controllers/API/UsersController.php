@@ -190,15 +190,15 @@ class UsersController extends Controller
 
             $users = User::findOrFail($id);
 
-            $users = User::where('username', $request->username)
-                            ->where('id', '!=', $id)
-                            ->first();
-
-            if ($users) {
+            if (!$users) {
                 throw new Exception("Username Is Exist", 404);
             }
 
             $getJabatan = M_JabatanAccessMenu::where('jabatan', $request->jabatan)->first();
+
+            if (!$getJabatan) {
+                throw new Exception("Jabatan not found", 404);
+            }
 
             $data_user = [
                 'username' => $request->username??'',
@@ -207,14 +207,12 @@ class UsersController extends Controller
                 'position' => $getJabatan->jabatan??'',
                 'no_ktp' => $request->no_ktp??'',
                 'alamat' => $request->alamat??'',
-                'gender' => $request-> gender ?? '',
-                'mobile_number' => $request-> no_hp ?? '',
-                'status' => $request-> status ?? '',
+                'gender' => $request->gender ?? '',
+                'mobile_number' => $request->no_hp ?? '',
+                'status' => $request->status ?? '',
                 'updated_by' => $request->user()-> id ?? '',
                 'updated_at' => $this-> current_time ?? ''
             ];
-
-            compareData(User::class,$id,$data_user,$request);
 
             if (isset($request->password) && !empty($request->password)) {
                 $data_user['password'] = bcrypt($request->password);
@@ -223,7 +221,6 @@ class UsersController extends Controller
             $users->update($data_user);
 
             DB::commit();
-            ActivityLogger::logActivity($request,"Success",200);
             return response()->json(['message' => 'User updated successfully', "status" => 200], 200);
         } catch (ModelNotFoundException $e) {
             DB::rollback();
