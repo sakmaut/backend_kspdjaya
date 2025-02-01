@@ -289,73 +289,39 @@ class ReportController extends Controller
 
             $loanNumber = $request->loan_number;
 
-            $data = DB::table('credit_schedule AS a')
-            ->leftJoin('arrears AS b', function ($join) {
-                $join->on('b.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
-                ->on('b.START_DATE', '=', 'a.PAYMENT_DATE');
-            })
-                ->where('a.LOAN_NUMBER', $loanNumber)
-                ->where(function ($query) {
-                    $query->where('a.PAID_FLAG', '!=', 'PAID')
-                    ->orWhereNotIn('b.STATUS_REC', ['S', 'D']);
-                })
-                ->orderBy('a.INSTALLMENT_COUNT', 'ASC')
-                ->select(
-                    'a.LOAN_NUMBER',
-                    'a.INSTALLMENT_COUNT',
-                    'a.PAYMENT_DATE',
-                    'a.PRINCIPAL',
-                    'a.INTEREST',
-                    'a.INSTALLMENT',
-                    'a.PRINCIPAL_REMAINS',
-                    'a.PAYMENT_VALUE_PRINCIPAL',
-                    'a.PAYMENT_VALUE_INTEREST',
-                    'a.PAYMENT_VALUE',
-                    'a.PAID_FLAG',
-                    'b.STATUS_REC',
-                    'b.ID as id_arrear',
-                    'b.PAST_DUE_PENALTY',
-                    'b.PAID_PENALTY'
-                )
-                ->get();
+            $data = DB::table('credit_schedule as a')
+                        ->leftJoin('payment as b', function ($join) {
+                            $join->on('b.LOAN_NUM', '=', 'a.LOAN_NUMBER')
+                            ->whereColumn('b.START_DATE', '=', 'a.PAYMENT_DATE');
+                        })
+                        ->leftJoin('arrears as c', function ($join) {
+                            $join->on('c.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
+                            ->whereColumn('c.START_DATE', '=', 'a.PAYMENT_DATE');
+                        })
+                        ->where('a.LOAN_NUMBER', '=', '11105230000622')
+                        ->groupBy('a.INSTALLMENT_COUNT', 'a.PAYMENT_DATE')
+                        ->select(
+                            'a.INSTALLMENT_COUNT',
+                            'a.PAYMENT_DATE',
+                            'a.PRINCIPAL',
+                            'a.INTEREST',
+                            'a.PAYMENT_VALUE_PRINCIPAL',
+                            'a.PAYMENT_VALUE_INTEREST',
+                            'b.ENTRY_DATE',
+                            'c.PAST_DUE_PENALTY',
+                            'c.PAID_PENALTY'
+                        )
+                        ->get();
 
 
             if ($data->isEmpty()) {
                 return $schedule;
             }
 
-            $getCustomer = M_Credit::where('LOAN_NUMBER', $loanNumber)
-                ->with(['customer' => function ($query) {
-                    $query->select(
-                        'CUST_CODE',
-                        'NAME',
-                        'ADDRESS',
-                        'RT',
-                        'RW',
-                        'PROVINCE',
-                        'CITY',
-                        'KELURAHAN',
-                        'KECAMATAN'
-                    );
-                }])
-                ->first()
-                ->customer;
-
-
             $j = 0;
             foreach ($data as $res) {
 
                 $installment = floatval($res->INSTALLMENT) - floatval($res->PAYMENT_VALUE);
-
-                if (!empty($res->STATUS_REC) && $res->STATUS_REC == 'PENDING') {
-                    $cekStatus = $res->STATUS_REC;
-                } else {
-                    $cekStatus = $res->PAID_FLAG;
-                }
-
-                if ($res->PAID_FLAG == 'PAID' && ($res->STATUS_REC == 'D' || $res->STATUS_REC == 'S')) {
-                    $cekStatus = 'PAID';
-                }
 
                 $schedule[] = [
                     'KE' => $res->INSTALLMENT_COUNT,
