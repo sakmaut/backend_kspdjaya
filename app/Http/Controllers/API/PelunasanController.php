@@ -63,7 +63,7 @@ class PelunasanController extends Controller
                         left join (	select	LOAN_NUMBER, 
                                             INTEREST * datediff(now(), PAYMENT_DATE) / 
                                                 date_format(date_add(date_add(str_to_date(concat('01',date_format(PAYMENT_DATE,'%m%Y')),'%d%m%Y'),interval 1 month),interval -1 day),'%m') as BUNGA
-                                    from	getCreditSchedule
+                                    from	credit_schedule
                                     where	LOAN_NUMBER = '{$loan_number}'
                                             and PAYMENT_DATE = (	select	max(PAYMENT_DATE)
                                                                     from	credit_schedule
