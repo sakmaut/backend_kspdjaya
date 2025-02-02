@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\M_Branch;
+use App\Models\M_KwitansiDetailPelunasan;
 use App\Models\M_KwitansiStructurDetail;
 use App\Models\M_LogPrint;
 use App\Models\M_Payment;
@@ -21,11 +22,21 @@ class R_KwitansiPelunasan extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $details = DB::table('payment as a')
-                        ->leftJoin('payment_detail as b', 'b.PAYMENT_ID', '=', 'a.ID')
-                        ->where('a.INVOICE', '=', $this->NO_TRANSAKSI)
-                        ->select('a.TITLE','a.START_DATE', 'b.ACC_KEYS', 'b.ORIGINAL_AMOUNT')
-                        ->get();
+        $details = M_KwitansiDetailPelunasan::select(
+                                                    'no_invoice',
+                                                    'loan_number',
+                                                    'angsuran_ke',
+                                                    'tgl_angsuran',
+                                                    'bayar_pokok',
+                                                    'bayar_bunga',
+                                                    'bayar_denda',
+                                                    'diskon_pokok',
+                                                    'diskon_bunga',
+                                                    'diskon_denda'  
+                                                )
+                                                ->where('no_invoice', $this->NO_TRANSAKSI)
+                                                ->orderByRaw('CAST(angsuran_ke AS SIGNED) ASC')
+                                                ->get();
         
 
         $branch = M_Branch::where('ID', $this->BRANCH_CODE)->first();

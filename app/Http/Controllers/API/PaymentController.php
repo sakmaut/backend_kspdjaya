@@ -45,7 +45,6 @@ class PaymentController extends Controller
 
             $dto = R_Kwitansi::collection($data->get());
 
-
             return response()->json($dto, 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
@@ -590,65 +589,77 @@ class PaymentController extends Controller
             $request->merge(['payment_method' => 'transfer']);
 
             if($request->flag == 'yes'){
-                if (isset($request->struktur) && is_array($request->struktur)) {
-                    foreach ($request->struktur as $res) {
-                        $request->merge(['approval' => 'approve', 'pembayaran' => $res['bayar_denda'] != 0 ? 'angsuran_denda' : 'angsuran']);
-                        
-                        $this->processPaymentStructure($res, $request, $getCodeBranch, $getInvoice);
+
+                if($kwitansi->PAYMENT_TYPE === 'pelunasan'){
+                    $pelunasan = new PelunasanController();
+                    $pelunasan->proccess($request, $kwitansi->LOAN_NUMBER, $getInvoice, 'PAID');
+                }else{
+                    if (isset($request->struktur) && is_array($request->struktur)) {
+                        foreach ($request->struktur as $res) {
+                            $request->merge(['approval' => 'approve', 'pembayaran' => $res['bayar_denda'] != 0 ? 'angsuran_denda' : 'angsuran']);
+
+                            $this->processPaymentStructure($res, $request, $getCodeBranch, $getInvoice);
+                        }
                     }
+                    $kwitansi->update(['STTS_PAYMENT' => 'PAID']);
                 }
-                $kwitansi->update(['STTS_PAYMENT' => 'PAID']);
             }else{
                 $request->merge(['approval' => 'no']);
 
-                if (isset($request->struktur) && is_array($request->struktur)) {
-                    foreach ($request->struktur as $res) {
-                        $loan_number = $res['loan_number'];
-                        $tgl_angsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
-                        $uid = Uuid::uuid7()->toString();
+                if ($kwitansi->PAYMENT_TYPE === 'pelunasan') {
+                    $pelunasan = new PelunasanController();
+                    $pelunasan->proccessCancel($request, $kwitansi->LOAN_NUMBER, $getInvoice, 'CANCEL');
+                } else {
 
-                        M_Payment::create([
-                            'ID' => $uid,
-                            'ACC_KEY' =>  $res['bayar_denda'] != 0 ? 'angsuran_denda' : 'angsuran',
-                            'STTS_RCRD' => 'CANCEL',
-                            'INVOICE' => $getInvoice ?? '',
-                            'NO_TRX' => $getInvoice ?? '',
-                            'PAYMENT_METHOD' => 'transfer',
-                            'BRANCH' => $getCodeBranch->CODE_NUMBER ?? '',
-                            'LOAN_NUM' => $loan_number ?? '',
-                            'ENTRY_DATE' => now(),
-                            'TITLE' => 'Angsuran Ke-' . $res['angsuran_ke'],
-                            'ORIGINAL_AMOUNT' => ($res['bayar_angsuran'] + $res['bayar_denda']),
-                            'OS_AMOUNT' => $os_amount ?? 0,
-                            'START_DATE' => $tgl_angsuran ?? '',
-                            'END_DATE' => now(),
-                            'USER_ID' => $request->user()->id ?? '',
-                            'AUTH_BY' => $request->user()->fullname ?? '',
-                            'AUTH_DATE' => now(),
-                            'ARREARS_ID' => $res['id_arrear'] ?? '',
-                            'BANK_NAME' => round(microtime(true) * 1000)
-                        ]);
+                    if (isset($request->struktur) && is_array($request->struktur)) {
+                        foreach ($request->struktur as $res) {
+                            $loan_number = $res['loan_number'];
+                            $tgl_angsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
+                            $uid = Uuid::uuid7()->toString();
 
-                        if (($res['bayar_angsuran'] != 0 && $res['installment'] != 0)) {
-                            $credit_schedule = M_CreditSchedule::where([
+                            M_Payment::create([
+                                'ID' => $uid,
+                                'ACC_KEY' =>  $res['bayar_denda'] != 0 ? 'angsuran_denda' : 'angsuran',
+                                'STTS_RCRD' => 'CANCEL',
+                                'INVOICE' => $getInvoice ?? '',
+                                'NO_TRX' => $getInvoice ?? '',
+                                'PAYMENT_METHOD' => 'transfer',
+                                'BRANCH' => $getCodeBranch->CODE_NUMBER ?? '',
+                                'LOAN_NUM' => $loan_number ?? '',
+                                'ENTRY_DATE' => now(),
+                                'TITLE' => 'Angsuran Ke-' . $res['angsuran_ke'],
+                                'ORIGINAL_AMOUNT' => ($res['bayar_angsuran'] + $res['bayar_denda']),
+                                'OS_AMOUNT' => $os_amount ?? 0,
+                                'START_DATE' => $tgl_angsuran ?? '',
+                                'END_DATE' => now(),
+                                'USER_ID' => $request->user()->id ?? '',
+                                'AUTH_BY' => $request->user()->fullname ?? '',
+                                'AUTH_DATE' => now(),
+                                'ARREARS_ID' => $res['id_arrear'] ?? '',
+                                'BANK_NAME' => round(microtime(true) * 1000)
+                            ]);
+
+                            if (($res['bayar_angsuran'] != 0 && $res['installment'] != 0)) {
+                                $credit_schedule = M_CreditSchedule::where([
+                                    'LOAN_NUMBER' => $loan_number,
+                                    'PAYMENT_DATE' => $tgl_angsuran
+                                ])->where(function ($query) {
+                                    $query->where('PAID_FLAG', '!=', 'PAID')
+                                        ->orWhereNull('PAID_FLAG');
+                                })->first();
+
+                                $credit_schedule->update(['PAID_FLAG' => '']);
+                            }
+
+                            M_Arrears::where([
                                 'LOAN_NUMBER' => $loan_number,
-                                'PAYMENT_DATE' => $tgl_angsuran
-                            ])->where(function ($query) {
-                                $query->where('PAID_FLAG', '!=', 'PAID')
-                                      ->orWhereNull('PAID_FLAG');
-                            })->first();
-
-                            $credit_schedule->update(['PAID_FLAG' => '']);
+                                'START_DATE' => $tgl_angsuran
+                            ])->update(['STATUS_REC' => 'A']);
                         }
-
-                        M_Arrears::where([
-                            'LOAN_NUMBER' => $loan_number,
-                            'START_DATE' => $tgl_angsuran
-                        ])->update(['STATUS_REC' => 'A']);
                     }
-                }
 
-                $kwitansi->update(['STTS_PAYMENT' => 'CANCEL']);
+                    $kwitansi->update(['STTS_PAYMENT' => 'CANCEL']);
+                }
             }
             
             $data_approval = [

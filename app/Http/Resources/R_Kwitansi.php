@@ -5,6 +5,7 @@ namespace App\Http\Resources;
 use App\Models\M_Branch;
 use App\Models\M_Credit;
 use App\Models\M_Customer;
+use App\Models\M_KwitansiDetailPelunasan;
 use App\Models\M_KwitansiStructurDetail;
 use App\Models\M_LogPrint;
 use App\Models\M_Payment;
@@ -23,32 +24,52 @@ class R_Kwitansi extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $details = M_KwitansiStructurDetail::select('id', 
-                                                    'no_invoice', 
-                                                    'key',
-                                                    'angsuran_ke', 
-                                                    'loan_number', 
-                                                    'tgl_angsuran', 
-                                                    'principal', 
-                                                    'interest', 
-                                                    'installment', 
-                                                    'principal_remains',
-                                                    'payment', 
-                                                    'bayar_angsuran',
-                                                    DB::raw('CASE WHEN bayar_denda = 0 THEN 0 ELSE COALESCE(bayar_denda, 0) END as bayar_denda'),
-                                                    'total_bayar',
-                                                    'flag', 
-                                                    'denda',
-                                                    'diskon_denda')
-                                            ->where('no_invoice', $this->NO_TRANSAKSI)
-                                            ->where(function($query) {
-                                                $query->where('installment', '<>', 0)
-                                                    ->orWhere('bayar_denda', '<>', 0)
-                                                    ->orWhere('diskon_denda', '=', 1);
-                                            })
-                                            ->orderByRaw('CAST(angsuran_ke AS SIGNED) ASC')
-                                            ->get();
-                                        
+
+        if($this->PAYMENT_TYPE === 'pelunasan'){
+            $details = M_KwitansiDetailPelunasan::select(
+                                                    'no_invoice',
+                                                    'loan_number',
+                                                    'angsuran_ke',
+                                                    'tgl_angsuran',
+                                                    'bayar_pokok',
+                                                    'bayar_bunga',
+                                                    'bayar_denda',
+                                                    'diskon_pokok',
+                                                    'diskon_bunga',
+                                                    'diskon_denda'
+                                                )
+                                                ->where('no_invoice', $this->NO_TRANSAKSI)
+                                                ->orderByRaw('CAST(angsuran_ke AS SIGNED) ASC')
+                                                ->get();
+        }else{
+            $details = M_KwitansiStructurDetail::select(
+                                                'id',
+                                                'no_invoice',
+                                                'key',
+                                                'angsuran_ke',
+                                                'loan_number',
+                                                'tgl_angsuran',
+                                                'principal',
+                                                'interest',
+                                                'installment',
+                                                'principal_remains',
+                                                'payment',
+                                                'bayar_angsuran',
+                                                DB::raw('CASE WHEN bayar_denda = 0 THEN 0 ELSE COALESCE(bayar_denda, 0) END as bayar_denda'),
+                                                'total_bayar',
+                                                'flag',
+                                                'denda',
+                                                'diskon_denda'
+                                            )
+                                                ->where('no_invoice', $this->NO_TRANSAKSI)
+                                                ->where(function ($query) {
+                                                    $query->where('installment', '<>', 0)
+                                                        ->orWhere('bayar_denda', '<>', 0)
+                                                        ->orWhere('diskon_denda', '=', 1);
+                                                })
+                                                ->orderByRaw('CAST(angsuran_ke AS SIGNED) ASC')
+                                                ->get();
+        }                                
         
 
         $branch = M_Branch::where('ID', $this->BRANCH_CODE)->first();
@@ -84,7 +105,7 @@ class R_Kwitansi extends JsonResource
             "jumlah_uang" => intval($this->JUMLAH_UANG ?? 0),
             "terbilang" => bilangan($this->TOTAL_BAYAR) ?? null,
             'attachment' => $attachment,
-            'struktur' => $details,
+            'struktur' => $details??[],
             "STATUS" => $this->STTS_PAYMENT ?? null,
             "created_by" => $this->CREATED_BY,
             "print_ke" =>  intval($logPrint->COUNT??0),
