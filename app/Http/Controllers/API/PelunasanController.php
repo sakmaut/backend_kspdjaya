@@ -148,7 +148,7 @@ class PelunasanController extends Controller
                                             $query->where('a.PAID_FLAG', '!=', 'PAID')
                                                 ->orWhereNotIn('b.STATUS_REC', ['S', 'D']);
                                         })
-                                        ->orderBy('  a.INSTALLMENT_COUNT', 'ASC')
+                                        ->orderBy('  a.PAYMENT_DATE', 'ASC')
                                         ->select(   'a.LOAN_NUMBER',
                                                     'a.INSTALLMENT_COUNT',
                                                     'a.PAYMENT_DATE',
@@ -158,12 +158,11 @@ class PelunasanController extends Controller
                                                     'a.PRINCIPAL_REMAINS',
                                                     'a.PAYMENT_VALUE_PRINCIPAL',
                                                     'a.PAYMENT_VALUE_INTEREST',
+                                                    'a.DISCOUNT_PRINCIPAL',
+                                                    'a.DISCOUNT_INTEREST',
+                                                    'a.INSUFFICIENT_PAYMENT',
                                                     'a.PAYMENT_VALUE',
-                                                    'a.PAID_FLAG',
-                                                    'b.STATUS_REC', 
-                                                    'b.ID as id_arrear', 
-                                                    'b.PAST_DUE_PENALTY', 
-                                                    'b.PAID_PENALTY')
+                                                    'a.PAID_FLAG')
                                         ->get();
 
                 $this->saveKwitansi($request, $detail_customer, $no_inv, $status);
