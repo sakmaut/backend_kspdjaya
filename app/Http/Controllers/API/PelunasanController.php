@@ -200,9 +200,11 @@ class PelunasanController extends Controller
                     }
                 }
 
-                $this->updateCredit($loan_number,$res);
+                $this->updateCreditSchedule($loan_number,$res);
                 $this->updateArrears($loan_number, $res);
             }
+
+            $this->updateCredit($request,$loan_number);
         }
     }
 
@@ -295,7 +297,7 @@ class PelunasanController extends Controller
         ]);
     }
 
-    function updateCredit($loan_number,$res){
+    function updateCreditSchedule($loan_number,$res){
     
         $getCreditSchedule = M_CreditSchedule::where(['LOAN_NUMBER' => $loan_number, 'PAYMENT_DATE' => $res['tgl_angsuran']])->first();
 
@@ -346,7 +348,7 @@ class PelunasanController extends Controller
         }
     }
 
-    function updateCreditSchedule($request, $loan_number)
+    function updateCredit($request, $loan_number)
     {
 
         $bayarPokok = $request->BAYAR_POKOK;
@@ -748,167 +750,87 @@ class PelunasanController extends Controller
         $this->arrearsCalculate($request, $loan_number, $no_inv,$arrears);
     }
 
-    private function principalCalculate($request,$loan_number, $no_inv, $creditSchedule)
+    private function principalCalculate($request, $loan_number, $no_inv, $creditSchedule)
     {
-        $bayarPokok = $request->BAYAR_POKOK;
-        $bayarDiscountPokok = $request->DISKON_POKOK;
-        $remaining_discount = $bayarDiscountPokok;
-
-        $remaining_principal = $bayarPokok;
-
-        foreach ($creditSchedule as $res) {
-
-            $valBeforePrincipal = $res['PAYMENT_VALUE_PRINCIPAL'];
-            $getPrincipal = $res['PRINCIPAL'];
-
-            $new_payment_value_principal = $valBeforePrincipal;
-
-            if ($valBeforePrincipal < $getPrincipal) {
-                $remaining_to_principal = $getPrincipal - $valBeforePrincipal;
-
-                if ($bayarPokok >= $remaining_to_principal) {
-                    $new_payment_value_principal = $getPrincipal;
-                    $bayarPokok -= $remaining_to_principal;
-                } else {
-                    $new_payment_value_principal += $bayarPokok;
-                    $bayarPokok = 0;
-                }
-
-                if ($remaining_principal <= 0) {
-                    $param['BAYAR_POKOK'] = 0;
-                } else {
-                    $param['BAYAR_POKOK'] = $new_payment_value_principal;
-                }
-
-                $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
-
-                if ($remaining_discount > 0) {
-                    $remaining_to_principal_for_discount = $getPrincipal - $new_payment_value_principal;
-
-                    if ($remaining_discount >= $remaining_to_principal_for_discount) {
-                        $param['DISKON_POKOK'] = $remaining_to_principal_for_discount;
-                        $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
-                
-                        $new_payment_value_principal += $remaining_to_principal_for_discount;
-                        $remaining_discount -= $remaining_to_principal_for_discount;
-                    } else {
-                        $updates['DISKON_POKOK'] = $remaining_discount;
-                        $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
-                        $new_payment_value_principal += $remaining_discount;
-                        $remaining_discount = 0;
-                    }
-                }
-            }
-        }
+        $this->calculatePayment(
+            $request->BAYAR_POKOK,
+            $request->DISKON_POKOK,
+            $creditSchedule,
+            'PRINCIPAL',
+            'PAYMENT_VALUE_PRINCIPAL',
+            'BAYAR_POKOK',
+            'DISKON_POKOK',
+            $loan_number,
+            $no_inv
+        );
     }
 
     private function interestCalculate($request, $loan_number, $no_inv, $creditSchedule)
     {
-        $bayarBunga = $request->BAYAR_BUNGA;
-        $bayarDiscountBunga = $request->DISKON_BUNGA;
-
-        $remaining_discount = $bayarDiscountBunga;
-
-        $remaining_principal = $bayarBunga;
-
-        foreach ($creditSchedule as $res) {
-
-            $valBeforeInterest = $res['PAYMENT_VALUE_INTEREST'];
-            $getInterest = $res['INTEREST'];
-
-            $new_payment_value_principal = $valBeforeInterest;
-
-            if ($valBeforeInterest < $getInterest) {
-                $remaining_to_principal = $getInterest - $valBeforeInterest;
-
-                if ($bayarBunga >= $remaining_to_principal) {
-                    $new_payment_value_principal = $getInterest;
-                    $bayarBunga -= $remaining_to_principal;
-                } else {
-                    $new_payment_value_principal += $bayarBunga;
-                    $bayarBunga = 0;
-                }
-
-                if ($remaining_principal <= 0) {
-                    $param['BAYAR_BUNGA'] = 0;
-                } else {
-                    $param['BAYAR_BUNGA'] = $new_payment_value_principal;
-                }
-
-                $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
-
-                if ($remaining_discount > 0) {
-                    $remaining_to_principal_for_discount = $getInterest - $new_payment_value_principal;
-
-                    if ($remaining_discount >= $remaining_to_principal_for_discount) {
-                        $param['DISKON_BUNGA'] = $remaining_to_principal_for_discount;
-                        $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
-
-                        $new_payment_value_principal += $remaining_to_principal_for_discount;
-                        $remaining_discount -= $remaining_to_principal_for_discount;
-                    } else {
-                        $updates['DISKON_BUNGA'] = $remaining_discount;
-                        $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
-                        $new_payment_value_principal += $remaining_discount;
-                        $remaining_discount = 0;
-                    }
-                }
-            }
-        }
+        $this->calculatePayment(
+            $request->BAYAR_BUNGA,
+            $request->DISKON_BUNGA,
+            $creditSchedule,
+            'INTEREST',
+            'PAYMENT_VALUE_INTEREST',
+            'BAYAR_BUNGA',
+            'DISKON_BUNGA',
+            $loan_number,
+            $no_inv
+        );
     }
 
-    private function arrearsCalculate($request, $loan_number, $no_inv,$arrears)
+    private function arrearsCalculate($request, $loan_number, $no_inv, $arrears)
     {
-        $bayarDenda = $request->BAYAR_DENDA;
-        $bayarDiscountDenda = $request->DISKON_DENDA;
+        $this->calculatePayment(
+            $request->BAYAR_DENDA,
+            $request->DISKON_DENDA,
+            $arrears,
+            'PAST_DUE_PENALTY',
+            'PAID_PENALTY',
+            'BAYAR_DENDA',
+            'DISKON_DENDA',
+            $loan_number,
+            $no_inv
+        );
+    }
 
-        $remaining_discount = $bayarDiscountDenda;
+    private function calculatePayment($paymentAmount, $discountAmount, $schedule, $fieldKey, $valueKey, $paymentParam, $discountParam, $loan_number, $no_inv)
+    {
+        $remainingPayment = $paymentAmount;
+        $remainingDiscount = $discountAmount;
 
-        $remaining_penalty = $bayarDenda;
+        foreach ($schedule as $res) {
+            $valBefore = $res[$valueKey];
+            $getAmount = $res[$fieldKey];
 
-        foreach ($arrears as $res) {
+            if ($valBefore < $getAmount) {
+                $remainingToPay = $getAmount - $valBefore;
 
-            $valBeforePenalty = $res['PAID_PENALTY'];
-            $getPenalty = $res['PAST_DUE_PENALTY'];
-    
-            $new_payment_value_penalty = $valBeforePenalty;
-
-            if ($valBeforePenalty < $getPenalty) {
-                $remaining_to_penalty = $getPenalty - $valBeforePenalty;
-
-                if ($bayarDenda >= $remaining_to_penalty) {
-                    $new_payment_value_penalty = $getPenalty;
-                    $bayarDenda -= $remaining_to_penalty;
+                if ($remainingPayment >= $remainingToPay) {
+                    $newPaymentValue = $getAmount;
+                    $remainingPayment -= $remainingToPay;
                 } else {
-                    $new_payment_value_penalty += $bayarDenda;
-                    $bayarDenda = 0;
+                    $newPaymentValue = $valBefore + $remainingPayment;
+                    $remainingPayment = 0;
                 }
 
-                if ($remaining_penalty <= 0) {
-                    $param['BAYAR_DENDA'] = 0;
-                } else {
-                    $param['BAYAR_DENDA'] = $new_payment_value_penalty;
-                }
-
+                $param[$paymentParam] = ($remainingPayment <= 0) ? 0 : $newPaymentValue;
                 $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
 
-                if ($remaining_discount > 0) {
-                    $remaining_to_penalty_for_discount = $getPenalty - $new_payment_value_penalty;
+                if ($remainingDiscount > 0) {
+                    $remainingToDiscount = $getAmount - $newPaymentValue;
 
-                    if ($remaining_discount >= $remaining_to_penalty_for_discount) {
-                        $param['DISKON_DENDA'] = $remaining_to_penalty_for_discount;
-                        $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
-
-                        $new_payment_value_penalty += $remaining_to_penalty_for_discount;
-                        $remaining_discount -= $remaining_to_penalty_for_discount;
+                    if ($remainingDiscount >= $remainingToDiscount) {
+                        $param[$discountParam] = $remainingToDiscount;
+                        $remainingDiscount -= $remainingToDiscount;
                     } else {
-                        $updates['DISKON_DENDA'] = $remaining_discount;
-                        $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
-                        $new_payment_value_penalty += $remaining_discount;
-                        $remaining_discount = 0;
+                        $param[$discountParam] = $remainingDiscount;
+                        $remainingDiscount = 0;
                     }
-                }
 
+                    $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
+                }
             }
         }
     }
