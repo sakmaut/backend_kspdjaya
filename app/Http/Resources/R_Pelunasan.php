@@ -51,7 +51,7 @@ class R_Pelunasan extends JsonResource
             "kelurahan" => $this->KELURAHAN,
             "kecamatan" => $this->KECAMATAN,
             "tgl_transaksi" => $this->TGL_TRANSAKSI,
-            "payment_method" => $payment->PAYMENT_METHOD,
+            "payment_method" => $payment->PAYMENT_METHOD??'',
             "nama_bank" => $this->NAMA_BANK,
             "no_rekening" => $this->NO_REKENING,
             "bukti_transfer" => $this->BUKTI_TRANSFER,
