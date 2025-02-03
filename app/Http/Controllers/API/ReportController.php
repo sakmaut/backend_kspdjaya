@@ -282,61 +282,53 @@ class ReportController extends Controller
         }
     }
 
-    public function strukturCredit(Request $request)
+    public function strukturCredit(Request $request,$id)
     {
         try {
             $schedule = [];
 
-            $loanNumber = $request->loan_number;
-
             $data = DB::table('credit_schedule as a')
-                        ->leftJoin('payment as b', function ($join) {
-                            $join->on('b.LOAN_NUM', '=', 'a.LOAN_NUMBER')
-                            ->whereColumn('b.START_DATE', '=', 'a.PAYMENT_DATE');
-                        })
-                        ->leftJoin('arrears as c', function ($join) {
-                            $join->on('c.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
-                            ->whereColumn('c.START_DATE', '=', 'a.PAYMENT_DATE');
-                        })
-                        ->where('a.LOAN_NUMBER', '=', '11105230000622')
-                        ->groupBy('a.INSTALLMENT_COUNT', 'a.PAYMENT_DATE')
-                        ->select(
-                            'a.INSTALLMENT_COUNT',
-                            'a.PAYMENT_DATE',
-                            'a.PRINCIPAL',
-                            'a.INTEREST',
-                            'a.PAYMENT_VALUE_PRINCIPAL',
-                            'a.PAYMENT_VALUE_INTEREST',
-                            'b.ENTRY_DATE',
-                            'c.PAST_DUE_PENALTY',
-                            'c.PAID_PENALTY'
-                        )
-                        ->get();
-
+                                ->leftJoin('payment as b', function ($join) {
+                                    $join->on('b.LOAN_NUM', '=', 'a.LOAN_NUMBER')
+                                        ->whereColumn('b.START_DATE', '=', 'a.PAYMENT_DATE');
+                                })
+                                ->leftJoin('arrears as c', function ($join) {
+                                    $join->on('c.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
+                                        ->whereColumn('c.START_DATE', '=', 'a.PAYMENT_DATE');
+                                })
+                                ->where('a.LOAN_NUMBER', '=', $id)
+                                ->distinct() 
+                                ->select(
+                                    'a.INSTALLMENT_COUNT',
+                                    'a.PAYMENT_DATE',
+                                    'a.PRINCIPAL',
+                                    'a.INTEREST',
+                                    'a.INSTALLMENT',
+                                    'a.PAYMENT_VALUE_PRINCIPAL',
+                                    'a.PAYMENT_VALUE_INTEREST',
+                                    'b.ENTRY_DATE',
+                                    'c.PAST_DUE_PENALTY',
+                                    'c.PAID_PENALTY'
+                                )
+                                ->get();
 
             if ($data->isEmpty()) {
                 return $schedule;
             }
 
-            $j = 0;
             foreach ($data as $res) {
 
-                $installment = floatval($res->INSTALLMENT) - floatval($res->PAYMENT_VALUE);
-
                 $schedule[] = [
-                    'KE' => $res->INSTALLMENT_COUNT,
-                    'LOAN NUMBER' => $res->LOAN_NUMBER,
-                    'TGL ANGSURAN' => Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y'),
-                    'POKOK' => floatval($res->PRINCIPAL),
-                    'BUNGA' => floatval($res->INTEREST),
-                    'ANGSURAN' => $installment,
-                    'BAKI DEBET' => floatval($res->PRINCIPAL_REMAINS),
-                    'payment' => floatval($res->PAYMENT_VALUE),
-                    'bayar_angsuran' => floatval($res->INSTALLMENT) - floatval($res->PAYMENT_VALUE),
-                    'bayar_denda' => $installment == 0 ? 0 : floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->PAID_PENALTY ?? 0),
-                    'total_bayar' => floatval($res->INSTALLMENT + ($res->PAST_DUE_PENALTY ?? 0)),
-                    'id_arrear' => $res->id_arrear ?? '',
-                    'denda' => floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->PAID_PENALTY ?? 0)
+                    'Angs' => $res->INSTALLMENT_COUNT,
+                    'Jt.Tempo' => Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y'),
+                    'Tgl Bayar' => Carbon::parse($res->ENTRY_DATE)->format('d-m-Y'),
+                    'Angs Pokok' => floatval($res->PRINCIPAL),
+                    'Angs Bunga' => floatval($res->INTEREST),
+                    'Ttl Angs' => floatval($res->INSTALLMENT),
+                    'Angs Denda' => floatval($res->PAST_DUE_PENALTY),
+                    'Bayar Pokok' => floatval($res->PAYMENT_VALUE_PRINCIPAL),
+                    'Bayar Bunga' => floatval($res->PAYMENT_VALUE_INTEREST),
+                    'Bayar Denda' => floatval($res->PAID_PENALTY)
                 ];
             }
 
