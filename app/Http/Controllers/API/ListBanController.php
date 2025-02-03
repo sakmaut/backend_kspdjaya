@@ -119,10 +119,11 @@ class ListBanController extends Controller
         return $result;
     }
 
-    public function listBan() {
-        ini_set('memory_limit', '256M');
-
+    public function listBan(Request $request) {
         try {
+
+            $getBranch = $request->user()->branch_id;
+
             $results = DB::table('branch as a')
                             ->join('credit as b', 'b.BRANCH', '=', 'a.ID')
                             ->leftJoin('customer as c', 'c.CUST_CODE', '=', 'b.CUST_CODE')
@@ -167,7 +168,8 @@ class ListBanController extends Controller
                                 DB::raw('SUM(g.VALUE) as TOTAL_NILAI_JAMINAN'),
                                 'b.CUST_CODE'
                             )
-                            ->where('b.CREATED_AT', '>=', DB::raw('DATE_SUB(NOW(), INTERVAL 1 MONTH)'))
+                            // ->where('b.CREATED_AT', '>=', DB::raw('DATE_SUB(NOW(), INTERVAL 1 MONTH)'))
+                            ->where('a.ID', $getBranch)
                             ->groupBy(
                                 'a.CODE',
                                 'a.NAME',
@@ -216,16 +218,16 @@ class ListBanController extends Controller
                     "PEKERJAAN" => $result->PEKERJAAN??'',
                     "SURVEYOR" => $result->SURVEYOR??'',
                     "CATT SURVEY" => $result->CATT_SURVEY??'',
-                    "PKK HUTANG" => $result->PKK_HUTANG??'',
+                    "PKK HUTANG" => number_format($result->PKK_HUTANG)??'',
                     "JML ANGS" => $result->PERIOD ?? '',
                     "PERIOD" => $result->tipe ?? '',
-                    "OVERDUE" => $result->OVERDUE??'',
+                    "OVERDUE" => number_format($result->OVERDUE)??'',
                     "CYCLE" => $result->CYCLE??'',
                     "STS KONTRAK" => $result->STATUS_REC??'',
-                    "OUTS PKK AKHIR" => $result->PAID_PRINCIPAL??'',
-                    "OUTS BNG AKHIR" => $result->PAID_INTEREST??'',
-                    "OVERDUE AKHIR" => $result->OUTSTANDING ?? '',
-                    "ANGSURAN" =>  $result->INSTALLMENT??'',
+                    "OUTS PKK AKHIR" => number_format($result->PAID_PRINCIPAL)??'',
+                    "OUTS BNG AKHIR" => number_format($result->PAID_INTEREST)??'',
+                    "OVERDUE AKHIR" => number_format($result->OUTSTANDING) ?? '',
+                    "ANGSURAN" => number_format($result->INSTALLMENT)??'',
                     "JTH TEMPO AWAL" => date("d-m-Y",strtotime( $result->INSTALLMENT_DATE))??'',
                     "JTH TEMPO AKHIR" => date("d-m-Y",strtotime( $result->FIRST_ARR_DATE))??'',
                     "NAMA BRG" =>  "SEPEDA MOTOR",
@@ -234,7 +236,7 @@ class ListBanController extends Controller
                     "NO MESIN" =>  $result->ENGINE_NUMBER??'',
                     "NO RANGKA" =>  $result->CHASIS_NUMBER??'',
                     "TAHUN" =>  $result->PRODUCTION_YEAR??'',
-                    "NILAI PINJAMAN" =>  $result->TOTAL_NILAI_JAMINAN??'',
+                    "NILAI PINJAMAN" => number_format($result->TOTAL_NILAI_JAMINAN)??'',
                     "ADMIN" =>  $result->TOTAL_ADMIN??'',
                     "CUST_ID" =>  $result->CUST_CODE??'',
                 ] ;
