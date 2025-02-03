@@ -37,6 +37,7 @@ class ReportController extends Controller
                                         'a.INSTALLMENT_DATE', 
                                         'd.NAME as branch_name')
                             ->orderBy('a.ORDER_NUMBER', 'asc')
+                            ->limit(10)
                             ->get();
 
             $mapping = $results->map(function($list){
