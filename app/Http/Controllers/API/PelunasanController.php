@@ -138,35 +138,8 @@ class PelunasanController extends Controller
 
             if (!M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->exists()) {
 
-                $creditSchedules =  DB::table('credit_schedule AS a')
-                                        ->leftJoin('arrears AS b', function ($join) {
-                                            $join->on('b.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
-                                            ->on('b.START_DATE', '=', 'a.PAYMENT_DATE');
-                                        })
-                                        ->where('a.LOAN_NUMBER', $loan_number)
-                                        ->where(function ($query) {
-                                            $query->where('a.PAID_FLAG', '!=', 'PAID')
-                                                ->orWhereNotIn('b.STATUS_REC', ['S', 'D']);
-                                        })
-                                        ->orderBy('a.PAYMENT_DATE', 'ASC')
-                                        ->select(   'a.LOAN_NUMBER',
-                                                    'a.INSTALLMENT_COUNT',
-                                                    'a.PAYMENT_DATE',
-                                                    'a.PRINCIPAL',
-                                                    'a.INTEREST',
-                                                    'a.INSTALLMENT',
-                                                    'a.PRINCIPAL_REMAINS',
-                                                    'a.PAYMENT_VALUE_PRINCIPAL',
-                                                    'a.PAYMENT_VALUE_INTEREST',
-                                                    'a.DISCOUNT_PRINCIPAL',
-                                                    'a.DISCOUNT_INTEREST',
-                                                    'a.INSUFFICIENT_PAYMENT',
-                                                    'a.PAYMENT_VALUE',
-                                                    'a.PAID_FLAG')
-                                        ->get();
-
                 $this->saveKwitansi($request, $detail_customer, $no_inv, $status);
-                $this->proccessKwitansiDetail($request, $loan_number, $no_inv, $creditSchedules);
+                $this->proccessKwitansiDetail($request, $loan_number, $no_inv);
             }
 
             if ($status === "PAID") {
@@ -771,10 +744,37 @@ class PelunasanController extends Controller
         ];
     }
 
-    function proccessKwitansiDetail($request, $loan_number, $no_inv, $creditSchedule)
+    function proccessKwitansiDetail($request, $loan_number, $no_inv)
     {
-        $this->principalCalculate($request, $loan_number, $no_inv, $creditSchedule);
-        $this->interestCalculate($request, $loan_number, $no_inv, $creditSchedule);
+        $creditSchedules =  M_CreditSchedule::from('credit_schedule AS a')
+                                            ->leftJoin('arrears AS b', function ($join) {
+                                                $join->on('b.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
+                                                    ->on('b.START_DATE', '=', 'a.PAYMENT_DATE');
+                                            })
+                                            ->where('a.LOAN_NUMBER', $loan_number)
+                                            ->where(function ($query) {
+                                                $query->where('a.PAID_FLAG', '!=', 'PAID')
+                                                    ->orWhereNotIn('b.STATUS_REC', ['S', 'D']);
+                                            })
+                                            ->orderBy('a.PAYMENT_DATE', 'ASC')
+                                            ->select(   'a.LOAN_NUMBER',
+                                                        'a.INSTALLMENT_COUNT',
+                                                        'a.PAYMENT_DATE',
+                                                        'a.PRINCIPAL',
+                                                        'a.INTEREST',
+                                                        'a.INSTALLMENT',
+                                                        'a.PRINCIPAL_REMAINS',
+                                                        'a.PAYMENT_VALUE_PRINCIPAL',
+                                                        'a.PAYMENT_VALUE_INTEREST',
+                                                        'a.DISCOUNT_PRINCIPAL',
+                                                        'a.DISCOUNT_INTEREST',
+                                                        'a.INSUFFICIENT_PAYMENT',
+                                                        'a.PAYMENT_VALUE',
+                                                        'a.PAID_FLAG')
+                                            ->get();
+
+        $this->principalCalculate($request, $loan_number, $no_inv, $creditSchedules);
+        $this->interestCalculate($request, $loan_number, $no_inv, $creditSchedules);
         $arrears = M_Arrears::where(['LOAN_NUMBER' => $loan_number, 'STATUS_REC' => 'A'])->get();
         $this->arrearsCalculate($request, $loan_number, $no_inv,$arrears);
     }
@@ -828,10 +828,10 @@ class PelunasanController extends Controller
     {
         $remainingPayment = $paymentAmount;
         $remainingDiscount = $discountAmount;
-
+      
         foreach ($schedule as $res) {
-            $valBefore = $res[$valueKey];
-            $getAmount = $res[$fieldKey];
+            $valBefore = $res->{$valueKey};
+            $getAmount = $res->{$fieldKey};
 
             if ($valBefore < $getAmount) {
                 $remainingToPay = $getAmount - $valBefore;
