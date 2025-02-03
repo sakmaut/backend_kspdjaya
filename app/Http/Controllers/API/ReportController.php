@@ -311,6 +311,7 @@ class ReportController extends Controller
                                     'c.PAST_DUE_PENALTY',
                                     'c.PAID_PENALTY'
                                 )
+                                ->orderBy('a.PAYMENT_DATE', 'asc')
                                 ->get();
 
             if ($data->isEmpty()) {
@@ -323,13 +324,13 @@ class ReportController extends Controller
                     'Angs' => $res->INSTALLMENT_COUNT,
                     'Jt.Tempo' => Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y'),
                     'Tgl Bayar' => Carbon::parse($res->ENTRY_DATE)->format('d-m-Y'),
-                    'Angs Pokok' => floatval($res->PRINCIPAL),
-                    'Angs Bunga' => floatval($res->INTEREST),
-                    'Ttl Angs' => floatval($res->INSTALLMENT),
-                    'Angs Denda' => floatval($res->PAST_DUE_PENALTY),
-                    'Bayar Pokok' => floatval($res->PAYMENT_VALUE_PRINCIPAL),
-                    'Bayar Bunga' => floatval($res->PAYMENT_VALUE_INTEREST),
-                    'Bayar Denda' => floatval($res->PAID_PENALTY)
+                    'Angs Pokok' => number_format($res->PRINCIPAL),
+                    'Angs Bunga' => number_format($res->INTEREST),
+                    'Ttl Angs' => number_format($res->INSTALLMENT),
+                    'Angs Denda' => number_format($res->PAST_DUE_PENALTY),
+                    'Bayar Pokok' => number_format($res->PAYMENT_VALUE_PRINCIPAL),
+                    'Bayar Bunga' => number_format($res->PAYMENT_VALUE_INTEREST),
+                    'Bayar Denda' => number_format($res->PAID_PENALTY)
                 ];
             }
 
