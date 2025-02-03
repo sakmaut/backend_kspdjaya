@@ -866,23 +866,23 @@ class PelunasanController extends Controller
 
     function insertKwitansiDetail($loan_number, $no_inv, $res, $param = [])
     {
-        // Get the payment date or start date
         $tgl_angsuran = $res['PAYMENT_DATE'] ?? $res['START_DATE'] ?? null;
 
-        // Check if the detail already exists
         $checkDetail = M_KwitansiDetailPelunasan::where([
             'no_invoice' => $no_inv,
             'tgl_angsuran' => $tgl_angsuran,
         ])->first();
 
-        
+        $credit = M_CreditSchedule::where([
+            'LOAN_NUMBER' => $loan_number,
+            'PAYMENT_DATE' => $tgl_angsuran,
+        ])->first();
 
-        // If no existing detail, create a new record
         if (!$checkDetail) {
             M_KwitansiDetailPelunasan::create([
                 'no_invoice' => $no_inv ?? '',
                 'loan_number' => $loan_number ?? '',
-                'angsuran_ke' => $res['INSTALLMENT_COUNT'] ?? 0,
+                'angsuran_ke' => $res['INSTALLMENT_COUNT'] ?? $credit->INSTALLMENT_COUNT ?? 0,
                 'tgl_angsuran' => $tgl_angsuran,
                 'installment' => $res['INSTALLMENT'] ?? 0,
                 'bayar_pokok' => $param['BAYAR_POKOK'] ?? 0,
@@ -893,29 +893,15 @@ class PelunasanController extends Controller
                 'diskon_denda' => $param['DISKON_DENDA'] ?? 0,
             ]);
         } else {
-            // If the detail exists, update the fields
             $fields = ['BAYAR_POKOK', 'DISKON_POKOK', 'BAYAR_BUNGA', 'DISKON_BUNGA', 'BAYAR_DENDA', 'DISKON_DENDA'];
 
-            // Prepare the update data array
-            $updateData = [];
-
-            // Loop through each field to check if it should be updated
             foreach ($fields as $field) {
                 if (isset($param[$field]) && $param[$field] != 0) {
-                    $updateData[strtolower($field)] = $param[$field];
+                    $checkDetail->update([strtolower($field) => $param[$field]]);
                 }
-            }
-
-            // Always update the 'angsuran_ke' field
-            $updateData['angsuran_ke'] = $res['INSTALLMENT_COUNT'] ?? 0;
-
-            // If there are any updates, apply them
-            if (count($updateData) > 0) {
-                $checkDetail->update($updateData);
             }
         }
     }
-
 }
 
 
