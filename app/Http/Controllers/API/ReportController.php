@@ -323,7 +323,7 @@ class ReportController extends Controller
                 $schedule[] = [
                     'Angs' => $res->INSTALLMENT_COUNT,
                     'Jt.Tempo' => Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y'),
-                    'Tgl Bayar' => Carbon::parse($res->ENTRY_DATE)->format('d-m-Y'),
+                    'Tgl Bayar' => Carbon::parse($res->ENTRY_DATE??'')->format('d-m-Y'),
                     'Angs Pokok' => number_format($res->PRINCIPAL),
                     'Angs Bunga' => number_format($res->INTEREST),
                     'Ttl Angs' => number_format($res->INSTALLMENT),
