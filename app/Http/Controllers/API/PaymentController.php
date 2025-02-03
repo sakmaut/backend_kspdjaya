@@ -9,7 +9,6 @@ use App\Models\M_Arrears;
 use App\Models\M_Branch;
 use App\Models\M_Credit;
 use App\Models\M_CreditSchedule;
-use App\Models\M_Customer;
 use App\Models\M_Kwitansi;
 use App\Models\M_KwitansiStructurDetail;
 use App\Models\M_Payment;
@@ -601,8 +600,9 @@ class PaymentController extends Controller
                             $this->processPaymentStructure($res, $request, $getCodeBranch, $getInvoice);
                         }
                     }
-                    $kwitansi->update(['STTS_PAYMENT' => 'PAID']);
                 }
+
+                $kwitansi->update(['STTS_PAYMENT' => 'PAID']);
             }else{
                 $request->merge(['approval' => 'no']);
 
