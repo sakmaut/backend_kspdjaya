@@ -202,7 +202,7 @@ class ReportController extends Controller
                         'NO MESIN' => $item['ENGINE_NUMBER'],
                         'NO BPKB' => $item['BPKB_NUMBER'],
                         'NO STNK' => $item['STNK_NUMBER'],
-                        'HARGA JAMINAN' => 'IDR ' . number_format(floatval($item['VALUE'])),
+                        'HARGA JAMINAN' => number_format(floatval($item['VALUE'])),
                         'LOKASI' => M_Branch::find($item['LOCATION_BRANCH'])->NAME ?? '',
                     ];
                 })->values()->toArray();
@@ -289,10 +289,6 @@ class ReportController extends Controller
             $schedule = [];
 
             $data = DB::table('credit_schedule as a')
-                                ->leftJoin('payment as b', function ($join) {
-                                    $join->on('b.LOAN_NUM', '=', 'a.LOAN_NUMBER')
-                                        ->whereColumn('b.START_DATE', '=', 'a.PAYMENT_DATE');
-                                })
                                 ->leftJoin('arrears as c', function ($join) {
                                     $join->on('c.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
                                         ->whereColumn('c.START_DATE', '=', 'a.PAYMENT_DATE');
@@ -307,7 +303,6 @@ class ReportController extends Controller
                                     'a.INSTALLMENT',
                                     'a.PAYMENT_VALUE_PRINCIPAL',
                                     'a.PAYMENT_VALUE_INTEREST',
-                                    'b.ENTRY_DATE',
                                     'c.PAST_DUE_PENALTY',
                                     'c.PAID_PENALTY'
                                 )
@@ -320,10 +315,16 @@ class ReportController extends Controller
 
             foreach ($data as $res) {
 
+                $getLastPayment = M_payment::select('ENTRY_DATE', 'LOAN_NUM', 'START_DATE')
+                                            ->where('LOAN_NUM', $id)
+                                            ->where('START_DATE', $res->PAYMENT_DATE)
+                                            ->orderByDesc('ENTRY_DATE')
+                                            ->first();
+
                 $schedule[] = [
                     'Angs' => $res->INSTALLMENT_COUNT,
                     'Jt.Tempo' => Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y'),
-                    'Tgl Bayar' => Carbon::parse($res->ENTRY_DATE??'')->format('d-m-Y'),
+                    'Tgl Bayar' => $getLastPayment ? Carbon::parse($getLastPayment->ENTRY_DATE??'')->format('d-m-Y'):'',
                     'Angs Pokok' => number_format($res->PRINCIPAL),
                     'Angs Bunga' => number_format($res->INTEREST),
                     'Ttl Angs' => number_format($res->INSTALLMENT),
