@@ -826,43 +826,63 @@ class PelunasanController extends Controller
 
     private function calculatePayment($paymentAmount, $discountAmount, $schedule, $fieldKey, $valueKey, $paymentParam, $discountParam, $loan_number, $no_inv)
     {
+        // Initialize remaining payment and discount
         $remainingPayment = $paymentAmount;
         $remainingDiscount = $discountAmount;
-      
+
+        // Loop through the payment schedule
         foreach ($schedule as $res) {
+            // Get the current value of the field and payment status
             $valBefore = $res->{$valueKey};
             $getAmount = $res->{$fieldKey};
-            
+
+            // Proceed only if there's an amount to pay
             if ($valBefore < $getAmount) {
+                // Calculate the amount left to pay
                 $remainingToPay = $getAmount - $valBefore;
 
+                // If enough payment is available to cover the remaining amount
                 if ($remainingPayment >= $remainingToPay) {
-                    $newPaymentValue = $getAmount;
-                    $remainingPayment -= $remainingToPay;
+                    $newPaymentValue = $getAmount; // Full payment
+                    $remainingPayment -= $remainingToPay; // Subtract the paid amount
                 } else {
-                    $newPaymentValue = $valBefore + $remainingPayment;
-                    $remainingPayment = 0;
+                    $newPaymentValue = $valBefore + $remainingPayment; // Partial payment
+                    $remainingPayment = 0; // All payment has been used
                 }
 
-                $param[$paymentParam] = ($remainingPayment <= 0) ? 0 : $newPaymentValue;
+                // Set the payment value, it shouldn't be zero unless fully paid
+                $param[$paymentParam] = ($remainingPayment < $remainingToPay) ? $newPaymentValue : $remainingPayment;
                 $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
 
+                // If there's a discount to apply
                 if ($remainingDiscount > 0) {
                     $remainingToDiscount = $getAmount - $newPaymentValue;
 
+                    // If there's enough discount to cover the remaining amount
                     if ($remainingDiscount >= $remainingToDiscount) {
-                        $param[$discountParam] = $remainingToDiscount;
-                        $remainingDiscount -= $remainingToDiscount;
+                        $param[$discountParam] = $remainingToDiscount; // Full discount
+                        $remainingDiscount -= $remainingToDiscount; // Subtract the used discount
                     } else {
-                        $param[$discountParam] = $remainingDiscount;
-                        $remainingDiscount = 0;
+                        $param[$discountParam] = $remainingDiscount; // Partial discount
+                        $remainingDiscount = 0; // No discount left
                     }
 
+                    // Update the Kwitansi detail with the discount
                     $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
                 }
             }
         }
+
+        // After the loop, if there's remaining payment or discount, we ensure they are properly tracked
+        if ($remainingPayment > 0) {
+            $param[$paymentParam] = $remainingPayment;
+        }
+
+        if ($remainingDiscount > 0) {
+            $param[$discountParam] = $remainingDiscount;
+        }
     }
+
 
     function insertKwitansiDetail($loan_number, $no_inv, $res, $param = [])
     {
