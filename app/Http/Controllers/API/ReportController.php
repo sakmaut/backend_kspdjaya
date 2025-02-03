@@ -36,7 +36,7 @@ class ReportController extends Controller
                                         'c.POLICE_NUMBER', 
                                         'a.INSTALLMENT_DATE', 
                                         'd.NAME as branch_name')
-                            ->orderBy('a.ORDER_NUMBER', 'asc')
+                            ->orderBy('a.CREATED_AT', 'desc')
                             ->limit(10)
                             ->get();
 
