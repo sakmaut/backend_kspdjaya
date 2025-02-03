@@ -196,10 +196,6 @@ class UsersController extends Controller
 
             $getJabatan = M_JabatanAccessMenu::where('jabatan', $request->jabatan)->first();
 
-            if (!$getJabatan) {
-                throw new Exception("Jabatan not found", 404);
-            }
-
             $data_user = [
                 'username' => $request->username??'',
                 'fullname' => $request->nama??'',
