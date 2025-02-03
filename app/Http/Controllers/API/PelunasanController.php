@@ -130,13 +130,6 @@ class PelunasanController extends Controller
             
             $discounts = $request->only(['DISKON_POKOK', 'DISKON_PINALTI', 'DISKON_BUNGA', 'DISKON_DENDA']);
 
-            $creditSchedule = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)
-                                            ->where(function ($query) {
-                                                $query->where('PAID_FLAG', '!=', 'PAID')->orWhereNull('PAID_FLAG');
-                                            })
-                                            ->orderBy('PAYMENT_DATE', 'asc')
-                                            ->get();
-
             $status = "PAID";
 
             if (array_sum($discounts) > 0 || strtolower($request->METODE_PEMBAYARAN) === 'transfer') {
@@ -144,13 +137,50 @@ class PelunasanController extends Controller
             }
 
             if (!M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->exists()) {
+
+                $creditSchedules =  DB::table('credit_schedule AS a')
+                                        ->leftJoin('arrears AS b', function ($join) {
+                                            $join->on('b.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
+                                            ->on('b.START_DATE', '=', 'a.PAYMENT_DATE');
+                                        })
+                                        ->where('a.LOAN_NUMBER', $loan_number)
+                                        ->where(function ($query) {
+                                            $query->where('a.PAID_FLAG', '!=', 'PAID')
+                                                ->orWhereNotIn('b.STATUS_REC', ['S', 'D']);
+                                        })
+                                        ->orderBy('  a.INSTALLMENT_COUNT', 'ASC')
+                                        ->select(   'a.LOAN_NUMBER',
+                                                    'a.INSTALLMENT_COUNT',
+                                                    'a.PAYMENT_DATE',
+                                                    'a.PRINCIPAL',
+                                                    'a.INTEREST',
+                                                    'a.INSTALLMENT',
+                                                    'a.PRINCIPAL_REMAINS',
+                                                    'a.PAYMENT_VALUE_PRINCIPAL',
+                                                    'a.PAYMENT_VALUE_INTEREST',
+                                                    'a.PAYMENT_VALUE',
+                                                    'a.PAID_FLAG',
+                                                    'b.STATUS_REC', 
+                                                    'b.ID as id_arrear', 
+                                                    'b.PAST_DUE_PENALTY', 
+                                                    'b.PAID_PENALTY')
+                                        ->get();
+
                 $this->saveKwitansi($request, $detail_customer, $no_inv, $status);
-                $this->proccessKwitansiDetail($request, $loan_number, $no_inv, $creditSchedule);
+                $this->proccessKwitansiDetail($request, $loan_number, $no_inv, $creditSchedules);
             }
 
             if ($status === "PAID") {
                 $this->proccess($request, $loan_number, $no_inv, $status);
             }else{
+
+                $creditSchedule = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)
+                                            ->where(function ($query) {
+                                                $query->where('PAID_FLAG', '!=', 'PAID')->orWhereNull('PAID_FLAG');
+                                            })
+                                            ->orderBy('PAYMENT_DATE', 'asc')
+                                            ->get();
+
                 foreach ($creditSchedule as $res) {
 
                     $res->update(['PAID_FLAG' => 'PENDING']);
