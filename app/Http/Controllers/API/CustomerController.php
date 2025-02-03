@@ -137,9 +137,12 @@ class CustomerController extends Controller
                         })
                         ->where('a.LOAN_NUMBER', $loanNumber)
                         ->where(function ($query) {
-                            $query->where('a.PAID_FLAG', '!=', 'PAID')
-                                ->orWhereNotIn('b.STATUS_REC', ['S', 'D']);
-                        })
+                            $query->where(function ($q) {
+                                $q->where('a.PAID_FLAG', '!=', 'PAID')
+                                  ->orWhereNull('a.PAID_FLAG');
+                            })
+                            ->orWhereNotIn('b.STATUS_REC', ['S', 'D']);
+                        })                        
                         ->orderBy('a.INSTALLMENT_COUNT', 'ASC')
                         ->select(   'a.LOAN_NUMBER',
                                     'a.INSTALLMENT_COUNT',
