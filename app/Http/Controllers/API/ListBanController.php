@@ -123,6 +123,7 @@ class ListBanController extends Controller
         try {
 
             $getBranch = $request->user()->branch_id;
+            $getPosition = $request->user()->position;
 
             $results = DB::table('branch as a')
                             ->join('credit as b', 'b.BRANCH', '=', 'a.ID')
@@ -132,7 +133,7 @@ class ListBanController extends Controller
                             ->leftJoin('cr_survey as f', 'f.id', '=', 'e.CR_SURVEY_ID')
                             ->leftJoin('cr_collateral as g', 'g.CR_CREDIT_ID', '=', 'b.ID')
                             ->select(
-                                'a.CODE as KODE',
+                                DB::raw("CONCAT(a.CODE, '-', a.CODE_NUMBER) as KODE"),
                                 'a.NAME as NAMA_CABANG',
                                 'b.LOAN_NUMBER as NO_KONTRAK',
                                 'c.NAME as NAMA_PELANGGAN',
@@ -167,44 +168,49 @@ class ListBanController extends Controller
                                 DB::raw('GROUP_CONCAT(g.PRODUCTION_YEAR) as PRODUCTION_YEAR'),
                                 DB::raw('SUM(g.VALUE) as TOTAL_NILAI_JAMINAN'),
                                 'b.CUST_CODE'
-                            )
-                            // ->where('b.CREATED_AT', '>=', DB::raw('DATE_SUB(NOW(), INTERVAL 1 MONTH)'))
-                            ->where('a.ID', $getBranch)
-                            ->groupBy(
-                                'a.CODE',
-                                'a.NAME',
-                                'b.LOAN_NUMBER',
-                                'c.NAME',
-                                'b.CREATED_AT',
-                                'c.INS_ADDRESS',
-                                'c.ZIP_CODE',
-                                'c.PHONE_HOUSE',
-                                'c.PHONE_PERSONAL',
-                                'c.OCCUPATION',
-                                'd.fullname',
-                                'f.survey_note',
-                                'b.PCPL_ORI',
-                                'e.TOTAL_ADMIN',
-                                'e.INSTALLMENT_TYPE',
-                                'b.PERIOD',
-                                DB::raw('DATEDIFF(b.FIRST_ARR_DATE, NOW())'),
-                                'b.STATUS_REC',
-                                'b.PAID_PRINCIPAL',
-                                'b.PAID_INTEREST',
-                                DB::raw('b.PAID_PRINCIPAL + b.PAID_INTEREST'),
-                                DB::raw('b.PCPL_ORI - b.PAID_PRINCIPAL'),
-                                'b.INSTALLMENT',
-                                'b.INSTALLMENT_DATE',
-                                'b.FIRST_ARR_DATE',
-                                'b.CUST_CODE'
-                            )
-                            ->get();
+                            );
 
+            if(strtolower($getPosition) == 'ho'){
+                $results->where('b.CREATED_AT', '>=', DB::raw('DATE_SUB(NOW(), INTERVAL 1 MONTH)'));
+            }else{
+                $results->where('a.ID', $getBranch);
+            }
+
+            $results->groupBy(
+                'a.CODE',
+                'a.CODE_NUMBER',
+                'a.NAME',
+                'b.LOAN_NUMBER',
+                'c.NAME',
+                'b.CREATED_AT',
+                'c.INS_ADDRESS',
+                'c.ZIP_CODE',
+                'c.PHONE_HOUSE',
+                'c.PHONE_PERSONAL',
+                'c.OCCUPATION',
+                'd.fullname',
+                'f.survey_note',
+                'b.PCPL_ORI',
+                'e.TOTAL_ADMIN',
+                'e.INSTALLMENT_TYPE',
+                'b.PERIOD',
+                DB::raw('DATEDIFF(b.FIRST_ARR_DATE, NOW())'),
+                'b.STATUS_REC',
+                'b.PAID_PRINCIPAL',
+                'b.PAID_INTEREST',
+                DB::raw('b.PAID_PRINCIPAL + b.PAID_INTEREST'),
+                DB::raw('b.PCPL_ORI - b.PAID_PRINCIPAL'),
+                'b.INSTALLMENT',
+                'b.INSTALLMENT_DATE',
+                'b.FIRST_ARR_DATE',
+                'b.CUST_CODE'
+            )
+            ->get();
 
             $build = [];
             foreach ($results as $result) {
                 $build[] =[
-                    "KODE" => $result->CODE??'',
+                    "KODE" => $result->KODE??'',
                     "CABANG" => $result->NAMA_CABANG??'',
                     "NO KONTRAK" => $result->NO_KONTRAK??'',
                     "NAMA PELANGGAN" => $result->NAMA_PELANGGAN??'',
