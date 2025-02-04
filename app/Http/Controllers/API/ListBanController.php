@@ -169,6 +169,7 @@ class ListBanController extends Controller
                                 DB::raw('SUM(g.VALUE) as TOTAL_NILAI_JAMINAN'),
                                 'b.CUST_CODE'
                             )
+                            // ->where('b.CREATED_AT', '>=', DB::raw('DATE_SUB(NOW(), INTERVAL 1 MONTH)'))
                             ->where('a.ID', $getBranch)
                             ->groupBy(
                                 'a.CODE',
@@ -201,11 +202,6 @@ class ListBanController extends Controller
                             )
                             ->get();
 
-            // if(strtolower($getPosition) == 'ho'){
-            //     $results->where('b.CREATED_AT', '>=', DB::raw('DATE_SUB(NOW(), INTERVAL 1 MONTH)'));
-            // }else{
-            //     ;
-            // }
 
             $build = [];
             foreach ($results as $result) {
@@ -234,8 +230,8 @@ class ListBanController extends Controller
                     "OUTS BNG AKHIR" => number_format($result->PAID_INTEREST??0),
                     "OVERDUE AKHIR" => number_format($result->OUTSTANDING??0),
                     "ANGSURAN" => number_format($result->INSTALLMENT??0),
-                    "JTH TEMPO AWAL" => date("d-m-Y",strtotime($result->INSTALLMENT_DATE??'')),
-                    "JTH TEMPO AKHIR" => date("d-m-Y",strtotime($result->FIRST_ARR_DATE??'')),
+                    "JTH TEMPO AWAL" => date("d-m-Y",strtotime( $result->INSTALLMENT_DATE??'')),
+                    "JTH TEMPO AKHIR" => date("d-m-Y",strtotime( $result->FIRST_ARR_DATE??'')),
                     "NAMA BRG" =>  "SEPEDA MOTOR",
                     "TIPE BRG" =>  $result->COLLATERAL??'',
                     "NO POL" =>  $result->POLICE_NUMBER??'',
