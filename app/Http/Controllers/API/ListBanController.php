@@ -224,7 +224,7 @@ class ListBanController extends Controller
                     "PEKERJAAN" => $result->PEKERJAAN??'',
                     "SURVEYOR" => $result->SURVEYOR??'',
                     "CATT SURVEY" => $result->CATT_SURVEY??'',
-                    "PKK HUTANG" => number_format($result->PKK_HUTANG)??'',
+                    "PKK HUTANG" => number_format($result->PKK_HUTANG??0),
                     "JML ANGS" => $result->PERIOD ?? '',
                     "PERIOD" => $result->tipe ?? '',
                     "OVERDUE" => number_format($result->OVERDUE)??'',
