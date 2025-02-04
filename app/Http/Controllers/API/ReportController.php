@@ -278,7 +278,7 @@ class ReportController extends Controller
                             SUM(CASE WHEN d.ACC_KEYS = 'DISKON_DENDA' THEN d.ORIGINAL_AMOUNT ELSE 0 END) AS 'DISKON_DENDA'
                         FROM payment a
                         INNER JOIN credit b ON b.LOAN_NUMBER = a.LOAN_NUM
-                        INNER JOIN payment_detail d ON d.PAYMENT_ID = a.ID
+                        LEFT JOIN payment_detail d ON d.PAYMENT_ID = a.ID
                         WHERE a.LOAN_NUM = {$id}
                         GROUP BY a.BRANCH, a.TITLE, a.LOAN_NUM, a.ENTRY_DATE, b.INSTALLMENT, a.INVOICE, a.STTS_RCRD, a.ORIGINAL_AMOUNT
                         ORDER BY a.ENTRY_DATE DESC;
