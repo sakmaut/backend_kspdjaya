@@ -381,7 +381,8 @@ class ReportController extends Controller
                     'Angs Denda' => number_format($res->PAST_DUE_PENALTY),
                     'Bayar Pokok' => number_format($res->PAYMENT_VALUE_PRINCIPAL),
                     'Bayar Bunga' => number_format($res->PAYMENT_VALUE_INTEREST),
-                    'Bayar Denda' => number_format($res->PAID_PENALTY)
+                    'Bayar Denda' => number_format($res->PAID_PENALTY),
+                    'Status' => $res->PAID_FLAG == 'PAID' ? 'LUNAS' : ''
                 ];
             }
 
