@@ -153,10 +153,8 @@ class PaymentController extends Controller
         }else{
             $this->updateArrears($loan_number, $tgl_angsuran, $res,$uid);
         }
-
-        if($res['bayar_denda'] != 0 || (isset($res['diskon_denda']) && $res['diskon_denda'] == 1)){
-            $this->createPaymentRecords($request, $res, $tgl_angsuran, $loan_number, $no_inv, $getCodeBranch,$uid);
-        }
+        
+        $this->createPaymentRecords($request, $res, $tgl_angsuran, $loan_number, $no_inv, $getCodeBranch,$uid);
         
         $this->updateCredit($loan_number);
     }
