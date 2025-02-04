@@ -241,22 +241,21 @@ class ReportController extends Controller
     public function pembayaran(Request $request,$id)
     {
         try {
-            $results = M_Payment::where('LOAN_NUM',$id)->first();
+            $results = M_Payment::where('LOAN_NUM', $id)->get(); 
 
-            if(!$results){
-                $allData = [];
-            }else{
-                $branch = M_Branch::where('CODE_NUMBER', $results->BRANCH)->first();
-                $results->BRANCH = $branch->NAME ?? '';
-                $results->ORIGINAL_AMOUNT = floatval($results->ORIGINAL_AMOUNT) ?? 0;
-                $results->OS_AMOUNT = floatval($results->OS_AMOUNT) ?? 0;
-                $results->USER_ID = User::find($results->USER_ID)->fullname ?? '';
-                $results->APPROVAL = M_PaymentApproval::where('PAYMENT_ID', $results->ID)->get() ?? '';
-                $results->ATTACHMENT = M_PaymentAttachment::where('payment_id', $results->ID)->get()?? '';
-                $results->DETAIL = M_PaymentDetail::where('PAYMENT_ID', $results->ID)->get() ?? '';
-
-                $allData = [$results];
-            }
+            $allData = [];
+            foreach ($results as $result) {
+                $allData[] = [
+                    'NO INVOICE' => $result->INVOICE ?? '',
+                    'NO KONTRAK' => $result->LOAN_NUMBER ?? '',
+                    'TGL BAYAR' => $result->ENTRY_DATE ?? '',
+                    'TIPE' => $result->ACC_KEY ?? '',
+                    'STATUS' => $result->STTS_RCRD ?? '',
+                    'CABANG' => M_Branch::where('ID', $result->BRANCH)->first()->NAME ?? '',
+                    'ANGSURAN' => $result->TITLE ?? '',
+                    'JUMLAH BAYAR' => number_format($result->ORIGINAL_AMOUNT ?? 0),
+                ];
+            }            
            
             return response()->json($allData, 200);
         } catch (\Exception $e) {
