@@ -266,21 +266,45 @@ class ReportController extends Controller
     public function pembayaran(Request $request,$id)
     {
         try {
-            $results = M_Payment::where('LOAN_NUM', $id)
-                                ->orderByDesc('ENTRY_DATE')
-                                ->get(); 
+                $sql = " SELECT a.BRANCH, a.TITLE, a.LOAN_NUM, a.ENTRY_DATE, b.INSTALLMENT, a.INVOICE, a.STTS_RCRD, a.ORIGINAL_AMOUNT,
+                            SUM(CASE WHEN d.ACC_KEYS = 'BAYAR_POKOK' THEN d.ORIGINAL_AMOUNT ELSE 0 END) AS 'BAYAR_POKOK', 
+                            SUM(CASE WHEN d.ACC_KEYS = 'BAYAR_BUNGA' THEN d.ORIGINAL_AMOUNT ELSE 0 END) AS 'BAYAR_BUNGA',
+                            SUM(CASE WHEN d.ACC_KEYS = 'BAYAR_DENDA' THEN d.ORIGINAL_AMOUNT ELSE 0 END) AS 'BAYAR_DENDA',
+                            SUM(CASE WHEN d.ACC_KEYS = 'BAYAR PELUNASAN POKOK' THEN d.ORIGINAL_AMOUNT ELSE 0 END) AS 'BAYAR_PELUNASAN_POKOK', 
+                            SUM(CASE WHEN d.ACC_KEYS = 'BAYAR PELUNASAN BUNGA' THEN d.ORIGINAL_AMOUNT ELSE 0 END) AS 'BAYAR_PELUNASAN_BUNGA',
+                            SUM(CASE WHEN d.ACC_KEYS = 'BAYAR PELUNASAN DENDA' THEN d.ORIGINAL_AMOUNT ELSE 0 END) AS 'BAYAR_PELUNASAN_DENDA',
+                            SUM(CASE WHEN d.ACC_KEYS = 'DISKON_POKOK' THEN d.ORIGINAL_AMOUNT ELSE 0 END) AS 'DISKON_POKOK',
+                            SUM(CASE WHEN d.ACC_KEYS = 'DISKON_BUNGA' THEN d.ORIGINAL_AMOUNT ELSE 0 END) AS 'DISKON_BUNGA',
+                            SUM(CASE WHEN d.ACC_KEYS = 'DISKON_DENDA' THEN d.ORIGINAL_AMOUNT ELSE 0 END) AS 'DISKON_DENDA'
+                        FROM payment a
+                        INNER JOIN credit b ON b.LOAN_NUMBER = a.LOAN_NUM
+                        INNER JOIN payment_detail d ON d.PAYMENT_ID = a.ID
+                        WHERE a.LOAN_NUM = {$id}
+                        GROUP BY a.BRANCH, a.TITLE, a.LOAN_NUM, a.ENTRY_DATE, b.INSTALLMENT, a.INVOICE, a.STTS_RCRD, a.ORIGINAL_AMOUNT
+                        ORDER BY a.ENTRY_DATE DESC;
+                        ";
+
+            $results = DB::select($sql);
 
             $allData = [];
             foreach ($results as $result) {
                 $allData[] = [
+                    'CABANG' => M_Branch::find($result->BRANCH)->NAME ?? '',
                     'NO INVOICE' => $result->INVOICE ?? '',
                     'NO KONTRAK' => $result->LOAN_NUM ?? '',
                     'TGL BAYAR' => $result->ENTRY_DATE ?? '',
-                    'TIPE' => $result->ACC_KEY ?? '',
-                    'STATUS' => $result->STTS_RCRD ?? '',
-                    'CABANG' => M_Branch::find($result->BRANCH)->NAME ?? '',
                     'ANGSURAN' => $result->TITLE ?? '',
                     'JUMLAH BAYAR' => number_format($result->ORIGINAL_AMOUNT ?? 0),
+                    'BAYAR POKOK' => number_format($result->BAYAR_POKOK ?? 0),
+                    'BAYAR BUNGA' => number_format($result->BAYAR_BUNGA ?? 0),
+                    'BAYAR DENDA' => number_format($result->BAYAR_DENDA ?? 0),
+                    'BAYAR PELUNASAN POKOK' => number_format($result->BAYAR_PELUNASAN_POKOK ?? 0),
+                    'BAYAR PELUNASAN BUNGA' => number_format($result->BAYAR_PELUNASAN_BUNGA ?? 0),
+                    'BAYAR PELUNASAN DENDA' => number_format($result->BAYAR_PELUNASAN_DENDA ?? 0),
+                    'DISKON POKOK' => number_format($result->DISKON_POKOK ?? 0),
+                    'DISKON BUNGA' => number_format($result->DISKON_BUNGA ?? 0),
+                    'DISKON DENDA' => number_format($result->DISKON_DENDA ?? 0),
+                    'STATUS' => $result->STTS_RCRD ?? '',
                 ];
             }            
            

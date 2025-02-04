@@ -264,24 +264,33 @@ class PelunasanController extends Controller
     }
 
     function proccessPayment($request,$uid,$no_inv,$status, $res){
+        $originalAmount = (
+            ($res['bayar_pokok'] ?? 0) + 
+            ($res['bayar_bunga'] ?? 0) + 
+            ($res['bayar_denda'] ?? 0) + 
+            ($res['diskon_pokok'] ?? 0) + 
+            ($res['diskon_bunga'] ?? 0) + 
+            ($res['diskon_denda'] ?? 0)
+        );
+        
         M_Payment::create([
             'ID' => $uid,
-            'ACC_KEY' => 'pelunasan',
+            'ACC_KEY' => 'Pelunasan Angsuran Ke-' . ($res['angsuran_ke'] ?? ''),
             'STTS_RCRD' => $status,
             'NO_TRX' => $no_inv,
             'PAYMENT_METHOD' => $request->METODE_PEMBAYARAN ?? '',
             'INVOICE' => $no_inv,
             'BRANCH' => M_Branch::find($request->user()->branch_id)->CODE_NUMBER ?? '',
-            'LOAN_NUM' => $res['loan_number'] ?? null,
+            'LOAN_NUM' => $res['loan_number'] ?? '',
             'ENTRY_DATE' => Carbon::now(),
-            'TITLE' => 'Angsuran Ke-' . $res['angsuran_ke'] ?? '',
-            'ORIGINAL_AMOUNT' => $res['bayar_pokok'] ?? null,
-            'START_DATE' => $res['tgl_angsuran'] ?? null,
+            'TITLE' => 'Angsuran Ke-' . ($res['angsuran_ke'] ?? ''),
+            'ORIGINAL_AMOUNT' => $originalAmount,
+            'START_DATE' => $res['tgl_angsuran'] ?? '',
             'END_DATE' => Carbon::now(),
             'USER_ID' => $request->user()->id,
-            'AUTH_BY' => $request->user()->fullname??'',
+            'AUTH_BY' => $request->user()->fullname ?? '',
             'AUTH_DATE' => Carbon::now()
-        ]);
+        ]);        
     }
 
     function updateCreditSchedule($loan_number,$res){
