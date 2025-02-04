@@ -95,22 +95,22 @@ class ReportController extends Controller
                 $buildArray = [];
             }else{
                 $buildArray =[
-                    'status' => $results->STATUS??'',
-                    'loan_number' => $results-> LOAN_NUMBER ?? '',
-                    'cust_code' => $results-> CUST_CODE ?? '',
+                    'Status' => $results->STATUS??'',
+                    'No Kontrak' => $results-> LOAN_NUMBER ?? '',
+                    'No Customer' => $results-> CUST_CODE ?? '',
                     'branch_name' => M_Branch::find($results->BRANCH)->NAME??'',
                     'order_number' => $results-> ORDER_NUMBER ?? '',
-                    'credit_type' => $results-> CREDIT_TYPE ?? '',
-                    'tenor' => (int)$results-> PERIOD ?? 0,
-                    'installment_date' => date('Y-m-d',strtotime($results->INSTALLMENT_DATE)) ?? '',
-                    'installment' => floatval($results->INSTALLMENT) ?? 0,
-                    'pcpl_ori' => floatval($results->PCPL_ORI) ?? 0,
-                    'paid_principal' => floatval($results->PAID_PRINCIPAL) ?? 0,
-                    'paid_interest' => floatval($results->PAID_INTEREST) ?? 0,
-                    'paid_penalty' => floatval($results->PAID_PENALTY) ?? 0,
-                    'mcf_name' => User::find($results->MCF_ID)->fullname??'',
-                    'created_by' => User::find($results->CREATED_BY)->fullname??'',
-                    'created_at' => date('Y-m-d',strtotime($results->CREATED_AT)) ??''
+                    'Tipe Kredit' => $results-> CREDIT_TYPE ?? '',
+                    'Tenor' => (int)$results-> PERIOD ?? 0,
+                    'Tgl Angsuran' => date('Y-m-d',strtotime($results->INSTALLMENT_DATE)) ?? '',
+                    'Angsuran' => floatval($results->INSTALLMENT) ?? 0,
+                    'Ttl Pinjaman' => floatval($results->PCPL_ORI) ?? 0,
+                    'Byr Pokok' => floatval($results->PAID_PRINCIPAL) ?? 0,
+                    'Byr Bunga' => floatval($results->PAID_INTEREST) ?? 0,
+                    'Byr Denda' => floatval($results->PAID_PENALTY) ?? 0,
+                    'Nama MCF' => User::find($results->MCF_ID)->fullname??'',
+                    'Dibuat Oleh' => User::find($results->CREATED_BY)->fullname??'',
+                    'Tgl Buat' => date('Y-m-d',strtotime($results->CREATED_AT)) ??''
                 ];
             }
 
