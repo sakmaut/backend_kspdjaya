@@ -42,6 +42,10 @@ class PaymentController extends Controller
                 $data = $data->where('BRANCH_CODE', '=', $getBranch);
             }
 
+            if (strtolower($getPosition) == 'ho') {
+                $data = $data->where('STTS_PAYMENT', '=', 'PENDING');
+            }
+
             $dto = R_Kwitansi::collection($data->get());
 
             return response()->json($dto, 200);
