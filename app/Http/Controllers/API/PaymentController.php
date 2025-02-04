@@ -738,6 +738,12 @@ class PaymentController extends Controller
                 'STTS_PAYMENT' => 'CANCEL'
             ]);
 
+            $checkPayment = M_Payment::where(['INVOICE' => $request->no_invoice ])->get();
+
+            foreach ($checkPayment as $list) {
+                $checkPayment->update(['STTS_RCRD' => 'CANCEL','AUTH_BY' => $request->user()->fullname??'','AUTH_DATE' => Carbon::now() ]);
+            }
+
             $loan_number = $request->value['loan_number'];
             $totalPrincipal = $request->value['totalPrincipal'];
             $totalInterest = $request->value['totalInterest'];
@@ -746,7 +752,6 @@ class PaymentController extends Controller
 
             $setPrincipal = round($totalPrincipal, 2);
 
-            // Update credit record
             $creditCheck = M_Credit::where('LOAN_NUMBER', $loan_number)
                                     ->whereIn('STATUS', ['A', 'D'])
                                     ->first();
@@ -762,7 +767,6 @@ class PaymentController extends Controller
                 ]);
             }
 
-            // Update credit schedule and arrears
             if (!empty($creditSchedule)) {
                 foreach ($creditSchedule as $resList) {
                     $creditScheduleCheck = M_CreditSchedule::where([
