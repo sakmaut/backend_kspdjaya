@@ -353,6 +353,8 @@ class ReportController extends Controller
                                     'a.INSTALLMENT',
                                     'a.PAYMENT_VALUE_PRINCIPAL',
                                     'a.PAYMENT_VALUE_INTEREST',
+                                    'a.INSUFFICIENT_PAYMENT',
+                                    'a.PAYMENT_VALUE',
                                     'a.PAID_FLAG',
                                     'c.PAST_DUE_PENALTY',
                                     'c.PAID_PENALTY'
@@ -383,6 +385,8 @@ class ReportController extends Controller
                     'Bayar Pokok' => number_format($res->PAYMENT_VALUE_PRINCIPAL),
                     'Bayar Bunga' => number_format($res->PAYMENT_VALUE_INTEREST),
                     'Bayar Denda' => number_format($res->PAID_PENALTY),
+                    'Kurang Bayar' => number_format($res->INSUFFICIENT_PAYMENT),
+                    'Ttl bayar' => number_format($res->PAYMENT_VALUE),
                     'Status' => $res->PAID_FLAG == 'PAID' ? 'LUNAS' : ''
                 ];
             }
