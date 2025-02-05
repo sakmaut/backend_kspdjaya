@@ -258,7 +258,7 @@ class PaymentController extends Controller
                                     ->whereIn('STATUS_REC', ['A', 'PENDING'])
                                     ->first();
 
-        $status = !$checkCreditSchedule && !$checkArrears ? 'D' : 'A';
+        $status = !$checkCreditSchedule && (!$checkArrears || empty($check_arrears)) ? 'D' : 'A';
 
         if ($check_credit) {
             $check_credit->update([
