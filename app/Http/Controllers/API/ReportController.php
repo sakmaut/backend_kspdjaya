@@ -386,41 +386,42 @@ class ReportController extends Controller
     {
         try {
             $schedule = [
-                
+                'detail' => [],
+                'data_credit' => []
             ];
 
-                $sql = "   SELECT 
-                            a.INSTALLMENT_COUNT, 
-                            a.PAYMENT_DATE, 
-                            a.PRINCIPAL, 
-                            a.INTEREST, 
-                            a.INSTALLMENT, 
-                            a.PAYMENT_VALUE_PRINCIPAL, 
-                            a.PAYMENT_VALUE_INTEREST, 
-                            a.PAID_FLAG, 
-                            c.PAST_DUE_PENALTY, 
-                            c.PAID_PENALTY, 
-                            mp.ENTRY_DATE
-                        from 
-                            credit_schedule as a
-                        left join 
-                            arrears as c 
-                            on c.LOAN_NUMBER = a.LOAN_NUMBER 
-                            and c.START_DATE = a.PAYMENT_DATE
-                        left join (
-                            SELECT 	LOAN_NUM, 
-                                    ENTRY_DATE,
-                                    max(START_DATE) as START_DATE  
-                            FROM `payment` 
-                            WHERE `LOAN_NUM` = {$id} 
-                            group by  LOAN_NUM,ENTRY_DATE,START_DATE
-                        ) as mp 
-                        on mp.LOAN_NUM = a.LOAN_NUMBER
-                        and mp.START_DATE = a.PAYMENT_DATE
-                        where 
-                            a.LOAN_NUMBER = {$id}
-                        order by 
-                            a.PAYMENT_DATE asc ";
+            $sql = "   SELECT 
+                        a.INSTALLMENT_COUNT, 
+                        a.PAYMENT_DATE, 
+                        a.PRINCIPAL, 
+                        a.INTEREST, 
+                        a.INSTALLMENT, 
+                        a.PAYMENT_VALUE_PRINCIPAL, 
+                        a.PAYMENT_VALUE_INTEREST, 
+                        a.PAID_FLAG, 
+                        c.PAST_DUE_PENALTY, 
+                        c.PAID_PENALTY, 
+                        mp.ENTRY_DATE
+                    from 
+                        credit_schedule as a
+                    left join 
+                        arrears as c 
+                        on c.LOAN_NUMBER = a.LOAN_NUMBER 
+                        and c.START_DATE = a.PAYMENT_DATE
+                    left join (
+                        SELECT 	LOAN_NUM, 
+                                ENTRY_DATE,
+                                max(START_DATE) as START_DATE  
+                        FROM `payment` 
+                        WHERE `LOAN_NUM` = {$id} 
+                        group by  LOAN_NUM,ENTRY_DATE,START_DATE
+                    ) as mp 
+                    on mp.LOAN_NUM = a.LOAN_NUMBER
+                    and mp.START_DATE = a.PAYMENT_DATE
+                    where 
+                        a.LOAN_NUMBER = {$id}
+                    order by 
+                        a.PAYMENT_DATE asc ";
                        
 
             $data = DB::select($sql);
@@ -434,7 +435,7 @@ class ReportController extends Controller
                 $ttlByr = floatval($res->PRINCIPAL + $res->INTEREST + $res->PAST_DUE_PENALTY);
                 $ttlByrAll = floatval($res->PAYMENT_VALUE_PRINCIPAL + $res->PAYMENT_VALUE_INTEREST + $res->PAID_PENALTY);
 
-                $schedule[] = [
+                $schedule['data_credit'][] = [
                     'Angs' => $res->INSTALLMENT_COUNT,
                     'Jt.Tempo' => Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y'),
                     'Tgl Byr' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE??'')->format('d-m-Y'):'',
@@ -456,13 +457,11 @@ class ReportController extends Controller
             }])->where('LOAN_NUMBER', $id)->first();
 
             if ($creditDetail) {
-                $schedule[] = [
-                    'detail' => [
-                        'no_kontrak' => $creditDetail->LOAN_NUMBER,
-                        'tgl_kontrak' => $creditDetail->INSTALLMENT_DATE,
-                        'nama' => $creditDetail->customer->NAME ?? '', // Safely access 'NAME'
-                        'status' => $creditDetail->STATUS == 'D' ? 'Tidak Aktif' : 'Aktif',
-                    ]
+                $schedule['detail'] = [
+                    'no_kontrak' => $creditDetail->LOAN_NUMBER,
+                    'tgl_kontrak' => $creditDetail->INSTALLMENT_DATE,
+                    'nama' => $creditDetail->customer->NAME ?? '', // Safely access 'NAME'
+                    'status' => $creditDetail->STATUS == 'D' ? 'Tidak Aktif' : 'Aktif',
                 ];
             }
 
