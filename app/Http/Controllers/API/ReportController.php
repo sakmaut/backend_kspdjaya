@@ -398,10 +398,14 @@ class ReportController extends Controller
                         a.INSTALLMENT, 
                         a.PAYMENT_VALUE_PRINCIPAL, 
                         a.PAYMENT_VALUE_INTEREST, 
+                        a.INSUFFICIENT_PAYMENT,
+                        a.PAYMENT_VALUE,
                         a.PAID_FLAG, 
                         c.PAST_DUE_PENALTY, 
                         c.PAID_PENALTY, 
-                        mp.ENTRY_DATE
+                        c.STATUS_REC, 
+                        mp.ENTRY_DATE,
+                        mp.INVOICE
                     from 
                         credit_schedule as a
                     left join 
@@ -411,10 +415,11 @@ class ReportController extends Controller
                     left join (
                         SELECT 	LOAN_NUM, 
                                 ENTRY_DATE,
+                                INVOICE,
                                 max(START_DATE) as START_DATE  
                         FROM `payment` 
                         WHERE `LOAN_NUM` = {$id} 
-                        group by  LOAN_NUM,ENTRY_DATE,START_DATE
+                        group by  LOAN_NUM,ENTRY_DATE,INVOICE,START_DATE
                     ) as mp 
                     on mp.LOAN_NUM = a.LOAN_NUMBER
                     and mp.START_DATE = a.PAYMENT_DATE
@@ -436,19 +441,20 @@ class ReportController extends Controller
                 $ttlByrAll = floatval($res->PAYMENT_VALUE_PRINCIPAL + $res->PAYMENT_VALUE_INTEREST + $res->PAID_PENALTY);
 
                 $schedule['data_credit'][] = [
-                    'Angs' => $res->INSTALLMENT_COUNT,
                     'Jt.Tempo' => Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y'),
-                    'Tgl Byr' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE??'')->format('d-m-Y'):'',
-                    'Angs Pkk' => number_format($res->PRINCIPAL),
-                    'Angs Bnga' => number_format($res->INTEREST),
-                    'Angs Dnda' => number_format($res->PAST_DUE_PENALTY),
-                    'Ttl Angs' => number_format($res->INSTALLMENT),
-                    'Byr Pkk' => number_format($res->PAYMENT_VALUE_PRINCIPAL),
-                    'Byr Bnga' => number_format($res->PAYMENT_VALUE_INTEREST),
+                    'Angs' => $res->INSTALLMENT_COUNT,
+                    'Seq' => 1,
+                    'Amt Angs' => number_format($res->INSTALLMENT),
+                    'No Ref' => $res->INVOICE??'',
+                    'Bank' => '',
+                    'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE??'')->format('d-m-Y'):'',
+                    'Amt Bayar' => number_format($res->PAYMENT_VALUE),
+                    'Sisa Angs' => number_format($res->INSUFFICIENT_PAYMENT),
+                    'Denda' => number_format($res->PAST_DUE_PENALTY),
                     'Byr Dnda' => number_format($res->PAID_PENALTY),
-                    'Krng Byr' => number_format($ttlByr-$ttlByrAll),
-                    'Ttl Byr' => number_format($ttlByr),
-                    'Stts' => $res->PAID_FLAG == 'PAID' ? 'LUNAS' : ''
+                    'Sisa Byr Tgh' => number_format($ttlByr-$ttlByrAll),
+                    'Ovd' => $res->PAID_FLAG == 'PAID' && $res->STATUS_REC != 'A' ? 0 : Carbon::now()->diffInDays(Carbon::parse($res->PAYMENT_DATE)),
+                    'Stts' => $res->PAID_FLAG == 'PAID' && $res->STATUS_REC != 'A' ? 'LUNAS' : ''
                 ];
             }
 
