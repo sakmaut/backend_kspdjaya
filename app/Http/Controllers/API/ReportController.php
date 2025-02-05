@@ -315,7 +315,7 @@ class ReportController extends Controller
     public function pembayaran(Request $request,$id)
     {
         try {
-                $sql = " SELECT a.BRANCH, a.TITLE, a.LOAN_NUM, a.ENTRY_DATE, b.INSTALLMENT, a.INVOICE, a.STTS_RCRD, a.ORIGINAL_AMOUNT,
+            $sql = "    SELECT a.BRANCH, a.TITLE, a.LOAN_NUM, a.ENTRY_DATE, b.INSTALLMENT, a.INVOICE, a.STTS_RCRD, a.ORIGINAL_AMOUNT,
                             SUM(CASE WHEN d.ACC_KEYS = 'ANGSURAN_POKOK' THEN d.ORIGINAL_AMOUNT ELSE 0 END) AS 'BAYAR_POKOK', 
                             SUM(CASE WHEN d.ACC_KEYS = 'ANGSURAN_BUNGA' THEN d.ORIGINAL_AMOUNT ELSE 0 END) AS 'BAYAR_BUNGA',
                             SUM(CASE WHEN d.ACC_KEYS = 'BAYAR_DENDA' THEN d.ORIGINAL_AMOUNT ELSE 0 END) AS 'BAYAR_DENDA',
@@ -387,40 +387,49 @@ class ReportController extends Controller
         try {
             $schedule = [];
 
-            $data = DB::table('credit_schedule as a')
-                                ->leftJoin('arrears as c', function ($join) {
-                                    $join->on('c.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
-                                        ->whereColumn('c.START_DATE', '=', 'a.PAYMENT_DATE');
-                                })
-                                ->where('a.LOAN_NUMBER', '=', $id)
-                                ->select(
-                                    'a.INSTALLMENT_COUNT',
-                                    'a.PAYMENT_DATE',
-                                    'a.PRINCIPAL',
-                                    'a.INTEREST',
-                                    'a.INSTALLMENT',
-                                    'a.PAYMENT_VALUE_PRINCIPAL',
-                                    'a.PAYMENT_VALUE_INTEREST',
-                                    'a.INSUFFICIENT_PAYMENT',
-                                    'a.PAYMENT_VALUE',
-                                    'a.PAID_FLAG',
-                                    'c.PAST_DUE_PENALTY',
-                                    'c.PAID_PENALTY'
-                                )
-                                ->orderBy('a.PAYMENT_DATE', 'asc')
-                                ->get();
+                $sql = "   SELECT 
+                            a.INSTALLMENT_COUNT, 
+                            a.PAYMENT_DATE, 
+                            a.PRINCIPAL, 
+                            a.INTEREST, 
+                            a.INSTALLMENT, 
+                            a.PAYMENT_VALUE_PRINCIPAL, 
+                            a.PAYMENT_VALUE_INTEREST, 
+                            a.INSUFFICIENT_PAYMENT, 
+                            a.PAYMENT_VALUE, 
+                            a.PAID_FLAG, 
+                            c.PAST_DUE_PENALTY, 
+                            c.PAID_PENALTY, 
+                            mp.ENTRY_DATE
+                        from 
+                            credit_schedule as a
+                        left join 
+                            arrears as c 
+                            on c.LOAN_NUMBER = a.LOAN_NUMBER 
+                            and c.START_DATE = a.PAYMENT_DATE
+                        left join (
+                            SELECT 	LOAN_NUM, 
+                                    ENTRY_DATE,
+                                    max(START_DATE) as START_DATE  
+                            FROM `payment` 
+                            WHERE `LOAN_NUM` = {$id} 
+                            group by  LOAN_NUM,ENTRY_DATE,START_DATE
+                        ) as mp 
+                        on mp.LOAN_NUM = a.LOAN_NUMBER
+                        and mp.START_DATE = a.PAYMENT_DATE
+                        where 
+                            a.LOAN_NUMBER = {$id}
+                        order by 
+                            a.PAYMENT_DATE asc ";
+                       
 
-            if ($data->isEmpty()) {
+            $data = DB::select($sql);
+
+            if (empty($data)) {
                 return $schedule;
             }
 
             foreach ($data as $res) {
-
-                $getLastPayment = M_payment::select('ENTRY_DATE', 'LOAN_NUM', 'START_DATE')
-                                            ->where('LOAN_NUM', $id)
-                                            ->where('START_DATE', $res->PAYMENT_DATE)
-                                            ->orderByDesc('ENTRY_DATE')
-                                            ->first();
 
                 $ttlByr = floatval($res->PRINCIPAL + $res->INTEREST + $res->PAST_DUE_PENALTY);
                 $ttlByrAll = floatval($res->PAYMENT_VALUE_PRINCIPAL + $res->PAYMENT_VALUE_INTEREST + $res->PAID_PENALTY);
@@ -428,7 +437,7 @@ class ReportController extends Controller
                 $schedule[] = [
                     'Angs' => $res->INSTALLMENT_COUNT,
                     'Jt.Tempo' => Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y'),
-                    'Tgl Byr' => $getLastPayment ? Carbon::parse($getLastPayment->ENTRY_DATE??'')->format('d-m-Y'):'',
+                    'Tgl Byr' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE??'')->format('d-m-Y'):'',
                     'Angs Pkk' => number_format($res->PRINCIPAL),
                     'Angs Bnga' => number_format($res->INTEREST),
                     'Angs Dnda' => number_format($res->PAST_DUE_PENALTY),
