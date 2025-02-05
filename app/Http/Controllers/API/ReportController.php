@@ -462,7 +462,7 @@ class ReportController extends Controller
                     'tgl_kontrak' => $creditDetail->INSTALLMENT_DATE??'',
                     'nama' => $creditDetail->customer->NAME ?? '', 
                     'no_pel' => $creditDetail->CUST_CODE??'',
-                    'status' => $creditDetail->STATUS == 'D' ? 'Tidak Aktif' : 'Aktif',
+                   'status' => ($creditDetail->STATUS ?? '') == 'D' ? 'Tidak Aktif' : 'Aktif'
                 ];
             }
 
