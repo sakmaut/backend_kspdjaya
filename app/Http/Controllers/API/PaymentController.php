@@ -745,7 +745,7 @@ class PaymentController extends Controller
 
             if(!empty($checkPayment)){
                 foreach ($checkPayment as $list) {
-                    $checkPayment->update(['STTS_RCRD' => 'CANCEL','AUTH_BY' => $request->user()->fullname??'','AUTH_DATE' => Carbon::now() ]);
+                    $list->update(['STTS_RCRD' => 'CANCEL','AUTH_BY' => $request->user()->fullname??'','AUTH_DATE' => Carbon::now() ]);
                 }
     
             }
