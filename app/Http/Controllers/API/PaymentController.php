@@ -42,6 +42,10 @@ class PaymentController extends Controller
                 $data = $data->where('BRANCH_CODE', '=', $getBranch);
             }
 
+            if (strtolower($getPosition) == 'ho') {
+                $data = $data->where('STTS_PAYMENT', '=', 'PENDING');
+            }
+
             $dto = R_Kwitansi::collection($data->get());
 
             return response()->json($dto, 200);
@@ -131,7 +135,6 @@ class PaymentController extends Controller
             $dto = new R_Kwitansi($data);
 
             DB::commit();
-            ActivityLogger::logActivity($request, "Success", 200);
             return response()->json($dto, 200);
         } catch (\Exception $e) {
             DB::rollback();
@@ -153,8 +156,10 @@ class PaymentController extends Controller
         }else{
             $this->updateArrears($loan_number, $tgl_angsuran, $res,$uid);
         }
-        
-        $this->createPaymentRecords($request, $res, $tgl_angsuran, $loan_number, $no_inv, $getCodeBranch,$uid);
+
+        if ($res['bayar_angsuran'] != 0 || $res['bayar_denda'] != 0 || (isset($res['diskon_denda']) && $res['diskon_denda'] == 1)) {
+            $this->createPaymentRecords($request, $res, $tgl_angsuran, $loan_number, $no_inv, $getCodeBranch,$uid);
+        }
         
         $this->updateCredit($loan_number);
     }
@@ -637,7 +642,7 @@ class PaymentController extends Controller
                                 'BANK_NAME' => round(microtime(true) * 1000)
                             ]);
 
-                            if (($res['bayar_angsuran'] != 0 && $res['installment'] != 0)) {
+                            if (($res['installment'] != 0)) {
                                 $credit_schedule = M_CreditSchedule::where([
                                     'LOAN_NUMBER' => $loan_number,
                                     'PAYMENT_DATE' => $tgl_angsuran
