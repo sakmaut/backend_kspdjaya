@@ -385,7 +385,9 @@ class ReportController extends Controller
     public function strukturCredit(Request $request,$id)
     {
         try {
-            $schedule = [];
+            $schedule = [
+                
+            ];
 
                 $sql = "   SELECT 
                             a.INSTALLMENT_COUNT, 
@@ -446,6 +448,19 @@ class ReportController extends Controller
                     'Krng Byr' => number_format($ttlByr-$ttlByrAll),
                     'Ttl Byr' => number_format($ttlByr),
                     'Stts' => $res->PAID_FLAG == 'PAID' ? 'LUNAS' : ''
+                ];
+            }
+
+            $creditDetail = M_Credit::with(['customer' => function($query) {
+                $query->select('CUST_CODE', 'NAME');
+            }])->where('LOAN_NUMBER', $id)->first();
+
+            if ($creditDetail) {
+                $schedule['detail'] = [
+                    'no_kontrak' => $creditDetail->LOAN_NUMBER,
+                    'tgl_kontrak' => $creditDetail->INSTALLMENT_DATE,
+                    'nama' =>$creditDetail->customer['NAME'] ?? '', 
+                    'status' => $creditDetail->STATUS == 'D' ? 'Tidak Aktif' : 'Aktif',
                 ];
             }
 
