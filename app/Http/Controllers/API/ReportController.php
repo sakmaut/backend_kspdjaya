@@ -94,24 +94,73 @@ class ReportController extends Controller
             if(!$results){
                 $buildArray = [];
             }else{
-                $buildArray =[
-                    'Status' => $results->STATUS??'',
-                    'No Kontrak' => $results-> LOAN_NUMBER ?? '',
-                    'No Customer' => $results-> CUST_CODE ?? '',
-                    'branch_name' => M_Branch::find($results->BRANCH)->NAME??'',
-                    'order_number' => $results-> ORDER_NUMBER ?? '',
-                    'Tipe Kredit' => $results-> CREDIT_TYPE ?? '',
-                    'Tenor' => (int)$results-> PERIOD ?? 0,
-                    'Tgl Angsuran' => date('Y-m-d',strtotime($results->INSTALLMENT_DATE)) ?? '',
-                    'Angsuran' => floatval($results->INSTALLMENT) ?? 0,
-                    'Ttl Pinjaman' => floatval($results->PCPL_ORI) ?? 0,
-                    'Byr Pokok' => floatval($results->PAID_PRINCIPAL) ?? 0,
-                    'Byr Bunga' => floatval($results->PAID_INTEREST) ?? 0,
-                    'Byr Denda' => floatval($results->PAID_PENALTY) ?? 0,
-                    'Nama MCF' => User::find($results->MCF_ID)->fullname??'',
-                    'Dibuat Oleh' => User::find($results->CREATED_BY)->fullname??'',
-                    'Tgl Buat' => date('Y-m-d',strtotime($results->CREATED_AT)) ??''
+                $buildArray = [
+                    [
+                        'title' => 'Status',
+                        'value' => $results->STATUS ?? ''
+                    ],
+                    [
+                        'title' => 'No Kontrak',
+                        'value' => $results->LOAN_NUMBER ?? ''
+                    ],
+                    [
+                        'title' => 'No Customer',
+                        'value' => $results->CUST_CODE ?? ''
+                    ],
+                    [
+                        'title' => 'Branch Name',
+                        'value' => M_Branch::find($results->BRANCH)->NAME ?? ''
+                    ],
+                    [
+                        'title' => 'Order Number',
+                        'value' => $results->ORDER_NUMBER ?? ''
+                    ],
+                    [
+                        'title' => 'Tipe Kredit',
+                        'value' => $results->CREDIT_TYPE ?? ''
+                    ],
+                    [
+                        'title' => 'Tenor',
+                        'value' => (int)$results->PERIOD ?? 0
+                    ],
+                    [
+                        'title' => 'Tgl Angsuran',
+                        'value' => date('Y-m-d', strtotime($results->INSTALLMENT_DATE)) ?? ''
+                    ],
+                    [
+                        'title' => 'Angsuran',
+                        'value' => floatval($results->INSTALLMENT) ?? 0
+                    ],
+                    [
+                        'title' => 'Ttl Pinjaman',
+                        'value' => floatval($results->PCPL_ORI) ?? 0
+                    ],
+                    [
+                        'title' => 'Byr Pokok',
+                        'value' => floatval($results->PAID_PRINCIPAL) ?? 0
+                    ],
+                    [
+                        'title' => 'Byr Bunga',
+                        'value' => floatval($results->PAID_INTEREST) ?? 0
+                    ],
+                    [
+                        'title' => 'Byr Denda',
+                        'value' => floatval($results->PAID_PENALTY) ?? 0
+                    ],
+                    [
+                        'title' => 'Nama MCF',
+                        'value' => User::find($results->MCF_ID)->fullname ?? ''
+                    ],
+                    [
+                        'title' => 'Dibuat Oleh',
+                        'value' => User::find($results->CREATED_BY)->fullname ?? ''
+                    ],
+                    [
+                        'title' => 'Tgl Buat',
+                        'value' => date('Y-m-d', strtotime($results->CREATED_AT)) ?? ''
+                    ]
                 ];
+                
             }
 
             return response()->json($buildArray, 200);
@@ -344,7 +393,6 @@ class ReportController extends Controller
                                         ->whereColumn('c.START_DATE', '=', 'a.PAYMENT_DATE');
                                 })
                                 ->where('a.LOAN_NUMBER', '=', $id)
-                                ->distinct() 
                                 ->select(
                                     'a.INSTALLMENT_COUNT',
                                     'a.PAYMENT_DATE',
@@ -374,20 +422,23 @@ class ReportController extends Controller
                                             ->orderByDesc('ENTRY_DATE')
                                             ->first();
 
+                $ttlByr = floatval($res->PRINCIPAL + $res->INTEREST + $res->PAST_DUE_PENALTY);
+                $ttlByrAll = floatval($res->PAYMENT_VALUE_PRINCIPAL + $res->PAYMENT_VALUE_INTEREST + $res->PAID_PENALTY);
+
                 $schedule[] = [
                     'Angs' => $res->INSTALLMENT_COUNT,
                     'Jt.Tempo' => Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y'),
-                    'Tgl Bayar' => $getLastPayment ? Carbon::parse($getLastPayment->ENTRY_DATE??'')->format('d-m-Y'):'',
-                    'Angs Pokok' => number_format($res->PRINCIPAL),
-                    'Angs Bunga' => number_format($res->INTEREST),
-                    'Angs Denda' => number_format($res->PAST_DUE_PENALTY),
+                    'Tgl Byr' => $getLastPayment ? Carbon::parse($getLastPayment->ENTRY_DATE??'')->format('d-m-Y'):'',
+                    'Angs Pkk' => number_format($res->PRINCIPAL),
+                    'Angs Bnga' => number_format($res->INTEREST),
+                    'Angs Dnda' => number_format($res->PAST_DUE_PENALTY),
                     'Ttl Angs' => number_format($res->INSTALLMENT),
-                    'Bayar Pokok' => number_format($res->PAYMENT_VALUE_PRINCIPAL),
-                    'Bayar Bunga' => number_format($res->PAYMENT_VALUE_INTEREST),
-                    'Bayar Denda' => number_format($res->PAID_PENALTY),
-                    'Kurang Bayar' => number_format($res->INSUFFICIENT_PAYMENT),
-                    'Ttl Bayar' => number_format($res->PAYMENT_VALUE),
-                    'Status' => $res->PAID_FLAG == 'PAID' ? 'LUNAS' : ''
+                    'Byr Pkk' => number_format($res->PAYMENT_VALUE_PRINCIPAL),
+                    'Byr Bnga' => number_format($res->PAYMENT_VALUE_INTEREST),
+                    'Byr Dnda' => number_format($res->PAID_PENALTY),
+                    'Krng Byr' => number_format($ttlByr-$ttlByrAll),
+                    'Ttl Byr' => number_format($ttlByr),
+                    'Stts' => $res->PAID_FLAG == 'PAID' ? 'LUNAS' : ''
                 ];
             }
 

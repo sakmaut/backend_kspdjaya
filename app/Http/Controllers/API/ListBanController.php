@@ -13,14 +13,15 @@ class ListBanController extends Controller
     {
         try {
             $cabangId = $request->cabang_id;
+            $getPosition = $request->user()->position;
 
             if ((isset($request->dari) && !empty($request->dari) && $request->dari !== null) || ( isset($request->sampai) && !empty($request->sampai) && $request->sampai !== null)) {
                 $dateFrom = $request->dari;
                 $dateTo = $request->sampai;
-                $arusKas = $this->queryArusKas($cabangId,$dateFrom, $dateTo);
+                $arusKas = $this->queryArusKas($getPosition,$cabangId,$dateFrom, $dateTo);
             }else{
                 $date = isset($request->dari) ? $request->dari : now();
-                $arusKas = $this->queryArusKas($cabangId,$date);
+                $arusKas = $this->queryArusKas($getPosition,$cabangId,$date);
             }
 
             $datas = array_map(function($list) {
@@ -46,7 +47,7 @@ class ListBanController extends Controller
         }
     }
 
-    private function queryArusKas($cabangId = null,$dateFrom = null, $dateTo = null) {
+    private function queryArusKas($getPosition,$cabangId = null,$dateFrom = null, $dateTo = null) {
 
         $query = "  SELECT 
                         b.JENIS,
@@ -108,7 +109,7 @@ class ListBanController extends Controller
                 $params['dateFrom'] = $dateFrom;
             }
 
-            if (!empty($cabangId)) {
+            if (strtolower($getPosition) != 'ho' && !empty($cabangId)) {
                 $query .= empty($params) ? " WHERE" : " AND";
                 $query .= " b.BRANCH_ID = :cabangId";
                 $params['cabangId'] = $cabangId;
