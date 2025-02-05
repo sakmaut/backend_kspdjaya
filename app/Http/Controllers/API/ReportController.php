@@ -458,10 +458,10 @@ class ReportController extends Controller
 
             if ($creditDetail) {
                 $schedule['detail'] = [
-                    'no_kontrak' => $creditDetail->LOAN_NUMBER,
-                    'tgl_kontrak' => $creditDetail->INSTALLMENT_DATE,
+                    'no_kontrak' => $creditDetail->LOAN_NUMBER??'',
+                    'tgl_kontrak' => $creditDetail->INSTALLMENT_DATE??'',
                     'nama' => $creditDetail->customer->NAME ?? '', 
-                    'no_pel' => $creditDetail->CUST_CODE,
+                    'no_pel' => $creditDetail->CUST_CODE??'',
                     'status' => $creditDetail->STATUS == 'D' ? 'Tidak Aktif' : 'Aktif',
                 ];
             }
