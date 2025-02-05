@@ -743,10 +743,13 @@ class PaymentController extends Controller
 
             $checkPayment = M_Payment::where(['INVOICE' => $request->no_invoice ])->get();
 
-            foreach ($checkPayment as $list) {
-                $checkPayment->update(['STTS_RCRD' => 'CANCEL','AUTH_BY' => $request->user()->fullname??'','AUTH_DATE' => Carbon::now() ]);
+            if(!empty($checkPayment)){
+                foreach ($checkPayment as $list) {
+                    $checkPayment->update(['STTS_RCRD' => 'CANCEL','AUTH_BY' => $request->user()->fullname??'','AUTH_DATE' => Carbon::now() ]);
+                }
+    
             }
-
+            
             $loan_number = $request->value['loan_number'];
             $totalPrincipal = $request->value['totalPrincipal'];
             $totalInterest = $request->value['totalInterest'];

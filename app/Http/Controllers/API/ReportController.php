@@ -395,8 +395,6 @@ class ReportController extends Controller
                             a.INSTALLMENT, 
                             a.PAYMENT_VALUE_PRINCIPAL, 
                             a.PAYMENT_VALUE_INTEREST, 
-                            a.INSUFFICIENT_PAYMENT, 
-                            a.PAYMENT_VALUE, 
                             a.PAID_FLAG, 
                             c.PAST_DUE_PENALTY, 
                             c.PAID_PENALTY, 
