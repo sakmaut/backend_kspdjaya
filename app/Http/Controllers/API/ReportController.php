@@ -460,7 +460,8 @@ class ReportController extends Controller
                 $schedule['detail'] = [
                     'no_kontrak' => $creditDetail->LOAN_NUMBER,
                     'tgl_kontrak' => $creditDetail->INSTALLMENT_DATE,
-                    'nama' => $creditDetail->customer->NAME ?? '', // Safely access 'NAME'
+                    'nama' => $creditDetail->customer->NAME ?? '', 
+                    'no_pel' => $creditDetail->CUST_CODE,
                     'status' => $creditDetail->STATUS == 'D' ? 'Tidak Aktif' : 'Aktif',
                 ];
             }
