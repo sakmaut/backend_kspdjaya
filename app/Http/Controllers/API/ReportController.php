@@ -456,11 +456,13 @@ class ReportController extends Controller
             }])->where('LOAN_NUMBER', $id)->first();
 
             if ($creditDetail) {
-                $schedule['detail'] = [
-                    'no_kontrak' => $creditDetail->LOAN_NUMBER,
-                    'tgl_kontrak' => $creditDetail->INSTALLMENT_DATE,
-                    'nama' =>$creditDetail->customer['NAME'] ?? '', 
-                    'status' => $creditDetail->STATUS == 'D' ? 'Tidak Aktif' : 'Aktif',
+                $schedule[] = [
+                    'detail' => [
+                        'no_kontrak' => $creditDetail->LOAN_NUMBER,
+                        'tgl_kontrak' => $creditDetail->INSTALLMENT_DATE,
+                        'nama' => $creditDetail->customer->NAME ?? '', // Safely access 'NAME'
+                        'status' => $creditDetail->STATUS == 'D' ? 'Tidak Aktif' : 'Aktif',
+                    ]
                 ];
             }
 
