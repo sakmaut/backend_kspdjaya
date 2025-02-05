@@ -289,22 +289,22 @@ class ReportController extends Controller
             $allData = [];
             foreach ($results as $result) {
                 $allData[] = [
-                    'CABANG' => M_Branch::find($result->BRANCH)->NAME ?? '',
-                    'NO INVOICE' => $result->INVOICE ?? '',
-                    'NO KONTRAK' => $result->LOAN_NUM ?? '',
-                    'TGL BAYAR' => $result->ENTRY_DATE ?? '',
-                    'ANGSURAN' => $result->TITLE ?? '',
-                    'JUMLAH BAYAR' => number_format($result->ORIGINAL_AMOUNT ?? 0),
-                    'BAYAR POKOK' => number_format($result->BAYAR_POKOK ?? 0),
-                    'BAYAR BUNGA' => number_format($result->BAYAR_BUNGA ?? 0),
-                    'BAYAR DENDA' => number_format($result->BAYAR_DENDA ?? 0),
-                    'BAYAR PELUNASAN POKOK' => number_format($result->BAYAR_PELUNASAN_POKOK ?? 0),
-                    'BAYAR PELUNASAN BUNGA' => number_format($result->BAYAR_PELUNASAN_BUNGA ?? 0),
-                    'BAYAR PELUNASAN DENDA' => number_format($result->BAYAR_PELUNASAN_DENDA ?? 0),
-                    'DISKON POKOK' => number_format($result->DISKON_POKOK ?? 0),
-                    'DISKON BUNGA' => number_format($result->DISKON_BUNGA ?? 0),
-                    'DISKON DENDA' => number_format($result->DISKON_DENDA ?? 0),
-                    'STATUS' => $result->STTS_RCRD ?? '',
+                    'Cbang' => M_Branch::find($result->BRANCH)->NAME ?? '',
+                    'No Inv' => $result->INVOICE ?? '',
+                    'No Kont' => $result->LOAN_NUM ?? '',
+                    'Tgl Byr' => $result->ENTRY_DATE ?? '',
+                    'Angs' => $result->TITLE ?? '',
+                    'Jml Byr' => number_format($result->ORIGINAL_AMOUNT ?? 0),
+                    'Byr Pkk' => number_format($result->BAYAR_POKOK ?? 0),
+                    'Byr Bnga' => number_format($result->BAYAR_BUNGA ?? 0),
+                    'Byr Dnda' => number_format($result->BAYAR_DENDA ?? 0),
+                    'Byr Plsn Pkk' => number_format($result->BAYAR_PELUNASAN_POKOK ?? 0),
+                    'Byr Plsn Bnga' => number_format($result->BAYAR_PELUNASAN_BUNGA ?? 0),
+                    'Byr Plsn Dnda' => number_format($result->BAYAR_PELUNASAN_DENDA ?? 0),
+                    'Dskn Pkk' => number_format($result->DISKON_POKOK ?? 0),
+                    'Dskn Bnga' => number_format($result->DISKON_BUNGA ?? 0),
+                    'Dskn Dnda' => number_format($result->DISKON_DENDA ?? 0),
+                    'Stts' => $result->STTS_RCRD ?? '',
                 ];
             }            
            
