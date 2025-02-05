@@ -200,7 +200,7 @@ class UsersController extends Controller
                 'username' => $request->username??'',
                 'fullname' => $request->nama??'',
                 'branch_id' => $request->cabang_id??'',
-                'position' => $getJabatan->jabatan??'',
+                'position' => $getJabatan->jabatan??$request->jabatan??'',
                 'no_ktp' => $request->no_ktp??'',
                 'alamat' => $request->alamat??'',
                 'gender' => $request->gender ?? '',
