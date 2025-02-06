@@ -390,43 +390,42 @@ class ReportController extends Controller
                 'data_credit' => []
             ];
 
-            $sql = "   SELECT 
-                        a.INSTALLMENT_COUNT, 
-                        a.PAYMENT_DATE, 
-                        a.PRINCIPAL, 
-                        a.INTEREST, 
-                        a.INSTALLMENT, 
-                        a.PAYMENT_VALUE_PRINCIPAL, 
-                        a.PAYMENT_VALUE_INTEREST, 
-                        a.INSUFFICIENT_PAYMENT,
-                        a.PAYMENT_VALUE,
-                        a.PAID_FLAG, 
-                        c.PAST_DUE_PENALTY, 
-                        c.PAID_PENALTY, 
-                        c.STATUS_REC, 
-                        mp.ENTRY_DATE,
-                        mp.INVOICE
-                    from 
-                        credit_schedule as a
-                    left join 
-                        arrears as c 
-                        on c.LOAN_NUMBER = a.LOAN_NUMBER 
-                        and c.START_DATE = a.PAYMENT_DATE
-                    left join (
-                        SELECT 	LOAN_NUM, 
-                                ENTRY_DATE,
-                                INVOICE,
-                                max(START_DATE) as START_DATE  
-                        FROM `payment` 
-                        WHERE `LOAN_NUM` = {$id} 
-                        group by  LOAN_NUM,ENTRY_DATE,INVOICE,START_DATE
-                    ) as mp 
-                    on mp.LOAN_NUM = a.LOAN_NUMBER
-                    and mp.START_DATE = a.PAYMENT_DATE
-                    where 
-                        a.LOAN_NUMBER = {$id}
-                    order by 
-                        a.PAYMENT_DATE asc ";
+            $sql = "    SELECT 
+                            a.INSTALLMENT_COUNT, 
+                            a.PAYMENT_DATE, 
+                            a.PRINCIPAL, 
+                            a.INTEREST, 
+                            a.INSTALLMENT, 
+                            a.PAYMENT_VALUE_PRINCIPAL, 
+                            a.PAYMENT_VALUE_INTEREST, 
+                            a.INSUFFICIENT_PAYMENT,
+                            a.PAYMENT_VALUE,
+                            a.PAID_FLAG, 
+                            c.PAST_DUE_PENALTY, 
+                            c.PAID_PENALTY, 
+                            c.STATUS_REC, 
+                            mp.ENTRY_DATE,
+                            mp.INST_COUNT, 
+                            case when a.PAID_FLAG <> 'PAID' and date_format(a.PAYMENT_DATE,'%d%m%Y') < date_format(now(),'%d%m%Y') then datediff(date_format(now(),'%d%m%Y'),date_format(a.PAYMENT_DATE,'%d%m%Y')) else 0 end as OD
+                        from 
+                            credit_schedule as a
+                        left join 
+                            arrears as c 
+                            on c.LOAN_NUMBER = a.LOAN_NUMBER 
+                            and c.START_DATE = a.PAYMENT_DATE
+                        left join (
+                            SELECT 	LOAN_NUM, 
+                                    ENTRY_DATE,
+                                    max(START_DATE) as START_DATE, 
+                                    count(START_DATE) as INST_COUNT
+                            FROM payment 
+                            WHERE LOAN_NUM = {$id}
+                            group by  LOAN_NUM,date_format(START_DATE,'%d%m%Y'),ENTRY_DATE
+                        ) as mp 
+                        on mp.LOAN_NUM = a.LOAN_NUMBER
+                        and date_format(mp.START_DATE,'%d%m%Y') = date_format(a.PAYMENT_DATE,'%d%m%Y')
+                        where 
+                            a.LOAN_NUMBER = {$id} ";
                        
 
             $data = DB::select($sql);
@@ -443,16 +442,16 @@ class ReportController extends Controller
                 $schedule['data_credit'][] = [
                     'Jt.Tempo' => Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y'),
                     'Angs' => $res->INSTALLMENT_COUNT,
-                    'Seq' => 1,
-                    'Amt Angs' => number_format($res->INSTALLMENT),
+                    'Seq' => $res->INST_COUNT??0,
+                    'Amt Angs' => number_format($res->INSTALLMENT ?? 0),
                     'No Ref' => $res->INVOICE??'',
                     'Bank' => '',
                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE??'')->format('d-m-Y'):'',
-                    'Amt Bayar' => number_format($res->PAYMENT_VALUE),
-                    'Sisa Angs' => number_format($res->INSUFFICIENT_PAYMENT),
-                    'Denda' => number_format($res->PAST_DUE_PENALTY),
-                    'Byr Dnda' => number_format($res->PAID_PENALTY),
-                    'Sisa Byr Tgh' => number_format($ttlByr-$ttlByrAll),
+                    'Amt Bayar' => number_format($res->PAYMENT_VALUE??0),
+                    'Sisa Angs' => number_format($res->INSUFFICIENT_PAYMENT ?? 0),
+                    'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0),
+                    'Byr Dnda' => number_format($res->PAID_PENALTY ?? 0),
+                    'Sisa Byr Tgh' => number_format($ttlByr ?? 0 - $ttlByrAll ?? 0),
                     'Ovd' => $res->PAID_FLAG == 'PAID' && $res->STATUS_REC != 'A' ? 0 : $res->OD??0,
                     'Stts' => $res->PAID_FLAG == 'PAID' && $res->STATUS_REC != 'A' ? 'LUNAS' : ''
                 ];
