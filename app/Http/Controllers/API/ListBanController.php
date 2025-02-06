@@ -161,15 +161,8 @@ class ListBanController extends Controller
 
             $params = [];
 
-            if (strtolower($getPosition) != 'ho' && !empty($cabangId)) {
-                $query .= empty($params) ? " WHERE" : " AND";
-                $query .= " b.BRANCH_ID = :cabangId";
-                $params['cabangId'] = $cabangId;
-            }
-
             if (strtolower($getPosition) == 'ho' && !empty($cabangId)) {
-                $query .= empty($params) ? " WHERE" : " AND";
-                $query .= " b.BRANCH_ID = :cabangId";
+                $query .= " AND b.BRANCH_ID = :cabangId";
                 $params['cabangId'] = $cabangId;
             }
 
