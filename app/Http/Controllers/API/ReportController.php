@@ -466,7 +466,7 @@ class ReportController extends Controller
                             ->orderBy('ENTRY_DATE', 'desc')
                             ->select('INVOICE')
                             ->first();
-
+                $sisaAngs = $res->PAID_FLAG == 'PAID' ? 0 : number_format($res->INSTALLMENT ?? 0);
 
                 $schedule['data_credit'][] = [
                     'Jt.Tempo' => Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y'),
@@ -477,7 +477,7 @@ class ReportController extends Controller
                     'Bank' => '',
                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE??'')->format('d-m-Y'):'',
                     'Amt Bayar' => number_format($res->PAYMENT_VALUE??0),
-                    'Sisa Angs' => number_format($res->INSUFFICIENT_PAYMENT ?? 0),
+                    'Sisa Angs' => $sisaAngs,
                     'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0),
                     'Byr Dnda' => number_format($res->PAID_PENALTY ?? 0),
                     'Sisa Byr Tgh' => number_format($ttlByr ?? 0 - $ttlByrAll ?? 0),
