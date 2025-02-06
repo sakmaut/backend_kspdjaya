@@ -367,15 +367,26 @@ class ReportController extends Controller
     public function tunggakkan(Request $request,$id)
     {
         try {
-            $results = M_Arrears::where('LOAN_NUMBER', $id)->first();
+            $results = M_Arrears::where('LOAN_NUMBER', $id)->get();
 
-            if (!$results) {
+            if ($results->isEmpty()) {
                 $allData = [];
             } else {
-                $allData = $results;
+                $allData = [];
+
+                foreach ($results as $res) {
+                    $allData[] = [
+                        'Jt.Tempo' => Carbon::parse($res->START_DATE)->format('Y-m-d'),
+                        'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('Y-m-d') : '',
+                        'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0),
+                        'Byr Dnda' => number_format($res->PAID_PENALTY ?? 0),
+                        'Status' => $res->STATUS_REC == 'A' ? '':'LUNAS',
+                    ];
+                }
             }
-           
+
             return response()->json($allData, 200);
+
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
