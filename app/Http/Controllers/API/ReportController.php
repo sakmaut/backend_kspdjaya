@@ -445,7 +445,7 @@ class ReportController extends Controller
                 $schedule['data_credit'][] = [
                     'Jt.Tempo' => Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y'),
                     'Angs' => $res->INSTALLMENT_COUNT,
-                    'Seq' => 1,
+                    'Seq' => $res->INST_COUNT,
                     'Amt Angs' => number_format($res->INSTALLMENT),
                     'No Ref' => $res->INVOICE??'',
                     'Bank' => '',
@@ -455,7 +455,7 @@ class ReportController extends Controller
                     'Denda' => number_format($res->PAST_DUE_PENALTY),
                     'Byr Dnda' => number_format($res->PAID_PENALTY),
                     'Sisa Byr Tgh' => number_format($ttlByr-$ttlByrAll),
-                    'Ovd' => $res->PAID_FLAG == 'PAID' && $res->STATUS_REC != 'A' ? 0 : Carbon::now()->diffInDays(Carbon::parse($res->PAYMENT_DATE)),
+                    'Ovd' => $res->OD,
                     'Stts' => $res->PAID_FLAG == 'PAID' && $res->STATUS_REC != 'A' ? 'LUNAS' : ''
                 ];
             }
