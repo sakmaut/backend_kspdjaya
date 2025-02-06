@@ -440,12 +440,18 @@ class ReportController extends Controller
                 $ttlByr = floatval($res->PRINCIPAL + $res->INTEREST + $res->PAST_DUE_PENALTY);
                 $ttlByrAll = floatval($res->PAYMENT_VALUE_PRINCIPAL + $res->PAYMENT_VALUE_INTEREST + $res->PAID_PENALTY);
 
+                $getInvoice = M_Payment::where('loan_number', $id)
+                            ->orderBy('ENTRY_DATE', 'desc')
+                            ->select('loan_number', 'ENTRY_DATE')
+                            ->first();
+
+
                 $schedule['data_credit'][] = [
                     'Jt.Tempo' => Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y'),
                     'Angs' => $res->INSTALLMENT_COUNT,
                     'Seq' => $res->INST_COUNT??0,
                     'Amt Angs' => number_format($res->INSTALLMENT ?? 0),
-                    'No Ref' => $res->INVOICE??'',
+                    'No Ref' => $getInvoice->INVOICE??'',
                     'Bank' => '',
                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE??'')->format('d-m-Y'):'',
                     'Amt Bayar' => number_format($res->PAYMENT_VALUE??0),
