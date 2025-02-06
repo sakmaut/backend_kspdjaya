@@ -16,8 +16,8 @@ class ListBanController extends Controller
             $getPosition = $request->user()->position;
             
             $datas = [
-                'CASH-IN' => [],
-                'CASH-OUT' => [],
+                'CASH_IN' => [],
+                'CASH_OUT' => [],
             ];
             
             if (!empty($request->dari)) {
@@ -31,7 +31,7 @@ class ListBanController extends Controller
                     if ($item->JENIS != 'PENCAIRAN') {
                         $found = false;
             
-                        foreach ($datas['CASH-IN'] as &$data) {
+                        foreach ($datas['CASH_IN'] as &$data) {
                             // Check if a combination of no_invoice, no_kontrak, and nama_pelanggan exists
                             if ($data['no_invoice'] === $item->no_invoice
                                 && $data['no_kontrak'] === $item->LOAN_NUM
@@ -51,13 +51,14 @@ class ListBanController extends Controller
             
                         // If not found, create a new 'CASH-IN' entry
                         if (!$found) {
-                            $datas['CASH-IN'][] = [
+                            $datas['CASH_IN'][] = [
                                 'no' => $no++,
                                 'no_invoice' => $item->no_invoice ?? '',
-                                'no_kontrak' => $item->LOAN_NUM,
-                                'nama_pelanggan' => $item->PELANGGAN,
-                                'metode_pembayaran' => $item->PAYMENT_METHOD,
-                                'keterangan' => $item->JENIS . ' Angsuran Ke-' . $item->angsuran_ke,
+                                'no_kontrak' => $item->LOAN_NUM?? '',
+                                'cabang' => $item->nama_cabang??'',
+                                'nama_pelanggan' => $item->PELANGGAN?? '',
+                                'metode_pembayaran' => $item->PAYMENT_METHOD?? '',
+                                'keterangan' => $item->JENIS . ' Angsuran Ke-' . $item->angsuran_ke ?? '',
                                 'amount' => floatval($item->ORIGINAL_AMOUNT),
                             ];
                         }
@@ -65,11 +66,12 @@ class ListBanController extends Controller
             
                     // Handle 'CASH-OUT'
                     if ($item->JENIS == 'PENCAIRAN') {
-                        $datas['CASH-OUT'][] = [
+                        $datas['CASH_OUT'][] = [
                             'no' => $no++,
-                            'no_kontrak' => $item->LOAN_NUM,
-                            'nama_pelanggan' => $item->PELANGGAN,
-                            'keterangan' => $item->LOAN_NUM,
+                            'no_kontrak' => $item->LOAN_NUM?? '',
+                            'cabang' => $item->nama_cabang??'',
+                            'nama_pelanggan' => $item->PELANGGAN?? '',
+                            'keterangan' => $item->LOAN_NUM?? '',
                             'amount' => floatval($item->ORIGINAL_AMOUNT),
                         ];
                     }
