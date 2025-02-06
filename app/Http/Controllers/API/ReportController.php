@@ -477,7 +477,7 @@ class ReportController extends Controller
                     'Bank' => '',
                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE??'')->format('d-m-Y'):'',
                     'Amt Bayar' => number_format($res->PAYMENT_VALUE??0),
-                    'Sisa Angs' => number_format($res->INSUFFICIENT_PAYMENT ?? 0),
+                    'Sisa Angs' => $res->PAID_FLAG != 'PAID'? number_format($res->INSTALLMENT ?? 0):0,
                     'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0),
                     'Byr Dnda' => number_format($res->PAID_PENALTY ?? 0),
                     'Sisa Byr Tgh' => number_format($ttlByr ?? 0 - $ttlByrAll ?? 0),
