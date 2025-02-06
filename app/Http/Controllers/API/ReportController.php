@@ -56,7 +56,6 @@ class ReportController extends Controller
             if (empty($results)) {
                 $mapping = [];
             } else {
-                $mapping = [];
                 foreach ($results as $result) {
                     $mapping[] = [
                         'credit_id' => $result->creditId ?? '',
