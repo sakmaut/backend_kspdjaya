@@ -390,43 +390,45 @@ class ReportController extends Controller
                 'data_credit' => []
             ];
 
-            $sql = "   SELECT 
-                        a.INSTALLMENT_COUNT, 
-                        a.PAYMENT_DATE, 
-                        a.PRINCIPAL, 
-                        a.INTEREST, 
-                        a.INSTALLMENT, 
-                        a.PAYMENT_VALUE_PRINCIPAL, 
-                        a.PAYMENT_VALUE_INTEREST, 
-                        a.INSUFFICIENT_PAYMENT,
-                        a.PAYMENT_VALUE,
-                        a.PAID_FLAG, 
-                        c.PAST_DUE_PENALTY, 
-                        c.PAID_PENALTY, 
-                        c.STATUS_REC, 
-                        mp.ENTRY_DATE,
-                        mp.INVOICE
-                    from 
-                        credit_schedule as a
-                    left join 
-                        arrears as c 
-                        on c.LOAN_NUMBER = a.LOAN_NUMBER 
-                        and c.START_DATE = a.PAYMENT_DATE
-                    left join (
-                        SELECT 	LOAN_NUM, 
-                                ENTRY_DATE,
-                                INVOICE,
-                                max(START_DATE) as START_DATE  
-                        FROM `payment` 
-                        WHERE `LOAN_NUM` = {$id} 
-                        group by  LOAN_NUM,ENTRY_DATE,INVOICE,START_DATE
-                    ) as mp 
-                    on mp.LOAN_NUM = a.LOAN_NUMBER
-                    and mp.START_DATE = a.PAYMENT_DATE
-                    where 
-                        a.LOAN_NUMBER = {$id}
-                    order by 
-                        a.PAYMENT_DATE asc ";
+            $sql = "    SELECT 
+                            a.INSTALLMENT_COUNT, 
+                            a.PAYMENT_DATE, 
+                            a.PRINCIPAL, 
+                            a.INTEREST, 
+                            a.INSTALLMENT, 
+                            a.PAYMENT_VALUE_PRINCIPAL, 
+                            a.PAYMENT_VALUE_INTEREST, 
+                            a.INSUFFICIENT_PAYMENT,
+                            a.PAYMENT_VALUE,
+                            a.PAID_FLAG, 
+                            c.PAST_DUE_PENALTY, 
+                            c.PAID_PENALTY, 
+                            c.STATUS_REC, 
+                            mp.ENTRY_DATE,
+                            mp.INVOICE, 
+                            mp.INST_COUNT, 
+                            case when a.PAID_FLAG <> 'PAID' and a.PAYMENT_DATE < now() then datediff(now(),a.PAYMENT_DATE) else 0 end as OD
+                        from 
+                            credit_schedule as a
+                        left join 
+                            arrears as c 
+                            on c.LOAN_NUMBER = a.LOAN_NUMBER 
+                            and c.START_DATE = a.PAYMENT_DATE
+                        left join (
+                            SELECT 	LOAN_NUM, 
+                                    ENTRY_DATE,
+                                    INVOICE,
+                                    max(START_DATE) as START_DATE, 
+                                    count(START_DATE) as INST_COUNT
+                            FROM payment 
+                            WHERE LOAN_NUM = {$id}
+                            group by  LOAN_NUM,ENTRY_DATE,INVOICE,START_DATE
+                        ) as mp 
+                        on mp.LOAN_NUM = a.LOAN_NUMBER
+                        and mp.START_DATE = a.PAYMENT_DATE
+                        where 
+                            a.LOAN_NUMBER = {$id}
+                        order by a.PAYMENT_DATE ";
                        
 
             $data = DB::select($sql);
