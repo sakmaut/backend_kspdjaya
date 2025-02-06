@@ -24,22 +24,51 @@ class ListBanController extends Controller
                 $arusKas = $this->queryArusKas($getPosition,$cabangId,$date);
             }
 
-            $datas = array_map(function($list) {
+            $no = 1;
+            $datas = [
+                'CASH-IN' => [],
+                'CASH-OUT' => [],
+            ];
 
-                $branch = M_Branch::where('CODE_NUMBER',$list->BRANCH)->first();
-
-                return [
-                    'JENIS' => $list->JENIS,
-                    'TYPE' => $list->JENIS == 'PENCAIRAN'?"CASH-OUT":"CASH-IN",
-                    'BRANCH' => $branch->NAME??null,
-                    'ENTRY_DATE' => $list->ENTRY_DATE,
-                    'ORIGINAL_AMOUNT' => floatval($list->ORIGINAL_AMOUNT),
-                    'PELANGGAN' => $list->PELANGGAN,
-                    'PAYMENT_METHOD' => $list->PAYMENT_METHOD
-                ];
-            }, $arusKas);
-
+            foreach ($arusKas as $item) {
+                if ($item->JENIS != 'PENCAIRAN') {
+                    // Check if the combination of no_invoice, no_kontrak, and nama_pelanggan exists
+                    $found = false;
+                    
+                    // Loop through the existing 'CASH-IN' array to see if the combination exists
+                    foreach ($datas['CASH-IN'] as &$data) {
+                        // Check for matching no_invoice, no_kontrak, and nama_pelanggan
+                        if ($data['no_invoice'] === $item->no_invoice 
+                            && $data['no_kontrak'] === $item->LOAN_NUM 
+                            && $data['nama_pelanggan'] === $item->PELANGGAN) {
+                            
+                            // Check if the angsuran_ke is the same
+                            if (strpos($data['keterangan'], 'Angsuran Ke-' . $item->angsuran_ke) === false) {
+                                // If not the same, append to the keterangan and amount
+                                $data['metode_pembayaran'] .= ', ' . $item->PAYMENT_METHOD;  // Concatenate with a comma
+                                $data['keterangan'] .= ', ' . $item->JENIS . ' Angsuran Ke-' . $item->angsuran_ke;  // Concatenate with a comma
+                                $data['amount'] += floatval($item->ORIGINAL_AMOUNT);  // Add to the amount
+                            }
+                            
+                            $found = true;
+                            break;  // Stop searching as we found the match
+                        }
+                    }
             
+                    // If not found, create a new entry
+                    if (!$found) {
+                        $datas['CASH-IN'][] = [
+                            'no' => $no++,
+                            'no_invoice' => $item->no_invoice ?? '',
+                            'no_kontrak' => $item->LOAN_NUM,
+                            'nama_pelanggan' => $item->PELANGGAN,
+                            'metode_pembayaran' => $item->PAYMENT_METHOD,
+                            'keterangan' => $item->JENIS . ' Angsuran Ke-' . $item->angsuran_ke,
+                            'amount' => floatval($item->ORIGINAL_AMOUNT),
+                        ];
+                    }
+                }
+            }
             return response()->json($datas, 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
@@ -57,22 +86,22 @@ class ListBanController extends Controller
                         b.ORIGINAL_AMOUNT,
                         b.LOAN_NUM,
                         concat(b3.NAME,' (',b3.ALIAS,')') as PELANGGAN,
-                        b.PAYMENT_METHOD
+                        b.PAYMENT_METHOD,
+                        b.nama_cabang,
+                        b.no_invoice,
+                        b.angsuran_ke
                     FROM (
                         SELECT 
-                            CASE 
-                                WHEN c.ID IS NOT NULL AND a.ACC_KEYS LIKE '%POKOK%' THEN 'TUNGGAKAN_POKOK'
-                                WHEN c.ID IS NOT NULL AND a.ACC_KEYS LIKE '%BUNGA%' THEN 'TUNGGAKAN_BUNGA'
-                                WHEN c.ID IS NULL AND a.ACC_KEYS LIKE '%POKOK%' THEN 'BAYAR_POKOK'
-                                WHEN c.ID IS NULL AND a.ACC_KEYS LIKE '%BUNGA%' THEN 'BAYAR_BUNGA'
-                                ELSE 'BAYAR_LAINNYA' 
-                            END AS JENIS, 
+                            a.ACC_KEYS as JENIS, 
                             b.BRANCH AS BRANCH, 
                             d.ID AS BRANCH_ID, 
+                            d.NAME as nama_cabang,
                             b.ENTRY_DATE, 
                             a.ORIGINAL_AMOUNT,
                             b.LOAN_NUM,
-                            b.PAYMENT_METHOD
+                            b.PAYMENT_METHOD,
+                            b.INVOICE as no_invoice,
+                            b.TITLE as angsuran_ke
                         FROM 
                             payment_detail a
                             INNER JOIN payment b ON b.ID = a.PAYMENT_ID
@@ -84,11 +113,14 @@ class ListBanController extends Controller
                         SELECT 
                             'PENCAIRAN' AS JENIS, 
                             b.CODE_NUMBER AS BRANCH,
+                            b.NAME as nama_cabang,
                             b.ID AS BRANCH_ID, 
                             a.CREATED_AT AS ENTRY_DATE,
                             a.PCPL_ORI AS ORIGINAL_AMOUNT,
                             a.LOAN_NUMBER AS LOAN_NUM,
-                            'cash' as PAYMENT_METHOD
+                            'cash' as PAYMENT_METHOD,
+                            '' as no_invoice,
+                            '' as angsuran_ke
                         FROM 
                             credit a
                             INNER JOIN branch b ON b.id = a.BRANCH
