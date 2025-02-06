@@ -440,7 +440,7 @@ class ReportController extends Controller
                 $ttlByr = floatval($res->PRINCIPAL + $res->INTEREST + $res->PAST_DUE_PENALTY);
                 $ttlByrAll = floatval($res->PAYMENT_VALUE_PRINCIPAL + $res->PAYMENT_VALUE_INTEREST + $res->PAID_PENALTY);
 
-                $getInvoice = M_Payment::where('LOAN_NUM', $id)
+                $getInvoice = M_Payment::where(['LOAN_NUM' => $id,'START_DATE' => $res->PAYMENT_DATE])
                             ->orderBy('ENTRY_DATE', 'desc')
                             ->select('INVOICE')
                             ->first();
