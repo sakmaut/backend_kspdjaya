@@ -46,13 +46,13 @@ class ReportController extends Controller
                 
                 if (!empty($request->no_kontrak)) {
                     $query->when($request->no_kontrak, function ($query, $no_kontrak) {
-                        return $query->where("a.LOAN_NUMBER", 'LIKE', "%{$no_kontrak}%");
+                        return $query->where("a.LOAN_NUMBER", 'LIKE', "%$no_kontrak%");
                     });
                 }
             
                 if (!empty($request->nama)) {
                     $query->when($request->nama, function ($query, $nama) {
-                        return $query->where("b.NAME", 'LIKE', "%{$nama}%");
+                        return $query->where("b.NAME", 'LIKE', "%$nama%");
                     });
                 }
             
