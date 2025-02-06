@@ -163,6 +163,7 @@ class ListBanController extends Controller
                             ->leftJoin('customer as c', 'c.CUST_CODE', '=', 'b.CUST_CODE')
                             ->leftJoin('users as d', 'd.id', '=', 'b.MCF_ID')
                             ->leftJoin('cr_application as e', 'e.ORDER_NUMBER', '=', 'b.ORDER_NUMBER')
+                            ->leftJoin('cr_order as h', 'h.APPLICATION_ID', '=', 'e.ID')
                             ->leftJoin('cr_survey as f', 'f.id', '=', 'e.CR_SURVEY_ID')
                             ->leftJoin('cr_collateral as g', 'g.CR_CREDIT_ID', '=', 'b.ID')
                             ->select(
@@ -200,7 +201,8 @@ class ListBanController extends Controller
                                 DB::raw('GROUP_CONCAT(g.CHASIS_NUMBER) as CHASIS_NUMBER'),
                                 DB::raw('GROUP_CONCAT(g.PRODUCTION_YEAR) as PRODUCTION_YEAR'),
                                 DB::raw('SUM(g.VALUE) as TOTAL_NILAI_JAMINAN'),
-                                'b.CUST_CODE'
+                                'b.CUST_CODE',
+                                DB::raw("concat(h.REF_PELANGGAN,' ',h.REF_PELANGGAN_OTHER) as supplier")
                             )
                             // ->where('b.CREATED_AT', '>=', DB::raw('DATE_SUB(NOW(), INTERVAL 1 MONTH)'))
                             ->where('a.ID', $getBranch)
@@ -231,7 +233,9 @@ class ListBanController extends Controller
                                 'b.INSTALLMENT',
                                 'b.INSTALLMENT_DATE',
                                 'b.FIRST_ARR_DATE',
-                                'b.CUST_CODE'
+                                'b.CUST_CODE',
+                                'h.REF_PELANGGAN',
+                                'h.REF_PELANGGAN_OTHER'
                             )
                             ->get();
 
@@ -253,7 +257,7 @@ class ListBanController extends Controller
                     "NO HP1" => $result->NO_HP ?? '',
                     "NO HP2" => $result->NO_HP ?? '',
                     "PEKERJAAN" => $result->PEKERJAAN ?? '',
-                    "SUPPLIER" => '',
+                    "SUPPLIER" => $result->supplier??'',
                     "SURVEYOR" => $result->SURVEYOR ?? '',
                     "CATT SURVEY" => $result->CATT_SURVEY ?? '',
                     "PKK HUTANG" => number_format($result->PKK_HUTANG ?? 0),
