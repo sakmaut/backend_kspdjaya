@@ -139,7 +139,7 @@ class ListBanController extends Controller
 
             $params = [];
 
-            if (!empty($cabangId)) {
+            if (!empty($cabangId) || $cabangId != 'SEMUA CABANG') {
                 $query .= " AND b.BRANCH_ID = :cabangId";
                 $params['cabangId'] = $cabangId;
             }
