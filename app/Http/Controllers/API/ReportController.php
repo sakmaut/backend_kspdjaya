@@ -337,8 +337,12 @@ class ReportController extends Controller
 
             $allData = [];
             foreach ($results as $result) {
+
+                $getPosition = User::find($result->USER_ID);
+
                 $allData[] = [
                     'Cbang' => M_Branch::find($result->BRANCH)->NAME ?? '',
+                    'Metode Byr' => $getPosition? $getPosition->position??'':$result->PAYMENT_METHOD ?? '',
                     'No Inv' => $result->INVOICE ?? '',
                     'No Kont' => $result->LOAN_NUM ?? '',
                     'Tgl Byr' => $result->ENTRY_DATE ?? '',
@@ -379,7 +383,8 @@ class ReportController extends Controller
                         'Jt.Tempo' => Carbon::parse($res->START_DATE)->format('Y-m-d'),
                         'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('Y-m-d') : '',
                         'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0),
-                        'Byr Dnda' => number_format($res->PAID_PENALTY ?? 0),
+                        'Bayar Dnda' => number_format($res->PAID_PENALTY ?? 0),
+                        'Diskon Dnda' => number_format($res->WOFF_PENALTY ?? 0),
                         'Status' => $res->STATUS_REC == 'A' ? '':'LUNAS',
                     ];
                 }
