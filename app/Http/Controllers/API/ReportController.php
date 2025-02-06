@@ -25,7 +25,7 @@ class ReportController extends Controller
         try {
             $mapping = [];
 
-            if (empty($request->nama) && empty($request->no_kontrak)) {
+            if (!isset($request->nama) && !isset($request->no_kontrak)) {
                 return response()->json($mapping, 200);
             } else {
                 $query = DB::table('credit as a')
