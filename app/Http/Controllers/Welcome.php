@@ -20,147 +20,39 @@ class Welcome extends Controller
 {
     public function index(Request $request)
     {
-    //    try {
-    //     $results = DB::table('branch as a')
-    //                         ->join('credit as b', 'b.BRANCH', '=', 'a.ID')
-    //                         ->leftJoin('customer as c', 'c.CUST_CODE', '=', 'b.CUST_CODE')
-    //                         ->leftJoin('users as d', 'd.id', '=', 'b.MCF_ID')
-    //                         ->leftJoin('cr_application as e', 'e.ORDER_NUMBER', '=', 'b.ORDER_NUMBER')
-    //                         ->leftJoin('cr_survey as f', 'f.id', '=', 'e.CR_SURVEY_ID')
-    //                         ->leftJoin('cr_collateral as g', 'g.CR_CREDIT_ID', '=', 'b.ID')
-    //                     ->select(
-    //                         'a.CODE',
-    //                         'a.NAME as cabang',
-    //                         'b.LOAN_NUMBER',
-    //                         'c.NAME as customer_name',
-    //                         'b.CREATED_AT',
-    //                         'c.INS_ADDRESS',
-    //                         'c.ZIP_CODE',
-    //                         'c.PHONE_HOUSE',
-    //                         'c.PHONE_PERSONAL',
-    //                         'c.OCCUPATION',
-    //                         'd.fullname',
-    //                         'f.survey_note',
-    //                         'b.PCPL_ORI',
-    //                         'e.TOTAL_ADMIN',
-    //                         'e.INSTALLMENT_TYPE',
-    //                         'b.PERIOD',
-    //                         DB::raw('DATEDIFF(b.FIRST_ARR_DATE, NOW()) as OVERDUE'),
-    //                         DB::raw('99 as CYCLE'),
-    //                         'b.STATUS_REC',
-    //                         'b.PAID_PRINCIPAL',
-    //                         'b.PAID_INTEREST',
-    //                         DB::raw('b.PAID_PRINCIPAL + b.PAID_INTEREST as PAID_TOTAL'),
-    //                         DB::raw('b.PCPL_ORI - b.PAID_PRINCIPAL as OUTSTANDING'),
-    //                         'b.INSTALLMENT',
-    //                         'b.INSTALLMENT_DATE',
-    //                         'b.FIRST_ARR_DATE',
-    //                         DB::raw("' ' as COLLECTOR"),
-    //                         DB::raw('GROUP_CONCAT(CONCAT(g.BRAND, " ", g.TYPE)) as COLLATERAL'),
-    //                         DB::raw('GROUP_CONCAT(g.POLICE_NUMBER) as POLICE_NUMBER'),
-    //                         DB::raw('GROUP_CONCAT(g.ENGINE_NUMBER) as ENGINE_NUMBER'),
-    //                         DB::raw('GROUP_CONCAT(g.CHASIS_NUMBER) as CHASIS_NUMBER'),
-    //                         DB::raw('GROUP_CONCAT(g.PRODUCTION_YEAR) as PRODUCTION_YEAR'),
-    //                         DB::raw('SUM(g.VALUE) as TOTAL_NILAI_JAMINAN'),
-    //                         'b.CUST_CODE'
-    //                     )
-    //                     ->groupBy(
-    //                         'a.CODE',
-    //                         'a.NAME',
-    //                         'b.LOAN_NUMBER',
-    //                         'c.NAME',
-    //                         'b.CREATED_AT',
-    //                         'c.INS_ADDRESS',
-    //                         'c.ZIP_CODE',
-    //                         'c.PHONE_HOUSE',
-    //                         'c.PHONE_PERSONAL',
-    //                         'c.OCCUPATION',
-    //                         'd.fullname',
-    //                         'f.survey_note',
-    //                         'b.PCPL_ORI',
-    //                         'e.TOTAL_ADMIN',
-    //                         'e.INSTALLMENT_TYPE',
-    //                         'b.PERIOD',
-    //                         DB::raw('DATEDIFF(b.FIRST_ARR_DATE, NOW())'),
-    //                         'b.STATUS_REC',
-    //                         'b.PAID_PRINCIPAL',
-    //                         'b.PAID_INTEREST',
-    //                         DB::raw('b.PAID_PRINCIPAL + b.PAID_INTEREST'),
-    //                         DB::raw('b.PCPL_ORI - b.PAID_PRINCIPAL'),
-    //                         'b.INSTALLMENT',
-    //                         'b.INSTALLMENT_DATE',
-    //                         'b.FIRST_ARR_DATE',
-    //                         'b.CUST_CODE'
-    //                     )
-    //                     ->limit(5)
-    //                     ->get();
+        $groupedData = [];
+        $groupedData = [];
+        foreach ($request->all() as $item) {
+            $key = $item['LOAN_NUMBER']; // Group by LOAN_NUMBER only
 
-    //             $build = [];
-    //             foreach ($results as $result) {
-    //                 $build[] =[
-    //                         "KODE" => $result->CODE??'',
-    //                         "CABANG" => $result->cabang??'',
-    //                         "NO_KONTRAK" => $result->LOAN_NUMBER??'',
-    //                         "NAMA_PELANGGAN" => $result->NAME??'',
-    //                         "TGL_BOOKING" => isset($result->CREATED_AT) && !empty($result->CREATED_AT) ? date("d-m-Y", strtotime($result->CREATED_AT)) : '',
-    //                         "ALAMAT_TAGIH" => $result->INS_ADDRESS??'',
-    //                         "KODE_POS" => $result->ZIP_CODE??'',
-    //                         "NO_TELP" => $result->PHONE_HOUSE??'',
-    //                         "NO_HP" => $result->PHONE_PERSONAL??'',
-    //                         "PEKERJAAN" => $result->OCCUPATION??'',
-    //                         "SURVEYOR" => $result->fullname??'',
-    //                         "CATT_SURVEY" => $result->survey_note??'',
-    //                         "PKK_HUTANG" => $result->PCPL_ORI??'',
-    //                         "JML_ANGS" => $result->PERIOD??'',
-    //                         "PERIOD" => $result->INSTALLMENT_TYPE??'',
-    //                         "OVERDUE" => $result->OVERDUE??'',
-    //                         "CYCLE" => $result->CYCLE??'',
-    //                         "STS_KONTRAK" => $result->STATUS_REC??'',
-    //                         "OUTS_PKK_AKHIR" => $result->PAID_PRINCIPAL??'',
-    //                         "OUTS_BNG_AKHIR" => $result->PAID_INTEREST??'',
-    //                         "ANGSURAN" =>  $result->INSTALLMENT??'',
-    //                         "JTH_TEMPO_AWAL" => date("d-m-Y",strtotime( $result->INSTALLMENT_DATE))??'',
-    //                         "JTH_TEMPO_AKHIR" => date("d-m-Y",strtotime( $result->INSTALLMENT_DATE))??'',
-    //                         "NAMA_BRG" =>  "SEPEDA MOTOR",
-    //                         "TIPE_BRG" =>  $result->COLLATERAL??'',
-    //                         "NO_POL" =>  $result->POLICE_NUMBER??'',
-    //                         "NO_MESIN" =>  $result->ENGINE_NUMBER??'',
-    //                         "NO_RANGKA" =>  $result->CHASIS_NUMBER??'',
-    //                         "TAHUN" =>  $result->PRODUCTION_YEAR??'',
-    //                         "NILAI_PINJAMAN" =>  $result->TOTAL_NILAI_JAMINAN??'',
-    //                         "ADMIN" =>  $result->TOTAL_ADMIN??'',
-    //                         "CUST_ID" =>  $result->CUST_CODE??'',
-    //                  ] ;
-    //             }
+            // If the group doesn't exist yet, initialize it
+            if (!isset($groupedData[$key])) {
+                // Preserve other fields (except no_invoice, which will be kept as it is for each record)
+                $groupedData[$key] = [
+                    "PAYMENT_TYPE" => $item['PAYMENT_TYPE'],
+                    "STTS_PAYMENT" => $item['STTS_PAYMENT'],
+                    "METODE_PEMBAYARAN" => $item['METODE_PEMBAYARAN'],
+                    "BRANCH_CODE" => $item['BRANCH_CODE'],
+                    "LOAN_NUMBER" => $item['LOAN_NUMBER'],
+                    "no_invoice" => $item['no_invoice'],  // keep original no_invoice
+                    "tgl_angsuran" => $item['tgl_angsuran'],  // assuming we want to keep the latest tgl_angsuran for each LOAN_NUMBER
+                    "angsuran_ke" => $item['angsuran_ke'],
+                    "installment" => $item['installment'],
+                    "diskon_denda" => $item['diskon_denda'],
+                    "flag" => $item['flag'],
+                    "details" => []
+                ];
+            }
 
-    //             if (!empty($build)) {
-    //                 // Define the file path
-    //                 $filename = storage_path('logs/lisban/listban_' . Carbon::now()->format('Y-m-d') . '.txt');
-        
-    //                 // Save the data as JSON
-    //                 file_put_contents($filename, json_encode($build, JSON_PRETTY_PRINT) . "\n");
-    //             }
-                
+            // Add bayar_angsuran and bayar_denda to the details array
+            $groupedData[$key]['details'][] = [
+                'bayar_angsuran' => $item['bayar_angsuran'],
+                'bayar_denda' => $item['bayar_denda']
+            ];
+        }
 
-    //         return response()->json('ok', 200);
-    //    } catch (\Throwable $e) {
-    //         return response()->json($e->getMessage(), 500);
-    //    }
+        // Output the grouped data
+        return response()->json($groupedData, 200);
     }
-
-    // public function index(Request $request)
-    // {
-    //     $filename = storage_path('logs/lisban/listban_' . Carbon::now()->format('Y-m-d') . '.txt');
-
-    //     if (file_exists($filename)) {
-    //         $fileContents = file_get_contents($filename);
-
-    //         $json = json_decode($fileContents,true);
-        
-    //         return response()->json($json, 200);
-    //     } else {
-    //         return response()->json(['error' => 'File not found'], 404);
-    //     }
-    // }
    
 }
