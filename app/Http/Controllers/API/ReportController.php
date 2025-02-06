@@ -425,7 +425,8 @@ class ReportController extends Controller
                         on mp.LOAN_NUM = a.LOAN_NUMBER
                         and date_format(mp.START_DATE,'%d%m%Y') = date_format(a.PAYMENT_DATE,'%d%m%Y')
                         where 
-                            a.LOAN_NUMBER = '$id' ";
+                            a.LOAN_NUMBER = '$id'
+                        order by a.PAYMENT_DATE asc";
                        
 
             $data = DB::select($sql);
