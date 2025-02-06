@@ -16,6 +16,7 @@ class ListBanController extends Controller
             $getPosition = $request->user()->position;
             
             $datas = [
+                'tgl_tarik' => $request->dari??'',
                 'CASH_IN' => [],
                 'CASH_OUT' => [],
             ];
@@ -49,7 +50,7 @@ class ListBanController extends Controller
                             }
                         }
             
-                        // If not found, create a new 'CASH-IN' entry
+                        $totalCashin = 0;
                         if (!$found) {
                             $datas['CASH_IN'][] = [
                                 'no' => $no++,
@@ -61,20 +62,29 @@ class ListBanController extends Controller
                                 'keterangan' => $item->JENIS . ' Angsuran Ke-' . $item->angsuran_ke ?? '',
                                 'amount' => floatval($item->ORIGINAL_AMOUNT),
                             ];
+
+                            $totalCashin += floatval($item->ORIGINAL_AMOUNT);
                         }
+
+                        $datas['ttl_cash_in'] = $totalCashin;
                     }
             
-                    // Handle 'CASH-OUT'
+                    $totalAmount = 0;
+
                     if ($item->JENIS == 'PENCAIRAN') {
                         $datas['CASH_OUT'][] = [
                             'no' => $no++,
-                            'no_kontrak' => $item->LOAN_NUM?? '',
-                            'cabang' => $item->nama_cabang??'',
-                            'nama_pelanggan' => $item->PELANGGAN?? '',
-                            'keterangan' => $item->LOAN_NUM?? '',
+                            'no_kontrak' => $item->LOAN_NUM ?? '',
+                            'cabang' => $item->nama_cabang ?? '',
+                            'nama_pelanggan' => $item->PELANGGAN ?? '',
+                            'keterangan' => $item->LOAN_NUM ?? '',
                             'amount' => floatval($item->ORIGINAL_AMOUNT),
                         ];
+                
+                        $totalAmount += floatval($item->ORIGINAL_AMOUNT);
                     }
+                    
+                    $datas['ttl_cash_out'] = $totalAmount;
                 }
             } else {
                 $datas = [];
