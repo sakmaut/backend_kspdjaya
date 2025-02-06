@@ -78,7 +78,7 @@ class CustomerController extends Controller
         
             if(!empty($request->nama)){
                 $query->when($request->nama, function ($query, $nama) {
-                    return $query->where(DB::raw("CONCAT(c.NAME, ' ', c.ALIAS)"), 'LIKE', "%{$nama}%");
+                    return $query->where("b.NAME", 'LIKE', "%{$nama}%");
                 });
             }
 

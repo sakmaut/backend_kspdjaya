@@ -52,7 +52,7 @@ class ReportController extends Controller
             
                 if (!empty($request->nama)) {
                     $query->when($request->nama, function ($query, $nama) {
-                        return $query->where(DB::raw("CONCAT(b.NAME, ' ', b.ALIAS)"), 'LIKE', "%{$nama}%");
+                        return $query->where("b.NAME", 'LIKE', "%{$nama}%");
                     });
                 }
             
