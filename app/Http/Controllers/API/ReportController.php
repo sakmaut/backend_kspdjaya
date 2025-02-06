@@ -338,7 +338,7 @@ class ReportController extends Controller
             $allData = [];
             foreach ($results as $result) {
 
-                $getPosition = User::find($result->USER_ID);
+                $getPosition = User::where('id', $result->USER_ID)->first();
 
                 $allData[] = [
                     'Cbang' => M_Branch::find($result->BRANCH)->NAME ?? '',
