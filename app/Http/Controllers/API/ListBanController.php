@@ -69,6 +69,43 @@ class ListBanController extends Controller
                     }
                 }
             }
+
+            foreach ($arusKas as $item) {
+                if ($item->JENIS == 'PENCAIRAN') {
+                    // Check if the combination of no_invoice, no_kontrak, and nama_pelanggan exists
+                    $found = false;
+                    
+                    // Loop through the existing 'CASH-IN' array to see if the combination exists
+                    foreach ($datas['CASH-OUT'] as &$data) {
+                        // Check for matching no_invoice, no_kontrak, and nama_pelanggan
+                        if ($data['no_invoice'] === $item->no_invoice 
+                            && $data['no_kontrak'] === $item->LOAN_NUM 
+                            && $data['nama_pelanggan'] === $item->PELANGGAN) {
+                            
+                            // Check if the angsuran_ke is the same
+                            if (strpos($data['keterangan'], 'Angsuran Ke-' . $item->angsuran_ke) === false) {
+                                // If not the same, append to the keterangan and amount
+                                $data['metode_pembayaran'] .= ', ' . $item->PAYMENT_METHOD;  // Concatenate with a comma
+                                $data['keterangan'] .= ', ' . $item->JENIS . ' Angsuran Ke-' . $item->angsuran_ke;  // Concatenate with a comma
+                                $data['amount'] += floatval($item->ORIGINAL_AMOUNT);  // Add to the amount
+                            }
+                            
+                            $found = true;
+                            break; 
+                        }
+                    }
+            
+                    if (!$found) {
+                        $datas['CASH-OUT'][] = [
+                            'no' => $no++,
+                            'no_kontrak' => $item->LOAN_NUM,
+                            'nama_pelanggan' => $item->PELANGGAN,
+                            'keterangan' => $item->JENIS . ' Angsuran Ke-' . $item->angsuran_ke,
+                            'amount' => floatval($item->ORIGINAL_AMOUNT),
+                        ];
+                    }
+                }
+            }
             return response()->json($datas, 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
