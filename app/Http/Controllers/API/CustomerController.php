@@ -78,7 +78,7 @@ class CustomerController extends Controller
         
             if(!empty($request->nama)){
                 $query->when($request->nama, function ($query, $nama) {
-                    return $query->where("b.NAME", 'LIKE', "%{$nama}%");
+                    return $query->where("c.NAME", 'LIKE', "%{$nama}%");
                 });
             }
 
