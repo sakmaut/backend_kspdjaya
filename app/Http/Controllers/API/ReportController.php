@@ -467,7 +467,7 @@ class ReportController extends Controller
                             ->select('INVOICE')
                             ->first();
 
-                $sisaAngs = number_format($res->INSTALLMENT ?? 0 - $res->PAYMENT_VALUE ?? 0);
+                $sisaAngs = number_format(floatval($res->INSTALLMENT) - floatval($res->PAYMENT_VALUE));
 
                 $schedule['data_credit'][] = [
                     'Jt.Tempo' => Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y'),
