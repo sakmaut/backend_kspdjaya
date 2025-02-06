@@ -338,7 +338,7 @@ class ReportController extends Controller
                         INNER JOIN credit b ON b.LOAN_NUMBER = a.LOAN_NUM
                         LEFT JOIN payment_detail d ON d.PAYMENT_ID = a.ID
                         WHERE a.LOAN_NUM = {$id}
-                        GROUP BY a.BRANCH, a.TITLE, a.LOAN_NUM, a.ENTRY_DATE, b.INSTALLMENT, a.INVOICE, a.STTS_RCRD, a.ORIGINAL_AMOUNT,a.USER_ID
+                        GROUP BY a.BRANCH, a.TITLE, a.LOAN_NUM, a.ENTRY_DATE, b.INSTALLMENT, a.INVOICE, a.STTS_RCRD, a.ORIGINAL_AMOUNT,a.USER_ID,a.PAYMENT_METHOD
                         ORDER BY a.ENTRY_DATE DESC;
                         ";
 
