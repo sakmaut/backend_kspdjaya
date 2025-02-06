@@ -419,13 +419,13 @@ class ReportController extends Controller
                                     max(START_DATE) as START_DATE, 
                                     count(START_DATE) as INST_COUNT
                             FROM payment 
-                            WHERE LOAN_NUM = {$id}
+                            WHERE LOAN_NUM = '$id'
                             group by  LOAN_NUM,date_format(START_DATE,'%d%m%Y'),ENTRY_DATE
                         ) as mp 
                         on mp.LOAN_NUM = a.LOAN_NUMBER
                         and date_format(mp.START_DATE,'%d%m%Y') = date_format(a.PAYMENT_DATE,'%d%m%Y')
                         where 
-                            a.LOAN_NUMBER = {$id} ";
+                            a.LOAN_NUMBER = '$id' ";
                        
 
             $data = DB::select($sql);
