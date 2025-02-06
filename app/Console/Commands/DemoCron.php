@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\M_Arrears;
 use App\Models\M_Branch;
 use App\Models\M_CronJobLog;
+use App\Models\M_FirstArr;
 use App\Models\M_Test;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
@@ -36,7 +37,6 @@ class DemoCron extends Command
         try {
 
             $setDate = DB::raw('CURDATE()');
-            // $setDate = '2023-12-16';
 
             $query = DB::table('credit_schedule')
                         ->where('PAYMENT_DATE', '<=', $setDate)
@@ -78,7 +78,6 @@ class DemoCron extends Command
                 ];
             }
     
-            // Process arrears data
             foreach ($arrearsData as $data) {
                 $existingArrears = M_Arrears::where([
                     'LOAN_NUMBER' => $data['LOAN_NUMBER'],
@@ -96,6 +95,22 @@ class DemoCron extends Command
                     // Insert new record
                     M_Arrears::create($data);
                 }
+            }
+
+            DB::table('first_arr')->delete();
+
+            $data = DB::table('arrears')
+                ->selectRaw('LOAN_NUMBER, min(START_DATE) as start_date, datediff(now(), min(START_DATE)) as date_diff')
+                ->where('status_rec', 'A')
+                ->groupBy('LOAN_NUMBER')
+                ->get();
+
+            foreach ($data as $row) {
+                M_FirstArr::create([
+                    'LOAN_NUMBER' => $row->LOAN_NUMBER,
+                    'START_DATE' => $row->start_date,
+                    'DATE_DIFF' => $row->date_diff
+                ]);
             }
     
             M_CronJobLog::create([
