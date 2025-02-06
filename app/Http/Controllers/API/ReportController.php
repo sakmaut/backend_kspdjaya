@@ -455,7 +455,7 @@ class ReportController extends Controller
                     'Denda' => number_format($res->PAST_DUE_PENALTY),
                     'Byr Dnda' => number_format($res->PAID_PENALTY),
                     'Sisa Byr Tgh' => number_format($ttlByr-$ttlByrAll),
-                    'Ovd' => $res->OD,
+                    'Ovd' => $res->OD??0,
                     'Stts' => $res->PAID_FLAG == 'PAID' && $res->STATUS_REC != 'A' ? 'LUNAS' : ''
                 ];
             }
