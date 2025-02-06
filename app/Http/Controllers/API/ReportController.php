@@ -23,12 +23,7 @@ class ReportController extends Controller
     public function inquiryList(Request $request)
     {
         try {
-            $mapping = [];
-
-            if (!isset($request->nama) && !isset($request->no_kontrak)) {
-                return response()->json($mapping, 200);
-            } else {
-                $query = DB::table('credit as a')
+            $query = DB::table('credit as a')
                             ->leftJoin('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
                             ->leftJoin('cr_collateral as c', 'c.CR_CREDIT_ID', '=', 'a.ID')
                             ->leftJoin('branch as d', 'd.ID', '=', 'a.BRANCH')
@@ -44,37 +39,36 @@ class ReportController extends Controller
                                 'd.NAME as branch_name'
                             );
                 
-                if (!empty($request->no_kontrak)) {
-                    $query->when($request->no_kontrak, function ($query, $no_kontrak) {
-                        return $query->where("a.LOAN_NUMBER", 'LIKE', "%{$no_kontrak}%");
-                    });
-                }
-            
-                if (!empty($request->nama)) {
-                    $query->when($request->nama, function ($query, $nama) {
-                        return $query->where("b.NAME", 'LIKE', "%{$nama}%");
-                    });
-                }
-            
-                $results = $query->get();
-            
-                if (empty($results)) {
-                    $mapping = [];
-                } else {
-                    $mapping = [];
-                    foreach ($results as $result) {
-                        $mapping[] = [
-                            'credit_id' => $result->creditId ?? '',
-                            'loan_number' => $result->LOAN_NUMBER ?? '',
-                            'order_number' => $result->ORDER_NUMBER ?? '',
-                            'cust_id' => $result->custId ?? '',
-                            'cust_code' => $result->CUST_CODE ?? '',
-                            'customer_name' => $result->customer_name ?? '',
-                            'police_number' => $result->POLICE_NUMBER ?? '',
-                            'entry_date' => date('Y-m-d', strtotime($result->INSTALLMENT_DATE)) ?? '',
-                            'branch_name' => $result->branch_name ?? '',
-                        ];
-                    }
+            if (!empty($request->no_kontrak)) {
+                $query->when($request->no_kontrak, function ($query, $no_kontrak) {
+                    return $query->where("a.LOAN_NUMBER", 'LIKE', "%{$no_kontrak}%");
+                });
+            }
+        
+            if (!empty($request->nama)) {
+                $query->when($request->nama, function ($query, $nama) {
+                    return $query->where("b.NAME", 'LIKE', "%{$nama}%");
+                });
+            }
+        
+            $results = $query->get();
+        
+            if (empty($results)) {
+                $mapping = [];
+            } else {
+                $mapping = [];
+                foreach ($results as $result) {
+                    $mapping[] = [
+                        'credit_id' => $result->creditId ?? '',
+                        'loan_number' => $result->LOAN_NUMBER ?? '',
+                        'order_number' => $result->ORDER_NUMBER ?? '',
+                        'cust_id' => $result->custId ?? '',
+                        'cust_code' => $result->CUST_CODE ?? '',
+                        'customer_name' => $result->customer_name ?? '',
+                        'police_number' => $result->POLICE_NUMBER ?? '',
+                        'entry_date' => date('Y-m-d', strtotime($result->INSTALLMENT_DATE)) ?? '',
+                        'branch_name' => $result->branch_name ?? '',
+                    ];
                 }
             }
         
