@@ -26,33 +26,32 @@ class ListBanController extends Controller
                 $arusKas = $this->queryArusKas($getPosition, $cabangId, $dateFrom);
             
                 $no = 1;
-                
-                $totalCashin = 0;  // Initialize the totalCashin variable outside the loop
-                $totalAmount = 0;  // Initialize the totalAmount variable outside the loop
-                
+                $totalCashin = 0;
+                $totalAmount = 0;
+
                 foreach ($arusKas as $item) {
                     // Handle 'CASH-IN'
                     if ($item->JENIS != 'PENCAIRAN') {
                         $found = false;
-                
+
                         foreach ($datas['CASH_IN'] as &$data) {
                             // Check if a combination of no_invoice, no_kontrak, and nama_pelanggan exists
                             if ($data['no_invoice'] === $item->no_invoice
                                 && $data['no_kontrak'] === $item->LOAN_NUM
                                 && $data['nama_pelanggan'] === $item->PELANGGAN) {
-                                
+
                                 // Check if the angsuran_ke is not already in the keterangan
                                 if (strpos($data['keterangan'], 'Angsuran Ke-' . $item->angsuran_ke) === false) {
                                     $data['metode_pembayaran'] .= ', ' . $item->PAYMENT_METHOD;
                                     $data['keterangan'] .= ', ' . $item->JENIS . ' Angsuran Ke-' . $item->angsuran_ke;
                                     $data['amount'] += floatval($item->ORIGINAL_AMOUNT);
                                 }
-                                
+
                                 $found = true;
                                 break;
                             }
                         }
-                
+
                         if (!$found) {
                             $datas['CASH_IN'][] = [
                                 'no' => $no++,
@@ -65,11 +64,13 @@ class ListBanController extends Controller
                                 'amount' => floatval($item->ORIGINAL_AMOUNT),
                             ];
                         }
-                
+
                         // Increment totalCashin for this iteration
                         $totalCashin += floatval($item->ORIGINAL_AMOUNT);
                     }
-                
+                }
+
+                foreach ($arusKas as $item) {
                     // Handle 'CASH-OUT'
                     if ($item->JENIS == 'PENCAIRAN') {
                         $datas['CASH_OUT'][] = [
@@ -80,15 +81,16 @@ class ListBanController extends Controller
                             'keterangan' => $item->LOAN_NUM ?? '',
                             'amount' => floatval($item->ORIGINAL_AMOUNT),
                         ];
-                
+
                         // Increment totalAmount for this iteration
                         $totalAmount += floatval($item->ORIGINAL_AMOUNT);
                     }
                 }
-                
+
                 // Store the totals in the datas array
                 $datas['ttl_cash_in'] = $totalCashin;
                 $datas['ttl_cash_out'] = $totalAmount;
+
                 
             } else {
                 $datas = [];
