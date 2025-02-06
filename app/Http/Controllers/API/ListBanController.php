@@ -275,6 +275,7 @@ class ListBanController extends Controller
                     "OVERDUE AKHIR" => number_format($result->OUTSTANDING ?? 0),
                     "ANGSURAN" => number_format($result->INSTALLMENT ?? 0),
                     "ANGS KE" => '',
+                    "TIPE ANGSURAN"=>'',
                     "JTH TEMPO AWAL" => date("d-m-Y", strtotime($result->INSTALLMENT_DATE ?? '')),
                     "JTH TEMPO AKHIR" => date("d-m-Y", strtotime($result->FIRST_ARR_DATE ?? '')),
                     "TGL BAYAR" => '',
