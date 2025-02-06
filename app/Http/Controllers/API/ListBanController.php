@@ -14,106 +14,79 @@ class ListBanController extends Controller
         try {
             $cabangId = $request->cabang_id;
             $getPosition = $request->user()->position;
-
-            if ((isset($request->dari) && !empty($request->dari) && $request->dari !== null) || ( isset($request->sampai) && !empty($request->sampai) && $request->sampai !== null)) {
-                $dateFrom = $request->dari;
-                $dateTo = $request->sampai;
-                $arusKas = $this->queryArusKas($getPosition,$cabangId,$dateFrom, $dateTo);
-            }else{
-                $date = isset($request->dari) ? $request->dari : now();
-                $arusKas = $this->queryArusKas($getPosition,$cabangId,$date);
-            }
-
-            $no = 1;
+            
             $datas = [
                 'CASH-IN' => [],
                 'CASH-OUT' => [],
             ];
-
-            foreach ($arusKas as $item) {
-                if ($item->JENIS != 'PENCAIRAN') {
-                    // Check if the combination of no_invoice, no_kontrak, and nama_pelanggan exists
-                    $found = false;
-                    
-                    // Loop through the existing 'CASH-IN' array to see if the combination exists
-                    foreach ($datas['CASH-IN'] as &$data) {
-                        // Check for matching no_invoice, no_kontrak, and nama_pelanggan
-                        if ($data['no_invoice'] === $item->no_invoice 
-                            && $data['no_kontrak'] === $item->LOAN_NUM 
-                            && $data['nama_pelanggan'] === $item->PELANGGAN) {
-                            
-                            // Check if the angsuran_ke is the same
-                            if (strpos($data['keterangan'], 'Angsuran Ke-' . $item->angsuran_ke) === false) {
-                                // If not the same, append to the keterangan and amount
-                                $data['metode_pembayaran'] .= ', ' . $item->PAYMENT_METHOD;  // Concatenate with a comma
-                                $data['keterangan'] .= ', ' . $item->JENIS . ' Angsuran Ke-' . $item->angsuran_ke;  // Concatenate with a comma
-                                $data['amount'] += floatval($item->ORIGINAL_AMOUNT);  // Add to the amount
+            
+            if (!empty($request->dari)) {
+                $dateFrom = $request->dari;
+                $arusKas = $this->queryArusKas($getPosition, $cabangId, $dateFrom);
+            
+                $no = 1;
+                
+                foreach ($arusKas as $item) {
+                    // Handle 'CASH-IN'
+                    if ($item->JENIS != 'PENCAIRAN') {
+                        $found = false;
+            
+                        foreach ($datas['CASH-IN'] as &$data) {
+                            // Check if a combination of no_invoice, no_kontrak, and nama_pelanggan exists
+                            if ($data['no_invoice'] === $item->no_invoice
+                                && $data['no_kontrak'] === $item->LOAN_NUM
+                                && $data['nama_pelanggan'] === $item->PELANGGAN) {
+                                
+                                // Check if the angsuran_ke is not already in the keterangan
+                                if (strpos($data['keterangan'], 'Angsuran Ke-' . $item->angsuran_ke) === false) {
+                                    $data['metode_pembayaran'] .= ', ' . $item->PAYMENT_METHOD;
+                                    $data['keterangan'] .= ', ' . $item->JENIS . ' Angsuran Ke-' . $item->angsuran_ke;
+                                    $data['amount'] += floatval($item->ORIGINAL_AMOUNT);
+                                }
+                                
+                                $found = true;
+                                break;
                             }
-                            
-                            $found = true;
-                            break;  // Stop searching as we found the match
+                        }
+            
+                        // If not found, create a new 'CASH-IN' entry
+                        if (!$found) {
+                            $datas['CASH-IN'][] = [
+                                'no' => $no++,
+                                'no_invoice' => $item->no_invoice ?? '',
+                                'no_kontrak' => $item->LOAN_NUM,
+                                'nama_pelanggan' => $item->PELANGGAN,
+                                'metode_pembayaran' => $item->PAYMENT_METHOD,
+                                'keterangan' => $item->JENIS . ' Angsuran Ke-' . $item->angsuran_ke,
+                                'amount' => floatval($item->ORIGINAL_AMOUNT),
+                            ];
                         }
                     }
             
-                    // If not found, create a new entry
-                    if (!$found) {
-                        $datas['CASH-IN'][] = [
-                            'no' => $no++,
-                            'no_invoice' => $item->no_invoice ?? '',
-                            'no_kontrak' => $item->LOAN_NUM,
-                            'nama_pelanggan' => $item->PELANGGAN,
-                            'metode_pembayaran' => $item->PAYMENT_METHOD,
-                            'keterangan' => $item->JENIS . ' Angsuran Ke-' . $item->angsuran_ke,
-                            'amount' => floatval($item->ORIGINAL_AMOUNT),
-                        ];
-                    }
-                }
-            }
-
-            foreach ($arusKas as $item) {
-                if ($item->JENIS == 'PENCAIRAN') {
-                    // Check if the combination of no_invoice, no_kontrak, and nama_pelanggan exists
-                    $found = false;
-                    
-                    // Loop through the existing 'CASH-IN' array to see if the combination exists
-                    foreach ($datas['CASH-OUT'] as &$data) {
-                        // Check for matching no_invoice, no_kontrak, and nama_pelanggan
-                        if ($data['no_invoice'] === $item->no_invoice 
-                            && $data['no_kontrak'] === $item->LOAN_NUM 
-                            && $data['nama_pelanggan'] === $item->PELANGGAN) {
-                            
-                            // Check if the angsuran_ke is the same
-                            if (strpos($data['keterangan'], 'Angsuran Ke-' . $item->angsuran_ke) === false) {
-                                // If not the same, append to the keterangan and amount
-                                $data['metode_pembayaran'] .= ', ' . $item->PAYMENT_METHOD;  // Concatenate with a comma
-                                $data['keterangan'] .= ', ' . $item->JENIS . ' Angsuran Ke-' . $item->angsuran_ke;  // Concatenate with a comma
-                                $data['amount'] += floatval($item->ORIGINAL_AMOUNT);  // Add to the amount
-                            }
-                            
-                            $found = true;
-                            break; 
-                        }
-                    }
-            
-                    if (!$found) {
+                    // Handle 'CASH-OUT'
+                    if ($item->JENIS == 'PENCAIRAN') {
                         $datas['CASH-OUT'][] = [
                             'no' => $no++,
                             'no_kontrak' => $item->LOAN_NUM,
                             'nama_pelanggan' => $item->PELANGGAN,
-                            'keterangan' => $item->JENIS . ' Angsuran Ke-' . $item->angsuran_ke,
+                            'keterangan' => $item->LOAN_NUM,
                             'amount' => floatval($item->ORIGINAL_AMOUNT),
                         ];
                     }
                 }
+            } else {
+                $datas = [];
             }
+            
             return response()->json($datas, 200);
+            
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
 
-    private function queryArusKas($getPosition,$cabangId = null,$dateFrom = null, $dateTo = null) {
+    private function queryArusKas($getPosition,$cabangId = null,$dateFrom) {
 
         $query = "  SELECT 
                         b.JENIS,
@@ -165,18 +138,10 @@ class ListBanController extends Controller
                             a.STATUS = 'A'
                     ) AS b
                     INNER JOIN credit b2 ON b2.LOAN_NUMBER = b.LOAN_NUM
-                    INNER JOIN customer b3 on b3.CUST_CODE = b2.CUST_CODE";
+                    INNER JOIN customer b3 on b3.CUST_CODE = b2.CUST_CODE
+                    WHERE DATE_FORMAT(b.ENTRY_DATE, '%Y-%m-%d') = '$dateFrom' ";
 
             $params = [];
-
-            if ($dateFrom && $dateTo) {
-                $query .= " WHERE DATE_FORMAT(b.ENTRY_DATE, '%Y-%m-%d') BETWEEN :dateFrom AND :dateTo";
-                $params['dateFrom'] = $dateFrom;
-                $params['dateTo'] = $dateTo;
-            } else {
-                $query .= " WHERE DATE_FORMAT(b.ENTRY_DATE, '%Y-%m-%d') = :dateFrom";
-                $params['dateFrom'] = $dateFrom;
-            }
 
             if (strtolower($getPosition) != 'ho' && !empty($cabangId)) {
                 $query .= empty($params) ? " WHERE" : " AND";
