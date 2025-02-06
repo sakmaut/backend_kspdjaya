@@ -125,8 +125,8 @@ class ListBanController extends Controller
                         SELECT 
                             'PENCAIRAN' AS JENIS, 
                             b.CODE_NUMBER AS BRANCH,
-                            b.NAME as nama_cabang,
                             b.ID AS BRANCH_ID, 
+                            b.NAME as nama_cabang,
                             a.CREATED_AT AS ENTRY_DATE,
                             a.PCPL_ORI AS ORIGINAL_AMOUNT,
                             a.LOAN_NUMBER AS LOAN_NUM,
