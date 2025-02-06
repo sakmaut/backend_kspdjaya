@@ -459,8 +459,8 @@ class ReportController extends Controller
 
             foreach ($data as $res) {
 
-                $ttlByr = floatval($res->INSTALLMENT + $res->PAST_DUE_PENALTY);
-                $ttlByrAll = floatval($res->PAYMENT_VALUE + $res->PAID_PENALTY);
+                $ttlAngs = floatval($res->INSTALLMENT) + floatval($res->PAST_DUE_PENALTY);
+                $ttlByr = floatval($res->PAYMENT_VALUE) + floatval($res->PAID_PENALTY);
 
                 $getInvoice = M_Payment::where(['LOAN_NUM' => $id,'START_DATE' => $res->PAYMENT_DATE])
                             ->orderBy('ENTRY_DATE', 'desc')
@@ -481,7 +481,7 @@ class ReportController extends Controller
                     'Sisa Angs' => $sisaAngs,
                     'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0),
                     'Byr Dnda' => number_format($res->PAID_PENALTY ?? 0),
-                    'Sisa Byr Tgh' => number_format($ttlByr ?? 0 - $ttlByrAll ?? 0),
+                    'Sisa Byr Tgh' => number_format($ttlAngs - $ttlByr),
                     'Ovd' => $res->PAID_FLAG == 'PAID' && $res->STATUS_REC != 'A' ? 0 : $res->OD??0,
                     'Stts' => $res->PAID_FLAG == 'PAID' && $res->STATUS_REC != 'A' ? 'LUNAS' : ''
                 ];
