@@ -2,11 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\API\PaymentController;
 use App\Models\M_Arrears;
 use App\Models\M_Branch;
+use App\Models\M_Credit;
+use App\Models\M_CreditSchedule;
 use App\Models\M_CrPersonal;
 use App\Models\M_CrProspect;
 use App\Models\M_DeuteronomyTransactionLog;
+use App\Models\M_Payment;
+use App\Models\M_PaymentDetail;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
@@ -21,38 +26,171 @@ class Welcome extends Controller
     public function index(Request $request)
     {
         $groupedData = [];
-        $groupedData = [];
+
         foreach ($request->all() as $item) {
-            $key = $item['LOAN_NUMBER']; // Group by LOAN_NUMBER only
+            // Use no_invoice and angsuran_ke as the key for grouping
+            $key = $item['no_invoice'] . '-' . $item['angsuran_ke'];
 
             // If the group doesn't exist yet, initialize it
             if (!isset($groupedData[$key])) {
-                // Preserve other fields (except no_invoice, which will be kept as it is for each record)
+                // Initialize the group for this invoice and angsuran_ke
                 $groupedData[$key] = [
-                    "PAYMENT_TYPE" => $item['PAYMENT_TYPE'],
-                    "STTS_PAYMENT" => $item['STTS_PAYMENT'],
-                    "METODE_PEMBAYARAN" => $item['METODE_PEMBAYARAN'],
-                    "BRANCH_CODE" => $item['BRANCH_CODE'],
-                    "LOAN_NUMBER" => $item['LOAN_NUMBER'],
-                    "no_invoice" => $item['no_invoice'],  // keep original no_invoice
+                    "type" => $item['PAYMENT_TYPE'],
+                    "status" => $item['STTS_PAYMENT'],
+                    "method" => $item['METODE_PEMBAYARAN'],
+                    "time" => $item['CREATED_AT'],
+                    "by" => $item['CREATED_BY'],
+                    "branch" => $item['BRANCH_CODE'],
+                    "loan" => $item['LOAN_NUMBER'],
+                    "invoice" => $item['no_invoice'],  // keep original no_invoice
                     "tgl_angsuran" => $item['tgl_angsuran'],  // assuming we want to keep the latest tgl_angsuran for each LOAN_NUMBER
                     "angsuran_ke" => $item['angsuran_ke'],
                     "installment" => $item['installment'],
                     "diskon_denda" => $item['diskon_denda'],
                     "flag" => $item['flag'],
-                    "details" => []
+                    'details' => [],
                 ];
             }
 
-            // Add bayar_angsuran and bayar_denda to the details array
-            $groupedData[$key]['details'][] = [
-                'bayar_angsuran' => $item['bayar_angsuran'],
-                'bayar_denda' => $item['bayar_denda']
-            ];
+            // Prepare the detail entry based on bayar_denda
+            if ($item['bayar_denda'] != 0) {
+                // Add both bayar_angsuran and bayar_denda if bayar_denda is not 0
+                $detail = [
+                    'bayar_angsuran' => $item['bayar_angsuran'],
+                    'bayar_denda' => $item['bayar_denda'],
+                ];
+            } else {
+                // If bayar_denda is 0, only add bayar_angsuran
+                $detail = [
+                    'bayar_angsuran' => $item['bayar_angsuran'],
+                ];
+            }
+
+            // Add the detail to the group's details
+            $groupedData[$key]['details'][] = $detail;
         }
 
-        // Output the grouped data
-        return response()->json($groupedData, 200);
+        foreach ($groupedData as $data) {
+
+            $uid = Uuid::uuid7()->toString();
+
+            $this->updateCreditSchedule($data['loan'], $data['tgl_angsuran'], $data, $uid);
+
+            M_Payment::create([
+                'ID' => $uid,
+                'ACC_KEY' => $data['flag'] == 'PAID' ? 'angsuran_denda' : $request->pembayaran ?? '',
+                'STTS_RCRD' => 'PAID',
+                'INVOICE' => $data['invoice'],
+                'NO_TRX' => $request->uid,
+                'PAYMENT_METHOD' => $data['method'],
+                'BRANCH' => $data["branch"],
+                'LOAN_NUM' => $data['loan'],
+                'VALUE_DATE' => null,
+                'ENTRY_DATE' => now(),
+                'SUSPENSION_PENALTY_FLAG' => $request->penangguhan_denda ?? '',
+                'TITLE' => 'Angsuran Ke-' . $data['angsuran_ke'],
+                'ORIGINAL_AMOUNT' => $data['installment'],
+                'OS_AMOUNT' => $os_amount ?? 0,
+                'START_DATE' => date('Y-m-d',strtotime($data['tgl_angsuran'])),
+                'END_DATE' => now(),
+                'USER_ID' => $data["time"],
+                'AUTH_BY' => $data["by"],
+                'AUTH_DATE' => now(),
+                'ARREARS_ID' => $data['id_arrear'] ?? '',
+                'BANK_NAME' => round(microtime(true) * 1000)
+            ]);
+        }
+
+        return response()->json('ok', 200);
+    }
+
+    private function updateCreditSchedule($loan_number, $tgl_angsuran, $res, $uid)
+    {
+        $credit_schedule = M_CreditSchedule::where([
+            'LOAN_NUMBER' => $loan_number,
+            'PAYMENT_DATE' => $tgl_angsuran
+        ])->first();
+
+        // Check if credit_schedule is found or if bayar_angsuran is non-zero
+        if ($credit_schedule) {
+            $byr_angsuran = $res['details'][0]['bayar_angsuran'];
+
+            // Initialize the payment value
+            $payment_value = $byr_angsuran + ($credit_schedule ? $credit_schedule->PAYMENT_VALUE : 0);
+
+            $valBeforePrincipal = $credit_schedule ? $credit_schedule->PAYMENT_VALUE_PRINCIPAL : 0;
+            $valBeforeInterest = $credit_schedule ? $credit_schedule->PAYMENT_VALUE_INTEREST : 0;
+            $getPrincipal = $credit_schedule ? $credit_schedule->PRINCIPAL : 0;
+            $getInterest = $credit_schedule ? $credit_schedule->INTEREST : 0;
+
+            $new_payment_value_principal = $valBeforePrincipal;
+            $new_payment_value_interest = $valBeforeInterest;
+
+            // Process principal payment if needed
+            if ($valBeforePrincipal < $getPrincipal) {
+                $remaining_to_principal = $getPrincipal - $valBeforePrincipal;
+
+                if ($byr_angsuran >= $remaining_to_principal) {
+                    $new_payment_value_principal = $getPrincipal;
+                    $remaining_payment = $byr_angsuran - $remaining_to_principal;
+                } else {
+                    $new_payment_value_principal += $byr_angsuran;
+                    $remaining_payment = 0;
+                }
+            } else {
+                $remaining_payment = $byr_angsuran;
+            }
+
+            // Update interest if the principal is fully paid
+            if ($new_payment_value_principal == $getPrincipal) {
+                if ($valBeforeInterest < $getInterest) {
+                    $new_payment_value_interest = min($valBeforeInterest + $remaining_payment, $getInterest);
+                }
+            }
+
+            if ($new_payment_value_principal !== $valBeforePrincipal) {
+                $valPrincipal = $new_payment_value_principal - $valBeforePrincipal;
+                $data = $this->preparePaymentData($uid, 'ANGSURAN_POKOK', $valPrincipal);
+                M_PaymentDetail::create($data);
+                $this->addCreditPaid($loan_number, ['ANGSURAN_POKOK' => $valPrincipal]);
+            }
+
+            // Only update interest if it's different from the previous value
+            if ($new_payment_value_interest !== $valBeforeInterest) {
+                $valInterest = $new_payment_value_interest - $valBeforeInterest;
+                $data = $this->preparePaymentData($uid, 'ANGSURAN_BUNGA', $valInterest);
+                M_PaymentDetail::create($data);
+                $this->addCreditPaid($loan_number, ['ANGSURAN_BUNGA' => $valInterest]);
+            }
+        }
+    }
+
+
+
+    function preparePaymentData($payment_id, $acc_key, $amount)
+    {
+        return [
+            'PAYMENT_ID' => $payment_id,
+            'ACC_KEYS' => $acc_key,
+            'ORIGINAL_AMOUNT' => $amount
+        ];
+    }
+
+    public function addCreditPaid($loan_number, array $data)
+    {
+        $check_credit = M_Credit::where(['LOAN_NUMBER' => $loan_number])->first();
+
+        if ($check_credit) {
+            $paidPrincipal = isset($data['ANGSURAN_POKOK']) ? $data['ANGSURAN_POKOK'] : 0;
+            $paidInterest = isset($data['ANGSURAN_BUNGA']) ? $data['ANGSURAN_BUNGA'] : 0;
+            $paidPenalty = isset($data['BAYAR_DENDA']) ? $data['BAYAR_DENDA'] : 0;
+
+            $check_credit->update([
+                'PAID_PRINCIPAL' => floatval($check_credit->PAID_PRINCIPAL) + floatval($paidPrincipal),
+                'PAID_INTEREST' => floatval($check_credit->PAID_INTEREST) + floatval($paidInterest),
+                'PAID_PENALTY' => floatval($check_credit->PAID_PENALTY) + floatval($paidPenalty)
+            ]);
+        }
     }
    
 }

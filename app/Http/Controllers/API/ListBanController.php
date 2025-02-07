@@ -55,6 +55,9 @@ class ListBanController extends Controller
 
                 foreach ($arusKas as $item) {
                     if ($item->JENIS == 'PENCAIRAN') {
+
+                        $getTttl = floatval($item->ORIGINAL_AMOUNT) - floatval($item->admin_fee);
+
                         $datas['datas'][] = [
                             'no' => $no++,
                             'type' =>'CASH_OUT',
@@ -65,10 +68,10 @@ class ListBanController extends Controller
                             'position' => $item->position ?? '',
                             'nama_pelanggan' => $item->PELANGGAN ?? '',
                             'keterangan' => 'PENCAIRAN NO KONTRAK '.$item->LOAN_NUM ?? '',
-                            'amount' => floatval($item->ORIGINAL_AMOUNT) - floatval($item->admin_fee),
+                            'amount' => $getTttl,
                         ];
 
-                        $totalAmount += floatval($item->ORIGINAL_AMOUNT);
+                        $totalAmount += $getTttl;
                     }
                 }
 

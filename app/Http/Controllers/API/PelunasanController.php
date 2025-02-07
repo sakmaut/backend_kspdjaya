@@ -163,7 +163,6 @@ class PelunasanController extends Controller
             }
 
             if (!M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->exists()) {
-
                 $this->saveKwitansi($request, $detail_customer, $no_inv, $status);
                 $this->proccessKwitansiDetail($request, $loan_number, $no_inv);
             }
@@ -171,7 +170,6 @@ class PelunasanController extends Controller
             if ($status === "PAID") {
                 $this->proccess($request, $loan_number, $no_inv, $status);
             }else{
-
                 $creditSchedule = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)
                                             ->where(function ($query) {
                                                 $query->where('PAID_FLAG', '!=', 'PAID')->orWhereNull('PAID_FLAG');
@@ -179,16 +177,18 @@ class PelunasanController extends Controller
                                             ->orderBy('PAYMENT_DATE', 'asc')
                                             ->get();
 
+                $checkArr = M_Arrears::where([
+                    'LOAN_NUMBER' => $loan_number,
+                    'STATUS_REC' => 'A'
+                ])->get();
+
                 foreach ($creditSchedule as $res) {
-
                     $res->update(['PAID_FLAG' => 'PENDING']);
+                }   
 
-                    M_Arrears::where([
-                        'LOAN_NUMBER' => $res['LOAN_NUMBER'],
-                        'START_DATE' => $res['PAYMENT_DATE'],
-                        'STATUS_REC' => 'A'
-                    ])->update(['STATUS_REC' => 'PENDING']);
-                }               
+                foreach ($checkArr as $ress) {
+                    $ress->update(['STATUS_REC' => 'PENDING']);
+                }  
             }
 
             $data = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
@@ -228,15 +228,17 @@ class PelunasanController extends Controller
                     }
                 }
 
-                $this->updateCreditSchedule($loan_number,$res);
+                if ($res['installment'] != 0) {
+                    $this->updateCreditSchedule($loan_number, $res);
+                }
+                
                 $this->updateArrears($loan_number, $res);
+                $this->updateCredit($res, $loan_number);
             }
-
-            $this->updateCredit($request,$loan_number);
         }
     }
 
-    function proccessCancel($request, $loan_number, $no_inv, $status)
+    function proccessCancel($loan_number, $no_inv, $status)
     {
         $pelunasanKwitansiDetail = M_KwitansiDetailPelunasan::where(['no_invoice' => $no_inv, 'loan_number' => $loan_number])->get();
 
@@ -246,46 +248,26 @@ class PelunasanController extends Controller
             $kwitansi->update(['STTS_PAYMENT' => $status]);
         }
 
+        $payment = M_Payment::where('INVOICE', $no_inv)->get();
+
+        if (!empty($payment)) {
+            foreach ($payment as $list) {
+                $list->update(['STTS_PAYMENT' => $status]);
+            }
+        }
+
         if (!empty($pelunasanKwitansiDetail)) {
-            
             foreach ($pelunasanKwitansiDetail as $res) {
-                $uid = Uuid::uuid7()->toString();
-                $this->proccessPayment($request, $uid, $no_inv, $status, $res);
 
-                $paymentDetails = [
-                    'BAYAR_POKOK' => $res['bayar_pokok'] ?? 0,
-                    'BAYAR_BUNGA' => $res['bayar_bunga'] ?? 0,
-                    'BAYAR_DENDA' => $res['bayar_denda'] ?? 0,
-                    'DISKON_POKOK' => $res['diskon_pokok'] ?? 0,
-                    'DISKON_BUNGA' => $res['diskon_bunga'] ?? 0,
-                    'DISKON_DENDA' => $res['diskon_denda'] ?? 0,
-                ];
-
-                foreach ($paymentDetails as $type => $amount) {
-                    if ($amount != 0) {
-                        $this->proccessPaymentDetail($uid, $type, $amount);
-                    }
+                if($res['installment'] != 0){
+                    $this->cancelCreditSchedule($loan_number, $res);
                 }
 
-                $getCreditSchedule = M_CreditSchedule::where(['LOAN_NUMBER' => $loan_number, 'PAYMENT_DATE' => $res['tgl_angsuran']])->first();
-
-                if ($getCreditSchedule) {
-                    $getCreditSchedule->update([
-                        'PAID_FLAG' => ''
-                    ]);
+                if ($res['bayar_denda'] != 0 || $res['diskon_denda'] != 0) {
+                    $this->cancelArrears($loan_number, $res);
                 }
 
-                $getArrears = M_Arrears::where([
-                    'LOAN_NUMBER' => $loan_number,
-                    'START_DATE' => $res['tgl_angsuran'],
-                ])->first();
-
-                if ($getArrears) {
-                    $getArrears->update([
-                        'STATUS_REC' => 'A',
-                        'UPDATED_AT' => Carbon::now(),
-                    ]);
-                }
+                $this->cancelCredit($loan_number, $res);
             }
         }
     }
@@ -328,17 +310,56 @@ class PelunasanController extends Controller
 
             $valBeforePrincipal = $getCreditSchedule->PAYMENT_VALUE_PRINCIPAL;
             $valBeforeInterest = $getCreditSchedule->PAYMENT_VALUE_INTEREST;
+            $valBeforeDiscPrincipal = $getCreditSchedule->DISCOUNT_PRINCIPAL;
+            $valBeforeDiscInterest = $getCreditSchedule->DISCOUNT_INTEREST;
 
             $ttlPrincipal = floatval($valBeforePrincipal) + floatval($res['bayar_pokok'] ?? 0);
-            $ttlInterest = floatval($valBeforeInterest) + floatval($res['bayar_pokok'] ?? 0);
+            $ttlInterest = floatval($valBeforeInterest) + floatval($res['bayar_bunga'] ?? 0);
+            $ttlDiscPrincipal = floatval($valBeforeDiscPrincipal) + floatval($res['diskon_pokok'] ?? 0);
+            $ttlDiscInterest = floatval($valBeforeDiscInterest) + floatval($res['diskon_bunga'] ?? 0);
 
             $getCreditSchedule->update([
                 'PAYMENT_VALUE_PRINCIPAL' => $ttlPrincipal,
-                'PAYMENT_VALUE_INTEREST' => $ttlInterest, 
-                'DISCOUNT_PRINCIPAL' => $res['diskon_pokok']??0, 
-                'DISCOUNT_INTEREST' => $res['diskon_bunga'] ?? 0, 
-                'PAYMENT_VALUE' => $res['installment'] ?? 0,
+                'PAYMENT_VALUE_INTEREST' => $ttlInterest,
+                'DISCOUNT_PRINCIPAL' => $ttlDiscPrincipal,
+                'DISCOUNT_INTEREST' => $ttlDiscInterest,
                 'PAID_FLAG' => 'PAID'
+            ]);
+
+            $ttlPayment = $ttlPrincipal + $ttlInterest + $ttlDiscPrincipal + $ttlDiscInterest;
+
+            $getCreditSchedule->update([
+                'PAYMENT_VALUE' => $ttlPayment
+            ]);
+        }
+    }
+
+    function cancelCreditSchedule($loan_number, $res)
+    {
+
+        $getCreditSchedule = M_CreditSchedule::where(['LOAN_NUMBER' => $loan_number, 'PAYMENT_DATE' => $res['tgl_angsuran']])->first();
+
+        if ($getCreditSchedule) {
+
+            $valBeforePrincipal = $getCreditSchedule->PAYMENT_VALUE_PRINCIPAL;
+            $valBeforeInterest = $getCreditSchedule->PAYMENT_VALUE_INTEREST;
+            $valBeforeDiscPrincipal = $getCreditSchedule->DISCOUNT_PRINCIPAL;
+            $valBeforeDiscInterest = $getCreditSchedule->DISCOUNT_INTEREST;
+            $valPaymentValue = $getCreditSchedule->PAYMENT_VALUE;
+
+            $ttlPrincipal = floatval($valBeforePrincipal) - floatval($res['bayar_pokok'] ?? 0);
+            $ttlInterest = floatval($valBeforeInterest) - floatval($res['bayar_bunga'] ?? 0);
+            $ttlDiscPrincipal = floatval($valBeforeDiscPrincipal) - floatval($res['diskon_pokok'] ?? 0);
+            $ttlDiscInterest = floatval($valBeforeDiscInterest) - floatval($res['diskon_bunga'] ?? 0);
+            $ttlPayment = $valPaymentValue - (floatval($res['bayar_pokok'] ?? 0) + floatval($res['bayar_bunga'] ?? 0) + floatval($res['diskon_pokok'] ?? 0) + floatval($res['diskon_bunga'] ?? 0));
+
+            $getCreditSchedule->update([
+                'PAYMENT_VALUE_PRINCIPAL' => $ttlPrincipal,
+                'PAYMENT_VALUE_INTEREST' => $ttlInterest,
+                'DISCOUNT_PRINCIPAL' => $ttlDiscPrincipal,
+                'DISCOUNT_INTEREST' => $ttlDiscInterest,
+                'PAYMENT_VALUE' => $ttlPayment,
+                'PAID_FLAG' => ''
             ]);
         }
     }
@@ -354,44 +375,86 @@ class PelunasanController extends Controller
             $ttlPrincipal = floatval($getArrears->PAID_PCPL) + floatval($res['bayar_pokok'] ?? 0);
             $ttlInterest = floatval($getArrears->PAID_INT) + floatval($res['bayar_bunga'] ?? 0);
             $ttlPenalty = floatval($getArrears->PAID_PENALTY) + floatval($res['bayar_denda'] ?? 0);
+            $ttlDiscPrincipal = floatval($getArrears->WOFF_PCPL) + floatval($res['diskon_pokok'] ?? 0);
+            $ttlDiscInterest = floatval($getArrears->WOFF_INT) + floatval($res['diskon_bunga'] ?? 0);
+            $ttlDiscPenalty = floatval($getArrears->WOFF_PENALTY) + floatval($res['diskon_denda'] ?? 0);
 
-            $checkDiscountArrears = empty($res['diskon_pokok']) && empty($res['diskon_bunga']) && empty($res['diskon_denda']);
+            $checkDiscountArrears = floatval($res['diskon_pokok']) != 0 && floatval($res['diskon_bunga']) != 0 && floatval($res['diskon_denda']) != 0;
 
             $getArrears->update([
-                'END_DATE' => Carbon::now()->format('Y-m-d'),
-                'PAID_PCPL' => $ttlPrincipal,
-                'PAID_INT' => $ttlInterest,
-                'PAID_PENALTY' => $ttlPenalty,
-                'WOFF_PCPL' => $res['diskon_pokok'] ?? 0,
-                'WOFF_INT' => $res['diskon_bunga'] ?? 0,
-                'WOFF_PENALTY' => $res['diskon_denda'] ?? 0,
-                'STATUS_REC' => 'D',
+                'END_DATE' => Carbon::now()->format('Y-m-d')??null,
+                'PAID_PCPL' => $ttlPrincipal??0,
+                'PAID_INT' => $ttlInterest ?? 0,
+                'PAID_PENALTY' => $ttlPenalty ?? 0,
+                'WOFF_PCPL' => $ttlDiscPrincipal ?? 0,
+                'WOFF_INT' => $ttlDiscInterest ?? 0,
+                'WOFF_PENALTY' => $ttlDiscPenalty ?? 0,
+                'STATUS_REC' => $checkDiscountArrears ?? 0 ? 'S':'D',
                 'UPDATED_AT' => Carbon::now(),
             ]);
         }
     }
 
-    function updateCredit($request, $loan_number)
+    function cancelArrears($loan_number, $res)
     {
+        $getArrears = M_Arrears::where([
+            'LOAN_NUMBER' => $loan_number,
+            'START_DATE' => $res['tgl_angsuran'],
+        ])->first();
 
-        $bayarPokok = $request->BAYAR_POKOK;
-        $bayarDiscountPokok = $request->DISKON_POKOK;
-        $bayarBunga = $request->BAYAR_BUNGA;
-        $bayarDiscountBunga = $request->DISKON_BUNGA;
-        $bayarDenda = $request->BAYAR_DENDA;
-        $bayarDiscountDenda = $request->DISKON_DENDA;
+        if ($getArrears) {
+            $ttlPrincipal = floatval($getArrears->PAID_PCPL) - floatval($res['bayar_pokok'] ?? 0);
+            $ttlInterest = floatval($getArrears->PAID_INT) - floatval($res['bayar_bunga'] ?? 0);
+            $ttlPenalty = floatval($getArrears->PAID_PENALTY) - floatval($res['bayar_denda'] ?? 0);
+            $ttlDiscPrincipal = floatval($getArrears->WOFF_PCPL) - floatval($res['diskon_pokok'] ?? 0);
+            $ttlDiscInterest = floatval($getArrears->WOFF_INT) - floatval($res['diskon_bunga'] ?? 0);
+            $ttlDiscPenalty = floatval($getArrears->WOFF_PENALTY) - floatval($res['diskon_denda'] ?? 0);
 
+            $getArrears->update([
+                'END_DATE' => Carbon::now()->format('Y-m-d'),
+                'PAID_PCPL' => $ttlPrincipal ?? 0,
+                'PAID_INT' => $ttlInterest ?? 0,
+                'PAID_PENALTY' => $ttlPenalty ?? 0,
+                'WOFF_PCPL' => $ttlDiscPrincipal ?? 0,
+                'WOFF_INT' => $ttlDiscInterest ?? 0,
+                'WOFF_PENALTY' => $ttlDiscPenalty ?? 0,
+                'STATUS_REC' => 'A',
+                'UPDATED_AT' => Carbon::now(),
+            ]);
+        }
+    }
+
+    function updateCredit($res, $loan_number)
+    {
         $credit = M_Credit::where('LOAN_NUMBER', $loan_number)->first();
 
         if ($credit) {
             $credit->update([
-                'PAID_PRINCIPAL' => floatval($credit->PAID_PRINCIPAL) + floatval($bayarPokok),
-                'PAID_INTEREST' => floatval($credit->PAID_INTEREST) + floatval($bayarBunga),
-                'DISCOUNT_PRINCIPAL' => floatval($credit->DISCOUNT_PRINCIPAL) + floatval($bayarDiscountPokok),
-                'DISCOUNT_INTEREST' => floatval($credit->DISCOUNT_INTEREST) + floatval($bayarDiscountBunga),
-                'PAID_PENALTY' => floatval($credit->PAID_PENALTY) + floatval($bayarDenda),
-                'DISCOUNT_PENALTY' => floatval($credit->DISCOUNT_PENALTY) + floatval($bayarDiscountDenda),
+                'PAID_PRINCIPAL' => floatval($credit->PAID_PRINCIPAL) + floatval($res['bayar_pokok']),
+                'PAID_INTEREST' => floatval($credit->PAID_INTEREST) + floatval($res['bayar_bunga']),
+                'DISCOUNT_PRINCIPAL' => floatval($credit->DISCOUNT_PRINCIPAL) + floatval($res['diskon_pokok']),
+                'DISCOUNT_INTEREST' => floatval($credit->DISCOUNT_INTEREST) + floatval($res['diskon_bunga']),
+                'PAID_PENALTY' => floatval($credit->PAID_PENALTY) + floatval($res['bayar_denda']),
+                'DISCOUNT_PENALTY' => floatval($credit->DISCOUNT_PENALTY) + floatval($res['diskon_denda']),
                 'STATUS' => 'D',
+                'END_DATE' => now()
+            ]);
+        }
+    }
+
+    function cancelCredit($loan_number,$res)
+    {
+        $credit = M_Credit::where('LOAN_NUMBER', $loan_number)->first();
+
+        if ($credit) {
+            $credit->update([
+                'PAID_PRINCIPAL' => floatval($credit->PAID_PRINCIPAL) - floatval($res['bayar_pokok']),
+                'PAID_INTEREST' => floatval($credit->PAID_INTEREST) - floatval($res['bayar_bunga']),
+                'DISCOUNT_PRINCIPAL' => floatval($credit->DISCOUNT_PRINCIPAL) - floatval($res['diskon_pokok']),
+                'DISCOUNT_INTEREST' => floatval($credit->DISCOUNT_INTEREST) - floatval($res['diskon_bunga']),
+                'PAID_PENALTY' => floatval($credit->PAID_PENALTY) - floatval($res['bayar_denda']),
+                'DISCOUNT_PENALTY' => floatval($credit->DISCOUNT_PENALTY) - floatval($res['diskon_denda']),
+                'STATUS' => 'A',
                 'END_DATE' => now()
             ]);
         }
@@ -488,7 +551,7 @@ class PelunasanController extends Controller
 
     private function principalCalculate($request, $loan_number, $no_inv, $creditSchedule)
     {
-        $this->calculatePayment(
+        $this->calculatePrincipal(
             $request->BAYAR_POKOK,
             $request->DISKON_POKOK,
             $creditSchedule,
@@ -503,22 +566,54 @@ class PelunasanController extends Controller
 
     private function interestCalculate($request, $loan_number, $no_inv, $creditSchedule)
     {
-        $this->calculatePayment(
-            $request->BAYAR_BUNGA,
-            $request->DISKON_BUNGA,
-            $creditSchedule,
-            'INTEREST',
-            'PAYMENT_VALUE_INTEREST',
-            'BAYAR_BUNGA',
-            'DISKON_BUNGA',
-            $loan_number,
-            $no_inv
-        );
+        $remainingPayment = $request->BAYAR_BUNGA;
+        $remainingDiscount = $request->DISKON_BUNGA;
+        $currentDate = now(); // Get the current date
+
+        foreach ($creditSchedule as $res) {
+            $valBefore = $res->PAYMENT_VALUE_INTEREST;
+            $getAmount = $res->INTEREST;
+            $getDate = $res->PAYMENT_DATE;
+
+            // Proceed only if there's an amount to pay and the payment date is in the future
+            if ($valBefore < $getAmount && $getDate <= $currentDate) {
+                // Calculate the amount left to pay
+                $remainingToPay = $getAmount - $valBefore;
+
+                // If enough payment is available to cover the remaining amount
+                if ($remainingPayment >= $remainingToPay) {
+                    $newPaymentValue = $getAmount; // Full payment
+                    $remainingPayment -= $remainingToPay; // Subtract the paid amount
+                } else {
+                    $newPaymentValue = $valBefore + $remainingPayment;
+                    $remainingPayment = 0;
+                }
+
+                // Apply the payment to the schedule
+                $param['BAYAR_BUNGA'] = $newPaymentValue;
+                $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
+
+                // Handle the discount if applicable
+                if ($remainingDiscount > 0) {
+                    $remainingToDiscount = $getAmount - $newPaymentValue;
+
+                    if ($remainingDiscount >= $remainingToDiscount) {
+                        $param['DISKON_BUNGA'] = $remainingToDiscount; // Full discount
+                        $remainingDiscount -= $remainingToDiscount; // Subtract the used discount
+                    } else {
+                        $param['DISKON_BUNGA'] = $remainingDiscount; // Partial discount
+                        $remainingDiscount = 0; // No discount left
+                    }
+
+                    $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
+                }
+            }
+        }
     }
 
     private function arrearsCalculate($request, $loan_number, $no_inv, $arrears)
     {
-        $this->calculatePayment(
+        $this->calculatePrincipal(
             $request->BAYAR_DENDA,
             $request->DISKON_DENDA,
             $arrears,
@@ -531,7 +626,7 @@ class PelunasanController extends Controller
         );
     }
 
-    private function calculatePayment($paymentAmount, $discountAmount, $schedule, $fieldKey, $valueKey, $paymentParam, $discountParam, $loan_number, $no_inv)
+    private function calculatePrincipal($paymentAmount, $discountAmount, $schedule, $fieldKey, $valueKey, $paymentParam, $discountParam, $loan_number, $no_inv)
     {
         $remainingPayment = $paymentAmount;
         $remainingDiscount = $discountAmount;
@@ -555,10 +650,11 @@ class PelunasanController extends Controller
                     $remainingPayment = 0;
                 }
 
-                $param[$paymentParam] = ($remainingPayment < $remainingToPay) ? $newPaymentValue : $remainingPayment;
+                // Apply the payment to the schedule
+                $param[$paymentParam] = $newPaymentValue;
                 $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
 
-                // If there's a discount to apply
+                // Handle the discount if applicable
                 if ($remainingDiscount > 0) {
                     $remainingToDiscount = $getAmount - $newPaymentValue;
 
@@ -574,6 +670,7 @@ class PelunasanController extends Controller
                 }
             }
         }
+
 
         if ($remainingPayment > 0) {
             $param[$paymentParam] = $remainingPayment;
