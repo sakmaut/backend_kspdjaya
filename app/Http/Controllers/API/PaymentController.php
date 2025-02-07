@@ -471,6 +471,8 @@ class PaymentController extends Controller
             'START_DATE' => $tgl_angsuran,
             'END_DATE' => now(),
             'USER_ID' => $request->user()->id,
+            'AUTH_BY' => $request->user()->fullname ?? '',
+            'AUTH_DATE' => now(),
             'ARREARS_ID' => $res['id_arrear'] ?? '',
             'BANK_NAME' => round(microtime(true) * 1000)
         ]);

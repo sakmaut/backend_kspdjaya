@@ -54,7 +54,7 @@ class PelunasanController extends Controller
                         ->groupBy('a.LOAN_NUMBER', 'a.PAYMENT_DATE', 'a.INTEREST', 'b.PCPL_ORI', 'b.PAID_PRINCIPAL')
                         ->first();
                         
-            $bunga = "select  $result->LOAN_NUMBER as LOAN_NUMBER,$result->INT_ARR as TUNGGAKAN_BUNGA, null as TUNGGAKAN_DENDA, null as DENDA_TOTAL";
+            $bunga = "select  $result->LOAN_NUMBER as LOAN_NUMBER,$result->INT_ARR as INT_ARR, null as TUNGGAKAN_DENDA, null as DENDA_TOTAL";
 
             $bunga2 = "select	LOAN_NUMBER, 
                                 sum(coalesce(PAST_DUE_INTRST,0))-sum(coalesce(PAID_INT,0)) as INT_ARR, 
