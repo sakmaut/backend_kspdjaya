@@ -95,7 +95,9 @@ class ListBanController extends Controller
                         b.PAYMENT_METHOD,
                         b.nama_cabang,
                         b.no_invoice,
-                        b.angsuran_ke
+                        b.angsuran_ke,
+                        b.admin_fee,
+                        b.user_id
                     FROM (
                         SELECT 
                             a.ACC_KEYS as JENIS, 
@@ -107,7 +109,9 @@ class ListBanController extends Controller
                             b.LOAN_NUM,
                             b.PAYMENT_METHOD,
                             b.INVOICE as no_invoice,
-                            b.TITLE as angsuran_ke
+                            b.TITLE as angsuran_ke,
+                            b.USER_ID as user_id,
+                            '' as admin_fee
                         FROM 
                             payment_detail a
                             INNER JOIN payment b ON b.ID = a.PAYMENT_ID
@@ -126,7 +130,9 @@ class ListBanController extends Controller
                             a.LOAN_NUMBER AS LOAN_NUM,
                             'cash' as PAYMENT_METHOD,
                             '' as no_invoice,
-                            '' as angsuran_ke
+                            '' as angsuran_ke,
+                            a.CREATED_BY as user_id,
+                            a.TOTAL_ADMIN as admin_fee
                         FROM 
                             credit a
                             INNER JOIN branch b ON b.id = a.BRANCH
