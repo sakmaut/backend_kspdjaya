@@ -338,7 +338,7 @@ class PelunasanController extends Controller
                 'WOFF_PCPL' => $res['diskon_pokok'] ?? 0,
                 'WOFF_INT' => $res['diskon_bunga'] ?? 0,
                 'WOFF_PENALTY' => $res['diskon_denda'] ?? 0,
-                'STATUS_REC' => $checkDiscountArrears ? 'S' : 'D',
+                'STATUS_REC' => 'D',
                 'UPDATED_AT' => Carbon::now(),
             ]);
         }
