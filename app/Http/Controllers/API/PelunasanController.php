@@ -88,7 +88,7 @@ class PelunasanController extends Controller
                         where	LOAN_NUMBER = '{$loan_number}'
                         group 	by LOAN_NUMBER";
             
-            $getDate1 = $result->PAYMENT_DATE;
+            $getDate1 = $result->PAYMENT_DATE??'';
             $getDate2 = Carbon::now()->format('Y-m-d');
 
             if(!empty($getDate1) && $getDate1 < $getDate2){
