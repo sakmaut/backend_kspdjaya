@@ -41,6 +41,23 @@ class PelunasanController extends Controller
 
             $loan_number = $request->loan_number;
 
+            $result = DB::table('credit_schedule as a')
+                        ->join('credit as b', 'b.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
+                        ->join('arrears as c', 'c.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
+                        ->select(
+                            'a.LOAN_NUMBER',
+                            'a.PAYMENT_DATE',
+                            'a.INTEREST as INT_ARR',
+                            DB::raw('SUM(CASE WHEN c.STATUS_REC <> "A" THEN COALESCE(c.PAST_DUE_PENALTY, 0) END) - 
+                                    SUM(CASE WHEN c.STATUS_REC <> "A" THEN COALESCE(c.PAID_PENALTY, 0) END) AS TUNGGAKAN_DENDA'),
+                            DB::raw('SUM(COALESCE(c.PAST_DUE_PENALTY, 0)) - SUM(COALESCE(c.PAID_PENALTY, 0)) AS DENDA_TOTAL'),
+                            DB::raw('b.PCPL_ORI - b.PAID_PRINCIPAL AS OS')
+                        )
+                        ->where('a.LOAN_NUMBER', '=', $loan_number)
+                        ->where('a.INSTALLMENT_COUNT', '=', 1)
+                        ->groupBy('a.LOAN_NUMBER', 'a.PAYMENT_DATE', 'a.INTEREST', 'b.PCPL_ORI', 'b.PAID_PRINCIPAL')
+                        ->first();
+
             $bunga = "  SELECT 
                             a.LOAN_NUMBER,
                             a.PAYMENT_DATE, 
@@ -62,8 +79,6 @@ class PelunasanController extends Controller
                             a.LOAN_NUMBER, a.PAYMENT_DATE, a.INTEREST, b.PCPL_ORI, b.PAID_PRINCIPAL
                         ";
 
-            $checkData = DB::select($bunga);
-
             $bunga2 = "select	LOAN_NUMBER, 
                                 sum(coalesce(PAST_DUE_INTRST,0))-sum(coalesce(PAID_INT,0)) as INT_ARR, 
                                 sum(case when STATUS_REC <> 'A' then coalesce(PAST_DUE_PENALTY,0) end)-
@@ -73,7 +88,7 @@ class PelunasanController extends Controller
                         where	LOAN_NUMBER = '{$loan_number}'
                         group 	by LOAN_NUMBER";
             
-            $getDate1 = $checkData[0]->PAYMENT_DATE;
+            $getDate1 = $result->PAYMENT_DATE;
             $getDate2 = Carbon::now()->format('Y-m-d');
 
             if(!empty($getDate1) && $getDate1 < $getDate2){
