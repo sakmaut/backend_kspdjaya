@@ -46,13 +46,13 @@ class ReportController extends Controller
                 
                 if (!empty($request->no_kontrak)) {
                     $query->when($request->no_kontrak, function ($query, $no_kontrak) {
-                        return $query->where("a.LOAN_NUMBER", 'LIKE', "%{$no_kontrak}%");
+                        return $query->where("a.LOAN_NUMBER",$no_kontrak);
                     });
                 }
             
                 if (!empty($request->nama)) {
                     $query->when($request->nama, function ($query, $nama) {
-                        return $query->where("b.NAME", 'LIKE', "%{$nama}%");
+                        return $query->where("b.NAME", 'LIKE', "%$nama%");
                     });
                 }
             
@@ -315,21 +315,30 @@ class ReportController extends Controller
     public function pembayaran(Request $request,$id)
     {
         try {
-            $sql = "    SELECT a.BRANCH, a.TITLE, a.LOAN_NUM, a.ENTRY_DATE, b.INSTALLMENT, a.INVOICE, a.STTS_RCRD, a.ORIGINAL_AMOUNT,
-                            SUM(CASE WHEN d.ACC_KEYS = 'ANGSURAN_POKOK' THEN d.ORIGINAL_AMOUNT ELSE 0 END) AS 'BAYAR_POKOK', 
-                            SUM(CASE WHEN d.ACC_KEYS = 'ANGSURAN_BUNGA' THEN d.ORIGINAL_AMOUNT ELSE 0 END) AS 'BAYAR_BUNGA',
-                            SUM(CASE WHEN d.ACC_KEYS = 'BAYAR_DENDA' THEN d.ORIGINAL_AMOUNT ELSE 0 END) AS 'BAYAR_DENDA',
-                            SUM(CASE WHEN d.ACC_KEYS = 'BAYAR PELUNASAN POKOK' THEN d.ORIGINAL_AMOUNT ELSE 0 END) AS 'BAYAR_PELUNASAN_POKOK', 
-                            SUM(CASE WHEN d.ACC_KEYS = 'BAYAR PELUNASAN BUNGA' THEN d.ORIGINAL_AMOUNT ELSE 0 END) AS 'BAYAR_PELUNASAN_BUNGA',
-                            SUM(CASE WHEN d.ACC_KEYS = 'BAYAR PELUNASAN DENDA' THEN d.ORIGINAL_AMOUNT ELSE 0 END) AS 'BAYAR_PELUNASAN_DENDA',
-                            SUM(CASE WHEN d.ACC_KEYS = 'DISKON_POKOK' THEN d.ORIGINAL_AMOUNT ELSE 0 END) AS 'DISKON_POKOK',
-                            SUM(CASE WHEN d.ACC_KEYS = 'DISKON_BUNGA' THEN d.ORIGINAL_AMOUNT ELSE 0 END) AS 'DISKON_BUNGA',
-                            SUM(CASE WHEN d.ACC_KEYS = 'DISKON_DENDA' THEN d.ORIGINAL_AMOUNT ELSE 0 END) AS 'DISKON_DENDA'
+            $sql = "    SELECT  a.BRANCH, 
+                                a.TITLE, 
+                                a.LOAN_NUM, 
+                                a.ENTRY_DATE, 
+                                b.INSTALLMENT, 
+                                a.INVOICE, 
+                                a.STTS_RCRD, 
+                                a.ORIGINAL_AMOUNT,
+                                a.USER_ID,
+                                a.PAYMENT_METHOD,
+                                SUM(CASE WHEN d.ACC_KEYS = 'ANGSURAN_POKOK' THEN d.ORIGINAL_AMOUNT ELSE 0 END) AS 'BAYAR_POKOK', 
+                                SUM(CASE WHEN d.ACC_KEYS = 'ANGSURAN_BUNGA' THEN d.ORIGINAL_AMOUNT ELSE 0 END) AS 'BAYAR_BUNGA',
+                                SUM(CASE WHEN d.ACC_KEYS = 'BAYAR_DENDA' THEN d.ORIGINAL_AMOUNT ELSE 0 END) AS 'BAYAR_DENDA',
+                                SUM(CASE WHEN d.ACC_KEYS = 'BAYAR PELUNASAN POKOK' THEN d.ORIGINAL_AMOUNT ELSE 0 END) AS 'BAYAR_PELUNASAN_POKOK', 
+                                SUM(CASE WHEN d.ACC_KEYS = 'BAYAR PELUNASAN BUNGA' THEN d.ORIGINAL_AMOUNT ELSE 0 END) AS 'BAYAR_PELUNASAN_BUNGA',
+                                SUM(CASE WHEN d.ACC_KEYS = 'BAYAR PELUNASAN DENDA' THEN d.ORIGINAL_AMOUNT ELSE 0 END) AS 'BAYAR_PELUNASAN_DENDA',
+                                SUM(CASE WHEN d.ACC_KEYS = 'DISKON_POKOK' THEN d.ORIGINAL_AMOUNT ELSE 0 END) AS 'DISKON_POKOK',
+                                SUM(CASE WHEN d.ACC_KEYS = 'DISKON_BUNGA' THEN d.ORIGINAL_AMOUNT ELSE 0 END) AS 'DISKON_BUNGA',
+                                SUM(CASE WHEN d.ACC_KEYS = 'DISKON_DENDA' THEN d.ORIGINAL_AMOUNT ELSE 0 END) AS 'DISKON_DENDA'
                         FROM payment a
                         INNER JOIN credit b ON b.LOAN_NUMBER = a.LOAN_NUM
                         LEFT JOIN payment_detail d ON d.PAYMENT_ID = a.ID
-                        WHERE a.LOAN_NUM = {$id}
-                        GROUP BY a.BRANCH, a.TITLE, a.LOAN_NUM, a.ENTRY_DATE, b.INSTALLMENT, a.INVOICE, a.STTS_RCRD, a.ORIGINAL_AMOUNT
+                        WHERE a.LOAN_NUM = '$id'
+                        GROUP BY a.BRANCH, a.TITLE, a.LOAN_NUM, a.ENTRY_DATE, b.INSTALLMENT, a.INVOICE, a.STTS_RCRD, a.ORIGINAL_AMOUNT,a.USER_ID,a.PAYMENT_METHOD
                         ORDER BY a.ENTRY_DATE DESC;
                         ";
 
@@ -337,23 +346,24 @@ class ReportController extends Controller
 
             $allData = [];
             foreach ($results as $result) {
+
+                $getPosition = User::where('id', $result->USER_ID)->first();
+
                 $allData[] = [
                     'Cbang' => M_Branch::find($result->BRANCH)->NAME ?? '',
+                    'Mtde Byr' => $getPosition? $getPosition->position??'':$result->PAYMENT_METHOD ?? '',
                     'No Inv' => $result->INVOICE ?? '',
                     'No Kont' => $result->LOAN_NUM ?? '',
                     'Tgl Byr' => $result->ENTRY_DATE ?? '',
                     'Angs' => $result->TITLE ?? '',
                     'Jml Byr' => number_format($result->ORIGINAL_AMOUNT ?? 0),
-                    'Byr Pkk' => number_format($result->BAYAR_POKOK ?? 0),
-                    'Byr Bnga' => number_format($result->BAYAR_BUNGA ?? 0),
+                    'Byr Angs' => number_format($result->BAYAR_POKOK ?? 0 + $result->BAYAR_BUNGA ?? 0),
                     'Byr Dnda' => number_format($result->BAYAR_DENDA ?? 0),
-                    'Byr Plsn Pkk' => number_format($result->BAYAR_PELUNASAN_POKOK ?? 0),
-                    'Byr Plsn Bnga' => number_format($result->BAYAR_PELUNASAN_BUNGA ?? 0),
+                    'Byr Plsn Ang' => number_format($result->BAYAR_PELUNASAN_POKOK ?? 0 + $result->BAYAR_PELUNASAN_BUNGA ?? 0),
                     'Byr Plsn Dnda' => number_format($result->BAYAR_PELUNASAN_DENDA ?? 0),
-                    'Dskn Pkk' => number_format($result->DISKON_POKOK ?? 0),
-                    'Dskn Bnga' => number_format($result->DISKON_BUNGA ?? 0),
+                    'Dskn Angs' => number_format($result->DISKON_POKOK ?? 0 + $result->DISKON_BUNGA ?? 0),
                     'Dskn Dnda' => number_format($result->DISKON_DENDA ?? 0),
-                    'Stts' => $result->STTS_RCRD ?? '',
+                    'Stts' => $result->STTS_RCRD == 'PAID'?'SUCCESS': $result->STTS_RCRD??'',
                 ];
             }            
            
@@ -367,15 +377,27 @@ class ReportController extends Controller
     public function tunggakkan(Request $request,$id)
     {
         try {
-            $results = M_Arrears::where('LOAN_NUMBER', $id)->first();
+            $results = M_Arrears::where('LOAN_NUMBER', $id)->get();
 
-            if (!$results) {
+            if ($results->isEmpty()) {
                 $allData = [];
             } else {
-                $allData = $results;
+                $allData = [];
+
+                foreach ($results as $res) {
+                    $allData[] = [
+                        'Jt.Tempo' => Carbon::parse($res->START_DATE)->format('Y-m-d'),
+                        'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('Y-m-d') : '',
+                        'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0),
+                        'Bayar Dnda' => number_format($res->PAID_PENALTY ?? 0),
+                        'Diskon Dnda' => number_format($res->WOFF_PENALTY ?? 0),
+                        'Status' => $res->STATUS_REC == 'A' ? '':'LUNAS',
+                    ];
+                }
             }
-           
+
             return response()->json($allData, 200);
+
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
@@ -390,43 +412,43 @@ class ReportController extends Controller
                 'data_credit' => []
             ];
 
-            $sql = "   SELECT 
-                        a.INSTALLMENT_COUNT, 
-                        a.PAYMENT_DATE, 
-                        a.PRINCIPAL, 
-                        a.INTEREST, 
-                        a.INSTALLMENT, 
-                        a.PAYMENT_VALUE_PRINCIPAL, 
-                        a.PAYMENT_VALUE_INTEREST, 
-                        a.INSUFFICIENT_PAYMENT,
-                        a.PAYMENT_VALUE,
-                        a.PAID_FLAG, 
-                        c.PAST_DUE_PENALTY, 
-                        c.PAID_PENALTY, 
-                        c.STATUS_REC, 
-                        mp.ENTRY_DATE,
-                        mp.INVOICE
-                    from 
-                        credit_schedule as a
-                    left join 
-                        arrears as c 
-                        on c.LOAN_NUMBER = a.LOAN_NUMBER 
-                        and c.START_DATE = a.PAYMENT_DATE
-                    left join (
-                        SELECT 	LOAN_NUM, 
-                                ENTRY_DATE,
-                                INVOICE,
-                                max(START_DATE) as START_DATE  
-                        FROM `payment` 
-                        WHERE `LOAN_NUM` = {$id} 
-                        group by  LOAN_NUM,ENTRY_DATE,INVOICE,START_DATE
-                    ) as mp 
-                    on mp.LOAN_NUM = a.LOAN_NUMBER
-                    and mp.START_DATE = a.PAYMENT_DATE
-                    where 
-                        a.LOAN_NUMBER = {$id}
-                    order by 
-                        a.PAYMENT_DATE asc ";
+            $sql = "    SELECT 
+                            a.INSTALLMENT_COUNT, 
+                            a.PAYMENT_DATE, 
+                            a.PRINCIPAL, 
+                            a.INTEREST, 
+                            a.INSTALLMENT, 
+                            a.PAYMENT_VALUE_PRINCIPAL, 
+                            a.PAYMENT_VALUE_INTEREST, 
+                            a.INSUFFICIENT_PAYMENT,
+                            a.PAYMENT_VALUE,
+                            a.PAID_FLAG, 
+                            c.PAST_DUE_PENALTY, 
+                            c.PAID_PENALTY, 
+                            c.STATUS_REC, 
+                            mp.ENTRY_DATE,
+                            mp.INST_COUNT, 
+                            case when a.PAID_FLAG = 'PAID' and c.STATUS_REC = 'A' then datediff(mp.ENTRY_DATE,a.PAYMENT_DATE) else 0 end as OD
+                        from 
+                            credit_schedule as a
+                        left join 
+                            arrears as c 
+                            on c.LOAN_NUMBER = a.LOAN_NUMBER 
+                            and c.START_DATE = a.PAYMENT_DATE
+                        left join (
+                            SELECT 	LOAN_NUM, 
+                                    ENTRY_DATE,
+                                    max(START_DATE) as START_DATE, 
+                                    count(START_DATE) as INST_COUNT
+                            FROM payment 
+                            WHERE LOAN_NUM = '$id'
+                            group by  LOAN_NUM,date_format(START_DATE,'%d%m%Y'),ENTRY_DATE
+                        ) as mp 
+                        on mp.LOAN_NUM = a.LOAN_NUMBER
+                        and date_format(mp.START_DATE,'%d%m%Y') = date_format(a.PAYMENT_DATE,'%d%m%Y')
+                        where 
+                            a.LOAN_NUMBER = '$id'
+                        order by a.PAYMENT_DATE asc";
                        
 
             $data = DB::select($sql);
@@ -437,24 +459,31 @@ class ReportController extends Controller
 
             foreach ($data as $res) {
 
-                $ttlByr = floatval($res->PRINCIPAL + $res->INTEREST + $res->PAST_DUE_PENALTY);
-                $ttlByrAll = floatval($res->PAYMENT_VALUE_PRINCIPAL + $res->PAYMENT_VALUE_INTEREST + $res->PAID_PENALTY);
+                $ttlAngs = floatval($res->INSTALLMENT) + floatval($res->PAST_DUE_PENALTY);
+                $ttlByr = floatval($res->PAYMENT_VALUE) + floatval($res->PAID_PENALTY);
+
+                $getInvoice = M_Payment::where(['LOAN_NUM' => $id,'START_DATE' => $res->PAYMENT_DATE])
+                            ->orderBy('ENTRY_DATE', 'desc')
+                            ->select('INVOICE')
+                            ->first();
+
+                $sisaAngs = number_format(floatval($res->INSTALLMENT) - floatval($res->PAYMENT_VALUE));
 
                 $schedule['data_credit'][] = [
                     'Jt.Tempo' => Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y'),
                     'Angs' => $res->INSTALLMENT_COUNT,
-                    'Seq' => 1,
-                    'Amt Angs' => number_format($res->INSTALLMENT),
-                    'No Ref' => $res->INVOICE??'',
+                    'Seq' => $res->INST_COUNT??0,
+                    'Amt Angs' => number_format($res->INSTALLMENT ?? 0),
+                    'No Ref' => $getInvoice->INVOICE??'',
                     'Bank' => '',
                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE??'')->format('d-m-Y'):'',
-                    'Amt Bayar' => number_format($res->PAYMENT_VALUE),
-                    'Sisa Angs' => number_format($res->INSUFFICIENT_PAYMENT),
-                    'Denda' => number_format($res->PAST_DUE_PENALTY),
-                    'Byr Dnda' => number_format($res->PAID_PENALTY),
-                    'Sisa Byr Tgh' => number_format($ttlByr-$ttlByrAll),
-                    'Ovd' => $res->PAID_FLAG == 'PAID' && $res->STATUS_REC != 'A' ? 0 : $res->OD??0,
-                    'Stts' => $res->PAID_FLAG == 'PAID' && $res->STATUS_REC != 'A' ? 'LUNAS' : ''
+                    'Amt Bayar' => number_format($res->PAYMENT_VALUE??0),
+                    'Sisa Angs' => $sisaAngs,
+                    'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0),
+                    'Byr Dnda' => number_format($res->PAID_PENALTY ?? 0),
+                    'Sisa Byr Tgh' => number_format($ttlAngs - $ttlByr),
+                    'Ovd' => $res->PAID_FLAG == 'PAID' && ($res->STATUS_REC != 'A' || empty($res->STATUS_REC)) ? 0 : $res->OD??0,
+                    'Stts' => $res->PAID_FLAG == 'PAID' && ($res->STATUS_REC != 'A' || empty($res->STATUS_REC)) ? 'LUNAS' : ''
                 ];
             }
 
@@ -465,7 +494,7 @@ class ReportController extends Controller
             if ($creditDetail) {
                 $schedule['detail'] = [
                     'no_kontrak' => $creditDetail->LOAN_NUMBER??'',
-                    'tgl_kontrak' => $creditDetail->INSTALLMENT_DATE??'',
+                    'tgl_kontrak' => Carbon::parse($creditDetail->INSTALLMENT_DATE)->format('d-m-Y'),
                     'nama' => $creditDetail->customer->NAME ?? '', 
                     'no_pel' => $creditDetail->CUST_CODE??'',
                    'status' => ($creditDetail->STATUS ?? '') == 'D' ? 'Tidak Aktif' : 'Aktif'

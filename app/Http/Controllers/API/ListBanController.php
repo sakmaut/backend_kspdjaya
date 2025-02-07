@@ -23,7 +23,10 @@ class ListBanController extends Controller
             
             if (!empty($request->dari)) {
                 $dateFrom = $request->dari;
-                $arusKas = $this->queryArusKas($getPosition, $cabangId, $dateFrom);
+                $arusKas = $this->queryArusKas($cabangId, $dateFrom);
+
+                // return response()->json($arusKas, 200);
+                // die;
             
                 $no = 1;
                 $totalCashin = 0;
@@ -32,57 +35,32 @@ class ListBanController extends Controller
                 foreach ($arusKas as $item) {
                     // Handle 'CASH-IN'
                     if ($item->JENIS != 'PENCAIRAN') {
-                        $found = false;
+                        $datas['CASH_IN'][] = [
+                            'no' => $no++,
+                            'no_invoice' => $item->no_invoice ?? '',
+                            'no_kontrak' => $item->LOAN_NUM ?? '',
+                            'cabang' => $item->nama_cabang ?? '',
+                            'nama_pelanggan' => $item->PELANGGAN ?? '',
+                            'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
+                            'keterangan' => $item->JENIS.' '. $item->angsuran_ke ?? '',
+                            'amount' => floatval($item->ORIGINAL_AMOUNT),
+                        ];
 
-                        foreach ($datas['CASH_IN'] as &$data) {
-                            // Check if a combination of no_invoice, no_kontrak, and nama_pelanggan exists
-                            if ($data['no_invoice'] === $item->no_invoice
-                                && $data['no_kontrak'] === $item->LOAN_NUM
-                                && $data['nama_pelanggan'] === $item->PELANGGAN) {
-
-                                // Check if the angsuran_ke is not already in the keterangan
-                                if (strpos($data['keterangan'], 'Angsuran Ke-' . $item->angsuran_ke) === false) {
-                                    $data['metode_pembayaran'] .= ', ' . $item->PAYMENT_METHOD;
-                                    $data['keterangan'] .= ', ' . $item->JENIS . ' Angsuran Ke-' . $item->angsuran_ke;
-                                    $data['amount'] += floatval($item->ORIGINAL_AMOUNT);
-                                }
-
-                                $found = true;
-                                break;
-                            }
-                        }
-
-                        if (!$found) {
-                            $datas['CASH_IN'][] = [
-                                'no' => $no++,
-                                'no_invoice' => $item->no_invoice ?? '',
-                                'no_kontrak' => $item->LOAN_NUM ?? '',
-                                'cabang' => $item->nama_cabang ?? '',
-                                'nama_pelanggan' => $item->PELANGGAN ?? '',
-                                'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
-                                'keterangan' => $item->JENIS . ' Angsuran Ke-' . $item->angsuran_ke ?? '',
-                                'amount' => floatval($item->ORIGINAL_AMOUNT),
-                            ];
-                        }
-
-                        // Increment totalCashin for this iteration
                         $totalCashin += floatval($item->ORIGINAL_AMOUNT);
                     }
                 }
 
                 foreach ($arusKas as $item) {
-                    // Handle 'CASH-OUT'
                     if ($item->JENIS == 'PENCAIRAN') {
                         $datas['CASH_OUT'][] = [
                             'no' => $no++,
                             'no_kontrak' => $item->LOAN_NUM ?? '',
                             'cabang' => $item->nama_cabang ?? '',
                             'nama_pelanggan' => $item->PELANGGAN ?? '',
-                            'keterangan' => $item->LOAN_NUM ?? '',
+                            'keterangan' => 'PENCAIRAN NO KONTRAK '.$item->LOAN_NUM ?? '',
                             'amount' => floatval($item->ORIGINAL_AMOUNT),
                         ];
 
-                        // Increment totalAmount for this iteration
                         $totalAmount += floatval($item->ORIGINAL_AMOUNT);
                     }
                 }
@@ -104,7 +82,7 @@ class ListBanController extends Controller
         }
     }
 
-    private function queryArusKas($getPosition,$cabangId = null,$dateFrom) {
+    private function queryArusKas($cabangId = null,$dateFrom) {
 
         $query = "  SELECT 
                         b.JENIS,
@@ -124,7 +102,7 @@ class ListBanController extends Controller
                             b.BRANCH AS BRANCH, 
                             d.ID AS BRANCH_ID, 
                             d.NAME as nama_cabang,
-                            b.ENTRY_DATE, 
+                            DATE_FORMAT(b.ENTRY_DATE, '%Y-%m-%d') AS ENTRY_DATE, 
                             a.ORIGINAL_AMOUNT,
                             b.LOAN_NUM,
                             b.PAYMENT_METHOD,
@@ -143,7 +121,7 @@ class ListBanController extends Controller
                             b.CODE_NUMBER AS BRANCH,
                             b.ID AS BRANCH_ID, 
                             b.NAME as nama_cabang,
-                            a.CREATED_AT AS ENTRY_DATE,
+                            DATE_FORMAT(a.CREATED_AT, '%Y-%m-%d') AS ENTRY_DATE,
                             a.PCPL_ORI AS ORIGINAL_AMOUNT,
                             a.LOAN_NUMBER AS LOAN_NUM,
                             'cash' as PAYMENT_METHOD,
@@ -157,11 +135,11 @@ class ListBanController extends Controller
                     ) AS b
                     INNER JOIN credit b2 ON b2.LOAN_NUMBER = b.LOAN_NUM
                     INNER JOIN customer b3 on b3.CUST_CODE = b2.CUST_CODE
-                    WHERE DATE_FORMAT(b.ENTRY_DATE, '%Y-%m-%d') = '$dateFrom' ";
+                    WHERE b.ENTRY_DATE = '$dateFrom' ";
 
             $params = [];
 
-            if (!empty($cabangId)) {
+            if (!empty($cabangId) && $cabangId != 'SEMUA CABANG') {
                 $query .= " AND b.BRANCH_ID = :cabangId";
                 $params['cabangId'] = $cabangId;
             }
