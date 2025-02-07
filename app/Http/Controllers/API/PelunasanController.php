@@ -68,7 +68,7 @@ class PelunasanController extends Controller
             $getDate1 = $result->PAYMENT_DATE??'';
             $getDate2 = Carbon::now()->format('Y-m-d');
 
-            if(!empty($getDate1) && $getDate1 < $getDate2){
+            if(!empty($getDate1) && $getDate1 > $getDate2){
                 $val_bunga = $bunga;
             }else{
                 $val_bunga = $bunga2;
@@ -82,7 +82,7 @@ class PelunasanController extends Controller
                         (coalesce(a.PENALTY_RATE,7.5)/100)*(a.PCPL_ORI-coalesce(a.PAID_PRINCIPAL,0)) as PINALTI,
                         d.DISC_BUNGA
                 from	credit a
-                        left join ($bunga) b
+                        left join ($val_bunga) b
                             on b.LOAN_NUMBER = a.LOAN_NUMBER
                         left join (	select	LOAN_NUMBER, 
                                             INTEREST * datediff(now(), PAYMENT_DATE) / 
