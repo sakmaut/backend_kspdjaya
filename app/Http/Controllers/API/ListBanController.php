@@ -153,7 +153,7 @@ class ListBanController extends Controller
         try {
 
             $dateFrom = $request->dari;
-            $getBranch = $request->user()->branch_id;
+            $getBranch = $request->cabang_id;
 
             $results = DB::table('branch as a')
                         ->join('credit as b', 'b.BRANCH', '=', 'a.ID')
