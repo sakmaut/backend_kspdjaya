@@ -41,8 +41,48 @@ class PelunasanController extends Controller
 
             $loan_number = $request->loan_number;
 
-            $result = DB::select(
-                "select	(a.PCPL_ORI-coalesce(a.PAID_PRINCIPAL,0)) as SISA_POKOK,
+            $bunga = "  SELECT 
+                            a.LOAN_NUMBER,
+                            a.PAYMENT_DATE, 
+                            a.INTEREST AS INT_ARR, 
+                            SUM(CASE WHEN c.STATUS_REC <> 'A' THEN COALESCE(c.PAST_DUE_PENALTY, 0) END) - 
+                            SUM(CASE WHEN c.STATUS_REC <> 'A' THEN COALESCE(c.PAID_PENALTY, 0) END) AS TUNGGAKAN_DENDA,
+                            SUM(COALESCE(c.PAST_DUE_PENALTY, 0)) - SUM(COALESCE(c.PAID_PENALTY, 0)) AS DENDA_TOTAL,
+                            b.PCPL_ORI - b.PAID_PRINCIPAL AS OS
+                        FROM 
+                            credit_schedule a
+                        INNER JOIN 
+                            credit b ON b.LOAN_NUMBER = a.LOAN_NUMBER
+                        INNER JOIN 
+                            arrears c ON c.LOAN_NUMBER = a.LOAN_NUMBER
+                        WHERE 
+                            a.LOAN_NUMBER = '{$loan_number}'
+                            AND a.INSTALLMENT_COUNT = 1
+                        GROUP BY 
+                            a.LOAN_NUMBER, a.PAYMENT_DATE, a.INTEREST, b.PCPL_ORI, b.PAID_PRINCIPAL
+                        ";
+
+            $checkData = DB::select($bunga);
+
+            $bunga2 = "select	LOAN_NUMBER, 
+                                sum(coalesce(PAST_DUE_INTRST,0))-sum(coalesce(PAID_INT,0)) as INT_ARR, 
+                                sum(case when STATUS_REC <> 'A' then coalesce(PAST_DUE_PENALTY,0) end)-
+                                    sum(case when STATUS_REC <> 'A' then coalesce(PAID_PENALTY,0) end) as TUNGGAKAN_DENDA,
+                                sum(coalesce(PAST_DUE_PENALTY,0))-sum(coalesce(PAID_PENALTY,0)) as DENDA_TOTAL
+                        from	arrears
+                        where	LOAN_NUMBER = '{$loan_number}'
+                        group 	by LOAN_NUMBER";
+            
+            $getDate1 = $checkData[0]->PAYMENT_DATE;
+            $getDate2 = Carbon::now()->format('Y-m-d');
+
+            if(!empty($getDate1) && $getDate1 < $getDate2){
+                $val_bunga = $bunga;
+            }else{
+                $val_bunga = $bunga2;
+            }
+
+            $allQuery = "select	(a.PCPL_ORI-coalesce(a.PAID_PRINCIPAL,0)) as SISA_POKOK,
                         c.BUNGA as BUNGA_BERJALAN,
                         b.INT_ARR as TUNGGAKAN_BUNGA,
                         b.TUNGGAKAN_DENDA as TUNGGAKAN_DENDA,
@@ -50,14 +90,7 @@ class PelunasanController extends Controller
                         (coalesce(a.PENALTY_RATE,7.5)/100)*(a.PCPL_ORI-coalesce(a.PAID_PRINCIPAL,0)) as PINALTI,
                         d.DISC_BUNGA
                 from	credit a
-                        left join (	select	LOAN_NUMBER, 
-                                            sum(coalesce(PAST_DUE_INTRST,0))-sum(coalesce(PAID_INT,0)) as INT_ARR, 
-                                            sum(case when STATUS_REC <> 'A' then coalesce(PAST_DUE_PENALTY,0) end)-
-                                                sum(case when STATUS_REC <> 'A' then coalesce(PAID_PENALTY,0) end) as TUNGGAKAN_DENDA,
-                                            sum(coalesce(PAST_DUE_PENALTY,0))-sum(coalesce(PAID_PENALTY,0)) as DENDA_TOTAL
-                                    from	arrears
-                                    where	LOAN_NUMBER = '{$loan_number}'
-                                    group 	by LOAN_NUMBER) b
+                        left join ($val_bunga) b
                             on b.LOAN_NUMBER = a.LOAN_NUMBER
                         left join (	select	LOAN_NUMBER, 
                                             INTEREST * datediff(now(), PAYMENT_DATE) / 
@@ -77,8 +110,9 @@ class PelunasanController extends Controller
                                                                     where	LOAN_NUMBER = '{$loan_number}'
                                                                             and PAYMENT_DATE>now())) d
                             on d.LOAN_NUMBER = a.LOAN_NUMBER
-                where a.LOAN_NUMBER = '{$loan_number}'"
-            );
+                where a.LOAN_NUMBER = '{$loan_number}'";
+
+            $result = DB::select($allQuery);
 
             $query2 = DB::select("
                     select	sum(INTEREST-coalesce(PAYMENT_VALUE_INTEREST,0)) as DISC_BUNGA
