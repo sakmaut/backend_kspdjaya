@@ -25,9 +25,6 @@ class ListBanController extends Controller
                 $dateFrom = $request->dari;
                 $arusKas = $this->queryArusKas($cabangId, $dateFrom);
 
-                // return response()->json($arusKas, 200);
-                // die;
-            
                 $no = 1;
                 $totalCashin = 0;
                 $totalAmount = 0;
@@ -39,7 +36,10 @@ class ListBanController extends Controller
                             'no' => $no++,
                             'no_invoice' => $item->no_invoice ?? '',
                             'no_kontrak' => $item->LOAN_NUM ?? '',
+                            'tgl' => $item->ENTRY_DATE ?? '',
                             'cabang' => $item->nama_cabang ?? '',
+                            'user' => $item->fullname ?? '',
+                            'position' => $item->position ?? '',
                             'nama_pelanggan' => $item->PELANGGAN ?? '',
                             'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
                             'keterangan' => $item->JENIS.' '. $item->angsuran_ke ?? '',
@@ -55,17 +55,19 @@ class ListBanController extends Controller
                         $datas['CASH_OUT'][] = [
                             'no' => $no++,
                             'no_kontrak' => $item->LOAN_NUM ?? '',
+                            'tgl' => $item->ENTRY_DATE ?? '',
                             'cabang' => $item->nama_cabang ?? '',
+                            'user' => $item->fullname ?? '',
+                            'position' => $item->position ?? '',
                             'nama_pelanggan' => $item->PELANGGAN ?? '',
                             'keterangan' => 'PENCAIRAN NO KONTRAK '.$item->LOAN_NUM ?? '',
-                            'amount' => floatval($item->ORIGINAL_AMOUNT),
+                            'amount' => floatval($item->ORIGINAL_AMOUNT) - floatval($item->admin_fee),
                         ];
 
                         $totalAmount += floatval($item->ORIGINAL_AMOUNT);
                     }
                 }
 
-                // Store the totals in the datas array
                 $datas['ttl_cash_in'] = $totalCashin;
                 $datas['ttl_cash_out'] = $totalAmount;
 
@@ -97,7 +99,9 @@ class ListBanController extends Controller
                         b.no_invoice,
                         b.angsuran_ke,
                         b.admin_fee,
-                        b.user_id
+                        b.user_id,
+                        u.fullname ,
+                        u.`position` 
                     FROM (
                         SELECT 
                             a.ACC_KEYS as JENIS, 
@@ -141,6 +145,7 @@ class ListBanController extends Controller
                     ) AS b
                     INNER JOIN credit b2 ON b2.LOAN_NUMBER = b.LOAN_NUM
                     INNER JOIN customer b3 on b3.CUST_CODE = b2.CUST_CODE
+                    INNER JOIN users u on u.id = b.user_id 
                     WHERE b.ENTRY_DATE = '$dateFrom' ";
 
             $params = [];
