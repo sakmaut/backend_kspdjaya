@@ -349,7 +349,7 @@ class PaymentController extends Controller
         $byr_angsuran = $res['bayar_angsuran'];
         $bayar_denda = $res['bayar_denda'];
 
-        if ($check_arrears && $res['bayar_denda'] != 0) {
+        if ($check_arrears || $res['bayar_denda'] != 0) {
             $current_penalty = $check_arrears->PAID_PENALTY;
 
             $new_penalty = $current_penalty + $bayar_denda;
