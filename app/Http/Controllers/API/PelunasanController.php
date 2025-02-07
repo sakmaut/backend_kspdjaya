@@ -82,7 +82,7 @@ class PelunasanController extends Controller
                         (coalesce(a.PENALTY_RATE,7.5)/100)*(a.PCPL_ORI-coalesce(a.PAID_PRINCIPAL,0)) as PINALTI,
                         d.DISC_BUNGA
                 from	credit a
-                        left join ($val_bunga) b
+                        left join ($bunga) b
                             on b.LOAN_NUMBER = a.LOAN_NUMBER
                         left join (	select	LOAN_NUMBER, 
                                             INTEREST * datediff(now(), PAYMENT_DATE) / 
@@ -105,6 +105,7 @@ class PelunasanController extends Controller
                 where a.LOAN_NUMBER = '{$loan_number}'";
 
             $result = DB::select($allQuery);
+
 
             $query2 = DB::select("
                     select	sum(INTEREST-coalesce(PAYMENT_VALUE_INTEREST,0)) as DISC_BUNGA
