@@ -17,14 +17,16 @@ class ListBanController extends Controller
             
             $datas = [
                 'tgl_tarik' => $request->dari??'',
-                'CASH_IN' => [],
-                'CASH_OUT' => [],
+                'datas' => []
             ];
             
             if (!empty($request->dari)) {
                 $dateFrom = $request->dari;
                 $arusKas = $this->queryArusKas($cabangId, $dateFrom);
 
+                // return response()->json($arusKas, 200);
+                // die;
+           
                 $no = 1;
                 $totalCashin = 0;
                 $totalAmount = 0;
@@ -32,8 +34,9 @@ class ListBanController extends Controller
                 foreach ($arusKas as $item) {
                     // Handle 'CASH-IN'
                     if ($item->JENIS != 'PENCAIRAN') {
-                        $datas['CASH_IN'][] = [
+                        $datas['datas'][] = [
                             'no' => $no++,
+                            'type' =>'CASH_IN',
                             'no_invoice' => $item->no_invoice ?? '',
                             'no_kontrak' => $item->LOAN_NUM ?? '',
                             'tgl' => $item->ENTRY_DATE ?? '',
@@ -52,8 +55,9 @@ class ListBanController extends Controller
 
                 foreach ($arusKas as $item) {
                     if ($item->JENIS == 'PENCAIRAN') {
-                        $datas['CASH_OUT'][] = [
+                        $datas['datas'][] = [
                             'no' => $no++,
+                            'type' =>'CASH_OUT',
                             'no_kontrak' => $item->LOAN_NUM ?? '',
                             'tgl' => $item->ENTRY_DATE ?? '',
                             'cabang' => $item->nama_cabang ?? '',
@@ -70,6 +74,7 @@ class ListBanController extends Controller
 
                 $datas['ttl_cash_in'] = $totalCashin;
                 $datas['ttl_cash_out'] = $totalAmount;
+                $datas['ttl_all'] = $$totalCashin + $totalAmount;
 
                 
             } else {
@@ -101,7 +106,7 @@ class ListBanController extends Controller
                         b.admin_fee,
                         b.user_id,
                         u.fullname ,
-                        u.`position` 
+                        u.position 
                     FROM (
                         SELECT 
                             a.ACC_KEYS as JENIS, 
