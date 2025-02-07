@@ -152,91 +152,94 @@ class ListBanController extends Controller
     public function listBan(Request $request) {
         try {
 
+            $dateFrom = $request->dari;
             $getBranch = $request->user()->branch_id;
-            $getPosition = $request->user()->position;
 
             $results = DB::table('branch as a')
-                            ->join('credit as b', 'b.BRANCH', '=', 'a.ID')
-                            ->leftJoin('customer as c', 'c.CUST_CODE', '=', 'b.CUST_CODE')
-                            ->leftJoin('users as d', 'd.id', '=', 'b.MCF_ID')
-                            ->leftJoin('cr_application as e', 'e.ORDER_NUMBER', '=', 'b.ORDER_NUMBER')
-                            ->leftJoin('cr_order as h', 'h.APPLICATION_ID', '=', 'e.ID')
-                            ->leftJoin('cr_survey as f', 'f.id', '=', 'e.CR_SURVEY_ID')
-                            ->leftJoin('cr_collateral as g', 'g.CR_CREDIT_ID', '=', 'b.ID')
-                            ->select(
-                                DB::raw("CONCAT(a.CODE, '-', a.CODE_NUMBER) as KODE"),
-                                'a.NAME as NAMA_CABANG',
-                                'b.LOAN_NUMBER as NO_KONTRAK',
-                                'c.NAME as NAMA_PELANGGAN',
-                                'b.CREATED_AT as TGL_BOOKING',
-                                DB::raw('null as UB'),
-                                DB::raw('null as PLATFORM'),
-                                'c.INS_ADDRESS as ALAMAT_TAGIH',
-                                'c.ZIP_CODE as KODE_POST',
-                                'c.PHONE_HOUSE as NO_TELP',
-                                'c.PHONE_PERSONAL as NO_HP',
-                                'c.OCCUPATION as PEKERJAAN',
-                                DB::raw('null as SURVEYOR'),
-                                'f.survey_note as CATT_SURVEY',
-                                'b.PCPL_ORI as PKK_HUTANG',
-                                'e.INSTALLMENT_TYPE as tipe',
-                                'b.PERIOD',
-                                DB::raw('DATEDIFF(b.FIRST_ARR_DATE, NOW()) as OVERDUE'),
-                                DB::raw('99 as CYCLE'),
-                                'b.STATUS_REC',
-                                'b.PAID_PRINCIPAL',
-                                'b.PAID_INTEREST',
-                                DB::raw('b.PAID_PRINCIPAL + b.PAID_INTEREST as PAID_TOTAL'),
-                                DB::raw('b.PCPL_ORI - b.PAID_PRINCIPAL as OUTSTANDING'),
-                                'b.INSTALLMENT',
-                                'b.INSTALLMENT_DATE',
-                                'b.FIRST_ARR_DATE',
-                                DB::raw("' ' as COLLECTOR"),
-                                DB::raw('GROUP_CONCAT(CONCAT(g.BRAND, " ", g.TYPE)) as COLLATERAL'),
-                                DB::raw('GROUP_CONCAT(g.POLICE_NUMBER) as POLICE_NUMBER'),
-                                DB::raw('GROUP_CONCAT(g.ENGINE_NUMBER) as ENGINE_NUMBER'),
-                                DB::raw('GROUP_CONCAT(g.CHASIS_NUMBER) as CHASIS_NUMBER'),
-                                DB::raw('GROUP_CONCAT(g.PRODUCTION_YEAR) as PRODUCTION_YEAR'),
-                                DB::raw('SUM(g.VALUE) as TOTAL_NILAI_JAMINAN'),
-                                'b.CUST_CODE',
-                                DB::raw("concat(h.REF_PELANGGAN,' ',h.REF_PELANGGAN_OTHER) as supplier")
-                            )
-                            // ->where('b.CREATED_AT', '>=', DB::raw('DATE_SUB(NOW(), INTERVAL 1 MONTH)'))
-                            ->where('a.ID', $getBranch)
-                            ->groupBy(
-                                'a.CODE',
-                                'a.CODE_NUMBER',
-                                'a.NAME',
-                                'b.LOAN_NUMBER',
-                                'c.NAME',
-                                'b.CREATED_AT',
-                                'c.INS_ADDRESS',
-                                'c.ZIP_CODE',
-                                'c.PHONE_HOUSE',
-                                'c.PHONE_PERSONAL',
-                                'c.OCCUPATION',
-                                'd.fullname',
-                                'f.survey_note',
-                                'b.PCPL_ORI',
-                                'e.TOTAL_ADMIN',
-                                'e.INSTALLMENT_TYPE',
-                                'b.PERIOD',
-                                DB::raw('DATEDIFF(b.FIRST_ARR_DATE, NOW())'),
-                                'b.STATUS_REC',
-                                'b.PAID_PRINCIPAL',
-                                'b.PAID_INTEREST',
-                                DB::raw('b.PAID_PRINCIPAL + b.PAID_INTEREST'),
-                                DB::raw('b.PCPL_ORI - b.PAID_PRINCIPAL'),
-                                'b.INSTALLMENT',
-                                'b.INSTALLMENT_DATE',
-                                'b.FIRST_ARR_DATE',
-                                'b.CUST_CODE',
-                                'h.REF_PELANGGAN',
-                                'h.REF_PELANGGAN_OTHER'
-                            )
-                            ->get();
-
-
+                        ->join('credit as b', 'b.BRANCH', '=', 'a.ID')
+                        ->leftJoin('customer as c', 'c.CUST_CODE', '=', 'b.CUST_CODE')
+                        ->leftJoin('users as d', 'd.id', '=', 'b.MCF_ID')
+                        ->leftJoin('cr_application as e', 'e.ORDER_NUMBER', '=', 'b.ORDER_NUMBER')
+                        ->leftJoin('cr_order as h', 'h.APPLICATION_ID', '=', 'e.ID')
+                        ->leftJoin('cr_survey as f', 'f.id', '=', 'e.CR_SURVEY_ID')
+                        ->leftJoin('cr_collateral as g', 'g.CR_CREDIT_ID', '=', 'b.ID')
+                        ->where('',$dateFrom)
+                        ->select(
+                            DB::raw("CONCAT(a.CODE, '-', a.CODE_NUMBER) as KODE"),
+                            'a.NAME as NAMA_CABANG',
+                            'b.LOAN_NUMBER as NO_KONTRAK',
+                            'c.NAME as NAMA_PELANGGAN',
+                            'b.CREATED_AT as TGL_BOOKING',
+                            DB::raw('null as UB'),
+                            DB::raw('null as PLATFORM'),
+                            'c.INS_ADDRESS as ALAMAT_TAGIH',
+                            'c.ZIP_CODE as KODE_POST',
+                            'c.PHONE_HOUSE as NO_TELP',
+                            'c.PHONE_PERSONAL as NO_HP',
+                            'c.OCCUPATION as PEKERJAAN',
+                            DB::raw('null as SURVEYOR'),
+                            'f.survey_note as CATT_SURVEY',
+                            'b.PCPL_ORI as PKK_HUTANG',
+                            'e.INSTALLMENT_TYPE as tipe',
+                            'b.PERIOD',
+                            DB::raw('DATEDIFF(b.FIRST_ARR_DATE, NOW()) as OVERDUE'),
+                            DB::raw('99 as CYCLE'),
+                            'b.STATUS_REC',
+                            'b.PAID_PRINCIPAL',
+                            'b.PAID_INTEREST',
+                            DB::raw('b.PAID_PRINCIPAL + b.PAID_INTEREST as PAID_TOTAL'),
+                            DB::raw('b.PCPL_ORI - b.PAID_PRINCIPAL as OUTSTANDING'),
+                            'b.INSTALLMENT',
+                            'b.INSTALLMENT_DATE',
+                            'b.FIRST_ARR_DATE',
+                            DB::raw("' ' as COLLECTOR"),
+                            DB::raw('GROUP_CONCAT(CONCAT(g.BRAND, " ", g.TYPE)) as COLLATERAL'),
+                            DB::raw('GROUP_CONCAT(g.POLICE_NUMBER) as POLICE_NUMBER'),
+                            DB::raw('GROUP_CONCAT(g.ENGINE_NUMBER) as ENGINE_NUMBER'),
+                            DB::raw('GROUP_CONCAT(g.CHASIS_NUMBER) as CHASIS_NUMBER'),
+                            DB::raw('GROUP_CONCAT(g.PRODUCTION_YEAR) as PRODUCTION_YEAR'),
+                            DB::raw('SUM(g.VALUE) as TOTAL_NILAI_JAMINAN'),
+                            'b.CUST_CODE',
+                            DB::raw("concat(h.REF_PELANGGAN,' ',h.REF_PELANGGAN_OTHER) as supplier")
+                        )
+                        ->groupBy(
+                            'a.CODE',
+                            'a.CODE_NUMBER',
+                            'a.NAME',
+                            'b.LOAN_NUMBER',
+                            'c.NAME',
+                            'b.CREATED_AT',
+                            'c.INS_ADDRESS',
+                            'c.ZIP_CODE',
+                            'c.PHONE_HOUSE',
+                            'c.PHONE_PERSONAL',
+                            'c.OCCUPATION',
+                            'd.fullname',
+                            'f.survey_note',
+                            'b.PCPL_ORI',
+                            'e.TOTAL_ADMIN',
+                            'e.INSTALLMENT_TYPE',
+                            'b.PERIOD',
+                            DB::raw('DATEDIFF(b.FIRST_ARR_DATE, NOW())'),
+                            'b.STATUS_REC',
+                            'b.PAID_PRINCIPAL',
+                            'b.PAID_INTEREST',
+                            DB::raw('b.PAID_PRINCIPAL + b.PAID_INTEREST'),
+                            DB::raw('b.PCPL_ORI - b.PAID_PRINCIPAL'),
+                            'b.INSTALLMENT',
+                            'b.INSTALLMENT_DATE',
+                            'b.FIRST_ARR_DATE',
+                            'b.CUST_CODE',
+                            'h.REF_PELANGGAN',
+                            'h.REF_PELANGGAN_OTHER'
+                        );
+        
+            if (!empty($getBranch) && $getBranch != 'SEMUA CABANG') {
+                $results->where('a.ID', $getBranch);
+            }
+            
+            $results = $results->get();
+        
             $build = [];
             foreach ($results as $result) {
                 $build[] =[
