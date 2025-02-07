@@ -163,7 +163,6 @@ class ListBanController extends Controller
                         ->leftJoin('cr_order as h', 'h.APPLICATION_ID', '=', 'e.ID')
                         ->leftJoin('cr_survey as f', 'f.id', '=', 'e.CR_SURVEY_ID')
                         ->leftJoin('cr_collateral as g', 'g.CR_CREDIT_ID', '=', 'b.ID')
-                        ->where('',$dateFrom)
                         ->select(
                             DB::raw("CONCAT(a.CODE, '-', a.CODE_NUMBER) as KODE"),
                             'a.NAME as NAMA_CABANG',
@@ -236,6 +235,12 @@ class ListBanController extends Controller
         
             if (!empty($getBranch) && $getBranch != 'SEMUA CABANG') {
                 $results->where('a.ID', $getBranch);
+            }
+
+            if (!empty($dateFrom) && $dateFrom != null && isset($dateFrom)) {
+                $results->where("DATE_FORMAT(b.CREATED_AT, '%Y-%m')", $dateFrom);
+            }else{
+                $results->where('b.CREATED_AT', '>=', DB::raw('DATE_SUB(NOW(), INTERVAL 1 MONTH)'));
             }
             
             $results = $results->get();
