@@ -238,7 +238,7 @@ class ListBanController extends Controller
             }
 
             if (!empty($dateFrom) && $dateFrom != null && isset($dateFrom)) {
-                $results->where("DATE_FORMAT(b.CREATED_AT, '%Y-%m')", $dateFrom);
+                $results->where(DB::raw("DATE_FORMAT(b.CREATED_AT, '%Y-%m')"), $dateFrom);
             }else{
                 $results->where('b.CREATED_AT', '>=', DB::raw('DATE_SUB(NOW(), INTERVAL 1 MONTH)'));
             }
