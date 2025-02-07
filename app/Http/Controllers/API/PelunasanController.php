@@ -43,41 +43,18 @@ class PelunasanController extends Controller
 
             $result = DB::table('credit_schedule as a')
                         ->join('credit as b', 'b.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
-                        ->join('arrears as c', 'c.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
                         ->select(
                             'a.LOAN_NUMBER',
                             'a.PAYMENT_DATE',
                             'a.INTEREST as INT_ARR',
-                            DB::raw('SUM(CASE WHEN c.STATUS_REC <> "A" THEN COALESCE(c.PAST_DUE_PENALTY, 0) END) - 
-                                    SUM(CASE WHEN c.STATUS_REC <> "A" THEN COALESCE(c.PAID_PENALTY, 0) END) AS TUNGGAKAN_DENDA'),
-                            DB::raw('SUM(COALESCE(c.PAST_DUE_PENALTY, 0)) - SUM(COALESCE(c.PAID_PENALTY, 0)) AS DENDA_TOTAL'),
                             DB::raw('b.PCPL_ORI - b.PAID_PRINCIPAL AS OS')
                         )
                         ->where('a.LOAN_NUMBER', '=', $loan_number)
                         ->where('a.INSTALLMENT_COUNT', '=', 1)
                         ->groupBy('a.LOAN_NUMBER', 'a.PAYMENT_DATE', 'a.INTEREST', 'b.PCPL_ORI', 'b.PAID_PRINCIPAL')
                         ->first();
-
-            $bunga = "  SELECT 
-                            a.LOAN_NUMBER,
-                            a.PAYMENT_DATE, 
-                            a.INTEREST AS INT_ARR, 
-                            SUM(CASE WHEN c.STATUS_REC <> 'A' THEN COALESCE(c.PAST_DUE_PENALTY, 0) END) - 
-                            SUM(CASE WHEN c.STATUS_REC <> 'A' THEN COALESCE(c.PAID_PENALTY, 0) END) AS TUNGGAKAN_DENDA,
-                            SUM(COALESCE(c.PAST_DUE_PENALTY, 0)) - SUM(COALESCE(c.PAID_PENALTY, 0)) AS DENDA_TOTAL,
-                            b.PCPL_ORI - b.PAID_PRINCIPAL AS OS
-                        FROM 
-                            credit_schedule a
-                        INNER JOIN 
-                            credit b ON b.LOAN_NUMBER = a.LOAN_NUMBER
-                        INNER JOIN 
-                            arrears c ON c.LOAN_NUMBER = a.LOAN_NUMBER
-                        WHERE 
-                            a.LOAN_NUMBER = '{$loan_number}'
-                            AND a.INSTALLMENT_COUNT = 1
-                        GROUP BY 
-                            a.LOAN_NUMBER, a.PAYMENT_DATE, a.INTEREST, b.PCPL_ORI, b.PAID_PRINCIPAL
-                        ";
+                        
+            $bunga = "select  $result->LOAN_NUMBER as LOAN_NUMBER,$result->INT_ARR as INT_ARR, null as TUNGGAKAN_DENDA, null as DENDA_TOTAL";
 
             $bunga2 = "select	LOAN_NUMBER, 
                                 sum(coalesce(PAST_DUE_INTRST,0))-sum(coalesce(PAID_INT,0)) as INT_ARR, 
