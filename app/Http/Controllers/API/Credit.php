@@ -299,6 +299,7 @@ class Credit extends Controller
             'INSTALLMENT'  => $data->INSTALLMENT,
             'FLAT_RATE'  => $data->FLAT_RATE??null,
             'EFF_RATE'  => $data->EFF_RATE??null,
+            'TOTAL_ADMIN' =>  $data->TOTAL_ADMIN??0,
             'VERSION'  => 1,
             'CREATED_BY' => $request->user()->id,
             'CREATED_AT' => Carbon::now(),

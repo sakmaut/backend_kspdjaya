@@ -40,6 +40,7 @@ class M_Credit extends Model
         'INSTALLMENT',
         'FLAT_RATE',
         'EFF_RATE',
+        'TOTAL_ADMIN',
         'VERSION',
         'CREATED_BY',
         'CREATED_AT',
