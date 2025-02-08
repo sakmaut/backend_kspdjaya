@@ -74,7 +74,6 @@ class ListBanController extends Controller
                 $datas['ttl_cash_in'] = $totalCashin;
                 $datas['ttl_cash_out'] = $totalAmount;
                 $datas['ttl_all'] = $totalCashin + $totalAmount;
-
                 
             } else {
                 $datas = [];
@@ -158,7 +157,7 @@ class ListBanController extends Controller
         $params = ['dateFrom' => $dateFrom];
 
         // If cabangId is provided, add it as a condition
-        if (!empty($cabangId)) {
+        if (!empty($cabangId) && $cabangId != 'SEMUA CABANG') {
             $query .= " AND b.BRANCH_ID = :cabangId";
             $params['cabangId'] = $cabangId;
         }
