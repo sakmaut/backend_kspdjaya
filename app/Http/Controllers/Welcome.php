@@ -116,9 +116,6 @@ class Welcome extends Controller
         if ($credit_schedule) {
             $byr_angsuran = $res['details'][0]['bayar_angsuran'];
 
-            \print_r($byr_angsuran);
-            die;
-
             $valBeforePrincipal = $credit_schedule ? $credit_schedule->PAYMENT_VALUE_PRINCIPAL : 0;
             $valBeforeInterest = $credit_schedule ? $credit_schedule->PAYMENT_VALUE_INTEREST : 0;
             $getPrincipal = $credit_schedule ? $credit_schedule->PRINCIPAL : 0;
