@@ -34,7 +34,8 @@ class PaymentController extends Controller
 
             $notrx = $request->query('notrx'); 
             $nama = $request->query('nama');
-            $no_kontrak = $request->query('no_kontrak'); 
+            $no_kontrak = $request->query('no_kontrak');
+            $tipe = $request->query('tipe'); 
 
             $getPosition = $request->user()->position;
             $getBranch = $request->user()->branch_id;
@@ -43,23 +44,30 @@ class PaymentController extends Controller
                 $data = M_Kwitansi::orderBy('CREATED_AT', 'DESC')
                     ->where('STTS_PAYMENT', '=', 'PENDING');
             } else {
-                $data = M_Kwitansi::where('PAYMENT_TYPE','!=' ,'pelunasan')->orderBy('CREATED_AT', 'DESC')->limit(10);
+                $data = M_Kwitansi::orderBy('CREATED_AT', 'DESC')->limit(10);
             }
 
             if (strtolower($getPosition) != 'ho') {
                 $data = $data->where('BRANCH_CODE', '=', $getBranch);
             }
 
+            switch ($tipe) {
+                case 'pembayaran':
+                    $data = $data->where('PAYMENT_TYPE', '!=', 'pelunasan');
+                    break;
+                case 'pelunasan':
+                    $data = $data->where('PAYMENT_TYPE', 'pelunasan');
+                    break;
+            }
+
             if (!empty($notrx)) {
                 $data = $data->where('NO_TRANSAKSI', 'like', '%' . $notrx . '%');
             }
 
-            // Apply 'nama' filter if it's not empty
             if (!empty($nama)) {
                 $data = $data->where('NAMA', 'like', '%' . $nama . '%');
             }
 
-            // Apply 'no_kontrak' filter if it's not empty
             if (!empty($no_kontrak)) {
                 $data = $data->where('LOAN_NUMBER', 'like', '%' . $no_kontrak . '%');
             }
