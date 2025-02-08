@@ -99,7 +99,7 @@ class Welcome extends Controller
 
             $get = M_Payment::where(['LOAN_NUM'=>$data["loan"],'INVOICE'=> $data["invoice"],'TITLE'=> 'Angsuran Ke-' . $data['angsuran_ke']])->first();
 
-            return $this->updateCreditSchedule($data['loan'], $data['tgl_angsuran'], $data, $get->ID??0);
+            $this->updateCreditSchedule($data['loan'], $data['tgl_angsuran'], $data, $get->ID??0);
         }
 
 
