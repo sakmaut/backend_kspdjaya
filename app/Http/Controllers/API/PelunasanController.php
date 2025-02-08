@@ -24,9 +24,28 @@ class PelunasanController extends Controller
     public function index(Request $request)
     {
         try {
-            $data = M_Kwitansi::where('PAYMENT_TYPE','pelunasan')->get();
 
-            $dto = R_Pelunasan::collection($data);
+            $notrx = $request->query('notrx');
+            $nama = $request->query('nama');
+            $no_kontrak = $request->query('no_kontrak'); 
+
+            $data = M_Kwitansi::where('PAYMENT_TYPE','pelunasan')->orderBy('CREATED_AT', 'DESC')->limit(10);
+
+            if (!empty($notrx)) {
+                $data = $data->where('NO_TRANSAKSI', 'like', '%' . $notrx . '%');
+            }
+
+            if (!empty($nama)) {
+                $data = $data->where('NAMA', 'like', '%' . $nama . '%');
+            }
+
+            if (!empty($no_kontrak)) {
+                $data = $data->where('LOAN_NUMBER', 'like', '%' . $no_kontrak . '%');
+            }
+
+            $results = $data->get();
+
+            $dto = R_Pelunasan::collection($results);
 
             return response()->json($dto, 200);
         } catch (\Exception $e) {
