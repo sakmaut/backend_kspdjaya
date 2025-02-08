@@ -16,13 +16,29 @@ class CollateralController extends Controller
     public function index(Request $request)
     {
         try {
-            $search = $request->get('search');
+            $atas_nama = $request->query('atas_nama');
+            $no_polisi = $request->query('no_polisi');
+            $no_bpkb = $request->query('no_bpkb');
 
             $collateral = M_CrCollateral::where(function ($query) {
                 $query->whereNull('DELETED_AT')
                     ->orWhere('DELETED_AT', '');
             });
 
+            // Apply filters only if the respective parameter is not empty
+            if (!empty($atas_nama)) {
+                $collateral = $collateral->where('ON_BEHALF', 'like', '%' . $atas_nama . '%');
+            }
+
+            if (!empty($no_polisi)) {
+                $collateral = $collateral->where('POLICE_NUMBER', 'like', '%' . $no_polisi . '%');
+            }
+
+            if (!empty($no_bpkb)) {
+                $collateral = $collateral->where('BPKB_NUMBER', 'like', '%' . $no_bpkb . '%');
+            }
+
+            // Limit the result to 10 records right away
             $collateral = $collateral->limit(10);
 
             // Use get() to retrieve the data, which will return a Collection
@@ -33,21 +49,7 @@ class CollateralController extends Controller
             $collateralData = $collateralData->toArray();
 
             // Return the transformed data as JSON
-            return response()->json($collateralData, 200);
-
-
-           // if (isset($search)) {
-            //     $collateral->where(function ($query) use ($search) {
-            //         $query->where('ON_BEHALF', 'LIKE', "%{$search}%")
-            //         ->orWhere('POLICE_NUMBER', 'LIKE', "%{$search}%")
-            //         ->orWhere('CHASIS_NUMBER', 'LIKE', "%{$search}%")
-            //         ->orWhere('ENGINE_NUMBER', 'LIKE', "%{$search}%")
-            //         ->orWhere('BPKB_NUMBER', 'LIKE', "%{$search}%")
-            //         ->orWhere('STNK_NUMBER', 'LIKE', "%{$search}%");
-            //     });
-            // }
-
-            
+            return response()->json($collateralData, 200);            
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
