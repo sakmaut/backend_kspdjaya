@@ -44,7 +44,7 @@ class PaymentController extends Controller
                 $data = M_Kwitansi::orderBy('CREATED_AT', 'DESC')
                     ->where('STTS_PAYMENT', '=', 'PENDING');
             } else {
-                $data = M_Kwitansi::orderBy('CREATED_AT', 'DESC')->limit(10);
+                $data = !empty($tipe) ? M_Kwitansi::orderBy('CREATED_AT', 'DESC')->limit(10) : [];
             }
 
             if (strtolower($getPosition) != 'ho') {
@@ -60,6 +60,7 @@ class PaymentController extends Controller
                     break;
             }
 
+            // Apply filters if parameters are provided
             if (!empty($notrx)) {
                 $data = $data->where('NO_TRANSAKSI', 'like', '%' . $notrx . '%');
             }
@@ -72,8 +73,12 @@ class PaymentController extends Controller
                 $data = $data->where('LOAN_NUMBER', 'like', '%' . $no_kontrak . '%');
             }
 
-            // Fetch the results
-            $results = $data->get();
+            // Fetch the results if data is available
+            if (!empty($data)) {
+                $results = $data->get();
+            } else {
+                $results = [];
+            }
 
             $dto = R_Kwitansi::collection($results);
 
