@@ -72,7 +72,7 @@ class PaymentController extends Controller
             }
 
             // Apply limit only if filters were applied
-            if ($filtersApplied) {
+            if (!$filtersApplied) {
                 $data = $data->limit(9);
             }
 
