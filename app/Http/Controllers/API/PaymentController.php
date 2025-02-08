@@ -40,29 +40,43 @@ class PaymentController extends Controller
             $getBranch = $request->user()->branch_id;
 
             if (strtolower($getPosition) == 'ho') {
-                $data = M_Kwitansi::orderBy('CREATED_AT', 'DESC')->where('STTS_PAYMENT', '=', 'PENDING');
-            }else{
-                $data = M_Kwitansi::limit(10)->orderBy('CREATED_AT', 'DESC');
+                $data = M_Kwitansi::orderBy('CREATED_AT', 'DESC')
+                    ->where('STTS_PAYMENT', '=', 'PENDING');
+            } else {
+                $data = M_Kwitansi::orderBy('CREATED_AT', 'DESC');
             }
 
             if (strtolower($getPosition) != 'ho') {
                 $data = $data->where('BRANCH_CODE', '=', $getBranch);
             }
 
+            // Apply filters based on the provided query parameters
+            $filtersApplied = false;
+
+            // Apply 'notrx' filter if it's not empty
             if (!empty($notrx)) {
                 $data = $data->where('NO_TRANSAKSI', 'like', '%' . $notrx . '%');
+                $filtersApplied = true;
             }
 
-            // Check if 'nama' is not empty and apply filter
+            // Apply 'nama' filter if it's not empty
             if (!empty($nama)) {
                 $data = $data->where('NAMA', 'like', '%' . $nama . '%');
+                $filtersApplied = true;
             }
 
-            // Check if 'no_kontrak' is not empty and apply filter
+            // Apply 'no_kontrak' filter if it's not empty
             if (!empty($no_kontrak)) {
                 $data = $data->where('LOAN_NUMBER', 'like', '%' . $no_kontrak . '%');
+                $filtersApplied = true;
             }
 
+            // Apply limit only if filters were applied
+            if ($filtersApplied) {
+                $data = $data->limit(10);
+            }
+
+            // Fetch the results
             $results = $data->get();
 
             $dto = R_Kwitansi::collection($results);
