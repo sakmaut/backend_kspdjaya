@@ -99,7 +99,7 @@ class Welcome extends Controller
 
             $get = M_Payment::where(['LOAN_NUM'=>$data["loan"],'INVOICE'=> $data["invoice"],'TITLE'=> 'Angsuran Ke-' . $data['angsuran_ke']])->first();
 
-            return $this->updateCreditSchedule($data['loan'], $data['tgl_angsuran'], $data, $get->ID??0);
+            $this->updateCreditSchedule($data['loan'], $data['tgl_angsuran'], $data, $get->ID??0);
         }
 
 
@@ -110,7 +110,7 @@ class Welcome extends Controller
     {
         $credit_schedule = M_CreditSchedule::where([
             'LOAN_NUMBER' => $loan_number,
-            'PAYMENT_DATE' => date('Y-m-d',strtotime($tgl_angsuran))
+            'PAYMENT_DATE' => date('Y-m-d', strtotime($tgl_angsuran))
         ])->first();
 
         if ($credit_schedule) {
@@ -125,7 +125,7 @@ class Welcome extends Controller
             $new_payment_value_interest = $valBeforeInterest;
 
             // Process principal payment if needed
-            if ($valBeforePrincipal < $getPrincipal) {
+            if ($valBeforePrincipal <= $getPrincipal) { // Changed to <= to ensure processing even if they are equal
                 $remaining_to_principal = $getPrincipal - $valBeforePrincipal;
 
                 if ($byr_angsuran >= $remaining_to_principal) {
