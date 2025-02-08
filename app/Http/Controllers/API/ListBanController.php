@@ -91,7 +91,7 @@ class ListBanController extends Controller
         }
     }
 
-    private function queryArusKas($cabangId = null,$dateFrom) {
+    private function queryArusKas($cabangId,$dateFrom) {
 
         $query = "  SELECT 
                         b.JENIS,
