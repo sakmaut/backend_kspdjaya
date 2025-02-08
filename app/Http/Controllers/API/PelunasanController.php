@@ -576,7 +576,8 @@ class PelunasanController extends Controller
             $getDate = $res->PAYMENT_DATE;
 
             // Proceed only if there's an amount to pay and the payment date is in the future
-            if ($valBefore < $getAmount && $getDate <= $currentDate) {
+            // if ($valBefore < $getAmount && $getDate <= $currentDate) {
+            if ($valBefore < $getAmount) {
                 // Calculate the amount left to pay
                 $remainingToPay = $getAmount - $valBefore;
 
