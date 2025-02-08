@@ -25,6 +25,10 @@ class Welcome extends Controller
 {
     public function index(Request $request)
     {
+
+        return response()->json("APA ANJING");
+        die;
+
         $groupedData = [];
 
         foreach ($request->all() as $item) {
