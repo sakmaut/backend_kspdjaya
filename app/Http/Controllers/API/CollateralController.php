@@ -7,6 +7,7 @@ use App\Models\M_Branch;
 use App\Models\M_CrCollateral;
 use App\Models\M_CrCollateralSertification;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -57,15 +58,12 @@ class CollateralController extends Controller
     {
         try {
             $checkCollateral = M_CrCollateral::where('id',$id)->first();
-            $checkCollateralSertification = M_CrCollateralSertification::where('id',$id)->first();
 
-            if($checkCollateral){
-                $datas = $this->collateralField($checkCollateral);
+            if(!$checkCollateral){
+                throw new Exception('Collateral Not Found',404);
             }
 
-            if($checkCollateralSertification){
-                $datas = $this->collateralSertificationField($checkCollateralSertification);
-            }
+            $datas = $this->collateralField($checkCollateral);
           
             return response()->json($datas, 200);
         }  catch (\Exception $e) {
@@ -79,51 +77,27 @@ class CollateralController extends Controller
         DB::beginTransaction();
         try {
             $checkCollateral = M_CrCollateral::where('id',$id)->first();
-            $checkCollateralSertification = M_CrCollateralSertification::where('id',$id)->first();
 
-            if($checkCollateral){
-
-                $data = [
-                    'BRAND' => $request->merk??'',
-                    'TYPE' => $request->tipe??'',
-                    'PRODUCTION_YEAR' => $request->tahun??'',
-                    'COLOR' => $request->warna??'',
-                    'ON_BEHALF' => $request->atas_nama??'',
-                    'POLICE_NUMBER' => $request->no_polisi??'',
-                    'CHASIS_NUMBER' => $request->no_rangka??'',
-                    'ENGINE_NUMBER' => $request->no_mesin??'',
-                    'BPKB_NUMBER' => $request->no_bpkb??'',
-                    'STNK_NUMBER' => $request->no_stnk??'',
-                    'MOD_DATE' => Carbon::now()->format('Y-m-d H:i:s')??'',
-                    'MOD_BY' => $request->user()->id??'',
-                ];
-
-                $checkCollateral->update($data);
-
-                compareData(M_CrCollateral::class,$id,$data,$request);
+            if (!$checkCollateral) {
+                throw new Exception('Collateral Not Found', 404);
             }
 
-            if($checkCollateralSertification){
+            $data = [
+                'BRAND' => $request->merk ?? '',
+                'TYPE' => $request->tipe ?? '',
+                'PRODUCTION_YEAR' => $request->tahun ?? '',
+                'COLOR' => $request->warna ?? '',
+                'ON_BEHALF' => $request->atas_nama ?? '',
+                'POLICE_NUMBER' => $request->no_polisi ?? '',
+                'CHASIS_NUMBER' => $request->no_rangka ?? '',
+                'ENGINE_NUMBER' => $request->no_mesin ?? '',
+                'BPKB_NUMBER' => $request->no_bpkb ?? '',
+                'STNK_NUMBER' => $request->no_stnk ?? '',
+                'MOD_DATE' => Carbon::now()->format('Y-m-d H:i:s') ?? '',
+                'MOD_BY' => $request->user()->id ?? '',
+            ];
 
-                $data = [
-                    'NO_SERTIFIKAT' => $request->no_sertifikat,
-                    'STATUS_KEPEMILIKAN' => $request->status_kepemilikan,
-                    'IMB' => $request->imb,
-                    'LUAS_TANAH' => $request->luas_tanah,
-                    'LUAS_BANGUNAN' => $request->luas_bangunan,
-                    'LOKASI' => $request->lokasi,
-                    'PROVINSI' => $request->provinsi,
-                    'KAB_KOTA' => $request->kab_kota,
-                    'KECAMATAN' => $request->kec,
-                    'DESA' => $request->desa,
-                    'ATAS_NAMA' => $request->atas_nama,
-                    'MOD_DATE' => Carbon::now()->format('Y-m-d H:i:s'),
-                    'MOD_BY' => $request->user()->id,
-                ];
-
-                $checkCollateralSertification->update($data);
-                compareData(M_CrCollateral::class,$id,$data,$request);
-            }
+            $checkCollateral->update($data);
 
             DB::commit();
             ActivityLogger::logActivity($request,"Success",200);
