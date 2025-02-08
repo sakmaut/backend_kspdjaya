@@ -71,14 +71,12 @@ class Welcome extends Controller
         }
 
         foreach ($groupedData as $data) {
-
             $uid = Uuid::uuid7()->toString();
 
-            $this->updateCreditSchedule($data['loan'], $data['tgl_angsuran'], $data, $uid);
-
+            // Insert payment record
             M_Payment::create([
                 'ID' => $uid,
-                'ACC_KEY' => $data['flag'] == 'PAID' ? 'angsuran_denda' : $request->pembayaran ?? '',
+                'ACC_KEY' => $data['flag'] == 'PAID' ? 'angsuran_denda' : $data['type'] ?? '',
                 'STTS_RCRD' => 'PAID',
                 'INVOICE' => $data['invoice'],
                 'NO_TRX' => $request->uid,
@@ -86,32 +84,34 @@ class Welcome extends Controller
                 'BRANCH' => $data["branch"],
                 'LOAN_NUM' => $data['loan'],
                 'VALUE_DATE' => null,
-                'ENTRY_DATE' => now(),
+                'ENTRY_DATE' => $data["time"],
                 'SUSPENSION_PENALTY_FLAG' => $request->penangguhan_denda ?? '',
                 'TITLE' => 'Angsuran Ke-' . $data['angsuran_ke'],
                 'ORIGINAL_AMOUNT' => $data['installment'],
                 'OS_AMOUNT' => $os_amount ?? 0,
-                'START_DATE' => date('Y-m-d',strtotime($data['tgl_angsuran'])),
-                'END_DATE' => now(),
-                'USER_ID' => $data["time"],
+                'START_DATE' => date('Y-m-d', strtotime($data['tgl_angsuran'])),
+                'END_DATE' => $data["time"],
+                'USER_ID' => $data["by"],
                 'AUTH_BY' => $data["by"],
-                'AUTH_DATE' => now(),
+                'AUTH_DATE' => $data["time"],
                 'ARREARS_ID' => $data['id_arrear'] ?? '',
                 'BANK_NAME' => round(microtime(true) * 1000)
             ]);
+
+            $this->updateCreditSchedule($data['loan'], $data['tgl_angsuran'], $data, $uid);
         }
+
 
         return response()->json('ok', 200);
     }
 
-    private function updateCreditSchedule($loan_number, $tgl_angsuran, $res, $uid)
+    function updateCreditSchedule($loan_number, $tgl_angsuran, $res, $uid)
     {
         $credit_schedule = M_CreditSchedule::where([
             'LOAN_NUMBER' => $loan_number,
-            'PAYMENT_DATE' => $tgl_angsuran
+            'PAYMENT_DATE' => date('Y-m-d',strtotime($tgl_angsuran))
         ])->first();
 
-        // Check if credit_schedule is found or if bayar_angsuran is non-zero
         if ($credit_schedule) {
             $byr_angsuran = $res['details'][0]['bayar_angsuran'];
 
@@ -148,6 +148,7 @@ class Welcome extends Controller
                 }
             }
 
+            // Insert payment details for principal
             if ($new_payment_value_principal !== $valBeforePrincipal) {
                 $valPrincipal = $new_payment_value_principal - $valBeforePrincipal;
                 $data = $this->preparePaymentData($uid, 'ANGSURAN_POKOK', $valPrincipal);
@@ -155,17 +156,22 @@ class Welcome extends Controller
                 $this->addCreditPaid($loan_number, ['ANGSURAN_POKOK' => $valPrincipal]);
             }
 
-            // Only update interest if it's different from the previous value
+            // Insert payment details for interest
             if ($new_payment_value_interest !== $valBeforeInterest) {
                 $valInterest = $new_payment_value_interest - $valBeforeInterest;
                 $data = $this->preparePaymentData($uid, 'ANGSURAN_BUNGA', $valInterest);
                 M_PaymentDetail::create($data);
                 $this->addCreditPaid($loan_number, ['ANGSURAN_BUNGA' => $valInterest]);
             }
+
+            // Insert payment details for penalties (if any)
+            if (isset($detail['bayar_denda']) && $detail['bayar_denda'] > 0) {
+                $data = $this->preparePaymentData($uid, 'DENDA', $detail['bayar_denda']);
+                M_PaymentDetail::create($data);
+                $this->addCreditPaid($loan_number, ['DENDA' => $detail['bayar_denda']]);
+            }
         }
     }
-
-
 
     function preparePaymentData($payment_id, $acc_key, $amount)
     {
