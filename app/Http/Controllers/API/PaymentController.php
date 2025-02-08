@@ -72,9 +72,7 @@ class PaymentController extends Controller
             }
 
             // If no filters are applied, limit the results to 10 data
-            if (empty($notrx) && empty($nama) && empty($no_kontrak) && empty($tipe)) {
-                $data = $data->limit(10);
-            }
+            $data = $data->limit(10);
 
             // Fetch the results
             $results = $data->get();
