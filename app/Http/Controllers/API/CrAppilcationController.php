@@ -46,9 +46,45 @@ class CrAppilcationController extends Controller
 
     public function showAdmins(Request $req){
         try {
-            $get_branch = $req->user()->branch_id;
-            $data = M_CrSurvey::show_admin($get_branch);
-            $dto = R_CrProspect::collection($data);
+            $branchId = $req->user()->branch_id;
+            $no_order = $req->query('no_order');
+            $nama = $req->query('nama');
+            $tgl_order = $req->query('tgl_order');
+
+            $data = M_CrSurvey::select(
+                                    'cr_survey.id as id',
+                                    'cr_survey.jenis_angsuran',
+                                    'cr_application.INSTALLMENT_TYPE',
+                                    'cr_application.ORDER_NUMBER as order_number',
+                                    'cr_survey.visit_date',
+                                    DB::raw("COALESCE(cr_personal.NAME, cr_survey.nama) as nama_debitur"),
+                                    'cr_survey.alamat',
+                                    'cr_survey.hp',
+                                    DB::raw("COALESCE(cr_application.SUBMISSION_VALUE, cr_survey.plafond) as plafond")
+                                )
+                        ->leftJoin('survey_approval', 'survey_approval.CR_SURVEY_ID', '=', 'cr_survey.id')
+                        ->leftJoin('cr_application', 'cr_application.CR_SURVEY_ID', '=', 'cr_survey.id')
+                        ->leftJoin('cr_personal', 'cr_personal.APPLICATION_ID', '=', 'cr_application.ID')
+                        ->where('cr_survey.branch_id', $branchId)
+                        ->where('survey_approval.CODE', '!=', 'DRSVY')
+                        ->whereNull('cr_survey.deleted_at')
+                        ->orderBy('cr_survey.created_at', 'desc');
+
+            if (!empty($no_order)) {
+                $data = $data->where('cr_application.ORDER_NUMBER', 'like', '%' . $no_order . '%');
+            }
+
+            if (!empty($nama)) {
+                $data = $data->where(DB::raw("COALESCE(cr_personal.NAME, cr_survey.nama)"), 'like', '%' . $nama . '%');
+            }
+
+            if (!empty($tgl_order)) {
+                $data = $data->whereRaw("DATE_FORMAT(cr_survey.created_at, '%Y%m%d') = ?", [$tgl_order]);
+            }
+
+            $results = $data->limit(10)->get();
+
+            $dto = R_CrProspect::collection($results);
     
             ActivityLogger::logActivity($req,"Success",200);
             return response()->json(['message' => true,"status" => 200,'response' => $dto], 200);
