@@ -74,52 +74,66 @@ class PelunasanController extends Controller
             //     $val_bunga = $bunga2;
             // }
 
-            $val_bunga = "  SELECT  LOAN_NUMBER,
-                                    SUM(COALESCE(INTEREST, 0)) - SUM(COALESCE(PAYMENT_VALUE_INTEREST, 0)) as INT_ARR
-                            FROM 
-                                credit_schedule
-                            WHERE 
-                                LOAN_NUMBER = '$loan_number'
-                                AND PAYMENT_DATE <= (
-                                    SELECT 
-                                        COALESCE(
-                                            MIN(PAYMENT_DATE), 
-                                            (   SELECT MIN(PAYMENT_DATE) 
-                                                FROM credit_schedule 
-                                                WHERE LOAN_NUMBER = '$loan_number' 
-                                                      AND PAYMENT_DATE < NOW())
-                                        )
-                                    FROM credit_schedule
-                                    WHERE LOAN_NUMBER = '$loan_number'
-                                        AND PAYMENT_DATE > NOW()
-                                )";
-
-            $allQuery = "select	(a.PCPL_ORI-coalesce(a.PAID_PRINCIPAL,0)) as SISA_POKOK,
-                            b.INT_ARR as TUNGGAKAN_BUNGA,
-                            e.TUNGGAKAN_DENDA as TUNGGAKAN_DENDA,
-                            e.DENDA_TOTAL as DENDA,
-                            (coalesce(a.PENALTY_RATE,7.5)/100)*(a.PCPL_ORI-coalesce(a.PAID_PRINCIPAL,0)) as PINALTI,
+            $allQuery = "SELECT 
+                            (a.PCPL_ORI - COALESCE(a.PAID_PRINCIPAL, 0)) AS SISA_POKOK,
+                            b.INT_ARR AS TUNGGAKAN_BUNGA,
+                            e.TUNGGAKAN_DENDA AS TUNGGAKAN_DENDA,
+                            e.DENDA_TOTAL AS DENDA,
+                            (COALESCE(a.PENALTY_RATE, 7.5) / 100) * (a.PCPL_ORI - COALESCE(a.PAID_PRINCIPAL, 0)) AS PINALTI,
                             d.DISC_BUNGA
-                from	credit a
-                        left join ($val_bunga) b
-                            on b.LOAN_NUMBER = a.LOAN_NUMBER
-                        left join (	select	LOAN_NUMBER, INTEREST-PAYMENT_VALUE_INTEREST as DISC_BUNGA
-                                    from	credit_schedule
-                                    where	LOAN_NUMBER = '{$loan_number}'
-                                            and PAYMENT_DATE = (	select	max(PAYMENT_DATE)
-                                                                    from	credit_schedule
-                                                                    where	LOAN_NUMBER = '{$loan_number}'
-                                                                            and PAYMENT_DATE>now())) d
-                            on d.LOAN_NUMBER = a.LOAN_NUMBER
-                        left join ( select	LOAN_NUMBER, 
-                                            sum(case when STATUS_REC <> 'A' then coalesce(PAST_DUE_PENALTY,0) end)-
-                                                sum(case when STATUS_REC <> 'A' then coalesce(PAID_PENALTY,0) end) as TUNGGAKAN_DENDA,
-                                            sum(coalesce(PAST_DUE_PENALTY,0))-sum(coalesce(PAID_PENALTY,0)) as DENDA_TOTAL
-                                    from	arrears
-                                    where	LOAN_NUMBER = '{$loan_number}'
-                                    group 	by LOAN_NUMBER) e
-                            on d.LOAN_NUMBER = a.LOAN_NUMBER
-                where a.LOAN_NUMBER = '{$loan_number}'";
+                        FROM 
+                            credit a
+                            LEFT JOIN (
+                                SELECT 
+                                    LOAN_NUMBER,
+                                    SUM(COALESCE(INTEREST, 0)) - SUM(COALESCE(PAYMENT_VALUE_INTEREST, 0)) AS INT_ARR
+                                FROM 
+                                    credit_schedule
+                                WHERE 
+                                    LOAN_NUMBER = '{$loan_number}' 
+                                    AND PAYMENT_DATE <= (
+                                        SELECT COALESCE(
+                                            MIN(PAYMENT_DATE), 
+                                            (SELECT MIN(PAYMENT_DATE) 
+                                            FROM credit_schedule 
+                                            WHERE LOAN_NUMBER = '{$loan_number}'  
+                                            AND PAYMENT_DATE < NOW())
+                                        )
+                                        FROM credit_schedule
+                                        WHERE LOAN_NUMBER = '{$loan_number}' 
+                                        AND PAYMENT_DATE > NOW()
+                                    )
+                                GROUP BY LOAN_NUMBER
+                            ) b ON b.LOAN_NUMBER = a.LOAN_NUMBER
+                            LEFT JOIN (
+                                SELECT 
+                                    LOAN_NUMBER, 
+                                    INTEREST - PAYMENT_VALUE_INTEREST AS DISC_BUNGA
+                                FROM 
+                                    credit_schedule
+                                WHERE 
+                                    LOAN_NUMBER = '{$loan_number}' 
+                                    AND PAYMENT_DATE = (
+                                        SELECT MAX(PAYMENT_DATE)
+                                        FROM credit_schedule
+                                        WHERE LOAN_NUMBER = '{$loan_number}' 
+                                        AND PAYMENT_DATE > NOW()
+                                    )
+                            ) d ON d.LOAN_NUMBER = a.LOAN_NUMBER
+                            LEFT JOIN (
+                                SELECT 
+                                    LOAN_NUMBER, 
+                                    SUM(CASE WHEN STATUS_REC <> 'A' THEN COALESCE(PAST_DUE_PENALTY, 0) END) -
+                                        SUM(CASE WHEN STATUS_REC <> 'A' THEN COALESCE(PAID_PENALTY, 0) END) AS TUNGGAKAN_DENDA,
+                                    SUM(COALESCE(PAST_DUE_PENALTY, 0)) - SUM(COALESCE(PAID_PENALTY, 0)) AS DENDA_TOTAL
+                                FROM 
+                                    arrears
+                                WHERE 
+                                    LOAN_NUMBER = '{$loan_number}' 
+                                GROUP BY LOAN_NUMBER
+                            ) e ON e.LOAN_NUMBER = a.LOAN_NUMBER
+                        WHERE 
+                            a.LOAN_NUMBER = '{$loan_number}' ";      
 
             $result = DB::select($allQuery);
 
@@ -133,7 +147,6 @@ class PelunasanController extends Controller
             $processedResults = array_map(function ($item) {
                 return [
                     'SISA_POKOK' => round(floatval($item->SISA_POKOK), 2),
-                    'BUNGA_BERJALAN' => round(floatval($item->BUNGA_BERJALAN), 2),
                     'TUNGGAKAN_BUNGA' => round(floatval($item->TUNGGAKAN_BUNGA), 2),
                     'TUNGGAKAN_DENDA' => round(floatval($item->TUNGGAKAN_DENDA), 2),
                     'DENDA' => round(floatval($item->DENDA), 2),
