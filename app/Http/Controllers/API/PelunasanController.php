@@ -237,6 +237,8 @@ class PelunasanController extends Controller
     {
         $pelunasanKwitansiDetail = M_KwitansiDetailPelunasan::where(['no_invoice' => $no_inv, 'loan_number' => $loan_number])->get();
 
+        $this->proccessPinaltyPayment($request,$no_inv,$status,$loan_number);
+
         if(!empty($pelunasanKwitansiDetail)){
             foreach ($pelunasanKwitansiDetail as $res) {
                 $uid = Uuid::uuid7()->toString();
@@ -275,6 +277,15 @@ class PelunasanController extends Controller
 
         if($kwitansi){
             $kwitansi->update(['STTS_PAYMENT' => $status]);
+        }
+
+        $getCredit = M_Credit::where('LOAN_NUMBER', $loan_number)->first();
+
+        if ($getCredit) {
+            $getCredit->update([
+                "PINALTY_PELUNASAN" => floatval($getCredit->PINALTY_PELUNASAN??0) - floatval($kwitansi->PINALTY_PELUNASAN ?? 0),
+                "DISKON_PINALTY_PELUNASAN" => floatval($getCredit->DISKON_PINALTY_PELUNASAN ?? 0) - floatval($kwitansi->DISKON_PINALTY_PELUNASAN ?? 0),
+            ]);
         }
 
         $payment = M_Payment::where('INVOICE', $no_inv)->get();
@@ -329,6 +340,38 @@ class PelunasanController extends Controller
             'AUTH_BY' => $request->user()->fullname ?? '',
             'AUTH_DATE' => Carbon::now()
         ]);        
+    }
+
+    function proccessPinaltyPayment($request, $no_inv, $status,$loan_number)
+    {
+        $uid = Uuid::uuid7()->toString();
+
+        M_Payment::create([
+            'ID' => $uid,
+            'ACC_KEY' => 'Bayar Pelunasan Pinalty',
+            'STTS_RCRD' => $status,
+            'NO_TRX' => $no_inv,
+            'PAYMENT_METHOD' => $request->METODE_PEMBAYARAN ?? '',
+            'INVOICE' => $no_inv,
+            'BRANCH' => M_Branch::find($request->user()->branch_id)->CODE_NUMBER ?? '',
+            'LOAN_NUM' => $loan_number ?? '',
+            'ENTRY_DATE' => Carbon::now(),
+            'TITLE' => 'Bayar Pelunasan Pinalty',
+            'ORIGINAL_AMOUNT' => $request->BAYAR_PINALTI??0,
+            'END_DATE' => Carbon::now(),
+            'USER_ID' => $request->user()->id,
+            'AUTH_BY' => $request->user()->fullname ?? '',
+            'AUTH_DATE' => Carbon::now()
+        ]);
+
+        if ($request->BAYAR_PINALTI != 0) {
+            $this->proccessPaymentDetail($uid, 'BAYAR PELUNASAN PINALTY', $request->BAYAR_PINALTI ?? 0);
+        }
+
+        if($request->DISKON_PINALTI != 0){
+            $this->proccessPaymentDetail($uid, 'BAYAR PELUNASAN DISKON PINALTY', $request->DISKON_PINALTI ?? 0);
+        }
+        
     }
 
     function updateCreditSchedule($loan_number,$res){
@@ -522,6 +565,15 @@ class PelunasanController extends Controller
         ];
     
         M_Kwitansi::create($data);
+
+        $getCredit = M_Credit::where('LOAN_NUMBER', $request->LOAN_NUMBER)->first();
+
+        if($getCredit){
+            $getCredit->update([
+                "PINALTY_PELUNASAN" => $request->BAYAR_PINALTI ?? 0,
+                "DISKON_PINALTY_PELUNASAN" => $request->DISKON_PINALTI ?? 0,
+            ]);
+        }
     }
 
     function proccessPaymentDetail($payment_id, $acc_key, $amount)
