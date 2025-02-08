@@ -113,67 +113,62 @@ class Welcome extends Controller
             'PAYMENT_DATE' => date('Y-m-d',strtotime($tgl_angsuran))
         ])->first();
 
-        return response()->json($uid);
+        if ($credit_schedule) {
+            $byr_angsuran = $res['details'][0]['bayar_angsuran'];
 
-        // if ($credit_schedule) {
-        //     $byr_angsuran = $res['details'][0]['bayar_angsuran'];
+            $valBeforePrincipal = $credit_schedule ? $credit_schedule->PAYMENT_VALUE_PRINCIPAL : 0;
+            $valBeforeInterest = $credit_schedule ? $credit_schedule->PAYMENT_VALUE_INTEREST : 0;
+            $getPrincipal = $credit_schedule ? $credit_schedule->PRINCIPAL : 0;
+            $getInterest = $credit_schedule ? $credit_schedule->INTEREST : 0;
 
-        //     // Initialize the payment value
-        //     $payment_value = $byr_angsuran + ($credit_schedule ? $credit_schedule->PAYMENT_VALUE : 0);
+            $new_payment_value_principal = $valBeforePrincipal;
+            $new_payment_value_interest = $valBeforeInterest;
 
-        //     $valBeforePrincipal = $credit_schedule ? $credit_schedule->PAYMENT_VALUE_PRINCIPAL : 0;
-        //     $valBeforeInterest = $credit_schedule ? $credit_schedule->PAYMENT_VALUE_INTEREST : 0;
-        //     $getPrincipal = $credit_schedule ? $credit_schedule->PRINCIPAL : 0;
-        //     $getInterest = $credit_schedule ? $credit_schedule->INTEREST : 0;
+            // Process principal payment if needed
+            if ($valBeforePrincipal < $getPrincipal) {
+                $remaining_to_principal = $getPrincipal - $valBeforePrincipal;
 
-        //     $new_payment_value_principal = $valBeforePrincipal;
-        //     $new_payment_value_interest = $valBeforeInterest;
+                if ($byr_angsuran >= $remaining_to_principal) {
+                    $new_payment_value_principal = $getPrincipal;
+                    $remaining_payment = $byr_angsuran - $remaining_to_principal;
+                } else {
+                    $new_payment_value_principal += $byr_angsuran;
+                    $remaining_payment = 0;
+                }
+            } else {
+                $remaining_payment = $byr_angsuran;
+            }
 
-        //     // Process principal payment if needed
-        //     if ($valBeforePrincipal < $getPrincipal) {
-        //         $remaining_to_principal = $getPrincipal - $valBeforePrincipal;
+            // Update interest if the principal is fully paid
+            if ($new_payment_value_principal == $getPrincipal) {
+                if ($valBeforeInterest < $getInterest) {
+                    $new_payment_value_interest = min($valBeforeInterest + $remaining_payment, $getInterest);
+                }
+            }
 
-        //         if ($byr_angsuran >= $remaining_to_principal) {
-        //             $new_payment_value_principal = $getPrincipal;
-        //             $remaining_payment = $byr_angsuran - $remaining_to_principal;
-        //         } else {
-        //             $new_payment_value_principal += $byr_angsuran;
-        //             $remaining_payment = 0;
-        //         }
-        //     } else {
-        //         $remaining_payment = $byr_angsuran;
-        //     }
+            // Insert payment details for principal
+            if ($new_payment_value_principal !== $valBeforePrincipal) {
+                $valPrincipal = $new_payment_value_principal - $valBeforePrincipal;
+                $data = $this->preparePaymentData($uid, 'ANGSURAN_POKOK', $valPrincipal);
+                M_PaymentDetail::create($data);
+                $this->addCreditPaid($loan_number, ['ANGSURAN_POKOK' => $valPrincipal]);
+            }
 
-        //     // Update interest if the principal is fully paid
-        //     if ($new_payment_value_principal == $getPrincipal) {
-        //         if ($valBeforeInterest < $getInterest) {
-        //             $new_payment_value_interest = min($valBeforeInterest + $remaining_payment, $getInterest);
-        //         }
-        //     }
+            // Insert payment details for interest
+            if ($new_payment_value_interest !== $valBeforeInterest) {
+                $valInterest = $new_payment_value_interest - $valBeforeInterest;
+                $data = $this->preparePaymentData($uid, 'ANGSURAN_BUNGA', $valInterest);
+                M_PaymentDetail::create($data);
+                $this->addCreditPaid($loan_number, ['ANGSURAN_BUNGA' => $valInterest]);
+            }
 
-        //     // Insert payment details for principal
-        //     if ($new_payment_value_principal !== $valBeforePrincipal) {
-        //         $valPrincipal = $new_payment_value_principal - $valBeforePrincipal;
-        //         $data = $this->preparePaymentData($uid, 'ANGSURAN_POKOK', $valPrincipal);
-        //         M_PaymentDetail::create($data);
-        //         $this->addCreditPaid($loan_number, ['ANGSURAN_POKOK' => $valPrincipal]);
-        //     }
-
-        //     // Insert payment details for interest
-        //     if ($new_payment_value_interest !== $valBeforeInterest) {
-        //         $valInterest = $new_payment_value_interest - $valBeforeInterest;
-        //         $data = $this->preparePaymentData($uid, 'ANGSURAN_BUNGA', $valInterest);
-        //         M_PaymentDetail::create($data);
-        //         $this->addCreditPaid($loan_number, ['ANGSURAN_BUNGA' => $valInterest]);
-        //     }
-
-        //     // Insert payment details for penalties (if any)
-        //     if (isset($detail['bayar_denda']) && $detail['bayar_denda'] > 0) {
-        //         $data = $this->preparePaymentData($uid, 'DENDA', $detail['bayar_denda']);
-        //         M_PaymentDetail::create($data);
-        //         $this->addCreditPaid($loan_number, ['DENDA' => $detail['bayar_denda']]);
-        //     }
-        // }
+            // Insert payment details for penalties (if any)
+            if (isset($detail['bayar_denda']) && $detail['bayar_denda'] > 0) {
+                $data = $this->preparePaymentData($uid, 'DENDA', $detail['bayar_denda']);
+                M_PaymentDetail::create($data);
+                $this->addCreditPaid($loan_number, ['DENDA' => $detail['bayar_denda']]);
+            }
+        }
     }
 
     function preparePaymentData($payment_id, $acc_key, $amount)
