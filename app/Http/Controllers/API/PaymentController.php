@@ -40,14 +40,12 @@ class PaymentController extends Controller
             $getPosition = $request->user()->position;
             $getBranch = $request->user()->branch_id;
 
-            if (strtolower($getPosition) == 'ho') {
-                $data = M_Kwitansi::orderBy('CREATED_AT', 'DESC')
-                    ->where('STTS_PAYMENT', '=', 'PENDING');
-            } else {
-                $data = !empty($tipe) ? M_Kwitansi::orderBy('CREATED_AT', 'DESC')->limit(10) : [];
-            }
+            $data = M_Kwitansi::orderBy('CREATED_AT', 'DESC');
 
-            if (strtolower($getPosition) != 'ho') {
+            if (strtolower($getPosition) == 'ho') {
+                $data = $data->where('STTS_PAYMENT', '=', 'PENDING');
+            } else {
+                // Apply branch filter if position is not 'ho'
                 $data = $data->where('BRANCH_CODE', '=', $getBranch);
             }
 
@@ -73,12 +71,13 @@ class PaymentController extends Controller
                 $data = $data->where('LOAN_NUMBER', 'like', '%' . $no_kontrak . '%');
             }
 
-            // Fetch the results if data is available
-            if (!empty($data)) {
-                $results = $data->get();
-            } else {
-                $results = [];
+            // If no filters are applied, limit the results to 10 data
+            if (empty($notrx) && empty($nama) && empty($no_kontrak) && empty($tipe)) {
+                $data = $data->limit(10);
             }
+
+            // Fetch the results
+            $results = $data->get();
 
             $dto = R_Kwitansi::collection($results);
 
