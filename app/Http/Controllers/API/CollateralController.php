@@ -15,76 +15,37 @@ class CollateralController extends Controller
     public function index(Request $request)
     {
         try {
-
             $search = $request->get('search');
-            $type = $request->get('type');
 
-            switch ($type) {
-                case 'kendaraan':
-                    $collateral = M_CrCollateral::where(function($query) {
-                        $query->whereNull('DELETED_AT')
-                            ->orWhere('DELETED_AT', '');
-                    });  
+            $collateral = M_CrCollateral::where(function ($query) {
+                $query->whereNull('DELETED_AT')
+                    ->orWhere('DELETED_AT', '');
+            });
 
-                    if(isset($search)){
-                        $collateral->where(function($query) use ($search) {
-                            $query->where('ON_BEHALF', 'LIKE', "%{$search}%")
-                                ->orWhere('POLICE_NUMBER', 'LIKE', "%{$search}%")
-                                ->orWhere('CHASIS_NUMBER', 'LIKE', "%{$search}%")
-                                ->orWhere('ENGINE_NUMBER', 'LIKE', "%{$search}%")
-                                ->orWhere('BPKB_NUMBER', 'LIKE', "%{$search}%")
-                                ->orWhere('STNK_NUMBER', 'LIKE', "%{$search}%");
-                        });
-                    }
+            $collateral = $collateral->limit(10);
 
-                    if ($collateral->count() > 0) {
-                        $collateral = $collateral->paginate(10);
+            // Use get() to retrieve the data, which will return a Collection
+            $collateralData = $collateral->get()->transform(function ($list) {
+                return $this->collateralField($list);
+            });
 
-                        $collateralData = $collateral->getCollection()->transform(function ($list) {
-                            return $this->collateralField($list);
-                        });
-                    
-                        $collateralData = $collateralData->toArray();
+            $collateralData = $collateralData->toArray();
 
-                        return response()->json([
-                            'data' => $collateralData,
-                            'pagination' => $this->pagination($collateral),
-                        ], 200);  
-                    }
-  
-                    break;
-                case 'sertifikat':
-                    $collateralSertification = M_CrCollateralSertification::where(function($query) {
-                                $query->whereNull('DELETED_AT')
-                                    ->orWhere('DELETED_AT', '');
-                    }); 
+            // Return the transformed data as JSON
+            return response()->json($collateralData, 200);
 
-                    if(isset($search)){
-                        $collateralSertification->where(function($query) use ($search) {
-                            $query->where('NO_SERTIFIKAT', 'LIKE', "%{$search}%")
-                                ->orWhere('ATAS_NAMA', 'LIKE', "%{$search}%");
-                        });
-                    }
 
-                    if ($collateralSertification->count() > 0) {
-                        $collateralSertification = $collateralSertification->paginate(10);
-                        $collateralSertificatData = $collateralSertification->getCollection()->transform(function ($list) {
-                            return $this->collateralSertificationField($list);
-                        });
-        
-                        $collateralSertificatData = $collateralSertificatData->toArray(); 
+           // if (isset($search)) {
+            //     $collateral->where(function ($query) use ($search) {
+            //         $query->where('ON_BEHALF', 'LIKE', "%{$search}%")
+            //         ->orWhere('POLICE_NUMBER', 'LIKE', "%{$search}%")
+            //         ->orWhere('CHASIS_NUMBER', 'LIKE', "%{$search}%")
+            //         ->orWhere('ENGINE_NUMBER', 'LIKE', "%{$search}%")
+            //         ->orWhere('BPKB_NUMBER', 'LIKE', "%{$search}%")
+            //         ->orWhere('STNK_NUMBER', 'LIKE', "%{$search}%");
+            //     });
+            // }
 
-                        return response()->json([
-                            'data' => $collateralSertificatData,
-                            'pagination' => $this->pagination($collateralSertification),
-                        ], 200);  
-                    }
-    
-                    break;
-                default:
-                     return response()->json([],200);
-                    break;
-            }
             
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
@@ -176,7 +137,6 @@ class CollateralController extends Controller
 
     private function collateralField($list){
         return [
-            "type" => "kendaraan",
             'id' => $list->ID,
             "tipe" => $list->TYPE,
             "merk" => $list->BRAND,
