@@ -99,7 +99,7 @@ class Welcome extends Controller
 
             $get = M_Payment::where(['LOAN_NUM'=>$data["loan"],'INVOICE'=> $data["invoice"],'TITLE'=> 'Angsuran Ke-' . $data['angsuran_ke']])->first();
 
-            $this->updateCreditSchedule($data['loan'], $data['tgl_angsuran'], $data, $get->ID??0);
+            return $this->updateCreditSchedule($data['loan'], $data['tgl_angsuran'], $data, $get->ID??0);
         }
 
 
@@ -115,6 +115,9 @@ class Welcome extends Controller
 
         if ($credit_schedule) {
             $byr_angsuran = $res['details'][0]['bayar_angsuran'];
+
+            \print_r($byr_angsuran);
+            die;
 
             $valBeforePrincipal = $credit_schedule ? $credit_schedule->PAYMENT_VALUE_PRINCIPAL : 0;
             $valBeforeInterest = $credit_schedule ? $credit_schedule->PAYMENT_VALUE_INTEREST : 0;
