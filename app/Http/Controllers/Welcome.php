@@ -71,34 +71,35 @@ class Welcome extends Controller
         }
 
         foreach ($groupedData as $data) {
-            $uid = Uuid::uuid7()->toString();
+            // $uid = Uuid::uuid7()->toString();
 
-            // Insert payment record
-            M_Payment::create([
-                'ID' => $uid,
-                'ACC_KEY' => $data['flag'] == 'PAID' ? 'angsuran_denda' : $data['type'] ?? '',
-                'STTS_RCRD' => 'PAID',
-                'INVOICE' => $data['invoice'],
-                'NO_TRX' => $request->uid,
-                'PAYMENT_METHOD' => $data['method'],
-                'BRANCH' => $data["branch"],
-                'LOAN_NUM' => $data['loan'],
-                'VALUE_DATE' => null,
-                'ENTRY_DATE' => $data["time"],
-                'SUSPENSION_PENALTY_FLAG' => $request->penangguhan_denda ?? '',
-                'TITLE' => 'Angsuran Ke-' . $data['angsuran_ke'],
-                'ORIGINAL_AMOUNT' => $data['installment'],
-                'OS_AMOUNT' => $os_amount ?? 0,
-                'START_DATE' => date('Y-m-d', strtotime($data['tgl_angsuran'])),
-                'END_DATE' => $data["time"],
-                'USER_ID' => $data["by"],
-                'AUTH_BY' => $data["by"],
-                'AUTH_DATE' => $data["time"],
-                'ARREARS_ID' => $data['id_arrear'] ?? '',
-                'BANK_NAME' => round(microtime(true) * 1000)
-            ]);
+            // M_Payment::create([
+            //     'ID' => $uid,
+            //     'ACC_KEY' => $data['flag'] == 'PAID' ? 'angsuran_denda' : $data['type'] ?? '',
+            //     'STTS_RCRD' => 'PAID',
+            //     'INVOICE' => $data['invoice'],
+            //     'NO_TRX' => $request->uid,
+            //     'PAYMENT_METHOD' => $data['method'],
+            //     'BRANCH' => $data["branch"],
+            //     'LOAN_NUM' => $data['loan'],
+            //     'VALUE_DATE' => null,
+            //     'ENTRY_DATE' => $data["time"],
+            //     'SUSPENSION_PENALTY_FLAG' => $request->penangguhan_denda ?? '',
+            //     'TITLE' => 'Angsuran Ke-' . $data['angsuran_ke'],
+            //     'ORIGINAL_AMOUNT' => $data['installment'],
+            //     'OS_AMOUNT' => $os_amount ?? 0,
+            //     'START_DATE' => date('Y-m-d', strtotime($data['tgl_angsuran'])),
+            //     'END_DATE' => $data["time"],
+            //     'USER_ID' => $data["by"],
+            //     'AUTH_BY' => $data["by"],
+            //     'AUTH_DATE' => $data["time"],
+            //     'ARREARS_ID' => $data['id_arrear'] ?? '',
+            //     'BANK_NAME' => round(microtime(true) * 1000)
+            // ]);
 
-            $this->updateCreditSchedule($data['loan'], $data['tgl_angsuran'], $data, $uid);
+            $get = M_Payment::where(['LOAN_NUM'=>$data["loan"],'INVOICE'=> $data["invoice"],'TITLE'=> 'Angsuran Ke-' . $data['angsuran_ke']])->first();
+
+            $this->updateCreditSchedule($data['loan'], $data['tgl_angsuran'], $data, $get->ID??0);
         }
 
 
