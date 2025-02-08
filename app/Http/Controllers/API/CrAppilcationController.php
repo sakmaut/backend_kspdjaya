@@ -70,15 +70,16 @@ class CrAppilcationController extends Controller
                         ->whereNull('cr_survey.deleted_at')
                         ->orderBy('cr_survey.created_at', 'desc');
 
-            if (!empty($no_order)) {
+            if (!is_null($no_order) && $no_order !== '') {
                 $data = $data->where('cr_application.ORDER_NUMBER', 'like', '%' . $no_order . '%');
             }
 
-            if (!empty($nama)) {
+            if (!is_null($nama) && $nama !== '') {
                 $data = $data->where(DB::raw("COALESCE(cr_personal.NAME, cr_survey.nama)"), 'like', '%' . $nama . '%');
             }
 
-            if (!empty($tgl_order)) {
+            if (!is_null($tgl_order) && $tgl_order !== '') {
+                // Apply date format to compare both `created_at` and the input `tgl_order`
                 $data = $data->whereRaw("DATE_FORMAT(cr_survey.created_at, '%Y%m%d') = ?", [$tgl_order]);
             }
 
