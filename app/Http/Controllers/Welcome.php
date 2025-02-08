@@ -99,7 +99,11 @@ class Welcome extends Controller
 
             $get = M_Payment::where(['LOAN_NUM'=>$data["loan"],'INVOICE'=> $data["invoice"],'TITLE'=> 'Angsuran Ke-' . $data['angsuran_ke']])->first();
 
-            $this->updateCreditSchedule($data['loan'], $data['tgl_angsuran'], $data, $get->ID??0);
+            $checkDetail = M_PaymentDetail::where(['PAYMENT_ID' => $get->ID])->first();
+
+            if(!$checkDetail){
+                $this->updateCreditSchedule($data['loan'], $data['tgl_angsuran'], $data, $get->ID ?? 0);
+            }
         }
 
 
