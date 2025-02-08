@@ -12,8 +12,6 @@ class ListBanController extends Controller
     public function index(Request $request)
     {
         try {
-            $cabangId = $request->cabang_id;
-            
             $datas = [
                 'tgl_tarik' => $request->dari??'',
                 'datas' => []
@@ -21,10 +19,9 @@ class ListBanController extends Controller
             
             if (!empty($request->dari)) {
                 $dateFrom = $request->dari;
-                $arusKas = $this->queryArusKas($cabangId, $dateFrom);
+                $cabangId = $request->cabang_id;
 
-                // return response()->json($arusKas, 200);
-                // die;
+                $arusKas = $this->queryArusKas($cabangId, $dateFrom);
            
                 $no = 1;
                 $totalCashin = 0;
@@ -91,7 +88,8 @@ class ListBanController extends Controller
         }
     }
 
-    private function queryArusKas($cabangId,$dateFrom) {
+    private function queryArusKas($cabangId, $dateFrom)
+    {
 
         $query = "  SELECT 
                         b.JENIS,
@@ -100,34 +98,34 @@ class ListBanController extends Controller
                         b.ENTRY_DATE,
                         b.ORIGINAL_AMOUNT,
                         b.LOAN_NUM,
-                        concat(b3.NAME,' (',b3.ALIAS,')') as PELANGGAN,
+                        CONCAT(b3.NAME, ' (', b3.ALIAS, ')') AS PELANGGAN,
                         b.PAYMENT_METHOD,
                         b.nama_cabang,
                         b.no_invoice,
                         b.angsuran_ke,
                         b.admin_fee,
                         b.user_id,
-                        u.fullname ,
-                        u.position 
+                        u.fullname,
+                        u.position
                     FROM (
                         SELECT 
-                            a.ACC_KEYS as JENIS, 
+                            a.ACC_KEYS AS JENIS, 
                             b.BRANCH AS BRANCH, 
                             d.ID AS BRANCH_ID, 
-                            d.NAME as nama_cabang,
+                            d.NAME AS nama_cabang,
                             DATE_FORMAT(b.ENTRY_DATE, '%Y-%m-%d') AS ENTRY_DATE, 
                             a.ORIGINAL_AMOUNT,
                             b.LOAN_NUM,
                             b.PAYMENT_METHOD,
-                            b.INVOICE as no_invoice,
-                            b.TITLE as angsuran_ke,
-                            b.USER_ID as user_id,
-                            '' as admin_fee
+                            b.INVOICE AS no_invoice,
+                            b.TITLE AS angsuran_ke,
+                            b.USER_ID AS user_id,
+                            '' AS admin_fee
                         FROM 
                             payment_detail a
-                            INNER JOIN payment b ON b.ID = a.PAYMENT_ID
-                            LEFT JOIN arrears c ON c.ID = b.ARREARS_ID
-                            LEFT JOIN branch d ON d.CODE_NUMBER = b.BRANCH
+                        INNER JOIN payment b ON b.ID = a.PAYMENT_ID
+                        LEFT JOIN arrears c ON c.ID = b.ARREARS_ID
+                        LEFT JOIN branch d ON d.CODE_NUMBER = b.BRANCH
 
                         UNION ALL
 
@@ -135,37 +133,42 @@ class ListBanController extends Controller
                             'PENCAIRAN' AS JENIS, 
                             b.CODE_NUMBER AS BRANCH,
                             b.ID AS BRANCH_ID, 
-                            b.NAME as nama_cabang,
+                            b.NAME AS nama_cabang,
                             DATE_FORMAT(a.CREATED_AT, '%Y-%m-%d') AS ENTRY_DATE,
                             a.PCPL_ORI AS ORIGINAL_AMOUNT,
                             a.LOAN_NUMBER AS LOAN_NUM,
-                            'cash' as PAYMENT_METHOD,
-                            '' as no_invoice,
-                            '' as angsuran_ke,
-                            a.CREATED_BY as user_id,
-                            a.TOTAL_ADMIN as admin_fee
+                            'cash' AS PAYMENT_METHOD,
+                            '' AS no_invoice,
+                            '' AS angsuran_ke,
+                            a.CREATED_BY AS user_id,
+                            a.TOTAL_ADMIN AS admin_fee
                         FROM 
                             credit a
-                            INNER JOIN branch b ON b.id = a.BRANCH
+                        INNER JOIN branch b ON b.id = a.BRANCH
                         WHERE 
                             a.STATUS = 'A'
                     ) AS b
                     INNER JOIN credit b2 ON b2.LOAN_NUMBER = b.LOAN_NUM
-                    INNER JOIN customer b3 on b3.CUST_CODE = b2.CUST_CODE
-                    INNER JOIN users u on u.id = b.user_id 
-                    WHERE b.ENTRY_DATE = '$dateFrom' ";
+                    INNER JOIN customer b3 ON b3.CUST_CODE = b2.CUST_CODE
+                    INNER JOIN users u ON u.id = b.user_id 
+                    WHERE b.ENTRY_DATE = :dateFrom
+                ";
 
-            $params = [];
+        // Bind parameters
+        $params = ['dateFrom' => $dateFrom];
 
-            if (!empty($cabangId) || $cabangId != 'SEMUA CABANG') {
-                $query .= " AND b.BRANCH_ID = :cabangId";
-                $params['cabangId'] = $cabangId;
-            }
+        // If cabangId is provided, add it as a condition
+        if (!empty($cabangId)) {
+            $query .= " AND b.BRANCH_ID = :cabangId";
+            $params['cabangId'] = $cabangId;
+        }
 
-            $result = DB::select($query, $params);
+        // Execute the query with parameters
+        $result = DB::select($query, $params);
 
         return $result;
     }
+
 
     public function listBan(Request $request) {
         try {
