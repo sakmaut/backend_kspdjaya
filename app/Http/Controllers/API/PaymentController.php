@@ -43,7 +43,7 @@ class PaymentController extends Controller
                 $data = M_Kwitansi::orderBy('CREATED_AT', 'DESC')
                     ->where('STTS_PAYMENT', '=', 'PENDING');
             } else {
-                $data = M_Kwitansi::orderBy('CREATED_AT', 'DESC')->limit(10);
+                $data = M_Kwitansi::where('PAYMENT_TYPE','!=' ,'pelunasan')->orderBy('CREATED_AT', 'DESC')->limit(10);
             }
 
             if (strtolower($getPosition) != 'ho') {
