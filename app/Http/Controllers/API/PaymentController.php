@@ -43,37 +43,25 @@ class PaymentController extends Controller
                 $data = M_Kwitansi::orderBy('CREATED_AT', 'DESC')
                     ->where('STTS_PAYMENT', '=', 'PENDING');
             } else {
-                $data = M_Kwitansi::orderBy('CREATED_AT', 'DESC');
+                $data = M_Kwitansi::orderBy('CREATED_AT', 'DESC')->limit(9);
             }
 
             if (strtolower($getPosition) != 'ho') {
                 $data = $data->where('BRANCH_CODE', '=', $getBranch);
             }
 
-            // Apply filters based on the provided query parameters
-            $filtersApplied = false;
-
-            // Apply 'notrx' filter if it's not empty
             if (!empty($notrx)) {
                 $data = $data->where('NO_TRANSAKSI', 'like', '%' . $notrx . '%');
-                $filtersApplied = true;
             }
 
             // Apply 'nama' filter if it's not empty
             if (!empty($nama)) {
                 $data = $data->where('NAMA', 'like', '%' . $nama . '%');
-                $filtersApplied = true;
             }
 
             // Apply 'no_kontrak' filter if it's not empty
             if (!empty($no_kontrak)) {
                 $data = $data->where('LOAN_NUMBER', 'like', '%' . $no_kontrak . '%');
-                $filtersApplied = true;
-            }
-
-            // Apply limit only if filters were applied
-            if (!$filtersApplied) {
-                $data = $data->limit(9);
             }
 
             // Fetch the results
