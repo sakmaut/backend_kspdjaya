@@ -110,7 +110,7 @@ class Welcome extends Controller
     {
         $credit_schedule = M_CreditSchedule::where([
             'LOAN_NUMBER' => $loan_number,
-            'PAYMENT_DATE' => date('Y-m-d',strtotime($tgl_angsuran))
+            'PAYMENT_DATE' => date('Y-m-d', strtotime($tgl_angsuran))
         ])->first();
 
         if ($credit_schedule) {
@@ -146,22 +146,21 @@ class Welcome extends Controller
                 }
             }
 
+            // Insert payment details for principal if there is a change
             $valPrincipal = $new_payment_value_principal - $valBeforePrincipal;
-            $data = $this->preparePaymentData($uid, 'ANGSURAN_POKOK', $valPrincipal);
-            M_PaymentDetail::create($data);
-            $this->addCreditPaid($loan_number, ['ANGSURAN_POKOK' => $valPrincipal]);
+            if ($valPrincipal > 0) {
+                $data = $this->preparePaymentData($uid, 'ANGSURAN_POKOK', $valPrincipal);
+                M_PaymentDetail::create($data);
+                $this->addCreditPaid($loan_number, ['ANGSURAN_POKOK' => $valPrincipal]);
+            }
 
+            // Insert payment details for interest if there is a change
             $valInterest = $new_payment_value_interest - $valBeforeInterest;
-            $data = $this->preparePaymentData($uid, 'ANGSURAN_BUNGA', $valInterest);
-            M_PaymentDetail::create($data);
-            $this->addCreditPaid($loan_number, ['ANGSURAN_BUNGA' => $valInterest]);
-
-            // // Insert payment details for penalties (if any)
-            // if (isset($detail['bayar_denda']) && $detail['bayar_denda'] > 0) {
-            //     $data = $this->preparePaymentData($uid, 'DENDA', $detail['bayar_denda']);
-            //     M_PaymentDetail::create($data);
-            //     $this->addCreditPaid($loan_number, ['DENDA' => $detail['bayar_denda']]);
-            // }
+            if ($valInterest > 0) {
+                $data = $this->preparePaymentData($uid, 'ANGSURAN_BUNGA', $valInterest);
+                M_PaymentDetail::create($data);
+                $this->addCreditPaid($loan_number, ['ANGSURAN_BUNGA' => $valInterest]);
+            }
         }
     }
 
