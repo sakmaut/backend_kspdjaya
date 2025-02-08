@@ -135,7 +135,7 @@ class UsersController extends Controller
             $data_array = [
                 'username' => $request->username??'',
                 'email' => $request->username . '@gmail.com',
-                'password' => bcrypt($request->password),
+                'password' =>!empty($request->password)? bcrypt($request->password) : bcrypt($request->username),
                 'fullname' => $request->nama??'',
                 'branch_id' => $request->cabang_id??'',
                 'position' => $request->jabatan??'',

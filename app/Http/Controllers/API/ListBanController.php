@@ -13,7 +13,6 @@ class ListBanController extends Controller
     {
         try {
             $cabangId = $request->cabang_id;
-            $getPosition = $request->user()->position;
             
             $datas = [
                 'tgl_tarik' => $request->dari??'',
@@ -158,7 +157,7 @@ class ListBanController extends Controller
 
             $params = [];
 
-            if (!empty($cabangId) && $cabangId != 'SEMUA CABANG') {
+            if (!empty($cabangId) || $cabangId != 'SEMUA CABANG') {
                 $query .= " AND b.BRANCH_ID = :cabangId";
                 $params['cabangId'] = $cabangId;
             }
