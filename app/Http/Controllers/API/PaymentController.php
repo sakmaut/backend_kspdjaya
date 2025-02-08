@@ -32,21 +32,40 @@ class PaymentController extends Controller
     public function index(Request $request){
         try {
 
+            $notrx = $request->query('notrx'); 
+            $nama = $request->query('nama');
+            $no_kontrak = $request->query('no_kontrak'); 
+
             $getPosition = $request->user()->position;
             $getBranch = $request->user()->branch_id;
 
-            $data = M_Kwitansi::where('CREATED_AT', '>=', Carbon::now()->subWeeks(2))
-                                ->orderBy('CREATED_AT', 'DESC');
+            if (strtolower($getPosition) == 'ho') {
+                $data = M_Kwitansi::orderBy('CREATED_AT', 'DESC')->where('STTS_PAYMENT', '=', 'PENDING');
+            }else{
+                $data = M_Kwitansi::limit(10)->orderBy('CREATED_AT', 'DESC');
+            }
 
             if (strtolower($getPosition) != 'ho') {
                 $data = $data->where('BRANCH_CODE', '=', $getBranch);
             }
 
-            if (strtolower($getPosition) == 'ho') {
-                $data = $data->where('STTS_PAYMENT', '=', 'PENDING');
+            if (!empty($notrx)) {
+                $data = $data->where('NO_TRANSAKSI', 'like', '%' . $notrx . '%');
             }
 
-            $dto = R_Kwitansi::collection($data->get());
+            // Check if 'nama' is not empty and apply filter
+            if (!empty($nama)) {
+                $data = $data->where('NAMA', 'like', '%' . $nama . '%');
+            }
+
+            // Check if 'no_kontrak' is not empty and apply filter
+            if (!empty($no_kontrak)) {
+                $data = $data->where('LOAN_NUMBER', 'like', '%' . $no_kontrak . '%');
+            }
+
+            $results = $data->get();
+
+            $dto = R_Kwitansi::collection($results);
 
             return response()->json($dto, 200);
         } catch (\Exception $e) {
