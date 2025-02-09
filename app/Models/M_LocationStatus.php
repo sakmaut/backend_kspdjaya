@@ -15,6 +15,7 @@ class M_LocationStatus extends Model
         'COLLATERAL_ID',
         'TYPE',
         'LOCATION',
+        'STATUS',
         'CREATE_BY',
         'CREATED_AT'
     ];

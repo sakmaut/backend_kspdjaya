@@ -154,7 +154,7 @@ class Credit extends Controller
             
             $this->insert_customer($request,$data, $cust_code);
             $this->insert_customer_xtra($data, $cust_code);
-            $this->insert_collateral($request,$data,$SET_UUID);
+            $this->insert_collateral($request,$data,$SET_UUID,$loan_number);
             $this->insert_collateral_sertification($request,$data,$SET_UUID);
         }
     
@@ -492,7 +492,7 @@ class Credit extends Controller
         return $documents;        
     }
 
-    private function insert_collateral($request,$data,$lastID){
+    private function insert_collateral($request,$data,$lastID,$loan_number){
         $data_collateral = M_CrGuaranteVehicle::where('CR_SURVEY_ID',$data->CR_SURVEY_ID)->where(function($query) {
                                 $query->whereNull('DELETED_AT')
                                     ->orWhere('DELETED_AT', '');
@@ -534,10 +534,9 @@ class Credit extends Controller
                     'COLLATERAL_ID' => $execute->ID,
                     'TYPE' => 'kendaraan',
                     'LOCATION' => $data->BRANCH,
-                    'STATUS' =>'NORMAL',
+                    'STATUS' =>'NEW '.$loan_number??'',
                     'CREATE_BY' => $request->user()->id,
                     'CREATED_AT' => $this->timeNow,
-                    'COLLATERAL_FLAG' => $data->BRANCH,
                 ];
 
                 M_LocationStatus::create($log);

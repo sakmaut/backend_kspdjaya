@@ -9,6 +9,7 @@ use App\Models\M_BpkbDetail;
 use App\Models\M_BpkbTransaction;
 use App\Models\M_CrCollateral;
 use App\Models\M_CrCollateralSertification;
+use App\Models\M_LocationStatus;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\QueryException;
@@ -18,9 +19,21 @@ use Ramsey\Uuid\Uuid as Uuid;
 
 class BpkbTransactionController extends Controller
 {
-    public function index(Request $request)
+    
+    protected $request;
+    protected $locationStatus;
+
+    public function __construct(Request $request,LocationStatus $locationStatus)
+    {
+        $this->locationStatus = $locationStatus;
+        $this->request = $request;
+    }
+
+    public function index()
     {
         try {
+            $request = $this->request;
+
             $user = $request->user();
             $branch = $user->branch_id??null;
 
@@ -39,9 +52,12 @@ class BpkbTransactionController extends Controller
         }
     }
 
-    public function listApproval(Request $request)
+    public function listApproval()
     {
         try {
+
+            $request = $this->request;
+
             $user = $request->user();
             $branch = $user->branch_id??null;
             
@@ -57,10 +73,11 @@ class BpkbTransactionController extends Controller
         }
     }
 
-    public function store(Request $request)
+    public function store()
     {
         DB::beginTransaction();
         try {
+            $request = $this->request;
 
             if (!isset($request->bpkb) || empty($request->bpkb)) {
                 throw new Exception("bpkb not found!!!");
@@ -81,8 +98,6 @@ class BpkbTransactionController extends Controller
                     'CREATED_BY' => $user->id
                 ];
             }else{
-
-                $coll = M_CrCollateral::where()->first();
 
                 $data = [
                     'TRX_CODE' => generateCodeJaminan($request, 'bpkb_transaction', 'TRX_CODE','JMN'),
@@ -206,7 +221,6 @@ class BpkbTransactionController extends Controller
             // }
 
             DB::commit();
-            ActivityLogger::logActivity($request,"Success",200);
             return response()->json(['message' => 'created successfully'], 200);
         }catch (QueryException $e) {
             DB::rollback();
@@ -263,9 +277,11 @@ class BpkbTransactionController extends Controller
         }
     }
 
-    public function approval(Request $request)
+    public function approval()
     {
         try {
+            $request = $this->request;
+
             $request->validate([
                 'no_surat' => 'required|string',
                 'flag' => 'required|string',
@@ -286,26 +302,24 @@ class BpkbTransactionController extends Controller
                 ]);
 
                 if (!empty($request->jaminan) && is_array($request->jaminan)) {
-                    // Get the transaction ID once
                     $transactionId = $check->ID;
                     
-                    // Batch update BPKB details to NORMAL status
-                    M_BpkbDetail::where('BPKB_TRANSACTION_ID', $transactionId)
-                        ->update(['STATUS' => 'NORMAL']);
+                    M_BpkbDetail::where('BPKB_TRANSACTION_ID', $transactionId)->update(['STATUS' => 'NORMAL']);
                     
-                    // Fetch all relevant BPKB details in a single query
                     $bpkbDetails = M_BpkbDetail::whereIn('ID', $request->jaminan)
-                        ->select('ID', 'COLLATERAL_ID')
-                        ->get();
+                                                ->select('ID', 'COLLATERAL_ID')
+                                                ->get();
                     
-                    // Extract all collateral IDs
                     $collateralIds = $bpkbDetails->pluck('COLLATERAL_ID')->toArray();
                     
-                    // Perform a single update for all collaterals
                     if (!empty($collateralIds)) {
-                        M_CrCollateral::whereIn('ID', $collateralIds)
-                            ->update(['LOCATION_BRANCH' => $request->user()->branch_id??'']);
+                        M_CrCollateral::whereIn('ID', $collateralIds)->update(['LOCATION_BRANCH' => $request->user()->branch_id??'']);
                     }
+
+                    foreach ($request->jaminan as $list) {
+                        $this->locationStatus->createLocationStatusLog($list, $request->user()->branch_id, 'SEND TO HO');
+                    }
+                    
                 }
             }
     

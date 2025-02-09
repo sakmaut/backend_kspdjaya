@@ -37,7 +37,7 @@ class BpkbController extends Controller
                             ->leftJoin('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
                             ->leftJoin('cr_collateral as c', 'c.CR_CREDIT_ID', '=', 'a.ID')
                             ->leftJoin('bpkb_detail as d', 'd.COLLATERAL_ID', '=', 'c.ID')
-                            ->select('a.LOAN_NUMBER', 'b.NAME', 'd.STATUS')
+                            ->select('a.LOAN_NUMBER', 'a.STATUS as status_kontrak', 'b.NAME', 'd.STATUS')
                             ->where('a.ID', '=', $list->CR_CREDIT_ID)
                             ->first();
                         
@@ -49,6 +49,7 @@ class BpkbController extends Controller
                     'nama_debitur' => $surveyId->NAME??NULL,
                     'order_number' => $surveyId->LOAN_NUMBER??NULL,
                     'no_jaminan' => $list->BPKB_NUMBER??NULL,
+                    'status_kontrak' => $surveyId->status_kontrak == 'D' ? "inactive":'active',
                     'id' => $list->ID,
                     'status_jaminan' => $surveyId->STATUS??'NORMAL',
                     "tipe" => $list->TYPE,
@@ -101,7 +102,7 @@ class BpkbController extends Controller
                     "atas_nama" => $list->ATAS_NAMA,
                     "nilai" => (int) $list->NILAI,
                     "lokasi" => $brachName->NAME??null,
-                   "document" => getCollateralDocument($list->ID, ['sertifikat'])??null
+                   "document" => $this->getCollateralDocument($list->ID, ['sertifikat'])??null
                 ];    
             }
 
@@ -200,7 +201,7 @@ class BpkbController extends Controller
                     "atas_nama" => $list->ATAS_NAMA,
                     "nilai" => (int) $list->NILAI,
                     "lokasi" => $brachName->NAME??null,
-                   "document" => getCollateralDocument($list->ID, ['sertifikat'])??null
+                   "document" => $this->getCollateralDocument($list->ID, ['sertifikat'])??null
                 ];    
             }
 
@@ -303,7 +304,7 @@ class BpkbController extends Controller
                     "atas_nama" => $list->ATAS_NAMA,
                     "nilai" => (int) $list->NILAI,
                     "lokasi" => $brachName->NAME??null,
-                   "document" => getCollateralDocument($list->ID, ['sertifikat'])??null
+                   "document" => $this->getCollateralDocument($list->ID, ['sertifikat'])??null
                 ];    
             }
 
