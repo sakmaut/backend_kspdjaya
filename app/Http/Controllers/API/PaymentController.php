@@ -43,39 +43,33 @@ class PaymentController extends Controller
             $data = M_Kwitansi::orderBy('CREATED_AT', 'DESC');
 
             if (strtolower($getPosition) == 'ho') {
-                $data = $data->where('STTS_PAYMENT', '=', 'PENDING');
+                 $data->where('STTS_PAYMENT', '=', 'PENDING');
             } else {
-                // Apply branch filter if position is not 'ho'
-                $data = $data->where('BRANCH_CODE', '=', $getBranch);
+                 $data->where('BRANCH_CODE', '=', $getBranch);
             }
 
             switch ($tipe) {
                 case 'pembayaran':
-                    $data = $data->where('PAYMENT_TYPE', '!=', 'pelunasan');
+                     $data->where('PAYMENT_TYPE', '!=', 'pelunasan');
                     break;
                 case 'pelunasan':
-                    $data = $data->where('PAYMENT_TYPE', 'pelunasan');
+                     $data->where('PAYMENT_TYPE', 'pelunasan');
                     break;
             }
 
-            // Apply filters if parameters are provided
             if (!empty($notrx)) {
-                $data = $data->where('NO_TRANSAKSI', 'like', '%' . $notrx . '%');
+                 $data->where('NO_TRANSAKSI', 'like', '%' . $notrx . '%');
             }
 
             if (!empty($nama)) {
-                $data = $data->where('NAMA', 'like', '%' . $nama . '%');
+                 $data->where('NAMA', 'like', '%' . $nama . '%');
             }
 
             if (!empty($no_kontrak)) {
-                $data = $data->where('LOAN_NUMBER', 'like', '%' . $no_kontrak . '%');
+                 $data->where('LOAN_NUMBER', 'like', '%' . $no_kontrak . '%');
             }
-
-            // If no filters are applied, limit the results to 10 data
-            $data = $data->limit(10);
-
-            // Fetch the results
-            $results = $data->get();
+            
+            $results = $data->limit(10)->get();
 
             $dto = R_Kwitansi::collection($results);
 

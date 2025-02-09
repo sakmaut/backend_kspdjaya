@@ -71,15 +71,15 @@ class CrAppilcationController extends Controller
                         ->orderBy('cr_survey.created_at', 'desc');
 
             if (!empty($no_order)) {
-                $data = $data->where('cr_application.ORDER_NUMBER', 'like', '%' . $no_order . '%');
+                 $data->where('cr_application.ORDER_NUMBER', 'like', '%' . $no_order . '%');
             }
 
             if (!empty($nama)) {
-                $data = $data->where(DB::raw("COALESCE(cr_personal.NAME, cr_survey.nama)"), 'like', '%' . $nama . '%');
+                 $data->where(DB::raw("COALESCE(cr_personal.NAME, cr_survey.nama)"), 'like', '%' . $nama . '%');
             }
 
             if (!empty($tgl_order)) {
-                $data = $data->whereRaw("DATE_FORMAT(cr_survey.created_at, '%Y%m%d') = ?", [$tgl_order]);
+                 $data->whereRaw("DATE_FORMAT(cr_survey.visit_date, '%Y-%m-%d') = ?", [$tgl_order]);
             }
 
             $results = $data->limit(10)->get();
