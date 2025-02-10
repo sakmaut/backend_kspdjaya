@@ -46,7 +46,7 @@ class ReportController extends Controller
 
                 if (!empty($request->no_kontrak)) {
                     $query->when($request->no_kontrak, function ($query, $no_kontrak) {
-                        return $query->where("a.LOAN_NUMBER",$no_kontrak);
+                        return $query->where("a.LOAN_NUMBER", $no_kontrak);
                     });
                 }
 
@@ -81,19 +81,19 @@ class ReportController extends Controller
             return response()->json($mapping, 200);
 
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
 
-    public function pinjaman(Request $request,$id)
+    public function pinjaman(Request $request, $id)
     {
         try {
-            $results = M_Credit::where('ID',$id)->first();
+            $results = M_Credit::where('ID', $id)->first();
 
-            if(!$results){
+            if (!$results) {
                 $buildArray = [];
-            }else{
+            } else {
                 $buildArray = [
                     [
                         'title' => 'Status',
@@ -165,39 +165,39 @@ class ReportController extends Controller
 
             return response()->json($buildArray, 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
 
-    public function debitur(Request $request,$id)
+    public function debitur(Request $request, $id)
     {
         try {
             $results = DB::table('customer as a')
-                        ->leftJoin('customer_extra as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
-                        ->select('a.*', 'b.*')
-                        ->where('a.ID', $id)
-                        ->first();
+                ->leftJoin('customer_extra as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
+                ->select('a.*', 'b.*')
+                ->where('a.ID', $id)
+                ->first();
 
-            if(!$results){
+            if (!$results) {
                 $results = [];
-            }else{
+            } else {
                 $results = [
                     'pelanggan' => [
                         "nama" => $results->NAME ?? '',
                         "nama_panggilan" => $results->ALIAS ?? '',
                         "jenis_kelamin" => $results->GENDER ?? '',
                         "tempat_lahir" => $results->BIRTHPLACE ?? '',
-                        "tgl_lahir" => date('Y-m-d',strtotime($results->BIRTHDATE)),
+                        "tgl_lahir" => date('Y-m-d', strtotime($results->BIRTHDATE)),
                         "gol_darah" => $results->BLOOD_TYPE ?? '',
                         "status_kawin" => $results->MARTIAL_STATUS ?? '',
                         "tgl_kawin" => $results->MARTIAL_DATE ?? '',
                         "tipe_identitas" => $results->ID_TYPE ?? '',
                         "no_identitas" => $results->ID_NUMBER ?? '',
                         "no_kk" => $results->KK_NUMBER ?? '',
-                        "tgl_terbit_identitas" => date('Y-m-d', strtotime($results->ID_ISSUE_DATE))?? '',
+                        "tgl_terbit_identitas" => date('Y-m-d', strtotime($results->ID_ISSUE_DATE)) ?? '',
                         "masa_berlaku_identitas" => date('Y-m-d', strtotime($results->ID_VALID_DATE)) ?? '',
-                        "no_kk" => $results->KK_NUMBER??'',
+                        "no_kk" => $results->KK_NUMBER ?? '',
                         "warganegara" => $results->CITIZEN ?? ''
                     ],
                     'alamat_identitas' => [
@@ -250,12 +250,12 @@ class ReportController extends Controller
 
             return response()->json($results, 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
 
-    public function jaminan(Request $request,$id)
+    public function jaminan(Request $request, $id)
     {
         try {
             $collaterals = [];
@@ -307,12 +307,12 @@ class ReportController extends Controller
 
             return response()->json($collaterals, 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
 
-    public function pembayaran(Request $request,$id)
+    public function pembayaran(Request $request, $id)
     {
         try {
             $sql = "    SELECT  a.BRANCH,
@@ -351,7 +351,7 @@ class ReportController extends Controller
 
                 $allData[] = [
                     'Cbang' => M_Branch::find($result->BRANCH)->NAME ?? '',
-                    'Mtde Byr' => $getPosition? $getPosition->position??'':$result->PAYMENT_METHOD ?? '',
+                    'Mtde Byr' => $getPosition ? $getPosition->position ?? '' : $result->PAYMENT_METHOD ?? '',
                     'No Inv' => $result->INVOICE ?? '',
                     'No Kont' => $result->LOAN_NUM ?? '',
                     'Tgl Byr' => $result->ENTRY_DATE ?? '',
@@ -363,14 +363,14 @@ class ReportController extends Controller
                     'Byr Plsn Dnda' => number_format($result->BAYAR_PELUNASAN_DENDA ?? 0),
                     'Dskn Angs' => number_format($result->DISKON_POKOK ?? 0 + $result->DISKON_BUNGA ?? 0),
                     'Dskn Dnda' => number_format($result->DISKON_DENDA ?? 0),
-                    'Stts' => $result->STTS_RCRD == 'PAID'?'SUCCESS': $result->STTS_RCRD??'',
+                    'Stts' => $result->STTS_RCRD == 'PAID' ? 'SUCCESS' : $result->STTS_RCRD ?? '',
                 ];
             }
 
             return response()->json($allData, 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
 
@@ -416,7 +416,7 @@ class ReportController extends Controller
         }
     }
 
-    public function tunggakkan(Request $request,$id)
+    public function tunggakkan(Request $request, $id)
     {
         try {
             $results = M_Arrears::where('LOAN_NUMBER', $id)->get();
@@ -433,20 +433,19 @@ class ReportController extends Controller
                         'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0),
                         'Bayar Dnda' => number_format($res->PAID_PENALTY ?? 0),
                         'Diskon Dnda' => number_format($res->WOFF_PENALTY ?? 0),
-                        'Status' => $res->STATUS_REC == 'A' ? '':'LUNAS',
+                        'Status' => $res->STATUS_REC == 'A' ? '' : 'LUNAS',
                     ];
                 }
             }
 
             return response()->json($allData, 200);
-
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
 
-    public function strukturCredit(Request $request,$id)
+    public function strukturCredit(Request $request, $id)
     {
         try {
             $schedule = [
@@ -504,38 +503,38 @@ class ReportController extends Controller
                 $ttlAngs = floatval($res->INSTALLMENT) + floatval($res->PAST_DUE_PENALTY);
                 $ttlByr = floatval($res->PAYMENT_VALUE) + floatval($res->PAID_PENALTY);
 
-                $getInvoice = M_Payment::where(['LOAN_NUM' => $id,'START_DATE' => $res->PAYMENT_DATE])
-                            ->orderBy('ENTRY_DATE', 'desc')
-                            ->select('INVOICE')
-                            ->first();
+                $getInvoice = M_Payment::where(['LOAN_NUM' => $id, 'START_DATE' => $res->PAYMENT_DATE])
+                    ->orderBy('ENTRY_DATE', 'desc')
+                    ->select('INVOICE')
+                    ->first();
 
                 $sisaAngs = number_format(floatval($res->INSTALLMENT) - floatval($res->PAYMENT_VALUE));
 
                 $schedule['data_credit'][] = [
                     'Jt.Tempo' => Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y'),
                     'Angs' => $res->INSTALLMENT_COUNT,
-                    'Seq' => $res->INST_COUNT??0,
+                    'Seq' => $res->INST_COUNT ?? 0,
                     'Amt Angs' => number_format($res->INSTALLMENT ?? 0),
-                    'No Ref' => $getInvoice->INVOICE??'',
+                    'No Ref' => $getInvoice->INVOICE ?? '',
                     'Bank' => '',
-                    'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE??'')->format('d-m-Y'):'',
-                    'Amt Bayar' => number_format($res->PAYMENT_VALUE??0),
+                    'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
+                    'Amt Bayar' => number_format($res->PAYMENT_VALUE ?? 0),
                     'Sisa Angs' => $sisaAngs,
                     'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0),
                     'Byr Dnda' => number_format($res->PAID_PENALTY ?? 0),
                     'Sisa Byr Tgh' => number_format($ttlAngs - $ttlByr),
-                    'Ovd' => $res->PAID_FLAG == 'PAID' && ($res->STATUS_REC != 'A' || empty($res->STATUS_REC)) ? 0 : $res->OD??0,
+                    'Ovd' => $res->PAID_FLAG == 'PAID' && ($res->STATUS_REC != 'A' || empty($res->STATUS_REC)) ? 0 : $res->OD ?? 0,
                     'Stts' => $res->PAID_FLAG == 'PAID' && ($res->STATUS_REC != 'A' || empty($res->STATUS_REC)) ? 'LUNAS' : ''
                 ];
             }
 
-            $creditDetail = M_Credit::with(['customer' => function($query) {
+            $creditDetail = M_Credit::with(['customer' => function ($query) {
                 $query->select('CUST_CODE', 'NAME');
             }])->where('LOAN_NUMBER', $id)->first();
 
             if ($creditDetail) {
                 $schedule['detail'] = [
-                    'no_kontrak' => $creditDetail->LOAN_NUMBER??'',
+                    'no_kontrak' => $creditDetail->LOAN_NUMBER ?? '',
                     'tgl_kontrak' => Carbon::parse($creditDetail->INSTALLMENT_DATE)->format('d-m-Y'),
                     'nama' => $creditDetail->customer->NAME ?? '',
                     'no_pel' => $creditDetail->CUST_CODE??'',
@@ -547,6 +546,49 @@ class ReportController extends Controller
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function collateralReport(Request $request)
+    {
+        try {
+            $sql = "SELECT	d.NAME as pos_pencairan, e.NAME as posisi_berkas,
+                            b.LOAN_NUMBER as no_kontrak, c.NAME as debitur,
+                            a.POLICE_NUMBER, a.STATUS
+                    FROM	cr_collateral a
+                            inner join credit b on b.ID = a.CR_CREDIT_ID
+                            inner join customer c on c.CUST_CODE = b.CUST_CODE
+                            left join branch d on d.ID = a.COLLATERAL_FLAG
+                            left join branch e on e.ID = a.LOCATION_BRANCH
+                            left join bpkb_detail f on f.COLLATERAL_ID = a.ID
+                    WHERE	(1=1)
+                            and d.NAME = '$request->pos'
+                            and b.LOAN_NUMBER like '%$request->loan_number%'
+                            and c.NAME like '%$request->nama%'
+                            and a.POLICE_NUMBER like '%$request->nopol%'
+                            and coalesce(f.STATUS,'Normal') = '$request->status'
+                    ORDER	BY d.NAME, e.NAME, b.LOAN_NUMBER, c.NAME,
+                            a.POLICE_NUMBER, a.STATUS";
+
+            $results = DB::select($sql);
+
+            $allData = [];
+            foreach ($results as $result) {
+
+                $allData[] = [
+                    'pos_pencairan' => $result->pos_pencairan ?? '',
+                    'posisi_berkas' => $result->posisi_berkas ?? '',
+                    'no_kontrak' => $result->no_kontrak ?? '',
+                    'nama_debitur' => $result->debitur ?? '',
+                    'no_polisi' => $result->POLICE_NUMBER ?? '',
+                    'status' => $result->STATUS ?? '',
+                ];
+            }
+
+            return response()->json($allData, 200);
+        } catch (\Exception $e) {
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
 }
