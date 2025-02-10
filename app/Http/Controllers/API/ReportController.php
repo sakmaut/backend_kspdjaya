@@ -553,7 +553,7 @@ class ReportController extends Controller
         try {
             $sql = "SELECT	d.NAME as pos_pencairan, e.NAME as posisi_berkas,
                             b.LOAN_NUMBER as no_kontrak, c.NAME as debitur,
-                            a.POLICE_NUMBER, f.STATUS as status
+                            a.POLICE_NUMBER, coalesce(f.STATUS,'NORMAL') as status
                     FROM	cr_collateral a
                             inner join credit b on b.ID = a.CR_CREDIT_ID
                             inner join customer c on c.CUST_CODE = b.CUST_CODE
