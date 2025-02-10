@@ -128,7 +128,7 @@ class CrAppilcationController extends Controller
             $check = M_CrApplication::where('CR_SURVEY_ID', $id)->whereNull('deleted_at')->first();
 
             if (!$check) {
-                $check_application_id = M_CrApplication::where('ID', $id)->whereNull('deleted_at')->first();
+                $check_application_id = M_CrSurvey::where('ID', $id)->whereNull('deleted_at')->first();
             } else {
                 $check_application_id = $check;
             }
