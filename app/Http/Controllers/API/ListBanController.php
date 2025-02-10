@@ -163,14 +163,11 @@ class ListBanController extends Controller
                     WHERE b.ENTRY_DATE = '$dateFrom'
                 ";
 
-        // If cabangId is provided, add it as a condition
         if (!empty($cabangId) && $cabangId != 'SEMUA CABANG') {
-            $query .= " AND b.BRANCH_ID = :cabangId";
-            $params['cabangId'] = $cabangId;
+            $query .= " AND b.BRANCH_ID = '" . $cabangId . "'";
         }
-
         // Execute the query with parameters
-        $result = DB::select($query, $params);
+        $result = DB::select($query);
 
         return $result;
     }
