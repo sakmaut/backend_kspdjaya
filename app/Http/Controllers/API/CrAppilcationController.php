@@ -125,18 +125,21 @@ class CrAppilcationController extends Controller
     public function show(Request $request, $id)
     {
         try {
+            $check = M_CrApplication::where('CR_SURVEY_ID', $id)->whereNull('deleted_at')->first();
 
-            $detail_prospect = M_CrSurvey::where('id', $id)->first();
-
-            if ($detail_prospect) {
-                $check = M_CrApplication::where('CR_SURVEY_ID', $detail_prospect->id)->whereNull('deleted_at')->first();
-
-                if (!$check) {
-                    $check_application_id = M_CrApplication::where('ID', $id)->whereNull('deleted_at')->first();
-                } else {
-                    $check_application_id = $check;
-                }
+            if (!$check) {
+                $check_application_id = M_CrApplication::where('ID', $id)->whereNull('deleted_at')->first();
+            } else {
+                $check_application_id = $check;
             }
+
+            $surveyID = $check_application_id->CR_SURVEY_ID;
+
+            if (!isset($surveyID)  || $surveyID == '') {
+                throw new Exception("Id FPK Is Not Exist", 404);
+            }
+
+            $detail_prospect = M_CrSurvey::where('id', $surveyID)->first();
 
             return response()->json(['message' => 'OK', "status" => 200, 'response' =>  $this->resourceDetail($detail_prospect, $check_application_id)], 200);
         } catch (\Exception $e) {
@@ -191,7 +194,7 @@ class CrAppilcationController extends Controller
                 throw new Exception("Id FPK Is Not Exist", 404);
             }
 
-            $surveyID = $check_application_id->CR_SURVEY_ID ?? '';
+            $surveyID = $check_application_id->CR_SURVEY_ID;
             $timenow = Carbon::now();
 
             $this->insert_cr_application($request, $check_application_id);
@@ -957,7 +960,7 @@ class CrAppilcationController extends Controller
     private function resourceDetail($data, $application)
     {
         $surveyId = $data->id;
-        $setApplicationId = $application->ID ?? '';
+        $setApplicationId = $application->ID;
 
         $guarente_vehicle = M_CrGuaranteVehicle::where('CR_SURVEY_ID', $surveyId)->where(function ($query) {
             $query->whereNull('DELETED_AT')
@@ -973,7 +976,7 @@ class CrAppilcationController extends Controller
         $cr_oder = M_CrOrder::where('APPLICATION_ID', $setApplicationId)->first();
         $applicationDetail = M_CrApplication::where('ID', $setApplicationId)->first();
         $cr_survey = M_CrSurvey::where('id', $surveyId)->first();
-        $check_exist = M_Credit::where('ORDER_NUMBER', $application->ORDER_NUMBER ?? '')->first();
+        $check_exist = M_Credit::where('ORDER_NUMBER', $application->ORDER_NUMBER)->first();
         $cr_guarantor = M_CrApplicationGuarantor::where('APPLICATION_ID', $setApplicationId)->get();
         $cr_spouse = M_CrApplicationSpouse::where('APPLICATION_ID', $setApplicationId)->first();
         $approval = M_ApplicationApproval::where('cr_application_id', $setApplicationId)->first();
@@ -981,9 +984,9 @@ class CrAppilcationController extends Controller
         $arrayList = [
             'id_application' => $setApplicationId,
             'survey_id' => $surveyId,
-            'order_number' => $application->ORDER_NUMBER ?? '',
+            'order_number' => $application->ORDER_NUMBER,
             "flag" => !$check_exist ? 0 : 1,
-            'jenis_angsuran' => empty($application->INSTALLMENT_TYPE ?? '') ? $cr_survey->jenis_angsuran ?? '' : $application->INSTALLMENT_TYPE ?? '',
+            'jenis_angsuran' => empty($application->INSTALLMENT_TYPE) ? $cr_survey->jenis_angsuran ?? '' : $application->INSTALLMENT_TYPE ?? '',
             'pelanggan' => [
                 "nama" => $cr_personal->NAME ?? ($data->nama ?? ''),
                 "nama_panggilan" => $cr_personal->ALIAS ?? null,
@@ -1108,7 +1111,7 @@ class CrAppilcationController extends Controller
             ],
             'jaminan' => [],
             "prospect_approval" => [
-                "status" => $approval_detail->application_result ?? '' == null ? $approval_detail->application_result ?? '' : ""
+                "status" => $approval_detail->application_result == null ? $approval_detail->application_result : ""
             ],
             "dokumen_indentitas" => $this->attachment($surveyId, "'ktp', 'kk', 'ktp_pasangan'"),
             "dokumen_jaminan" => $this->attachment($surveyId, "'no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri'"),
