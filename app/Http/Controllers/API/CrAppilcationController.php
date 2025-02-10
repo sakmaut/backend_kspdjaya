@@ -1108,7 +1108,7 @@ class CrAppilcationController extends Controller
             ],
             'jaminan' => [],
             "prospect_approval" => [
-                "status" => $approval_detail->application_result == null ? $approval_detail->application_result ?? '' : ""
+                "status" => $approval_detail->application_result ?? '' == null ? $approval_detail->application_result ?? '' : ""
             ],
             "dokumen_indentitas" => $this->attachment($surveyId, "'ktp', 'kk', 'ktp_pasangan'"),
             "dokumen_jaminan" => $this->attachment($surveyId, "'no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri'"),
