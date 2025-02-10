@@ -129,6 +129,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('listBan', [ListBanController::class,'listBan']);
 
     //Report
+    Route::post('collateralReport', [ReportController::class,'collateralReport']);
     Route::post('inquiryList', [ReportController::class,'inquiryList']);
     Route::get('creditReport/{id}', [ReportController::class,'pinjaman']);
     Route::get('strukturCredit/{id}', [ReportController::class, 'strukturCredit']);
