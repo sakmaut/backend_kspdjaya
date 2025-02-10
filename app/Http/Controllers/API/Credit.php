@@ -207,6 +207,61 @@ class Credit extends Controller
             "struktur" => $check_exist != null && !empty($check_exist->LOAN_NUMBER) ? $schedule : $data_credit_schedule ?? null
         ];
 
+        if ($check_exist) {
+
+            $getCollateral = M_CrCollateral::where('CR_CREDIT_ID', $check_exist->ID)->get();
+
+            foreach ($getCollateral as $list) {
+                $data['jaminan'][] = [
+                    "type" => "kendaraan",
+                    'counter_id' => $list->HEADER_ID,
+                    "atr" => [
+                        'id' => $list->ID,
+                        'status_jaminan' => null,
+                        "tipe" => $list->TYPE,
+                        "merk" => $list->BRAND,
+                        "tahun" => $list->PRODUCTION_YEAR,
+                        "warna" => $list->COLOR,
+                        "atas_nama" => $list->ON_BEHALF,
+                        "no_polisi" => $list->POLICE_NUMBER,
+                        "no_rangka" => $list->CHASIS_NUMBER,
+                        "no_mesin" => $list->ENGINE_NUMBER,
+                        "no_bpkb" => $list->BPKB_NUMBER,
+                        "alamat_bpkb" => $list->BPKB_ADDRESS,
+                        "no_faktur" => $list->INVOICE_NUMBER,
+                        "no_stnk" => $list->STNK_NUMBER,
+                        "tgl_stnk" => $list->STNK_VALID_DATE,
+                        "nilai" => (int) $list->VALUE
+                    ]
+                ];
+            }
+        } else {
+            foreach ($guarente_vehicle as $list) {
+                $data['jaminan'][] = [
+                    "type" => "kendaraan",
+                    'counter_id' => $list->HEADER_ID,
+                    "atr" => [
+                        'id' => $list->ID,
+                        'status_jaminan' => null,
+                        "tipe" => $list->TYPE,
+                        "merk" => $list->BRAND,
+                        "tahun" => $list->PRODUCTION_YEAR,
+                        "warna" => $list->COLOR,
+                        "atas_nama" => $list->ON_BEHALF,
+                        "no_polisi" => $list->POLICE_NUMBER,
+                        "no_rangka" => $list->CHASIS_NUMBER,
+                        "no_mesin" => $list->ENGINE_NUMBER,
+                        "no_bpkb" => $list->BPKB_NUMBER,
+                        "alamat_bpkb" => $list->BPKB_ADDRESS,
+                        "no_faktur" => $list->INVOICE_NUMBER,
+                        "no_stnk" => $list->STNK_NUMBER,
+                        "tgl_stnk" => $list->STNK_VALID_DATE,
+                        "nilai" => (int) $list->VALUE
+                    ]
+                ];
+            }
+        }
+
         foreach ($cr_guarantor as $list) {
             $data['penjamin'][] = [
                 "id" => $list->ID ?? null,
@@ -222,54 +277,6 @@ class Credit extends Controller
                 "hub_cust" => $list->STATUS_WITH_DEBITUR ?? null,
                 "no_hp" => $list->MOBILE_NUMBER ?? null,
                 "pendapatan" => $list->INCOME ?? null,
-            ];
-        }
-
-        foreach ($guarente_vehicle as $list) {
-            $data['jaminan'][] = [
-                "type" => "kendaraan",
-                'counter_id' => $list->HEADER_ID,
-                "atr" => [
-                    'id' => $list->ID,
-                    'status_jaminan' => null,
-                    "tipe" => $list->TYPE,
-                    "merk" => $list->BRAND,
-                    "tahun" => $list->PRODUCTION_YEAR,
-                    "warna" => $list->COLOR,
-                    "atas_nama" => $list->ON_BEHALF,
-                    "no_polisi" => $list->POLICE_NUMBER,
-                    "no_rangka" => $list->CHASIS_NUMBER,
-                    "no_mesin" => $list->ENGINE_NUMBER,
-                    "no_bpkb" => $list->BPKB_NUMBER,
-                    "alamat_bpkb" => $list->BPKB_ADDRESS,
-                    "no_faktur" => $list->INVOICE_NUMBER,
-                    "no_stnk" => $list->STNK_NUMBER,
-                    "tgl_stnk" => $list->STNK_VALID_DATE,
-                    "nilai" => (int) $list->VALUE
-                ]
-            ];
-        }
-
-        foreach ($guarente_sertificat as $list) {
-            $data['jaminan'][] = [
-                "type" => "sertifikat",
-                'counter_id' => $list->HEADER_ID,
-                "atr" => [
-                    'id' => $list->ID,
-                    'status_jaminan' => null,
-                    "no_sertifikat" => $list->NO_SERTIFIKAT,
-                    "status_kepemilikan" => $list->STATUS_KEPEMILIKAN,
-                    "imb" => $list->IMB,
-                    "luas_tanah" => $list->LUAS_TANAH,
-                    "luas_bangunan" => $list->LUAS_BANGUNAN,
-                    "lokasi" => $list->LOKASI,
-                    "provinsi" => $list->PROVINSI,
-                    "kab_kota" => $list->KAB_KOTA,
-                    "kec" => $list->KECAMATAN,
-                    "desa" => $list->DESA,
-                    "atas_nama" => $list->ATAS_NAMA,
-                    "nilai" => (int) $list->NILAI
-                ]
             ];
         }
 
@@ -525,7 +532,7 @@ class Credit extends Controller
         if ($data_collateral->isNotEmpty()) {
             foreach ($data_collateral as $res) {
                 $data_jaminan = [
-                    'HEADER_ID' =>  $setHeaderID,
+                    'HEADER_ID' => $setHeaderID,
                     'CR_CREDIT_ID' => $lastID ?? null,
                     'TYPE' => $res->TYPE ?? null,
                     'BRAND' => $res->BRAND ?? null,
@@ -536,7 +543,10 @@ class Credit extends Controller
                     'CHASIS_NUMBER' => $res->CHASIS_NUMBER ?? null,
                     'ENGINE_NUMBER' => $res->ENGINE_NUMBER ?? null,
                     'BPKB_NUMBER' => $res->BPKB_NUMBER ?? null,
+                    'BPKB_ADDRESS' => $res->BPKB_ADDRESS ?? null,
                     'STNK_NUMBER' => $res->STNK_NUMBER ?? null,
+                    'INVOICE_NUMBER' => $res->INVOICE_NUMBER ?? null,
+                    'STNK_VALID_DATE' => $res->STNK_VALID_DATE ?? null,
                     'VALUE' => $res->VALUE ?? null,
                     'LOCATION_BRANCH' => $data->BRANCH,
                     'COLLATERAL_FLAG' => $data->BRANCH,
