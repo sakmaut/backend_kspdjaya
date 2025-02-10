@@ -15,6 +15,7 @@ use App\Models\M_KwitansiDetailPelunasan;
 use App\Models\M_Payment;
 use App\Models\M_PaymentDetail;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Ramsey\Uuid\Uuid;
@@ -166,6 +167,12 @@ class PelunasanController extends Controller
     {
         DB::beginTransaction();
         try {
+
+            $check = $request->only(['BAYAR_POKOK', 'BAYAR_BUNGA', 'BAYAR_PINALTI', 'BAYAR_DENDA', 'DISKON_POKOK', 'DISKON_PINALTI', 'DISKON_BUNGA', 'DISKON_DENDA']);
+
+            if (array_sum($check) == 0) {
+                throw new Exception('Null Kabeh');
+            }
 
             $loan_number = $request->LOAN_NUMBER;
 
