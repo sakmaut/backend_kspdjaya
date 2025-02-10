@@ -4,11 +4,11 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\M_LocationStatus;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class LocationStatus extends Controller
 {
-
     protected $request;
     protected $entityLocationStatus;
 
@@ -18,21 +18,21 @@ class LocationStatus extends Controller
         $this->entityLocationStatus = $entityLocationStatus;
     }
 
-    public function createLocationStatusLog(string $collateralId, string $location, string $status = 'NEW'): void
+    public function createLocationStatusLog(string $trxId, string $descr, string $status): void
     {
-        $log = $this->prepareLogData($collateralId, $location, $status);
+        $log = $this->prepareLogData($trxId, $descr, $status);
         $this->entityLocationStatus->create($log);
     }
 
-    protected function prepareLogData(string $collateralId, string $location, string $status): array
+    protected function prepareLogData(string $trxId, string $descr, string $status): array
     {
         return [
-            'TYPE' => 'kendaraan',
-            'COLLATERAL_ID' => $collateralId,
-            'LOCATION' => $location,
-            'STATUS' => $status,
-            'CREATE_BY' => $this->request->user()->id,
-            'CREATED_AT' => now(),
+            'BPKB_TRANSACTION_ID' => $trxId,
+            'ONCHARGE_APPRVL' => $status,
+            'ONCHARGE_PERSON' => $this->request->user()->id,
+            'ONCHARGE_TIME' => Carbon::now(),
+            'ONCHARGE_DESCR' => $descr,
+            'APPROVAL_RESULT' => $status
         ];
     }
 }

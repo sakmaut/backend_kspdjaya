@@ -11,16 +11,16 @@ use Illuminate\Support\Facades\File;
 class ActivityLogger extends Controller
 {
 
-    public static function logActivity($request,$msg,$status_code)
+    public static function logActivity($request, $msg, $status_code)
     {
 
-        $getUserInfo = $request->user()??'';
+        $getUserInfo = $request->user() ?? '';
 
         $logData = [
-            'user_id' => $getUserInfo->id??'',
-            'user_fullname' => $getUserInfo->fullname??'',
-            'user_position' => $getUserInfo->position??'',
-            'user_branch' => M_Branch::find($getUserInfo->branch_id)->NAME??'',
+            'user_id' => $getUserInfo->id ?? '',
+            'user_fullname' => $getUserInfo->fullname ?? '',
+            'user_position' => $getUserInfo->position ?? '',
+            'user_branch' => M_Branch::find($getUserInfo->branch_id)->NAME ?? '',
             'method' => $request->method(),
             'status' => $status_code,
             'url_endpoint' => $request->fullUrl(),
@@ -31,14 +31,13 @@ class ActivityLogger extends Controller
         ];
 
         $path = 'logs/activity';
-        
+
         $logString = "[" . Carbon::now()->toDateTimeString() . "] " . json_encode($logData) . PHP_EOL;
-        
-        $logFilePath = storage_path( $path.'/log-' . Carbon::now()->format('Y-m') . '.txt');
-        
+
+        $logFilePath = storage_path($path . '/log-' . Carbon::now()->format('Y-m') . '.txt');
+
         File::ensureDirectoryExists(storage_path($path));
         File::append($logFilePath, $logString);
-        
     }
 
     // public static function logActivity($request,$msg,$status_code)
@@ -54,25 +53,25 @@ class ActivityLogger extends Controller
     //         'ip_address' => $request->ip(),
     //         'user_agent' => $request->header('User-Agent'),
     //     ];
-        
+
     //     M_ActivityLogger::create($logData);
-        
+
     // }
 
-    public static function logActivityLogin(Request $request,$event,$msg,$status_code)
+    public static function logActivityLogin(Request $request, $event, $msg, $status_code)
     {
 
-        $getUserInfo = $request->user()??'';
+        $getUserInfo = $request->user() ?? '';
 
         $logData = [
             "input_login" => [
-                'username' => $request->username??'',
-                'password' => $request->password??'',
+                'username' => $request->username ?? '',
+                'password' => $request->password ?? '',
             ],
-            'user_id' => $getUserInfo->id??'',
-            'user_fullname' => $getUserInfo->fullname??'',
-            'user_position' => $getUserInfo->position??'',
-            'user_branch' => M_Branch::find($getUserInfo->branch_id??'')->NAME??'',
+            'user_id' => $getUserInfo->id ?? '',
+            'user_fullname' => $getUserInfo->fullname ?? '',
+            'user_position' => $getUserInfo->position ?? '',
+            'user_branch' => M_Branch::find($getUserInfo->branch_id ?? '')->NAME ?? '',
             'event' => $event,
             'status' => $status_code,
             'url_endpoint' => $request->fullUrl(),
@@ -87,24 +86,24 @@ class ActivityLogger extends Controller
         $path = 'logs/authentication';
 
         $logString = "[" . Carbon::now()->toDateTimeString() . "] " . json_encode($logData) . PHP_EOL;
-        
-        $logFilePath = storage_path($path.'/log-' . Carbon::now()->format('Y-m') . '.txt');
-        
+
+        $logFilePath = storage_path($path . '/log-' . Carbon::now()->format('Y-m') . '.txt');
+
         File::ensureDirectoryExists(storage_path($path));
         File::append($logFilePath, $logString);
     }
 
-    public static function logActivityLogout(Request $request,$event,$msg,$status_code,$username)
+    public static function logActivityLogout(Request $request, $event, $msg, $status_code, $username)
     {
 
-        $getUserInfo = $request->user()??'';
+        $getUserInfo = $request->user() ?? '';
 
         $logData = [
-            'token' =>  $request->bearerToken()??'',
-            'user_id' => $getUserInfo->id??'',
-            'user_fullname' => $getUserInfo->fullname??'',
-            'user_position' => $getUserInfo->position??'',
-            'user_branch' => M_Branch::find($getUserInfo->branch_id)->NAME??'',
+            'token' =>  $request->bearerToken() ?? '',
+            'user_id' => $getUserInfo->id ?? '',
+            'user_fullname' => $getUserInfo->fullname ?? '',
+            'user_position' => $getUserInfo->position ?? '',
+            'user_branch' => M_Branch::find($getUserInfo->branch_id)->NAME ?? '',
             'event' => $event,
             'status' => $status_code,
             'url_endpoint' => $request->fullUrl(),
@@ -119,9 +118,9 @@ class ActivityLogger extends Controller
         $path = 'logs/authentication';
 
         $logString = "[" . Carbon::now()->toDateTimeString() . "] " . json_encode($logData) . PHP_EOL;
-        
-        $logFilePath = storage_path($path.'/log-' . Carbon::now()->format('Y-m') . '.txt');
-        
+
+        $logFilePath = storage_path($path . '/log-' . Carbon::now()->format('Y-m') . '.txt');
+
         File::ensureDirectoryExists(storage_path($path));
         File::append($logFilePath, $logString);
     }

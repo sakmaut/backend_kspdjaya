@@ -39,60 +39,71 @@ class Credit extends Controller
 {
 
     private $timeNow;
+    protected $locationStatus;
 
-    public function __construct()
+    public function __construct(LocationStatus $locationStatus)
     {
         $this->timeNow = Carbon::now();
+        $this->locationStatus = $locationStatus;
     }
 
     public function index(Request $request)
     {
         try {
-            $data = M_CrApplication::where('ORDER_NUMBER',$request->order_number)->first();
+            $data = M_CrApplication::where('ORDER_NUMBER', $request->order_number)->first();
 
             if (!$data) {
                 throw new Exception("Order Number Is Not Exist", 404);
             }
 
-            return response()->json($this->buildData($request,$data), 200);
+            return response()->json($this->buildData($request, $data), 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
 
-    function queryKapos($branchID){
+    function queryKapos($branchID)
+    {
 
         $result = DB::table('users as a')
-                        ->select('a.fullname', 'a.position', 'a.no_ktp', 'a.alamat', 
-                                'b.address', 'b.name', 'b.city')
-                        ->leftJoin('branch as b', 'b.id', '=', 'a.branch_id')
-                        ->where('a.position', 'KAPOS')
-                        ->where('b.id', $branchID)
-                        ->first();
+            ->select(
+                'a.fullname',
+                'a.position',
+                'a.no_ktp',
+                'a.alamat',
+                'b.address',
+                'b.name',
+                'b.city'
+            )
+            ->leftJoin('branch as b', 'b.id', '=', 'a.branch_id')
+            ->where('a.position', 'KAPOS')
+            ->where('b.id', $branchID)
+            ->first();
 
         return $result;
     }
 
-    private function buildData($request,$data){
-        $cr_personal = M_CrPersonal::where('APPLICATION_ID',$data->ID)->first();
-        $cr_guarantor = M_CrApplicationGuarantor::where('APPLICATION_ID',$data->ID)->get();
-        $cr_spouse = M_CrApplicationSpouse::where('APPLICATION_ID',$data->ID)->first();
-        $pihak1= $this->queryKapos($data->BRANCH);
-       
+    private function buildData($request, $data)
+    {
+        $cr_personal = M_CrPersonal::where('APPLICATION_ID', $data->ID)->first();
+        $cr_guarantor = M_CrApplicationGuarantor::where('APPLICATION_ID', $data->ID)->get();
+        $cr_spouse = M_CrApplicationSpouse::where('APPLICATION_ID', $data->ID)->first();
+        $pihak1 = $this->queryKapos($data->BRANCH);
+
         $set_tgl_awal = $request->tgl_awal;
         $principal = $data->POKOK_PEMBAYARAN;
         $angsuran = $data->INSTALLMENT;
         $loanTerm = $data->TENOR;
 
         $type = $data->INSTALLMENT_TYPE;
-      
+
         if (strtolower($type) == 'bulanan') {
-            $data_credit_schedule = $this->generateAmortizationSchedule($set_tgl_awal,$data);
+            $data_credit_schedule = $this->generateAmortizationSchedule($set_tgl_awal, $data);
 
             $installment_count = count($data_credit_schedule);
-        }else{
-            $data_credit_schedule = $this->generateAmortizationScheduleMusiman($set_tgl_awal,$data);
+        } else {
+            $data_credit_schedule = $this->generateAmortizationScheduleMusiman($set_tgl_awal, $data);
 
             $installment_count = count($data_credit_schedule);
         }
@@ -100,8 +111,8 @@ class Credit extends Controller
         $schedule = [];
         $check_exist = M_Credit::where('ORDER_NUMBER', $request->order_number)->first();
 
-        if($check_exist != null && !empty($check_exist->LOAN_NUMBER)){
-            $credit_schedule = M_CreditSchedule::where('LOAN_NUMBER',$check_exist->LOAN_NUMBER)->get();
+        if ($check_exist != null && !empty($check_exist->LOAN_NUMBER)) {
+            $credit_schedule = M_CreditSchedule::where('LOAN_NUMBER', $check_exist->LOAN_NUMBER)->get();
 
             $no = 1;
             foreach ($credit_schedule as $key) {
@@ -115,110 +126,110 @@ class Credit extends Controller
                 ];
             }
         }
-      
+
         $SET_UUID = Uuid::uuid7()->toString();
         $loan_number = generateCode($request, 'credit', 'LOAN_NUMBER');
         $cust_code = generateCustCode($request, 'customer', 'CUST_CODE');
-        
-        $guarente_vehicle = M_CrGuaranteVehicle::where('CR_SURVEY_ID',$data->CR_SURVEY_ID)->where(function($query) {
-            $query->whereNull('DELETED_AT')
-                ->orWhere('DELETED_AT', '');
-        })->get(); 
 
-        $guarente_sertificat = M_CrGuaranteSertification::where('CR_SURVEY_ID',$data->CR_SURVEY_ID)->where(function($query) {
+        $guarente_vehicle = M_CrGuaranteVehicle::where('CR_SURVEY_ID', $data->CR_SURVEY_ID)->where(function ($query) {
             $query->whereNull('DELETED_AT')
                 ->orWhere('DELETED_AT', '');
-        })->get(); 
+        })->get();
+
+        $guarente_sertificat = M_CrGuaranteSertification::where('CR_SURVEY_ID', $data->CR_SURVEY_ID)->where(function ($query) {
+            $query->whereNull('DELETED_AT')
+                ->orWhere('DELETED_AT', '');
+        })->get();
 
 
         if (!$check_exist && $request->flag == 'yes') {
 
-            $this->insert_credit($SET_UUID,$request, $data, $loan_number,$installment_count, $cust_code);
+            $this->insert_credit($SET_UUID, $request, $data, $loan_number, $installment_count, $cust_code);
 
-            $no =1;
+            $no = 1;
             foreach ($data_credit_schedule as $list) {
                 $credit_schedule =
-                [
-                    'ID' => Uuid::uuid7()->toString(),
-                    'LOAN_NUMBER' => $loan_number,
-                    'INSTALLMENT_COUNT' => $no++,
-                    'PAYMENT_DATE' => parseDatetoYMD($list['tgl_angsuran']),
-                    'PRINCIPAL' => $list['pokok'],
-                    'INTEREST' => $list['bunga'],
-                    'INSTALLMENT' => $list['total_angsuran'],
-                    'PRINCIPAL_REMAINS' => $list['baki_debet']
-                ];
+                    [
+                        'ID' => Uuid::uuid7()->toString(),
+                        'LOAN_NUMBER' => $loan_number,
+                        'INSTALLMENT_COUNT' => $no++,
+                        'PAYMENT_DATE' => parseDatetoYMD($list['tgl_angsuran']),
+                        'PRINCIPAL' => $list['pokok'],
+                        'INTEREST' => $list['bunga'],
+                        'INSTALLMENT' => $list['total_angsuran'],
+                        'PRINCIPAL_REMAINS' => $list['baki_debet']
+                    ];
 
                 M_CreditSchedule::create($credit_schedule);
             }
-            
-            $this->insert_customer($request,$data, $cust_code);
+
+            $this->insert_customer($request, $data, $cust_code);
             $this->insert_customer_xtra($data, $cust_code);
-            $this->insert_collateral($request,$data,$SET_UUID,$loan_number);
-            $this->insert_collateral_sertification($request,$data,$SET_UUID);
+            $this->insert_collateral($request, $data, $SET_UUID, $loan_number);
+            $this->insert_collateral_sertification($request, $data, $SET_UUID);
         }
-    
+
         $data = [
-           "no_perjanjian" => !$check_exist && $request->flag == 'yes' ? $loan_number??null: $check_exist->LOAN_NUMBER??null,
-            "cabang" => 'CABANG '.strtoupper($pihak1->name)??null,
-            "kota" => strtoupper($pihak1->city)??null,
-            "alamat_kantor" => strtoupper($pihak1->address)??null,
-            "tgl_cetak" => !empty($check_exist)? Carbon::parse($check_exist->CREATED_AT)->format('Y-m-d') : null,
-            "tgl_awal_angsuran" => !empty($check_exist)? Carbon::parse($check_exist->INSTALLMENT_DATE)->format('Y-m-d'): Carbon::parse($set_tgl_awal)->format('Y-m-d'),
-            "flag" => !$check_exist?0:1,
-             "pihak_1" => [
-                "nama" => strtoupper($pihak1->fullname)??null,
-                "jabatan" => strtoupper($pihak1->position)??null,
-                "no_ktp" => strtoupper($pihak1->no_ktp)??null,
-                "alamat" => strtoupper($pihak1->alamat)??null
-             ],
-             "pihak_2" => [
-                "nama" =>strtoupper($cr_personal->NAME)??null,
-                "no_identitas" => strtoupper($cr_personal->ID_NUMBER)??null,
-                "alamat" => strtoupper($cr_personal->ADDRESS)??null
-             ],
+            "no_perjanjian" => !$check_exist && $request->flag == 'yes' ? $loan_number ?? null : $check_exist->LOAN_NUMBER ?? null,
+            "cabang" => 'CABANG ' . strtoupper($pihak1->name) ?? null,
+            "kota" => strtoupper($pihak1->city) ?? null,
+            "alamat_kantor" => strtoupper($pihak1->address) ?? null,
+            "tgl_cetak" => !empty($check_exist) ? Carbon::parse($check_exist->CREATED_AT)->format('Y-m-d') : null,
+            "tgl_awal_angsuran" => !empty($check_exist) ? Carbon::parse($check_exist->INSTALLMENT_DATE)->format('Y-m-d') : Carbon::parse($set_tgl_awal)->format('Y-m-d'),
+            "flag" => !$check_exist ? 0 : 1,
+            "pihak_1" => [
+                "nama" => strtoupper($pihak1->fullname) ?? null,
+                "jabatan" => strtoupper($pihak1->position) ?? null,
+                "no_ktp" => strtoupper($pihak1->no_ktp) ?? null,
+                "alamat" => strtoupper($pihak1->alamat) ?? null
+            ],
+            "pihak_2" => [
+                "nama" => strtoupper($cr_personal->NAME) ?? null,
+                "no_identitas" => strtoupper($cr_personal->ID_NUMBER) ?? null,
+                "alamat" => strtoupper($cr_personal->ADDRESS) ?? null
+            ],
             "penjamin" => [],
             "pasangan" => [
-                "nama_pasangan" =>$cr_spouse->NAME ?? null,
-                "tmptlahir_pasangan" =>$cr_spouse->BIRTHPLACE ?? null,
+                "nama_pasangan" => $cr_spouse->NAME ?? null,
+                "tmptlahir_pasangan" => $cr_spouse->BIRTHPLACE ?? null,
                 "pekerjaan_pasangan" => $cr_spouse->OCCUPATION ?? null,
                 "tgllahir_pasangan" => $cr_spouse->BIRTHDATE ?? null,
                 "alamat_pasangan" => $cr_spouse->ADDRESS ?? null
             ],
-             "pokok_margin" =>bilangan($principal)??null,
-             "tenor" => bilangan($data->TENOR,false)??null,
-             "credit_id" => !empty($check_exist)?$check_exist->ID:null,
-             "tgl_awal_pk" => !empty($check_exist)?Carbon::parse($check_exist->ENTRY_DATE)->format('Y-m-d'):parseDatetoYMD($set_tgl_awal),
-             "tgl_akhir_pk" => !empty($check_exist)?Carbon::parse($check_exist->END_DATE)->format('Y-m-d'):add_months(parseDatetoYMD($set_tgl_awal),$loanTerm),
-             "angsuran" =>bilangan($angsuran)??null,
-             "opt_periode" => $data->OPT_PERIODE??null,
-             "jaminan" => [],
-             "struktur" => $check_exist != null && !empty($check_exist->LOAN_NUMBER)?$schedule:$data_credit_schedule??null
+            "pokok_margin" => bilangan($principal) ?? null,
+            "tenor" => bilangan($data->TENOR, false) ?? null,
+            "credit_id" => !empty($check_exist) ? $check_exist->ID : null,
+            "tgl_awal_pk" => !empty($check_exist) ? Carbon::parse($check_exist->ENTRY_DATE)->format('Y-m-d') : parseDatetoYMD($set_tgl_awal),
+            "tgl_akhir_pk" => !empty($check_exist) ? Carbon::parse($check_exist->END_DATE)->format('Y-m-d') : add_months(parseDatetoYMD($set_tgl_awal), $loanTerm),
+            "angsuran" => bilangan($angsuran) ?? null,
+            "opt_periode" => $data->OPT_PERIODE ?? null,
+            "jaminan" => [],
+            "struktur" => $check_exist != null && !empty($check_exist->LOAN_NUMBER) ? $schedule : $data_credit_schedule ?? null
         ];
 
         foreach ($cr_guarantor as $list) {
             $data['penjamin'][] = [
                 "id" => $list->ID ?? null,
                 "nama" => $list->NAME ?? null,
-                "jenis_kelamin" => $list->GENDER?? null,
-                "tempat_lahir" => $list->BIRTHPLACE?? null,
-                "tgl_lahir" =>$list->BIRTHDATE?? null,
-                "alamat" => $list->ADDRESS?? null,
-                "tipe_identitas"  => $list->IDENTIY_TYPE?? null,
-                "no_identitas"  => $list->NUMBER_IDENTITY?? null,
-                "pekerjaan"  => $list->OCCUPATION?? null,
-                "lama_bekerja"  => intval($list->WORK_PERIOD?? null),
-                "hub_cust" => $list->STATUS_WITH_DEBITUR?? null,
-                "no_hp" => $list->MOBILE_NUMBER?? null,
-                "pendapatan" => $list->INCOME?? null,   
-            ];    
+                "jenis_kelamin" => $list->GENDER ?? null,
+                "tempat_lahir" => $list->BIRTHPLACE ?? null,
+                "tgl_lahir" => $list->BIRTHDATE ?? null,
+                "alamat" => $list->ADDRESS ?? null,
+                "tipe_identitas"  => $list->IDENTIY_TYPE ?? null,
+                "no_identitas"  => $list->NUMBER_IDENTITY ?? null,
+                "pekerjaan"  => $list->OCCUPATION ?? null,
+                "lama_bekerja"  => intval($list->WORK_PERIOD ?? null),
+                "hub_cust" => $list->STATUS_WITH_DEBITUR ?? null,
+                "no_hp" => $list->MOBILE_NUMBER ?? null,
+                "pendapatan" => $list->INCOME ?? null,
+            ];
         }
 
         foreach ($guarente_vehicle as $list) {
             $data['jaminan'][] = [
                 "type" => "kendaraan",
                 'counter_id' => $list->HEADER_ID,
-                "atr" => [ 
+                "atr" => [
                     'id' => $list->ID,
                     'status_jaminan' => null,
                     "tipe" => $list->TYPE,
@@ -236,14 +247,14 @@ class Credit extends Controller
                     "tgl_stnk" => $list->STNK_VALID_DATE,
                     "nilai" => (int) $list->VALUE
                 ]
-            ];    
+            ];
         }
 
         foreach ($guarente_sertificat as $list) {
             $data['jaminan'][] = [
                 "type" => "sertifikat",
                 'counter_id' => $list->HEADER_ID,
-                "atr" => [ 
+                "atr" => [
                     'id' => $list->ID,
                     'status_jaminan' => null,
                     "no_sertifikat" => $list->NO_SERTIFIKAT,
@@ -259,57 +270,58 @@ class Credit extends Controller
                     "atas_nama" => $list->ATAS_NAMA,
                     "nilai" => (int) $list->NILAI
                 ]
-            ];    
+            ];
         }
 
         return $data;
     }
 
-    private function insert_credit($SET_UUID,$request,$data,$loan_number,$installment_count, $cust_code){
+    private function insert_credit($SET_UUID, $request, $data, $loan_number, $installment_count, $cust_code)
+    {
 
         $survey = M_CrSurvey::find($data->CR_SURVEY_ID);
 
         $setDate = parseDatetoYMD($request->tgl_awal);
 
-        $cr_personal = M_CrPersonal::where('APPLICATION_ID',$data->ID)->first();
-        $check_customer_ktp = M_Customer::where('ID_NUMBER',$cr_personal->ID_NUMBER)->first();
+        $cr_personal = M_CrPersonal::where('APPLICATION_ID', $data->ID)->first();
+        $check_customer_ktp = M_Customer::where('ID_NUMBER', $cr_personal->ID_NUMBER)->first();
 
-        $data_credit =[
+        $data_credit = [
             'ID' =>  $SET_UUID,
             'LOAN_NUMBER' => $loan_number,
             'STATUS_REC' => 'AC',
             'BRANCH'   => $data->BRANCH,
             'ORDER_NUMBER' => $data->ORDER_NUMBER,
             'STATUS'  => 'A',
-            'MCF_ID'  => $survey->created_by??null,
-            'ENTRY_DATE'  => $setDate??null,
+            'MCF_ID'  => $survey->created_by ?? null,
+            'ENTRY_DATE'  => $setDate ?? null,
             'FIRST_ARR_DATE'  => null,
-            'INSTALLMENT_DATE'  => $setDate??null,
-            'END_DATE'  => add_months($setDate,$data->PERIOD)??null,
-            'PCPL_ORI'  => $data->SUBMISSION_VALUE + ($data->TOTAL_ADMIN ?? 0)??null,
-            'INTRST_ORI' => $data->TOTAL_INTEREST??0,
+            'INSTALLMENT_DATE'  => $setDate ?? null,
+            'END_DATE'  => add_months($setDate, $data->PERIOD) ?? null,
+            'PCPL_ORI'  => $data->SUBMISSION_VALUE + ($data->TOTAL_ADMIN ?? 0) ?? null,
+            'INTRST_ORI' => $data->TOTAL_INTEREST ?? 0,
             'PAID_PRINCIPAL'  => 0,
             'PAID_INTEREST'  => 0,
             'PAID_PENALTY'  => 0,
             'DUE_PRINCIPAL'  => 0,
             'DUE_INTEREST'  => 0,
             'DUE_PENALTY'  => 0,
-            'CREDIT_TYPE'  =>$data->INSTALLMENT_TYPE??null,
+            'CREDIT_TYPE'  => $data->INSTALLMENT_TYPE ?? null,
             'INSTALLMENT_COUNT'  => $installment_count,
             'PERIOD'  => $data->TENOR,
             'INSTALLMENT'  => $data->INSTALLMENT,
-            'FLAT_RATE'  => $data->FLAT_RATE??null,
-            'EFF_RATE'  => $data->EFF_RATE??null,
-            'TOTAL_ADMIN' =>  $data->TOTAL_ADMIN??0,
+            'FLAT_RATE'  => $data->FLAT_RATE ?? null,
+            'EFF_RATE'  => $data->EFF_RATE ?? null,
+            'TOTAL_ADMIN' =>  $data->TOTAL_ADMIN ?? 0,
             'VERSION'  => 1,
             'CREATED_BY' => $request->user()->id,
             'CREATED_AT' => Carbon::now(),
         ];
 
-         
-        if(!$check_customer_ktp){
+
+        if (!$check_customer_ktp) {
             $data_credit['CUST_CODE'] = $cust_code;
-        }else{
+        } else {
             $data_credit['CUST_CODE'] = $check_customer_ktp->CUST_CODE;
         }
 
@@ -319,11 +331,12 @@ class Credit extends Controller
         return $last_id;
     }
 
-    private function insert_customer($request,$data, $cust_code){
+    private function insert_customer($request, $data, $cust_code)
+    {
 
-        $cr_personal = M_CrPersonal::where('APPLICATION_ID',$data->ID)->first();
-        $cr_order = M_CrOrder::where('APPLICATION_ID',$data->ID)->first();
-        $check_customer_ktp = M_Customer::where('ID_NUMBER',$cr_personal->ID_NUMBER)->first();
+        $cr_personal = M_CrPersonal::where('APPLICATION_ID', $data->ID)->first();
+        $cr_order = M_CrOrder::where('APPLICATION_ID', $data->ID)->first();
+        $check_customer_ktp = M_Customer::where('ID_NUMBER', $cr_personal->ID_NUMBER)->first();
 
         $getAttachment = DB::select(
             "   SELECT *
@@ -338,70 +351,71 @@ class Credit extends Controller
                 ORDER BY TIMEMILISECOND DESC"
         );
 
-        $data_customer =[
-            'NAME' =>$cr_personal->NAME,
-            'ALIAS' =>$cr_personal->ALIAS,
-            'GENDER' =>$cr_personal->GENDER,
-            'BIRTHPLACE' =>$cr_personal->BIRTHPLACE,
-            'BIRTHDATE' =>$cr_personal->BIRTHDATE,
-            'BLOOD_TYPE' =>$cr_personal->BLOOD_TYPE,
+        $data_customer = [
+            'NAME' => $cr_personal->NAME,
+            'ALIAS' => $cr_personal->ALIAS,
+            'GENDER' => $cr_personal->GENDER,
+            'BIRTHPLACE' => $cr_personal->BIRTHPLACE,
+            'BIRTHDATE' => $cr_personal->BIRTHDATE,
+            'BLOOD_TYPE' => $cr_personal->BLOOD_TYPE,
             'MOTHER_NAME' => $cr_order->MOTHER_NAME,
-            'NPWP' =>$cr_order->NO_NPWP,
-            'MARTIAL_STATUS' =>$cr_personal->MARTIAL_STATUS,
-            'MARTIAL_DATE' =>$cr_personal->MARTIAL_DATE,
-            'ID_TYPE' =>$cr_personal->ID_TYPE,
-            'ID_NUMBER' =>$cr_personal->ID_NUMBER,
-            'KK_NUMBER' =>$cr_personal->KK,
-            'ID_ISSUE_DATE' =>$cr_personal->ID_ISSUE_DATE,
-            'ID_VALID_DATE' =>$cr_personal->ID_VALID_DATE,
-            'ADDRESS' =>$cr_personal->ADDRESS,
-            'RT' =>$cr_personal->RT,
-            'RW' =>$cr_personal->RW,
-            'PROVINCE' =>$cr_personal->PROVINCE,
-            'CITY' =>$cr_personal->CITY,
-            'KELURAHAN' =>$cr_personal->KELURAHAN,
-            'KECAMATAN'=>$cr_personal->KECAMATAN ,
-            'ZIP_CODE' =>$cr_personal->ZIP_CODE,
-            'KK' =>$cr_personal->KK,
-            'CITIZEN' =>$cr_personal->CITIZEN,
-            'INS_ADDRESS' =>$cr_personal->INS_ADDRESS,
-            'INS_RT' =>$cr_personal->INS_RT,
-            'INS_RW' =>$cr_personal->INS_RW,
-            'INS_PROVINCE' =>$cr_personal->INS_PROVINCE,
-            'INS_CITY' =>$cr_personal->INS_CITY,
-            'INS_KELURAHAN' =>$cr_personal->INS_KELURAHAN,
-            'INS_KECAMATAN' =>$cr_personal->INS_KECAMATAN,
-            'INS_ZIP_CODE' =>$cr_personal->INS_ZIP_CODE,
-            'OCCUPATION' =>$cr_personal->OCCUPATION,
-            'OCCUPATION_ON_ID' =>$cr_personal->OCCUPATION_ON_ID,
+            'NPWP' => $cr_order->NO_NPWP,
+            'MARTIAL_STATUS' => $cr_personal->MARTIAL_STATUS,
+            'MARTIAL_DATE' => $cr_personal->MARTIAL_DATE,
+            'ID_TYPE' => $cr_personal->ID_TYPE,
+            'ID_NUMBER' => $cr_personal->ID_NUMBER,
+            'KK_NUMBER' => $cr_personal->KK,
+            'ID_ISSUE_DATE' => $cr_personal->ID_ISSUE_DATE,
+            'ID_VALID_DATE' => $cr_personal->ID_VALID_DATE,
+            'ADDRESS' => $cr_personal->ADDRESS,
+            'RT' => $cr_personal->RT,
+            'RW' => $cr_personal->RW,
+            'PROVINCE' => $cr_personal->PROVINCE,
+            'CITY' => $cr_personal->CITY,
+            'KELURAHAN' => $cr_personal->KELURAHAN,
+            'KECAMATAN' => $cr_personal->KECAMATAN,
+            'ZIP_CODE' => $cr_personal->ZIP_CODE,
+            'KK' => $cr_personal->KK,
+            'CITIZEN' => $cr_personal->CITIZEN,
+            'INS_ADDRESS' => $cr_personal->INS_ADDRESS,
+            'INS_RT' => $cr_personal->INS_RT,
+            'INS_RW' => $cr_personal->INS_RW,
+            'INS_PROVINCE' => $cr_personal->INS_PROVINCE,
+            'INS_CITY' => $cr_personal->INS_CITY,
+            'INS_KELURAHAN' => $cr_personal->INS_KELURAHAN,
+            'INS_KECAMATAN' => $cr_personal->INS_KECAMATAN,
+            'INS_ZIP_CODE' => $cr_personal->INS_ZIP_CODE,
+            'OCCUPATION' => $cr_personal->OCCUPATION,
+            'OCCUPATION_ON_ID' => $cr_personal->OCCUPATION_ON_ID,
             'INCOME' => $cr_order->INCOME_PERSONAL,
-            'RELIGION' =>$cr_personal->RELIGION,
-            'EDUCATION' =>$cr_personal->EDUCATION,
-            'PROPERTY_STATUS' =>$cr_personal->PROPERTY_STATUS,
-            'PHONE_HOUSE' =>$cr_personal->PHONE_HOUSE,
-            'PHONE_PERSONAL' =>$cr_personal->PHONE_PERSONAL,
-            'PHONE_OFFICE' =>$cr_personal->PHONE_OFFICE,
-            'EXT_1' =>$cr_personal->EXT_1,
-            'EXT_2' =>$cr_personal->EXT_2,
+            'RELIGION' => $cr_personal->RELIGION,
+            'EDUCATION' => $cr_personal->EDUCATION,
+            'PROPERTY_STATUS' => $cr_personal->PROPERTY_STATUS,
+            'PHONE_HOUSE' => $cr_personal->PHONE_HOUSE,
+            'PHONE_PERSONAL' => $cr_personal->PHONE_PERSONAL,
+            'PHONE_OFFICE' => $cr_personal->PHONE_OFFICE,
+            'EXT_1' => $cr_personal->EXT_1,
+            'EXT_2' => $cr_personal->EXT_2,
             'VERSION' => 1,
             'CREATE_DATE' => Carbon::now(),
             'CREATE_USER' => $request->user()->id,
         ];
-        
-        if(!$check_customer_ktp){
+
+        if (!$check_customer_ktp) {
             $data_customer['ID'] = Uuid::uuid7()->toString();
             $data_customer['CUST_CODE'] = $cust_code;
             $last_id = M_Customer::create($data_customer);
 
-            $this->createCustomerDocuments($last_id->ID,$getAttachment);
-        }else{
+            $this->createCustomerDocuments($last_id->ID, $getAttachment);
+        } else {
             $check_customer_ktp->update($data_customer);
 
-            $this->createCustomerDocuments($check_customer_ktp->ID,$getAttachment);
+            $this->createCustomerDocuments($check_customer_ktp->ID, $getAttachment);
         }
     }
 
-    private function createCustomerDocuments($customerId, $attachments) {
+    private function createCustomerDocuments($customerId, $attachments)
+    {
 
         M_CustomerDocument::where('CUSTOMER_ID', $customerId)->delete();
 
@@ -413,31 +427,32 @@ class Credit extends Controller
                 'PATH' => $res->PATH,
                 'TIMESTAMP' => round(microtime(true) * 1000)
             ];
-    
+
             M_CustomerDocument::create($custmer_doc_data);
         }
     }
 
-    private function insert_customer_xtra($data, $cust_code){
+    private function insert_customer_xtra($data, $cust_code)
+    {
 
-        $cr_personal = M_CrPersonal::where('APPLICATION_ID',$data->ID)->first();
-        $cr_personal_extra = M_CrPersonalExtra::where('APPLICATION_ID',$data->ID)->first();
-        $cr_spouse = M_CrApplicationSpouse::where('APPLICATION_ID',$data->ID)->first();
+        $cr_personal = M_CrPersonal::where('APPLICATION_ID', $data->ID)->first();
+        $cr_personal_extra = M_CrPersonalExtra::where('APPLICATION_ID', $data->ID)->first();
+        $cr_spouse = M_CrApplicationSpouse::where('APPLICATION_ID', $data->ID)->first();
         $check_customer_ktp = M_Customer::where('ID_NUMBER', $cr_personal->ID_NUMBER)->first();
-        $cr_order = M_CrOrder::where('APPLICATION_ID',$data->ID)->first();
+        $cr_order = M_CrOrder::where('APPLICATION_ID', $data->ID)->first();
         $update = M_CustomerExtra::where('CUST_CODE', $check_customer_ktp->CUST_CODE)->first();
 
 
-        $data_customer_xtra =[
-            'OTHER_OCCUPATION_1' =>$cr_personal_extra->OTHER_OCCUPATION_1??null,
-            'OTHER_OCCUPATION_2' =>$cr_personal_extra->OTHER_OCCUPATION_2??null,
-            'SPOUSE_NAME' =>  $cr_spouse->NAME??null,
-            'SPOUSE_BIRTHPLACE' =>  $cr_spouse->BIRTHPLACE??null,
-            'SPOUSE_BIRTHDATE' =>  $cr_spouse->BIRTHDATE??null,
-            'SPOUSE_ID_NUMBER' => $cr_spouse->NUMBER_IDENTITY??null,
-            'SPOUSE_INCOME' => $cr_order->INCOME_SPOUSE??null,
-            'SPOUSE_ADDRESS' => $cr_spouse->ADDRESS??null,
-            'SPOUSE_OCCUPATION' => $cr_spouse->OCCUPATION??null,
+        $data_customer_xtra = [
+            'OTHER_OCCUPATION_1' => $cr_personal_extra->OTHER_OCCUPATION_1 ?? null,
+            'OTHER_OCCUPATION_2' => $cr_personal_extra->OTHER_OCCUPATION_2 ?? null,
+            'SPOUSE_NAME' =>  $cr_spouse->NAME ?? null,
+            'SPOUSE_BIRTHPLACE' =>  $cr_spouse->BIRTHPLACE ?? null,
+            'SPOUSE_BIRTHDATE' =>  $cr_spouse->BIRTHDATE ?? null,
+            'SPOUSE_ID_NUMBER' => $cr_spouse->NUMBER_IDENTITY ?? null,
+            'SPOUSE_INCOME' => $cr_order->INCOME_SPOUSE ?? null,
+            'SPOUSE_ADDRESS' => $cr_spouse->ADDRESS ?? null,
+            'SPOUSE_OCCUPATION' => $cr_spouse->OCCUPATION ?? null,
             'SPOUSE_RT' => null,
             'SPOUSE_RW' => null,
             'SPOUSE_PROVINCE' => null,
@@ -445,25 +460,25 @@ class Credit extends Controller
             'SPOUSE_KELURAHAN' => null,
             'SPOUSE_KECAMATAN' => null,
             'SPOUSE_ZIP_CODE' => null,
-            'INS_ADDRESS' =>null,
-            'INS_RT' =>null,
-            'INS_RW' =>null,
-            'INS_PROVINCE' =>null,
-            'INS_CITY' =>null,
-            'INS_KELURAHAN' =>null,
-            'INS_KECAMATAN' =>null,
-            'INS_ZIP_CODE' =>null,
-            'EMERGENCY_NAME' =>$cr_personal_extra->EMERGENCY_NAME??null,
-            'EMERGENCY_ADDRESS' =>$cr_personal_extra->EMERGENCY_ADDRESS??null,
-            'EMERGENCY_RT' =>$cr_personal_extra->EMERGENCY_RT??null,
-            'EMERGENCY_RW' =>$cr_personal_extra->EMERGENCY_RW??null,
-            'EMERGENCY_PROVINCE' =>$cr_personal_extra->EMERGENCY_PROVINCE??null,
-            'EMERGENCYL_CITY' =>$cr_personal_extra->EMERGENCY_CITY??null,
-            'EMERGENCY_KELURAHAN' =>$cr_personal_extra->EMERGENCY_KELURAHAN??null,
-            'EMERGENCYL_KECAMATAN' =>$cr_personal_extra->EMERGENCY_KECAMATAN??null,
-            'EMERGENCY_ZIP_CODE' =>$cr_personal_extra->EMERGENCY_ZIP_CODE??null,
-            'EMERGENCY_PHONE_HOUSE' =>$cr_personal_extra->EMERGENCY_PHONE_HOUSE??null,
-            'EMERGENCY_PHONE_PERSONAL' =>$cr_personal_extra->EMERGENCY_PHONE_PERSONAL??null
+            'INS_ADDRESS' => null,
+            'INS_RT' => null,
+            'INS_RW' => null,
+            'INS_PROVINCE' => null,
+            'INS_CITY' => null,
+            'INS_KELURAHAN' => null,
+            'INS_KECAMATAN' => null,
+            'INS_ZIP_CODE' => null,
+            'EMERGENCY_NAME' => $cr_personal_extra->EMERGENCY_NAME ?? null,
+            'EMERGENCY_ADDRESS' => $cr_personal_extra->EMERGENCY_ADDRESS ?? null,
+            'EMERGENCY_RT' => $cr_personal_extra->EMERGENCY_RT ?? null,
+            'EMERGENCY_RW' => $cr_personal_extra->EMERGENCY_RW ?? null,
+            'EMERGENCY_PROVINCE' => $cr_personal_extra->EMERGENCY_PROVINCE ?? null,
+            'EMERGENCYL_CITY' => $cr_personal_extra->EMERGENCY_CITY ?? null,
+            'EMERGENCY_KELURAHAN' => $cr_personal_extra->EMERGENCY_KELURAHAN ?? null,
+            'EMERGENCYL_KECAMATAN' => $cr_personal_extra->EMERGENCY_KECAMATAN ?? null,
+            'EMERGENCY_ZIP_CODE' => $cr_personal_extra->EMERGENCY_ZIP_CODE ?? null,
+            'EMERGENCY_PHONE_HOUSE' => $cr_personal_extra->EMERGENCY_PHONE_HOUSE ?? null,
+            'EMERGENCY_PHONE_PERSONAL' => $cr_personal_extra->EMERGENCY_PHONE_PERSONAL ?? null
         ];
 
         if (!$update) {
@@ -475,7 +490,8 @@ class Credit extends Controller
         }
     }
 
-    public function attachment_guarante($survey_id, $data){
+    public function attachment_guarante($survey_id, $data)
+    {
         $documents = DB::select(
             "   SELECT *
                 FROM cr_survey_document AS csd
@@ -488,58 +504,51 @@ class Credit extends Controller
                 )
                 ORDER BY TIMEMILISECOND DESC"
         );
-    
-        return $documents;        
+
+        return $documents;
     }
 
-    private function insert_collateral($request,$data,$lastID,$loan_number){
-        $data_collateral = M_CrGuaranteVehicle::where('CR_SURVEY_ID',$data->CR_SURVEY_ID)->where(function($query) {
-                                $query->whereNull('DELETED_AT')
-                                    ->orWhere('DELETED_AT', '');
-                            })->get(); 
+    private function insert_collateral($request, $data, $lastID, $loan_number)
+    {
+        $data_collateral = M_CrGuaranteVehicle::where('CR_SURVEY_ID', $data->CR_SURVEY_ID)->where(function ($query) {
+            $query->whereNull('DELETED_AT')
+                ->orWhere('DELETED_AT', '');
+        })->get();
 
-        $doc = $this->attachment_guarante($data->CR_SURVEY_ID ,"'no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri'");
+        $doc = $this->attachment_guarante($data->CR_SURVEY_ID, "'no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri'");
 
         $setHeaderID = '';
         foreach ($doc as $res) {
-            $setHeaderID = $res->COUNTER_ID??'';
+            $setHeaderID = $res->COUNTER_ID ?? '';
         }
 
-        if($data_collateral->isNotEmpty()){
+        if ($data_collateral->isNotEmpty()) {
             foreach ($data_collateral as $res) {
                 $data_jaminan = [
                     'HEADER_ID' =>  $setHeaderID,
-                    'CR_CREDIT_ID' => $lastID??null,
-                    'TYPE' => $res->TYPE??null,
-                    'BRAND' => $res->BRAND??null,
-                    'PRODUCTION_YEAR' => $res->PRODUCTION_YEAR??null,
-                    'COLOR' => $res->COLOR??null,
-                    'ON_BEHALF' => $res->ON_BEHALF??null,
-                    'POLICE_NUMBER' => $res->POLICE_NUMBER??null,
-                    'CHASIS_NUMBER' => $res->CHASIS_NUMBER??null,
-                    'ENGINE_NUMBER' => $res->ENGINE_NUMBER??null,
-                    'BPKB_NUMBER' => $res->BPKB_NUMBER??null,
-                    'STNK_NUMBER' => $res->STNK_NUMBER??null,
-                    'VALUE' => $res->VALUE??null,
+                    'CR_CREDIT_ID' => $lastID ?? null,
+                    'TYPE' => $res->TYPE ?? null,
+                    'BRAND' => $res->BRAND ?? null,
+                    'PRODUCTION_YEAR' => $res->PRODUCTION_YEAR ?? null,
+                    'COLOR' => $res->COLOR ?? null,
+                    'ON_BEHALF' => $res->ON_BEHALF ?? null,
+                    'POLICE_NUMBER' => $res->POLICE_NUMBER ?? null,
+                    'CHASIS_NUMBER' => $res->CHASIS_NUMBER ?? null,
+                    'ENGINE_NUMBER' => $res->ENGINE_NUMBER ?? null,
+                    'BPKB_NUMBER' => $res->BPKB_NUMBER ?? null,
+                    'STNK_NUMBER' => $res->STNK_NUMBER ?? null,
+                    'VALUE' => $res->VALUE ?? null,
                     'LOCATION_BRANCH' => $data->BRANCH,
                     'COLLATERAL_FLAG' => $data->BRANCH,
                     'VERSION' => 1,
                     'CREATE_DATE' => $this->timeNow,
                     'CREATE_BY' => $request->user()->id,
                 ];
-    
+
                 $execute = M_CrCollateral::create($data_jaminan);
 
-                $log = [
-                    'COLLATERAL_ID' => $execute->ID,
-                    'TYPE' => 'kendaraan',
-                    'LOCATION' => $data->BRANCH,
-                    'STATUS' =>'NEW '.$loan_number??'',
-                    'CREATE_BY' => $request->user()->id,
-                    'CREATED_AT' => $this->timeNow,
-                ];
-
-                M_LocationStatus::create($log);
+                $statusLog = 'NEW ' . $loan_number ?? '';
+                $this->locationStatus->createLocationStatusLog($execute->ID, $data->BRANCH, $statusLog);
 
                 foreach ($doc as $res) {
                     $custmer_doc_data = [
@@ -548,26 +557,27 @@ class Credit extends Controller
                         'COUNTER_ID' => $res->COUNTER_ID,
                         'PATH' => $res->PATH
                     ];
-            
+
                     M_CrCollateralDocument::create($custmer_doc_data);
                 }
             }
         }
     }
 
-    private function insert_collateral_sertification($request,$data,$lastID){
-        $data_collateral = M_CrGuaranteSertification::where('CR_SURVEY_ID',$data->CR_SURVEY_ID)->where(function($query) {
-                                $query->whereNull('DELETED_AT')
-                                    ->orWhere('DELETED_AT', '');
-                            })->get(); 
+    private function insert_collateral_sertification($request, $data, $lastID)
+    {
+        $data_collateral = M_CrGuaranteSertification::where('CR_SURVEY_ID', $data->CR_SURVEY_ID)->where(function ($query) {
+            $query->whereNull('DELETED_AT')
+                ->orWhere('DELETED_AT', '');
+        })->get();
 
-        $doc = $this->attachment_guarante($data->CR_SURVEY_ID ,"'sertifikat'");                    
+        $doc = $this->attachment_guarante($data->CR_SURVEY_ID, "'sertifikat'");
 
-        if($data_collateral->isNotEmpty()){
+        if ($data_collateral->isNotEmpty()) {
             foreach ($data_collateral as $res) {
                 $data_jaminan = [
                     'HEADER_ID' => "",
-                    'CR_CREDIT_ID' => $lastID??null,
+                    'CR_CREDIT_ID' => $lastID ?? null,
                     'STATUS_JAMINAN' => $res->STATUS_JAMINAN,
                     'NO_SERTIFIKAT' => $res->NO_SERTIFIKAT,
                     'STATUS_KEPEMILIKAN' => $res->STATUS_KEPEMILIKAN,
@@ -587,13 +597,13 @@ class Credit extends Controller
                     'CREATE_DATE' => $this->timeNow,
                     'CREATE_BY' => $request->user()->id,
                 ];
-    
+
                 $execute =  M_CrCollateralSertification::create($data_jaminan);
 
                 $log = [
                     'COLLATERAL_ID' => $execute->id,
                     'TYPE' => 'sertifikat',
-                    'STATUS' =>'NORMAL',
+                    'STATUS' => 'NORMAL',
                     'COLLATERAL_FLAG' => $data->BRANCH,
                     'CREATED_BY' => $request->user()->id,
                     'CREATED_AT' => $this->timeNow
@@ -608,29 +618,30 @@ class Credit extends Controller
                         'COUNTER_ID' => $res->COUNTER_ID,
                         'PATH' => $res->PATH
                     ];
-            
+
                     M_CrCollateralDocument::create($custmer_doc_data);
                 }
             }
         }
     }
 
-    public function checkCollateral(Request $request){
+    public function checkCollateral(Request $request)
+    {
         try {
 
             if (collect($request->jaminan)->isNotEmpty()) {
                 foreach ($request->jaminan as $result) {
-                    $checkMethod = $this->checkCollateralExists($result['type'],$result['number']);
-                    
+                    $checkMethod = $this->checkCollateralExists($result['type'], $result['number']);
+
                     if ($checkMethod->isNotEmpty()) {
-                        return response()->json(['status' => false, 'message' => "ADA JAMINAN YANG AKTIF BANGSAT","data" => $checkMethod->first()->LOAN_NUMBER], 400);
+                        return response()->json(['status' => false, 'message' => "ADA JAMINAN YANG AKTIF BANGSAT", "data" => $checkMethod->first()->LOAN_NUMBER], 400);
                     }
                 }
             }
 
-            return response()->json(['status' => true,'message' =>"Aman Cuk"], 200);
+            return response()->json(['status' => true, 'message' => "Aman Cuk"], 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['status' => false, 'message' => $e->getMessage()], 400);
         }
     }
@@ -639,13 +650,13 @@ class Credit extends Controller
     {
         $table = $type === 'kendaraan' ? 'cr_collateral' : 'cr_collateral_sertification';
         $column = $type === 'kendaraan' ? 'BPKB_NUMBER' : 'NO_SERTIFIKAT';
-        
+
         return DB::table('credit as a')
-                    ->leftJoin($table . ' as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
-                    ->where('b.' . $column, $no)
-                    ->where('a.STATUS', 'A')
-                    ->select('a.LOAN_NUMBER')
-                    ->get();  
+            ->leftJoin($table . ' as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
+            ->where('b.' . $column, $no)
+            ->where('a.STATUS', 'A')
+            ->select('a.LOAN_NUMBER')
+            ->get();
     }
 
     // private function generateAmortizationSchedule($principal, $angsuran, $setDate, $loanTerm) {
@@ -845,7 +856,7 @@ class Credit extends Controller
         $remainingBalance = $data->POKOK_PEMBAYARAN;
         $term = ceil($data->TENOR);
         $angsuran = $data->INSTALLMENT;
-        $suku_bunga_konversi = ($data->FLAT_RATE/100);
+        $suku_bunga_konversi = ($data->FLAT_RATE / 100);
         $ttal_bunga = $data->TOTAL_INTEREST;
         $totalInterestPaid = 0;
 
@@ -868,7 +879,7 @@ class Credit extends Controller
 
             $schedule[] = [
                 'angsuran_ke' => $i,
-                'tgl_angsuran' => setPaymentDate($setDate, $i), 
+                'tgl_angsuran' => setPaymentDate($setDate, $i),
                 'baki_debet_awal' => floatval($remainingBalance + $principalPayment),
                 'pokok' => floatval($principalPayment),
                 'bunga' => floatval($interest),
@@ -881,7 +892,7 @@ class Credit extends Controller
     }
 
     private function generateAmortizationScheduleMusiman($setDate, $data)
-    { 
+    {
         $schedule = [];
         $remainingBalance = $data->POKOK_PEMBAYARAN;  // Initial loan amount (POKOK_PEMBAYARAN)
         $term = ceil($data->TENOR);  // Loan term in months (TENOR)
@@ -889,31 +900,31 @@ class Credit extends Controller
         $suku_bunga_konversi = round($data->FLAT_RATE / 100, 10);  // Monthly interest rate (FLAT_RATE divided by 100)
         $ttal_bunga = $data->TOTAL_INTEREST;  // Total interest (TOTAL_INTEREST)
         $totalInterestPaid = 0;  // Total interest paid so far
-    
+
         $tenorList = [
             '3' => 1,
             '6' => 1,
             '12' => 2,
             '18' => 3
         ];
-    
+
         $term = $tenorList[$term] ?? 0;
 
-        $monthsToAdd = ($data->TENOR/$tenorList[$data->TENOR]) ?? 0;
+        $monthsToAdd = ($data->TENOR / $tenorList[$data->TENOR]) ?? 0;
 
         $startDate = new DateTime($setDate);
-    
+
         for ($i = 1; $i <= $term; $i++) {
-            
+
             $interest = round($remainingBalance * $suku_bunga_konversi, 2);
-          
+
             if ($i < $term) {
                 $principalPayment = round($angsuran - $interest, 2);
             } else {
                 $principalPayment = round($remainingBalance, 2);
                 $interest = round($ttal_bunga - $totalInterestPaid, 2);
             }
-    
+
             $totalPayment = round($principalPayment + $interest, 2);
             $remainingBalance = round($remainingBalance - $principalPayment, 2);
             $totalInterestPaid += $interest;
@@ -925,7 +936,7 @@ class Credit extends Controller
             $paymentDate = clone $startDate;
 
             $paymentDate->modify("+{$monthsToAdd} months");
-    
+
             // Format the date as required (e.g., 'Y-m-d')
             $formattedPaymentDate = $paymentDate->format('Y-m-d');
 
@@ -937,10 +948,10 @@ class Credit extends Controller
                 'total_angsuran' => floatval($totalPayment),
                 'baki_debet' => floatval($remainingBalance)
             ];
-    
+
             $startDate = $paymentDate;
         }
-    
+
         return $schedule;
     }
 
@@ -966,7 +977,6 @@ class Credit extends Controller
             }
 
             throw new Exception("Request Flag Not Valid", 404);
-
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
@@ -986,8 +996,8 @@ class Credit extends Controller
             throw new Exception("Order Number {$orderNumber} No Exist", 404);
         }
 
-        $this->updateApplicationApproval($request, $checkOrderNumber,'REORADM','revisi admin');
-        $this->updateSurveyApproval($request, $checkOrderNumber,'REORADM','revisi admin');
+        $this->updateApplicationApproval($request, $checkOrderNumber, 'REORADM', 'revisi admin');
+        $this->updateSurveyApproval($request, $checkOrderNumber, 'REORADM', 'revisi admin');
 
         return response()->json(['message' => "Success Revisi Order"], 200);
     }
@@ -998,29 +1008,29 @@ class Credit extends Controller
             'ORDER_NUMBER' => $orderNumber,
             'STATUS' => 'A'
         ])->whereNull('DELETED_BY')
-        ->whereNull('DELETED_AT')
-        ->first();
+            ->whereNull('DELETED_AT')
+            ->first();
 
         if (!$check) {
             throw new Exception("Order Number Not Exist", 404);
         }
 
         M_CreditCancelLog::create([
-            'CREDIT_ID' => $orderNumber??'',
+            'CREDIT_ID' => $orderNumber ?? '',
             'REQUEST_FLAG' => "CANCEL",
-            'REQUEST_BY' => $request->user()->id??'',
-            'REQUEST_BRANCH' => $request->user()->branch_id??'',
+            'REQUEST_BY' => $request->user()->id ?? '',
+            'REQUEST_BRANCH' => $request->user()->branch_id ?? '',
             'REQUEST_DATE' => Carbon::now(),
-            'REQUEST_DESCR' => $request->descr??'',
+            'REQUEST_DESCR' => $request->descr ?? '',
         ]);
 
         $checkSurveyId = M_CrApplication::where('ORDER_NUMBER', $check->ORDER_NUMBER)->first();
         if ($checkSurveyId) {
-            $this->updateApplicationApproval($request, $checkSurveyId,'REQCANCELHO','menunggu cancel order');
-            $this->updateSurveyApproval($request, $checkSurveyId,'REQCANCELHO','menunggu cancel order');
+            $this->updateApplicationApproval($request, $checkSurveyId, 'REQCANCELHO', 'menunggu cancel order');
+            $this->updateSurveyApproval($request, $checkSurveyId, 'REQCANCELHO', 'menunggu cancel order');
         }
 
-        if (strtolower($request->user()->position) === 'ho' && isset($request->flag) && !empty($request->flag) ) {
+        if (strtolower($request->user()->position) === 'ho' && isset($request->flag) && !empty($request->flag)) {
             return $this->processHoApproval($request, $check);
         }
     }
@@ -1034,10 +1044,10 @@ class Credit extends Controller
                 'DELETED_BY' => $request->user()->id,
                 'DELETED_AT' => Carbon::now(),
             ]);
-    
+
             $checkCreditCancel = M_CreditCancelLog::where('CREDIT_ID', $check->ORDER_NUMBER)->first();
-    
-            if($checkCreditCancel){
+
+            if ($checkCreditCancel) {
                 $checkCreditCancel->update([
                     'ONCHARGE_DESCR' => $request->descr_ho ?? '',
                     'ONCHARGE_PERSON' => $request->user()->id,
@@ -1048,10 +1058,10 @@ class Credit extends Controller
 
             $updateProsessRequest = M_CrApplication::where('ORDER_NUMBER', $check->ORDER_NUMBER)->first();
             if ($updateProsessRequest) {
-                $this->updateApplicationApproval($request, $updateProsessRequest,'CANCELHO','cancel order');
-                $this->updateSurveyApproval($request, $updateProsessRequest,'CANCELHO','cancel order');
+                $this->updateApplicationApproval($request, $updateProsessRequest, 'CANCELHO', 'cancel order');
+                $this->updateSurveyApproval($request, $updateProsessRequest, 'CANCELHO', 'cancel order');
             }
-        }elseif(strtolower($request->flag) === 'no'){
+        } elseif (strtolower($request->flag) === 'no') {
             $application = M_CrApplication::where('ORDER_NUMBER', $check->ORDER_NUMBER)->first();
 
             $approval = M_ApplicationApproval::where('cr_application_id', $application->ID)->first();
@@ -1059,13 +1069,13 @@ class Credit extends Controller
                 $approval->update([
                     'code' => 'APHO',
                     'cr_prospect_id' => $application->CR_SURVEY_ID ?? null,
-                    'cr_application_id' => $application->ID??null,
+                    'cr_application_id' => $application->ID ?? null,
                     'application_result' => 'disetujui ho',
                     'cr_application_ho' => $request->user()->id,
                     'cr_application_ho_time' => Carbon::now()->format('Y-m-d'),
                     'cr_application_ho_desc' => $request->descr_ho ?? '',
                 ]);
-    
+
                 M_ApplicationApprovalLog::create([
                     'CODE' => 'CANCELREQADM',
                     'POSITION' => $request->user()->position ?? null,
@@ -1085,7 +1095,7 @@ class Credit extends Controller
                     'ONCHARGE_TIME' => Carbon::now(),
                     'APPROVAL_RESULT' => 'disetujui ho',
                 ]);
-    
+
                 M_SurveyApprovalLog::create([
                     'CODE' => 'CANCELREQADM',
                     'SURVEY_APPROVAL_ID' => $application->CR_SURVEY_ID,
@@ -1099,14 +1109,14 @@ class Credit extends Controller
         return response()->json(['message' => "Success Cancel Order"], 200);
     }
 
-    private function updateApplicationApproval(Request $request, $application,$code,$descr)
+    private function updateApplicationApproval(Request $request, $application, $code, $descr)
     {
         $approval = M_ApplicationApproval::where('cr_application_id', $application->ID)->first();
         if ($approval) {
             $approval->update([
                 'code' => $code,
                 'cr_prospect_id' => $application->CR_SURVEY_ID ?? null,
-                'cr_application_id' => $application->ID??null,
+                'cr_application_id' => $application->ID ?? null,
                 'application_result' => $descr,
                 'cr_application_ho' => $request->user()->id,
                 'cr_application_ho_time' => Carbon::now()->format('Y-m-d'),
@@ -1124,7 +1134,7 @@ class Credit extends Controller
         }
     }
 
-    private function updateSurveyApproval(Request $request, $application,$code,$descr)
+    private function updateSurveyApproval(Request $request, $application, $code, $descr)
     {
         $surveyApproval = M_SurveyApproval::where('CR_SURVEY_ID', $application->CR_SURVEY_ID)->first();
         if ($surveyApproval) {
@@ -1149,23 +1159,22 @@ class Credit extends Controller
     public function pkCancelList(Request $request)
     {
         try {
-            $data = M_CreditCancelLog::where(function($query) {
-                        $query->whereNull('ONCHARGE_PERSON')
-                            ->orWhere('ONCHARGE_PERSON', '');
-                    })
-                    ->where(function($query) {
-                        $query->whereNull('ONCHARGE_TIME')
-                            ->orWhere('ONCHARGE_TIME', '');
-                    })
-                    ->get();
+            $data = M_CreditCancelLog::where(function ($query) {
+                $query->whereNull('ONCHARGE_PERSON')
+                    ->orWhere('ONCHARGE_PERSON', '');
+            })
+                ->where(function ($query) {
+                    $query->whereNull('ONCHARGE_TIME')
+                        ->orWhere('ONCHARGE_TIME', '');
+                })
+                ->get();
 
             $dto = R_CreditCancelLog::collection($data);
 
             return response()->json($dto, 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
-
 }
