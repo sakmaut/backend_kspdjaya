@@ -41,9 +41,8 @@ class PaymentController extends Controller
             $getPosition = $request->user()->position;
             $getBranch = $request->user()->branch_id;
 
-            $data = M_Kwitansi::where('CREATED_AT', Carbon::now())
-                ->orderBy('CREATED_AT', 'DESC')
-                ->get();
+            $data = M_Kwitansi::where(DB::raw('DATE_FORMAT(CREATED_AT,"%Y%m%d")'), Carbon::now()->format('Ymd'))
+                ->orderBy('CREATED_AT', 'DESC');
 
             if (strtolower($getPosition) == 'ho') {
                 $data->where('STTS_PAYMENT', '=', 'PENDING');
