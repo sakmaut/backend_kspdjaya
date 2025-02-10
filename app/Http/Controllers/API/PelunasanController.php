@@ -92,18 +92,16 @@ class PelunasanController extends Controller
                                 GROUP BY LOAN_NUMBER
                             ) b ON b.LOAN_NUMBER = a.LOAN_NUMBER
                             LEFT JOIN (
-                                SELECT 
-                                    LOAN_NUMBER, 
-                                    INTEREST - PAYMENT_VALUE_INTEREST AS DISC_BUNGA
-                                FROM 
-                                    credit_schedule
-                                WHERE 
-                                    LOAN_NUMBER = '{$loan_number}' 
-                                    AND PAYMENT_DATE = (
-                                        SELECT MAX(PAYMENT_DATE)
-                                        FROM credit_schedule
-                                        WHERE LOAN_NUMBER = '{$loan_number}' 
-                                        AND PAYMENT_DATE > NOW()
+                                        SELECT	LOAN_NUMBER,coalesce (sum(INTEREST),0) AS DISC_BUNGA
+                                        FROM	credit_schedule
+                                        WHERE	LOAN_NUMBER='{$loan_number}'
+                                                and PAYMENT_DATE>(SELECT	coalesce(min(PAYMENT_DATE),(SELECT	max(PAYMENT_DATE)
+                                                                                                        FROM	credit_schedule
+                                                                                                        WHERE	LOAN_NUMBER='{$loan_number}'
+                                                                                                                and PAYMENT_DATE<now()))
+                                                                    FROM	credit_schedule
+                                                                    WHERE	LOAN_NUMBER='{$loan_number}'
+                                                                            and PAYMENT_DATE>now())
                                     )
                             ) d ON d.LOAN_NUMBER = a.LOAN_NUMBER
                             LEFT JOIN (
