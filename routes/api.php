@@ -66,7 +66,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('cr_application_generate', [CrAppilcationController::class, 'generateUuidFPK']);
 
     // Route Group Cr Prospek (Kunjungan)
-    Route::resource('kunjungan', CrSurveyController::class)->except(['index', 'howAdmins']);
+    Route::resource('kunjungan', CrSurveyController::class)->except(['index', 'showAdmins']);
     Route::post('image_upload_prospect', [CrSurveyController::class, 'uploadImage']);
     Route::post('image_upload_multiple', [CrSurveyController::class, 'imageMultiple']);
     Route::delete('image_deleted/{id}', [CrSurveyController::class, 'destroyImage']);

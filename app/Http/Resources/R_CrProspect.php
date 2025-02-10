@@ -24,6 +24,7 @@ class R_CrProspect extends JsonResource
     public function toArray(Request $request): array
     {
         $check_exist = M_Credit::where('ORDER_NUMBER', $this->order_number)->first();
+        $getApproval = M_SurveyApproval::where('CR_SURVEY_ID', $this->id)->first();
 
         $data = [
             'id' => $this->id,
@@ -36,8 +37,8 @@ class R_CrProspect extends JsonResource
             'alamat' => $this->alamat,
             'hp' => $this->hp,
             'plafond' => $this->plafond,
-            'status' => $this->APPROVAL_RESULT ?? '',
-            'status_code' => $this->CODE ?? '',
+            'status' => $getApproval ? $getApproval->APPROVAL_RESULT : '',
+            'status_code' => $getApproval ? $getApproval->CODE : '',
             'attachment' => $this->attachment($this->id, "'sp', 'pk', 'dok'")
         ];
 
