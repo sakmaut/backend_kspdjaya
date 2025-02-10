@@ -168,106 +168,289 @@ class ListBanController extends Controller
         return $result;
     }
 
+    // public function listBan(Request $request) {
+    //     try {
 
-    public function listBan(Request $request) {
+    //         $dateFrom = $request->dari;
+    //         $getBranch = $request->cabang_id;
+
+    //         $results = DB::table('branch as a')
+    //                     ->join('credit as b', 'b.BRANCH', '=', 'a.ID')
+    //                     ->leftJoin('customer as c', 'c.CUST_CODE', '=', 'b.CUST_CODE')
+    //                     ->leftJoin('users as d', 'd.id', '=', 'b.MCF_ID')
+    //                     ->leftJoin('cr_application as e', 'e.ORDER_NUMBER', '=', 'b.ORDER_NUMBER')
+    //                     ->leftJoin('cr_order as h', 'h.APPLICATION_ID', '=', 'e.ID')
+    //                     ->leftJoin('cr_survey as f', 'f.id', '=', 'e.CR_SURVEY_ID')
+    //                     ->leftJoin('cr_collateral as g', 'g.CR_CREDIT_ID', '=', 'b.ID')
+    //                     ->select(
+    //                         DB::raw("CONCAT(a.CODE, '-', a.CODE_NUMBER) as KODE"),
+    //                         'a.NAME as NAMA_CABANG',
+    //                         'b.LOAN_NUMBER as NO_KONTRAK',
+    //                         'c.NAME as NAMA_PELANGGAN',
+    //                         'b.CREATED_AT as TGL_BOOKING',
+    //                         DB::raw('null as UB'),
+    //                         DB::raw('null as PLATFORM'),
+    //                         'c.INS_ADDRESS as ALAMAT_TAGIH',
+    //                         'c.ZIP_CODE as KODE_POST',
+    //                         'c.PHONE_HOUSE as NO_TELP',
+    //                         'c.PHONE_PERSONAL as NO_HP',
+    //                         'c.OCCUPATION as PEKERJAAN',
+    //                         DB::raw('null as SURVEYOR'),
+    //                         'f.survey_note as CATT_SURVEY',
+    //                         'b.PCPL_ORI as PKK_HUTANG',
+    //                         'e.INSTALLMENT_TYPE as tipe',
+    //                         'b.PERIOD',
+    //                         DB::raw('DATEDIFF(b.FIRST_ARR_DATE, NOW()) as OVERDUE'),
+    //                         DB::raw('99 as CYCLE'),
+    //                         'b.STATUS_REC',
+    //                         'b.PAID_PRINCIPAL',
+    //                         'b.PAID_INTEREST',
+    //                         DB::raw('b.PAID_PRINCIPAL + b.PAID_INTEREST as PAID_TOTAL'),
+    //                         DB::raw('b.PCPL_ORI - b.PAID_PRINCIPAL as OUTSTANDING'),
+    //                         'b.INSTALLMENT',
+    //                         'b.INSTALLMENT_DATE',
+    //                         'b.FIRST_ARR_DATE',
+    //                         DB::raw("' ' as COLLECTOR"),
+    //                         DB::raw('GROUP_CONCAT(CONCAT(g.BRAND, " ", g.TYPE)) as COLLATERAL'),
+    //                         DB::raw('GROUP_CONCAT(g.POLICE_NUMBER) as POLICE_NUMBER'),
+    //                         DB::raw('GROUP_CONCAT(g.ENGINE_NUMBER) as ENGINE_NUMBER'),
+    //                         DB::raw('GROUP_CONCAT(g.CHASIS_NUMBER) as CHASIS_NUMBER'),
+    //                         DB::raw('GROUP_CONCAT(g.PRODUCTION_YEAR) as PRODUCTION_YEAR'),
+    //                         DB::raw('SUM(g.VALUE) as TOTAL_NILAI_JAMINAN'),
+    //                         'b.CUST_CODE',
+    //                         DB::raw("concat(h.REF_PELANGGAN,' ',h.REF_PELANGGAN_OTHER) as supplier")
+    //                     )
+    //                     ->groupBy(
+    //                         'a.CODE',
+    //                         'a.CODE_NUMBER',
+    //                         'a.NAME',
+    //                         'b.LOAN_NUMBER',
+    //                         'c.NAME',
+    //                         'b.CREATED_AT',
+    //                         'c.INS_ADDRESS',
+    //                         'c.ZIP_CODE',
+    //                         'c.PHONE_HOUSE',
+    //                         'c.PHONE_PERSONAL',
+    //                         'c.OCCUPATION',
+    //                         'd.fullname',
+    //                         'f.survey_note',
+    //                         'b.PCPL_ORI',
+    //                         'e.TOTAL_ADMIN',
+    //                         'e.INSTALLMENT_TYPE',
+    //                         'b.PERIOD',
+    //                         DB::raw('DATEDIFF(b.FIRST_ARR_DATE, NOW())'),
+    //                         'b.STATUS_REC',
+    //                         'b.PAID_PRINCIPAL',
+    //                         'b.PAID_INTEREST',
+    //                         DB::raw('b.PAID_PRINCIPAL + b.PAID_INTEREST'),
+    //                         DB::raw('b.PCPL_ORI - b.PAID_PRINCIPAL'),
+    //                         'b.INSTALLMENT',
+    //                         'b.INSTALLMENT_DATE',
+    //                         'b.FIRST_ARR_DATE',
+    //                         'b.CUST_CODE',
+    //                         'h.REF_PELANGGAN',
+    //                         'h.REF_PELANGGAN_OTHER'
+    //                     );
+
+    //         if (!empty($getBranch) && $getBranch != 'SEMUA CABANG') {
+    //             $results->where('a.ID', $getBranch);
+    //         }
+
+    //         if (!empty($dateFrom)) {
+    //             $results->where(DB::raw("DATE_FORMAT(b.CREATED_AT, '%Y-%m')"), $dateFrom);
+    //         } else {
+    //             $results->where('b.CREATED_AT', '>=', DB::raw('DATE_SUB(NOW(), INTERVAL 1 MONTH)'));
+    //         }
+
+    //         $results = $results->get();
+
+    //         $build = [];
+    //         foreach ($results as $result) {
+    //             $build[] =[
+    //                 "KODE CABANG" => $result->KODE ?? '',
+    //                 "NAMA CABANG" => $result->NAMA_CABANG ?? '',
+    //                 "NO KONTRAK" => $result->NO_KONTRAK ?? '',
+    //                 "NAMA PELANGGAN" => $result->NAMA_PELANGGAN ?? '',
+    //                 "TGL BOOKING" => isset($result->TGL_BOOKING) && !empty($result->TGL_BOOKING) ? date("d-m-Y", strtotime($result->TGL_BOOKING)) : '',
+    //                 "UB" => $result->UB ?? '',
+    //                 "PLATFORM" => $result->PLATFORM ?? '',
+    //                 "ALAMAT TAGIH" => $result->ALAMAT_TAGIH ?? '',
+    //                 "KODEPOS" => $result->KODE_POST ?? '',
+    //                 "SUBZIP" => '',
+    //                 "NO TELP" => $result->NO_TELP ?? '',
+    //                 "NO HP1" => $result->NO_HP ?? '',
+    //                 "NO HP2" => $result->NO_HP ?? '',
+    //                 "PEKERJAAN" => $result->PEKERJAAN ?? '',
+    //                 "SUPPLIER" => $result->supplier??'',
+    //                 "SURVEYOR" => $result->SURVEYOR ?? '',
+    //                 "CATT SURVEY" => $result->CATT_SURVEY ?? '',
+    //                 "PKK HUTANG" => number_format($result->PKK_HUTANG ?? 0),
+    //                 "JML ANGS" => $result->PERIOD ?? '',
+    //                 "JRK ANGS" => $result->PERIOD ?? '',
+    //                 "PERIOD" => $result->tipe ?? '',
+    //                 "OUT PKK AWAL" => '',
+    //                 "OUT BNG AWAL" => '',
+    //                 "OVERDUE AWAL" => number_format($result->OVERDUE ?? 0),
+    //                 "AMBC PKK AWAL" => '',
+    //                 "AMBC BNG AWAL" => '',
+    //                 "AMBC TOTAL AWAL" => '',
+    //                 "CYCLE AWAL" => $result->CYCLE ?? '',
+    //                 "STS KONTRAK" => $result->STATUS_REC ?? '',
+    //                 "STS BEBAN" => '',
+    //                 "POLA BYR AWAL" => '',
+    //                 "OUTS PKK AKHIR" => number_format($result->PAID_PRINCIPAL ?? 0),
+    //                 "OUTS BNG AKHIR" => number_format($result->PAID_INTEREST ?? 0),
+    //                 "OVERDUE AKHIR" => number_format($result->OUTSTANDING ?? 0),
+    //                 "ANGSURAN" => number_format($result->INSTALLMENT ?? 0),
+    //                 "ANGS KE" => '',
+    //                 "TIPE ANGSURAN"=>'',
+    //                 "JTH TEMPO AWAL" => date("d-m-Y", strtotime($result->INSTALLMENT_DATE ?? '')),
+    //                 "JTH TEMPO AKHIR" => date("d-m-Y", strtotime($result->FIRST_ARR_DATE ?? '')),
+    //                 "TGL BAYAR" => '',
+    //                 "KOLEKTOR" => '',
+    //                 "CARA BYR" => '',
+    //                 "AMBC PKK_AKHIR" => '',
+    //                 "AMBC BNG_AKHIR" => '',
+    //                 "AMBC TOTAL_AKHIR" => '',
+    //                 "AC PKK"=>'',
+    //                 "AC BNG MRG"=>'',
+    //                 "AC TOTAL"=>'',
+    //                 "CYCLE AKHIR"=>'',
+    //                 "POLA BYR AKHIR"=>'',
+    //                 "NAMA BRG"=>'',
+    //                 "TIPE BRG" =>  $result->COLLATERAL ?? '',
+    //                 "NO POL" =>  $result->POLICE_NUMBER ?? '',
+    //                 "NO MESIN" =>  $result->ENGINE_NUMBER ?? '',
+    //                 "NO RANGKA" =>  $result->CHASIS_NUMBER ?? '',
+    //                 "TAHUN" =>  $result->PRODUCTION_YEAR ?? '',
+    //                 "NILAI PINJAMAN" => number_format($result->TOTAL_NILAI_JAMINAN ?? 0),
+    //                 "ADMIN" =>  $result->TOTAL_ADMIN ?? '',
+    //                 "CUST_ID" =>  $result->CUST_CODE??'',
+    //             ] ;
+    //         }
+    //         return response()->json($build, 200);           
+    //     }catch (\Exception $e) {
+    //         return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+    //     }
+    // }
+
+    public function listBan(Request $request)
+    {
         try {
 
             $dateFrom = $request->dari;
             $getBranch = $request->cabang_id;
 
-            $results = DB::table('branch as a')
-                        ->join('credit as b', 'b.BRANCH', '=', 'a.ID')
-                        ->leftJoin('customer as c', 'c.CUST_CODE', '=', 'b.CUST_CODE')
-                        ->leftJoin('users as d', 'd.id', '=', 'b.MCF_ID')
-                        ->leftJoin('cr_application as e', 'e.ORDER_NUMBER', '=', 'b.ORDER_NUMBER')
-                        ->leftJoin('cr_order as h', 'h.APPLICATION_ID', '=', 'e.ID')
-                        ->leftJoin('cr_survey as f', 'f.id', '=', 'e.CR_SURVEY_ID')
-                        ->leftJoin('cr_collateral as g', 'g.CR_CREDIT_ID', '=', 'b.ID')
-                        ->select(
-                            DB::raw("CONCAT(a.CODE, '-', a.CODE_NUMBER) as KODE"),
-                            'a.NAME as NAMA_CABANG',
-                            'b.LOAN_NUMBER as NO_KONTRAK',
-                            'c.NAME as NAMA_PELANGGAN',
-                            'b.CREATED_AT as TGL_BOOKING',
-                            DB::raw('null as UB'),
-                            DB::raw('null as PLATFORM'),
-                            'c.INS_ADDRESS as ALAMAT_TAGIH',
-                            'c.ZIP_CODE as KODE_POST',
-                            'c.PHONE_HOUSE as NO_TELP',
-                            'c.PHONE_PERSONAL as NO_HP',
-                            'c.OCCUPATION as PEKERJAAN',
-                            DB::raw('null as SURVEYOR'),
-                            'f.survey_note as CATT_SURVEY',
-                            'b.PCPL_ORI as PKK_HUTANG',
-                            'e.INSTALLMENT_TYPE as tipe',
-                            'b.PERIOD',
-                            DB::raw('DATEDIFF(b.FIRST_ARR_DATE, NOW()) as OVERDUE'),
-                            DB::raw('99 as CYCLE'),
-                            'b.STATUS_REC',
-                            'b.PAID_PRINCIPAL',
-                            'b.PAID_INTEREST',
-                            DB::raw('b.PAID_PRINCIPAL + b.PAID_INTEREST as PAID_TOTAL'),
-                            DB::raw('b.PCPL_ORI - b.PAID_PRINCIPAL as OUTSTANDING'),
-                            'b.INSTALLMENT',
-                            'b.INSTALLMENT_DATE',
-                            'b.FIRST_ARR_DATE',
-                            DB::raw("' ' as COLLECTOR"),
-                            DB::raw('GROUP_CONCAT(CONCAT(g.BRAND, " ", g.TYPE)) as COLLATERAL'),
-                            DB::raw('GROUP_CONCAT(g.POLICE_NUMBER) as POLICE_NUMBER'),
-                            DB::raw('GROUP_CONCAT(g.ENGINE_NUMBER) as ENGINE_NUMBER'),
-                            DB::raw('GROUP_CONCAT(g.CHASIS_NUMBER) as CHASIS_NUMBER'),
-                            DB::raw('GROUP_CONCAT(g.PRODUCTION_YEAR) as PRODUCTION_YEAR'),
-                            DB::raw('SUM(g.VALUE) as TOTAL_NILAI_JAMINAN'),
-                            'b.CUST_CODE',
-                            DB::raw("concat(h.REF_PELANGGAN,' ',h.REF_PELANGGAN_OTHER) as supplier")
-                        )
-                        ->groupBy(
-                            'a.CODE',
-                            'a.CODE_NUMBER',
-                            'a.NAME',
-                            'b.LOAN_NUMBER',
-                            'c.NAME',
-                            'b.CREATED_AT',
-                            'c.INS_ADDRESS',
-                            'c.ZIP_CODE',
-                            'c.PHONE_HOUSE',
-                            'c.PHONE_PERSONAL',
-                            'c.OCCUPATION',
-                            'd.fullname',
-                            'f.survey_note',
-                            'b.PCPL_ORI',
-                            'e.TOTAL_ADMIN',
-                            'e.INSTALLMENT_TYPE',
-                            'b.PERIOD',
-                            DB::raw('DATEDIFF(b.FIRST_ARR_DATE, NOW())'),
-                            'b.STATUS_REC',
-                            'b.PAID_PRINCIPAL',
-                            'b.PAID_INTEREST',
-                            DB::raw('b.PAID_PRINCIPAL + b.PAID_INTEREST'),
-                            DB::raw('b.PCPL_ORI - b.PAID_PRINCIPAL'),
-                            'b.INSTALLMENT',
-                            'b.INSTALLMENT_DATE',
-                            'b.FIRST_ARR_DATE',
-                            'b.CUST_CODE',
-                            'h.REF_PELANGGAN',
-                            'h.REF_PELANGGAN_OTHER'
-                        );
-        
-            if (!empty($getBranch) && $getBranch != 'SEMUA CABANG') {
-                $results->where('a.ID', $getBranch);
-            }
+            $query = "SELECT 
+                            CONCAT(a.CODE, '-', a.CODE_NUMBER) AS KODE,
+                            a.NAME AS NAMA_CABANG,
+                            b.LOAN_NUMBER AS NO_KONTRAK,
+                            c.NAME AS NAMA_PELANGGAN,
+                            b.CREATED_AT AS TGL_BOOKING,
+                            NULL AS UB,
+                            NULL AS PLATFORM,
+                            c.INS_ADDRESS AS ALAMAT_TAGIH,
+                            c.ZIP_CODE AS KODE_POST,
+                            '' AS SUB_ZIP,
+                            c.PHONE_HOUSE AS NO_TELP,
+                            c.PHONE_PERSONAL AS NO_HP,
+                            c.PHONE_PERSONAL AS NO_HP2,
+                            c.OCCUPATION AS PEKERJAAN,
+                            CONCAT(h.REF_PELANGGAN, ' ', h.REF_PELANGGAN_OTHER) AS supplier, 
+                            NULL AS SURVEYOR,
+                            f.survey_note AS CATT_SURVEY,
+                            b.PCPL_ORI AS PKK_HUTANG,
+                            b.PERIOD AS JUMLAH_ANGSURAN, 
+                            b.INSTALLMENT_COUNT/b.PERIOD AS JARAK_ANGSURAN, 
+                            b.INSTALLMENT_COUNT as PERIOD, 
+                            i.OS_POKOK AS OUTSTANDING,
+                            i.OS_BUNGA, 
+                            DATEDIFF(i.TUNGGAKAN_PERTAMA, str_to_date('31012025','%d%m%Y')) AS OVERDUE_AWAL,
+                            i.TUNGGAKAN_POKOK as AMBC_PKK_AWAL, 
+                            i.TUNGGAKAN_BUNGA as AMBC_BNG_AWAL, 
+                            i.TUNGGAKAN_POKOK+i.TUNGGAKAN_BUNGA as AMBC_TOTAL_AWAL, 
+                            99 AS CYCLE,
+                            b.STATUS_REC,
+                            'status beban', 
+                            'pola bayar awal', 
+                            b.PCPL_ORI-b.PAID_PRINCIPAL OS_PKK_AKHIR, 
+                            k.OS_BNG_AKHIR OS_BNG_AKHIR, 
+                            j.DUE_DAYS as OVERDUE_AKHIR, 
+                            b.INSTALLMENT,
+                            k.LAST_INST, 
+                            e.INSTALLMENT_TYPE AS tipe,
+                            i.TUNGGAKAN_PERTAMA,
+                            'tgl tunggakan akhir', 
+                            k.LAST_PAY, 
+                            ' ' AS COLLECTOR,
+                            l.payment_method as cara_bayar, 
+                            m.tggk_pkk as AMBC_PKK_AKHIR, 
+                            m.tggk_bng as AMBC_BNG_AKHIR, 
+                            m.tggk_pkk+m.tggk_bng as AMBC_TOTAL_AKHIR, 
+                            m.byr_tggk_pkk AC_PKK, 
+                            m.byr_tggk_bng AC_BNG_MRG, 
+                            m.byr_tggk_pkk+m.byr_tggk_bng AC_TOTAL, 
+                            'cycle akhir', 
+                            'jenis jaminan', 
+                            g.COLLATERAL,
+                            g.POLICE_NUMBER,
+                            g.ENGINE_NUMBER,
+                            g.CHASIS_NUMBER,
+                            g.PRODUCTION_YEAR,
+                            g.TOTAL_JAMINAN,
+                            'nilai admin', 
+                            b.CUST_CODE
+                        FROM  	branch AS a
+                            INNER JOIN credit b ON b.BRANCH = a.ID
+                            LEFT JOIN customer c ON c.CUST_CODE = b.CUST_CODE
+                            LEFT JOIN users d ON d.id = b.MCF_ID
+                            LEFT JOIN cr_application e ON e.ORDER_NUMBER = b.ORDER_NUMBER
+                            LEFT JOIN cr_order h ON h.APPLICATION_ID = e.ID
+                            LEFT JOIN cr_survey f ON f.id = e.CR_SURVEY_ID
+                            LEFT JOIN (	SELECT	CR_CREDIT_ID, 
+                                        sum(VALUE) as TOTAL_JAMINAN, 
+                                        GROUP_CONCAT(concat(BRAND,' ',TYPE)) as COLLATERAL, 
+                                        GROUP_CONCAT(POLICE_NUMBER) as POLICE_NUMBER, 
+                                        GROUP_CONCAT(ENGINE_NUMBER) as ENGINE_NUMBER, 
+                                        GROUP_CONCAT(CHASIS_NUMBER) as CHASIS_NUMBER, 
+                                        GROUP_CONCAT(PRODUCTION_YEAR) as PRODUCTION_YEAR
+                                    FROM 	cr_collateral 
+                                    GROUP 	BY CR_CREDIT_ID) g ON g.CR_CREDIT_ID = b.ID
+                                LEFT JOIN credit_2025 i on cast(i.loan_number as char) = cast(b.LOAN_NUMBER as char)
+                                LEFT JOIN first_arr j on cast(j.LOAN_NUMBER as char) = cast(b.LOAN_NUMBER as char)
+                            LEFT JOIN (	SELECT	loan_number, sum(interest)-sum(payment_value_interest) as OS_BNG_AKHIR, 
+                                        min(case when paid_flag='PAID' then 999 else installment_count end) as LAST_INST, 
+                                        max(case when paid_flag='PAID' then payment_date else str_to_date('01011900','%d%m%Y') end) as LAST_PAY
+                                    FROM	credit_schedule
+                                    WHERE	loan_number in (select loan_number from credit where status='A')
+                                    GROUP	BY loan_number) k on k.loan_number=b.loan_number
+                            LEFT JOIN (	SELECT	loan_num, entry_date, payment_method
+                                    FROM	payment
+                                    WHERE	(loan_num,entry_date) in (select loan_num, max(entry_date) from payment group by loan_num)) l on l.loan_num=b.loan_number
+                            LEFT JOIN (	SELECT	loan_number, 
+                                        sum(past_due_pcpl) as tggk_pkk, sum(past_due_intrst) as tggk_bng, 
+                                            sum(paid_pcpl) as byr_tggk_pkk, sum(paid_int) as byr_tggk_bng
+                                    FROM	arrears
+                                    WHERE	STATUS_REC='A'
+                                    GROUP	BY loan_number) m on m.loan_number=b.loan_number";
 
-            if (!empty($dateFrom)) {
-                $results->where(DB::raw("DATE_FORMAT(b.CREATED_AT, '%Y-%m')"), $dateFrom);
-            } else {
-                $results->where('b.CREATED_AT', '>=', DB::raw('DATE_SUB(NOW(), INTERVAL 1 MONTH)'));
-            }
-            
-            $results = $results->get();
-        
+            $results = DB::select($query);
+
+            // if (!empty($getBranch) && $getBranch != 'SEMUA CABANG') {
+            //     $results->where('a.ID', $getBranch);
+            // }
+
+            // if (!empty($dateFrom)) {
+            //     $results->where(DB::raw("DATE_FORMAT(b.CREATED_AT, '%Y-%m')"), $dateFrom);
+            // } else {
+            //     $results->where('b.CREATED_AT', '>=', DB::raw('DATE_SUB(NOW(), INTERVAL 1 MONTH)'));
+            // }
+
+            // $results = $results->get();
+
             $build = [];
             foreach ($results as $result) {
-                $build[] =[
+                $build[] = [
                     "KODE CABANG" => $result->KODE ?? '',
                     "NAMA CABANG" => $result->NAMA_CABANG ?? '',
                     "NO KONTRAK" => $result->NO_KONTRAK ?? '',
@@ -282,7 +465,7 @@ class ListBanController extends Controller
                     "NO HP1" => $result->NO_HP ?? '',
                     "NO HP2" => $result->NO_HP ?? '',
                     "PEKERJAAN" => $result->PEKERJAAN ?? '',
-                    "SUPPLIER" => $result->supplier??'',
+                    "SUPPLIER" => $result->supplier ?? '',
                     "SURVEYOR" => $result->SURVEYOR ?? '',
                     "CATT SURVEY" => $result->CATT_SURVEY ?? '',
                     "PKK HUTANG" => number_format($result->PKK_HUTANG ?? 0),
@@ -292,8 +475,8 @@ class ListBanController extends Controller
                     "OUT PKK AWAL" => '',
                     "OUT BNG AWAL" => '',
                     "OVERDUE AWAL" => number_format($result->OVERDUE ?? 0),
-                    "AMBC PKK AWAL" => '',
-                    "AMBC BNG AWAL" => '',
+                    "AMBC PKK AWAL" => $result->AMBC_PKK_AWAL,
+                    "AMBC BNG AWAL" => $result->AMBC_BNG_AWAL,
                     "AMBC TOTAL AWAL" => '',
                     "CYCLE AWAL" => $result->CYCLE ?? '',
                     "STS KONTRAK" => $result->STATUS_REC ?? '',
@@ -304,21 +487,21 @@ class ListBanController extends Controller
                     "OVERDUE AKHIR" => number_format($result->OUTSTANDING ?? 0),
                     "ANGSURAN" => number_format($result->INSTALLMENT ?? 0),
                     "ANGS KE" => '',
-                    "TIPE ANGSURAN"=>'',
+                    "TIPE ANGSURAN" => '',
                     "JTH TEMPO AWAL" => date("d-m-Y", strtotime($result->INSTALLMENT_DATE ?? '')),
                     "JTH TEMPO AKHIR" => date("d-m-Y", strtotime($result->FIRST_ARR_DATE ?? '')),
-                    "TGL BAYAR" => '',
+                    "TGL BAYAR" => $result->LAST_PAY,
                     "KOLEKTOR" => '',
-                    "CARA BYR" => '',
-                    "AMBC PKK_AKHIR" => '',
-                    "AMBC BNG_AKHIR" => '',
-                    "AMBC TOTAL_AKHIR" => '',
-                    "AC PKK"=>'',
-                    "AC BNG MRG"=>'',
-                    "AC TOTAL"=>'',
-                    "CYCLE AKHIR"=>'',
-                    "POLA BYR AKHIR"=>'',
-                    "NAMA BRG"=>'',
+                    "CARA BYR" => $result->cara_bayar,
+                    "AMBC PKK_AKHIR" => $result->AMBC_PKK_AKHIR,
+                    "AMBC BNG_AKHIR" => $result->AMBC_BNG_AKHIR,
+                    "AMBC TOTAL_AKHIR" => $result->AMBC_TOTAL_AKHIR,
+                    "AC PKK" => $result->AC_PKK,
+                    "AC BNG MRG" => $result->AC_BNG_MRG,
+                    "AC TOTAL" => $result->AC_TOTAL,
+                    "CYCLE AKHIR" => '',
+                    "POLA BYR AKHIR" => '',
+                    "NAMA BRG" => '',
                     "TIPE BRG" =>  $result->COLLATERAL ?? '',
                     "NO POL" =>  $result->POLICE_NUMBER ?? '',
                     "NO MESIN" =>  $result->ENGINE_NUMBER ?? '',
@@ -326,11 +509,11 @@ class ListBanController extends Controller
                     "TAHUN" =>  $result->PRODUCTION_YEAR ?? '',
                     "NILAI PINJAMAN" => number_format($result->TOTAL_NILAI_JAMINAN ?? 0),
                     "ADMIN" =>  $result->TOTAL_ADMIN ?? '',
-                    "CUST_ID" =>  $result->CUST_CODE??'',
-                ] ;
+                    "CUST_ID" =>  $result->CUST_CODE ?? '',
+                ];
             }
-            return response()->json($build, 200);           
-        }catch (\Exception $e) {
+            return response()->json($build, 200);
+        } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
