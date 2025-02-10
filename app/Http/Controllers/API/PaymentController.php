@@ -41,7 +41,7 @@ class PaymentController extends Controller
             $getPosition = $request->user()->position;
             $getBranch = $request->user()->branch_id;
 
-            $data = M_Kwitansi::whereDate('CREATED_AT', Carbon::now()->toDateString())
+            $data = M_Kwitansi::where('CREATED_AT', Carbon::now())
                 ->orderBy('CREATED_AT', 'DESC')
                 ->get();
 
