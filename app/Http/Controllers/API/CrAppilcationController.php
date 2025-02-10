@@ -973,7 +973,7 @@ class CrAppilcationController extends Controller
         $cr_oder = M_CrOrder::where('APPLICATION_ID', $setApplicationId)->first();
         $applicationDetail = M_CrApplication::where('ID', $setApplicationId)->first();
         $cr_survey = M_CrSurvey::where('id', $surveyId)->first();
-        $check_exist = M_Credit::where('ORDER_NUMBER', $application->ORDER_NUMBER)->first();
+        $check_exist = M_Credit::where('ORDER_NUMBER', $application->ORDER_NUMBER ?? '')->first();
         $cr_guarantor = M_CrApplicationGuarantor::where('APPLICATION_ID', $setApplicationId)->get();
         $cr_spouse = M_CrApplicationSpouse::where('APPLICATION_ID', $setApplicationId)->first();
         $approval = M_ApplicationApproval::where('cr_application_id', $setApplicationId)->first();
@@ -981,9 +981,9 @@ class CrAppilcationController extends Controller
         $arrayList = [
             'id_application' => $setApplicationId,
             'survey_id' => $surveyId,
-            'order_number' => $application->ORDER_NUMBER,
+            'order_number' => $application->ORDER_NUMBER ?? '',
             "flag" => !$check_exist ? 0 : 1,
-            'jenis_angsuran' => empty($application->INSTALLMENT_TYPE) ? $cr_survey->jenis_angsuran ?? '' : $application->INSTALLMENT_TYPE ?? '',
+            'jenis_angsuran' => empty($application->INSTALLMENT_TYPE ?? '') ? $cr_survey->jenis_angsuran ?? '' : $application->INSTALLMENT_TYPE ?? '',
             'pelanggan' => [
                 "nama" => $cr_personal->NAME ?? ($data->nama ?? ''),
                 "nama_panggilan" => $cr_personal->ALIAS ?? null,
