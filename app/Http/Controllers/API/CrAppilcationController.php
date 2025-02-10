@@ -191,7 +191,7 @@ class CrAppilcationController extends Controller
                 throw new Exception("Id FPK Is Not Exist", 404);
             }
 
-            $surveyID = $check_application_id->CR_SURVEY_ID;
+            $surveyID = $check_application_id->CR_SURVEY_ID ?? '';
             $timenow = Carbon::now();
 
             $this->insert_cr_application($request, $check_application_id);
