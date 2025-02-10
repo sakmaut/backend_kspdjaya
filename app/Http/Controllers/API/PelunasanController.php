@@ -60,39 +60,6 @@ class PelunasanController extends Controller
 
             $loan_number = $request->loan_number;
 
-            // $result = DB::table('credit_schedule as a')
-            //             ->join('credit as b', 'b.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
-            //             ->select(
-            //                 'a.LOAN_NUMBER',
-            //                 'a.PAYMENT_DATE',
-            //                 'a.INTEREST as INT_ARR',
-            //                 DB::raw('b.PCPL_ORI - b.PAID_PRINCIPAL AS OS')
-            //             )
-            //             ->where('a.LOAN_NUMBER', '=', $loan_number)
-            //             ->where('a.INSTALLMENT_COUNT', '=', 1)
-            //             ->groupBy('a.LOAN_NUMBER', 'a.PAYMENT_DATE', 'a.INTEREST', 'b.PCPL_ORI', 'b.PAID_PRINCIPAL')
-            //             ->first();
-
-            // $bunga = "select  $result->LOAN_NUMBER as LOAN_NUMBER,$result->INT_ARR as INT_ARR, null as TUNGGAKAN_DENDA, null as DENDA_TOTAL";
-
-            // $bunga2 = "select	LOAN_NUMBER, 
-            //                     sum(coalesce(PAST_DUE_INTRST,0))-sum(coalesce(PAID_INT,0)) as INT_ARR, 
-            //                     sum(case when STATUS_REC <> 'A' then coalesce(PAST_DUE_PENALTY,0) end)-
-            //                         sum(case when STATUS_REC <> 'A' then coalesce(PAID_PENALTY,0) end) as TUNGGAKAN_DENDA,
-            //                     sum(coalesce(PAST_DUE_PENALTY,0))-sum(coalesce(PAID_PENALTY,0)) as DENDA_TOTAL
-            //             from	arrears
-            //             where	LOAN_NUMBER = '{$loan_number}'
-            //             group 	by LOAN_NUMBER";
-
-            // $getDate1 = $result->PAYMENT_DATE??'';
-            // $getDate2 = Carbon::now()->format('Y-m-d');
-
-            // if(!empty($getDate1) && $getDate1 > $getDate2){
-            //     $val_bunga = $bunga;
-            // }else{
-            //     $val_bunga = $bunga2;
-            // }
-
             $allQuery = "SELECT 
                             (a.PCPL_ORI - COALESCE(a.PAID_PRINCIPAL, 0)) AS SISA_POKOK,
                             b.INT_ARR AS TUNGGAKAN_BUNGA,
@@ -470,8 +437,6 @@ class PelunasanController extends Controller
             $ttlDiscInterest = floatval($getArrears->WOFF_INT) + floatval($res['diskon_bunga'] ?? 0);
             $ttlDiscPenalty = floatval($getArrears->WOFF_PENALTY) + floatval($res['diskon_denda'] ?? 0);
 
-            $checkDiscountArrears = floatval($res['diskon_pokok']) != 0 && floatval($res['diskon_bunga']) != 0 && floatval($res['diskon_denda']) != 0;
-
             $getArrears->update([
                 'END_DATE' => Carbon::now()->format('Y-m-d') ?? null,
                 'PAID_PCPL' => $ttlPrincipal ?? 0,
@@ -480,8 +445,13 @@ class PelunasanController extends Controller
                 'WOFF_PCPL' => $ttlDiscPrincipal ?? 0,
                 'WOFF_INT' => $ttlDiscInterest ?? 0,
                 'WOFF_PENALTY' => $ttlDiscPenalty ?? 0,
-                'STATUS_REC' => $checkDiscountArrears ?? 0 ? 'S' : 'D',
                 'UPDATED_AT' => Carbon::now(),
+            ]);
+
+            $checkDiscountArrears = ($ttlDiscPrincipal + $ttlDiscInterest + $ttlDiscPenalty) == 0;
+
+            $getArrears->update([
+                'STATUS_REC' => $checkDiscountArrears ? 'S' : 'D',
             ]);
         }
     }

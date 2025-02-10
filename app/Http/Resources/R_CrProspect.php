@@ -23,29 +23,29 @@ class R_CrProspect extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $stts_approval = M_SurveyApproval::where('CR_SURVEY_ID',$this->id)->first();
-        $check_exist = M_Credit::where('ORDER_NUMBER',$this->order_number)->first();
+        $check_exist = M_Credit::where('ORDER_NUMBER', $this->order_number)->first();
 
         $data = [
             'id' => $this->id,
-            "flag" => !$check_exist?0:1,
-            "credit_id" => !$check_exist?null:$check_exist->ID??null,
-            "jenis_angsuran" =>  empty($this->INSTALLMENT_TYPE)?$this->jenis_angsuran??'':$this->INSTALLMENT_TYPE??'',
+            "flag" => !$check_exist ? 0 : 1,
+            "credit_id" => !$check_exist ? null : $check_exist->ID ?? null,
+            "jenis_angsuran" =>  empty($this->INSTALLMENT_TYPE) ? $this->jenis_angsuran ?? '' : $this->INSTALLMENT_TYPE ?? '',
             'order_number' => $this->order_number,
-            'visit_date' => $this->visit_date  == null ? null :date('d-m-Y', strtotime($this->visit_date)),
+            'visit_date' => $this->visit_date  == null ? null : date('d-m-Y', strtotime($this->visit_date)),
             'nama_debitur' => $this->nama_debitur,
             'alamat' => $this->alamat,
             'hp' => $this->hp,
             'plafond' => $this->plafond,
-            'status' => ($stts_approval)?$stts_approval->APPROVAL_RESULT:'',
-            'status_code' => ($stts_approval)?$stts_approval->CODE:'',
+            'status' => $this->APPROVAL_RESULT ?? '',
+            'status_code' => $this->CODE ?? '',
             'attachment' => $this->attachment($this->id, "'sp', 'pk', 'dok'")
         ];
-        
+
         return $data;
     }
 
-    public function attachment($survey_id, $data){
+    public function attachment($survey_id, $data)
+    {
         $documents = DB::select(
             "   SELECT *
                 FROM cr_survey_document AS csd
@@ -58,7 +58,7 @@ class R_CrProspect extends JsonResource
                 )
                 ORDER BY TIMEMILISECOND DESC"
         );
-    
-        return $documents;        
+
+        return $documents;
     }
 }

@@ -37,81 +37,6 @@ class CrAppilcationController extends Controller
     {
         try {
             $data = M_CrApplication::fpkListData($request);
-            return response()->json(['message' => true,"status" => 200,'response' => $data], 200);
-        } catch (\Exception $e) {
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
-        }
-    }
-
-    public function showAdmins(Request $req){
-        try {
-            $branchId = $req->user()->branch_id;
-            $no_order = $req->query('no_order');
-            $nama = $req->query('nama');
-            $tgl_order = $req->query('tgl_order');
-
-            $data = M_CrSurvey::select(
-                                    'cr_survey.id as id',
-                                    'cr_survey.jenis_angsuran',
-                                    'cr_application.INSTALLMENT_TYPE',
-                                    'cr_application.ORDER_NUMBER as order_number',
-                                    'cr_survey.visit_date',
-                                    DB::raw("COALESCE(cr_personal.NAME, cr_survey.nama) as nama_debitur"),
-                                    'cr_survey.alamat',
-                                    'cr_survey.hp',
-                                    DB::raw("COALESCE(cr_application.SUBMISSION_VALUE, cr_survey.plafond) as plafond")
-                                )
-                        ->leftJoin('survey_approval', 'survey_approval.CR_SURVEY_ID', '=', 'cr_survey.id')
-                        ->leftJoin('cr_application', 'cr_application.CR_SURVEY_ID', '=', 'cr_survey.id')
-                        ->leftJoin('cr_personal', 'cr_personal.APPLICATION_ID', '=', 'cr_application.ID')
-                        ->where('cr_survey.branch_id', $branchId)
-                        ->where('survey_approval.CODE', '!=', 'DRSVY')
-                        ->whereNull('cr_survey.deleted_at')
-                        ->orderBy('cr_survey.created_at', 'desc');
-
-            if (!empty($no_order)) {
-                 $data->where('cr_application.ORDER_NUMBER', 'like', '%' . $no_order . '%');
-            }
-
-            if (!empty($nama)) {
-                 $data->where(DB::raw("COALESCE(cr_personal.NAME, cr_survey.nama)"), 'like', '%' . $nama . '%');
-            }
-
-            if (!empty($tgl_order)) {
-                 $data->whereRaw("DATE_FORMAT(cr_survey.visit_date, '%Y-%m-%d') = ?", [$tgl_order]);
-            }
-
-            $results = $data->limit(10)->get();
-
-            $dto = R_CrProspect::collection($results);
-    
-            ActivityLogger::logActivity($req,"Success",200);
-            return response()->json(['message' => true,"status" => 200,'response' => $dto], 200);
-        } catch (QueryException $e) {
-            ActivityLogger::logActivity($req,$e->getMessage(),409);
-            return response()->json(['message' => $e->getMessage(),"status" => 409], 409);
-        } catch (\Exception $e) {
-            ActivityLogger::logActivity($req,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
-        }
-    }
-
-    public function showKapos(Request $request)
-    {
-        try {
-            $data = M_CrApplication::fpkListData($request,'WAKPS','WAHO','APKPS','APHO','REORHO','CLHO','REORKPS','CLKPS');
-            return response()->json(['message' => true,"status" => 200,'response' => $data], 200);
-        } catch (\Exception $e) {
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
-        }
-    }
-
-    public function showHo(Request $request)
-    {
-        try {
-            $data = M_CrApplication::fpkListData($request,'APKPS','WAKPS','WAHO','APHO','REORHO','CLHO','REORKPS','CLKPS');
             return response()->json(['message' => true, "status" => 200, 'response' => $data], 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
@@ -119,29 +44,106 @@ class CrAppilcationController extends Controller
         }
     }
 
-    public function show(Request $request,$id)
+    public function showAdmins(Request $req)
     {
         try {
-            $check = M_CrApplication::where('CR_SURVEY_ID',$id)->whereNull('deleted_at')->first();
+            $branchId = $req->user()->branch_id;
+            $no_order = $req->query('no_order');
+            $nama = $req->query('nama');
+            $tgl_order = $req->query('tgl_order');
+
+            $data = M_CrSurvey::select(
+                'cr_survey.id as id',
+                'cr_survey.jenis_angsuran',
+                'cr_application.INSTALLMENT_TYPE',
+                'cr_application.ORDER_NUMBER as order_number',
+                'cr_survey.visit_date',
+                DB::raw("COALESCE(cr_personal.NAME, cr_survey.nama) as nama_debitur"),
+                'cr_survey.alamat',
+                'cr_survey.hp',
+                'survey_approval.CODE',
+                DB::raw("COALESCE(cr_application.SUBMISSION_VALUE, cr_survey.plafond) as plafond")
+            )
+                ->leftJoin('survey_approval', 'survey_approval.CR_SURVEY_ID', '=', 'cr_survey.id')
+                ->leftJoin('cr_application', 'cr_application.CR_SURVEY_ID', '=', 'cr_survey.id')
+                ->leftJoin('cr_personal', 'cr_personal.APPLICATION_ID', '=', 'cr_application.ID')
+                ->where('cr_survey.branch_id', $branchId)
+                ->where('survey_approval.CODE', '!=', 'DRSVY')
+                ->whereNull('cr_survey.deleted_at')
+                ->orderBy('cr_survey.created_at', 'desc');
+
+            if (!empty($no_order)) {
+                $data->where('cr_application.ORDER_NUMBER', 'like', '%' . $no_order . '%');
+            }
+
+            if (!empty($nama)) {
+                $data->where(DB::raw("COALESCE(cr_personal.NAME, cr_survey.nama)"), 'like', '%' . $nama . '%');
+            }
+
+            if (!empty($tgl_order)) {
+                $data->whereRaw("DATE_FORMAT(cr_survey.visit_date, '%Y-%m-%d') = ?", [$tgl_order]);
+            }
+
+            $results = $data->limit(10)->get();
+
+            $dto = R_CrProspect::collection($results);
+
+            ActivityLogger::logActivity($req, "Success", 200);
+            return response()->json(['message' => true, "status" => 200, 'response' => $dto], 200);
+        } catch (QueryException $e) {
+            ActivityLogger::logActivity($req, $e->getMessage(), 409);
+            return response()->json(['message' => $e->getMessage(), "status" => 409], 409);
+        } catch (\Exception $e) {
+            ActivityLogger::logActivity($req, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+        }
+    }
+
+    public function showKapos(Request $request)
+    {
+        try {
+            $data = M_CrApplication::fpkListData($request, 'WAKPS', 'WAHO', 'APKPS', 'APHO', 'REORHO', 'CLHO', 'REORKPS', 'CLKPS');
+            return response()->json(['message' => true, "status" => 200, 'response' => $data], 200);
+        } catch (\Exception $e) {
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+        }
+    }
+
+    public function showHo(Request $request)
+    {
+        try {
+            $data = M_CrApplication::fpkListData($request, 'APKPS', 'WAKPS', 'WAHO', 'APHO', 'REORHO', 'CLHO', 'REORKPS', 'CLKPS');
+            return response()->json(['message' => true, "status" => 200, 'response' => $data], 200);
+        } catch (\Exception $e) {
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+        }
+    }
+
+    public function show(Request $request, $id)
+    {
+        try {
+            $check = M_CrApplication::where('CR_SURVEY_ID', $id)->whereNull('deleted_at')->first();
 
             if (!$check) {
-                $check_application_id = M_CrApplication::where('ID',$id)->whereNull('deleted_at')->first();
-            }else {
+                $check_application_id = M_CrApplication::where('ID', $id)->whereNull('deleted_at')->first();
+            } else {
                 $check_application_id = $check;
             }
-            
+
             $surveyID = $check_application_id->CR_SURVEY_ID;
 
             if (!isset($surveyID)  || $surveyID == '') {
                 throw new Exception("Id FPK Is Not Exist", 404);
             }
 
-            $detail_prospect = M_CrSurvey::where('id',$surveyID)->first();
+            $detail_prospect = M_CrSurvey::where('id', $surveyID)->first();
 
-            return response()->json(['message' => 'OK',"status" => 200,'response' =>  $this->resourceDetail($detail_prospect,$check_application_id)], 200);
+            return response()->json(['message' => 'OK', "status" => 200, 'response' =>  $this->resourceDetail($detail_prospect, $check_application_id)], 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
 
@@ -151,8 +153,8 @@ class CrAppilcationController extends Controller
         try {
             $uuid = Uuid::uuid4()->toString();
 
-            $check_prospect_id = M_CrSurvey::where('id',$request->data_order['cr_prospect_id'])
-                                                ->whereNull('deleted_at')->first();
+            $check_prospect_id = M_CrSurvey::where('id', $request->data_order['cr_prospect_id'])
+                ->whereNull('deleted_at')->first();
 
             if (!$check_prospect_id) {
                 throw new Exception("Id Kunjungan Is Not Exist", 404);
@@ -162,23 +164,23 @@ class CrAppilcationController extends Controller
             // // self::update_cr_prospect($request,$check_prospect_id);
             // self::insert_cr_personal($request,$uuid);
             // self::insert_cr_personal_extra($request,$uuid);
-            $this->insert_bank_account($request,$uuid);
-    
+            $this->insert_bank_account($request, $uuid);
+
             DB::commit();
             // ActivityLogger::logActivity($request,"Success",200); 
-            return response()->json(['message' => 'Application created successfully',"status" => 200], 200);
-        }catch (QueryException $e) {
+            return response()->json(['message' => 'Application created successfully', "status" => 200], 200);
+        } catch (QueryException $e) {
             DB::rollback();
-            ActivityLogger::logActivity($request,$e->getMessage(),409);
-            return response()->json(['message' => $e->getMessage(),"status" => 409], 409);
+            ActivityLogger::logActivity($request, $e->getMessage(), 409);
+            return response()->json(['message' => $e->getMessage(), "status" => 409], 409);
         } catch (\Exception $e) {
             DB::rollback();
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
 
-    public function update(Request $request,$id)
+    public function update(Request $request, $id)
     {
         try {
             $request->validate([
@@ -194,23 +196,23 @@ class CrAppilcationController extends Controller
             $surveyID = $check_application_id->CR_SURVEY_ID;
             $timenow = Carbon::now();
 
-            $this->insert_cr_application($request,$check_application_id);
-            $this->insert_cr_personal($request,$id);
-            $this->insert_cr_order($request, $surveyID,$id);
-            $this->insert_cr_personal_extra($request,$id);
+            $this->insert_cr_application($request, $check_application_id);
+            $this->insert_cr_personal($request, $id);
+            $this->insert_cr_order($request, $surveyID, $id);
+            $this->insert_cr_personal_extra($request, $id);
             if (!empty($request->penjamin)) {
-               $this->insert_cr_guarantor($request, $id);
+                $this->insert_cr_guarantor($request, $id);
             }
             if (!empty($request->pasangan)) {
-               $this->insert_cr_spouse($request, $id);
+                $this->insert_cr_spouse($request, $id);
             }
-            $this->insert_bank_account($request,$id);
+            $this->insert_bank_account($request, $id);
             $this->insert_taksasi($request, $surveyID);
-            $this->insert_application_approval($request,$id, $surveyID,$request->flag_pengajuan);
+            $this->insert_application_approval($request, $id, $surveyID, $request->flag_pengajuan);
 
             // if($request->user()->position === 'KAPOS'){
             //     $data_approval['application_result'] = 'DROR';
-    
+
             //     $approval_change = M_SurveyApproval::where('CR_SURVEY_ID', $surveyID)->first();
 
             //     if ($approval_change) {
@@ -220,16 +222,16 @@ class CrAppilcationController extends Controller
             //     }
 
             //     $checkApproval= M_ApplicationApproval::where('cr_application_id', $id)->first();
-    
+
             //     $checkApproval->update($data_approval);
             // }
 
             if (collect($request->jaminan)->isNotEmpty()) {
                 foreach ($request->jaminan as $result) {
- 
+
                     switch (strtolower($result['type'])) {
                         case 'kendaraan':
- 
+
                             $data_array_col = [
                                 'TYPE' => $result['atr']['tipe'] ?? null,
                                 'BRAND' => $result['atr']['merk'] ?? null,
@@ -247,30 +249,29 @@ class CrAppilcationController extends Controller
                                 'VALUE' => $result['atr']['nilai'] ?? null
                             ];
 
-                            if(!isset($result['atr']['id'])){
+                            if (!isset($result['atr']['id'])) {
 
-                                $data_array_col['ID']= Uuid::uuid7()->toString();
-                                $data_array_col['CR_SURVEY_ID']= $surveyID;
-                                $data_array_col['HEADER_ID']= $result['counter_id'];
-                                $data_array_col['CREATE_DATE']= $timenow;
-                                $data_array_col['CREATE_BY']= $request->user()->id;
+                                $data_array_col['ID'] = Uuid::uuid7()->toString();
+                                $data_array_col['CR_SURVEY_ID'] = $surveyID;
+                                $data_array_col['HEADER_ID'] = $result['counter_id'];
+                                $data_array_col['CREATE_DATE'] = $timenow;
+                                $data_array_col['CREATE_BY'] = $request->user()->id;
 
                                 M_CrGuaranteVehicle::create($data_array_col);
+                            } else {
 
-                            }else{
-
-                                $data_array_col['MOD_DATE']= $timenow;
-                                $data_array_col['MOD_BY']= $request->user()->id;
+                                $data_array_col['MOD_DATE'] = $timenow;
+                                $data_array_col['MOD_BY'] = $request->user()->id;
 
                                 $kendaraan = M_CrGuaranteVehicle::where([
                                     'ID' => $result['atr']['id'],
-                                    'HEADER_ID' =>$result['counter_id'],
-                                    'CR_SURVEY_ID' =>$surveyID
-                                    ])
+                                    'HEADER_ID' => $result['counter_id'],
+                                    'CR_SURVEY_ID' => $surveyID
+                                ])
                                     ->whereNull('DELETED_AT')->first();
 
                                 if (!$kendaraan) {
-                                    throw new Exception("Id Jaminan Kendaraan Not Found",404);
+                                    throw new Exception("Id Jaminan Kendaraan Not Found", 404);
                                 }
 
                                 $kendaraan->update($data_array_col);
@@ -281,8 +282,8 @@ class CrAppilcationController extends Controller
 
                             $data_array_col = [
                                 'STATUS_JAMINAN' => $result['atr']['status_jaminan'] ?? null,
-                                'NO_SERTIFIKAT' => $result['atr']['no_sertifikat']?? null,
-                                'STATUS_KEPEMILIKAN' => $result['atr']['status_kepemilikan']?? null,
+                                'NO_SERTIFIKAT' => $result['atr']['no_sertifikat'] ?? null,
+                                'STATUS_KEPEMILIKAN' => $result['atr']['status_kepemilikan'] ?? null,
                                 'IMB' => $result['atr']['imb'] ?? null,
                                 'LUAS_TANAH' => $result['atr']['luas_tanah'] ?? null,
                                 'LUAS_BANGUNAN' => $result['atr']['luas_bangunan'] ?? null,
@@ -295,29 +296,28 @@ class CrAppilcationController extends Controller
                                 'NILAI' => $result['atr']['nilai'] ?? null
                             ];
 
-                            if(!isset($result['atr']['id'])){
+                            if (!isset($result['atr']['id'])) {
 
-                                $data_array_col['ID']= Uuid::uuid7()->toString();
-                                $data_array_col['CR_SURVEY_ID']= $surveyID;
-                                $data_array_col['HEADER_ID']= $result['counter_id'];
-                                $data_array_col['CREATE_DATE']= $timenow;
-                                $data_array_col['CREATE_BY']= $request->user()->id;
+                                $data_array_col['ID'] = Uuid::uuid7()->toString();
+                                $data_array_col['CR_SURVEY_ID'] = $surveyID;
+                                $data_array_col['HEADER_ID'] = $result['counter_id'];
+                                $data_array_col['CREATE_DATE'] = $timenow;
+                                $data_array_col['CREATE_BY'] = $request->user()->id;
 
                                 M_CrGuaranteSertification::create($data_array_col);
+                            } else {
 
-                            }else{
-
-                                $data_array_col['MOD_DATE']= $timenow;
-                                $data_array_col['MOD_BY']= $request->user()->id;
+                                $data_array_col['MOD_DATE'] = $timenow;
+                                $data_array_col['MOD_BY'] = $request->user()->id;
 
                                 $sertifikasi = M_CrGuaranteSertification::where([
                                     'ID' => $result['atr']['id'],
-                                    'HEADER_ID' =>$result['counter_id'],
-                                    'CR_SURVEY_ID' =>$surveyID
-                                    ])->whereNull('DELETED_AT')->first();
-    
+                                    'HEADER_ID' => $result['counter_id'],
+                                    'CR_SURVEY_ID' => $surveyID
+                                ])->whereNull('DELETED_AT')->first();
+
                                 if (!$sertifikasi) {
-                                    throw new Exception("Id Jaminan Sertifikat Not Found",404);
+                                    throw new Exception("Id Jaminan Sertifikat Not Found", 404);
                                 }
 
                                 $sertifikasi->update($data_array_col);
@@ -325,72 +325,69 @@ class CrAppilcationController extends Controller
 
                             break;
                     }
-                   
                 }
             }
 
             if (collect($request->deleted_kendaraan)->isNotEmpty()) {
                 foreach ($request->deleted_kendaraan as $res) {
-                   try {
-                     $check = M_CrGuaranteVehicle::findOrFail($res['id']);
+                    try {
+                        $check = M_CrGuaranteVehicle::findOrFail($res['id']);
 
-                    $data = [
-                        'DELETED_BY' => $request->user()->id,
-                        'DELETED_AT' => $timenow
-                    ];
-                    
-                    $check->update($data);
+                        $data = [
+                            'DELETED_BY' => $request->user()->id,
+                            'DELETED_AT' => $timenow
+                        ];
 
-                    $deleted_docs = M_CrSurveyDocument::where([
-                        'CR_SURVEY_ID' => $surveyID,
-                        'COUNTER_ID' => $check->HEADER_ID
-                    ])->whereIn('TYPE', ['no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri'])->get();
+                        $check->update($data);
 
-                    if (!$deleted_docs->isEmpty()) {
-                        foreach ($deleted_docs as $doc) {
-                            $doc->delete();
+                        $deleted_docs = M_CrSurveyDocument::where([
+                            'CR_SURVEY_ID' => $surveyID,
+                            'COUNTER_ID' => $check->HEADER_ID
+                        ])->whereIn('TYPE', ['no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri'])->get();
+
+                        if (!$deleted_docs->isEmpty()) {
+                            foreach ($deleted_docs as $doc) {
+                                $doc->delete();
+                            }
                         }
+                    } catch (\Exception $e) {
+                        DB::rollback();
+                        ActivityLogger::logActivity($request, $e->getMessage(), 500);
+                        return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
                     }
-
-                   } catch (\Exception $e) {
-                    DB::rollback();
-                    ActivityLogger::logActivity($request,$e->getMessage(),500);
-                    return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
-                   }
                 }
             }
 
             if (collect($request->deleted_sertifikat)->isNotEmpty()) {
                 foreach ($request->deleted_sertifikat as $res) {
-                   try {
-                     $check = M_CrGuaranteSertification::findOrFail($res['id']);
+                    try {
+                        $check = M_CrGuaranteSertification::findOrFail($res['id']);
 
-                     $data = [
-                        'DELETED_BY' => $request->user()->id,
-                        'DELETED_AT' => $timenow
-                    ];
-                    
-                    $check->update($data);
+                        $data = [
+                            'DELETED_BY' => $request->user()->id,
+                            'DELETED_AT' => $timenow
+                        ];
 
-                    $deleted_docs = M_CrSurveyDocument::where(['CR_SURVEY_ID' => $id,'TYPE' => 'sertifikat','COUNTER_ID' => $check->HEADER_ID])->get();
+                        $check->update($data);
 
-                    if (!$deleted_docs->isEmpty()) {
-                        foreach ($deleted_docs as $doc) {
-                            $doc->delete();
+                        $deleted_docs = M_CrSurveyDocument::where(['CR_SURVEY_ID' => $id, 'TYPE' => 'sertifikat', 'COUNTER_ID' => $check->HEADER_ID])->get();
+
+                        if (!$deleted_docs->isEmpty()) {
+                            foreach ($deleted_docs as $doc) {
+                                $doc->delete();
+                            }
                         }
+                    } catch (\Exception $e) {
+                        DB::rollback();
+                        ActivityLogger::logActivity($request, $e->getMessage(), 500);
+                        return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
                     }
-
-                   } catch (\Exception $e) {
-                    DB::rollback();
-                    ActivityLogger::logActivity($request,$e->getMessage(),500);
-                    return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
-                   }
                 }
             }
 
             if (collect($request->deleted_penjamin)->isNotEmpty()) {
                 foreach ($request->deleted_penjamin as $res) {
-                    $check = M_CrApplicationGuarantor::where('ID',$res['id'])->get();
+                    $check = M_CrApplicationGuarantor::where('ID', $res['id'])->get();
 
                     if (!$check->isEmpty()) {
                         foreach ($check as $doc) {
@@ -400,14 +397,15 @@ class CrAppilcationController extends Controller
                 }
             }
 
-            return response()->json(['message' => 'Updated Successfully',"status" => 200], 200);
+            return response()->json(['message' => 'Updated Successfully', "status" => 200], 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
 
-    private function insert_cr_application($request,$applicationModel){
+    private function insert_cr_application($request, $applicationModel)
+    {
 
         // if(strtolower($request->ekstra['jenis_angsuran']) == 'musiman'){
         //     $tenorLists = [
@@ -422,73 +420,74 @@ class CrAppilcationController extends Controller
         //     $tenor = $request->ekstra['tenor'];
         // }
 
-        $data_cr_application =[
+        $data_cr_application = [
             'FORM_NUMBER' => '',
             'CUST_CODE' => '',
             'ENTRY_DATE' => Carbon::now()->format('Y-m-d'),
-            'SUBMISSION_VALUE' => $request->ekstra['nilai_yang_diterima']??null,
-            'CREDIT_TYPE' => $request->ekstra['tipe_angsuran']??null,
-            'INSTALLMENT_COUNT' =>null,
-            'PERIOD' => $request->ekstra['periode']??null,
-            'INSTALLMENT' => $request->ekstra['angsuran']??null,
-            'OPT_PERIODE' =>$request->ekstra['opt_periode']??null,
-            'EFF_RATE' => $request->ekstra['eff_rate']??null,
+            'SUBMISSION_VALUE' => $request->ekstra['nilai_yang_diterima'] ?? null,
+            'CREDIT_TYPE' => $request->ekstra['tipe_angsuran'] ?? null,
+            'INSTALLMENT_COUNT' => null,
+            'PERIOD' => $request->ekstra['periode'] ?? null,
+            'INSTALLMENT' => $request->ekstra['angsuran'] ?? null,
+            'OPT_PERIODE' => $request->ekstra['opt_periode'] ?? null,
+            'EFF_RATE' => $request->ekstra['eff_rate'] ?? null,
             'FLAT_RATE' => $request->ekstra['flat_rate'] ?? null,
             'INTEREST_RATE' => $request->ekstra['suku_bunga'] ?? null,
             'TOTAL_INTEREST' => $request->ekstra['total_bunga'] ?? null,
-            'INSTALLMENT_TYPE' => $request->ekstra['jenis_angsuran']??null,
-            'TENOR' => $request->ekstra['tenor']??null,
-            'POKOK_PEMBAYARAN' => $request->ekstra['pokok_pembayaran']??null,
-            'NET_ADMIN' => $request->ekstra['net_admin']??null,
-            'TOTAL_ADMIN' => $request->ekstra['total']??null,
-            'CADANGAN' => $request->ekstra['cadangan']??null,
-            'PAYMENT_WAY'=> $request->ekstra['cara_pembayaran']??null,
-            'PROVISION'=> $request->ekstra['provisi']??null,
-            'INSURANCE'=> $request->ekstra['asuransi']??null,
-            'TRANSFER_FEE'=> $request->ekstra['biaya_transfer']??null,
-            'INTEREST_MARGIN'=> $request->ekstra['bunga_margin']??null,
-            'PRINCIPAL_MARGIN'=> $request->ekstra['pokok_margin']??null,
-            'LAST_INSTALLMENT'=> $request->ekstra['angsuran_terakhir']??null,
-            'INTEREST_MARGIN_EFF_ACTUAL'=> $request->ekstra['bunga_eff_actual']??null,
-            'INTEREST_MARGIN_EFF_FLAT'=> $request->ekstra['bunga_flat']??null,
+            'INSTALLMENT_TYPE' => $request->ekstra['jenis_angsuran'] ?? null,
+            'TENOR' => $request->ekstra['tenor'] ?? null,
+            'POKOK_PEMBAYARAN' => $request->ekstra['pokok_pembayaran'] ?? null,
+            'NET_ADMIN' => $request->ekstra['net_admin'] ?? null,
+            'TOTAL_ADMIN' => $request->ekstra['total'] ?? null,
+            'CADANGAN' => $request->ekstra['cadangan'] ?? null,
+            'PAYMENT_WAY' => $request->ekstra['cara_pembayaran'] ?? null,
+            'PROVISION' => $request->ekstra['provisi'] ?? null,
+            'INSURANCE' => $request->ekstra['asuransi'] ?? null,
+            'TRANSFER_FEE' => $request->ekstra['biaya_transfer'] ?? null,
+            'INTEREST_MARGIN' => $request->ekstra['bunga_margin'] ?? null,
+            'PRINCIPAL_MARGIN' => $request->ekstra['pokok_margin'] ?? null,
+            'LAST_INSTALLMENT' => $request->ekstra['angsuran_terakhir'] ?? null,
+            'INTEREST_MARGIN_EFF_ACTUAL' => $request->ekstra['bunga_eff_actual'] ?? null,
+            'INTEREST_MARGIN_EFF_FLAT' => $request->ekstra['bunga_flat'] ?? null,
             'VERSION' => 1
         ];
 
-        if(!$applicationModel){
+        if (!$applicationModel) {
             $data_cr_application['ID'] = Uuid::uuid7()->toString();
             $data_cr_application['CREATE_DATE'] = Carbon::now()->format('Y-m-d');
             $data_cr_application['CREATE_BY'] = $request->user()->id;
             $data_cr_application['BRANCH'] = $request->user()->branch_id;
-            $data_cr_application['ORDER_NUMBER'] = $this->createAutoCode(M_CrApplication::class,'ORDER_NUMBER','COR');
+            $data_cr_application['ORDER_NUMBER'] = $this->createAutoCode(M_CrApplication::class, 'ORDER_NUMBER', 'COR');
             M_CrApplication::create($data_cr_application);
-        }else{
+        } else {
             // compareData(M_CrApplication::class,$id,$data_cr_application,$request);
             $data_cr_application['MOD_DATE'] = Carbon::now()->format('Y-m-d');
             $data_cr_application['MOD_BY'] = $request->user()->id;
             $applicationModel->update($data_cr_application);
-        } 
+        }
     }
 
-    private function insert_cr_order($request,$id,$fpkId){
+    private function insert_cr_order($request, $id, $fpkId)
+    {
 
-        $check = M_CrOrder::where('APPLICATION_ID',$fpkId)->first();
+        $check = M_CrOrder::where('APPLICATION_ID', $fpkId)->first();
 
-        $data_order =[
-            'NO_NPWP' => $request->order['no_npwp']??null,
-            'BIAYA' => $request->order['biaya_bulanan']??null,
-            'ORDER_TANGGAL' => Carbon::parse($request->order['order_tanggal'])->format('Y-m-d')??null,
-            'ORDER_STATUS' => $request->order['order_status']??null,
-            'ORDER_TIPE' => $request->order['order_tipe']??null,
-            'UNIT_BISNIS' => $request->order['unit_bisnis']??null,
-            'CUST_SERVICE' => $request->order['cust_service']??null,
-            'REF_PELANGGAN' => $request->order['ref_pelanggan']??null,
-            'REF_PELANGGAN_OTHER' => $request->order['ref_pelanggan_oth']??null,
-            'PROG_MARKETING' => $request->order['prog_marketing']??null,
-            'CARA_BAYAR' => $request->order['cara_bayar']??null,
-            'KODE_BARANG' => $request->barang_taksasi['kode_barang']??null,
-            'ID_TIPE' => $request->barang_taksasi['id_tipe']??null,
-            'TAHUN' => $request->barang_taksasi['tahun']??null,
-            'HARGA_PASAR' => $request->barang_taksasi['harga_pasar']??null,
+        $data_order = [
+            'NO_NPWP' => $request->order['no_npwp'] ?? null,
+            'BIAYA' => $request->order['biaya_bulanan'] ?? null,
+            'ORDER_TANGGAL' => Carbon::parse($request->order['order_tanggal'])->format('Y-m-d') ?? null,
+            'ORDER_STATUS' => $request->order['order_status'] ?? null,
+            'ORDER_TIPE' => $request->order['order_tipe'] ?? null,
+            'UNIT_BISNIS' => $request->order['unit_bisnis'] ?? null,
+            'CUST_SERVICE' => $request->order['cust_service'] ?? null,
+            'REF_PELANGGAN' => $request->order['ref_pelanggan'] ?? null,
+            'REF_PELANGGAN_OTHER' => $request->order['ref_pelanggan_oth'] ?? null,
+            'PROG_MARKETING' => $request->order['prog_marketing'] ?? null,
+            'CARA_BAYAR' => $request->order['cara_bayar'] ?? null,
+            'KODE_BARANG' => $request->barang_taksasi['kode_barang'] ?? null,
+            'ID_TIPE' => $request->barang_taksasi['id_tipe'] ?? null,
+            'TAHUN' => $request->barang_taksasi['tahun'] ?? null,
+            'HARGA_PASAR' => $request->barang_taksasi['harga_pasar'] ?? null,
             'MOTHER_NAME' => $request->order['nama_ibu'] ?? null,
             'CATEGORY' => $request->order['kategori'] ?? null,
             'TITLE' => $request->order['gelar'] ?? null,
@@ -501,180 +500,185 @@ class CrAppilcationController extends Controller
             'SURVEY_NOTE' => $request->order['catatan_survey'] ?? null
         ];
 
-        if(!$check){
+        if (!$check) {
             $data_order['ID'] = Uuid::uuid7()->toString();
             $data_order['APPLICATION_ID'] = $fpkId;
 
             M_CrOrder::create($data_order);
-        }else{
+        } else {
             $check->update($data_order);
         }
     }
 
-    private function insert_cr_personal($request,$applicationId){
+    private function insert_cr_personal($request, $applicationId)
+    {
 
-        $check = M_CrPersonal::where('APPLICATION_ID',$applicationId)->first();
+        $check = M_CrPersonal::where('APPLICATION_ID', $applicationId)->first();
 
-        $data_cr_application =[  
-            'NAME' => $request->pelanggan['nama']??null,
-            'ALIAS' => $request->pelanggan['nama_panggilan']??null,
-            'GENDER' => $request->pelanggan['jenis_kelamin']??null,
-            'BIRTHPLACE' => $request->pelanggan['tempat_lahir']??null,
-            'BIRTHDATE' => $request->pelanggan['tgl_lahir']??null,
-            'BLOOD_TYPE' => $request->pelanggan['gol_darah']??null,
-            'MARTIAL_STATUS' => $request->pelanggan['status_kawin']??null,
-            'MARTIAL_DATE' => $request->pelanggan['tgl_kawin']??null,
-            'ID_TYPE' => $request->pelanggan['tipe_identitas']??null,
-            'ID_NUMBER' => $request->pelanggan['no_identitas']??null,
-            'ID_ISSUE_DATE' => $request->pelanggan['tgl_terbit']??null,
-            'ID_VALID_DATE' => $request->pelanggan['masa_berlaku']??null,
-            'KK' => $request->pelanggan['no_kk']??null,
-            'CITIZEN' => $request->pelanggan['warganegara']??null,
-            
-            'ADDRESS' => $request->alamat_identitas['alamat']??null,
-            'RT' => $request->alamat_identitas['rt']??null,
-            'RW' => $request->alamat_identitas['rw']??null,
-            'PROVINCE' => $request->alamat_identitas['provinsi']??null,
-            'CITY' => $request->alamat_identitas['kota']??null,
-            'KELURAHAN' => $request->alamat_identitas['kelurahan']??null,
-            'KECAMATAN' => $request->alamat_identitas['kecamatan']??null,
-            'ZIP_CODE' =>  $request->alamat_identitas['kode_pos']??null,
+        $data_cr_application = [
+            'NAME' => $request->pelanggan['nama'] ?? null,
+            'ALIAS' => $request->pelanggan['nama_panggilan'] ?? null,
+            'GENDER' => $request->pelanggan['jenis_kelamin'] ?? null,
+            'BIRTHPLACE' => $request->pelanggan['tempat_lahir'] ?? null,
+            'BIRTHDATE' => $request->pelanggan['tgl_lahir'] ?? null,
+            'BLOOD_TYPE' => $request->pelanggan['gol_darah'] ?? null,
+            'MARTIAL_STATUS' => $request->pelanggan['status_kawin'] ?? null,
+            'MARTIAL_DATE' => $request->pelanggan['tgl_kawin'] ?? null,
+            'ID_TYPE' => $request->pelanggan['tipe_identitas'] ?? null,
+            'ID_NUMBER' => $request->pelanggan['no_identitas'] ?? null,
+            'ID_ISSUE_DATE' => $request->pelanggan['tgl_terbit'] ?? null,
+            'ID_VALID_DATE' => $request->pelanggan['masa_berlaku'] ?? null,
+            'KK' => $request->pelanggan['no_kk'] ?? null,
+            'CITIZEN' => $request->pelanggan['warganegara'] ?? null,
 
-            'INS_ADDRESS' => $request->alamat_tagih['alamat']??null,
-            'INS_RT' => $request->alamat_tagih['rt']??null,
-            'INS_RW' => $request->alamat_tagih['rw']??null,
-            'INS_PROVINCE' => $request->alamat_tagih['provinsi']??null,
-            'INS_CITY' => $request->alamat_tagih['kota']??null,
-            'INS_KELURAHAN' => $request->alamat_tagih['kelurahan']??null,
-            'INS_KECAMATAN' => $request->alamat_tagih['kecamatan']??null,
-            'INS_ZIP_CODE' => $request->alamat_tagih['kode_pos']??null,
+            'ADDRESS' => $request->alamat_identitas['alamat'] ?? null,
+            'RT' => $request->alamat_identitas['rt'] ?? null,
+            'RW' => $request->alamat_identitas['rw'] ?? null,
+            'PROVINCE' => $request->alamat_identitas['provinsi'] ?? null,
+            'CITY' => $request->alamat_identitas['kota'] ?? null,
+            'KELURAHAN' => $request->alamat_identitas['kelurahan'] ?? null,
+            'KECAMATAN' => $request->alamat_identitas['kecamatan'] ?? null,
+            'ZIP_CODE' =>  $request->alamat_identitas['kode_pos'] ?? null,
 
-            'OCCUPATION' => $request->pekerjaan['pekerjaan']??null,
-            'OCCUPATION_ON_ID' => $request->pekerjaan['pekerjaan_id']??null,
-            'RELIGION' => $request->pekerjaan['agama']??null,
-            'EDUCATION' => $request->pekerjaan['pendidikan']??null,
-            'PROPERTY_STATUS' => $request->pekerjaan['status_rumah']??null,
-            'PHONE_HOUSE' => $request->pekerjaan['telepon_rumah']??null,
-            'PHONE_PERSONAL' => $request->pekerjaan['telepon_selular']??null,
-            'PHONE_OFFICE' => $request->pekerjaan['telepon_kantor']??null,
-            'EXT_1' => $request->pekerjaan['ekstra1']??null,
-            'EXT_2' => $request->pekerjaan['ekstra2']??null,
-           
+            'INS_ADDRESS' => $request->alamat_tagih['alamat'] ?? null,
+            'INS_RT' => $request->alamat_tagih['rt'] ?? null,
+            'INS_RW' => $request->alamat_tagih['rw'] ?? null,
+            'INS_PROVINCE' => $request->alamat_tagih['provinsi'] ?? null,
+            'INS_CITY' => $request->alamat_tagih['kota'] ?? null,
+            'INS_KELURAHAN' => $request->alamat_tagih['kelurahan'] ?? null,
+            'INS_KECAMATAN' => $request->alamat_tagih['kecamatan'] ?? null,
+            'INS_ZIP_CODE' => $request->alamat_tagih['kode_pos'] ?? null,
+
+            'OCCUPATION' => $request->pekerjaan['pekerjaan'] ?? null,
+            'OCCUPATION_ON_ID' => $request->pekerjaan['pekerjaan_id'] ?? null,
+            'RELIGION' => $request->pekerjaan['agama'] ?? null,
+            'EDUCATION' => $request->pekerjaan['pendidikan'] ?? null,
+            'PROPERTY_STATUS' => $request->pekerjaan['status_rumah'] ?? null,
+            'PHONE_HOUSE' => $request->pekerjaan['telepon_rumah'] ?? null,
+            'PHONE_PERSONAL' => $request->pekerjaan['telepon_selular'] ?? null,
+            'PHONE_OFFICE' => $request->pekerjaan['telepon_kantor'] ?? null,
+            'EXT_1' => $request->pekerjaan['ekstra1'] ?? null,
+            'EXT_2' => $request->pekerjaan['ekstra2'] ?? null,
+
             'VERSION' => 1,
             'CREATE_DATE' => Carbon::now()->format('Y-m-d'),
             'CREATE_USER' => $request->user()->id,
         ];
 
-        if(!$check){
+        if (!$check) {
             $data_cr_application['ID'] = Uuid::uuid7()->toString();
             $data_cr_application['APPLICATION_ID'] = $applicationId;
-    
+
             M_CrPersonal::create($data_cr_application);
-        }else{
+        } else {
             $check->update($data_cr_application);
         }
     }
 
-    private function insert_cr_guarantor($request,$applicationId){
+    private function insert_cr_guarantor($request, $applicationId)
+    {
         if (collect($request->penjamin)->isNotEmpty()) {
             foreach ($request->penjamin as $res) {
 
-                $check = M_CrApplicationGuarantor::where('ID',$res['id'])->first();
+                $check = M_CrApplicationGuarantor::where('ID', $res['id'])->first();
 
-                $data_cr_application =[  
-                    'ID' => $res['id']??null,
-                    'NAME' => $res['nama']??null,
-                    'GENDER' => $res['jenis_kelamin']??null,
-                    'BIRTHPLACE' => $res['tempat_lahir']??null,
-                    'BIRTHDATE' => $res['tgl_lahir']??null,
-                    'ADDRESS' => $res['alamat']??null,
-                    'IDENTITY_TYPE' => $res['tipe_identitas']??null,
-                    'NUMBER_IDENTITY' => $res['no_identitas']??null,
-                    'OCCUPATION' => $res['pekerjaan']??null,
-                    'WORK_PERIOD' => $res['lama_bekerja']??null,
-                    'STATUS_WITH_DEBITUR' => $res['hub_cust']??null,
-                    'MOBILE_NUMBER' => $res['no_hp']??null,
-                    'INCOME' => $res['pendapatan']??null,
+                $data_cr_application = [
+                    'ID' => $res['id'] ?? null,
+                    'NAME' => $res['nama'] ?? null,
+                    'GENDER' => $res['jenis_kelamin'] ?? null,
+                    'BIRTHPLACE' => $res['tempat_lahir'] ?? null,
+                    'BIRTHDATE' => $res['tgl_lahir'] ?? null,
+                    'ADDRESS' => $res['alamat'] ?? null,
+                    'IDENTITY_TYPE' => $res['tipe_identitas'] ?? null,
+                    'NUMBER_IDENTITY' => $res['no_identitas'] ?? null,
+                    'OCCUPATION' => $res['pekerjaan'] ?? null,
+                    'WORK_PERIOD' => $res['lama_bekerja'] ?? null,
+                    'STATUS_WITH_DEBITUR' => $res['hub_cust'] ?? null,
+                    'MOBILE_NUMBER' => $res['no_hp'] ?? null,
+                    'INCOME' => $res['pendapatan'] ?? null,
                 ];
-        
-                if(!$check){
+
+                if (!$check) {
                     $data_cr_application['ID'] = $res['id'];
                     $data_cr_application['APPLICATION_ID'] = $applicationId;
-            
+
                     M_CrApplicationGuarantor::create($data_cr_application);
-                }else{
+                } else {
                     $check->update($data_cr_application);
                 }
             }
         }
     }
 
-    private function insert_cr_spouse($request,$applicationId){
+    private function insert_cr_spouse($request, $applicationId)
+    {
 
-        $check = M_CrApplicationSpouse::where('APPLICATION_ID',$applicationId)->first();
+        $check = M_CrApplicationSpouse::where('APPLICATION_ID', $applicationId)->first();
 
-        $data_cr_application =[  
-            'NAME' => $request->pasangan['nama_pasangan']??null,
-            'BIRTHPLACE' => $request->pasangan['tmptlahir_pasangan']??null,
-            'BIRTHDATE' => $request->pasangan['tgllahir_pasangan']??null,
-            'ADDRESS' => $request->pasangan['alamat_pasangan']??null,
-            'OCCUPATION' => $request->pasangan['pekerjaan_pasangan']??null
+        $data_cr_application = [
+            'NAME' => $request->pasangan['nama_pasangan'] ?? null,
+            'BIRTHPLACE' => $request->pasangan['tmptlahir_pasangan'] ?? null,
+            'BIRTHDATE' => $request->pasangan['tgllahir_pasangan'] ?? null,
+            'ADDRESS' => $request->pasangan['alamat_pasangan'] ?? null,
+            'OCCUPATION' => $request->pasangan['pekerjaan_pasangan'] ?? null
         ];
 
-        if(!$check){
+        if (!$check) {
             $data_cr_application['ID'] = Uuid::uuid7()->toString();
             $data_cr_application['APPLICATION_ID'] = $applicationId;
-    
+
             M_CrApplicationSpouse::create($data_cr_application);
-        }else{
+        } else {
             $check->update($data_cr_application);
         }
     }
 
-    private function insert_cr_personal_extra($request,$applicationId){
+    private function insert_cr_personal_extra($request, $applicationId)
+    {
 
-        $check = M_CrPersonalExtra::where('APPLICATION_ID',$applicationId)->first();
+        $check = M_CrPersonalExtra::where('APPLICATION_ID', $applicationId)->first();
 
-        $data_cr_application =[  
-            'BI_NAME' => $request->tambahan['nama_bi']??null,
-            'EMAIL' => $request->tambahan['email']??null,
-            'INFO' => $request->tambahan['info_khusus']??null,
-            'OTHER_OCCUPATION_1' => $request->tambahan['usaha_lain1']??null,
-            'OTHER_OCCUPATION_2' => $request->tambahan['usaha_lain2']??null,
-            'OTHER_OCCUPATION_3' => $request->tambahan['usaha_lain3']??null,
-            'OTHER_OCCUPATION_4' => $request->tambahan['usaha_lain4']??null,
-            'MAIL_ADDRESS' => $request->surat['alamat']??null,
-            'MAIL_RT' => $request->surat['rt']??null,
-            'MAIL_RW' => $request->surat['rw']??null,
-            'MAIL_PROVINCE' => $request->surat['provinsi']??null,
-            'MAIL_CITY' => $request->surat['kota']??null,
-            'MAIL_KELURAHAN' => $request->surat['kelurahan']??null,
-            'MAIL_KECAMATAN' => $request->surat['kecamatan']??null,
-            'MAIL_ZIP_CODE' => $request->surat['kode_pos']??null,
-            'EMERGENCY_NAME' => $request->kerabat_darurat['nama']??null,
-            'EMERGENCY_ADDRESS' => $request->kerabat_darurat['alamat']??null,
-            'EMERGENCY_RT' => $request->kerabat_darurat['rt']??null,
-            'EMERGENCY_RW' => $request->kerabat_darurat['rw']??null,
-            'EMERGENCY_PROVINCE' => $request->kerabat_darurat['provinsi']??null,
-            'EMERGENCY_CITY' => $request->kerabat_darurat['kota']??null,
-            'EMERGENCY_KELURAHAN' => $request->kerabat_darurat['kelurahan']??null,
-            'EMERGENCY_KECAMATAN' => $request->kerabat_darurat['kecamatan']??null,
-            'EMERGENCY_ZIP_CODE' => $request->kerabat_darurat['kode_pos']??null,
-            'EMERGENCY_PHONE_HOUSE' => $request->kerabat_darurat['no_telp']??null,
-            'EMERGENCY_PHONE_PERSONAL'  => $request->kerabat_darurat['no_hp']??null
+        $data_cr_application = [
+            'BI_NAME' => $request->tambahan['nama_bi'] ?? null,
+            'EMAIL' => $request->tambahan['email'] ?? null,
+            'INFO' => $request->tambahan['info_khusus'] ?? null,
+            'OTHER_OCCUPATION_1' => $request->tambahan['usaha_lain1'] ?? null,
+            'OTHER_OCCUPATION_2' => $request->tambahan['usaha_lain2'] ?? null,
+            'OTHER_OCCUPATION_3' => $request->tambahan['usaha_lain3'] ?? null,
+            'OTHER_OCCUPATION_4' => $request->tambahan['usaha_lain4'] ?? null,
+            'MAIL_ADDRESS' => $request->surat['alamat'] ?? null,
+            'MAIL_RT' => $request->surat['rt'] ?? null,
+            'MAIL_RW' => $request->surat['rw'] ?? null,
+            'MAIL_PROVINCE' => $request->surat['provinsi'] ?? null,
+            'MAIL_CITY' => $request->surat['kota'] ?? null,
+            'MAIL_KELURAHAN' => $request->surat['kelurahan'] ?? null,
+            'MAIL_KECAMATAN' => $request->surat['kecamatan'] ?? null,
+            'MAIL_ZIP_CODE' => $request->surat['kode_pos'] ?? null,
+            'EMERGENCY_NAME' => $request->kerabat_darurat['nama'] ?? null,
+            'EMERGENCY_ADDRESS' => $request->kerabat_darurat['alamat'] ?? null,
+            'EMERGENCY_RT' => $request->kerabat_darurat['rt'] ?? null,
+            'EMERGENCY_RW' => $request->kerabat_darurat['rw'] ?? null,
+            'EMERGENCY_PROVINCE' => $request->kerabat_darurat['provinsi'] ?? null,
+            'EMERGENCY_CITY' => $request->kerabat_darurat['kota'] ?? null,
+            'EMERGENCY_KELURAHAN' => $request->kerabat_darurat['kelurahan'] ?? null,
+            'EMERGENCY_KECAMATAN' => $request->kerabat_darurat['kecamatan'] ?? null,
+            'EMERGENCY_ZIP_CODE' => $request->kerabat_darurat['kode_pos'] ?? null,
+            'EMERGENCY_PHONE_HOUSE' => $request->kerabat_darurat['no_telp'] ?? null,
+            'EMERGENCY_PHONE_PERSONAL'  => $request->kerabat_darurat['no_hp'] ?? null
         ];
 
-        if(!$check){
+        if (!$check) {
             $data_cr_application['ID'] = Uuid::uuid4()->toString();
             $data_cr_application['APPLICATION_ID'] = $applicationId;
 
             M_CrPersonalExtra::create($data_cr_application);
-        }else{
+        } else {
             $check->update($data_cr_application);
         }
     }
 
-    private function insert_bank_account($request,$applicationId){
+    private function insert_bank_account($request, $applicationId)
+    {
 
         if (isset($request->info_bank) && is_array($request->info_bank)) {
 
@@ -685,11 +689,11 @@ class CrAppilcationController extends Controller
                 $dataToInsert[] = [
                     'ID' => Uuid::uuid4()->toString(),
                     'APPLICATION_ID' => $applicationId,
-                    'BANK_CODE' => $result['kode_bank']?? null,
-                    'BANK_NAME' => $result['nama_bank']?? null,
-                    'ACCOUNT_NUMBER' => $result['no_rekening']?? null,
-                    'ACCOUNT_NAME' => $result['atas_nama']?? null,
-                    'STATUS' => $result['status']?? null,
+                    'BANK_CODE' => $result['kode_bank'] ?? null,
+                    'BANK_NAME' => $result['nama_bank'] ?? null,
+                    'ACCOUNT_NUMBER' => $result['no_rekening'] ?? null,
+                    'ACCOUNT_NAME' => $result['atas_nama'] ?? null,
+                    'STATUS' => $result['status'] ?? null,
                 ];
             }
 
@@ -697,8 +701,9 @@ class CrAppilcationController extends Controller
         }
     }
 
-    private function insert_application_approval($request,$applicationId, $surveyID,$flag){
-        if($flag === 'yes'){
+    private function insert_application_approval($request, $applicationId, $surveyID, $flag)
+    {
+        if ($flag === 'yes') {
             $data_approval['code'] = 'WAKPS';
             $data_approval['application_result'] = 'menunggu kapos';
 
@@ -710,21 +715,21 @@ class CrAppilcationController extends Controller
                 'ONCHARGE_TIME' => Carbon::now(),
                 'APPROVAL_RESULT' => 'menunggu kapos'
             ];
-    
+
             M_ApplicationApprovalLog::create($data_application_log);
 
             $survey_apprval_change = M_SurveyApproval::where('CR_SURVEY_ID', $surveyID)->first();
 
             if ($survey_apprval_change) {
-                $data_update_approval=[
+                $data_update_approval = [
                     'CODE' => 'WAKPS',
                     'ONCHARGE_PERSON' => $request->user()->id,
                     'ONCHARGE_TIME' => Carbon::now(),
                     'APPROVAL_RESULT' => 'menunggu kapos'
                 ];
-        
+
                 $survey_apprval_change->update($data_update_approval);
-        
+
                 $data_survey_log = [
                     'CODE' => 'WAKPS',
                     'SURVEY_APPROVAL_ID' => $surveyID,
@@ -732,23 +737,25 @@ class CrAppilcationController extends Controller
                     'ONCHARGE_TIME' => Carbon::now(),
                     'APPROVAL_RESULT' =>  'menunggu kapos'
                 ];
-        
+
                 M_SurveyApprovalLog::create($data_survey_log);
             }
-        }else{
+        } else {
             $data_approval['code'] = 'DROR';
             $data_approval['application_result'] = 'draf';
         }
 
-        $checkApproval= M_ApplicationApproval::where('cr_application_id', $applicationId)->first();
+        $checkApproval = M_ApplicationApproval::where('cr_application_id', $applicationId)->first();
 
         if (!$checkApproval) {
             $data_approval = array_merge(
-            [
-                'id' => Uuid::uuid7()->toString(),
-                'cr_prospect_id' => $surveyID, 
-                'cr_application_id' => $applicationId
-            ],$data_approval);
+                [
+                    'id' => Uuid::uuid7()->toString(),
+                    'cr_prospect_id' => $surveyID,
+                    'cr_application_id' => $applicationId
+                ],
+                $data_approval
+            );
 
             M_ApplicationApproval::create($data_approval);
         } else {
@@ -761,7 +768,7 @@ class CrAppilcationController extends Controller
         try {
             $getSurveyId = $request->cr_prospect_id;
 
-            $check_survey_id = M_CrSurvey::where('id',$getSurveyId)->whereNull('deleted_at')->first();
+            $check_survey_id = M_CrSurvey::where('id', $getSurveyId)->whereNull('deleted_at')->first();
 
             if (!$check_survey_id) {
                 throw new Exception("Id Survey Is Not Exist", 404);
@@ -769,102 +776,102 @@ class CrAppilcationController extends Controller
 
             $uuid = Uuid::uuid7()->toString();
 
-            $check_prospect_id = M_CrApplication::where('CR_SURVEY_ID',$getSurveyId)->first();
+            $check_prospect_id = M_CrApplication::where('CR_SURVEY_ID', $getSurveyId)->first();
 
-            if(!$check_prospect_id){
+            if (!$check_prospect_id) {
                 $generate_uuid = $uuid;
 
-                $data_cr_application =[
+                $data_cr_application = [
                     'ID' => $uuid,
                     'CR_SURVEY_ID' => $check_survey_id->id,
-                    'ORDER_NUMBER' => $this->createAutoCode(M_CrApplication::class,'ORDER_NUMBER','COR'),
+                    'ORDER_NUMBER' => $this->createAutoCode(M_CrApplication::class, 'ORDER_NUMBER', 'COR'),
                     'BRANCH' => $request->user()->branch_id,
-                    'TENOR' => $check_survey_id->tenor??null,
+                    'TENOR' => $check_survey_id->tenor ?? null,
                     'INSTALLMENT_TYPE' => $check_survey_id->jenis_angsuran ?? null,
                     'VERSION' => 1,
                     'CREATE_DATE' => Carbon::now()->format('Y-m-d'),
                     'CREATE_BY' => $request->user()->id,
                 ];
-        
+
                 M_CrApplication::create($data_cr_application);
 
-                if(strtolower($check_survey_id->category) == 'ro'){
+                if (strtolower($check_survey_id->category) == 'ro') {
 
-                    $customer = M_Customer::where('ID_NUMBER',$check_survey_id->ktp)->first();
-                    $customer_xtra = M_CustomerExtra::where('CUST_CODE',$customer->CUST_CODE)->first();    
+                    $customer = M_Customer::where('ID_NUMBER', $check_survey_id->ktp)->first();
+                    $customer_xtra = M_CustomerExtra::where('CUST_CODE', $customer->CUST_CODE)->first();
 
-                    $data_cr_personal =[  
+                    $data_cr_personal = [
                         'ID' => Uuid::uuid7()->toString(),
                         'APPLICATION_ID' => $uuid,
-                        'NAME' => $check_survey_id->nama??null,
-                        'ALIAS' => $customer->ALIAS??null,
-                        'GENDER' => $customer->GENDER??null,
-                        'BIRTHPLACE' => $customer->BIRTHPLACE??null,
-                        'BIRTHDATE' => $check_survey_id->tgl_lahir??null,
-                        'BLOOD_TYPE' => $customer->BLOOD_TYPE??null,
-                        'MARTIAL_STATUS' => $customer->MARTIAL_STATUS??null,
-                        'MARTIAL_DATE' => $customer->MARTIAL_DATE??null,
-                        'ID_TYPE' => $customer->ID_TYPE??null,
-                        'ID_NUMBER' => $check_survey_id->ktp??null,
-                        'ID_ISSUE_DATE' => $customer->ID_ISSUE_DATE??null,
-                        'ID_VALID_DATE' => $customer->ID_VALID_DATE??null,
-                        'KK' => $check_survey_id->kk??null,
-                        'CITIZEN' => $customer->CITIZEN??null,
-                        
-                        'ADDRESS' => $check_survey_id->alamat??null,
-                        'RT' => $check_survey_id->rt??null,
-                        'RW' => $check_survey_id->rw??null,
-                        'PROVINCE' => $customer->PROVINCE??null,
-                        'CITY' => $customer->CITY??null,
-                        'KELURAHAN' => $customer->KELURAHAN??null,
-                        'KECAMATAN' => $customer->KECAMATAN??null,
-                        'ZIP_CODE' => $customer->ZIP_CODE??null,
-            
-                        'INS_ADDRESS' => $customer->INS_ADDRESS??null,
-                        'INS_RT' => $customer->INS_RT??null,
-                        'INS_RW' => $customer->INS_RW??null,
-                        'INS_PROVINCE' => $customer->INS_PROVINCE??null,
-                        'INS_CITY' => $customer->INS_CITY??null,
-                        'INS_KELURAHAN' => $customer->INS_KELURAHAN??null,
-                        'INS_KECAMATAN' => $customer->INS_KECAMATAN??null,
-                        'INS_ZIP_CODE' => $customer->INS_ZIP_CODE??null,
-            
-                        'OCCUPATION' => $customer->OCCUPATION??null,
-                        'OCCUPATION_ON_ID' => $customer->OCCUPATION_ON_ID??null,
-                        'RELIGION' => $customer->RELIGION??null,
-                        'EDUCATION' => $customer->EDUCATION??null,
-                        'PROPERTY_STATUS' => $customer->PROPERTY_STATUS??null,
-                        'PHONE_HOUSE' => $customer->PHONE_HOUSE??null,
-                        'PHONE_PERSONAL' => $customer->PHONE_PERSONAL??null,
-                        'PHONE_OFFICE' => $customer->PHONE_OFFICE??null,
-                        'EXT_1' => $customer->EXT_1??null,
-                        'EXT_2' => $customer->EXT_2??null,
+                        'NAME' => $check_survey_id->nama ?? null,
+                        'ALIAS' => $customer->ALIAS ?? null,
+                        'GENDER' => $customer->GENDER ?? null,
+                        'BIRTHPLACE' => $customer->BIRTHPLACE ?? null,
+                        'BIRTHDATE' => $check_survey_id->tgl_lahir ?? null,
+                        'BLOOD_TYPE' => $customer->BLOOD_TYPE ?? null,
+                        'MARTIAL_STATUS' => $customer->MARTIAL_STATUS ?? null,
+                        'MARTIAL_DATE' => $customer->MARTIAL_DATE ?? null,
+                        'ID_TYPE' => $customer->ID_TYPE ?? null,
+                        'ID_NUMBER' => $check_survey_id->ktp ?? null,
+                        'ID_ISSUE_DATE' => $customer->ID_ISSUE_DATE ?? null,
+                        'ID_VALID_DATE' => $customer->ID_VALID_DATE ?? null,
+                        'KK' => $check_survey_id->kk ?? null,
+                        'CITIZEN' => $customer->CITIZEN ?? null,
+
+                        'ADDRESS' => $check_survey_id->alamat ?? null,
+                        'RT' => $check_survey_id->rt ?? null,
+                        'RW' => $check_survey_id->rw ?? null,
+                        'PROVINCE' => $customer->PROVINCE ?? null,
+                        'CITY' => $customer->CITY ?? null,
+                        'KELURAHAN' => $customer->KELURAHAN ?? null,
+                        'KECAMATAN' => $customer->KECAMATAN ?? null,
+                        'ZIP_CODE' => $customer->ZIP_CODE ?? null,
+
+                        'INS_ADDRESS' => $customer->INS_ADDRESS ?? null,
+                        'INS_RT' => $customer->INS_RT ?? null,
+                        'INS_RW' => $customer->INS_RW ?? null,
+                        'INS_PROVINCE' => $customer->INS_PROVINCE ?? null,
+                        'INS_CITY' => $customer->INS_CITY ?? null,
+                        'INS_KELURAHAN' => $customer->INS_KELURAHAN ?? null,
+                        'INS_KECAMATAN' => $customer->INS_KECAMATAN ?? null,
+                        'INS_ZIP_CODE' => $customer->INS_ZIP_CODE ?? null,
+
+                        'OCCUPATION' => $customer->OCCUPATION ?? null,
+                        'OCCUPATION_ON_ID' => $customer->OCCUPATION_ON_ID ?? null,
+                        'RELIGION' => $customer->RELIGION ?? null,
+                        'EDUCATION' => $customer->EDUCATION ?? null,
+                        'PROPERTY_STATUS' => $customer->PROPERTY_STATUS ?? null,
+                        'PHONE_HOUSE' => $customer->PHONE_HOUSE ?? null,
+                        'PHONE_PERSONAL' => $customer->PHONE_PERSONAL ?? null,
+                        'PHONE_OFFICE' => $customer->PHONE_OFFICE ?? null,
+                        'EXT_1' => $customer->EXT_1 ?? null,
+                        'EXT_2' => $customer->EXT_2 ?? null,
                         'VERSION' => 1,
                         'CREATE_DATE' => Carbon::now()->format('Y-m-d'),
                         'CREATE_USER' => $request->user()->id,
                     ];
 
-                    $data_cr_order =[
+                    $data_cr_order = [
                         'ID' => Uuid::uuid7()->toString(),
                         'APPLICATION_ID' => $uuid,
-                        'NO_NPWP' => $customer->NPWP??null,
+                        'NO_NPWP' => $customer->NPWP ?? null,
                         'MOTHER_NAME' => $customer->MOTHER_NAME ?? null,
                         'WORK_PERIOD'  => $check_survey_id->work_period ?? null,
                         'INCOME_PERSONAL'  => $check_survey_id->income_personal ?? null,
                         'INCOME_SPOUSE'  => $check_survey_id->income_spouse ?? null,
                         'INCOME_OTHER'  => $check_survey_id->income_other ?? null,
-                        'UNIT_BISNIS' => $check_survey_id->usaha??null,
-                        'EXPENSES'  =>  $check_survey_id->expenses?? null,                    
-                    ];  
-                    
-                    $data_cr_application_spouse =[
+                        'UNIT_BISNIS' => $check_survey_id->usaha ?? null,
+                        'EXPENSES'  =>  $check_survey_id->expenses ?? null,
+                    ];
+
+                    $data_cr_application_spouse = [
                         'ID' => Uuid::uuid7()->toString(),
                         'APPLICATION_ID' => $uuid,
-                        'NAME' => $customer_xtra->SPOUSE_NAME??null,
-                        'BIRTHPLACE' => $customer_xtra->SPOUSE_BIRTHPLACE??null,
-                        'BIRTHDATE' => $customer_xtra->SPOUSE_BIRTHDATE??null,
-                        'ADDRESS' => $customer_xtra->SPOUSE_ADDRESS??null,
-                        'OCCUPATION' => $customer_xtra->SPOUSE_OCCUPATION??null
+                        'NAME' => $customer_xtra->SPOUSE_NAME ?? null,
+                        'BIRTHPLACE' => $customer_xtra->SPOUSE_BIRTHPLACE ?? null,
+                        'BIRTHDATE' => $customer_xtra->SPOUSE_BIRTHDATE ?? null,
+                        'ADDRESS' => $customer_xtra->SPOUSE_ADDRESS ?? null,
+                        'OCCUPATION' => $customer_xtra->SPOUSE_OCCUPATION ?? null
                     ];
 
                     $data_cr_personal_extra = [
@@ -881,31 +888,31 @@ class CrAppilcationController extends Controller
                         'EMERGENCY_ZIP_CODE' => $customer_xtra->EMERGENCY_ZIP_CODE ?? null,
                         'EMERGENCY_PHONE_HOUSE' => $customer_xtra->EMERGENCY_PHONE_HOUSE ?? null,
                         'EMERGENCY_PHONE_PERSONAL' => $customer_xtra->EMERGENCY_PHONE_PERSONAL ?? null
-                    ];    
-                
+                    ];
+
                     M_CrPersonal::create($data_cr_personal);
                     M_CrPersonalExtra::create($data_cr_personal_extra);
                     M_CrOrder::create($data_cr_order);
                     M_CrApplicationSpouse::create($data_cr_application_spouse);
                 }
 
-                $this->createApplicationApproval($request,$getSurveyId,$generate_uuid);
-            }else{
+                $this->createApplicationApproval($request, $getSurveyId, $generate_uuid);
+            } else {
                 $generate_uuid = $check_prospect_id->ID;
             }
 
-            return response()->json(['message' => 'OK',"status" => 200,'response' => ['uuid'=>$generate_uuid]], 200);
+            return response()->json(['message' => 'OK', "status" => 200, 'response' => ['uuid' => $generate_uuid]], 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
 
-    private function createApplicationApproval($request,$getSurveyId,$fpkCreate = null)
+    private function createApplicationApproval($request, $getSurveyId, $fpkCreate = null)
     {
         $uuid = Uuid::uuid7()->toString();
 
-        $approval =[
+        $approval = [
             'id' => $uuid,
             'code' => 'CROR',
             'cr_prospect_id' => $getSurveyId,
@@ -927,9 +934,9 @@ class CrAppilcationController extends Controller
 
         M_ApplicationApprovalLog::create($data_application_log);
 
-        $survey_apprval_change = M_SurveyApproval::where('CR_SURVEY_ID',$getSurveyId)->first();
+        $survey_apprval_change = M_SurveyApproval::where('CR_SURVEY_ID', $getSurveyId)->first();
 
-        $data_update_approval=[
+        $data_update_approval = [
             'CODE' => 'CROR',
             'ONCHARGE_PERSON' => $request->user()->id,
             'ONCHARGE_TIME' => Carbon::now(),
@@ -947,194 +954,194 @@ class CrAppilcationController extends Controller
         ];
 
         M_SurveyApprovalLog::create($data_survey_log);
-    } 
+    }
 
-    private function resourceDetail($data,$application)
+    private function resourceDetail($data, $application)
     {
         $surveyId = $data->id;
         $setApplicationId = $application->ID;
 
-        $guarente_vehicle = M_CrGuaranteVehicle::where('CR_SURVEY_ID',$surveyId)->where(function($query) {
-                                $query->whereNull('DELETED_AT')
-                                    ->orWhere('DELETED_AT', '');
-                            })->get(); 
-        $guarente_sertificat = M_CrGuaranteSertification::where('CR_SURVEY_ID',$surveyId)->where(function($query) {
-                                    $query->whereNull('DELETED_AT')
-                                        ->orWhere('DELETED_AT', '');
-                                })->get(); 
-        $approval_detail = M_ApplicationApproval::where('cr_application_id',$setApplicationId)->first();
-        $cr_personal = M_CrPersonal::where('APPLICATION_ID',$setApplicationId)->first();
-        $cr_personal_extra = M_CrPersonalExtra::where('APPLICATION_ID',$setApplicationId)->first();
-        $cr_oder = M_CrOrder::where('APPLICATION_ID',$setApplicationId)->first();
-        $applicationDetail = M_CrApplication::where('ID',$setApplicationId)->first();
-        $cr_survey= M_CrSurvey::where('id',$surveyId)->first();
+        $guarente_vehicle = M_CrGuaranteVehicle::where('CR_SURVEY_ID', $surveyId)->where(function ($query) {
+            $query->whereNull('DELETED_AT')
+                ->orWhere('DELETED_AT', '');
+        })->get();
+        $guarente_sertificat = M_CrGuaranteSertification::where('CR_SURVEY_ID', $surveyId)->where(function ($query) {
+            $query->whereNull('DELETED_AT')
+                ->orWhere('DELETED_AT', '');
+        })->get();
+        $approval_detail = M_ApplicationApproval::where('cr_application_id', $setApplicationId)->first();
+        $cr_personal = M_CrPersonal::where('APPLICATION_ID', $setApplicationId)->first();
+        $cr_personal_extra = M_CrPersonalExtra::where('APPLICATION_ID', $setApplicationId)->first();
+        $cr_oder = M_CrOrder::where('APPLICATION_ID', $setApplicationId)->first();
+        $applicationDetail = M_CrApplication::where('ID', $setApplicationId)->first();
+        $cr_survey = M_CrSurvey::where('id', $surveyId)->first();
         $check_exist = M_Credit::where('ORDER_NUMBER', $application->ORDER_NUMBER)->first();
-        $cr_guarantor = M_CrApplicationGuarantor::where('APPLICATION_ID',$setApplicationId)->get();
-        $cr_spouse = M_CrApplicationSpouse::where('APPLICATION_ID',$setApplicationId)->first();
-        $approval = M_ApplicationApproval::where('cr_application_id',$setApplicationId)->first();
+        $cr_guarantor = M_CrApplicationGuarantor::where('APPLICATION_ID', $setApplicationId)->get();
+        $cr_spouse = M_CrApplicationSpouse::where('APPLICATION_ID', $setApplicationId)->first();
+        $approval = M_ApplicationApproval::where('cr_application_id', $setApplicationId)->first();
 
         $arrayList = [
             'id_application' => $setApplicationId,
             'survey_id' => $surveyId,
             'order_number' => $application->ORDER_NUMBER,
-            "flag" => !$check_exist?0:1,
-            'jenis_angsuran' => empty($application->INSTALLMENT_TYPE)?$cr_survey->jenis_angsuran??'':$application->INSTALLMENT_TYPE??'',
-            'pelanggan' =>[
-                "nama" => $cr_personal->NAME ?? ( $data->nama?? ''),
+            "flag" => !$check_exist ? 0 : 1,
+            'jenis_angsuran' => empty($application->INSTALLMENT_TYPE) ? $cr_survey->jenis_angsuran ?? '' : $application->INSTALLMENT_TYPE ?? '',
+            'pelanggan' => [
+                "nama" => $cr_personal->NAME ?? ($data->nama ?? ''),
                 "nama_panggilan" => $cr_personal->ALIAS ?? null,
                 "jenis_kelamin" => $cr_personal->GENDER ?? null,
-                "tempat_lahir" => $cr_personal->BIRTHPLACE??null,
-                "tgl_lahir" => date_format(date_create(empty($cr_personal->BIRTHDATE)?$cr_survey->tgl_lahir:$cr_personal->BIRTHDATE), 'Y-m-d'),
-                "gol_darah" => $cr_personal->BLOOD_TYPE??null,
-                "status_kawin" => $cr_personal->MARTIAL_STATUS??null,
+                "tempat_lahir" => $cr_personal->BIRTHPLACE ?? null,
+                "tgl_lahir" => date_format(date_create(empty($cr_personal->BIRTHDATE) ? $cr_survey->tgl_lahir : $cr_personal->BIRTHDATE), 'Y-m-d'),
+                "gol_darah" => $cr_personal->BLOOD_TYPE ?? null,
+                "status_kawin" => $cr_personal->MARTIAL_STATUS ?? null,
                 "tgl_kawin" => $cr_personal->MARTIAL_DATE ?? null,
                 "tipe_identitas" => "KTP",
-                "no_identitas" => empty($cr_personal->ID_NUMBER)?$data->ktp??null:$cr_personal->ID_NUMBER??null,
-                "tgl_terbit_identitas" => $cr_personal->ID_ISSUE_DATE ??null,
+                "no_identitas" => empty($cr_personal->ID_NUMBER) ? $data->ktp ?? null : $cr_personal->ID_NUMBER ?? null,
+                "tgl_terbit_identitas" => $cr_personal->ID_ISSUE_DATE ?? null,
                 "masa_berlaku_identitas" => $cr_personal->ID_VALID_DATE ?? null,
-                "no_kk" => empty($cr_personal->KK)?$cr_survey->kk:$cr_personal->KK,
-                "warganegara" => $cr_personal->CITIZEN??null
+                "no_kk" => empty($cr_personal->KK) ? $cr_survey->kk : $cr_personal->KK,
+                "warganegara" => $cr_personal->CITIZEN ?? null
             ],
-            'alamat_identitas' =>[
-                "alamat" => empty($cr_personal->ADDRESS)?$cr_survey->alamat??null:$cr_personal->ADDRESS??null,
-                "rt" =>empty($cr_personal->RT)?$cr_survey->rt??null:$cr_personal->RT??null,
-                "rw" =>empty($cr_personal->RW)?$cr_survey->rw??null:$cr_personal->RW??null,
-                "provinsi" =>empty($cr_personal->PROVINCE)?$cr_survey->province??null:$cr_personal->PROVINCE??null,
-                "kota" =>empty($cr_personal->CITY)?$cr_survey->city??null:$cr_personal->CITY??null,
-                "kelurahan" =>empty($cr_personal->KELURAHAN)?$cr_survey->kelurahan??null:$cr_personal->KELURAHAN??null,
-                "kecamatan" =>empty($cr_personal->KECAMATAN)?$cr_survey->kecamatan??null:$cr_personal->KECAMATAN??null,
-                "kode_pos" => empty($cr_personal->ZIP_CODE)?$cr_survey->zip_code??null:$cr_personal->ZIP_CODE??null
+            'alamat_identitas' => [
+                "alamat" => empty($cr_personal->ADDRESS) ? $cr_survey->alamat ?? null : $cr_personal->ADDRESS ?? null,
+                "rt" => empty($cr_personal->RT) ? $cr_survey->rt ?? null : $cr_personal->RT ?? null,
+                "rw" => empty($cr_personal->RW) ? $cr_survey->rw ?? null : $cr_personal->RW ?? null,
+                "provinsi" => empty($cr_personal->PROVINCE) ? $cr_survey->province ?? null : $cr_personal->PROVINCE ?? null,
+                "kota" => empty($cr_personal->CITY) ? $cr_survey->city ?? null : $cr_personal->CITY ?? null,
+                "kelurahan" => empty($cr_personal->KELURAHAN) ? $cr_survey->kelurahan ?? null : $cr_personal->KELURAHAN ?? null,
+                "kecamatan" => empty($cr_personal->KECAMATAN) ? $cr_survey->kecamatan ?? null : $cr_personal->KECAMATAN ?? null,
+                "kode_pos" => empty($cr_personal->ZIP_CODE) ? $cr_survey->zip_code ?? null : $cr_personal->ZIP_CODE ?? null
             ],
-            'alamat_tagih' =>[
-                "alamat" => $cr_personal->INS_ADDRESS??null,
-                "rt" => $cr_personal->INS_RT??null,
-                "rw" => $cr_personal->INS_RW??null,
-                "provinsi" => $cr_personal->INS_PROVINCE??null,
-                "kota" => $cr_personal->INS_CITY??null,
-                "kelurahan" => $cr_personal->INS_KELURAHAN??null,
-                "kecamatan" => $cr_personal->INS_KECAMATAN??null,
-                "kode_pos" => $cr_personal->INS_ZIP_CODE??null
+            'alamat_tagih' => [
+                "alamat" => $cr_personal->INS_ADDRESS ?? null,
+                "rt" => $cr_personal->INS_RT ?? null,
+                "rw" => $cr_personal->INS_RW ?? null,
+                "provinsi" => $cr_personal->INS_PROVINCE ?? null,
+                "kota" => $cr_personal->INS_CITY ?? null,
+                "kelurahan" => $cr_personal->INS_KELURAHAN ?? null,
+                "kecamatan" => $cr_personal->INS_KECAMATAN ?? null,
+                "kode_pos" => $cr_personal->INS_ZIP_CODE ?? null
             ],
-            "barang_taksasi"=>[
-                "kode_barang"=>$cr_oder->KODE_BARANG??null,
-                "id_tipe"=>$cr_oder->ID_TIPE??null,
-                "tahun"=>$cr_oder->TAHUN??null,
-                "harga_pasar"=>$cr_oder->HARGA_PASAR??null
+            "barang_taksasi" => [
+                "kode_barang" => $cr_oder->KODE_BARANG ?? null,
+                "id_tipe" => $cr_oder->ID_TIPE ?? null,
+                "tahun" => $cr_oder->TAHUN ?? null,
+                "harga_pasar" => $cr_oder->HARGA_PASAR ?? null
             ],
-            'pekerjaan' =>[
-                "pekerjaan" => empty($cr_personal->OCCUPATION)?$cr_survey->usaha??null:$cr_personal->OCCUPATION??null,
-                "pekerjaan_id" => empty($cr_personal->OCCUPATION_ON_ID)?$cr_survey->sector:$cr_personal->OCCUPATION_ON_ID??null,
-                "agama" => $cr_personal->RELIGION??null,
-                "pendidikan" => $cr_personal->EDUCATION??null,
-                "status_rumah" => $cr_personal->PROPERTY_STATUS??null,
-                "telepon_rumah" => $cr_personal->PHONE_HOUSE??null,
-                "telepon_selular" => empty($cr_personal->PHONE_PERSONAL)?$data->hp??null:$cr_personal->PHONE_PERSONAL??null,
-                "telepon_kantor" => $cr_personal->PHONE_OFFICE??null,
-                "ekstra1" => $cr_personal->EXT_1??null,
-                "ekstra2" => $cr_personal->EXT_2??null
+            'pekerjaan' => [
+                "pekerjaan" => empty($cr_personal->OCCUPATION) ? $cr_survey->usaha ?? null : $cr_personal->OCCUPATION ?? null,
+                "pekerjaan_id" => empty($cr_personal->OCCUPATION_ON_ID) ? $cr_survey->sector : $cr_personal->OCCUPATION_ON_ID ?? null,
+                "agama" => $cr_personal->RELIGION ?? null,
+                "pendidikan" => $cr_personal->EDUCATION ?? null,
+                "status_rumah" => $cr_personal->PROPERTY_STATUS ?? null,
+                "telepon_rumah" => $cr_personal->PHONE_HOUSE ?? null,
+                "telepon_selular" => empty($cr_personal->PHONE_PERSONAL) ? $data->hp ?? null : $cr_personal->PHONE_PERSONAL ?? null,
+                "telepon_kantor" => $cr_personal->PHONE_OFFICE ?? null,
+                "ekstra1" => $cr_personal->EXT_1 ?? null,
+                "ekstra2" => $cr_personal->EXT_2 ?? null
             ],
-            'order' =>[
-                "nama_ibu" => $cr_oder->MOTHER_NAME ?? null, 
-                'cr_prospect_id' => $prospect_id??null,
-                "kategori" => $cr_oder->CATEGORY ?? null, 
-                "gelar" => $cr_oder->TITLE ?? null, 
-                "lama_bekerja" => empty($cr_oder->WORK_PERIOD)? intval($cr_survey->work_period):intval($cr_oder->WORK_PERIOD), 
-                "tanggungan" => $cr_oder->DEPENDANTS ?? null, 
-                "biaya_bulanan" =>intval(empty($cr_oder->BIAYA)?$cr_survey->expenses:$cr_oder->BIAYA), 
-                "pendapatan_pribadi" => intval(empty($cr_oder->INCOME_PERSONAL)?$cr_survey->income_personal:$cr_oder->INCOME_PERSONAL),
-                "pendapatan_pasangan" =>intval(empty($cr_oder->INCOME_SPOUSE)?$cr_survey->income_spouse:$cr_oder->INCOME_SPOUSE),
-                "pendapatan_lainnya" =>intval(empty($cr_oder->INCOME_OTHER)?$cr_survey->income_other:$cr_oder->INCOME_OTHER),
-                "no_npwp" => $cr_oder->NO_NPWP??null,
-                "order_tanggal" =>  date('d-m-Y', strtotime($cr_survey->visit_date))??null,
-                "order_status" =>  $cr_oder->ORDER_STATUS??null,
-                "order_tipe" =>  $cr_oder->ORDER_TIPE??null,
-                "unit_bisnis" => $cr_oder->UNIT_BISNIS??null, 
-                "cust_service" => $cr_oder->CUST_SERVICE??null,
-                "ref_pelanggan" => $cr_oder->REF_PELANGGAN??null,
-                'ref_pelanggan_oth' => $cr_oder->REF_PELANGGAN_OTHER??null,
+            'order' => [
+                "nama_ibu" => $cr_oder->MOTHER_NAME ?? null,
+                'cr_prospect_id' => $prospect_id ?? null,
+                "kategori" => $cr_oder->CATEGORY ?? null,
+                "gelar" => $cr_oder->TITLE ?? null,
+                "lama_bekerja" => empty($cr_oder->WORK_PERIOD) ? intval($cr_survey->work_period) : intval($cr_oder->WORK_PERIOD),
+                "tanggungan" => $cr_oder->DEPENDANTS ?? null,
+                "biaya_bulanan" => intval(empty($cr_oder->BIAYA) ? $cr_survey->expenses : $cr_oder->BIAYA),
+                "pendapatan_pribadi" => intval(empty($cr_oder->INCOME_PERSONAL) ? $cr_survey->income_personal : $cr_oder->INCOME_PERSONAL),
+                "pendapatan_pasangan" => intval(empty($cr_oder->INCOME_SPOUSE) ? $cr_survey->income_spouse : $cr_oder->INCOME_SPOUSE),
+                "pendapatan_lainnya" => intval(empty($cr_oder->INCOME_OTHER) ? $cr_survey->income_other : $cr_oder->INCOME_OTHER),
+                "no_npwp" => $cr_oder->NO_NPWP ?? null,
+                "order_tanggal" =>  date('d-m-Y', strtotime($cr_survey->visit_date)) ?? null,
+                "order_status" =>  $cr_oder->ORDER_STATUS ?? null,
+                "order_tipe" =>  $cr_oder->ORDER_TIPE ?? null,
+                "unit_bisnis" => $cr_oder->UNIT_BISNIS ?? null,
+                "cust_service" => $cr_oder->CUST_SERVICE ?? null,
+                "ref_pelanggan" => $cr_oder->REF_PELANGGAN ?? null,
+                'ref_pelanggan_oth' => $cr_oder->REF_PELANGGAN_OTHER ?? null,
                 "surveyor_name" => User::find($cr_survey->created_by)->fullname,
-                "catatan_survey" => !empty($cr_oder->SURVEY_NOTE)?$cr_oder->SURVEY_NOTE: $data->survey_note??null,
-                "prog_marketing" => $cr_oder->PROG_MARKETING??null,
-                "cara_bayar" => $cr_oder->CARA_BAYAR??null
+                "catatan_survey" => !empty($cr_oder->SURVEY_NOTE) ? $cr_oder->SURVEY_NOTE : $data->survey_note ?? null,
+                "prog_marketing" => $cr_oder->PROG_MARKETING ?? null,
+                "cara_bayar" => $cr_oder->CARA_BAYAR ?? null
             ],
-            'tambahan' =>[
-                "nama_bi"  => $cr_personal_extra->BI_NAME ?? null, 
-                "email"  => $cr_personal_extra->EMAIL?? null,
-                "info_khusus"  => $cr_personal_extra->INFO?? null,
-                "usaha_lain1"  => $cr_personal_extra->OTHER_OCCUPATION_1?? null,
-                "usaha_lain2"  => $cr_personal_extra->OTHER_OCCUPATION_2?? null,
-                "usaha_lain3"  => $cr_personal_extra->OTHER_OCCUPATION_3?? null,
-                "usaha_lain4"  => $cr_personal_extra->OTHER_OCCUPATION_4?? null,
+            'tambahan' => [
+                "nama_bi"  => $cr_personal_extra->BI_NAME ?? null,
+                "email"  => $cr_personal_extra->EMAIL ?? null,
+                "info_khusus"  => $cr_personal_extra->INFO ?? null,
+                "usaha_lain1"  => $cr_personal_extra->OTHER_OCCUPATION_1 ?? null,
+                "usaha_lain2"  => $cr_personal_extra->OTHER_OCCUPATION_2 ?? null,
+                "usaha_lain3"  => $cr_personal_extra->OTHER_OCCUPATION_3 ?? null,
+                "usaha_lain4"  => $cr_personal_extra->OTHER_OCCUPATION_4 ?? null,
             ],
-            'kerabat_darurat' =>[
-                "nama"  => $cr_personal_extra->EMERGENCY_NAME?? null,
-                "alamat"  => $cr_personal_extra->EMERGENCY_ADDRESS?? null,
-                "rt"  => $cr_personal_extra->EMERGENCY_RT?? null,
-                "rw"  => $cr_personal_extra->EMERGENCY_RW?? null,
-                "provinsi" =>$cr_personal_extra->EMERGENCY_PROVINCE?? null,
-                "kota" => $cr_personal_extra->EMERGENCY_CITY?? null,
-                "kelurahan" => $cr_personal_extra->EMERGENCY_KELURAHAN?? null,
-                "kecamatan" => $cr_personal_extra->EMERGENCY_KECAMATAN?? null,
-                "kode_pos" => $cr_personal_extra->EMERGENCY_ZIP_CODE?? null,
-                "no_telp" => $cr_personal_extra->EMERGENCY_PHONE_HOUSE?? null,
-                "no_hp" => $cr_personal_extra->EMERGENCY_PHONE_PERSONAL?? null, 
+            'kerabat_darurat' => [
+                "nama"  => $cr_personal_extra->EMERGENCY_NAME ?? null,
+                "alamat"  => $cr_personal_extra->EMERGENCY_ADDRESS ?? null,
+                "rt"  => $cr_personal_extra->EMERGENCY_RT ?? null,
+                "rw"  => $cr_personal_extra->EMERGENCY_RW ?? null,
+                "provinsi" => $cr_personal_extra->EMERGENCY_PROVINCE ?? null,
+                "kota" => $cr_personal_extra->EMERGENCY_CITY ?? null,
+                "kelurahan" => $cr_personal_extra->EMERGENCY_KELURAHAN ?? null,
+                "kecamatan" => $cr_personal_extra->EMERGENCY_KECAMATAN ?? null,
+                "kode_pos" => $cr_personal_extra->EMERGENCY_ZIP_CODE ?? null,
+                "no_telp" => $cr_personal_extra->EMERGENCY_PHONE_HOUSE ?? null,
+                "no_hp" => $cr_personal_extra->EMERGENCY_PHONE_PERSONAL ?? null,
             ],
             "penjamin" => [],
             "pasangan" => [
-                "nama_pasangan" =>$cr_spouse->NAME ?? null,
-                "tmptlahir_pasangan" =>$cr_spouse->BIRTHPLACE ?? null,
+                "nama_pasangan" => $cr_spouse->NAME ?? null,
+                "tmptlahir_pasangan" => $cr_spouse->BIRTHPLACE ?? null,
                 "pekerjaan_pasangan" => $cr_spouse->OCCUPATION ?? null,
                 "tgllahir_pasangan" => $cr_spouse->BIRTHDATE ?? null,
                 "alamat_pasangan" => $cr_spouse->ADDRESS ?? null
             ],
-            "info_bank" =>[],
-            "ekstra" =>[
-                'jenis_angsuran' => strtolower(empty($application->INSTALLMENT_TYPE)?$cr_survey->jenis_angsuran:$application->INSTALLMENT_TYPE),
+            "info_bank" => [],
+            "ekstra" => [
+                'jenis_angsuran' => strtolower(empty($application->INSTALLMENT_TYPE) ? $cr_survey->jenis_angsuran : $application->INSTALLMENT_TYPE),
                 'tenor' => $application->TENOR,
-                "nilai_yang_diterima" => $applicationDetail->SUBMISSION_VALUE == ''?(int) $data->plafond:(int)$applicationDetail->SUBMISSION_VALUE?? null,
-                "total"=> (int)$applicationDetail->TOTAL_ADMIN?? null,
-                "cadangan"=> $applicationDetail->CADANGAN?? null,
-                "opt_periode"=> $applicationDetail->OPT_PERIODE?? null,
-                "provisi"=> $applicationDetail->PROVISION?? null,
-                "asuransi"=> $applicationDetail->INSURANCE?? null,
-                "biaya_transfer"=> $applicationDetail->TRANSFER_FEE?? null,
-                "eff_rate"=> $applicationDetail->EFF_RATE?? null,
-                "angsuran"=> intval($applicationDetail->INSTALLMENT)?? null
+                "nilai_yang_diterima" => $applicationDetail->SUBMISSION_VALUE == '' ? (int) $data->plafond : (int)$applicationDetail->SUBMISSION_VALUE ?? null,
+                "total" => (int)$applicationDetail->TOTAL_ADMIN ?? null,
+                "cadangan" => $applicationDetail->CADANGAN ?? null,
+                "opt_periode" => $applicationDetail->OPT_PERIODE ?? null,
+                "provisi" => $applicationDetail->PROVISION ?? null,
+                "asuransi" => $applicationDetail->INSURANCE ?? null,
+                "biaya_transfer" => $applicationDetail->TRANSFER_FEE ?? null,
+                "eff_rate" => $applicationDetail->EFF_RATE ?? null,
+                "angsuran" => intval($applicationDetail->INSTALLMENT) ?? null
             ],
-            'jaminan' => [],  
+            'jaminan' => [],
             "prospect_approval" => [
-                "status" => $approval_detail->application_result == null ?$approval_detail->application_result:""
+                "status" => $approval_detail->application_result == null ? $approval_detail->application_result : ""
             ],
             "dokumen_indentitas" => $this->attachment($surveyId, "'ktp', 'kk', 'ktp_pasangan'"),
             "dokumen_jaminan" => $this->attachment($surveyId, "'no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri'"),
-            "dokumen_pendukung" => M_CrSurveyDocument::attachmentGetAll($surveyId, ['other'])??null,
+            "dokumen_pendukung" => M_CrSurveyDocument::attachmentGetAll($surveyId, ['other']) ?? null,
             "dokumen_order" => $this->attachment($surveyId, "'sp', 'pk', 'dok'"),
-            "approval" => 
+            "approval" =>
             [
-                'status' => $approval->application_result??null,
-                'kapos' => $approval->cr_application_kapos_desc??null,
-                'ho' => $approval->cr_application_ho_desc ??null           
+                'status' => $approval->application_result ?? null,
+                'kapos' => $approval->cr_application_kapos_desc ?? null,
+                'ho' => $approval->cr_application_ho_desc ?? null
             ]
         ];
-        
+
         $arrayList['info_bank'] = M_CrApplicationBank::where('APPLICATION_ID', $application->ID)
-                                ->get()
-                                ->map(function ($list) {
-                                    return [
-                                        "kode_bank" => $list->BANK_CODE,
-                                        "nama_bank" => $list->BANK_NAME,
-                                        "no_rekening" => $list->ACCOUNT_NUMBER,
-                                        "atas_nama" => $list->ACCOUNT_NAME,
-                                        "status" => $list->STATUS
-                                    ];
-                                })
-                                ->all();
+            ->get()
+            ->map(function ($list) {
+                return [
+                    "kode_bank" => $list->BANK_CODE,
+                    "nama_bank" => $list->BANK_NAME,
+                    "no_rekening" => $list->ACCOUNT_NUMBER,
+                    "atas_nama" => $list->ACCOUNT_NAME,
+                    "status" => $list->STATUS
+                ];
+            })
+            ->all();
 
         foreach ($guarente_vehicle as $list) {
             $arrayList['jaminan'][] = [
                 "type" => "kendaraan",
                 'counter_id' => $list->HEADER_ID,
-                "atr" => [ 
+                "atr" => [
                     'id' => $list->ID,
                     'status_jaminan' => null,
                     "tipe" => $list->TYPE,
@@ -1151,34 +1158,34 @@ class CrAppilcationController extends Controller
                     "no_stnk" => $list->STNK_NUMBER,
                     "tgl_stnk" => $list->STNK_VALID_DATE,
                     "nilai" => (int) $list->VALUE,
-                    "document" => $this->attachment_guarante($surveyId,$list->HEADER_ID ,"'no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri'")
+                    "document" => $this->attachment_guarante($surveyId, $list->HEADER_ID, "'no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri'")
                 ]
-            ];    
+            ];
         }
 
         foreach ($cr_guarantor as $list) {
             $arrayList['penjamin'][] = [
                 "id" => $list->ID ?? null,
                 "nama" => $list->NAME ?? null,
-                "jenis_kelamin" => $list->GENDER?? null,
-                "tempat_lahir" => $list->BIRTHPLACE?? null,
-                "tgl_lahir" =>$list->BIRTHDATE?? null,
-                "alamat" => $list->ADDRESS?? null,
-                "tipe_identitas"  => $list->IDENTIY_TYPE?? null,
-                "no_identitas"  => $list->NUMBER_IDENTITY?? null,
-                "pekerjaan"  => $list->OCCUPATION?? null,
-                "lama_bekerja"  => intval($list->WORK_PERIOD)?? null,
-                "hub_cust" => $list->STATUS_WITH_DEBITUR?? null,
-                "no_hp" => $list->MOBILE_NUMBER?? null,
-                "pendapatan" => $list->INCOME?? null,   
-            ];    
+                "jenis_kelamin" => $list->GENDER ?? null,
+                "tempat_lahir" => $list->BIRTHPLACE ?? null,
+                "tgl_lahir" => $list->BIRTHDATE ?? null,
+                "alamat" => $list->ADDRESS ?? null,
+                "tipe_identitas"  => $list->IDENTIY_TYPE ?? null,
+                "no_identitas"  => $list->NUMBER_IDENTITY ?? null,
+                "pekerjaan"  => $list->OCCUPATION ?? null,
+                "lama_bekerja"  => intval($list->WORK_PERIOD) ?? null,
+                "hub_cust" => $list->STATUS_WITH_DEBITUR ?? null,
+                "no_hp" => $list->MOBILE_NUMBER ?? null,
+                "pendapatan" => $list->INCOME ?? null,
+            ];
         }
 
         foreach ($guarente_sertificat as $list) {
             $arrayList['jaminan'][] = [
                 "type" => "sertifikat",
                 'counter_id' => $list->HEADER_ID,
-                "atr" => [ 
+                "atr" => [
                     'id' => $list->ID,
                     'status_jaminan' => null,
                     "no_sertifikat" => $list->NO_SERTIFIKAT,
@@ -1193,15 +1200,16 @@ class CrAppilcationController extends Controller
                     "desa" => $list->DESA,
                     "atas_nama" => $list->ATAS_NAMA,
                     "nilai" => (int) $list->NILAI,
-                    "document" => M_CrSurveyDocument::attachmentSertifikat($surveyId,$list->HEADER_ID, ['sertifikat'])??null,
+                    "document" => M_CrSurveyDocument::attachmentSertifikat($surveyId, $list->HEADER_ID, ['sertifikat']) ?? null,
                 ]
-            ];    
+            ];
         }
-        
+
         return $arrayList;
     }
 
-    public function attachment($survey_id, $data){
+    public function attachment($survey_id, $data)
+    {
         $documents = DB::select(
             "   SELECT *
                 FROM cr_survey_document AS csd
@@ -1214,11 +1222,12 @@ class CrAppilcationController extends Controller
                 )
                 ORDER BY TIMEMILISECOND DESC"
         );
-    
-        return $documents;        
+
+        return $documents;
     }
 
-    private function attachment_guarante($survey_id,$header_id, $data){
+    private function attachment_guarante($survey_id, $header_id, $data)
+    {
         $documents = DB::select(
             "   SELECT *
                 FROM cr_survey_document AS csd
@@ -1232,30 +1241,31 @@ class CrAppilcationController extends Controller
                 )
                 ORDER BY TIMEMILISECOND DESC"
         );
-    
-        return $documents;        
+
+        return $documents;
     }
 
-    private function insert_taksasi($request,$id){
+    private function insert_taksasi($request, $id)
+    {
 
-        $check = M_CrGuaranteVehicle::where('CR_SURVEY_ID',$id)->first();
+        $check = M_CrGuaranteVehicle::where('CR_SURVEY_ID', $id)->first();
 
-        $data_order =[
-            'TYPE' => $request->barang_taksasi['tipe']??null,
-            'BRAND' => $request->barang_taksasi['merk']??null,
-            'PRODUCTION_YEAR' => $request->barang_taksasi['tahun']??null,
-            'COLOR' => $request->barang_taksasi['warna']??null,
-            'ON_BEHALF' => $request->barang_taksasi['atas_nama']??null,
-            'POLICE_NUMBER' => $request->barang_taksasi['no_polisi']??null,
-            'CHASIS_NUMBER' => $request->barang_taksasi['no_rangka']??null,
-            'ENGINE_NUMBER' => $request->barang_taksasi['no_mesin']??null,
-            'STNK_NUMBER' => $request->barang_taksasi['no_stnk']??null,
-            'STNK_VALID_DATE' => $request->barang_taksasi['tgl_stnk']??null,
-            'VALUE' => $request->barang_taksasi['nilai']??null,
-            'BPKB_NUMBER' => $request->barang_taksasi['no_bpkb']??null
+        $data_order = [
+            'TYPE' => $request->barang_taksasi['tipe'] ?? null,
+            'BRAND' => $request->barang_taksasi['merk'] ?? null,
+            'PRODUCTION_YEAR' => $request->barang_taksasi['tahun'] ?? null,
+            'COLOR' => $request->barang_taksasi['warna'] ?? null,
+            'ON_BEHALF' => $request->barang_taksasi['atas_nama'] ?? null,
+            'POLICE_NUMBER' => $request->barang_taksasi['no_polisi'] ?? null,
+            'CHASIS_NUMBER' => $request->barang_taksasi['no_rangka'] ?? null,
+            'ENGINE_NUMBER' => $request->barang_taksasi['no_mesin'] ?? null,
+            'STNK_NUMBER' => $request->barang_taksasi['no_stnk'] ?? null,
+            'STNK_VALID_DATE' => $request->barang_taksasi['tgl_stnk'] ?? null,
+            'VALUE' => $request->barang_taksasi['nilai'] ?? null,
+            'BPKB_NUMBER' => $request->barang_taksasi['no_bpkb'] ?? null
         ];
 
-        if($check){
+        if ($check) {
             $check->update($data_order);
         }
     }
@@ -1268,32 +1278,32 @@ class CrAppilcationController extends Controller
                 'cr_application_id' => 'required|string',
                 'flag' => 'required|string',
             ]);
-    
+
             // Fetch necessary records
             $check_application_id = M_ApplicationApproval::where('cr_application_id', $request->cr_application_id)->first();
             if (!$check_application_id) {
                 throw new Exception("Id FPK is not found.", 404);
             }
-    
+
             $checkApplication = M_CrApplication::where('ID', $request->cr_application_id)->first();
             $surveyApproval = M_SurveyApproval::where('CR_SURVEY_ID', $checkApplication->CR_SURVEY_ID)->first();
-    
+
             // Prepare common data
             $currentTime = Carbon::now();
             $userId = $request->user()->id;
             $description = $request->keterangan;
             $flag = $request->flag;
-    
+
             // Define mapping for flag to code and result
             $approvalDataMap = [
                 'yes' => ['code' => 'WAHO', 'result' => 'disetujui,menunggu ho'],
                 'revisi' => ['code' => 'REORKPS', 'result' => 'ada revisi kapos'],
                 'no' => ['code' => 'CLKPS', 'result' => 'dibatalkan kapos'],
             ];
-    
+
             // Get corresponding data based on flag
             $approvalData = $approvalDataMap[$flag] ?? $approvalDataMap['no'];
-    
+
             // Prepare approval data for the application
             $data_approval = [
                 'cr_application_kapos' => $userId,
@@ -1303,18 +1313,17 @@ class CrAppilcationController extends Controller
                 'code' => $approvalData['code'],
                 'application_result' => $approvalData['result'],
             ];
-    
+
             // Create logs and update the status
-            $this->createApplicationApprovalLog($approvalData['code'], $request->cr_application_id, $userId, $currentTime, $description, $approvalData['result'],'KAPOS');
+            $this->createApplicationApprovalLog($approvalData['code'], $request->cr_application_id, $userId, $currentTime, $description, $approvalData['result'], 'KAPOS');
             $this->updateSurveyApproval($surveyApproval, $approvalData['code'], $userId, $currentTime, $approvalData['result']);
             $this->createSurveyApprovalLog($approvalData['code'], $checkApplication->CR_SURVEY_ID, $userId, $currentTime, $approvalData['result']);
-    
+
             // Update application approval data
             $check_application_id->update($data_approval);
-    
+
             // Return success response
             return response()->json(['message' => 'Approval Kapos Successfully', 'status' => 200], 200);
-    
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), 'status' => 500], 500);
@@ -1328,31 +1337,31 @@ class CrAppilcationController extends Controller
                 'cr_application_id' => 'required|string',
                 'flag' => 'required|string',
             ]);
-        
+
             $check_application_id = M_ApplicationApproval::where('cr_application_id', $request->cr_application_id)->first();
-        
+
             if (!$check_application_id) {
                 throw new Exception("Id FPK Is Not Exist", 404);
             }
-        
+
             $checkApplication = M_CrApplication::where('ID', $request->cr_application_id)->first();
             $surveyApproval = M_SurveyApproval::where('CR_SURVEY_ID', $checkApplication->CR_SURVEY_ID)->first();
-        
+
             $currentTime = Carbon::now();
             $userId = $request->user()->id;
             $description = $request->keterangan;
             $flag = $request->flag;
-    
+
             // Define mapping for flag to code and result
             $approvalDataMap = [
                 'yes' => ['code' => 'APHO', 'result' => 'disetujui ho'],
                 'revisi' => ['code' => 'REORHO', 'result' => 'ada revisi ho'],
                 'no' => ['code' => 'CLHO', 'result' => 'dibatalkan ho'],
             ];
-    
+
             // Get corresponding data based on flag
             $approvalData = $approvalDataMap[$flag] ?? $approvalDataMap['no'];
-    
+
             // Prepare approval data for the application
             $data_approval = [
                 'cr_application_ho' => $userId,
@@ -1362,15 +1371,15 @@ class CrAppilcationController extends Controller
                 'code' => $approvalData['code'],
                 'application_result' => $approvalData['result'],
             ];
-    
+
             // Create logs and update the status
-            $this->createApplicationApprovalLog($approvalData['code'], $request->cr_application_id, $userId, $currentTime, $description, $approvalData['result'],'HO');
+            $this->createApplicationApprovalLog($approvalData['code'], $request->cr_application_id, $userId, $currentTime, $description, $approvalData['result'], 'HO');
             $this->updateSurveyApproval($surveyApproval, $approvalData['code'], $userId, $currentTime, $approvalData['result']);
             $this->createSurveyApprovalLog($approvalData['code'], $checkApplication->CR_SURVEY_ID, $userId, $currentTime, $approvalData['result']);
-    
+
             // Update application approval data
             $check_application_id->update($data_approval);
-        
+
             return response()->json(['message' => 'Approval Ho Successfully'], 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
@@ -1378,7 +1387,7 @@ class CrAppilcationController extends Controller
         }
     }
 
-    private function createApplicationApprovalLog($code, $applicationId, $userId, $currentTime, $description, $result,$position)
+    private function createApplicationApprovalLog($code, $applicationId, $userId, $currentTime, $description, $result, $position)
     {
         M_ApplicationApprovalLog::create([
             'CODE' => $code,
