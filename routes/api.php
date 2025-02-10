@@ -93,8 +93,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('taksasi_download', [TaksasiController::class, 'download']);
 
     Route::resource('customer', CustomerController::class);
-    Route::post('search_customer', [CustomerController::class,'searchCustomer']);
-    Route::post('check_ro', [CustomerController::class,'cekRO']);
+    Route::post('search_customer', [CustomerController::class, 'searchCustomer']);
+    Route::post('check_ro', [CustomerController::class, 'cekRO']);
     Route::post('kontrak_fasilitas', [CustomerController::class, 'fasilitas']);
     Route::post('struktur_kredit', [CustomerController::class, 'creditStruktur']);
     Route::resource('payment', PaymentController::class);
@@ -109,36 +109,37 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //Blacklist
     Route::resource('blacklist', CrBlacklistController::class);
-    Route::post('blacklist_detail', [CrBlacklistController::class,'check']);
+    Route::post('blacklist_detail', [CrBlacklistController::class, 'check']);
 
     Route::resource('jaminan', BpkbController::class);
     Route::resource('jaminan_transaction', BpkbTransactionController::class);
     Route::post('jaminan_transaction_permintaan', [BpkbTransactionController::class, 'jaminan_transaction_permintaan']);
-    Route::post('jaminan_approval', [BpkbTransactionController::class,'approval']);
-    Route::post('update_jaminan_transaction', [BpkbTransactionController::class,'update_status']);
-    Route::get('jaminan_list_approval', [BpkbTransactionController::class,'listApproval']);
-    Route::get('forpostjaminan', [BpkbController::class,'forpostjaminan']);
-    Route::get('forgetjaminan', [BpkbController::class,'forgetjaminan']);
-    Route::post('change_password', [UsersController::class,'changePassword']);
-    Route::post('reset_password', [UsersController::class,'resetPassword']);
+    Route::post('jaminan_approval', [BpkbTransactionController::class, 'approval']);
+    Route::post('update_jaminan_transaction', [BpkbTransactionController::class, 'update_status']);
+    Route::get('jaminan_list_approval', [BpkbTransactionController::class, 'listApproval']);
+    Route::get('forpostjaminan', [BpkbController::class, 'forpostjaminan']);
+    Route::get('forgetjaminan', [BpkbController::class, 'forgetjaminan']);
+    Route::post('change_password', [UsersController::class, 'changePassword']);
+    Route::post('reset_password', [UsersController::class, 'resetPassword']);
 
-    Route::resource('position',HrPositionController::class);
-    Route::post('checkCollateral', [Credit::class,'checkCollateral']);
+    Route::resource('position', HrPositionController::class);
+    Route::post('checkCollateral', [Credit::class, 'checkCollateral']);
 
-    Route::post('arus_kas',[ListBanController::class,'index']);
-    Route::post('listBan', [ListBanController::class,'listBan']);
+    Route::post('arus_kas', [ListBanController::class, 'index']);
+    Route::post('listBan', [ListBanController::class, 'listBan']);
 
     //Report
-    Route::post('inquiryList', [ReportController::class,'inquiryList']);
-    Route::get('creditReport/{id}', [ReportController::class,'pinjaman']);
+    Route::post('inquiryList', [ReportController::class, 'inquiryList']);
+    Route::get('creditReport/{id}', [ReportController::class, 'pinjaman']);
     Route::get('strukturCredit/{id}', [ReportController::class, 'strukturCredit']);
-    Route::get('customerReport/{id}', [ReportController::class,'debitur']);
-    Route::get('collateralReport/{id}', [ReportController::class,'jaminan']);
-    Route::get('paymentReport/{id}', [ReportController::class,'pembayaran']);
-    Route::get('arrearsReport/{id}', [ReportController::class,'tunggakkan']);
+    Route::get('customerReport/{id}', [ReportController::class, 'debitur']);
+    Route::get('collateralReport/{id}', [ReportController::class, 'jaminan']);
+    Route::get('paymentReport/{id}', [ReportController::class, 'pembayaran']);
+    Route::get('arrearsReport/{id}', [ReportController::class, 'tunggakkan']);
+    Route::post('collateral_report', [ReportController::class, 'collateralReport']);
 
-    Route::resource('collateral',CollateralController::class);
-    Route::resource('log_print',LogPrintController::class);
+    Route::resource('collateral', CollateralController::class);
+    Route::resource('log_print', LogPrintController::class);
 });
 
 
