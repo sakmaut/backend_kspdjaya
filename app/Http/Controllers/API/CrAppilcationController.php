@@ -62,6 +62,7 @@ class CrAppilcationController extends Controller
                 'cr_survey.alamat',
                 'cr_survey.hp',
                 'survey_approval.CODE',
+                'survey_approval.APPROVAL_RESULT',
                 DB::raw("COALESCE(cr_application.SUBMISSION_VALUE, cr_survey.plafond) as plafond")
             )
                 ->leftJoin('survey_approval', 'survey_approval.CR_SURVEY_ID', '=', 'cr_survey.id')
