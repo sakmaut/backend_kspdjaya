@@ -129,14 +129,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('listBan', [ListBanController::class, 'listBan']);
 
     //Report
-    Route::post('inquiryList', [ReportController::class, 'inquiryList']);
-    Route::get('creditReport/{id}', [ReportController::class, 'pinjaman']);
+    Route::post('inquiryList', [ReportController::class,'inquiryList']);
+    Route::get('creditReport/{id}', [ReportController::class,'pinjaman']);
     Route::get('strukturCredit/{id}', [ReportController::class, 'strukturCredit']);
     Route::get('customerReport/{id}', [ReportController::class, 'debitur']);
     Route::get('collateralReport/{id}', [ReportController::class, 'jaminan']);
     Route::get('paymentReport/{id}', [ReportController::class, 'pembayaran']);
     Route::get('arrearsReport/{id}', [ReportController::class, 'tunggakkan']);
-    Route::get('collateral_report', [ReportController::class, 'collateralReport']);
+    Route::get('collateral_report', [ReportController::class, 'collateralAllReport']);
 
     Route::resource('collateral', CollateralController::class);
     Route::resource('log_print', LogPrintController::class);
