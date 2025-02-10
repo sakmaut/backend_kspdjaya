@@ -553,7 +553,7 @@ class ReportController extends Controller
         try {
             $sql = "SELECT	d.NAME as pos_pencairan, e.NAME as posisi_berkas,
                             b.LOAN_NUMBER as no_kontrak, c.NAME as debitur,
-                            a.POLICE_NUMBER, f.STATUS
+                            a.POLICE_NUMBER, f.STATUS as status
                     FROM	cr_collateral a
                             inner join credit b on b.ID = a.CR_CREDIT_ID
                             inner join customer c on c.CUST_CODE = b.CUST_CODE
@@ -578,7 +578,7 @@ class ReportController extends Controller
                     }
 
                     $sql.="ORDER	BY d.NAME, e.NAME, b.LOAN_NUMBER, c.NAME,
-                            a.POLICE_NUMBER, f.STATUS";
+                            a.POLICE_NUMBER, f.STATUS limit 0,10";
 
             $results = DB::select($sql);
 
@@ -591,7 +591,7 @@ class ReportController extends Controller
                     'no_kontrak' => $result->no_kontrak ?? '',
                     'nama_debitur' => $result->debitur ?? '',
                     'no_polisi' => $result->POLICE_NUMBER ?? '',
-                    'status' => $result->STATUS ?? '',
+                    'status' => $result->status ?? '',
                 ];
             }
 
