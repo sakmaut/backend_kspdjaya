@@ -29,54 +29,56 @@ use Ramsey\Uuid\Uuid;
 class PaymentController extends Controller
 {
 
-    public function index(Request $request){
+    public function index(Request $request)
+    {
         try {
 
-            $notrx = $request->query('notrx'); 
+            $notrx = $request->query('notrx');
             $nama = $request->query('nama');
             $no_kontrak = $request->query('no_kontrak');
-            $tipe = $request->query('tipe'); 
+            $tipe = $request->query('tipe');
 
             $getPosition = $request->user()->position;
             $getBranch = $request->user()->branch_id;
 
-            $data = M_Kwitansi::orderBy('CREATED_AT', 'DESC');
+            $data = M_Kwitansi::where(DB::raw('DATE_FORMAT(CREATED_AT,"%Y%m%d")'), Carbon::now()->format('Ymd'))
+                ->orderBy('CREATED_AT', 'DESC');
 
             if (strtolower($getPosition) == 'ho') {
-                 $data->where('STTS_PAYMENT', '=', 'PENDING');
+                $data->where('STTS_PAYMENT', '=', 'PENDING');
             } else {
-                 $data->where('BRANCH_CODE', '=', $getBranch);
+                $data->where('BRANCH_CODE', '=', $getBranch);
             }
 
             switch ($tipe) {
                 case 'pembayaran':
-                     $data->where('PAYMENT_TYPE', '!=', 'pelunasan');
+                    $data->where('PAYMENT_TYPE', '!=', 'pelunasan');
                     break;
                 case 'pelunasan':
-                     $data->where('PAYMENT_TYPE', 'pelunasan');
+                    $data->where('PAYMENT_TYPE', 'pelunasan');
                     break;
             }
 
             if (!empty($notrx)) {
-                 $data->where('NO_TRANSAKSI', 'like', '%' . $notrx . '%');
+                $data->where('NO_TRANSAKSI', 'like', '%' . $notrx . '%');
             }
 
             if (!empty($nama)) {
-                 $data->where('NAMA', 'like', '%' . $nama . '%');
+                $data->where('NAMA', 'like', '%' . $nama . '%');
             }
 
             if (!empty($no_kontrak)) {
-                 $data->where('LOAN_NUMBER', 'like', '%' . $no_kontrak . '%');
+                $data->where('LOAN_NUMBER', 'like', '%' . $no_kontrak . '%');
             }
-            
-            $results = $data->limit(10)->get();
+
+            $results = $data->get();
 
             $dto = R_Kwitansi::collection($results);
 
             return response()->json($dto, 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
 
@@ -88,9 +90,9 @@ class PaymentController extends Controller
 
             $getCodeBranch = M_Branch::findOrFail($request->user()->branch_id);
 
-            $customer_data = null; 
+            $customer_data = null;
             $check_method_payment = strtolower($request->payment_method) === 'cash';
-            
+
             if (isset($request->struktur) && is_array($request->struktur)) {
                 foreach ($request->struktur as $res) {
 
@@ -142,14 +144,13 @@ class PaymentController extends Controller
                             ])->update(['PAID_FLAG' => 'PENDING']);
                         }
 
-                        if($res['bayar_denda'] != 0 || (isset($res['diskon_denda']) && $res['diskon_denda'] == 1)){
+                        if ($res['bayar_denda'] != 0 || (isset($res['diskon_denda']) && $res['diskon_denda'] == 1)) {
                             M_Arrears::where([
                                 'LOAN_NUMBER' => $res['loan_number'],
                                 'START_DATE' => $tgl_angsuran,
                                 'STATUS_REC' => 'A'
                             ])->update(['STATUS_REC' => 'PENDING']);
                         }
-                        
                     }
                 }
             }
@@ -163,7 +164,7 @@ class PaymentController extends Controller
             return response()->json($dto, 200);
         } catch (\Exception $e) {
             DB::rollback();
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage()], 500);
         }
     }
@@ -174,22 +175,22 @@ class PaymentController extends Controller
         $tgl_angsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
         $uid = Uuid::uuid7()->toString();
 
-        $this->updateCreditSchedule($loan_number, $tgl_angsuran, $res,$uid);
+        $this->updateCreditSchedule($loan_number, $tgl_angsuran, $res, $uid);
 
-        if((strtolower($request->bayar_dengan_diskon) == 'ya' && isset($request->bayar_dengan_diskon) && $request->bayar_dengan_diskon != '') || isset($res['diskon_denda']) && $res['diskon_denda'] == 1){
-            $this->updateDiscountArrears($loan_number, $tgl_angsuran, $res,$uid);
-        }else{
-            $this->updateArrears($loan_number, $tgl_angsuran, $res,$uid);
+        if ((strtolower($request->bayar_dengan_diskon) == 'ya' && isset($request->bayar_dengan_diskon) && $request->bayar_dengan_diskon != '') || isset($res['diskon_denda']) && $res['diskon_denda'] == 1) {
+            $this->updateDiscountArrears($loan_number, $tgl_angsuran, $res, $uid);
+        } else {
+            $this->updateArrears($loan_number, $tgl_angsuran, $res, $uid);
         }
 
         if ($res['bayar_angsuran'] != 0 || $res['bayar_denda'] != 0 || (isset($res['diskon_denda']) && $res['diskon_denda'] == 1)) {
-            $this->createPaymentRecords($request, $res, $tgl_angsuran, $loan_number, $no_inv, $getCodeBranch,$uid);
+            $this->createPaymentRecords($request, $res, $tgl_angsuran, $loan_number, $no_inv, $getCodeBranch, $uid);
         }
-        
+
         $this->updateCredit($loan_number);
     }
 
-    private function updateCreditSchedule($loan_number, $tgl_angsuran, $res,$uid)
+    private function updateCreditSchedule($loan_number, $tgl_angsuran, $res, $uid)
     {
         $credit_schedule = M_CreditSchedule::where([
             'LOAN_NUMBER' => $loan_number,
@@ -200,7 +201,7 @@ class PaymentController extends Controller
         $flag = $res['flag'];
 
         if ($credit_schedule || $byr_angsuran != 0 || $flag != 'PAID') {
-            
+
             $payment_value = $byr_angsuran + $credit_schedule->PAYMENT_VALUE;
 
             $valBeforePrincipal = $credit_schedule->PAYMENT_VALUE_PRINCIPAL;
@@ -218,8 +219,8 @@ class PaymentController extends Controller
                     $new_payment_value_principal = $getPrincipal;
                     $remaining_payment = $byr_angsuran - $remaining_to_principal;
                 } else {
-                    $new_payment_value_principal += $byr_angsuran; 
-                    $remaining_payment = 0; 
+                    $new_payment_value_principal += $byr_angsuran;
+                    $remaining_payment = 0;
                 }
             } else {
                 $remaining_payment = $byr_angsuran;
@@ -247,7 +248,7 @@ class PaymentController extends Controller
                 $valInterest = $new_payment_value_interest - $valBeforeInterest;
                 $data = $this->preparePaymentData($uid, 'ANGSURAN_BUNGA', $valInterest);
                 M_PaymentDetail::create($data);
-                $this->addCreditPaid($loan_number,['ANGSURAN_BUNGA' => $valInterest]);
+                $this->addCreditPaid($loan_number, ['ANGSURAN_BUNGA' => $valInterest]);
             }
 
             $total_paid = $new_payment_value_principal + $new_payment_value_interest;
@@ -264,24 +265,24 @@ class PaymentController extends Controller
             }
 
             $credit_schedule->update(['PAID_FLAG' => $credit_schedule->PAYMENT_VALUE >= $credit_schedule->INSTALLMENT ? 'PAID' : '']);
-
         }
     }
 
-    private function updateCredit($loan_number){
+    private function updateCredit($loan_number)
+    {
 
         $check_credit = M_Credit::where(['LOAN_NUMBER' => $loan_number])->first();
 
         $checkCreditSchedule = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)
             ->where(function ($query) {
                 $query->where('PAID_FLAG', '')
-                ->orWhereNull('PAID_FLAG');
+                    ->orWhereNull('PAID_FLAG');
             })
             ->first();
 
         $checkArrears = M_Arrears::where('LOAN_NUMBER', $loan_number)
-                                    ->whereIn('STATUS_REC', ['A', 'PENDING'])
-                                    ->first();
+            ->whereIn('STATUS_REC', ['A', 'PENDING'])
+            ->first();
 
         $status = !$checkCreditSchedule && (!$checkArrears || empty($check_arrears)) ? 'D' : 'A';
 
@@ -292,7 +293,7 @@ class PaymentController extends Controller
         }
     }
 
-    private function updateDiscountArrears($loan_number, $tgl_angsuran,$res,$uid)
+    private function updateDiscountArrears($loan_number, $tgl_angsuran, $res, $uid)
     {
         $check_arrears = M_Arrears::where([
             'LOAN_NUMBER' => $loan_number,
@@ -353,18 +354,17 @@ class PaymentController extends Controller
             }
 
             $updates['PAID_PENALTY'] = $getPenalty;
-            $updates['END_DATE'] = now();   
-            $updates['UPDATED_AT'] = now();          
+            $updates['END_DATE'] = now();
+            $updates['UPDATED_AT'] = now();
             if (!empty($updates)) {
                 $check_arrears->update($updates);
             }
 
             $check_arrears->update(['STATUS_REC' => $remainingPenalty > 0 ? 'D' : 'S']);
         }
-
     }
 
-    private function updateArrears($loan_number, $tgl_angsuran,$res,$uid)
+    private function updateArrears($loan_number, $tgl_angsuran, $res, $uid)
     {
         $check_arrears = M_Arrears::where([
             'LOAN_NUMBER' => $loan_number,
@@ -422,7 +422,7 @@ class PaymentController extends Controller
             $this->addCreditPaid($loan_number, ['BAYAR_DENDA' => $bayar_denda]);
 
             $updates['PAID_PENALTY'] = $new_penalty;
-            $updates['END_DATE'] = now();   
+            $updates['END_DATE'] = now();
             $updates['UPDATED_AT'] = now();
             $updates['STATUS_REC'] = 'A';
 
@@ -430,8 +430,8 @@ class PaymentController extends Controller
                 $check_arrears->update($updates);
             }
 
-            $total1= floatval($new_payment_value_principal) + floatval($new_payment_value_interest) + floatval($new_penalty);
-            $total2= floatval($getPrincipal) + floatval($getInterest) + floatval($getPenalty);
+            $total1 = floatval($new_payment_value_principal) + floatval($new_payment_value_interest) + floatval($new_penalty);
+            $total2 = floatval($getPrincipal) + floatval($getInterest) + floatval($getPenalty);
 
             if ($total1 == $total2) {
                 $check_arrears->update(['STATUS_REC' => 'S']);
@@ -449,15 +449,15 @@ class PaymentController extends Controller
             "LOAN_NUMBER" => $request->no_facility ?? null,
             "TGL_TRANSAKSI" => Carbon::now()->format('d-m-Y'),
             'BRANCH_CODE' => $request->user()->branch_id,
-            'CUST_CODE' => $customer_detail['cust_code']??'',
-            'NAMA' => $customer_detail['nama']??'',
-            'ALAMAT' => $customer_detail['alamat']??'',
-            'RT' => $customer_detail['rt']??'',
-            'RW' => $customer_detail['rw']??'',
-            'PROVINSI' => $customer_detail['provinsi']??'',
-            'KOTA' => $customer_detail['kota']??'',
-            'KELURAHAN' => $customer_detail['kelurahan']??'',
-            'KECAMATAN' => $customer_detail['kecamatan']??'',
+            'CUST_CODE' => $customer_detail['cust_code'] ?? '',
+            'NAMA' => $customer_detail['nama'] ?? '',
+            'ALAMAT' => $customer_detail['alamat'] ?? '',
+            'RT' => $customer_detail['rt'] ?? '',
+            'RW' => $customer_detail['rw'] ?? '',
+            'PROVINSI' => $customer_detail['provinsi'] ?? '',
+            'KOTA' => $customer_detail['kota'] ?? '',
+            'KELURAHAN' => $customer_detail['kelurahan'] ?? '',
+            'KECAMATAN' => $customer_detail['kecamatan'] ?? '',
             "METODE_PEMBAYARAN" => $request->payment_method ?? null,
             "TOTAL_BAYAR" => $request->total_bayar ?? null,
             "DISKON" => $request->diskon_tunggakan ?? null,
@@ -476,7 +476,7 @@ class PaymentController extends Controller
         );
     }
 
-    function createPaymentRecords($request, $res, $tgl_angsuran, $loan_number, $no_inv, $branch,$uid)
+    function createPaymentRecords($request, $res, $tgl_angsuran, $loan_number, $no_inv, $branch, $uid)
     {
         M_Payment::create([
             'ID' => $uid,
@@ -503,7 +503,7 @@ class PaymentController extends Controller
         ]);
     }
 
-    function preparePaymentData($payment_id,$acc_key, $amount)
+    function preparePaymentData($payment_id, $acc_key, $amount)
     {
         return [
             'PAYMENT_ID' => $payment_id,
@@ -512,23 +512,24 @@ class PaymentController extends Controller
         ];
     }
 
-    public function addCreditPaid($loan_number,array $data){
-          $check_credit = M_Credit::where(['LOAN_NUMBER' => $loan_number])->first();
-       
-          if ($check_credit) {
-                $paidPrincipal = isset($data['ANGSURAN_POKOK']) ? $data['ANGSURAN_POKOK']:0;
-                $paidInterest = isset($data['ANGSURAN_BUNGA']) ? $data['ANGSURAN_BUNGA'] :0;
-                $paidPenalty = isset($data['BAYAR_DENDA'])? $data['BAYAR_DENDA'] : 0;
+    public function addCreditPaid($loan_number, array $data)
+    {
+        $check_credit = M_Credit::where(['LOAN_NUMBER' => $loan_number])->first();
 
-                $check_credit->update([
-                    'PAID_PRINCIPAL' => floatval($check_credit->PAID_PRINCIPAL) + floatval($paidPrincipal),
-                    'PAID_INTEREST' => floatval($check_credit->PAID_INTEREST) + floatval($paidInterest),
-                    'PAID_PENALTY' => floatval($check_credit->PAID_PENALTY) + floatval($paidPenalty)
-                ]);
-            }
+        if ($check_credit) {
+            $paidPrincipal = isset($data['ANGSURAN_POKOK']) ? $data['ANGSURAN_POKOK'] : 0;
+            $paidInterest = isset($data['ANGSURAN_BUNGA']) ? $data['ANGSURAN_BUNGA'] : 0;
+            $paidPenalty = isset($data['BAYAR_DENDA']) ? $data['BAYAR_DENDA'] : 0;
+
+            $check_credit->update([
+                'PAID_PRINCIPAL' => floatval($check_credit->PAID_PRINCIPAL) + floatval($paidPrincipal),
+                'PAID_INTEREST' => floatval($check_credit->PAID_INTEREST) + floatval($paidInterest),
+                'PAID_PENALTY' => floatval($check_credit->PAID_PENALTY) + floatval($paidPenalty)
+            ]);
+        }
     }
 
-    public function destroyImage(Request $req,$id)
+    public function destroyImage(Request $req, $id)
     {
         DB::beginTransaction();
         try {
@@ -537,17 +538,17 @@ class PaymentController extends Controller
             $check->delete();
 
             DB::commit();
-            ActivityLogger::logActivity($req,"deleted successfully",200);
-            return response()->json(['message' => 'deleted successfully',"status" => 200], 200);
+            ActivityLogger::logActivity($req, "deleted successfully", 200);
+            return response()->json(['message' => 'deleted successfully', "status" => 200], 200);
         } catch (ModelNotFoundException $e) {
             DB::rollback();
             ActivityLogger::logActivity($req, 'Document Id Not Found', 404);
             return response()->json(['message' => 'Document Id Not Found', "status" => 404], 404);
         } catch (\Exception $e) {
             DB::rollback();
-            ActivityLogger::logActivity($req,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
-        } 
+            ActivityLogger::logActivity($req, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+        }
     }
 
     public function upload(Request $req)
@@ -558,17 +559,17 @@ class PaymentController extends Controller
             if (preg_match('/^data:image\/(\w+);base64,/', $req->image, $type)) {
                 $data = substr($req->image, strpos($req->image, ',') + 1);
                 $data = base64_decode($data);
-    
+
                 // Generate a unique filename
                 $extension = strtolower($type[1]); // Get the image extension
                 $fileName = Uuid::uuid4()->toString() . '.' . $extension;
-    
+
                 // Store the image
                 $image_path = Storage::put("public/Payment/{$fileName}", $data);
                 $image_path = str_replace('public/', '', $image_path);
-              
-                $url = URL::to('/') . '/storage/' .'Payment/'. $fileName;
-    
+
+                $url = URL::to('/') . '/storage/' . 'Payment/' . $fileName;
+
                 // Prepare data for database insertion
                 $data_array_attachment = [
                     'id' => Uuid::uuid4()->toString(),
@@ -576,14 +577,14 @@ class PaymentController extends Controller
                     'file_attach' => $url ?? ''
                 ];
 
-                $check = M_PaymentAttachment::where('payment_id',$req->uid)->first();
+                $check = M_PaymentAttachment::where('payment_id', $req->uid)->first();
 
-                if($check){
+                if ($check) {
                     $check->delete();
                 }
 
                 M_PaymentAttachment::create($data_array_attachment);
-    
+
                 DB::commit();
                 return response()->json(['message' => 'Image upload successfully', "status" => 200, 'response' => $url], 200);
             } else {
@@ -591,17 +592,15 @@ class PaymentController extends Controller
                 ActivityLogger::logActivity($req, 'No image file provided', 400);
                 return response()->json(['message' => 'No image file provided', "status" => 400], 400);
             }
-
-           
         } catch (QueryException $e) {
             DB::rollback();
-            ActivityLogger::logActivity($req,$e->getMessage(),409);
-            return response()->json(['message' => $e->getMessage(),"status" => 409], 409);
+            ActivityLogger::logActivity($req, $e->getMessage(), 409);
+            return response()->json(['message' => $e->getMessage(), "status" => 409], 409);
         } catch (\Exception $e) {
             DB::rollback();
-            ActivityLogger::logActivity($req,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
-        } 
+            ActivityLogger::logActivity($req, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+        }
     }
 
     public function approval(Request $request)
@@ -617,12 +616,12 @@ class PaymentController extends Controller
 
             $request->merge(['payment_method' => 'transfer']);
 
-            if($request->flag == 'yes'){
+            if ($request->flag == 'yes') {
 
-                if($kwitansi->PAYMENT_TYPE === 'pelunasan'){
+                if ($kwitansi->PAYMENT_TYPE === 'pelunasan') {
                     $pelunasan = new PelunasanController();
                     $pelunasan->proccess($request, $kwitansi->LOAN_NUMBER, $getInvoice, 'PAID');
-                }else{
+                } else {
                     if (isset($request->struktur) && is_array($request->struktur)) {
                         foreach ($request->struktur as $res) {
                             $request->merge(['approval' => 'approve', 'pembayaran' => $res['bayar_denda'] != 0 ? 'angsuran_denda' : 'angsuran']);
@@ -632,7 +631,7 @@ class PaymentController extends Controller
                 }
 
                 $kwitansi->update(['STTS_PAYMENT' => 'PAID']);
-            }else{
+            } else {
                 $request->merge(['approval' => 'no']);
 
                 if ($kwitansi->PAYMENT_TYPE === 'pelunasan') {
@@ -690,7 +689,7 @@ class PaymentController extends Controller
                     $kwitansi->update(['STTS_PAYMENT' => 'CANCEL']);
                 }
             }
-            
+
             $data_approval = [
                 'PAYMENT_ID' => $request->no_invoice,
                 'ONCHARGE_APPRVL' => $request->flag,
@@ -747,7 +746,7 @@ class PaymentController extends Controller
 
             // Process HO approval if applicable
             if (strtolower($request->user()->position) == 'ho' && isset($flag) && !empty($flag)) {
-                 $this->processHoApproval($request, $check);
+                $this->processHoApproval($request, $check);
             }
 
             DB::commit();
@@ -767,7 +766,7 @@ class PaymentController extends Controller
             if ($check->PAYMENT_TYPE === 'pelunasan') {
                 $pelunasan = new PelunasanController();
                 $pelunasan->proccessCancel($check->LOAN_NUMBER, $request->no_invoice, 'CANCEL');
-            } else{
+            } else {
                 $check->update([
                     'STTS_PAYMENT' => 'CANCEL'
                 ]);
@@ -861,30 +860,30 @@ class PaymentController extends Controller
     {
         try {
             $data = DB::table('payment_cancel_log as a')
-                        ->select(
-                            'a.ID',
-                            'a.INVOICE_NUMBER',
-                            'a.REQUEST_BY',
-                            'a.REQUEST_BRANCH',
-                            'a.REQUEST_POSITION',
-                            'a.REQUEST_DATE',
-                            'a.ONCHARGE_PERSON',
-                            'a.ONCHARGE_TIME',
-                            'a.ONCHARGE_DESCR',
-                            'a.ONCHARGE_FLAG',
-                            'b.LOAN_NUMBER',
-                            'b.TGL_TRANSAKSI'
-                        )
-                        ->leftJoin('kwitansi as b', 'b.NO_TRANSAKSI', '=', 'a.INVOICE_NUMBER')
-                        ->where(function ($query) {
-                            $query->whereNull('a.ONCHARGE_PERSON')
-                            ->orWhere('a.ONCHARGE_PERSON', '');
-                        })
-                        ->where(function ($query) {
-                            $query->whereNull('a.ONCHARGE_TIME')
-                            ->orWhere('a.ONCHARGE_TIME', '');
-                        })
-                        ->get();
+                ->select(
+                    'a.ID',
+                    'a.INVOICE_NUMBER',
+                    'a.REQUEST_BY',
+                    'a.REQUEST_BRANCH',
+                    'a.REQUEST_POSITION',
+                    'a.REQUEST_DATE',
+                    'a.ONCHARGE_PERSON',
+                    'a.ONCHARGE_TIME',
+                    'a.ONCHARGE_DESCR',
+                    'a.ONCHARGE_FLAG',
+                    'b.LOAN_NUMBER',
+                    'b.TGL_TRANSAKSI'
+                )
+                ->leftJoin('kwitansi as b', 'b.NO_TRANSAKSI', '=', 'a.INVOICE_NUMBER')
+                ->where(function ($query) {
+                    $query->whereNull('a.ONCHARGE_PERSON')
+                        ->orWhere('a.ONCHARGE_PERSON', '');
+                })
+                ->where(function ($query) {
+                    $query->whereNull('a.ONCHARGE_TIME')
+                        ->orWhere('a.ONCHARGE_TIME', '');
+                })
+                ->get();
 
             $dto = R_PaymentCancelLog::collection($data);
 
@@ -894,5 +893,4 @@ class PaymentController extends Controller
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
-
 }
