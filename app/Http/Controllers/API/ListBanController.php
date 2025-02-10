@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\M_Branch;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -18,7 +19,16 @@ class ListBanController extends Controller
             ];
             
             if (!empty($request->dari)) {
-                $dateFrom = $request->dari;
+
+                $timestamp = $request->dari / 1000;
+
+                // Convert the timestamp to a Carbon instance
+                $date = Carbon::createFromTimestamp($timestamp);
+
+                // Format the date as Y-m-d
+                $formattedDate = $date->format('Y-m-d');
+
+                $dateFrom = $formattedDate;
                 $cabangId = $request->cabang_id;
 
                 $arusKas = $this->queryArusKas($cabangId, $dateFrom);
