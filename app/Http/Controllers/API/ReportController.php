@@ -565,7 +565,7 @@ class ReportController extends Controller
                         $sql.="and d.NAME = '$request->pos'";
                     }
                     if ($request->loan_number) {
-                        $sql .= "and d.NAME = '$request->loan_number'";
+                        $sql .= "and b.LOAN_NUMBER = '$request->loan_number'";
                     }
                     if ($request->nama) {
                         $sql .= "and c.NAME like '%$request->nama%'";
@@ -574,7 +574,7 @@ class ReportController extends Controller
                         $sql .="and a.POLICE_NUMBER like '%$request->nopol%";
                     }
                     if ($request->status) {
-                        $sql .= "and coalesce(f.STATUS,'Normal') = '$request->status'";
+                        $sql .= "and coalesce(f.STATUS,'NORMAL') = '$request->status'";
                     }
 
                     $sql.="ORDER	BY d.NAME, e.NAME, b.LOAN_NUMBER, c.NAME,
