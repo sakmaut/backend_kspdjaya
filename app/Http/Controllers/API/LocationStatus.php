@@ -18,21 +18,21 @@ class LocationStatus extends Controller
         $this->entityLocationStatus = $entityLocationStatus;
     }
 
-    public function createLocationStatusLog(string $trxId, string $descr, string $status): void
+    public function createLocationStatusLog(string $collateralId, string $location, string $status = 'NEW'): void
     {
-        $log = $this->prepareLogData($trxId, $descr, $status);
+        $log = $this->prepareLogData($collateralId, $location, $status);
         $this->entityLocationStatus->create($log);
     }
 
-    protected function prepareLogData(string $trxId, string $descr, string $status): array
+    protected function prepareLogData(string $collateralId, string $location, string $status): array
     {
         return [
-            'BPKB_TRANSACTION_ID' => $trxId,
-            'ONCHARGE_APPRVL' => $status,
-            'ONCHARGE_PERSON' => $this->request->user()->id,
-            'ONCHARGE_TIME' => Carbon::now(),
-            'ONCHARGE_DESCR' => $descr,
-            'APPROVAL_RESULT' => $status
+            'TYPE' => 'kendaraan',
+            'COLLATERAL_ID' => $collateralId,
+            'LOCATION' => $location,
+            'STATUS' => $status,
+            'CREATE_BY' => $this->request->user()->id,
+            'CREATED_AT' => now(),
         ];
     }
 }
