@@ -560,13 +560,24 @@ class ReportController extends Controller
                             left join branch d on d.ID = a.COLLATERAL_FLAG
                             left join branch e on e.ID = a.LOCATION_BRANCH
                             left join bpkb_detail f on f.COLLATERAL_ID = a.ID
-                    WHERE	(1=1)
-                            and d.NAME = '$request->pos'
-                            and b.LOAN_NUMBER like '%$request->loan_number%'
-                            and c.NAME like '%$request->nama%'
-                            and a.POLICE_NUMBER like '%$request->nopol%'
-                            and coalesce(f.STATUS,'Normal') = '$request->status'
-                    ORDER	BY d.NAME, e.NAME, b.LOAN_NUMBER, c.NAME,
+                    WHERE	(1=1)";
+                    if($request->pos){
+                        $sql.="and d.NAME = '$request->pos'";
+                    }
+                    if ($request->loan_number) {
+                        $sql .= "and d.NAME = '$request->loan_number'";
+                    }
+                    if ($request->nama) {
+                        $sql .= "and c.NAME like '%$request->nama%'";
+                    }
+                    if ($request->nopol) {
+                        $sql .="and a.POLICE_NUMBER like '%$request->nopol%";
+                    }
+                    if ($request->status) {
+                        $sql .= "and coalesce(f.STATUS,'Normal') = '$request->status'";
+                    }
+
+                    $sql.="ORDER	BY d.NAME, e.NAME, b.LOAN_NUMBER, c.NAME,
                             a.POLICE_NUMBER, f.STATUS";
 
             $results = DB::select($sql);
