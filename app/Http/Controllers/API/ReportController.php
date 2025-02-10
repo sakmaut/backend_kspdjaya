@@ -29,20 +29,20 @@ class ReportController extends Controller
                 return response()->json($mapping, 200);
             } else {
                 $query = DB::table('credit as a')
-                            ->leftJoin('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
-                            ->leftJoin('cr_collateral as c', 'c.CR_CREDIT_ID', '=', 'a.ID')
-                            ->leftJoin('branch as d', 'd.ID', '=', 'a.BRANCH')
-                            ->select(
-                                'a.ID as creditId',
-                                'a.LOAN_NUMBER',
-                                'a.ORDER_NUMBER',
-                                'b.ID as custId',
-                                'b.CUST_CODE',
-                                'b.NAME as customer_name',
-                                'c.POLICE_NUMBER',
-                                'a.INSTALLMENT_DATE',
-                                'd.NAME as branch_name'
-                            );
+                    ->leftJoin('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
+                    ->leftJoin('cr_collateral as c', 'c.CR_CREDIT_ID', '=', 'a.ID')
+                    ->leftJoin('branch as d', 'd.ID', '=', 'a.BRANCH')
+                    ->select(
+                        'a.ID as creditId',
+                        'a.LOAN_NUMBER',
+                        'a.ORDER_NUMBER',
+                        'b.ID as custId',
+                        'b.CUST_CODE',
+                        'b.NAME as customer_name',
+                        'c.POLICE_NUMBER',
+                        'a.INSTALLMENT_DATE',
+                        'd.NAME as branch_name'
+                    );
 
                 if (!empty($request->no_kontrak)) {
                     $query->when($request->no_kontrak, function ($query, $no_kontrak) {
@@ -79,7 +79,6 @@ class ReportController extends Controller
             }
 
             return response()->json($mapping, 200);
-
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
@@ -160,7 +159,6 @@ class ReportController extends Controller
                         'value' => date('Y-m-d', strtotime($results->CREATED_AT)) ?? ''
                     ]
                 ];
-
             }
 
             return response()->json($buildArray, 200);
@@ -374,7 +372,8 @@ class ReportController extends Controller
         }
     }
 
-    public function collateralReport(Request $request){
+    public function collateralReport(Request $request)
+    {
         try {
             $sql = "SELECT	d.NAME as pos_pencairan, e.NAME as posisi_berkas,
                             b.LOAN_NUMBER as no_kontrak, c.NAME as debitur,
@@ -400,12 +399,12 @@ class ReportController extends Controller
             foreach ($results as $result) {
 
                 $allData[] = [
-                    'pos_pencairan' => $result -> pos_pencairan ?? '',
-                    'posisi_berkas' => $result -> posisi_berkas ?? '',
-                    'no_kontrak' => $result -> no_kontrak ?? '',
-                    'nama_debitur' => $result -> debitur ?? '',
-                    'no_polisi' => $result -> POLICE_NUMBER ?? '',
-                    'status' => $result -> STATUS ?? '',
+                    'pos_pencairan' => $result->pos_pencairan ?? '',
+                    'posisi_berkas' => $result->posisi_berkas ?? '',
+                    'no_kontrak' => $result->no_kontrak ?? '',
+                    'nama_debitur' => $result->debitur ?? '',
+                    'no_polisi' => $result->POLICE_NUMBER ?? '',
+                    'status' => $result->STATUS ?? '',
                 ];
             }
 
@@ -537,8 +536,8 @@ class ReportController extends Controller
                     'no_kontrak' => $creditDetail->LOAN_NUMBER ?? '',
                     'tgl_kontrak' => Carbon::parse($creditDetail->INSTALLMENT_DATE)->format('d-m-Y'),
                     'nama' => $creditDetail->customer->NAME ?? '',
-                    'no_pel' => $creditDetail->CUST_CODE??'',
-                   'status' => ($creditDetail->STATUS ?? '') == 'D' ? 'Tidak Aktif' : 'Aktif'
+                    'no_pel' => $creditDetail->CUST_CODE ?? '',
+                    'status' => ($creditDetail->STATUS ?? '') == 'D' ? 'Tidak Aktif' : 'Aktif'
                 ];
             }
 
@@ -549,12 +548,12 @@ class ReportController extends Controller
         }
     }
 
-    public function collateralReport(Request $request)
+    public function collateralAllReport(Request $request)
     {
         try {
             $sql = "SELECT	d.NAME as pos_pencairan, e.NAME as posisi_berkas,
                             b.LOAN_NUMBER as no_kontrak, c.NAME as debitur,
-                            a.POLICE_NUMBER, a.STATUS
+                            a.POLICE_NUMBER, f.STATUS
                     FROM	cr_collateral a
                             inner join credit b on b.ID = a.CR_CREDIT_ID
                             inner join customer c on c.CUST_CODE = b.CUST_CODE
@@ -562,13 +561,13 @@ class ReportController extends Controller
                             left join branch e on e.ID = a.LOCATION_BRANCH
                             left join bpkb_detail f on f.COLLATERAL_ID = a.ID
                     WHERE	(1=1)
-                            and d.NAME = '$request->pos'
-                            and b.LOAN_NUMBER like '%$request->loan_number%'
-                            and c.NAME like '%$request->nama%'
-                            and a.POLICE_NUMBER like '%$request->nopol%'
-                            and coalesce(f.STATUS,'Normal') = '$request->status'
+                           -- and d.NAME = '$request->pos'
+                           -- and b.LOAN_NUMBER like '%$request->loan_number%'
+                            -- and c.NAME like '%$request->nama%'
+                            -- and a.POLICE_NUMBER like '%$request->nopol%'
+                            -- and coalesce(f.STATUS,'Normal') = '$request->status'
                     ORDER	BY d.NAME, e.NAME, b.LOAN_NUMBER, c.NAME,
-                            a.POLICE_NUMBER, a.STATUS";
+                            a.POLICE_NUMBER, f.STATUS";
 
             $results = DB::select($sql);
 
