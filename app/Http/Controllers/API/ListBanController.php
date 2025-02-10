@@ -160,11 +160,8 @@ class ListBanController extends Controller
                     INNER JOIN credit b2 ON b2.LOAN_NUMBER = b.LOAN_NUM
                     INNER JOIN customer b3 ON b3.CUST_CODE = b2.CUST_CODE
                     INNER JOIN users u ON u.id = b.user_id 
-                    WHERE b.ENTRY_DATE = :dateFrom
+                    WHERE b.ENTRY_DATE = '$dateFrom'
                 ";
-
-        // Bind parameters
-        $params = ['dateFrom' => $dateFrom];
 
         // If cabangId is provided, add it as a condition
         if (!empty($cabangId) && $cabangId != 'SEMUA CABANG') {
