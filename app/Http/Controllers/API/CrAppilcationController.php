@@ -957,7 +957,7 @@ class CrAppilcationController extends Controller
     private function resourceDetail($data, $application)
     {
         $surveyId = $data->id;
-        $setApplicationId = $application->ID;
+        $setApplicationId = $application->ID ?? '';
 
         $guarente_vehicle = M_CrGuaranteVehicle::where('CR_SURVEY_ID', $surveyId)->where(function ($query) {
             $query->whereNull('DELETED_AT')
