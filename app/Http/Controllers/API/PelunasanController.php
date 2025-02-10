@@ -27,9 +27,9 @@ class PelunasanController extends Controller
 
             $notrx = $request->query('notrx');
             $nama = $request->query('nama');
-            $no_kontrak = $request->query('no_kontrak'); 
+            $no_kontrak = $request->query('no_kontrak');
 
-            $data = M_Kwitansi::where('PAYMENT_TYPE','pelunasan')->orderBy('CREATED_AT', 'DESC')->limit(10);
+            $data = M_Kwitansi::where('PAYMENT_TYPE', 'pelunasan')->orderBy('CREATED_AT', 'DESC')->limit(10);
 
             if (!empty($notrx)) {
                 $data = $data->where('NO_TRANSAKSI', 'like', '%' . $notrx . '%');
@@ -72,7 +72,7 @@ class PelunasanController extends Controller
             //             ->where('a.INSTALLMENT_COUNT', '=', 1)
             //             ->groupBy('a.LOAN_NUMBER', 'a.PAYMENT_DATE', 'a.INTEREST', 'b.PCPL_ORI', 'b.PAID_PRINCIPAL')
             //             ->first();
-                        
+
             // $bunga = "select  $result->LOAN_NUMBER as LOAN_NUMBER,$result->INT_ARR as INT_ARR, null as TUNGGAKAN_DENDA, null as DENDA_TOTAL";
 
             // $bunga2 = "select	LOAN_NUMBER, 
@@ -83,7 +83,7 @@ class PelunasanController extends Controller
             //             from	arrears
             //             where	LOAN_NUMBER = '{$loan_number}'
             //             group 	by LOAN_NUMBER";
-            
+
             // $getDate1 = $result->PAYMENT_DATE??'';
             // $getDate2 = Carbon::now()->format('Y-m-d');
 
@@ -113,7 +113,7 @@ class PelunasanController extends Controller
                                     AND PAYMENT_DATE <= (
                                         SELECT COALESCE(
                                             MIN(PAYMENT_DATE), 
-                                            (SELECT MIN(PAYMENT_DATE) 
+                                            (SELECT MAX(PAYMENT_DATE) 
                                             FROM credit_schedule 
                                             WHERE LOAN_NUMBER = '{$loan_number}'  
                                             AND PAYMENT_DATE < NOW())
@@ -152,7 +152,7 @@ class PelunasanController extends Controller
                                 GROUP BY LOAN_NUMBER
                             ) e ON e.LOAN_NUMBER = a.LOAN_NUMBER
                         WHERE 
-                            a.LOAN_NUMBER = '{$loan_number}' ";      
+                            a.LOAN_NUMBER = '{$loan_number}' ";
 
             $result = DB::select($allQuery);
 
@@ -177,11 +177,11 @@ class PelunasanController extends Controller
             if (!empty($query2) && isset($query2[0]->DISC_BUNGA)) {
                 $discBunga = round(floatval($query2[0]->DISC_BUNGA), 2);
             }
-        
+
             foreach ($processedResults as &$processedResult) {
                 $processedResult['DISC_BUNGA'] = $discBunga;
             }
-        
+
             return response()->json($processedResults, 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
@@ -195,13 +195,13 @@ class PelunasanController extends Controller
         try {
 
             $loan_number = $request->LOAN_NUMBER;
-            
+
             $no_inv = generateCodeKwitansi($request, 'kwitansi', 'NO_TRANSAKSI', 'INV');
-    
+
             $credit = M_Credit::where('LOAN_NUMBER', $loan_number)->firstOrFail();
 
             $detail_customer = M_Customer::where('CUST_CODE', $credit->CUST_CODE)->firstOrFail();
-            
+
             $discounts = $request->only(['DISKON_POKOK', 'DISKON_PINALTI', 'DISKON_BUNGA', 'DISKON_DENDA']);
 
             $status = "PAID";
@@ -217,13 +217,13 @@ class PelunasanController extends Controller
 
             if ($status === "PAID") {
                 $this->proccess($request, $loan_number, $no_inv, $status);
-            }else{
+            } else {
                 $creditSchedule = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)
-                                            ->where(function ($query) {
-                                                $query->where('PAID_FLAG', '!=', 'PAID')->orWhereNull('PAID_FLAG');
-                                            })
-                                            ->orderBy('PAYMENT_DATE', 'asc')
-                                            ->get();
+                    ->where(function ($query) {
+                        $query->where('PAID_FLAG', '!=', 'PAID')->orWhereNull('PAID_FLAG');
+                    })
+                    ->orderBy('PAYMENT_DATE', 'asc')
+                    ->get();
 
                 $checkArr = M_Arrears::where([
                     'LOAN_NUMBER' => $loan_number,
@@ -232,17 +232,17 @@ class PelunasanController extends Controller
 
                 foreach ($creditSchedule as $res) {
                     $res->update(['PAID_FLAG' => 'PENDING']);
-                }   
+                }
 
                 foreach ($checkArr as $ress) {
                     $ress->update(['STATUS_REC' => 'PENDING']);
-                }  
+                }
             }
 
             $data = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
 
             $dto = new R_KwitansiPelunasan($data);
-           
+
             DB::commit();
             return response()->json($dto, 200);
         } catch (\Exception $e) {
@@ -256,9 +256,9 @@ class PelunasanController extends Controller
     {
         $pelunasanKwitansiDetail = M_KwitansiDetailPelunasan::where(['no_invoice' => $no_inv, 'loan_number' => $loan_number])->get();
 
-        $this->proccessPinaltyPayment($request,$no_inv,$status,$loan_number);
+        $this->proccessPinaltyPayment($request, $no_inv, $status, $loan_number);
 
-        if(!empty($pelunasanKwitansiDetail)){
+        if (!empty($pelunasanKwitansiDetail)) {
             foreach ($pelunasanKwitansiDetail as $res) {
                 $uid = Uuid::uuid7()->toString();
                 $this->proccessPayment($request, $uid, $no_inv, $status, $res);
@@ -281,7 +281,7 @@ class PelunasanController extends Controller
                 if ($res['installment'] != 0) {
                     $this->updateCreditSchedule($loan_number, $res);
                 }
-                
+
                 $this->updateArrears($loan_number, $res);
                 $this->updateCredit($res, $loan_number);
             }
@@ -294,7 +294,7 @@ class PelunasanController extends Controller
 
         $kwitansi = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
 
-        if($kwitansi){
+        if ($kwitansi) {
             $kwitansi->update(['STTS_PAYMENT' => $status]);
         }
 
@@ -302,7 +302,7 @@ class PelunasanController extends Controller
 
         if ($getCredit) {
             $getCredit->update([
-                "PINALTY_PELUNASAN" => floatval($getCredit->PINALTY_PELUNASAN??0) - floatval($kwitansi->PINALTY_PELUNASAN ?? 0),
+                "PINALTY_PELUNASAN" => floatval($getCredit->PINALTY_PELUNASAN ?? 0) - floatval($kwitansi->PINALTY_PELUNASAN ?? 0),
                 "DISKON_PINALTY_PELUNASAN" => floatval($getCredit->DISKON_PINALTY_PELUNASAN ?? 0) - floatval($kwitansi->DISKON_PINALTY_PELUNASAN ?? 0),
             ]);
         }
@@ -318,7 +318,7 @@ class PelunasanController extends Controller
         if (!empty($pelunasanKwitansiDetail)) {
             foreach ($pelunasanKwitansiDetail as $res) {
 
-                if($res['installment'] != 0){
+                if ($res['installment'] != 0) {
                     $this->cancelCreditSchedule($loan_number, $res);
                 }
 
@@ -331,16 +331,16 @@ class PelunasanController extends Controller
         }
     }
 
-    function proccessPayment($request,$uid,$no_inv,$status, $res){
+    function proccessPayment($request, $uid, $no_inv, $status, $res)
+    {
         $originalAmount = (
-            ($res['bayar_pokok'] ?? 0) + 
-            ($res['bayar_bunga'] ?? 0) + 
-            ($res['bayar_denda'] ?? 0) + 
-            ($res['diskon_pokok'] ?? 0) + 
-            ($res['diskon_bunga'] ?? 0) + 
-            ($res['diskon_denda'] ?? 0)
-        );
-        
+            ($res['bayar_pokok'] ?? 0) +
+            ($res['bayar_bunga'] ?? 0) +
+            ($res['bayar_denda'] ?? 0) +
+            ($res['diskon_pokok'] ?? 0) +
+            ($res['diskon_bunga'] ?? 0) +
+            ($res['diskon_denda'] ?? 0));
+
         M_Payment::create([
             'ID' => $uid,
             'ACC_KEY' => 'Pelunasan Angsuran Ke-' . ($res['angsuran_ke'] ?? ''),
@@ -358,10 +358,10 @@ class PelunasanController extends Controller
             'USER_ID' => $request->user()->id,
             'AUTH_BY' => $request->user()->fullname ?? '',
             'AUTH_DATE' => Carbon::now()
-        ]);        
+        ]);
     }
 
-    function proccessPinaltyPayment($request, $no_inv, $status,$loan_number)
+    function proccessPinaltyPayment($request, $no_inv, $status, $loan_number)
     {
         $uid = Uuid::uuid7()->toString();
 
@@ -376,7 +376,7 @@ class PelunasanController extends Controller
             'LOAN_NUM' => $loan_number ?? '',
             'ENTRY_DATE' => Carbon::now(),
             'TITLE' => 'Bayar Pelunasan Pinalty',
-            'ORIGINAL_AMOUNT' => $request->BAYAR_PINALTI??0,
+            'ORIGINAL_AMOUNT' => $request->BAYAR_PINALTI ?? 0,
             'END_DATE' => Carbon::now(),
             'USER_ID' => $request->user()->id,
             'AUTH_BY' => $request->user()->fullname ?? '',
@@ -387,17 +387,17 @@ class PelunasanController extends Controller
             $this->proccessPaymentDetail($uid, 'BAYAR PELUNASAN PINALTY', $request->BAYAR_PINALTI ?? 0);
         }
 
-        if($request->DISKON_PINALTI != 0){
+        if ($request->DISKON_PINALTI != 0) {
             $this->proccessPaymentDetail($uid, 'BAYAR PELUNASAN DISKON PINALTY', $request->DISKON_PINALTI ?? 0);
         }
-        
     }
 
-    function updateCreditSchedule($loan_number,$res){
-    
+    function updateCreditSchedule($loan_number, $res)
+    {
+
         $getCreditSchedule = M_CreditSchedule::where(['LOAN_NUMBER' => $loan_number, 'PAYMENT_DATE' => $res['tgl_angsuran']])->first();
 
-        if($getCreditSchedule){
+        if ($getCreditSchedule) {
 
             $valBeforePrincipal = $getCreditSchedule->PAYMENT_VALUE_PRINCIPAL;
             $valBeforeInterest = $getCreditSchedule->PAYMENT_VALUE_INTEREST;
@@ -473,14 +473,14 @@ class PelunasanController extends Controller
             $checkDiscountArrears = floatval($res['diskon_pokok']) != 0 && floatval($res['diskon_bunga']) != 0 && floatval($res['diskon_denda']) != 0;
 
             $getArrears->update([
-                'END_DATE' => Carbon::now()->format('Y-m-d')??null,
-                'PAID_PCPL' => $ttlPrincipal??0,
+                'END_DATE' => Carbon::now()->format('Y-m-d') ?? null,
+                'PAID_PCPL' => $ttlPrincipal ?? 0,
                 'PAID_INT' => $ttlInterest ?? 0,
                 'PAID_PENALTY' => $ttlPenalty ?? 0,
                 'WOFF_PCPL' => $ttlDiscPrincipal ?? 0,
                 'WOFF_INT' => $ttlDiscInterest ?? 0,
                 'WOFF_PENALTY' => $ttlDiscPenalty ?? 0,
-                'STATUS_REC' => $checkDiscountArrears ?? 0 ? 'S':'D',
+                'STATUS_REC' => $checkDiscountArrears ?? 0 ? 'S' : 'D',
                 'UPDATED_AT' => Carbon::now(),
             ]);
         }
@@ -533,7 +533,7 @@ class PelunasanController extends Controller
         }
     }
 
-    function cancelCredit($loan_number,$res)
+    function cancelCredit($loan_number, $res)
     {
         $credit = M_Credit::where('LOAN_NUMBER', $loan_number)->first();
 
@@ -550,8 +550,8 @@ class PelunasanController extends Controller
             ]);
         }
     }
-    
-    private function saveKwitansi($request, $customer, $no_inv,$status)
+
+    private function saveKwitansi($request, $customer, $no_inv, $status)
     {
         $data = [
             "PAYMENT_TYPE" => 'pelunasan',
@@ -571,9 +571,9 @@ class PelunasanController extends Controller
             "KECAMATAN" => $customer->KECAMATAN,
             "KELURAHAN" => $customer->KELURAHAN,
             "METODE_PEMBAYARAN" => $request->METODE_PEMBAYARAN,
-            "TOTAL_BAYAR" => $request->TOTAL_BAYAR??0,
-            "PINALTY_PELUNASAN" => $request->BAYAR_PINALTI??0,
-            "DISKON_PINALTY_PELUNASAN" => $request->DISKON_PINALTI??0,
+            "TOTAL_BAYAR" => $request->TOTAL_BAYAR ?? 0,
+            "PINALTY_PELUNASAN" => $request->BAYAR_PINALTI ?? 0,
+            "DISKON_PINALTY_PELUNASAN" => $request->DISKON_PINALTI ?? 0,
             "PEMBULATAN" => $request->PEMBULATAN,
             "DISKON" => $request->PEMBULATAN,
             "KEMBALIAN" => $request->KEMBALIAN,
@@ -582,12 +582,12 @@ class PelunasanController extends Controller
             "NO_REKENING" => $request->NO_REKENING,
             "CREATED_BY" => $request->user()->fullname
         ];
-    
+
         M_Kwitansi::create($data);
 
         $getCredit = M_Credit::where('LOAN_NUMBER', $request->LOAN_NUMBER)->first();
 
-        if($getCredit){
+        if ($getCredit) {
             $getCredit->update([
                 "PINALTY_PELUNASAN" => $request->BAYAR_PINALTI ?? 0,
                 "DISKON_PINALTY_PELUNASAN" => $request->DISKON_PINALTI ?? 0,
@@ -605,7 +605,7 @@ class PelunasanController extends Controller
         ]);
     }
 
-    function preparePaymentData($payment_id,$acc_key, $amount)
+    function preparePaymentData($payment_id, $acc_key, $amount)
     {
         return [
             'PAYMENT_ID' => $payment_id,
@@ -617,36 +617,38 @@ class PelunasanController extends Controller
     function proccessKwitansiDetail($request, $loan_number, $no_inv)
     {
         $creditSchedules =  M_CreditSchedule::from('credit_schedule AS a')
-                                            ->leftJoin('arrears AS b', function ($join) {
-                                                $join->on('b.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
-                                                    ->on('b.START_DATE', '=', 'a.PAYMENT_DATE');
-                                            })
-                                            ->where('a.LOAN_NUMBER', $loan_number)
-                                            ->where(function ($query) {
-                                                $query->where('a.PAID_FLAG', '!=', 'PAID')
-                                                    ->orWhereNotIn('b.STATUS_REC', ['S', 'D']);
-                                            })
-                                            ->orderBy('a.PAYMENT_DATE', 'ASC')
-                                            ->select(   'a.LOAN_NUMBER',
-                                                        'a.INSTALLMENT_COUNT',
-                                                        'a.PAYMENT_DATE',
-                                                        'a.PRINCIPAL',
-                                                        'a.INTEREST',
-                                                        'a.INSTALLMENT',
-                                                        'a.PRINCIPAL_REMAINS',
-                                                        'a.PAYMENT_VALUE_PRINCIPAL',
-                                                        'a.PAYMENT_VALUE_INTEREST',
-                                                        'a.DISCOUNT_PRINCIPAL',
-                                                        'a.DISCOUNT_INTEREST',
-                                                        'a.INSUFFICIENT_PAYMENT',
-                                                        'a.PAYMENT_VALUE',
-                                                        'a.PAID_FLAG')
-                                            ->get();
+            ->leftJoin('arrears AS b', function ($join) {
+                $join->on('b.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
+                    ->on('b.START_DATE', '=', 'a.PAYMENT_DATE');
+            })
+            ->where('a.LOAN_NUMBER', $loan_number)
+            ->where(function ($query) {
+                $query->where('a.PAID_FLAG', '!=', 'PAID')
+                    ->orWhereNotIn('b.STATUS_REC', ['S', 'D']);
+            })
+            ->orderBy('a.PAYMENT_DATE', 'ASC')
+            ->select(
+                'a.LOAN_NUMBER',
+                'a.INSTALLMENT_COUNT',
+                'a.PAYMENT_DATE',
+                'a.PRINCIPAL',
+                'a.INTEREST',
+                'a.INSTALLMENT',
+                'a.PRINCIPAL_REMAINS',
+                'a.PAYMENT_VALUE_PRINCIPAL',
+                'a.PAYMENT_VALUE_INTEREST',
+                'a.DISCOUNT_PRINCIPAL',
+                'a.DISCOUNT_INTEREST',
+                'a.INSUFFICIENT_PAYMENT',
+                'a.PAYMENT_VALUE',
+                'a.PAID_FLAG'
+            )
+            ->get();
 
         $this->principalCalculate($request, $loan_number, $no_inv, $creditSchedules);
         $this->interestCalculate($request, $loan_number, $no_inv, $creditSchedules);
         $arrears = M_Arrears::where(['LOAN_NUMBER' => $loan_number, 'STATUS_REC' => 'A'])->get();
-        $this->arrearsCalculate($request, $loan_number, $no_inv,$arrears);
+        $this->arrearsCalculate($request, $loan_number, $no_inv, $arrears);
     }
 
     private function principalCalculate($request, $loan_number, $no_inv, $creditSchedule)
@@ -821,5 +823,3 @@ class PelunasanController extends Controller
         }
     }
 }
-
-
