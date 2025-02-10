@@ -136,7 +136,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('collateralReport/{id}', [ReportController::class, 'jaminan']);
     Route::get('paymentReport/{id}', [ReportController::class, 'pembayaran']);
     Route::get('arrearsReport/{id}', [ReportController::class, 'tunggakkan']);
-    Route::post('collateral_report', [ReportController::class, 'collateralReport']);
+    Route::get('collateral_report', [ReportController::class, 'collateralReport']);
 
     Route::resource('collateral', CollateralController::class);
     Route::resource('log_print', LogPrintController::class);
