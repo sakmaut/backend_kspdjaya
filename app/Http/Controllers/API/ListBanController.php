@@ -337,113 +337,116 @@ class ListBanController extends Controller
     public function listBan(Request $request)
     {
         try {
+
             $dateFrom = $request->dari;
             $getBranch = $request->cabang_id;
 
-            $query = DB::table(DB::raw("(SELECT 
-                                            CONCAT(a.CODE, '-', a.CODE_NUMBER) AS KODE,
-                                            a.NAME AS NAMA_CABANG,
-                                            b.LOAN_NUMBER AS NO_KONTRAK,
-                                            c.NAME AS NAMA_PELANGGAN,
-                                            b.CREATED_AT AS TGL_BOOKING,
-                                            NULL AS UB,
-                                            NULL AS PLATFORM,
-                                            c.INS_ADDRESS AS ALAMAT_TAGIH,
-                                            c.ZIP_CODE AS KODE_POST,
-                                            '' AS SUB_ZIP,
-                                            c.PHONE_HOUSE AS NO_TELP,
-                                            c.PHONE_PERSONAL AS NO_HP,
-                                            c.PHONE_PERSONAL AS NO_HP2,
-                                            c.OCCUPATION AS PEKERJAAN,
-                                            CONCAT(h.REF_PELANGGAN, ' ', h.REF_PELANGGAN_OTHER) AS supplier, 
-                                            NULL AS SURVEYOR,
-                                            f.survey_note AS CATT_SURVEY,
-                                            b.PCPL_ORI AS PKK_HUTANG,
-                                            b.PERIOD AS JUMLAH_ANGSURAN, 
-                                            b.INSTALLMENT_COUNT/b.PERIOD AS JARAK_ANGSURAN, 
-                                            b.INSTALLMENT_COUNT as PERIOD, 
-                                            i.OS_POKOK AS OUTSTANDING,
-                                            i.OS_BUNGA, 
-                                            DATEDIFF(i.TUNGGAKAN_PERTAMA, str_to_date('31012025','%d%m%Y')) AS OVERDUE_AWAL,
-                                            i.TUNGGAKAN_POKOK as AMBC_PKK_AWAL, 
-                                            i.TUNGGAKAN_BUNGA as AMBC_BNG_AWAL, 
-                                            i.TUNGGAKAN_POKOK+i.TUNGGAKAN_BUNGA as AMBC_TOTAL_AWAL, 
-                                            99 AS CYCLE,
-                                            b.STATUS_REC,
-                                            'status beban', 
-                                            'pola bayar awal', 
-                                            b.PCPL_ORI-b.PAID_PRINCIPAL OS_PKK_AKHIR, 
-                                            k.OS_BNG_AKHIR OS_BNG_AKHIR, 
-                                            j.DUE_DAYS as OVERDUE_AKHIR, 
-                                            b.INSTALLMENT,
-                                            k.LAST_INST, 
-                                            e.INSTALLMENT_TYPE AS tipe,
-                                            i.TUNGGAKAN_PERTAMA,
-                                            'tgl tunggakan akhir', 
-                                            k.LAST_PAY, 
-                                            ' ' AS COLLECTOR,
-                                            l.payment_method as cara_bayar, 
-                                            m.tggk_pkk as AMBC_PKK_AKHIR, 
-                                            m.tggk_bng as AMBC_BNG_AKHIR, 
-                                            m.tggk_pkk+m.tggk_bng as AMBC_TOTAL_AKHIR, 
-                                            m.byr_tggk_pkk AC_PKK, 
-                                            m.byr_tggk_bng AC_BNG_MRG, 
-                                            m.byr_tggk_pkk+m.byr_tggk_bng AC_TOTAL, 
-                                            'cycle akhir', 
-                                            'jenis jaminan', 
-                                            g.COLLATERAL,
-                                            g.POLICE_NUMBER,
-                                            g.ENGINE_NUMBER,
-                                            g.CHASIS_NUMBER,
-                                            g.PRODUCTION_YEAR,
-                                            g.TOTAL_JAMINAN,
-                                            'nilai admin', 
-                                            b.CUST_CODE
-                                        FROM  	branch AS a
-                                            INNER JOIN credit b ON b.BRANCH = a.ID
-                                            LEFT JOIN customer c ON c.CUST_CODE = b.CUST_CODE
-                                            LEFT JOIN users d ON d.id = b.MCF_ID
-                                            LEFT JOIN cr_application e ON e.ORDER_NUMBER = b.ORDER_NUMBER
-                                            LEFT JOIN cr_order h ON h.APPLICATION_ID = e.ID
-                                            LEFT JOIN cr_survey f ON f.id = e.CR_SURVEY_ID
-                                            LEFT JOIN (	SELECT	CR_CREDIT_ID, 
-                                                        sum(VALUE) as TOTAL_JAMINAN, 
-                                                        GROUP_CONCAT(concat(BRAND,' ',TYPE)) as COLLATERAL, 
-                                                        GROUP_CONCAT(POLICE_NUMBER) as POLICE_NUMBER, 
-                                                        GROUP_CONCAT(ENGINE_NUMBER) as ENGINE_NUMBER, 
-                                                        GROUP_CONCAT(CHASIS_NUMBER) as CHASIS_NUMBER, 
-                                                        GROUP_CONCAT(PRODUCTION_YEAR) as PRODUCTION_YEAR
-                                                    FROM 	cr_collateral 
-                                                    GROUP 	BY CR_CREDIT_ID) g ON g.CR_CREDIT_ID = b.ID
-                                                LEFT JOIN credit_2025 i on cast(i.loan_number as char) = cast(b.LOAN_NUMBER as char)
-                                                LEFT JOIN first_arr j on cast(j.LOAN_NUMBER as char) = cast(b.LOAN_NUMBER as char)
-                                            LEFT JOIN (	SELECT	loan_number, sum(interest)-sum(payment_value_interest) as OS_BNG_AKHIR, 
-                                                        min(case when paid_flag='PAID' then 999 else installment_count end) as LAST_INST, 
-                                                        max(case when paid_flag='PAID' then payment_date else str_to_date('01011900','%d%m%Y') end) as LAST_PAY
-                                                    FROM	credit_schedule
-                                                    WHERE	loan_number in (select loan_number from credit where status='A')
-                                                    GROUP	BY loan_number) k on k.loan_number=b.loan_number
-                                            LEFT JOIN (	SELECT	loan_num, entry_date, payment_method
-                                                    FROM	payment
-                                                    WHERE	(loan_num,entry_date) in (select loan_num, max(entry_date) from payment group by loan_num)) l on l.loan_num=b.loan_number
-                                            LEFT JOIN (	SELECT	loan_number, 
-                                                        sum(past_due_pcpl) as tggk_pkk, sum(past_due_intrst) as tggk_bng, 
-                                                            sum(paid_pcpl) as byr_tggk_pkk, sum(paid_int) as byr_tggk_bng
-                                                    FROM	arrears
-                                                    WHERE	STATUS_REC='A'
-                                                    GROUP	BY loan_number) m on m.loan_number=b.loan_number) AS query_alias"));
+            $query = "  SELECT 
+                            CONCAT(a.CODE, '-', a.CODE_NUMBER) AS KODE,
+                            a.NAME AS NAMA_CABANG,
+                            b.LOAN_NUMBER AS NO_KONTRAK,
+                            c.NAME AS NAMA_PELANGGAN,
+                            b.CREATED_AT AS TGL_BOOKING,
+                            NULL AS UB,
+                            NULL AS PLATFORM,
+                            c.INS_ADDRESS AS ALAMAT_TAGIH,
+                            c.ZIP_CODE AS KODE_POST,
+                            '' AS SUB_ZIP,
+                            c.PHONE_HOUSE AS NO_TELP,
+                            c.PHONE_PERSONAL AS NO_HP,
+                            c.PHONE_PERSONAL AS NO_HP2,
+                            c.OCCUPATION AS PEKERJAAN,
+                            CONCAT(h.REF_PELANGGAN, ' ', h.REF_PELANGGAN_OTHER) AS supplier, 
+                            NULL AS SURVEYOR,
+                            f.survey_note AS CATT_SURVEY,
+                            b.PCPL_ORI AS PKK_HUTANG,
+                            b.PERIOD AS JUMLAH_ANGSURAN, 
+                            b.INSTALLMENT_COUNT/b.PERIOD AS JARAK_ANGSURAN, 
+                            b.INSTALLMENT_COUNT as PERIOD, 
+                            i.OS_POKOK AS OUTSTANDING,
+                            i.OS_BUNGA, 
+                            DATEDIFF(i.TUNGGAKAN_PERTAMA, str_to_date('31012025','%d%m%Y')) AS OVERDUE_AWAL,
+                            i.TUNGGAKAN_POKOK as AMBC_PKK_AWAL, 
+                            i.TUNGGAKAN_BUNGA as AMBC_BNG_AWAL, 
+                            i.TUNGGAKAN_POKOK+i.TUNGGAKAN_BUNGA as AMBC_TOTAL_AWAL, 
+                            99 AS CYCLE,
+                            b.STATUS_REC,
+                            'status beban', 
+                            'pola bayar awal', 
+                            b.PCPL_ORI-b.PAID_PRINCIPAL OS_PKK_AKHIR, 
+                            k.OS_BNG_AKHIR OS_BNG_AKHIR, 
+                            j.DUE_DAYS as OVERDUE_AKHIR, 
+                            b.INSTALLMENT,
+                            k.LAST_INST, 
+                            e.INSTALLMENT_TYPE AS tipe,
+                            i.TUNGGAKAN_PERTAMA,
+                            'tgl tunggakan akhir', 
+                            k.LAST_PAY, 
+                            ' ' AS COLLECTOR,
+                            l.payment_method as cara_bayar, 
+                            m.tggk_pkk as AMBC_PKK_AKHIR, 
+                            m.tggk_bng as AMBC_BNG_AKHIR, 
+                            m.tggk_pkk+m.tggk_bng as AMBC_TOTAL_AKHIR, 
+                            m.byr_tggk_pkk AC_PKK, 
+                            m.byr_tggk_bng AC_BNG_MRG, 
+                            m.byr_tggk_pkk+m.byr_tggk_bng AC_TOTAL, 
+                            'cycle akhir', 
+                            'jenis jaminan', 
+                            g.COLLATERAL,
+                            g.POLICE_NUMBER,
+                            g.ENGINE_NUMBER,
+                            g.CHASIS_NUMBER,
+                            g.PRODUCTION_YEAR,
+                            g.TOTAL_JAMINAN,
+                            'nilai admin', 
+                            b.CUST_CODE
+                        FROM  	branch AS a
+                            INNER JOIN credit b ON b.BRANCH = a.ID
+                            LEFT JOIN customer c ON c.CUST_CODE = b.CUST_CODE
+                            LEFT JOIN users d ON d.id = b.MCF_ID
+                            LEFT JOIN cr_application e ON e.ORDER_NUMBER = b.ORDER_NUMBER
+                            LEFT JOIN cr_order h ON h.APPLICATION_ID = e.ID
+                            LEFT JOIN cr_survey f ON f.id = e.CR_SURVEY_ID
+                            LEFT JOIN (	SELECT	CR_CREDIT_ID, 
+                                        sum(VALUE) as TOTAL_JAMINAN, 
+                                        GROUP_CONCAT(concat(BRAND,' ',TYPE)) as COLLATERAL, 
+                                        GROUP_CONCAT(POLICE_NUMBER) as POLICE_NUMBER, 
+                                        GROUP_CONCAT(ENGINE_NUMBER) as ENGINE_NUMBER, 
+                                        GROUP_CONCAT(CHASIS_NUMBER) as CHASIS_NUMBER, 
+                                        GROUP_CONCAT(PRODUCTION_YEAR) as PRODUCTION_YEAR
+                                    FROM 	cr_collateral 
+                                    GROUP 	BY CR_CREDIT_ID) g ON g.CR_CREDIT_ID = b.ID
+                                LEFT JOIN credit_2025 i on cast(i.loan_number as char) = cast(b.LOAN_NUMBER as char)
+                                LEFT JOIN first_arr j on cast(j.LOAN_NUMBER as char) = cast(b.LOAN_NUMBER as char)
+                            LEFT JOIN (	SELECT	loan_number, sum(interest)-sum(payment_value_interest) as OS_BNG_AKHIR, 
+                                        min(case when paid_flag='PAID' then 999 else installment_count end) as LAST_INST, 
+                                        max(case when paid_flag='PAID' then payment_date else str_to_date('01011900','%d%m%Y') end) as LAST_PAY
+                                    FROM	credit_schedule
+                                    WHERE	loan_number in (select loan_number from credit where status='A')
+                                    GROUP	BY loan_number) k on k.loan_number=b.loan_number
+                            LEFT JOIN (	SELECT	loan_num, entry_date, payment_method
+                                    FROM	payment
+                                    WHERE	(loan_num,entry_date) in (select loan_num, max(entry_date) from payment group by loan_num)) l on l.loan_num=b.loan_number
+                            LEFT JOIN (	SELECT	loan_number, 
+                                        sum(past_due_pcpl) as tggk_pkk, sum(past_due_intrst) as tggk_bng, 
+                                            sum(paid_pcpl) as byr_tggk_pkk, sum(paid_int) as byr_tggk_bng
+                                    FROM	arrears
+                                    WHERE	STATUS_REC='A'
+                                    GROUP	BY loan_number) m on m.loan_number=b.loan_number
+                        WHERE 1=1";
 
+            // Add filters dynamically
             if (!empty($getBranch) && $getBranch != 'SEMUA CABANG') {
-                $query->where('a.ID', $getBranch);
+                $query .= " AND a.ID = '$getBranch'";
             }
 
             if (!empty($dateFrom)) {
-                $query->where(DB::raw("DATE_FORMAT(b.CREATED_AT, '%Y-%m')"), $dateFrom);
+                $query .= " AND DATE_FORMAT(b.CREATED_AT, '%Y-%m') = '$dateFrom'";
             } else {
-                $query->where('b.CREATED_AT', '>=', DB::raw('DATE_SUB(NOW(), INTERVAL 1 MONTH)'));
+                $query .= " AND b.CREATED_AT >= DATE_SUB(NOW(), INTERVAL 1 MONTH)";
             }
 
-            $results = $query->get();
+            $results = DB::select($query);
 
             $build = [];
             foreach ($results as $result) {
