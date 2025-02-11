@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\M_Branch;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -13,16 +14,25 @@ class ListBanController extends Controller
     {
         try {
             $datas = [
-                'tgl_tarik' => $request->dari??'',
+                'tgl_tarik' => $request->dari ?? '',
                 'datas' => []
             ];
-            
+
             if (!empty($request->dari)) {
-                $dateFrom = $request->dari;
+
+                $timestamp = $request->dari / 1000;
+
+                // Convert the timestamp to a Carbon instance
+                $date = Carbon::createFromTimestamp($timestamp);
+
+                // Format the date as Y-m-d
+                $formattedDate = $date->format('Y-m-d');
+
+                $dateFrom = $formattedDate;
                 $cabangId = $request->cabang_id;
 
                 $arusKas = $this->queryArusKas($cabangId, $dateFrom);
-           
+
                 $no = 1;
                 $totalCashin = 0;
                 $totalAmount = 0;
@@ -32,7 +42,7 @@ class ListBanController extends Controller
                     if ($item->JENIS != 'PENCAIRAN') {
                         $datas['datas'][] = [
                             'no' => $no++,
-                            'type' =>'CASH_IN',
+                            'type' => 'CASH_IN',
                             'no_invoice' => $item->no_invoice ?? '',
                             'no_kontrak' => $item->LOAN_NUM ?? '',
                             'tgl' => $item->ENTRY_DATE ?? '',
@@ -41,7 +51,7 @@ class ListBanController extends Controller
                             'position' => $item->position ?? '',
                             'nama_pelanggan' => $item->PELANGGAN ?? '',
                             'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
-                            'keterangan' => $item->JENIS.' '. $item->angsuran_ke ?? '',
+                            'keterangan' => $item->JENIS . ' ' . $item->angsuran_ke ?? '',
                             'amount' => floatval($item->ORIGINAL_AMOUNT),
                         ];
 
@@ -56,14 +66,14 @@ class ListBanController extends Controller
 
                         $datas['datas'][] = [
                             'no' => $no++,
-                            'type' =>'CASH_OUT',
+                            'type' => 'CASH_OUT',
                             'no_kontrak' => $item->LOAN_NUM ?? '',
                             'tgl' => $item->ENTRY_DATE ?? '',
                             'cabang' => $item->nama_cabang ?? '',
                             'user' => $item->fullname ?? '',
                             'position' => $item->position ?? '',
                             'nama_pelanggan' => $item->PELANGGAN ?? '',
-                            'keterangan' => 'PENCAIRAN NO KONTRAK '.$item->LOAN_NUM ?? '',
+                            'keterangan' => 'PENCAIRAN NO KONTRAK ' . $item->LOAN_NUM ?? '',
                             'amount' => $getTttl,
                         ];
 
@@ -74,13 +84,11 @@ class ListBanController extends Controller
                 $datas['ttl_cash_in'] = $totalCashin;
                 $datas['ttl_cash_out'] = $totalAmount;
                 $datas['ttl_all'] = $totalCashin + $totalAmount;
-                
             } else {
                 $datas = [];
             }
-            
+
             return response()->json($datas, 200);
-            
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
@@ -150,20 +158,14 @@ class ListBanController extends Controller
                     INNER JOIN credit b2 ON b2.LOAN_NUMBER = b.LOAN_NUM
                     INNER JOIN customer b3 ON b3.CUST_CODE = b2.CUST_CODE
                     INNER JOIN users u ON u.id = b.user_id 
-                    WHERE b.ENTRY_DATE = :dateFrom
+                    WHERE b.ENTRY_DATE = '$dateFrom'
                 ";
 
-        // Bind parameters
-        $params = ['dateFrom' => $dateFrom];
-
-        // If cabangId is provided, add it as a condition
         if (!empty($cabangId) && $cabangId != 'SEMUA CABANG') {
-            $query .= " AND b.BRANCH_ID = :cabangId";
-            $params['cabangId'] = $cabangId;
+            $query .= " AND b.BRANCH_ID = '" . $cabangId . "'";
         }
-
         // Execute the query with parameters
-        $result = DB::select($query, $params);
+        $result = DB::select($query);
 
         return $result;
     }
@@ -341,7 +343,7 @@ class ListBanController extends Controller
             $dateFrom = $request->dari;
             $getBranch = $request->cabang_id;
 
-            $query = "SELECT 
+            $query = "  SELECT 
                             CONCAT(a.CODE, '-', a.CODE_NUMBER) AS KODE,
                             a.NAME AS NAMA_CABANG,
                             b.LOAN_NUMBER AS NO_KONTRAK,
@@ -371,7 +373,7 @@ class ListBanController extends Controller
                             coalesce(i.TUNGGAKAN_POKOK)+coalesce(i.TUNGGAKAN_BUNGA) as AMBC_TOTAL_AWAL, 
                             concat('C',floor((DATEDIFF(str_to_date('31012025','%d%m%Y'),i.TUNGGAKAN_PERTAMA))/30)) AS CYCLE_AWAL,
                             b.STATUS_REC,
-                            b.STATUS_REC, 
+                            b.STATUS_REC as STATUS_BEBAN, 
                             case when (b.INSTALLMENT_COUNT/b.PERIOD)=1 then 'BULANAN' else 'MUSIMAN' end as pola_bayar, 
                             b.PCPL_ORI-b.PAID_PRINCIPAL OS_PKK_AKHIR, 
                             coalesce(k.OS_BNG_AKHIR,0) as OS_BNG_AKHIR, 
@@ -435,21 +437,21 @@ class ListBanController extends Controller
                                         min(start_date) as curr_arr
                                     FROM	arrears
                                     WHERE	STATUS_REC='A'
-                                    GROUP	BY loan_number) m on m.loan_number=b.loan_number";
+                                    GROUP	BY loan_number) m on m.loan_number=b.loan_number
+                            WHERE 1=1";
 
-            $results = DB::select($query);
-
-            // if (!empty($getBranch) && $getBranch != 'SEMUA CABANG') {
-            //     $results->where('a.ID', $getBranch);
-            // }
+            // Add filters dynamically
+            if (!empty($getBranch) && $getBranch != 'SEMUA CABANG') {
+                $query .= " AND a.ID = '$getBranch'";
+            }
 
             // if (!empty($dateFrom)) {
-            //     $results->where(DB::raw("DATE_FORMAT(b.CREATED_AT, '%Y-%m')"), $dateFrom);
+            //     $query .= " AND DATE_FORMAT(b.CREATED_AT, '%Y-%m') = '$dateFrom'";
             // } else {
-            //     $results->where('b.CREATED_AT', '>=', DB::raw('DATE_SUB(NOW(), INTERVAL 1 MONTH)'));
+            //     $query .= " AND b.CREATED_AT >= DATE_SUB(NOW(), INTERVAL 1 MONTH)";
             // }
 
-            // $results = $results->get();
+            $results = DB::select($query);
 
             $build = [];
             foreach ($results as $result) {
@@ -472,22 +474,22 @@ class ListBanController extends Controller
                     "SURVEYOR" => $result->SURVEYOR ?? '',
                     "CATT SURVEY" => $result->CATT_SURVEY ?? '',
                     "PKK HUTANG" => number_format($result->PKK_HUTANG ?? 0),
-                    "JML ANGS" => number_format($result->JUMLAH_ANGSURAN ?? 0),
-                    "JRK ANGS" => $result->JARAK_ANGSURAN ?? '',
-                    "PERIOD" => $result->PERIOD ?? '',
-                    "OUT PKK AWAL" => number_format($result->OUTSTANDING ?? 0),
-                    "OUT BNG AWAL" => number_format($result->OS_BUNGA ?? 0),
-                    "OVERDUE AWAL" => number_format($result->OVERDUE_AWAL ?? 0),
-                    "AMBC PKK AWAL" => number_format($result->AMBC_PKK_AWAL ?? 0),
-                    "AMBC BNG AWAL" => number_format($result->AMBC_BNG_AWAL ?? 0),
-                    "AMBC TOTAL AWAL" => number_format($result->AMBC_TOTAL_AWAL ?? 0),
-                    "CYCLE AWAL" => $result->CYCLE_AWAL ?? '',
+                    "JML ANGS" => $result->PERIOD ?? '',
+                    "JRK ANGS" => $result->PERIOD ?? '',
+                    "PERIOD" => $result->tipe ?? '',
+                    "OUT PKK AWAL" => '',
+                    "OUT BNG AWAL" => '',
+                    "OVERDUE AWAL" => number_format($result->OVERDUE ?? 0),
+                    "AMBC PKK AWAL" => $result->AMBC_PKK_AWAL,
+                    "AMBC BNG AWAL" => $result->AMBC_BNG_AWAL,
+                    "AMBC TOTAL AWAL" => '',
+                    "CYCLE AWAL" => $result->CYCLE ?? '',
                     "STS KONTRAK" => $result->STATUS_REC ?? '',
-                    "STS BEBAN" => $result->STATUS_REC ?? '',
-                    "POLA BYR AWAL" => $result->pola_bayar ?? '',
-                    "OUTS PKK AKHIR" => number_format($result->OS_PKK_AKHIR ?? 0),
-                    "OUTS BNG AKHIR" => number_format($result->OS_BNG_AKHIR ?? 0),
-                    "OVERDUE AKHIR" => number_format($result->OVERDUE_AKHIR ?? 0),
+                    "STS BEBAN" => '',
+                    "POLA BYR AWAL" => '',
+                    "OUTS PKK AKHIR" => number_format($result->PAID_PRINCIPAL ?? 0),
+                    "OUTS BNG AKHIR" => number_format($result->PAID_INTEREST ?? 0),
+                    "OVERDUE AKHIR" => number_format($result->OUTSTANDING ?? 0),
                     "ANGSURAN" => number_format($result->INSTALLMENT ?? 0),
                     "ANGS KE" => $result->LAST_INST??'',
                     "TIPE ANGSURAN" => $result->tipe ?? '',
@@ -502,20 +504,21 @@ class ListBanController extends Controller
                     "AC PKK" => $result->AC_PKK,
                     "AC BNG MRG" => $result->AC_BNG_MRG,
                     "AC TOTAL" => $result->AC_TOTAL,
-                    "CYCLE AKHIR" => $result->CYCLE_AKHIR,
-                    "POLA BYR AKHIR" => $result->pola_bayar_akhir,
-                    "NAMA BRG" => 'Sepeda Motor',
+                    "CYCLE AKHIR" => '',
+                    "POLA BYR AKHIR" => '',
+                    "NAMA BRG" => '',
                     "TIPE BRG" =>  $result->COLLATERAL ?? '',
                     "NO POL" =>  $result->POLICE_NUMBER ?? '',
                     "NO MESIN" =>  $result->ENGINE_NUMBER ?? '',
                     "NO RANGKA" =>  $result->CHASIS_NUMBER ?? '',
                     "TAHUN" =>  $result->PRODUCTION_YEAR ?? '',
-                    "NILAI PINJAMAN" => number_format($result->TOTAL_NILAI_JAMINAN ?? 0),
+                    "NILAI PINJAMAN" => number_format($result->TOTAL_JAMINAN ?? 0),
                     "ADMIN" =>  $result->TOTAL_ADMIN ?? '',
+                    "NILAI ADMIN" => '',
                     "CUST_ID" =>  $result->CUST_CODE ?? '',
                 ];
             }
-            return response()->json($build, 200);
+            return response()->json($results, 200);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }

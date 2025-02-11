@@ -323,6 +323,7 @@ class ReportController extends Controller
                                 a.ORIGINAL_AMOUNT,
                                 a.USER_ID,
                                 a.PAYMENT_METHOD,
+                                c.CREATED_BY,
                                 SUM(CASE WHEN d.ACC_KEYS = 'ANGSURAN_POKOK' THEN d.ORIGINAL_AMOUNT ELSE 0 END) AS 'BAYAR_POKOK',
                                 SUM(CASE WHEN d.ACC_KEYS = 'ANGSURAN_BUNGA' THEN d.ORIGINAL_AMOUNT ELSE 0 END) AS 'BAYAR_BUNGA',
                                 SUM(CASE WHEN d.ACC_KEYS = 'BAYAR_DENDA' THEN d.ORIGINAL_AMOUNT ELSE 0 END) AS 'BAYAR_DENDA',
@@ -334,9 +335,11 @@ class ReportController extends Controller
                                 SUM(CASE WHEN d.ACC_KEYS = 'DISKON_DENDA' THEN d.ORIGINAL_AMOUNT ELSE 0 END) AS 'DISKON_DENDA'
                         FROM payment a
                         INNER JOIN credit b ON b.LOAN_NUMBER = a.LOAN_NUM
+                        LEFT JOIN kwitansi c ON c.NO_TRANSAKSI = a.INVOICE
                         LEFT JOIN payment_detail d ON d.PAYMENT_ID = a.ID
                         WHERE a.LOAN_NUM = '$id'
-                        GROUP BY a.BRANCH, a.TITLE, a.LOAN_NUM, a.ENTRY_DATE, b.INSTALLMENT, a.INVOICE, a.STTS_RCRD, a.ORIGINAL_AMOUNT,a.USER_ID,a.PAYMENT_METHOD
+                        GROUP BY a.BRANCH, a.TITLE, a.LOAN_NUM, a.ENTRY_DATE, b.INSTALLMENT, a.INVOICE, a.STTS_RCRD,
+                                a.ORIGINAL_AMOUNT,a.USER_ID,a.PAYMENT_METHOD, c.CREATED_BY
                         ORDER BY a.ENTRY_DATE DESC;
                         ";
 
@@ -345,10 +348,11 @@ class ReportController extends Controller
             $allData = [];
             foreach ($results as $result) {
 
-                $getPosition = User::where('id', $result->USER_ID)->first();
+                $getPosition = User::where('username', $result->CREATED_BY)->first();
 
                 $allData[] = [
                     'Cbang' => M_Branch::find($result->BRANCH)->NAME ?? '',
+                    'Dibuat' => $getPosition->fullname ?? $result->CREATED_BY ?? '',
                     'Mtde Byr' => $getPosition ? $getPosition->position ?? '' : $result->PAYMENT_METHOD ?? '',
                     'No Inv' => $result->INVOICE ?? '',
                     'No Kont' => $result->LOAN_NUM ?? '',
@@ -467,8 +471,18 @@ class ReportController extends Controller
                             c.PAID_PENALTY,
                             c.STATUS_REC,
                             mp.ENTRY_DATE,
-                            mp.INST_COUNT,
-                            case when a.PAID_FLAG = 'PAID' and c.STATUS_REC = 'A' then datediff(mp.ENTRY_DATE,a.PAYMENT_DATE) else 0 end as OD
+                            mp.INST_COUNT_INCREMENT,
+                            mp.ORIGINAL_AMOUNT,
+                           CASE
+                                WHEN c.PAST_DUE_PENALTY != 0 
+                                THEN DATEDIFF(
+                                            CASE
+                                                WHEN mp.ENTRY_DATE IS NULL OR TRIM(mp.ENTRY_DATE) = '' THEN NOW()
+                                                ELSE mp.ENTRY_DATE
+                                            END,
+                                           a.PAYMENT_DATE)
+                                ELSE 0
+                            END AS OD
                         from
                             credit_schedule as a
                         left join
@@ -477,12 +491,14 @@ class ReportController extends Controller
                             and c.START_DATE = a.PAYMENT_DATE
                         left join (
                             SELECT 	LOAN_NUM,
-                                    ENTRY_DATE,
-                                    max(START_DATE) as START_DATE,
-                                    count(START_DATE) as INST_COUNT
+                                    DATE(ENTRY_DATE) as ENTRY_DATE, 
+                                    max(DATE(START_DATE)) as START_DATE,
+                                    ROW_NUMBER() OVER (PARTITION BY START_DATE ORDER BY ENTRY_DATE) as INST_COUNT_INCREMENT,
+                            		ORIGINAL_AMOUNT
                             FROM payment
                             WHERE LOAN_NUM = '$id'
-                            group by  LOAN_NUM,date_format(START_DATE,'%d%m%Y'),ENTRY_DATE
+                            group by  LOAN_NUM,START_DATE,ENTRY_DATE,ORIGINAL_AMOUNT 
+                            ORDER BY `ENTRY_DATE` DESC
                         ) as mp
                         on mp.LOAN_NUM = a.LOAN_NUMBER
                         and date_format(mp.START_DATE,'%d%m%Y') = date_format(a.PAYMENT_DATE,'%d%m%Y')
@@ -517,11 +533,11 @@ class ReportController extends Controller
                     'No Ref' => $getInvoice->INVOICE ?? '',
                     'Bank' => '',
                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
-                    'Amt Bayar' => number_format($res->PAYMENT_VALUE ?? 0),
+                    'Amt Bayar' => number_format($res->ORIGINAL_AMOUNT ?? 0),
                     'Sisa Angs' => $sisaAngs,
                     'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0),
                     'Byr Dnda' => number_format($res->PAID_PENALTY ?? 0),
-                    'Sisa Byr Tgh' => number_format($ttlAngs - $ttlByr),
+                    'Sisa Byr Tgh' => number_format(abs($ttlAngs - $ttlByr)),
                     'Ovd' => $res->PAID_FLAG == 'PAID' && ($res->STATUS_REC != 'A' || empty($res->STATUS_REC)) ? 0 : $res->OD ?? 0,
                     'Stts' => $res->PAID_FLAG == 'PAID' && ($res->STATUS_REC != 'A' || empty($res->STATUS_REC)) ? 'LUNAS' : ''
                 ];
@@ -561,24 +577,25 @@ class ReportController extends Controller
                             left join branch e on e.ID = a.LOCATION_BRANCH
                             left join bpkb_detail f on f.COLLATERAL_ID = a.ID
                     WHERE	(1=1)";
-                    if($request->pos){
-                        $sql.="and d.NAME = '$request->pos'";
-                    }
-                    if ($request->loan_number) {
-                        $sql .= "and b.LOAN_NUMBER = '$request->loan_number'";
-                    }
-                    if ($request->nama) {
-                        $sql .= "and c.NAME like '%$request->nama%'";
-                    }
-                    if ($request->nopol) {
-                        $sql .="and a.POLICE_NUMBER like '%$request->nopol%";
-                    }
-                    if ($request->status) {
-                        $sql .= "and coalesce(f.STATUS,'NORMAL') = '$request->status'";
-                    }
+            if ($request->pos && $request->pos != "SEMUA POS") {
+                $sql .= "and d.NAME like '%$request->pos%'";
+            }
+            if ($request->loan_number) {
+                $sql .= "and b.LOAN_NUMBER = '$request->loan_number'";
+            }
+            if ($request->nama) {
+                $sql .= "and c.NAME like '%$request->nama%'";
+            }
+            if ($request->nopol) {
+                $sql .= "and a.POLICE_NUMBER like '%$request->nopol%";
+            }
+            if ($request->status) {
+                $sql .= "and coalesce(f.STATUS,'NORMAL') = '$request->status'";
+            }
 
-                    $sql.="ORDER	BY d.NAME, e.NAME, b.LOAN_NUMBER, c.NAME,
-                            a.POLICE_NUMBER, f.STATUS limit 0,10";
+            $sql .= "ORDER	BY d.NAME, e.NAME, b.LOAN_NUMBER, c.NAME,
+                            a.POLICE_NUMBER, f.STATUS ";
+
 
             $results = DB::select($sql);
 
@@ -596,6 +613,68 @@ class ReportController extends Controller
             }
 
             return response()->json($allData, 200);
+        } catch (\Exception $e) {
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+        }
+    }
+
+    public function kreditJatuhTempo(Request $request)
+    {
+        try {
+            $filter = [];
+            foreach ($request->hari as $stringHari) {
+                array_push($filter, "date_format(date_add(now(),interval $stringHari day),'%d%m%Y')");
+            }
+            $imFilter = implode(',', $filter);
+            $sql = "SELECT	d.NAME as CABANG,b.LOAN_NUMBER,c.NAME as DEBITUR,
+                            a.PAYMENT_DATE,a.INSTALLMENT_COUNT,
+                            a.PRINCIPAL-a.PAYMENT_VALUE_PRINCIPAL as POKOK,
+                            a.INTEREST-a.PAYMENT_VALUE_INTEREST as BUNGA,
+                            coalesce(e.TUNGG_POKOK,0) as TUNGGAKAN_POKOK,
+                            coalesce(e.TUNGG_BUNGA,0) as TUNGGAKAN_BUNGA,
+                            coalesce(e.DENDA,0) as DENDA,
+                            coalesce(datediff(now(),e.TUNGG_AWAL),0) as HARI_TERLAMBAT,
+                            c.ADDRESS,c.PHONE_PERSONAL
+                    FROM	credit_schedule a
+                            INNER JOIN credit b
+                                on b.LOAN_NUMBER=a.LOAN_NUMBER
+                                and b.STATUS='A'
+                            INNER JOIN customer c on c.CUST_CODE=b.CUST_CODE
+                            INNER JOIN branch d on d.ID=b.BRANCH
+                            LEFT JOIN (	SELECT	s1.LOAN_NUMBER,
+                                                sum(s1.PAST_DUE_PCPL-s1.PAID_PCPL) as TUNGG_POKOK,
+                                                sum(s1.PAST_DUE_INTRST-s1.PAID_INT) as TUNGG_BUNGA,
+                                                sum(s1.PAST_DUE_PENALTY-s1.PAID_PENALTY) as DENDA,
+                                                min(s1.START_DATE) as TUNGG_AWAL
+                                        FROM	arrears s1
+                                        WHERE	s1.STATUS_REC='A'
+                                        GROUP	BY s1.LOAN_NUMBER) e on e.LOAN_NUMBER=b.LOAN_NUMBER
+                    WHERE	date_format(a.PAYMENT_DATE,'%d%m%Y')in ($imFilter)
+                    and d.NAME like '%$request->cabang%'";
+            // if ($request->pos && $request->pos != "SEMUA POS") {
+            //     $sql .= "and d.NAME like '%$request->pos%'";
+            // }
+            // if ($request->loan_number) {
+            //     $sql .= "and b.LOAN_NUMBER = '$request->loan_number'";
+            // }
+            // if ($request->nama) {
+            //     $sql .= "and c.NAME like '%$request->nama%'";
+            // }
+            // if ($request->nopol) {
+            //     $sql .= "and a.POLICE_NUMBER like '%$request->nopol%";
+            // }
+            // if ($request->status) {
+            //     $sql .= "and coalesce(f.STATUS,'NORMAL') = '$request->status'";
+            // }
+
+            // $sql .= "ORDER	BY d.NAME, e.NAME, b.LOAN_NUMBER, c.NAME,
+            //                 a.POLICE_NUMBER, f.STATUS ";
+
+
+            $results = DB::select($sql);
+
+            return response()->json($results, 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
