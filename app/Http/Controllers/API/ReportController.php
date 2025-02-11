@@ -471,13 +471,10 @@ class ReportController extends Controller
                             c.PAID_PENALTY,
                             c.STATUS_REC,
                             mp.ENTRY_DATE,
-                            mp.INST_COUNT,
+                            mp.INST_COUNT_INCREMENT,
+                            mp.ORIGINAL_AMOUNT,
                            CASE
-<<<<<<< HEAD
-                                WHEN a.PAID_FLAG = 'PAID' OR c.STATUS_REC = 'A'
-=======
                                 WHEN a.PAID_FLAG = 'PAID' OR c.STATUS_REC = 'A' 
->>>>>>> 8731add05aa8737dd2fe36ade4d27c58a7b01089
                                 THEN DATEDIFF(
                                             CASE
                                                 WHEN mp.ENTRY_DATE IS NULL OR TRIM(mp.ENTRY_DATE) = '' THEN NOW()
@@ -494,12 +491,14 @@ class ReportController extends Controller
                             and c.START_DATE = a.PAYMENT_DATE
                         left join (
                             SELECT 	LOAN_NUM,
-                                    ENTRY_DATE,
-                                    max(START_DATE) as START_DATE,
-                                    count(START_DATE) as INST_COUNT
+                                    DATE(ENTRY_DATE) as ENTRY_DATE, 
+                                    max(DATE(START_DATE)) as START_DATE,
+                                    ROW_NUMBER() OVER (PARTITION BY START_DATE ORDER BY ENTRY_DATE) as INST_COUNT_INCREMENT,
+                            		ORIGINAL_AMOUNT
                             FROM payment
                             WHERE LOAN_NUM = '$id'
-                            group by  LOAN_NUM,date_format(START_DATE,'%d%m%Y'),ENTRY_DATE
+                            group by  LOAN_NUM,START_DATE,ENTRY_DATE,ORIGINAL_AMOUNT 
+                            ORDER BY `ENTRY_DATE` DESC
                         ) as mp
                         on mp.LOAN_NUM = a.LOAN_NUMBER
                         and date_format(mp.START_DATE,'%d%m%Y') = date_format(a.PAYMENT_DATE,'%d%m%Y')
@@ -534,7 +533,7 @@ class ReportController extends Controller
                     'No Ref' => $getInvoice->INVOICE ?? '',
                     'Bank' => '',
                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
-                    'Amt Bayar' => number_format($res->PAYMENT_VALUE ?? 0),
+                    'Amt Bayar' => number_format($res->ORIGINAL_AMOUNT ?? 0),
                     'Sisa Angs' => $sisaAngs,
                     'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0),
                     'Byr Dnda' => number_format($res->PAID_PENALTY ?? 0),
