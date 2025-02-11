@@ -438,7 +438,6 @@ class ListBanController extends Controller
                                     FROM	arrears
                                     WHERE	STATUS_REC='A'
                                     GROUP	BY loan_number) m on m.loan_number=b.loan_number
-                            ORDER BY a.NAME,b.CREATED_AT ASC
                             WHERE 1=1";
 
             // Add filters dynamically
@@ -451,6 +450,8 @@ class ListBanController extends Controller
             // } else {
             //     $query .= " AND b.CREATED_AT >= DATE_SUB(NOW(), INTERVAL 1 MONTH)";
             // }
+
+            $query .= "ORDER BY a.NAME,b.CREATED_AT ASC";
 
             $results = DB::select($query);
 
