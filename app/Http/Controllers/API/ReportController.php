@@ -323,6 +323,7 @@ class ReportController extends Controller
                                 a.ORIGINAL_AMOUNT,
                                 a.USER_ID,
                                 a.PAYMENT_METHOD,
+                                c.CREATED_BY,
                                 SUM(CASE WHEN d.ACC_KEYS = 'ANGSURAN_POKOK' THEN d.ORIGINAL_AMOUNT ELSE 0 END) AS 'BAYAR_POKOK',
                                 SUM(CASE WHEN d.ACC_KEYS = 'ANGSURAN_BUNGA' THEN d.ORIGINAL_AMOUNT ELSE 0 END) AS 'BAYAR_BUNGA',
                                 SUM(CASE WHEN d.ACC_KEYS = 'BAYAR_DENDA' THEN d.ORIGINAL_AMOUNT ELSE 0 END) AS 'BAYAR_DENDA',
@@ -334,9 +335,11 @@ class ReportController extends Controller
                                 SUM(CASE WHEN d.ACC_KEYS = 'DISKON_DENDA' THEN d.ORIGINAL_AMOUNT ELSE 0 END) AS 'DISKON_DENDA'
                         FROM payment a
                         INNER JOIN credit b ON b.LOAN_NUMBER = a.LOAN_NUM
+                        LEFT JOIN kwitansi c ON c.NO_TRANSAKSI = a.INVOICE
                         LEFT JOIN payment_detail d ON d.PAYMENT_ID = a.ID
                         WHERE a.LOAN_NUM = '$id'
-                        GROUP BY a.BRANCH, a.TITLE, a.LOAN_NUM, a.ENTRY_DATE, b.INSTALLMENT, a.INVOICE, a.STTS_RCRD, a.ORIGINAL_AMOUNT,a.USER_ID,a.PAYMENT_METHOD
+                        GROUP BY a.BRANCH, a.TITLE, a.LOAN_NUM, a.ENTRY_DATE, b.INSTALLMENT, a.INVOICE, a.STTS_RCRD, 
+                                a.ORIGINAL_AMOUNT,a.USER_ID,a.PAYMENT_METHOD, c.CREATED_BY
                         ORDER BY a.ENTRY_DATE DESC;
                         ";
 
@@ -345,10 +348,11 @@ class ReportController extends Controller
             $allData = [];
             foreach ($results as $result) {
 
-                $getPosition = User::where('id', $result->USER_ID)->first();
+                $getPosition = User::where('username', $result->CREATED_BY)->first();
 
                 $allData[] = [
                     'Cbang' => M_Branch::find($result->BRANCH)->NAME ?? '',
+                    'Dibuat' => $getPosition->fullname ?? '',
                     'Mtde Byr' => $getPosition ? $getPosition->position ?? '' : $result->PAYMENT_METHOD ?? '',
                     'No Inv' => $result->INVOICE ?? '',
                     'No Kont' => $result->LOAN_NUM ?? '',
@@ -561,24 +565,25 @@ class ReportController extends Controller
                             left join branch e on e.ID = a.LOCATION_BRANCH
                             left join bpkb_detail f on f.COLLATERAL_ID = a.ID
                     WHERE	(1=1)";
-                    if($request->pos){
-                        $sql.="and d.NAME = '$request->pos'";
-                    }
-                    if ($request->loan_number) {
-                        $sql .= "and b.LOAN_NUMBER = '$request->loan_number'";
-                    }
-                    if ($request->nama) {
-                        $sql .= "and c.NAME like '%$request->nama%'";
-                    }
-                    if ($request->nopol) {
-                        $sql .="and a.POLICE_NUMBER like '%$request->nopol%";
-                    }
-                    if ($request->status) {
-                        $sql .= "and coalesce(f.STATUS,'NORMAL') = '$request->status'";
-                    }
+            if ($request->pos && $request->pos != "SEMUA POS") {
+                $sql .= "and d.NAME like '%$request->pos%'";
+            }
+            if ($request->loan_number) {
+                $sql .= "and b.LOAN_NUMBER = '$request->loan_number'";
+            }
+            if ($request->nama) {
+                $sql .= "and c.NAME like '%$request->nama%'";
+            }
+            if ($request->nopol) {
+                $sql .= "and a.POLICE_NUMBER like '%$request->nopol%";
+            }
+            if ($request->status) {
+                $sql .= "and coalesce(f.STATUS,'NORMAL') = '$request->status'";
+            }
 
-                    $sql.="ORDER	BY d.NAME, e.NAME, b.LOAN_NUMBER, c.NAME,
-                            a.POLICE_NUMBER, f.STATUS limit 0,10";
+            $sql .= "ORDER	BY d.NAME, e.NAME, b.LOAN_NUMBER, c.NAME,
+                            a.POLICE_NUMBER, f.STATUS ";
+
 
             $results = DB::select($sql);
 
