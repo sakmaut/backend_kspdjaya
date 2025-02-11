@@ -188,6 +188,7 @@ class ReportController extends Controller
                         "tempat_lahir" => $results->BIRTHPLACE ?? '',
                         "tgl_lahir" => date('Y-m-d', strtotime($results->BIRTHDATE)),
                         "gol_darah" => $results->BLOOD_TYPE ?? '',
+                        "ibu_kandung" => $results->MOTHER_NAME ?? '',
                         "status_kawin" => $results->MARTIAL_STATUS ?? '',
                         "tgl_kawin" => $results->MARTIAL_DATE ?? '',
                         "tipe_identitas" => $results->ID_TYPE ?? '',
