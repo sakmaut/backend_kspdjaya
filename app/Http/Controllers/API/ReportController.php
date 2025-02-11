@@ -674,9 +674,9 @@ class ReportController extends Controller
             //                 a.POLICE_NUMBER, f.STATUS ";
 
 
-            //$results = DB::select($sql);
+            $results = DB::select($sql);
 
-            return response()->json($sql, 200);
+            return response()->json($results, 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
