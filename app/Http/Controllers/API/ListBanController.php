@@ -491,12 +491,12 @@ class ListBanController extends Controller
                     "OUTS BNG AKHIR" => number_format($result->PAID_INTEREST ?? 0),
                     "OVERDUE AKHIR" => number_format($result->OUTSTANDING ?? 0),
                     "ANGSURAN" => number_format($result->INSTALLMENT ?? 0),
-                    "ANGS KE" => '',
-                    "TIPE ANGSURAN" => '',
-                    "JTH TEMPO AWAL" => date("d-m-Y", strtotime($result->INSTALLMENT_DATE ?? '')),
-                    "JTH TEMPO AKHIR" => date("d-m-Y", strtotime($result->FIRST_ARR_DATE ?? '')),
+                    "ANGS KE" => $result->LAST_INST ?? '',
+                    "TIPE ANGSURAN" => $result->tipe ?? '',
+                    "JTH TEMPO AWAL" => date("d-m-Y", strtotime($result->TUNGGAKAN_PERTAMA ?? '')),
+                    "JTH TEMPO AKHIR" => date("d-m-Y", strtotime($result->curr_arr ?? '')),
                     "TGL BAYAR" => $result->LAST_PAY,
-                    "KOLEKTOR" => '',
+                    "KOLEKTOR" => $result->COLLECTOR,
                     "CARA BYR" => $result->cara_bayar,
                     "AMBC PKK_AKHIR" => number_format($result->AMBC_PKK_AKHIR ?? 0),
                     "AMBC BNG_AKHIR" => number_format($result->AMBC_BNG_AKHIR ?? 0),
@@ -506,7 +506,7 @@ class ListBanController extends Controller
                     "AC TOTAL" => $result->AC_TOTAL,
                     "CYCLE AKHIR" => $result->CYCLE_AKHIR,
                     "POLA BYR AKHIR" => $result->pola_bayar_akhir,
-                    "NAMA BRG" => "",
+                    "NAMA BRG" => 'Sepeda Motor',
                     "TIPE BRG" =>  $result->COLLATERAL ?? '',
                     "NO POL" =>  $result->POLICE_NUMBER ?? '',
                     "NO MESIN" =>  $result->ENGINE_NUMBER ?? '',
@@ -515,10 +515,10 @@ class ListBanController extends Controller
                     "NILAI PINJAMAN" => number_format($result->TOTAL_JAMINAN ?? 0),
                     "ADMIN" =>  $result->TOTAL_ADMIN ?? '',
                     "NILAI ADMIN" => '',
-                    "CUST_ID" =>  $result->CUST_CODE ?? '',
+                    "CUST_ID" =>  $result->CUST_CODE ?? ''
                 ];
             }
-            return response()->json($results, 200);
+            return response()->json($build, 200);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
