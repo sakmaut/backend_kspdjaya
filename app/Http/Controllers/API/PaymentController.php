@@ -144,7 +144,7 @@ class PaymentController extends Controller
                             ])->update(['PAID_FLAG' => 'PENDING']);
                         }
 
-                        if ($res['bayar_denda'] != 0 || (isset($res['diskon_denda']) && $res['diskon_denda'] == 1)) {
+                        if ($res['bayar_denda'] != 0 || (isset($res['diskon_denda']) && $res['diskon_denda'] == 1) || strtolower($request->bayar_dengan_diskon) == 'ya') {
                             M_Arrears::where([
                                 'LOAN_NUMBER' => $res['loan_number'],
                                 'START_DATE' => $tgl_angsuran,
@@ -278,13 +278,17 @@ class PaymentController extends Controller
                 $query->where('PAID_FLAG', '')
                     ->orWhereNull('PAID_FLAG');
             })
-            ->first();
+            ->get();
 
         $checkArrears = M_Arrears::where('LOAN_NUMBER', $loan_number)
             ->whereIn('STATUS_REC', ['A', 'PENDING'])
-            ->first();
+            ->get();
 
-        $status = !$checkCreditSchedule && (!$checkArrears || empty($check_arrears)) ? 'D' : 'A';
+        if ($checkCreditSchedule->isEmpty() && $checkArrears->isEmpty()) {
+            $status = 'D';
+        } else {
+            $status = 'A';
+        }
 
         if ($check_credit) {
             $check_credit->update([

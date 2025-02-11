@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\M_Branch;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -13,16 +14,25 @@ class ListBanController extends Controller
     {
         try {
             $datas = [
-                'tgl_tarik' => $request->dari??'',
+                'tgl_tarik' => $request->dari ?? '',
                 'datas' => []
             ];
-            
+
             if (!empty($request->dari)) {
-                $dateFrom = $request->dari;
+
+                $timestamp = $request->dari / 1000;
+
+                // Convert the timestamp to a Carbon instance
+                $date = Carbon::createFromTimestamp($timestamp);
+
+                // Format the date as Y-m-d
+                $formattedDate = $date->format('Y-m-d');
+
+                $dateFrom = $formattedDate;
                 $cabangId = $request->cabang_id;
 
                 $arusKas = $this->queryArusKas($cabangId, $dateFrom);
-           
+
                 $no = 1;
                 $totalCashin = 0;
                 $totalAmount = 0;
@@ -32,7 +42,7 @@ class ListBanController extends Controller
                     if ($item->JENIS != 'PENCAIRAN') {
                         $datas['datas'][] = [
                             'no' => $no++,
-                            'type' =>'CASH_IN',
+                            'type' => 'CASH_IN',
                             'no_invoice' => $item->no_invoice ?? '',
                             'no_kontrak' => $item->LOAN_NUM ?? '',
                             'tgl' => $item->ENTRY_DATE ?? '',
@@ -41,7 +51,7 @@ class ListBanController extends Controller
                             'position' => $item->position ?? '',
                             'nama_pelanggan' => $item->PELANGGAN ?? '',
                             'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
-                            'keterangan' => $item->JENIS.' '. $item->angsuran_ke ?? '',
+                            'keterangan' => $item->JENIS . ' ' . $item->angsuran_ke ?? '',
                             'amount' => floatval($item->ORIGINAL_AMOUNT),
                         ];
 
@@ -56,14 +66,14 @@ class ListBanController extends Controller
 
                         $datas['datas'][] = [
                             'no' => $no++,
-                            'type' =>'CASH_OUT',
+                            'type' => 'CASH_OUT',
                             'no_kontrak' => $item->LOAN_NUM ?? '',
                             'tgl' => $item->ENTRY_DATE ?? '',
                             'cabang' => $item->nama_cabang ?? '',
                             'user' => $item->fullname ?? '',
                             'position' => $item->position ?? '',
                             'nama_pelanggan' => $item->PELANGGAN ?? '',
-                            'keterangan' => 'PENCAIRAN NO KONTRAK '.$item->LOAN_NUM ?? '',
+                            'keterangan' => 'PENCAIRAN NO KONTRAK ' . $item->LOAN_NUM ?? '',
                             'amount' => $getTttl,
                         ];
 
@@ -74,13 +84,11 @@ class ListBanController extends Controller
                 $datas['ttl_cash_in'] = $totalCashin;
                 $datas['ttl_cash_out'] = $totalAmount;
                 $datas['ttl_all'] = $totalCashin + $totalAmount;
-                
             } else {
                 $datas = [];
             }
-            
+
             return response()->json($datas, 200);
-            
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
@@ -150,20 +158,14 @@ class ListBanController extends Controller
                     INNER JOIN credit b2 ON b2.LOAN_NUMBER = b.LOAN_NUM
                     INNER JOIN customer b3 ON b3.CUST_CODE = b2.CUST_CODE
                     INNER JOIN users u ON u.id = b.user_id 
-                    WHERE b.ENTRY_DATE = :dateFrom
+                    WHERE b.ENTRY_DATE = '$dateFrom'
                 ";
 
-        // Bind parameters
-        $params = ['dateFrom' => $dateFrom];
-
-        // If cabangId is provided, add it as a condition
         if (!empty($cabangId) && $cabangId != 'SEMUA CABANG') {
-            $query .= " AND b.BRANCH_ID = :cabangId";
-            $params['cabangId'] = $cabangId;
+            $query .= " AND b.BRANCH_ID = '" . $cabangId . "'";
         }
-
         // Execute the query with parameters
-        $result = DB::select($query, $params);
+        $result = DB::select($query);
 
         return $result;
     }
@@ -341,7 +343,7 @@ class ListBanController extends Controller
             $dateFrom = $request->dari;
             $getBranch = $request->cabang_id;
 
-            $query = "SELECT 
+            $query = "  SELECT 
                             CONCAT(a.CODE, '-', a.CODE_NUMBER) AS KODE,
                             a.NAME AS NAMA_CABANG,
                             b.LOAN_NUMBER AS NO_KONTRAK,
@@ -365,32 +367,33 @@ class ListBanController extends Controller
                             b.INSTALLMENT_COUNT as PERIOD, 
                             i.OS_POKOK AS OUTSTANDING,
                             i.OS_BUNGA, 
-                            DATEDIFF(i.TUNGGAKAN_PERTAMA, str_to_date('31012025','%d%m%Y')) AS OVERDUE_AWAL,
-                            i.TUNGGAKAN_POKOK as AMBC_PKK_AWAL, 
-                            i.TUNGGAKAN_BUNGA as AMBC_BNG_AWAL, 
-                            i.TUNGGAKAN_POKOK+i.TUNGGAKAN_BUNGA as AMBC_TOTAL_AWAL, 
-                            99 AS CYCLE,
+                            DATEDIFF(str_to_date('31012025','%d%m%Y'),i.TUNGGAKAN_PERTAMA) AS OVERDUE_AWAL,
+                            coalesce(i.TUNGGAKAN_POKOK) as AMBC_PKK_AWAL, 
+                            coalesce(i.TUNGGAKAN_BUNGA) as AMBC_BNG_AWAL, 
+                            coalesce(i.TUNGGAKAN_POKOK)+coalesce(i.TUNGGAKAN_BUNGA) as AMBC_TOTAL_AWAL, 
+                            concat('C',floor((DATEDIFF(str_to_date('31012025','%d%m%Y'),i.TUNGGAKAN_PERTAMA))/30)) AS CYCLE_AWAL,
                             b.STATUS_REC,
-                            'status beban', 
-                            'pola bayar awal', 
+                            b.STATUS_REC, 
+                            case when (b.INSTALLMENT_COUNT/b.PERIOD)=1 then 'BULANAN' else 'MUSIMAN' end as pola_bayar, 
                             b.PCPL_ORI-b.PAID_PRINCIPAL OS_PKK_AKHIR, 
-                            k.OS_BNG_AKHIR OS_BNG_AKHIR, 
+                            coalesce(k.OS_BNG_AKHIR,0) as OS_BNG_AKHIR, 
                             j.DUE_DAYS as OVERDUE_AKHIR, 
                             b.INSTALLMENT,
                             k.LAST_INST, 
                             e.INSTALLMENT_TYPE AS tipe,
                             i.TUNGGAKAN_PERTAMA,
-                            'tgl tunggakan akhir', 
+                            m.curr_arr, 
                             k.LAST_PAY, 
                             ' ' AS COLLECTOR,
                             l.payment_method as cara_bayar, 
-                            m.tggk_pkk as AMBC_PKK_AKHIR, 
-                            m.tggk_bng as AMBC_BNG_AKHIR, 
-                            m.tggk_pkk+m.tggk_bng as AMBC_TOTAL_AKHIR, 
-                            m.byr_tggk_pkk AC_PKK, 
-                            m.byr_tggk_bng AC_BNG_MRG, 
-                            m.byr_tggk_pkk+m.byr_tggk_bng AC_TOTAL, 
-                            'cycle akhir', 
+                            coalesce(m.tggk_pkk,0) as AMBC_PKK_AKHIR, 
+                            coalesce(m.tggk_bng,0) as AMBC_BNG_AKHIR, 
+                            coalesce(m.tggk_pkk,0)+coalesce(m.tggk_bng,0) as AMBC_TOTAL_AKHIR, 
+                            coalesce(m.byr_tggk_pkk,0) AC_PKK, 
+                            coalesce(m.byr_tggk_bng,0) AC_BNG_MRG, 
+                            coalesce(m.byr_tggk_pkk,0)+coalesce(m.byr_tggk_bng,0) AC_TOTAL, 
+                            concat('C',floor(j.DUE_DAYS/30)) as CYCLE_AKHIR, 
+                            case when (b.INSTALLMENT_COUNT/b.PERIOD)=1 then 'BULANAN' else 'MUSIMAN' end as pola_bayar_akhir, 
                             'jenis jaminan', 
                             g.COLLATERAL,
                             g.POLICE_NUMBER,
@@ -401,7 +404,7 @@ class ListBanController extends Controller
                             'nilai admin', 
                             b.CUST_CODE
                         FROM  	branch AS a
-                            INNER JOIN credit b ON b.BRANCH = a.ID
+                            INNER JOIN credit b ON b.BRANCH = a.ID AND b.STATUS='A' OR (b.BRANCH = a.ID AND b.STATUS in ('D','S') AND date_format(b.mod_date,'%m%Y')=date_format(now(),'%m%Y'))
                             LEFT JOIN customer c ON c.CUST_CODE = b.CUST_CODE
                             LEFT JOIN users d ON d.id = b.MCF_ID
                             LEFT JOIN cr_application e ON e.ORDER_NUMBER = b.ORDER_NUMBER
@@ -418,101 +421,103 @@ class ListBanController extends Controller
                                     GROUP 	BY CR_CREDIT_ID) g ON g.CR_CREDIT_ID = b.ID
                                 LEFT JOIN credit_2025 i on cast(i.loan_number as char) = cast(b.LOAN_NUMBER as char)
                                 LEFT JOIN first_arr j on cast(j.LOAN_NUMBER as char) = cast(b.LOAN_NUMBER as char)
-                            LEFT JOIN (	SELECT	loan_number, sum(interest)-sum(payment_value_interest) as OS_BNG_AKHIR, 
+                            LEFT JOIN (	SELECT	loan_number, sum(interest)-sum(coalesce(payment_value_interest,0)) as OS_BNG_AKHIR, 
                                         min(case when paid_flag='PAID' then 999 else installment_count end) as LAST_INST, 
                                         max(case when paid_flag='PAID' then payment_date else str_to_date('01011900','%d%m%Y') end) as LAST_PAY
                                     FROM	credit_schedule
-                                    WHERE	loan_number in (select loan_number from credit where status='A')
+                                    WHERE	loan_number in (select loan_number from credit where status='A' 
+                                            or (status in ('S','D') and mod_date > date_add(now(),interval -1 month)))
                                     GROUP	BY loan_number) k on k.loan_number=b.loan_number
                             LEFT JOIN (	SELECT	loan_num, entry_date, payment_method
                                     FROM	payment
                                     WHERE	(loan_num,entry_date) in (select loan_num, max(entry_date) from payment group by loan_num)) l on l.loan_num=b.loan_number
                             LEFT JOIN (	SELECT	loan_number, 
                                         sum(past_due_pcpl) as tggk_pkk, sum(past_due_intrst) as tggk_bng, 
-                                            sum(paid_pcpl) as byr_tggk_pkk, sum(paid_int) as byr_tggk_bng
+                                            sum(paid_pcpl) as byr_tggk_pkk, sum(paid_int) as byr_tggk_bng, 
+                                        min(start_date) as curr_arr
                                     FROM	arrears
                                     WHERE	STATUS_REC='A'
-                                    GROUP	BY loan_number) m on m.loan_number=b.loan_number";
+                                    GROUP	BY loan_number) m on m.loan_number=b.loan_number
+                            WHERE 1=1";
+
+            // Add filters dynamically
+            if (!empty($getBranch) && $getBranch != 'SEMUA CABANG') {
+                $query .= " AND a.ID = '$getBranch'";
+            }
+
+            if (!empty($dateFrom)) {
+                $query .= " AND DATE_FORMAT(b.CREATED_AT, '%Y-%m') = '$dateFrom'";
+            } else {
+                $query .= " AND b.CREATED_AT >= DATE_SUB(NOW(), INTERVAL 1 MONTH)";
+            }
 
             $results = DB::select($query);
 
-            // if (!empty($getBranch) && $getBranch != 'SEMUA CABANG') {
-            //     $results->where('a.ID', $getBranch);
+            // $build = [];
+            // foreach ($results as $result) {
+            //     $build[] = [
+            //         "KODE CABANG" => $result->KODE ?? '',
+            //         "NAMA CABANG" => $result->NAMA_CABANG ?? '',
+            //         "NO KONTRAK" => $result->NO_KONTRAK ?? '',
+            //         "NAMA PELANGGAN" => $result->NAMA_PELANGGAN ?? '',
+            //         "TGL BOOKING" => isset($result->TGL_BOOKING) && !empty($result->TGL_BOOKING) ? date("d-m-Y", strtotime($result->TGL_BOOKING)) : '',
+            //         "UB" => $result->UB ?? '',
+            //         "PLATFORM" => $result->PLATFORM ?? '',
+            //         "ALAMAT TAGIH" => $result->ALAMAT_TAGIH ?? '',
+            //         "KODEPOS" => $result->KODE_POST ?? '',
+            //         "SUBZIP" => '',
+            //         "NO TELP" => $result->NO_TELP ?? '',
+            //         "NO HP1" => $result->NO_HP ?? '',
+            //         "NO HP2" => $result->NO_HP ?? '',
+            //         "PEKERJAAN" => $result->PEKERJAAN ?? '',
+            //         "SUPPLIER" => $result->supplier ?? '',
+            //         "SURVEYOR" => $result->SURVEYOR ?? '',
+            //         "CATT SURVEY" => $result->CATT_SURVEY ?? '',
+            //         "PKK HUTANG" => number_format($result->PKK_HUTANG ?? 0),
+            //         "JML ANGS" => $result->PERIOD ?? '',
+            //         "JRK ANGS" => $result->PERIOD ?? '',
+            //         "PERIOD" => $result->tipe ?? '',
+            //         "OUT PKK AWAL" => '',
+            //         "OUT BNG AWAL" => '',
+            //         "OVERDUE AWAL" => number_format($result->OVERDUE ?? 0),
+            //         "AMBC PKK AWAL" => $result->AMBC_PKK_AWAL,
+            //         "AMBC BNG AWAL" => $result->AMBC_BNG_AWAL,
+            //         "AMBC TOTAL AWAL" => '',
+            //         "CYCLE AWAL" => $result->CYCLE ?? '',
+            //         "STS KONTRAK" => $result->STATUS_REC ?? '',
+            //         "STS BEBAN" => '',
+            //         "POLA BYR AWAL" => '',
+            //         "OUTS PKK AKHIR" => number_format($result->PAID_PRINCIPAL ?? 0),
+            //         "OUTS BNG AKHIR" => number_format($result->PAID_INTEREST ?? 0),
+            //         "OVERDUE AKHIR" => number_format($result->OUTSTANDING ?? 0),
+            //         "ANGSURAN" => number_format($result->INSTALLMENT ?? 0),
+            //         "ANGS KE" => '',
+            //         "TIPE ANGSURAN" => '',
+            //         "JTH TEMPO AWAL" => date("d-m-Y", strtotime($result->INSTALLMENT_DATE ?? '')),
+            //         "JTH TEMPO AKHIR" => date("d-m-Y", strtotime($result->FIRST_ARR_DATE ?? '')),
+            //         "TGL BAYAR" => $result->LAST_PAY,
+            //         "KOLEKTOR" => '',
+            //         "CARA BYR" => $result->cara_bayar,
+            //         "AMBC PKK_AKHIR" => $result->AMBC_PKK_AKHIR,
+            //         "AMBC BNG_AKHIR" => $result->AMBC_BNG_AKHIR,
+            //         "AMBC TOTAL_AKHIR" => $result->AMBC_TOTAL_AKHIR,
+            //         "AC PKK" => $result->AC_PKK,
+            //         "AC BNG MRG" => $result->AC_BNG_MRG,
+            //         "AC TOTAL" => $result->AC_TOTAL,
+            //         "CYCLE AKHIR" => '',
+            //         "POLA BYR AKHIR" => '',
+            //         "NAMA BRG" => '',
+            //         "TIPE BRG" =>  $result->COLLATERAL ?? '',
+            //         "NO POL" =>  $result->POLICE_NUMBER ?? '',
+            //         "NO MESIN" =>  $result->ENGINE_NUMBER ?? '',
+            //         "NO RANGKA" =>  $result->CHASIS_NUMBER ?? '',
+            //         "TAHUN" =>  $result->PRODUCTION_YEAR ?? '',
+            //         "NILAI PINJAMAN" => number_format($result->TOTAL_NILAI_JAMINAN ?? 0),
+            //         "ADMIN" =>  $result->TOTAL_ADMIN ?? '',
+            //         "CUST_ID" =>  $result->CUST_CODE ?? '',
+            //     ];
             // }
-
-            // if (!empty($dateFrom)) {
-            //     $results->where(DB::raw("DATE_FORMAT(b.CREATED_AT, '%Y-%m')"), $dateFrom);
-            // } else {
-            //     $results->where('b.CREATED_AT', '>=', DB::raw('DATE_SUB(NOW(), INTERVAL 1 MONTH)'));
-            // }
-
-            // $results = $results->get();
-
-            $build = [];
-            foreach ($results as $result) {
-                $build[] = [
-                    "KODE CABANG" => $result->KODE ?? '',
-                    "NAMA CABANG" => $result->NAMA_CABANG ?? '',
-                    "NO KONTRAK" => $result->NO_KONTRAK ?? '',
-                    "NAMA PELANGGAN" => $result->NAMA_PELANGGAN ?? '',
-                    "TGL BOOKING" => isset($result->TGL_BOOKING) && !empty($result->TGL_BOOKING) ? date("d-m-Y", strtotime($result->TGL_BOOKING)) : '',
-                    "UB" => $result->UB ?? '',
-                    "PLATFORM" => $result->PLATFORM ?? '',
-                    "ALAMAT TAGIH" => $result->ALAMAT_TAGIH ?? '',
-                    "KODEPOS" => $result->KODE_POST ?? '',
-                    "SUBZIP" => '',
-                    "NO TELP" => $result->NO_TELP ?? '',
-                    "NO HP1" => $result->NO_HP ?? '',
-                    "NO HP2" => $result->NO_HP ?? '',
-                    "PEKERJAAN" => $result->PEKERJAAN ?? '',
-                    "SUPPLIER" => $result->supplier ?? '',
-                    "SURVEYOR" => $result->SURVEYOR ?? '',
-                    "CATT SURVEY" => $result->CATT_SURVEY ?? '',
-                    "PKK HUTANG" => number_format($result->PKK_HUTANG ?? 0),
-                    "JML ANGS" => $result->PERIOD ?? '',
-                    "JRK ANGS" => $result->PERIOD ?? '',
-                    "PERIOD" => $result->tipe ?? '',
-                    "OUT PKK AWAL" => '',
-                    "OUT BNG AWAL" => '',
-                    "OVERDUE AWAL" => number_format($result->OVERDUE ?? 0),
-                    "AMBC PKK AWAL" => $result->AMBC_PKK_AWAL,
-                    "AMBC BNG AWAL" => $result->AMBC_BNG_AWAL,
-                    "AMBC TOTAL AWAL" => '',
-                    "CYCLE AWAL" => $result->CYCLE ?? '',
-                    "STS KONTRAK" => $result->STATUS_REC ?? '',
-                    "STS BEBAN" => '',
-                    "POLA BYR AWAL" => '',
-                    "OUTS PKK AKHIR" => number_format($result->PAID_PRINCIPAL ?? 0),
-                    "OUTS BNG AKHIR" => number_format($result->PAID_INTEREST ?? 0),
-                    "OVERDUE AKHIR" => number_format($result->OUTSTANDING ?? 0),
-                    "ANGSURAN" => number_format($result->INSTALLMENT ?? 0),
-                    "ANGS KE" => '',
-                    "TIPE ANGSURAN" => '',
-                    "JTH TEMPO AWAL" => date("d-m-Y", strtotime($result->INSTALLMENT_DATE ?? '')),
-                    "JTH TEMPO AKHIR" => date("d-m-Y", strtotime($result->FIRST_ARR_DATE ?? '')),
-                    "TGL BAYAR" => $result->LAST_PAY,
-                    "KOLEKTOR" => '',
-                    "CARA BYR" => $result->cara_bayar,
-                    "AMBC PKK_AKHIR" => $result->AMBC_PKK_AKHIR,
-                    "AMBC BNG_AKHIR" => $result->AMBC_BNG_AKHIR,
-                    "AMBC TOTAL_AKHIR" => $result->AMBC_TOTAL_AKHIR,
-                    "AC PKK" => $result->AC_PKK,
-                    "AC BNG MRG" => $result->AC_BNG_MRG,
-                    "AC TOTAL" => $result->AC_TOTAL,
-                    "CYCLE AKHIR" => '',
-                    "POLA BYR AKHIR" => '',
-                    "NAMA BRG" => '',
-                    "TIPE BRG" =>  $result->COLLATERAL ?? '',
-                    "NO POL" =>  $result->POLICE_NUMBER ?? '',
-                    "NO MESIN" =>  $result->ENGINE_NUMBER ?? '',
-                    "NO RANGKA" =>  $result->CHASIS_NUMBER ?? '',
-                    "TAHUN" =>  $result->PRODUCTION_YEAR ?? '',
-                    "NILAI PINJAMAN" => number_format($result->TOTAL_NILAI_JAMINAN ?? 0),
-                    "ADMIN" =>  $result->TOTAL_ADMIN ?? '',
-                    "CUST_ID" =>  $result->CUST_CODE ?? '',
-                ];
-            }
-            return response()->json($build, 200);
+            return response()->json($results, 200);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
