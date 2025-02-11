@@ -675,7 +675,7 @@ class ReportController extends Controller
 
             $results = DB::select($sql);
 
-            return response()->json($request->hari, 200);
+            return response()->json($results, 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
