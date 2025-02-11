@@ -562,7 +562,7 @@ class ReportController extends Controller
                             left join bpkb_detail f on f.COLLATERAL_ID = a.ID
                     WHERE	(1=1)";
                     if($request->pos && $request->pos != "SEMUA POS"){
-                        $sql.="and d.NAME like '%$request->pos%'";
+                        $sql.="and d.NAME = '$request->pos'";
                     }
                     if ($request->loan_number) {
                         $sql .= "and b.LOAN_NUMBER = '$request->loan_number'";
@@ -574,7 +574,7 @@ class ReportController extends Controller
                         $sql .="and a.POLICE_NUMBER like '%$request->nopol%";
                     }
                     if ($request->status) {
-                        $sql .= "and coalesce(f.STATUS,'NORMAL') = '$request->status'";
+                        $sql .= "and f.STATUS = '$request->status'";
                     }
 
                     $sql.="ORDER	BY d.NAME, e.NAME, b.LOAN_NUMBER, c.NAME,
