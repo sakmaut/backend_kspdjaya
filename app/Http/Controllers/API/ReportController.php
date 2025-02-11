@@ -554,7 +554,7 @@ class ReportController extends Controller
                     'Byr Dnda' => number_format($res->PAID_PENALTY ?? 0),
                     'Sisa Byr Tgh' => number_format(abs($ttlAngs - $ttlByr)),
                     'Ovd' => $res->OD ?? 0,
-                    'Stts' => $res->PAID_FLAG == 'PAID' && $res->STATUS_REC == 'A' ? 'LUNAS' : ''
+                    'Stts' => $res->PAID_FLAG == 'PAID' && $res->STATUS_REC != 'A' ? 'LUNAS' : ''
                 ];
             }
 
