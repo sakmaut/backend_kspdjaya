@@ -473,6 +473,7 @@ class ReportController extends Controller
                             mp.ENTRY_DATE,
                             mp.INST_COUNT_INCREMENT,
                             mp.ORIGINAL_AMOUNT,
+                            mp.INVOICE,
                            CASE
                                 WHEN c.PAST_DUE_PENALTY != 0 
                                 THEN DATEDIFF(
@@ -494,10 +495,11 @@ class ReportController extends Controller
                                     DATE(ENTRY_DATE) as ENTRY_DATE, 
                                     max(DATE(START_DATE)) as START_DATE,
                                     ROW_NUMBER() OVER (PARTITION BY START_DATE ORDER BY ENTRY_DATE) as INST_COUNT_INCREMENT,
-                            		ORIGINAL_AMOUNT
+                            		ORIGINAL_AMOUNT,
+                                    INVOICE
                             FROM payment
                             WHERE LOAN_NUM = '$id'
-                            group by  LOAN_NUM,START_DATE,ENTRY_DATE,ORIGINAL_AMOUNT 
+                            group by  LOAN_NUM,START_DATE,ENTRY_DATE,ORIGINAL_AMOUNT ,INVOICE
                             ORDER BY `ENTRY_DATE` DESC
                         ) as mp
                         on mp.LOAN_NUM = a.LOAN_NUMBER
@@ -521,11 +523,6 @@ class ReportController extends Controller
                 $ttlAngs = floatval($res->INSTALLMENT) + floatval($res->PAST_DUE_PENALTY);
                 $ttlByr = floatval($res->PAYMENT_VALUE) + floatval($res->PAID_PENALTY);
 
-                $getInvoice = M_Payment::where(['LOAN_NUM' => $id, 'START_DATE' => $res->PAYMENT_DATE])
-                    ->orderBy('ENTRY_DATE', 'desc')
-                    ->select('INVOICE')
-                    ->first();
-
                 $sisaAngs = number_format(floatval($res->INSTALLMENT) - floatval($res->PAYMENT_VALUE));
 
                 $currentJtTempo = isset($res->PAYMENT_DATE) ? Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y') : '';
@@ -548,7 +545,7 @@ class ReportController extends Controller
                     'Angs' => $currentAngs,
                     'Seq' => $res->INST_COUNT_INCREMENT ?? 0,
                     'Amt Angs' => number_format($res->INSTALLMENT ?? 0),
-                    'No Ref' => $getInvoice->INVOICE ?? '',
+                    'No Ref' => $res->INVOICE ?? '',
                     'Bank' => '',
                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
                     'Amt Bayar' => number_format($res->ORIGINAL_AMOUNT ?? 0),
