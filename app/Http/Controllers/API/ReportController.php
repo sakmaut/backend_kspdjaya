@@ -473,7 +473,7 @@ class ReportController extends Controller
                             mp.ENTRY_DATE,
                             mp.INST_COUNT,
                            CASE
-                                WHEN c.PAST_DUE_PENALTY != 0 OR c.PAST_DUE_PENALTY != '' AND c.STATUS_REC = 'A' 
+                                WHEN c.PAST_DUE_PENALTY != 0 OR c.PAST_DUE_PENALTY != ''
                                 THEN DATEDIFF(
                                             CASE 
                                                 WHEN mp.ENTRY_DATE IS NULL OR TRIM(mp.ENTRY_DATE) = '' THEN NOW() 
