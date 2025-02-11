@@ -513,7 +513,8 @@ class ReportController extends Controller
                 return $schedule;
             }
 
-            $prevInstallments = [];
+            $prevJtTempo = null;
+            $prevAngs = null;
 
             foreach ($data as $res) {
 
@@ -530,13 +531,10 @@ class ReportController extends Controller
                 $currentJtTempo = isset($res->PAYMENT_DATE) ? Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y') : '';
                 $currentAngs = isset($res->INSTALLMENT_COUNT) ? $res->INSTALLMENT_COUNT : '';
 
-                // Check if this combination of 'Jt.Tempo' and 'Angs' has already been added
-                if (in_array($currentJtTempo . '_' . $currentAngs, $prevInstallments)) {
-                    continue;
+                if ($currentJtTempo === $prevJtTempo && $currentAngs === $prevAngs) {
+                    $currentJtTempo = '';
+                    $currentAngs = '';
                 }
-
-                // Store the combination of 'Jt.Tempo' and 'Angs' to avoid duplicates
-                $prevInstallments[] = $currentJtTempo . '_' . $currentAngs;
 
                 $schedule['data_credit'][] = [
                     'Jt.Tempo' => $currentJtTempo,
@@ -554,6 +552,9 @@ class ReportController extends Controller
                     'Ovd' => $res->OD ?? 0,
                     'Stts' => $res->PAID_FLAG == 'PAID' && ($res->STATUS_REC != 'A' || empty($res->STATUS_REC)) ? 'LUNAS' : ''
                 ];
+
+                $prevJtTempo = $currentJtTempo;
+                $prevAngs = $currentAngs;
             }
 
             $creditDetail = M_Credit::with(['customer' => function ($query) {
