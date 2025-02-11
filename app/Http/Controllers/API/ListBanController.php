@@ -373,7 +373,7 @@ class ListBanController extends Controller
                             coalesce(i.TUNGGAKAN_POKOK)+coalesce(i.TUNGGAKAN_BUNGA) as AMBC_TOTAL_AWAL, 
                             concat('C',floor((DATEDIFF(str_to_date('31012025','%d%m%Y'),i.TUNGGAKAN_PERTAMA))/30)) AS CYCLE_AWAL,
                             b.STATUS_REC,
-                            b.STATUS_REC, 
+                            b.STATUS_REC as STATUS_BEBAN, 
                             case when (b.INSTALLMENT_COUNT/b.PERIOD)=1 then 'BULANAN' else 'MUSIMAN' end as pola_bayar, 
                             b.PCPL_ORI-b.PAID_PRINCIPAL OS_PKK_AKHIR, 
                             coalesce(k.OS_BNG_AKHIR,0) as OS_BNG_AKHIR, 
