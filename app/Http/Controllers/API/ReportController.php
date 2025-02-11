@@ -646,7 +646,11 @@ class ReportController extends Controller
                                         FROM	arrears s1
                                         WHERE	s1.STATUS_REC='A'
                                         GROUP	BY s1.LOAN_NUMBER) e on e.LOAN_NUMBER=b.LOAN_NUMBER
-                    WHERE	date_format(a.PAYMENT_DATE,'%d%m%Y')=date_format(now(),'%d%m%Y')";
+                    WHERE	date_format(a.PAYMENT_DATE,'%d%m%Y')in (";
+            foreach ($request->hari as days) {
+                $sql .= "date_format(date_add(now(),interval ($days) day),'%d%m%Y'),";
+            }
+            $sql .= ")";
             // if ($request->pos && $request->pos != "SEMUA POS") {
             //     $sql .= "and d.NAME like '%$request->pos%'";
             // }
