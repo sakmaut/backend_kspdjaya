@@ -504,7 +504,7 @@ class ReportController extends Controller
                         and date_format(mp.START_DATE,'%d%m%Y') = date_format(a.PAYMENT_DATE,'%d%m%Y')
                         where
                             a.LOAN_NUMBER = '$id'
-                        order by a.PAYMENT_DATE asc";
+                        order by a.PAYMENT_DATE,mp.ENTRY_DATE asc";
 
 
             $data = DB::select($sql);
@@ -512,6 +512,9 @@ class ReportController extends Controller
             if (empty($data)) {
                 return $schedule;
             }
+
+            $prevJtTempo = null;
+            $prevAngs = null;
 
             foreach ($data as $res) {
 
@@ -525,10 +528,18 @@ class ReportController extends Controller
 
                 $sisaAngs = number_format(floatval($res->INSTALLMENT) - floatval($res->PAYMENT_VALUE));
 
+                $currentJtTempo = isset($res->PAYMENT_DATE) ? Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y') : '';
+                $currentAngs = isset($res->INSTALLMENT_COUNT) ? $res->INSTALLMENT_COUNT : '';
+
+                if ($currentJtTempo === $prevJtTempo && $currentAngs === $prevAngs) {
+                    $currentJtTempo = '';
+                    $currentAngs = '';
+                }
+
                 $schedule['data_credit'][] = [
-                    'Jt.Tempo' => Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y'),
-                    'Angs' => $res->INSTALLMENT_COUNT,
-                    'Seq' => $res->INST_COUNT ?? 0,
+                    'Jt.Tempo' => $currentJtTempo,
+                    'Angs' => $currentAngs,
+                    'Seq' => $res->INST_COUNT_INCREMENT ?? 0,
                     'Amt Angs' => number_format($res->INSTALLMENT ?? 0),
                     'No Ref' => $getInvoice->INVOICE ?? '',
                     'Bank' => '',
@@ -541,6 +552,9 @@ class ReportController extends Controller
                     'Ovd' => $res->PAID_FLAG == 'PAID' && ($res->STATUS_REC != 'A' || empty($res->STATUS_REC)) ? 0 : $res->OD ?? 0,
                     'Stts' => $res->PAID_FLAG == 'PAID' && ($res->STATUS_REC != 'A' || empty($res->STATUS_REC)) ? 'LUNAS' : ''
                 ];
+
+                $prevJtTempo = $currentJtTempo;
+                $prevAngs = $currentAngs;
             }
 
             $creditDetail = M_Credit::with(['customer' => function ($query) {
