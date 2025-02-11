@@ -565,9 +565,8 @@ class ReportController extends Controller
                             left join branch e on e.ID = a.LOCATION_BRANCH
                             left join bpkb_detail f on f.COLLATERAL_ID = a.ID
                     WHERE	(1=1)";
-<<<<<<< HEAD
             if ($request->pos && $request->pos != "SEMUA POS") {
-                $sql .= "and d.NAME = '$request->pos'";
+                $sql .= "and d.NAME like '%$request->pos%'";
             }
             if ($request->loan_number) {
                 $sql .= "and b.LOAN_NUMBER = '$request->loan_number'";
@@ -583,28 +582,8 @@ class ReportController extends Controller
             }
 
             $sql .= "ORDER	BY d.NAME, e.NAME, b.LOAN_NUMBER, c.NAME,
-                            a.POLICE_NUMBER, f.STATUS limit 0,10";
-=======
-                    if($request->pos && $request->pos != "SEMUA POS"){
-                        $sql.="and d.NAME like '%$request->pos%'";
-                    }
-                    if ($request->loan_number) {
-                        $sql .= "and b.LOAN_NUMBER = '$request->loan_number'";
-                    }
-                    if ($request->nama) {
-                        $sql .= "and c.NAME like '%$request->nama%'";
-                    }
-                    if ($request->nopol) {
-                        $sql .="and a.POLICE_NUMBER like '%$request->nopol%";
-                    }
-                    if ($request->status) {
-                        $sql .= "and coalesce(f.STATUS,'NORMAL') = '$request->status'";
-                    }
-
-                    $sql.="ORDER	BY d.NAME, e.NAME, b.LOAN_NUMBER, c.NAME,
                             a.POLICE_NUMBER, f.STATUS ";
 
->>>>>>> 9ed10f0b2e0a6f928c841243984531532d13e440
 
             $results = DB::select($sql);
 
