@@ -489,16 +489,16 @@ class ReportController extends Controller
                             on c.LOAN_NUMBER = a.LOAN_NUMBER
                             and c.START_DATE = a.PAYMENT_DATE
                         left join (
-                            SELECT 	LOAN_NUM,
-                                    ENTRY_DATE,
+                           SELECT 	LOAN_NUM,
+                                    max(ENTRY_DATE) as ENTRY_DATE,
                                     max(START_DATE) as START_DATE,
                                     count(START_DATE) as INST_COUNT
                             FROM payment
                             WHERE LOAN_NUM = '$id'
-                            group by  LOAN_NUM,date_format(START_DATE,'%d%m%Y'),ENTRY_DATE
+                            group by  LOAN_NUM
                         ) as mp
-                        on mp.LOAN_NUM = a.LOAN_NUMBER
-                        and date_format(mp.START_DATE,'%d%m%Y') = date_format(a.PAYMENT_DATE,'%d%m%Y')
+                            on mp.LOAN_NUM = a.LOAN_NUMBER
+                            and date_format(mp.START_DATE,'%d%m%Y') = date_format(a.PAYMENT_DATE,'%d%m%Y')
                         where
                             a.LOAN_NUMBER = '$id'
                         order by a.PAYMENT_DATE asc";
