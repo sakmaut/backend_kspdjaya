@@ -14,10 +14,10 @@ class ListBanController extends Controller
     {
         try {
             $datas = [
-                'tgl_tarik' => $request->dari??'',
+                'tgl_tarik' => $request->dari ?? '',
                 'datas' => []
             ];
-            
+
             if (!empty($request->dari)) {
 
                 $timestamp = $request->dari / 1000;
@@ -32,7 +32,7 @@ class ListBanController extends Controller
                 $cabangId = $request->cabang_id;
 
                 $arusKas = $this->queryArusKas($cabangId, $dateFrom);
-           
+
                 $no = 1;
                 $totalCashin = 0;
                 $totalAmount = 0;
@@ -42,7 +42,7 @@ class ListBanController extends Controller
                     if ($item->JENIS != 'PENCAIRAN') {
                         $datas['datas'][] = [
                             'no' => $no++,
-                            'type' =>'CASH_IN',
+                            'type' => 'CASH_IN',
                             'no_invoice' => $item->no_invoice ?? '',
                             'no_kontrak' => $item->LOAN_NUM ?? '',
                             'tgl' => $item->ENTRY_DATE ?? '',
@@ -51,7 +51,7 @@ class ListBanController extends Controller
                             'position' => $item->position ?? '',
                             'nama_pelanggan' => $item->PELANGGAN ?? '',
                             'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
-                            'keterangan' => $item->JENIS.' '. $item->angsuran_ke ?? '',
+                            'keterangan' => $item->JENIS . ' ' . $item->angsuran_ke ?? '',
                             'amount' => floatval($item->ORIGINAL_AMOUNT),
                         ];
 
@@ -66,14 +66,14 @@ class ListBanController extends Controller
 
                         $datas['datas'][] = [
                             'no' => $no++,
-                            'type' =>'CASH_OUT',
+                            'type' => 'CASH_OUT',
                             'no_kontrak' => $item->LOAN_NUM ?? '',
                             'tgl' => $item->ENTRY_DATE ?? '',
                             'cabang' => $item->nama_cabang ?? '',
                             'user' => $item->fullname ?? '',
                             'position' => $item->position ?? '',
                             'nama_pelanggan' => $item->PELANGGAN ?? '',
-                            'keterangan' => 'PENCAIRAN NO KONTRAK '.$item->LOAN_NUM ?? '',
+                            'keterangan' => 'PENCAIRAN NO KONTRAK ' . $item->LOAN_NUM ?? '',
                             'amount' => $getTttl,
                         ];
 
@@ -84,13 +84,11 @@ class ListBanController extends Controller
                 $datas['ttl_cash_in'] = $totalCashin;
                 $datas['ttl_cash_out'] = $totalAmount;
                 $datas['ttl_all'] = $totalCashin + $totalAmount;
-                
             } else {
                 $datas = [];
             }
-            
+
             return response()->json($datas, 200);
-            
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
@@ -369,32 +367,33 @@ class ListBanController extends Controller
                             b.INSTALLMENT_COUNT as PERIOD, 
                             i.OS_POKOK AS OUTSTANDING,
                             i.OS_BUNGA, 
-                            DATEDIFF(i.TUNGGAKAN_PERTAMA, str_to_date('31012025','%d%m%Y')) AS OVERDUE_AWAL,
-                            i.TUNGGAKAN_POKOK as AMBC_PKK_AWAL, 
-                            i.TUNGGAKAN_BUNGA as AMBC_BNG_AWAL, 
-                            i.TUNGGAKAN_POKOK+i.TUNGGAKAN_BUNGA as AMBC_TOTAL_AWAL, 
-                            99 AS CYCLE,
+                            DATEDIFF(str_to_date('31012025','%d%m%Y'),i.TUNGGAKAN_PERTAMA) AS OVERDUE_AWAL,
+                            coalesce(i.TUNGGAKAN_POKOK) as AMBC_PKK_AWAL, 
+                            coalesce(i.TUNGGAKAN_BUNGA) as AMBC_BNG_AWAL, 
+                            coalesce(i.TUNGGAKAN_POKOK)+coalesce(i.TUNGGAKAN_BUNGA) as AMBC_TOTAL_AWAL, 
+                            concat('C',floor((DATEDIFF(str_to_date('31012025','%d%m%Y'),i.TUNGGAKAN_PERTAMA))/30)) AS CYCLE_AWAL,
                             b.STATUS_REC,
-                            'status beban', 
-                            'pola bayar awal', 
+                            b.STATUS_REC, 
+                            case when (b.INSTALLMENT_COUNT/b.PERIOD)=1 then 'BULANAN' else 'MUSIMAN' end as pola_bayar, 
                             b.PCPL_ORI-b.PAID_PRINCIPAL OS_PKK_AKHIR, 
-                            k.OS_BNG_AKHIR OS_BNG_AKHIR, 
+                            coalesce(k.OS_BNG_AKHIR,0) as OS_BNG_AKHIR, 
                             j.DUE_DAYS as OVERDUE_AKHIR, 
                             b.INSTALLMENT,
                             k.LAST_INST, 
                             e.INSTALLMENT_TYPE AS tipe,
                             i.TUNGGAKAN_PERTAMA,
-                            'tgl tunggakan akhir', 
+                            m.curr_arr, 
                             k.LAST_PAY, 
                             ' ' AS COLLECTOR,
                             l.payment_method as cara_bayar, 
-                            m.tggk_pkk as AMBC_PKK_AKHIR, 
-                            m.tggk_bng as AMBC_BNG_AKHIR, 
-                            m.tggk_pkk+m.tggk_bng as AMBC_TOTAL_AKHIR, 
-                            m.byr_tggk_pkk AC_PKK, 
-                            m.byr_tggk_bng AC_BNG_MRG, 
-                            m.byr_tggk_pkk+m.byr_tggk_bng AC_TOTAL, 
-                            'cycle akhir', 
+                            coalesce(m.tggk_pkk,0) as AMBC_PKK_AKHIR, 
+                            coalesce(m.tggk_bng,0) as AMBC_BNG_AKHIR, 
+                            coalesce(m.tggk_pkk,0)+coalesce(m.tggk_bng,0) as AMBC_TOTAL_AKHIR, 
+                            coalesce(m.byr_tggk_pkk,0) AC_PKK, 
+                            coalesce(m.byr_tggk_bng,0) AC_BNG_MRG, 
+                            coalesce(m.byr_tggk_pkk,0)+coalesce(m.byr_tggk_bng,0) AC_TOTAL, 
+                            concat('C',floor(j.DUE_DAYS/30)) as CYCLE_AKHIR, 
+                            case when (b.INSTALLMENT_COUNT/b.PERIOD)=1 then 'BULANAN' else 'MUSIMAN' end as pola_bayar_akhir, 
                             'jenis jaminan', 
                             g.COLLATERAL,
                             g.POLICE_NUMBER,
@@ -405,7 +404,7 @@ class ListBanController extends Controller
                             'nilai admin', 
                             b.CUST_CODE
                         FROM  	branch AS a
-                            INNER JOIN credit b ON b.BRANCH = a.ID
+                            INNER JOIN credit b ON b.BRANCH = a.ID AND b.STATUS='A' OR (b.BRANCH = a.ID AND b.STATUS in ('D','S') AND date_format(b.mod_date,'%m%Y')=date_format(now(),'%m%Y'))
                             LEFT JOIN customer c ON c.CUST_CODE = b.CUST_CODE
                             LEFT JOIN users d ON d.id = b.MCF_ID
                             LEFT JOIN cr_application e ON e.ORDER_NUMBER = b.ORDER_NUMBER
@@ -422,22 +421,24 @@ class ListBanController extends Controller
                                     GROUP 	BY CR_CREDIT_ID) g ON g.CR_CREDIT_ID = b.ID
                                 LEFT JOIN credit_2025 i on cast(i.loan_number as char) = cast(b.LOAN_NUMBER as char)
                                 LEFT JOIN first_arr j on cast(j.LOAN_NUMBER as char) = cast(b.LOAN_NUMBER as char)
-                            LEFT JOIN (	SELECT	loan_number, sum(interest)-sum(payment_value_interest) as OS_BNG_AKHIR, 
+                            LEFT JOIN (	SELECT	loan_number, sum(interest)-sum(coalesce(payment_value_interest,0)) as OS_BNG_AKHIR, 
                                         min(case when paid_flag='PAID' then 999 else installment_count end) as LAST_INST, 
                                         max(case when paid_flag='PAID' then payment_date else str_to_date('01011900','%d%m%Y') end) as LAST_PAY
                                     FROM	credit_schedule
-                                    WHERE	loan_number in (select loan_number from credit where status='A')
+                                    WHERE	loan_number in (select loan_number from credit where status='A' 
+                                            or (status in ('S','D') and mod_date > date_add(now(),interval -1 month)))
                                     GROUP	BY loan_number) k on k.loan_number=b.loan_number
                             LEFT JOIN (	SELECT	loan_num, entry_date, payment_method
                                     FROM	payment
                                     WHERE	(loan_num,entry_date) in (select loan_num, max(entry_date) from payment group by loan_num)) l on l.loan_num=b.loan_number
                             LEFT JOIN (	SELECT	loan_number, 
                                         sum(past_due_pcpl) as tggk_pkk, sum(past_due_intrst) as tggk_bng, 
-                                            sum(paid_pcpl) as byr_tggk_pkk, sum(paid_int) as byr_tggk_bng
+                                            sum(paid_pcpl) as byr_tggk_pkk, sum(paid_int) as byr_tggk_bng, 
+                                        min(start_date) as curr_arr
                                     FROM	arrears
                                     WHERE	STATUS_REC='A'
                                     GROUP	BY loan_number) m on m.loan_number=b.loan_number
-                        WHERE 1=1";
+                            WHERE 1=1";
 
             // Add filters dynamically
             if (!empty($getBranch) && $getBranch != 'SEMUA CABANG') {
