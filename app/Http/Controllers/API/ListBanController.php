@@ -438,6 +438,7 @@ class ListBanController extends Controller
                                     FROM	arrears
                                     WHERE	STATUS_REC='A'
                                     GROUP	BY loan_number) m on m.loan_number=b.loan_number
+                            ORDER BY a.NAME,b.CREATED_AT ASC
                             WHERE 1=1";
 
             // Add filters dynamically
@@ -464,7 +465,7 @@ class ListBanController extends Controller
                     "UB" => $result->UB ?? '',
                     "PLATFORM" => $result->PLATFORM ?? '',
                     "ALAMAT TAGIH" => $result->ALAMAT_TAGIH ?? '',
-                    "KODEPOS" => $result->KODE_POST ?? '',
+                    "KODE POS" => $result->KODE_POST ?? '',
                     "SUBZIP" => '',
                     "NO TELP" => $result->NO_TELP ?? '',
                     "NO HP1" => $result->NO_HP ?? '',
