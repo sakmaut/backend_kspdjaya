@@ -474,7 +474,7 @@ class ReportController extends Controller
                             mp.INST_COUNT_INCREMENT,
                             mp.ORIGINAL_AMOUNT,
                            CASE
-                                WHEN a.PAID_FLAG = 'PAID' OR c.STATUS_REC = 'A' 
+                                WHEN c.PAST_DUE_PENALTY != 0 
                                 THEN DATEDIFF(
                                             CASE
                                                 WHEN mp.ENTRY_DATE IS NULL OR TRIM(mp.ENTRY_DATE) = '' THEN NOW()
