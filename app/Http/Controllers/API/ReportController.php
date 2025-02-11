@@ -623,9 +623,8 @@ class ReportController extends Controller
     public function kreditJatuhTempo(Request $request)
     {
         try {
-            $hari = $request->hari;
             $filter=[];
-            foreach ($hari as $stringHari) {
+            foreach ($request->hari as $stringHari) {
                 array_push($filter, "date_format(date_add(now(),interval $stringHari day),'%d%m%Y')");
             }
             $imFilter = implode(',',$filter);
@@ -676,7 +675,7 @@ class ReportController extends Controller
 
             $results = DB::select($sql);
 
-            return response()->json($results, 200);
+            return response()->json($request->hari, 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
