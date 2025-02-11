@@ -472,11 +472,11 @@ class ReportController extends Controller
                             c.STATUS_REC,
                             mp.ENTRY_DATE,
                             mp.INST_COUNT,
-                            CASE
+                           CASE
                                 WHEN a.PAID_FLAG = 'PAID' AND c.STATUS_REC = 'A' 
                                 THEN DATEDIFF(mp.ENTRY_DATE, 
                                             CASE 
-                                                WHEN a.PAYMENT_DATE IS NULL OR a.PAYMENT_DATE = '' THEN NOW() 
+                                                WHEN a.PAYMENT_DATE IS NULL OR a.PAYMENT_DATE = '' THEN CURDATE() 
                                                 ELSE a.PAYMENT_DATE 
                                             END)
                                 ELSE 0 
