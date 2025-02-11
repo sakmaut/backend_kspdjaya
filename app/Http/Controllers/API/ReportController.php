@@ -565,7 +565,7 @@ class ReportController extends Controller
                             left join branch e on e.ID = a.LOCATION_BRANCH
                             left join bpkb_detail f on f.COLLATERAL_ID = a.ID
                     WHERE	(1=1)";
-            if ($request->pos) {
+            if ($request->pos && $request->pos != "SEMUA POS") {
                 $sql .= "and d.NAME = '$request->pos'";
             }
             if ($request->loan_number) {
