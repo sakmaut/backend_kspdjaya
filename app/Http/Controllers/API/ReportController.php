@@ -562,7 +562,7 @@ class ReportController extends Controller
                             left join bpkb_detail f on f.COLLATERAL_ID = a.ID
                     WHERE	(1=1)";
                     if($request->pos && $request->pos != "SEMUA POS"){
-                        $sql.="and d.NAME = '$request->pos'";
+                        $sql.="and d.NAME like '%$request->pos'%";
                     }
                     if ($request->loan_number) {
                         $sql .= "and b.LOAN_NUMBER = '$request->loan_number'";
