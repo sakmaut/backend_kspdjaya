@@ -476,7 +476,7 @@ class ReportController extends Controller
 <<<<<<< HEAD
                                 WHEN a.PAID_FLAG = 'PAID' OR c.STATUS_REC = 'A'
 =======
-                                WHEN c.PAST_DUE_PENALTY != 0 OR c.PAST_DUE_PENALTY != ''
+                                WHEN a.PAID_FLAG = 'PAID' OR c.STATUS_REC = 'A' 
 >>>>>>> 8731add05aa8737dd2fe36ade4d27c58a7b01089
                                 THEN DATEDIFF(
                                             CASE
@@ -538,8 +538,8 @@ class ReportController extends Controller
                     'Sisa Angs' => $sisaAngs,
                     'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0),
                     'Byr Dnda' => number_format($res->PAID_PENALTY ?? 0),
-                    'Sisa Byr Tgh' => number_format($ttlAngs - $ttlByr),
-                    'Ovd' =>  $res->OD ?? 0,
+                    'Sisa Byr Tgh' => number_format(abs($ttlAngs - $ttlByr)),
+                    'Ovd' => $res->PAID_FLAG == 'PAID' && ($res->STATUS_REC != 'A' || empty($res->STATUS_REC)) ? 0 : $res->OD ?? 0,
                     'Stts' => $res->PAID_FLAG == 'PAID' && ($res->STATUS_REC != 'A' || empty($res->STATUS_REC)) ? 'LUNAS' : ''
                 ];
             }
@@ -623,11 +623,11 @@ class ReportController extends Controller
     public function kreditJatuhTempo(Request $request)
     {
         try {
-            $filter=[];
+            $filter = [];
             foreach ($request->hari as $stringHari) {
                 array_push($filter, "date_format(date_add(now(),interval $stringHari day),'%d%m%Y')");
             }
-            $imFilter = implode(',',$filter);
+            $imFilter = implode(',', $filter);
             $sql = "SELECT	d.NAME as CABANG,b.LOAN_NUMBER,c.NAME as DEBITUR,
                             a.PAYMENT_DATE,a.INSTALLMENT_COUNT,
                             a.PRINCIPAL-a.PAYMENT_VALUE_PRINCIPAL as POKOK,
