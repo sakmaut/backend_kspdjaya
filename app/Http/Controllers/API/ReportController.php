@@ -574,21 +574,21 @@ class ReportController extends Controller
                             left join branch e on e.ID = a.LOCATION_BRANCH
                             left join bpkb_detail f on f.COLLATERAL_ID = a.ID
                     WHERE	(1=1)";
-                    if($request->pos && $request->pos != "SEMUA POS"){
-                        $sql.="and d.NAME like '%$request->pos%'";
-                    }
-                    if ($request->loan_number) {
-                        $sql .= "and b.LOAN_NUMBER = '$request->loan_number'";
-                    }
-                    if ($request->nama) {
-                        $sql .= "and c.NAME like '%$request->nama%'";
-                    }
-                    if ($request->nopol) {
-                        $sql .="and a.POLICE_NUMBER like '%$request->nopol%";
-                    }
-                    if ($request->status) {
-                        $sql .= "and coalesce(f.STATUS,'NORMAL') = '$request->status'";
-                    }
+            if ($request->pos && $request->pos != "SEMUA POS") {
+                $sql .= "and d.NAME like '%$request->pos%'";
+            }
+            if ($request->loan_number) {
+                $sql .= "and b.LOAN_NUMBER = '$request->loan_number'";
+            }
+            if ($request->nama) {
+                $sql .= "and c.NAME like '%$request->nama%'";
+            }
+            if ($request->nopol) {
+                $sql .= "and a.POLICE_NUMBER like '%$request->nopol%";
+            }
+            if ($request->status) {
+                $sql .= "and coalesce(f.STATUS,'NORMAL') = '$request->status'";
+            }
 
             $sql .= "ORDER	BY d.NAME, e.NAME, b.LOAN_NUMBER, c.NAME,
                             a.POLICE_NUMBER, f.STATUS ";
@@ -610,6 +610,62 @@ class ReportController extends Controller
             }
 
             return response()->json($allData, 200);
+        } catch (\Exception $e) {
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+        }
+    }
+
+    public function kreditJatuhTempo(Request $request)
+    {
+        try {
+            $sql = "SELECT	d.NAME,b.LOAN_NUMBER,c.NAME,
+                            a.PAYMENT_DATE,a.INSTALLMENT_COUNT,
+                            a.PRINCIPAL-a.PAYMENT_VALUE_PRINCIPAL as POKOK,
+                            a.INTEREST-a.PAYMENT_VALUE_INTEREST as BUNGA,
+                            coalesce(e.TUNGG_POKOK,0) as TUNGGAKAN_POKOK,
+                            coalesce(e.TUNGG_BUNGA,0) as TUNGGAKAN_BUNGA,
+                            coalesce(e.DENDA,0) as DENDA,
+                            coalesce(datediff(now(),e.TUNGG_AWAL),0) as HARI_TERLAMBAT,
+                            c.ADDRESS,c.PHONE_PERSONAL
+                    FROM	credit_schedule a
+                            INNER JOIN credit b
+                                on b.LOAN_NUMBER=a.LOAN_NUMBER
+                                and b.STATUS='A'
+                            INNER JOIN customer c on c.CUST_CODE=b.CUST_CODE
+                            INNER JOIN branch d on d.ID=b.BRANCH
+                            LEFT JOIN (	SELECT	s1.LOAN_NUMBER,
+                                                sum(s1.PAST_DUE_PCPL-s1.PAID_PCPL) as TUNGG_POKOK,
+                                                sum(s1.PAST_DUE_INTRST-s1.PAID_INT) as TUNGG_BUNGA,
+                                                sum(s1.PAST_DUE_PENALTY-s1.PAID_PENALTY) as DENDA,
+                                                min(s1.START_DATE) as TUNGG_AWAL
+                                        FROM	arrears s1
+                                        WHERE	s1.STATUS_REC='A'
+                                        GROUP	BY s1.LOAN_NUMBER) e on e.LOAN_NUMBER=b.LOAN_NUMBER
+                    WHERE	date_format(a.PAYMENT_DATE,'%d%m%Y')=date_format(now(),'%d%m%Y')";
+            // if ($request->pos && $request->pos != "SEMUA POS") {
+            //     $sql .= "and d.NAME like '%$request->pos%'";
+            // }
+            // if ($request->loan_number) {
+            //     $sql .= "and b.LOAN_NUMBER = '$request->loan_number'";
+            // }
+            // if ($request->nama) {
+            //     $sql .= "and c.NAME like '%$request->nama%'";
+            // }
+            // if ($request->nopol) {
+            //     $sql .= "and a.POLICE_NUMBER like '%$request->nopol%";
+            // }
+            // if ($request->status) {
+            //     $sql .= "and coalesce(f.STATUS,'NORMAL') = '$request->status'";
+            // }
+
+            // $sql .= "ORDER	BY d.NAME, e.NAME, b.LOAN_NUMBER, c.NAME,
+            //                 a.POLICE_NUMBER, f.STATUS ";
+
+
+            $results = DB::select($sql);
+
+            return response()->json($results, 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
