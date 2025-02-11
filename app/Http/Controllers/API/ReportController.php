@@ -513,8 +513,8 @@ class ReportController extends Controller
                 return $schedule;
             }
 
-            $prevJtTempo = null;
-            $prevAngs = null;
+            $prevJtTempo = [];
+            $prevAngs = [];
 
             foreach ($data as $res) {
 
@@ -531,9 +531,16 @@ class ReportController extends Controller
                 $currentJtTempo = isset($res->PAYMENT_DATE) ? Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y') : '';
                 $currentAngs = isset($res->INSTALLMENT_COUNT) ? $res->INSTALLMENT_COUNT : '';
 
-                if ($currentJtTempo === $prevJtTempo && $currentAngs === $prevAngs) {
+                if (in_array($currentJtTempo, $prevJtTempo)) {
                     $currentJtTempo = '';
+                } else {
+                    array_push($prevJtTempo, $currentJtTempo);
+                }
+
+                if (in_array($currentAngs, $prevAngs)) {
                     $currentAngs = '';
+                } else {
+                    array_push($prevAngs, $currentAngs);
                 }
 
                 $schedule['data_credit'][] = [
@@ -552,9 +559,6 @@ class ReportController extends Controller
                     'Ovd' => $res->OD ?? 0,
                     'Stts' => $res->PAID_FLAG == 'PAID' && ($res->STATUS_REC != 'A' || empty($res->STATUS_REC)) ? 'LUNAS' : ''
                 ];
-
-                $prevJtTempo = $currentJtTempo;
-                $prevAngs = $currentAngs;
             }
 
             $creditDetail = M_Credit::with(['customer' => function ($query) {
