@@ -623,10 +623,10 @@ class ReportController extends Controller
     public function kreditJatuhTempo(Request $request)
     {
         try {
-            $hari = [1,2,3,4];
+            $hari = $request->hari;
             $filter=[];
             foreach ($hari as $stringHari) {
-                array_push($filter, "date_format(date_add(now(),interval ($stringHari) day),'%d%m%Y')");
+                array_push($filter, "date_format(date_add(now(),interval $stringHari day),'%d%m%Y')");
             }
             $imFilter = implode(',',$filter);
             $sql = "SELECT	d.NAME,b.LOAN_NUMBER,c.NAME,
@@ -652,7 +652,8 @@ class ReportController extends Controller
                                         FROM	arrears s1
                                         WHERE	s1.STATUS_REC='A'
                                         GROUP	BY s1.LOAN_NUMBER) e on e.LOAN_NUMBER=b.LOAN_NUMBER
-                    WHERE	date_format(a.PAYMENT_DATE,'%d%m%Y')in ($imFilter)";
+                    WHERE	date_format(a.PAYMENT_DATE,'%d%m%Y')in ($imFilter)
+                    and d.NAMA like '%$request->cabang%'";
             // if ($request->pos && $request->pos != "SEMUA POS") {
             //     $sql .= "and d.NAME like '%$request->pos%'";
             // }
