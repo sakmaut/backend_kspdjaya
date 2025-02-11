@@ -578,7 +578,8 @@ class ReportController extends Controller
                     }
 
                     $sql.="ORDER	BY d.NAME, e.NAME, b.LOAN_NUMBER, c.NAME,
-                            a.POLICE_NUMBER, f.STATUS limit 0,10";
+                            a.POLICE_NUMBER, f.STATUS ";
+
 
             $results = DB::select($sql);
 
