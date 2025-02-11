@@ -32,7 +32,6 @@ use Ramsey\Uuid\Uuid;
 
 class CrAppilcationController extends Controller
 {
-
     public function index(Request $request)
     {
         try {
