@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\API\PaymentController;
+use App\Http\Controllers\API\StatusApproval;
 use App\Models\M_Arrears;
 use App\Models\M_Branch;
 use App\Models\M_Credit;
@@ -23,10 +24,17 @@ use Illuminate\Support\Facades\URL;
 
 class Welcome extends Controller
 {
+
+    protected $statusApproval;
+
+    public function __construct(StatusApproval $statusApproval)
+    {
+        $this->statusApproval = $statusApproval;
+    }
+
     public function index(Request $request)
     {
-
-        return response()->json("APA ANJING");
+        return response()->json($this->statusApproval::DRAFT_SURVEY);
         die;
 
         $groupedData = [];
@@ -101,11 +109,11 @@ class Welcome extends Controller
             //     'BANK_NAME' => round(microtime(true) * 1000)
             // ]);
 
-            $get = M_Payment::where(['LOAN_NUM'=>$data["loan"],'INVOICE'=> $data["invoice"],'TITLE'=> 'Angsuran Ke-' . $data['angsuran_ke']])->first();
+            $get = M_Payment::where(['LOAN_NUM' => $data["loan"], 'INVOICE' => $data["invoice"], 'TITLE' => 'Angsuran Ke-' . $data['angsuran_ke']])->first();
 
             $checkDetail = M_PaymentDetail::where(['PAYMENT_ID' => $get->ID])->first();
 
-            if(!$checkDetail){
+            if (!$checkDetail) {
                 $this->updateCreditSchedule($data['loan'], $data['tgl_angsuran'], $data, $get->ID ?? 0);
             }
         }
@@ -129,15 +137,15 @@ class Welcome extends Controller
             $getPrincipal = $credit_schedule ? $credit_schedule->PRINCIPAL : 0;
             $getInterest = $credit_schedule ? $credit_schedule->INTEREST : 0;
 
-            if($credit_schedule->PAID_FLAG == 'PAID'){
+            if ($credit_schedule->PAID_FLAG == 'PAID') {
                 $data = $this->preparePaymentData($uid, 'ANGSURAN_POKOK', $getPrincipal);
                 M_PaymentDetail::create($data);
                 $this->addCreditPaid($loan_number, ['ANGSURAN_POKOK' => $getPrincipal]);
-           
+
                 $data = $this->preparePaymentData($uid, 'ANGSURAN_BUNGA', $getInterest);
                 M_PaymentDetail::create($data);
                 $this->addCreditPaid($loan_number, ['ANGSURAN_BUNGA' => $getInterest]);
-            }else{
+            } else {
                 $new_payment_value_principal = $valBeforePrincipal;
                 $new_payment_value_interest = $valBeforeInterest;
 
@@ -207,5 +215,4 @@ class Welcome extends Controller
             ]);
         }
     }
-   
 }
