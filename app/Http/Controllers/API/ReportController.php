@@ -652,7 +652,7 @@ class ReportController extends Controller
                                         WHERE	s1.STATUS_REC='A'
                                         GROUP	BY s1.LOAN_NUMBER) e on e.LOAN_NUMBER=b.LOAN_NUMBER
                     WHERE	date_format(a.PAYMENT_DATE,'%d%m%Y')in ($imFilter)
-                    and d.NAMA like '%$request->cabang%'";
+                    and d.NAME like '%$request->cabang%'";
             // if ($request->pos && $request->pos != "SEMUA POS") {
             //     $sql .= "and d.NAME like '%$request->pos%'";
             // }
