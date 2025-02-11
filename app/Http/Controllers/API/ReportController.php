@@ -623,7 +623,7 @@ class ReportController extends Controller
     public function kreditJatuhTempo(Request $request)
     {
         try {
-            $hari = $request->hari;
+            $hari = [1,2,3,4];
             $filter=[];
             foreach ($hari as $stringHari) {
                 array_push($filter, "date_format(date_add(now(),interval ($stringHari) day),'%d%m%Y')");
