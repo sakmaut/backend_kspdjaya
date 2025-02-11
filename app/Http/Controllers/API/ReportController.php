@@ -472,7 +472,15 @@ class ReportController extends Controller
                             c.STATUS_REC,
                             mp.ENTRY_DATE,
                             mp.INST_COUNT,
-                            case when a.PAID_FLAG = 'PAID' and c.STATUS_REC = 'A' then datediff(mp.ENTRY_DATE,a.PAYMENT_DATE) else 0 end as OD
+                            CASE
+                                WHEN a.PAID_FLAG = 'PAID' AND c.STATUS_REC = 'A' 
+                                THEN DATEDIFF(mp.ENTRY_DATE, 
+                                            CASE 
+                                                WHEN a.PAYMENT_DATE IS NULL OR a.PAYMENT_DATE = '' THEN NOW() 
+                                                ELSE a.PAYMENT_DATE 
+                                            END)
+                                ELSE 0 
+                            END AS OD
                         from
                             credit_schedule as a
                         left join
