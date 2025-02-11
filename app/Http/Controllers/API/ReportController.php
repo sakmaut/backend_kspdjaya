@@ -352,7 +352,7 @@ class ReportController extends Controller
 
                 $allData[] = [
                     'Cbang' => M_Branch::find($result->BRANCH)->NAME ?? '',
-                    'Dibuat' => $getPosition->fullname ?? '',
+                    'Dibuat' => $getPosition->fullname ?? $result->CREATED_BY ?? '',
                     'Mtde Byr' => $getPosition ? $getPosition->position ?? '' : $result->PAYMENT_METHOD ?? '',
                     'No Inv' => $result->INVOICE ?? '',
                     'No Kont' => $result->LOAN_NUM ?? '',
