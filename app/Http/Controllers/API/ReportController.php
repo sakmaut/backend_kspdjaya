@@ -628,7 +628,7 @@ class ReportController extends Controller
                 array_push($filter, "date_format(date_add(now(),interval $stringHari day),'%d%m%Y')");
             }
             $imFilter = implode(',',$filter);
-            $sql = "SELECT	d.NAME,b.LOAN_NUMBER,c.NAME,
+            $sql = "SELECT	d.NAME as CABANG,b.LOAN_NUMBER,c.NAME as DEBITUR,
                             a.PAYMENT_DATE,a.INSTALLMENT_COUNT,
                             a.PRINCIPAL-a.PAYMENT_VALUE_PRINCIPAL as POKOK,
                             a.INTEREST-a.PAYMENT_VALUE_INTEREST as BUNGA,
