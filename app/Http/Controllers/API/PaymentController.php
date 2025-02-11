@@ -278,13 +278,17 @@ class PaymentController extends Controller
                 $query->where('PAID_FLAG', '')
                     ->orWhereNull('PAID_FLAG');
             })
-            ->first();
+            ->get();
 
         $checkArrears = M_Arrears::where('LOAN_NUMBER', $loan_number)
             ->whereIn('STATUS_REC', ['A', 'PENDING'])
-            ->first();
+            ->get();
 
-        $status = !$checkCreditSchedule && (!$checkArrears || empty($check_arrears)) ? 'D' : 'A';
+        if ($checkCreditSchedule->isEmpty() && $checkArrears->isEmpty()) {
+            $status = 'D';
+        } else {
+            $status = 'A';
+        }
 
         if ($check_credit) {
             $check_credit->update([
