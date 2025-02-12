@@ -60,7 +60,7 @@ class PaymentController extends Controller
                     break;
             }
 
-            if (empty($notrx) && empty($nama) && empty($no_kontrak) && empty($formattedDate)) {
+            if (empty($notrx) && empty($nama) && empty($no_kontrak) && (empty($formattedDate) || $formattedDate == null)) {
                 $data->where(DB::raw('DATE_FORMAT(CREATED_AT,"%Y%m%d")'), Carbon::now()->format('Ymd'));
             } else {
 
