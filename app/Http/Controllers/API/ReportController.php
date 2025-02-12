@@ -552,16 +552,9 @@ class ReportController extends Controller
                 $currentJtTempo = isset($res->PAYMENT_DATE) ? Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y') : '';
                 $currentAngs = isset($res->INSTALLMENT_COUNT) ? $res->INSTALLMENT_COUNT : '';
 
-                // Store the previous 'Sisa Angs' value for comparison
-                $previousSisaAngsFormatted = $previousSisaAngs !== null ? number_format($previousSisaAngs) : 'N/A';
-
                 // Now calculate 'Sisa Angs' for the current row
                 $currentSisaAngs = number_format($sisaAngs - floatval($res->ORIGINAL_AMOUNT));
 
-                // Store the current value of 'Sisa Angs' for use in the next iteration
-                $previousSisaAngs = $sisaAngs - floatval($res->ORIGINAL_AMOUNT);
-
-                // Add data to the schedule
                 $schedule['data_credit'][] = [
                     'Jt.Tempo' => $currentJtTempo,
                     'Angs' => $currentAngs,
@@ -572,7 +565,6 @@ class ReportController extends Controller
                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
                     'Amt Bayar' => number_format($res->ORIGINAL_AMOUNT ?? 0),
                     'Sisa Angs' => $currentSisaAngs,
-                    'Previous Sisa Angs' => $previousSisaAngsFormatted, // Show previous Sisa Angs
                     'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0),
                     'Byr Dnda' => number_format($res->denda ?? 0),
                     'Sisa Ttl Tghn' => number_format(abs($ttlAngs - $ttlByr)),
