@@ -559,6 +559,8 @@ class ReportController extends Controller
                     array_push($prevAngs, $currentAngs);
                 }
 
+                $sisaByr = number_format(abs($ttlAngs - $ttlByr));
+
                 $schedule['data_credit'][] = [
                     'Jt.Tempo' => $currentJtTempo,
                     'Angs' => $currentAngs,
@@ -571,7 +573,7 @@ class ReportController extends Controller
                     'Sisa Angs' => $sisaAngs,
                     'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0),
                     'Byr Dnda' => number_format($res->denda ?? 0),
-                    'Sisa Byr Tgh' => number_format(abs($ttlAngs - $ttlByr)),
+                    'Sisa Ttl Tghn' => number_format(abs($ttlAngs - $ttlByr)),
                     'Ovd' => $res->OD ?? 0,
                     'Stts' => $res->PAID_FLAG == 'PAID' && $res->STATUS_REC != 'A' ? 'LUNAS' : ''
                 ];
