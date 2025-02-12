@@ -5,11 +5,16 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Models\M_Branch;
 use App\Models\M_CrCollateral;
+use App\Models\M_CrCollateralDocument;
 use App\Models\M_CrCollateralSertification;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Contracts\Cache\Store;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
+use Ramsey\Uuid\Uuid;
 
 class CollateralController extends Controller
 {
@@ -131,40 +136,6 @@ class CollateralController extends Controller
         ];
     }
 
-    private function collateralSertificationField($list){
-        return [
-            "type" => "sertifikat",
-            'id' => $list->ID,
-            "no_sertifikat" => $list->NO_SERTIFIKAT,
-            "status_kepemilikan" => $list->STATUS_KEPEMILIKAN,
-            "imb" => $list->IMB,
-            "luas_tanah" => $list->LUAS_TANAH,
-            "luas_bangunan" => $list->LUAS_BANGUNAN,
-            "lokasi" => $list->LOKASI,
-            "provinsi" => $list->PROVINSI,
-            "kab_kota" => $list->KAB_KOTA,
-            "kec" => $list->KECAMATAN,
-            "desa" => $list->DESA,
-            "atas_nama" => $list->ATAS_NAMA,
-            "nilai" => (int) $list->NILAI,
-            "lokasi" => M_Branch::find($list->LOCATION_BRANCH)->NAME??null
-        ];
-    }
-
-    private function pagination($collateral){
-         return [
-            'current_page' => $collateral->currentPage(),
-            'total_pages' => $collateral->lastPage(),
-            'total_items' => $collateral->total(),
-            'per_page' => $collateral->perPage(),
-            'next_page_url' => $collateral->nextPageUrl(),
-            'prev_page_url' => $collateral->previousPageUrl(),
-            'first_page_url' => $collateral->url(1),
-            'last_page_url' => $collateral->url($collateral->lastPage()),
-            'links' => $this->getPaginationLinks($collateral)
-        ];
-    }
-
     private function getPaginationLinks($paginator)
     {
         $links = [];
@@ -193,5 +164,54 @@ class CollateralController extends Controller
         ];
 
         return $links;
+    }
+
+    public function uploadImage(Request $req)
+    {
+        DB::beginTransaction();
+        try {
+
+            $this->validate($req, [
+                'image' => 'required|string',
+                'type' => 'required|string',
+                'collateral_id' => 'required|string'
+            ]);
+
+            // Decode the base64 string
+            if (preg_match('/^data:image\/(\w+);base64,/', $req->image, $type)) {
+                $data = substr($req->image, strpos($req->image, ',') + 1);
+                $data = base64_decode($data);
+
+                // Generate a unique filename
+                $extension = strtolower($type[1]); // Get the image extension
+                $fileName = Uuid::uuid4()->toString() . '.' . $extension;
+
+                // Store the image
+                $image_path = Storage::put("public/Cr_Collateral/{$fileName}", $data);
+                $image_path = str_replace('public/', '', $image_path);
+                
+                $url = URL::to('/') . '/storage/' . 'Cr_Collateral/' . $fileName;
+
+                $collateral = [
+                    'COLLATERAL_ID' => $req->collateral_id,
+                    'TYPE' => $req->type,
+                    'COUNTER_ID' => round(microtime(true) * 1000),
+                    'PATH' => $url ?? ''
+                ];
+
+                M_CrCollateralDocument::create($collateral);
+
+                DB::commit();
+                return response()->json(['message' => 'Image upload successfully', "status" => 200, 'response' => $url], 200);
+            } else {
+                DB::rollback();
+                ActivityLogger::logActivity($req, 'No image file provided', 400);
+                return response()->json(['message' => 'No image file provided', "status" => 400], 400);
+            }
+        } catch (\Exception $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($req, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+        }
     }
 }
