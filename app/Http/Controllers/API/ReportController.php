@@ -537,30 +537,31 @@ class ReportController extends Controller
             $prevJtTempo = [];
             $prevAngs = [];
 
-            foreach ($data as $res) {
+            // Initialize a variable to store the previous 'Sisa Angs' value
+            $previousSisaAngs = null;
 
+            foreach ($data as $res) {
+                // Calculate the total installment amount (including penalty)
                 $ttlAngs = floatval($res->INSTALLMENT) + floatval($res->PAST_DUE_PENALTY);
                 $ttlByr = floatval($res->angsuran) + floatval($res->denda);
 
-                $sisaAngs = number_format(floatval($res->INSTALLMENT) - floatval($res->angsuran));
+                // Calculate the current remaining installment
+                $sisaAngs = floatval($res->INSTALLMENT) - floatval($res->angsuran);
 
+                // Formatting the payment date and installment count
                 $currentJtTempo = isset($res->PAYMENT_DATE) ? Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y') : '';
                 $currentAngs = isset($res->INSTALLMENT_COUNT) ? $res->INSTALLMENT_COUNT : '';
 
-                if (in_array($currentJtTempo, $prevJtTempo)) {
-                    $currentJtTempo = '';
-                } else {
-                    array_push($prevJtTempo, $currentJtTempo);
-                }
+                // Store the previous 'Sisa Angs' value for comparison
+                $previousSisaAngsFormatted = $previousSisaAngs !== null ? number_format($previousSisaAngs) : 'N/A';
 
-                if (in_array($currentAngs, $prevAngs)) {
-                    $currentAngs = '';
-                } else {
-                    array_push($prevAngs, $currentAngs);
-                }
+                // Now calculate 'Sisa Angs' for the current row
+                $currentSisaAngs = number_format($sisaAngs - floatval($res->ORIGINAL_AMOUNT));
 
-                $sisaByr = number_format(abs($ttlAngs - $ttlByr));
+                // Store the current value of 'Sisa Angs' for use in the next iteration
+                $previousSisaAngs = $sisaAngs - floatval($res->ORIGINAL_AMOUNT);
 
+                // Add data to the schedule
                 $schedule['data_credit'][] = [
                     'Jt.Tempo' => $currentJtTempo,
                     'Angs' => $currentAngs,
@@ -570,14 +571,16 @@ class ReportController extends Controller
                     'Bank' => '',
                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
                     'Amt Bayar' => number_format($res->ORIGINAL_AMOUNT ?? 0),
-                    'Sisa Angs' => number_format(floatval($sisaAngs??0) - floatval($res->ORIGINAL_AMOUNT??0)),
+                    'Sisa Angs' => $currentSisaAngs,
+                    'Previous Sisa Angs' => $previousSisaAngsFormatted, // Show previous Sisa Angs
                     'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0),
                     'Byr Dnda' => number_format($res->denda ?? 0),
-                    'Sisa Ttl Tghn' => $sisaByr,
+                    'Sisa Ttl Tghn' => number_format(abs($ttlAngs - $ttlByr)),
                     'Ovd' => $res->OD ?? 0,
-                    'Stts' => $sisaByr == '0' ? 'LUNAS' : ''
+                    'Stts' => $currentSisaAngs == '0' ? 'LUNAS' : ''
                 ];
             }
+
 
             $creditDetail = M_Credit::with(['customer' => function ($query) {
                 $query->select('CUST_CODE', 'NAME');
