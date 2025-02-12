@@ -312,7 +312,7 @@ class ListBanController extends Controller
                 $build[] = [
                     "KODE CABANG" => $result->KODE ?? '',
                     "NAMA CABANG" => $result->NAMA_CABANG ?? '',
-                    "NO KONTRAK" => $result->NO_KONTRAK ?? '',
+                    "NO KONTRAK" =>  (string)($result->NO_KONTRAK ?? ''),
                     "NAMA PELANGGAN" => $result->NAMA_PELANGGAN ?? '',
                     "TGL BOOKING" => isset($result->TGL_BOOKING) && !empty($result->TGL_BOOKING) ? date("d-m-Y", strtotime($result->TGL_BOOKING)) : '',
                     "UB" => $result->UB ?? '',
