@@ -58,19 +58,24 @@ class PaymentController extends Controller
                     break;
             }
 
-            if (!empty($notrx)) {
-                $data->where('NO_TRANSAKSI', 'like', '%' . $notrx . '%');
+            if (empty($notrx) && empty($nama) && empty($no_kontrak)) {
+                $data->where(DB::raw('DATE_FORMAT(CREATED_AT,"%Y%m%d")'), Carbon::now()->format('Ymd'));
+            } else {
+
+                if (!empty($notrx)) {
+                    $data->where('NO_TRANSAKSI', $notrx);
+                }
+
+                if (!empty($nama)) {
+                    $data->where('NAMA', 'like', '%' . $nama . '%');
+                }
+
+                if (!empty($no_kontrak)) {
+                    $data->where('LOAN_NUMBER', $no_kontrak);
+                }
             }
 
-            if (!empty($nama)) {
-                $data->where('NAMA', 'like', '%' . $nama . '%');
-            }
-
-            if (!empty($no_kontrak)) {
-                $data->where('LOAN_NUMBER', 'like', '%' . $no_kontrak . '%');
-            }
-
-            $results = $data->where(DB::raw('DATE_FORMAT(CREATED_AT,"%Y%m%d")'), Carbon::now()->format('Ymd'))->get();
+            $results = $data->get();
 
             $dto = R_Kwitansi::collection($results);
 
