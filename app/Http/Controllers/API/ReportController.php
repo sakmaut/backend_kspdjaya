@@ -569,13 +569,13 @@ class ReportController extends Controller
                     'No Ref' => $res->INVOICE ?? '',
                     'Bank' => '',
                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
-                    'Amt Bayar' => number_format($res->ORIGINAL_AMOUNT ?? 0),
+                    'Amt Bayar' => number_format($res->ttlByr ?? 0),
                     'Sisa Angs' => $sisaAngs,
                     'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0),
                     'Byr Dnda' => number_format($res->denda ?? 0),
-                    'Sisa Ttl Tghn' => number_format(abs($ttlAngs - $ttlByr)),
+                    'Sisa Ttl Tghn' => number_format(abs($sisaByr)),
                     'Ovd' => $res->OD ?? 0,
-                    'Stts' => $res->PAID_FLAG == 'PAID' && $res->STATUS_REC != 'A' ? 'LUNAS' : ''
+                    'Stts' => $sisaByr == '0' ? 'LUNAS' : ''
                 ];
             }
 
