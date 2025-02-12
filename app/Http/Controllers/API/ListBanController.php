@@ -383,7 +383,7 @@ class ListBanController extends Controller
                             e.INSTALLMENT_TYPE AS tipe,
                             i.TUNGGAKAN_PERTAMA,
                             m.curr_arr, 
-                            k.LAST_PAY, 
+                            case when date_format(k.LAST_PAY,'%m%Y')=date_format(now(),'%m%Y') then k.LAST_PAY else null end as LAST_PAY, 
                             ' ' AS COLLECTOR,
                             l.payment_method as cara_bayar, 
                             coalesce(m.tggk_pkk,0) as AMBC_PKK_AKHIR, 
