@@ -49,7 +49,7 @@ class BpkbController extends Controller
                     'nama_debitur' => $surveyId->NAME ?? NULL,
                     'order_number' => $surveyId->LOAN_NUMBER ?? NULL,
                     'no_jaminan' => $list->BPKB_NUMBER ?? NULL,
-                    // 'status_kontrak' => $surveyId->status_kontrak == 'D' ? "inactive" : 'active',
+                    'status_kontrak' => $surveyId->status_kontrak ?? ($surveyId->status_kontrak == 'D' ? "inactive" : 'active'),
                     'id' => $list->ID,
                     'status_jaminan' => $surveyId->STATUS ?? 'NORMAL',
                     "tipe" => $list->TYPE,
