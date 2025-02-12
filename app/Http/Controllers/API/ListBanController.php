@@ -225,7 +225,7 @@ class ListBanController extends Controller
                             coalesce(i.TUNGGAKAN_POKOK)+coalesce(i.TUNGGAKAN_BUNGA) as AMBC_TOTAL_AWAL, 
                             concat('C',floor((DATEDIFF(str_to_date('31012025','%d%m%Y'),i.TUNGGAKAN_PERTAMA))/30)) AS CYCLE_AWAL,
                             b.STATUS_REC,
-                            b.STATUS_REC as STATUS_BEBAN, 
+                            b.STATUS_REC, 
                             case when (b.INSTALLMENT_COUNT/b.PERIOD)=1 then 'BULANAN' else 'MUSIMAN' end as pola_bayar, 
                             b.PCPL_ORI-b.PAID_PRINCIPAL OS_PKK_AKHIR, 
                             coalesce(k.OS_BNG_AKHIR,0) as OS_BNG_AKHIR, 
@@ -256,7 +256,7 @@ class ListBanController extends Controller
                             'nilai admin', 
                             b.CUST_CODE
                         FROM  	branch AS a
-                            INNER JOIN credit b ON b.BRANCH = a.ID AND b.STATUS='A' OR (b.BRANCH = a.ID AND b.STATUS in ('D','S') AND date_format(b.mod_date,'%m%Y')=date_format(now(),'%m%Y'))
+                            INNER JOIN credit b ON b.BRANCH = a.ID AND b.STATUS='A' OR (b.BRANCH = a.ID AND b.STATUS in ('D','S') AND b.loan_number in (select loan_num from payment where date_format(entry_date,'%m%Y')=date_format(now(),'%m%Y')))
                             LEFT JOIN customer c ON c.CUST_CODE = b.CUST_CODE
                             LEFT JOIN users d ON d.id = b.MCF_ID
                             LEFT JOIN cr_application e ON e.ORDER_NUMBER = b.ORDER_NUMBER
