@@ -522,7 +522,7 @@ class ReportController extends Controller
             foreach ($data as $res) {
 
                 $ttlAngs = floatval($res->INSTALLMENT) + floatval($res->PAST_DUE_PENALTY);
-                $ttlByr = floatval($res->PAYMENT_VALUE) + floatval($res->PAID_PENALTY);
+                $ttlByr = floatval($res->ORIGINAL_AMOUNT) + floatval($res->PAID_PENALTY);
 
                 $sisaAngs = number_format(floatval($res->INSTALLMENT) - floatval($res->ORIGINAL_AMOUNT));
 
@@ -550,7 +550,7 @@ class ReportController extends Controller
                     'Bank' => '',
                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
                     'Amt Bayar' => number_format($res->ORIGINAL_AMOUNT ?? 0),
-                    'Sisa Angs' => $sisaAngs,
+                    'Sisa Angs' => $res->PAID_FLAG == 'PAID' ? 0 : $sisaAngs,
                     'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0),
                     'Byr Dnda' => number_format($res->PAID_PENALTY ?? 0),
                     'Sisa Byr Tgh' => number_format(abs($ttlAngs - $ttlByr)),
