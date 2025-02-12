@@ -19,13 +19,4 @@ class M_FirstArr extends Model
     protected $primaryKey = 'LOAN_NUMBER';
     public $incrementing = false;
     public $timestamps = false;
-    protected static function boot()
-    {
-        parent::boot();
-        static::creating(function ($model) {
-            if ($model->getKey() == null) {
-                $model->setAttribute($model->getKeyName(), Str::uuid()->toString());
-            }
-        });
-    }
 }
