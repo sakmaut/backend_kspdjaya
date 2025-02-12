@@ -23,6 +23,7 @@ use App\Http\Controllers\API\{
     LogPrintController,
     PelunasanController,
     ReportController,
+    TaskPusher,
     TaskController
 };
 use App\Http\Controllers\Welcome;
@@ -130,7 +131,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('listBan', [ListBanController::class, 'listBan']);
 
     //Task
-    Route::resource('task', TaskController::class);
+    Route::resource('task_pusher', TaskPusher::class);
 
     //Report
     Route::post('inquiryList', [ReportController::class,'inquiryList']);

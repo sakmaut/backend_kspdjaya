@@ -12,6 +12,7 @@ use App\Models\M_CrSurvey;
 use App\Models\M_CrSurveyDocument;
 use App\Models\M_SurveyApproval;
 use App\Models\M_SurveyApprovalLog;
+use App\Models\M_TaskPusher;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -312,14 +313,28 @@ class CrSurveyController extends Controller
             'CR_SURVEY_ID' => $request->id
         ];
 
+        //add to task
+        $pushData = [
+            'ID'=> $this->uuid,
+            'BRANCH'=>$request->user()->branch_id,
+            'CHANNEL'=>'ORDER',
+            'IDENTIFIER'=>$request->id,
+            'MESSAGE'=>'order '.$request->data_nasabah['nama'].' dibuat',
+            'CREATED_AT'=>now(),
+            'STATUS'=>null,
+            'READ_AT'=>null,
+            'USER_ACCESS'=>null
+        ];
+
         if (!$request->flag) {
             $data['CODE'] = 'DRSVY';
             $data['APPROVAL_RESULT'] = 'draf survey';
         } else {
             $data['CODE'] = 'WADM';
             $data['APPROVAL_RESULT'] = 'menunggu admin';
-        }
 
+        }
+M_TaskPusher::create($pushData);
         $approval = M_SurveyApproval::create($data);
 
         $data_log = [
@@ -334,6 +349,8 @@ class CrSurveyController extends Controller
         ];
 
         M_SurveyApprovalLog::create($data_log);
+
+
     }
 
     private function insert_guarante($request)
