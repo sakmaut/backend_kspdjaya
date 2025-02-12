@@ -25,17 +25,11 @@ class BpkbController extends Controller
                     ->orWhere('DELETED_AT', '');
             })->get();
 
-            $collateral_sertificat = M_CrCollateralSertification::where('LOCATION', $branch)->where(function ($query) {
-                $query->whereNull('DELETED_AT')
-                    ->orWhere('DELETED_AT', '');
-            })->get();
-
             $data = [];
             foreach ($collateral as $list) {
 
                 $surveyId = DB::table('credit as a')
                     ->leftJoin('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
-                    ->leftJoin('cr_collateral as c', 'c.CR_CREDIT_ID', '=', 'a.ID')
                     ->leftJoin('bpkb_detail as d', 'd.COLLATERAL_ID', '=', 'c.ID')
                     ->select('a.LOAN_NUMBER', 'a.STATUS as status_kontrak', 'b.NAME', 'd.STATUS')
                     ->where('a.ID', '=', $list->CR_CREDIT_ID)
