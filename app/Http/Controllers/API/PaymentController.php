@@ -75,7 +75,7 @@ class PaymentController extends Controller
                     $data->where('LOAN_NUMBER', $no_kontrak);
                 }
 
-                if (!empty($dari) || $dari != 'null') {
+                if ($dari != 'null') {
                     $formattedDate = Carbon::parse($dari)->format('Ymd');
                     $data->where(DB::raw('DATE_FORMAT(CREATED_AT,"%Y%m%d")'), $formattedDate);
                 }
