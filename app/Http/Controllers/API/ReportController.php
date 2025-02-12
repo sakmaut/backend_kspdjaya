@@ -475,6 +475,8 @@ class ReportController extends Controller
                             mp.INST_COUNT_INCREMENT,
                             mp.ORIGINAL_AMOUNT,
                             mp.INVOICE,
+                            mp.angsuran,
+                            mp.denda,
                            CASE
                                 WHEN c.PAST_DUE_PENALTY != 0 
                                 THEN DATEDIFF(
@@ -492,16 +494,32 @@ class ReportController extends Controller
                             on c.LOAN_NUMBER = a.LOAN_NUMBER
                             and c.START_DATE = a.PAYMENT_DATE
                         left join (
-                            SELECT 	LOAN_NUM,
-                                    DATE(ENTRY_DATE) as ENTRY_DATE, 
-                                    max(DATE(START_DATE)) as START_DATE,
-                                    ROW_NUMBER() OVER (PARTITION BY START_DATE ORDER BY ENTRY_DATE) as INST_COUNT_INCREMENT,
-                            		ORIGINAL_AMOUNT,
-                                    INVOICE
-                            FROM payment
-                            WHERE LOAN_NUM = '$id'
-                            group by  LOAN_NUM,START_DATE,ENTRY_DATE,ORIGINAL_AMOUNT ,INVOICE
-                            ORDER BY `ENTRY_DATE` DESC
+                            SELECT  
+                                a.LOAN_NUM,
+                                DATE(a.ENTRY_DATE) AS ENTRY_DATE, 
+                                MAX(DATE(a.START_DATE)) AS START_DATE,
+                                ROW_NUMBER() OVER (PARTITION BY a.START_DATE ORDER BY a.ENTRY_DATE) AS INST_COUNT_INCREMENT,
+                                a.ORIGINAL_AMOUNT,
+                                a.INVOICE,
+                                b.angsuran,
+                                b.denda
+                            FROM 
+                                payment a
+                            LEFT JOIN (
+                                SELECT  
+                                    payment_id, 
+                                    SUM(CASE WHEN ACC_KEYS = 'ANGSURAN_POKOK' OR ACC_KEYS = 'ANGSURAN_BUNGA' THEN ORIGINAL_AMOUNT ELSE 0 END) AS angsuran,
+                                    SUM(CASE WHEN ACC_KEYS = 'BAYAR_DENDA' THEN ORIGINAL_AMOUNT ELSE 0 END) AS denda
+                                FROM 
+                                    payment_detail 
+                                GROUP BY payment_id
+                            ) AS b 
+                            ON b.payment_id = a.id
+                            WHERE 
+                                a.LOAN_NUM = '11000240000426'
+                            GROUP BY 
+                                a.LOAN_NUM, a.START_DATE, a.ENTRY_DATE, a.ORIGINAL_AMOUNT, a.INVOICE, b.angsuran, b.denda
+                            ORDER BY a.ENTRY_DATE DESC
                         ) as mp
                         on mp.LOAN_NUM = a.LOAN_NUMBER
                         and date_format(mp.START_DATE,'%d%m%Y') = date_format(a.PAYMENT_DATE,'%d%m%Y')
@@ -522,9 +540,9 @@ class ReportController extends Controller
             foreach ($data as $res) {
 
                 $ttlAngs = floatval($res->INSTALLMENT) + floatval($res->PAST_DUE_PENALTY);
-                $ttlByr = floatval($res->ORIGINAL_AMOUNT) + floatval($res->PAID_PENALTY);
+                $ttlByr = floatval($res->angsuran) + floatval($res->denda);
 
-                $sisaAngs = number_format(floatval($res->INSTALLMENT) - floatval($res->ORIGINAL_AMOUNT));
+                $sisaAngs = number_format(floatval($res->INSTALLMENT) - floatval($res->angsuran));
 
                 $currentJtTempo = isset($res->PAYMENT_DATE) ? Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y') : '';
                 $currentAngs = isset($res->INSTALLMENT_COUNT) ? $res->INSTALLMENT_COUNT : '';
@@ -552,7 +570,7 @@ class ReportController extends Controller
                     'Amt Bayar' => number_format($res->ORIGINAL_AMOUNT ?? 0),
                     'Sisa Angs' => $sisaAngs,
                     'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0),
-                    'Byr Dnda' => number_format($res->PAID_PENALTY ?? 0),
+                    'Byr Dnda' => number_format($res->denda ?? 0),
                     'Sisa Byr Tgh' => number_format(abs($ttlAngs - $ttlByr)),
                     'Ovd' => $res->OD ?? 0,
                     'Stts' => $res->PAID_FLAG == 'PAID' && $res->STATUS_REC != 'A' ? 'LUNAS' : ''
