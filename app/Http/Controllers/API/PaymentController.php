@@ -39,9 +39,8 @@ class PaymentController extends Controller
             $tipe = $request->query('tipe');
             $dari = $request->query('dari');
 
-            $timestamp = $request->dari / 1000;
+            $timestamp = $dari / 1000;
 
-            // Convert the timestamp to a Carbon instance
             $date = Carbon::createFromTimestamp($timestamp);
 
             // Format the date as Y-m-d
