@@ -198,7 +198,7 @@ class ListBanController extends Controller
             $query = "  SELECT 
                             CONCAT(a.CODE, '-', a.CODE_NUMBER) AS KODE,
                             a.NAME AS NAMA_CABANG,
-                            CONCAT(b.LOAN_NUMBER AS STRING)) AS NO_KONTRAK,
+                            CONCAT(CAST(b.LOAN_NUMBER AS STRING)) AS NO_KONTRAK,
                             c.NAME AS NAMA_PELANGGAN,
                             b.CREATED_AT AS TGL_BOOKING,
                             NULL AS UB,
