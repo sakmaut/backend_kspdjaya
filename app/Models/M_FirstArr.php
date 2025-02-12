@@ -16,16 +16,7 @@ class M_FirstArr extends Model
         'DUE_DAYS'
     ];
     protected $guarded = [];
+    protected $primaryKey = 'LOAN_NUMBER';
     public $incrementing = false;
-    protected $keyType = 'string';
     public $timestamps = false;
-    protected static function boot()
-    {
-        parent::boot();
-        static::creating(function ($model) {
-            if ($model->getKey() == null) {
-                $model->setAttribute($model->getKeyName(), Str::uuid()->toString());
-            }
-        });
-    }
 }

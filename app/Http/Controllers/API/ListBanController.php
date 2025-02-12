@@ -198,7 +198,7 @@ class ListBanController extends Controller
             $query = "  SELECT 
                             CONCAT(a.CODE, '-', a.CODE_NUMBER) AS KODE,
                             a.NAME AS NAMA_CABANG,
-                            b.LOAN_NUMBER AS NO_KONTRAK,
+                            CONCAT(b.LOAN_NUMBER) AS NO_KONTRAK,
                             c.NAME AS NAMA_PELANGGAN,
                             b.CREATED_AT AS TGL_BOOKING,
                             NULL AS UB,
@@ -225,7 +225,7 @@ class ListBanController extends Controller
                             coalesce(i.TUNGGAKAN_POKOK)+coalesce(i.TUNGGAKAN_BUNGA) as AMBC_TOTAL_AWAL, 
                             concat('C',floor((DATEDIFF(str_to_date('31012025','%d%m%Y'),i.TUNGGAKAN_PERTAMA))/30)) AS CYCLE_AWAL,
                             b.STATUS_REC,
-                            b.STATUS_REC as STATUS_BEBAN, 
+                            b.STATUS_REC, 
                             case when (b.INSTALLMENT_COUNT/b.PERIOD)=1 then 'BULANAN' else 'MUSIMAN' end as pola_bayar, 
                             b.PCPL_ORI-b.PAID_PRINCIPAL OS_PKK_AKHIR, 
                             coalesce(k.OS_BNG_AKHIR,0) as OS_BNG_AKHIR, 
@@ -256,7 +256,7 @@ class ListBanController extends Controller
                             'nilai admin', 
                             b.CUST_CODE
                         FROM  	branch AS a
-                            INNER JOIN credit b ON b.BRANCH = a.ID AND b.STATUS='A' OR (b.BRANCH = a.ID AND b.STATUS in ('D','S') AND date_format(b.mod_date,'%m%Y')=date_format(now(),'%m%Y'))
+                            INNER JOIN credit b ON b.BRANCH = a.ID AND b.STATUS='A' OR (b.BRANCH = a.ID AND b.STATUS in ('D','S') AND b.loan_number in (select loan_num from payment where date_format(entry_date,'%m%Y')=date_format(now(),'%m%Y')))
                             LEFT JOIN customer c ON c.CUST_CODE = b.CUST_CODE
                             LEFT JOIN users d ON d.id = b.MCF_ID
                             LEFT JOIN cr_application e ON e.ORDER_NUMBER = b.ORDER_NUMBER
@@ -312,7 +312,7 @@ class ListBanController extends Controller
                 $build[] = [
                     "KODE CABANG" => $result->KODE ?? '',
                     "NAMA CABANG" => $result->NAMA_CABANG ?? '',
-                    "NO KONTRAK" => $result->NO_KONTRAK ?? '',
+                    "NO KONTRAK" =>  (string)($result->NO_KONTRAK ?? ''),
                     "NAMA PELANGGAN" => $result->NAMA_PELANGGAN ?? '',
                     "TGL BOOKING" => isset($result->TGL_BOOKING) && !empty($result->TGL_BOOKING) ? date("d-m-Y", strtotime($result->TGL_BOOKING)) : '',
                     "UB" => $result->UB ?? '',
