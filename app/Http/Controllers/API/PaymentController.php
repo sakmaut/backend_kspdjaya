@@ -41,8 +41,7 @@ class PaymentController extends Controller
             $getPosition = $request->user()->position;
             $getBranch = $request->user()->branch_id;
 
-            $data = M_Kwitansi::where(DB::raw('DATE_FORMAT(CREATED_AT,"%Y%m%d")'), Carbon::now()->format('Ymd'))
-                ->orderBy('CREATED_AT', 'DESC');
+            $data = M_Kwitansi::orderBy('CREATED_AT', 'DESC');
 
             if (strtolower($getPosition) == 'ho') {
                 $data->where('STTS_PAYMENT', '=', 'PENDING');
@@ -71,7 +70,7 @@ class PaymentController extends Controller
                 $data->where('LOAN_NUMBER', 'like', '%' . $no_kontrak . '%');
             }
 
-            $results = $data->get();
+            $results = $data->where(DB::raw('DATE_FORMAT(CREATED_AT,"%Y%m%d")'), Carbon::now()->format('Ymd'))->get();
 
             $dto = R_Kwitansi::collection($results);
 
