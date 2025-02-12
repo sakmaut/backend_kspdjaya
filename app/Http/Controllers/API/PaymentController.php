@@ -38,6 +38,7 @@ class PaymentController extends Controller
             $no_kontrak = $request->query('no_kontrak');
             $tipe = $request->query('tipe');
             $dari = $request->query('dari');
+            $formattedDate = Carbon::parse($dari)->format('Ymd');
 
             $getPosition = $request->user()->position;
             $getBranch = $request->user()->branch_id;
@@ -59,7 +60,7 @@ class PaymentController extends Controller
                     break;
             }
 
-            if (empty($notrx) && empty($nama) && empty($no_kontrak)) {
+            if (empty($notrx) && empty($nama) && empty($no_kontrak) && empty($formattedDate)) {
                 $data->where(DB::raw('DATE_FORMAT(CREATED_AT,"%Y%m%d")'), Carbon::now()->format('Ymd'));
             } else {
 
@@ -73,6 +74,10 @@ class PaymentController extends Controller
 
                 if (!empty($no_kontrak)) {
                     $data->where('LOAN_NUMBER', $no_kontrak);
+                }
+
+                if (!empty($formattedDate)) {
+                    $data->where(DB::raw('DATE_FORMAT(CREATED_AT,"%Y%m%d")'), $formattedDate);
                 }
             }
 
