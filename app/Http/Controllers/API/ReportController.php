@@ -545,11 +545,12 @@ class ReportController extends Controller
                 $currentJtTempo = isset($res->PAYMENT_DATE) ? Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y') : '';
                 $currentAngs = isset($res->INSTALLMENT_COUNT) ? $res->INSTALLMENT_COUNT : '';
 
-                $sisaAngs = number_format(floatval($res->INSTALLMENT) - floatval($res->angsuran));
+                // Hitung sisa angsuran
+                $sisaAngs = floatval($res->INSTALLMENT) - floatval($res->angsuran);
 
                 if (in_array($currentJtTempo, $prevJtTempo)) {
                     $currentJtTempo = '';
-                    $sisaAngs -= $res->ORIGINAL_AMOUNT ?? 0;
+                    $sisaAngs -= floatval($res->ORIGINAL_AMOUNT ?? 0);
                 } else {
                     array_push($prevJtTempo, $currentJtTempo);
                 }
@@ -571,7 +572,7 @@ class ReportController extends Controller
                     'Bank' => '',
                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
                     'Amt Bayar' => number_format($res->ORIGINAL_AMOUNT ?? 0),
-                    'Sisa Angs' => number_format(floatval($res->INSTALLMENT) - floatval($res->angsuran)),
+                    'Sisa Angs' => number_format($sisaAngs), 
                     'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0),
                     'Byr Dnda' => number_format($res->denda ?? 0),
                     'Sisa Ttl Tghn' => $sisaByr,
