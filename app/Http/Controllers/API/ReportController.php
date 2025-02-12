@@ -545,8 +545,11 @@ class ReportController extends Controller
                 $currentJtTempo = isset($res->PAYMENT_DATE) ? Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y') : '';
                 $currentAngs = isset($res->INSTALLMENT_COUNT) ? $res->INSTALLMENT_COUNT : '';
 
+                $sisaAngs = number_format(floatval($res->INSTALLMENT) - floatval($res->angsuran));
+
                 if (in_array($currentJtTempo, $prevJtTempo)) {
                     $currentJtTempo = '';
+                    $sisaAngs -= $res->ORIGINAL_AMOUNT ?? 0;
                 } else {
                     array_push($prevJtTempo, $currentJtTempo);
                 }
