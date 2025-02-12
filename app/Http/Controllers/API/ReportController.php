@@ -570,7 +570,7 @@ class ReportController extends Controller
                     'Bank' => '',
                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
                     'Amt Bayar' => number_format($res->ORIGINAL_AMOUNT ?? 0),
-                    'Sisa Angs' => number_format(floatval($sisaByr) - floatval($res->ORIGINAL_AMOUNT)),
+                    'Sisa Angs' => number_format($res->INSTALLMENT ?? 0 - $res->ORIGINAL_AMOUNT),
                     'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0),
                     'Byr Dnda' => number_format($res->denda ?? 0),
                     'Sisa Ttl Tghn' => $sisaByr,
