@@ -524,7 +524,7 @@ class ReportController extends Controller
                 $ttlAngs = floatval($res->INSTALLMENT) + floatval($res->PAST_DUE_PENALTY);
                 $ttlByr = floatval($res->PAYMENT_VALUE) + floatval($res->PAID_PENALTY);
 
-                $sisaAngs = number_format(floatval($res->INSTALLMENT) - floatval($res->PAYMENT_VALUE));
+                $sisaAngs = number_format(floatval($res->INSTALLMENT) - floatval($res->ORIGINAL_AMOUNT));
 
                 $currentJtTempo = isset($res->PAYMENT_DATE) ? Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y') : '';
                 $currentAngs = isset($res->INSTALLMENT_COUNT) ? $res->INSTALLMENT_COUNT : '';
