@@ -430,7 +430,7 @@ class ListBanController extends Controller
                                     GROUP	BY loan_number) k on k.loan_number=b.loan_number
                             LEFT JOIN (	SELECT	loan_num, entry_date, payment_method
                                     FROM	payment
-                                    WHERE	(loan_num,entry_date) in (select loan_num, max(entry_date) from payment group by loan_num)) l on l.loan_num=b.loan_number
+                                    WHERE	(loan_num,entry_date,title) in (select loan_num, max(entry_date), concat('Angsuran Ke-',max(cast(replace(title,'Angsuran Ke-','') as signed))) from payment group by loan_num)) l on l.loan_num=b.loan_number
                             LEFT JOIN (	SELECT	loan_number, 
                                         sum(past_due_pcpl) as tggk_pkk, sum(past_due_intrst) as tggk_bng, 
                                             sum(paid_pcpl) as byr_tggk_pkk, sum(paid_int) as byr_tggk_bng, 
