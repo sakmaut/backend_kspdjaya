@@ -76,7 +76,7 @@ class PaymentController extends Controller
                     $data->where('LOAN_NUMBER', $no_kontrak);
                 }
 
-                if (!empty($formattedDate)) {
+                if (!empty($formattedDate) || $formattedDate != null) {
                     $data->where(DB::raw('DATE_FORMAT(CREATED_AT,"%Y%m%d")'), $formattedDate);
                 }
             }
