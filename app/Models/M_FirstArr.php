@@ -16,8 +16,8 @@ class M_FirstArr extends Model
         'DUE_DAYS'
     ];
     protected $guarded = [];
+    protected $primaryKey = 'LOAN_NUMBER';
     public $incrementing = false;
-    protected $keyType = 'string';
     public $timestamps = false;
     protected static function boot()
     {

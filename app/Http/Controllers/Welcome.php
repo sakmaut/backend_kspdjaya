@@ -45,7 +45,7 @@ class Welcome extends Controller
         foreach ($data as $row) {
             M_FirstArr::create([
                 'LOAN_NUMBER' => $row->LOAN_NUMBER,
-                'START_DATE' => $row->start_date,
+                'START_DATE' => Carbon::parse($row->start_date)->format('Y-m-d'),
                 'DATE_DIFF' => $row->date_diff
             ]);
         }
