@@ -56,44 +56,9 @@ class BpkbController extends Controller
                     "asal_lokasi" => $asalBranch->NAME ?? null,
                     "lokasi" => $brachName->NAME ?? $list->LOCATION_BRANCH,
                     "document" => $this->getCollateralDocument($list->ID, ['no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri']) ?? null,
+                    "document_rilis" => $this->attachment($list->ID, "'rilis'") ?? null,
                 ];
             }
-
-            // foreach ($collateral_sertificat as $list) {
-
-            //     $surveyId = DB::table('credit as a')
-            //         ->leftJoin('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
-            //         ->leftJoin('cr_collateral as c', 'c.CR_CREDIT_ID', '=', 'a.ID')
-            //         ->leftJoin('bpkb_detail as d', 'd.COLLATERAL_ID', '=', 'c.ID')
-            //         ->select('a.LOAN_NUMBER', 'b.NAME', 'd.STATUS')
-            //         ->where('a.ID', '=', $list->CR_CREDIT_ID)
-            //         ->first();
-
-            //     $brachName = M_Branch::find($list->LOCATION_BRANCH);
-
-            //     $data[] = [
-            //         "type" => "sertifikat",
-            //         'nama_debitur' => $surveyId->NAME ?? NULL,
-            //         'order_number' => $surveyId->LOAN_NUMBER ?? NULL,
-            //         'no_jaminan' => $list->NO_SERTIFIKAT ?? NULL,
-            //         'id' => $list->ID,
-            //         'status_jaminan' => $surveyId->STATUS ?? 'NORMAL',
-            //         "no_sertifikat" => $list->NO_SERTIFIKAT,
-            //         "status_kepemilikan" => $list->STATUS_KEPEMILIKAN,
-            //         "imb" => $list->IMB,
-            //         "luas_tanah" => $list->LUAS_TANAH,
-            //         "luas_bangunan" => $list->LUAS_BANGUNAN,
-            //         "lokasi" => $list->LOKASI,
-            //         "provinsi" => $list->PROVINSI,
-            //         "kab_kota" => $list->KAB_KOTA,
-            //         "kec" => $list->KECAMATAN,
-            //         "desa" => $list->DESA,
-            //         "atas_nama" => $list->ATAS_NAMA,
-            //         "nilai" => (int) $list->NILAI,
-            //         "lokasi" => $brachName->NAME ?? null,
-            //         "document" => $this->getCollateralDocument($list->ID, ['sertifikat']) ?? null
-            //     ];
-            // }
 
             ActivityLogger::logActivity($request, "Success", 200);
             return response()->json($data, 200);
@@ -331,6 +296,24 @@ class BpkbController extends Controller
             ->get();
 
         return $attachment;
+    }
+
+    public function attachment($collateralId, $data)
+    {
+        $documents = DB::select(
+            "   SELECT *
+                FROM cr_collateral_document AS csd
+                WHERE (TYPE, COUNTER_ID) IN (
+                    SELECT TYPE, MAX(COUNTER_ID)
+                    FROM cr_collateral_document
+                    WHERE TYPE IN ($data)
+                        AND COLLATERAL_ID = '$collateralId'
+                    GROUP BY TYPE
+                )
+                ORDER BY COUNTER_ID DESC"
+        );
+
+        return $documents;
     }
 
     function getCollateralDocument($creditID, $param)
