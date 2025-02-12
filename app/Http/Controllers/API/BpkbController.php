@@ -24,8 +24,8 @@ class BpkbController extends Controller
                             ->leftJoin('credit as b', 'b.ID', '=', 'a.CR_CREDIT_ID')
                             ->leftJoin('customer as c', 'c.CUST_CODE', '=', 'b.CUST_CODE')
                             ->select('b.STATUS', 'a.*', 'b.LOAN_NUMBER', 'c.NAME')
+                            ->where('a.LOCATION_BRANCH', $branch)
                             ->get();
-
 
             $data = [];
             foreach ($results as $list) {
