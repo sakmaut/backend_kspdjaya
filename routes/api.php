@@ -22,7 +22,8 @@ use App\Http\Controllers\API\{
     ListBanController,
     LogPrintController,
     PelunasanController,
-    ReportController
+    ReportController,
+    TaskController
 };
 use App\Http\Controllers\Welcome;
 use Illuminate\Http\Request;
@@ -127,6 +128,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('arus_kas', [ListBanController::class, 'index']);
     Route::post('listBan', [ListBanController::class, 'listBan']);
+
+    //Task
+    Route::resource('task', TaskController::class);
 
     //Report
     Route::post('inquiryList', [ReportController::class,'inquiryList']);
