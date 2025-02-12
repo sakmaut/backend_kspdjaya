@@ -48,36 +48,36 @@ class PaymentController extends Controller
                 $data->where('STTS_PAYMENT', '=', 'PENDING');
             } else {
                 $data->where('BRANCH_CODE', '=', $getBranch);
-            }
 
-            switch ($tipe) {
-                case 'pembayaran':
-                    $data->where('PAYMENT_TYPE', '!=', 'pelunasan');
-                    break;
-                case 'pelunasan':
-                    $data->where('PAYMENT_TYPE', 'pelunasan');
-                    break;
-            }
-
-            if (empty($notrx) && empty($nama) && empty($no_kontrak) && (empty($dari) || $dari == 'null')) {
-                $data->where(DB::raw('DATE_FORMAT(CREATED_AT,"%Y%m%d")'), Carbon::now()->format('Ymd'));
-            } else {
-
-                if (!empty($notrx)) {
-                    $data->where('NO_TRANSAKSI', $notrx);
+                switch ($tipe) {
+                    case 'pembayaran':
+                        $data->where('PAYMENT_TYPE', '!=', 'pelunasan');
+                        break;
+                    case 'pelunasan':
+                        $data->where('PAYMENT_TYPE', 'pelunasan');
+                        break;
                 }
 
-                if (!empty($nama)) {
-                    $data->where('NAMA', 'like', '%' . $nama . '%');
-                }
+                if (empty($notrx) && empty($nama) && empty($no_kontrak) && (empty($dari) || $dari == 'null')) {
+                    $data->where(DB::raw('DATE_FORMAT(CREATED_AT,"%Y%m%d")'), Carbon::now()->format('Ymd'));
+                } else {
 
-                if (!empty($no_kontrak)) {
-                    $data->where('LOAN_NUMBER', $no_kontrak);
-                }
+                    if (!empty($notrx)) {
+                        $data->where('NO_TRANSAKSI', $notrx);
+                    }
 
-                if ($dari != 'null') {
-                    $formattedDate = Carbon::parse($dari)->format('Ymd');
-                    $data->where(DB::raw('DATE_FORMAT(CREATED_AT,"%Y%m%d")'), $formattedDate);
+                    if (!empty($nama)) {
+                        $data->where('NAMA', 'like', '%' . $nama . '%');
+                    }
+
+                    if (!empty($no_kontrak)) {
+                        $data->where('LOAN_NUMBER', $no_kontrak);
+                    }
+
+                    if ($dari != 'null') {
+                        $formattedDate = Carbon::parse($dari)->format('Ymd');
+                        $data->where(DB::raw('DATE_FORMAT(CREATED_AT,"%Y%m%d")'), $formattedDate);
+                    }
                 }
             }
 
