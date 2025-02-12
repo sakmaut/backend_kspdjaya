@@ -39,14 +39,14 @@ class DemoCron extends Command
             $setDate = DB::raw('CURDATE()');
 
             $query = DB::table('credit_schedule')
-                        ->where('PAYMENT_DATE', '<=', $setDate)
-                        ->where(function ($query) {
-                            $query->whereNull('PAID_FLAG')
-                                ->orWhere('PAID_FLAG', '=', '');
-                        })
-                        ->select('*')
-                        ->get();
-    
+                ->where('PAYMENT_DATE', '<=', $setDate)
+                ->where(function ($query) {
+                    $query->whereNull('PAID_FLAG')
+                        ->orWhere('PAID_FLAG', '=', '');
+                })
+                ->select('*')
+                ->get();
+
             if ($query->isEmpty()) {
                 M_CronJobLog::create([
                     'STATUS' => 'SUCCESS',
@@ -54,41 +54,41 @@ class DemoCron extends Command
                 ]);
                 return;
             }
-    
+
             $arrearsData = [];
             foreach ($query as $result) {
                 $date = date('Y-m-d');
                 // $date = date($setDate);
                 $daysDiff = (strtotime($date) - strtotime($result->PAYMENT_DATE)) / (60 * 60 * 24);
                 $pastDuePenalty = $result->INSTALLMENT * ($daysDiff * 0.005);
-    
+
                 $arrearsData[] = [
                     'ID' => Uuid::uuid7()->toString(),
                     'STATUS_REC' => 'A',
                     'LOAN_NUMBER' => $result->LOAN_NUMBER,
                     'START_DATE' => $result->PAYMENT_DATE,
                     'END_DATE' => null,
-                    'PAST_DUE_PCPL' => $result->PRINCIPAL??0,
-                    'PAST_DUE_INTRST' => $result->INTEREST??0,
-                    'PAST_DUE_PENALTY' => $pastDuePenalty??0,
+                    'PAST_DUE_PCPL' => $result->PRINCIPAL ?? 0,
+                    'PAST_DUE_INTRST' => $result->INTEREST ?? 0,
+                    'PAST_DUE_PENALTY' => $pastDuePenalty ?? 0,
                     'PAID_PCPL' => 0,
                     'PAID_INT' => 0,
                     'PAID_PENALTY' => 0,
                     'CREATED_AT' => Carbon::now('Asia/Jakarta')
                 ];
             }
-    
+
             foreach ($arrearsData as $data) {
                 $existingArrears = M_Arrears::where([
                     'LOAN_NUMBER' => $data['LOAN_NUMBER'],
                     'START_DATE' => $data['START_DATE'],
                     'STATUS_REC' => 'A'
                 ])->first();
-    
+
                 if ($existingArrears) {
                     // Update the existing record
                     $existingArrears->update([
-                        'PAST_DUE_PENALTY' => $data['PAST_DUE_PENALTY']??0,
+                        'PAST_DUE_PENALTY' => $data['PAST_DUE_PENALTY'] ?? 0,
                         'UPDATED_AT' => Carbon::now('Asia/Jakarta')
                     ]);
                 } else {
@@ -112,7 +112,7 @@ class DemoCron extends Command
                     'DATE_DIFF' => $row->date_diff
                 ]);
             }
-    
+
             M_CronJobLog::create([
                 'STATUS' => 'SUCCESS',
                 'DESCRIPTION' => 'Records processed successfully'
@@ -124,5 +124,4 @@ class DemoCron extends Command
             ]);
         }
     }
-    
 }
