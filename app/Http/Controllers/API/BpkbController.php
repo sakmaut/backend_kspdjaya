@@ -30,8 +30,7 @@ class BpkbController extends Controller
 
                 $surveyId = DB::table('credit as a')
                     ->leftJoin('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
-                    ->leftJoin('bpkb_detail as d', 'd.COLLATERAL_ID', '=', 'c.ID')
-                    ->select('a.LOAN_NUMBER', 'a.STATUS as status_kontrak', 'b.NAME', 'd.STATUS')
+                    ->select('a.LOAN_NUMBER', 'a.STATUS', 'b.NAME')
                     ->where('a.ID', '=', $list->CR_CREDIT_ID)
                     ->first();
 
@@ -43,9 +42,9 @@ class BpkbController extends Controller
                     'nama_debitur' => $surveyId->NAME ?? NULL,
                     'order_number' => $surveyId->LOAN_NUMBER ?? NULL,
                     'no_jaminan' => $list->BPKB_NUMBER ?? NULL,
-                    'status_kontrak' => $surveyId->status_kontrak != NULL ? ($surveyId->status_kontrak == 'D' ? 'inactive' : 'active') : '',
+                    'status_kontrak' => $surveyId->STATUS != NULL ? ($surveyId->STATUS == 'D' ? 'inactive' : 'active') : '',
                     'id' => $list->ID,
-                    'status_jaminan' => $surveyId->STATUS ?? 'NORMAL',
+                    'status_jaminan' => '',
                     "tipe" => $list->TYPE,
                     "merk" => $list->BRAND,
                     "tahun" => $list->PRODUCTION_YEAR,
