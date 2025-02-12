@@ -553,7 +553,7 @@ class ReportController extends Controller
                 $currentAngs = isset($res->INSTALLMENT_COUNT) ? $res->INSTALLMENT_COUNT : '';
 
                 // Now calculate 'Sisa Angs' for the current row
-                $currentSisaAngs = number_format($sisaAngs - floatval($res->ORIGINAL_AMOUNT));
+                $currentSisaAngs = number_format(floatval($res->INSTALLMENT) - ($sisaAngs - floatval($res->ORIGINAL_AMOUNT)));
 
                 $schedule['data_credit'][] = [
                     'Jt.Tempo' => $currentJtTempo,
