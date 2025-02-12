@@ -545,9 +545,10 @@ class ReportController extends Controller
                 $currentJtTempo = isset($res->PAYMENT_DATE) ? Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y') : '';
                 $currentAngs = isset($res->INSTALLMENT_COUNT) ? $res->INSTALLMENT_COUNT : '';
 
-                // Hitung sisa angsuran
+                // Hitung sisa angsuran awal
                 $sisaAngs = floatval($res->INSTALLMENT) - floatval($res->angsuran);
 
+                // Jika currentJtTempo sudah ada di prevJtTempo, kurangi sisaAngs dengan ORIGINAL_AMOUNT
                 if (in_array($currentJtTempo, $prevJtTempo)) {
                     $currentJtTempo = '';
                     $sisaAngs -= floatval($res->ORIGINAL_AMOUNT ?? 0);
@@ -555,14 +556,17 @@ class ReportController extends Controller
                     array_push($prevJtTempo, $currentJtTempo);
                 }
 
+                // Jika currentAngs sudah ada di prevAngs, set currentAngs menjadi kosong
                 if (in_array($currentAngs, $prevAngs)) {
                     $currentAngs = '';
                 } else {
                     array_push($prevAngs, $currentAngs);
                 }
 
+                // Hitung sisa total tagihan
                 $sisaByr = number_format(abs($ttlAngs - $ttlByr));
 
+                // Masukkan data ke dalam array schedule
                 $schedule['data_credit'][] = [
                     'Jt.Tempo' => $currentJtTempo,
                     'Angs' => $currentAngs,
@@ -572,7 +576,7 @@ class ReportController extends Controller
                     'Bank' => '',
                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
                     'Amt Bayar' => number_format($res->ORIGINAL_AMOUNT ?? 0),
-                    'Sisa Angs' => number_format($sisaAngs), 
+                    'Sisa Angs' => number_format($sisaAngs), // Gunakan nilai sisaAngs yang sudah dikurangi
                     'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0),
                     'Byr Dnda' => number_format($res->denda ?? 0),
                     'Sisa Ttl Tghn' => $sisaByr,
