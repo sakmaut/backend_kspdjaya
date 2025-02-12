@@ -20,29 +20,25 @@ class BpkbController extends Controller
 
             $branch = $request->user()->branch_id;
 
-            $collateral = M_CrCollateral::where('LOCATION_BRANCH', $branch)->where(function ($query) {
-                $query->whereNull('DELETED_AT')
-                    ->orWhere('DELETED_AT', '');
-            })->get();
+            $results = DB::table('cr_collateral as a')
+                            ->leftJoin('credit as b', 'b.ID', '=', 'a.CR_CREDIT_ID')
+                            ->leftJoin('customer as c', 'c.CUST_CODE', '=', 'b.CUST_CODE')
+                            ->select('b.STATUS', 'a.*', 'b.LOAN_NUMBER', 'c.NAME')
+                            ->get();
+
 
             $data = [];
-            foreach ($collateral as $list) {
-
-                $surveyId = DB::table('credit as a')
-                    ->leftJoin('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
-                    ->select('a.LOAN_NUMBER', 'a.STATUS', 'b.NAME')
-                    ->where('a.ID', '=', $list->CR_CREDIT_ID)
-                    ->first();
+            foreach ($results as $list) {
 
                 $asalBranch = M_Branch::find($list->COLLATERAL_FLAG);
                 $brachName = M_Branch::find($list->LOCATION_BRANCH);
 
                 $data[] = [
                     "type" => "kendaraan",
-                    'nama_debitur' => $surveyId->NAME ?? NULL,
-                    'order_number' => $surveyId->LOAN_NUMBER ?? NULL,
+                    'nama_debitur' => $list->NAME ?? NULL,
+                    'order_number' => $list->LOAN_NUMBER ?? NULL,
                     'no_jaminan' => $list->BPKB_NUMBER ?? NULL,
-                    'status_kontrak' => $surveyId->STATUS != NULL ? ($surveyId->STATUS == 'D' ? 'inactive' : 'active') : '',
+                    'status_kontrak' => $list->STATUS == 'D' ? 'inactive' : 'active',
                     'id' => $list->ID,
                     'status_jaminan' => '',
                     "tipe" => $list->TYPE,
