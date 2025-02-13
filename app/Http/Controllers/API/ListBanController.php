@@ -256,7 +256,7 @@ class ListBanController extends Controller
                             g.ENGINE_NUMBER,
                             g.CHASIS_NUMBER,
                             g.PRODUCTION_YEAR,
-                            b.PCPL_ORI+b.TOTAL_ADMIN as TOTAL_PINJAMAN,
+                            b.PCPL_ORI-b.TOTAL_ADMIN as TOTAL_PINJAMAN,
                             b.TOTAL_ADMIN, 
                             b.CUST_CODE
                         FROM  	branch AS a
