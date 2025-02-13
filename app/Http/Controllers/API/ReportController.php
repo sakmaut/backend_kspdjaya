@@ -545,33 +545,21 @@ class ReportController extends Controller
                 $currentJtTempo = isset($res->PAYMENT_DATE) ? Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y') : '';
                 $currentAngs = isset($res->INSTALLMENT_COUNT) ? $res->INSTALLMENT_COUNT : '';
 
-                // Hitung sisa angsuran awal
+                // Calculate the initial Sisa Angs
                 $sisaAngs = floatval($res->INSTALLMENT) - floatval($res->angsuran);
 
-                if (in_array($currentJtTempo, $prevJtTempo)) {
-                    $currentJtTempo = '';
-                } else {
-                    array_push($prevJtTempo, $currentJtTempo);
-                }
-
-                if (in_array($currentAngs, $prevAngs)) {
-                    $currentAngs = '';
-                } else {
-                    array_push($prevAngs, $currentAngs);
-                }
-
-                // Adjust the current row's remaining balance by subtracting the previous row's Sisa Angs
+                // If there was a previous row, subtract its Sisa Angs from the current row
                 if ($previousSisaAngs > 0) {
-                    $sisaAngs -= $previousSisaAngs;
+                    $sisaAngs -= $previousSisaAngs; // Subtract the remaining balance of the previous row
                 }
 
                 // Ensure Sisa Angs doesn't go negative (set to 0 if negative)
                 $sisaAngs = max($sisaAngs, 0);
 
-                // Hitung sisa total tagihan
+                // Track the total amount that should be reduced from the current row
                 $sisaByr = number_format(abs($ttlAngs - $ttlByr));
 
-                // Masukkan data ke dalam array schedule
+                // Store the current row's data into the schedule array
                 $schedule['data_credit'][] = [
                     'Jt.Tempo' => $currentJtTempo,
                     'Angs' => $currentAngs,
@@ -592,6 +580,7 @@ class ReportController extends Controller
                 // Update the previousSisaAngs for the next iteration
                 $previousSisaAngs = $sisaAngs;
             }
+
 
             $creditDetail = M_Credit::with(['customer' => function ($query) {
                 $query->select('CUST_CODE', 'NAME');
