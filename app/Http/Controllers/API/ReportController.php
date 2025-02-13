@@ -553,7 +553,6 @@ class ReportController extends Controller
                 // Jika currentJtTempo sudah ada di prevJtTempo, kurangi sisaAngs dengan ORIGINAL_AMOUNT
                 if (in_array($currentJtTempo, $prevJtTempo)) {
                     $currentJtTempo = '';
-                    $sisaAngs -= floatval($res->ORIGINAL_AMOUNT ?? 0);
                 } else {
                     array_push($prevJtTempo, $currentJtTempo);
                 }
@@ -567,11 +566,11 @@ class ReportController extends Controller
 
                 $key = $currentJtTempo . '-' . $currentAngs;
                 if (isset($previousAngsValues[$key])) {
-                    // If a previous value exists, use it for Sisa Angs
-                    $sisaAngs = floatval($previousAngsValues[$key]);
+                    // If it exists, subtract the previous 'Sisa Angs' value
+                    $sisaAngs -= $previousAngsValues[$key];
                 }
 
-                // Store the current Sisa Angs value for future reference
+                // Store the current 'Sisa Angs' value for the next iteration
                 $previousAngsValues[$key] = $sisaAngs;
 
                 // Hitung sisa total tagihan

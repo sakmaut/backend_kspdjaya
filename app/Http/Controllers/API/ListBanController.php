@@ -198,7 +198,7 @@ class ListBanController extends Controller
             $query = "  SELECT 
                             CONCAT(a.CODE, '-', a.CODE_NUMBER) AS KODE,
                             a.NAME AS NAMA_CABANG,
-                            CONCAT(b.LOAN_NUMBER) AS NO_KONTRAK,
+                            b.LOAN_NUMBER AS NO_KONTRAK,
                             c.NAME AS NAMA_PELANGGAN,
                             b.CREATED_AT AS TGL_BOOKING,
                             NULL AS UB,
@@ -223,7 +223,8 @@ class ListBanController extends Controller
                             coalesce(i.TUNGGAKAN_POKOK) as AMBC_PKK_AWAL, 
                             coalesce(i.TUNGGAKAN_BUNGA) as AMBC_BNG_AWAL, 
                             coalesce(i.TUNGGAKAN_POKOK)+coalesce(i.TUNGGAKAN_BUNGA) as AMBC_TOTAL_AWAL, 
-                            concat('C',floor((DATEDIFF(str_to_date('31012025','%d%m%Y'),i.TUNGGAKAN_PERTAMA))/30)) AS CYCLE_AWAL,
+                            concat('C',case when floor((DATEDIFF(str_to_date('31012025','%d%m%Y'),i.TUNGGAKAN_PERTAMA))/30)>8 then 'X' 
+                                else floor((DATEDIFF(str_to_date('31012025','%d%m%Y'),i.TUNGGAKAN_PERTAMA))/30) end) AS CYCLE_AWAL,
                             b.STATUS_REC,
                             b.STATUS_REC, 
                             case when (b.INSTALLMENT_COUNT/b.PERIOD)=1 then 'BULANAN' else 'MUSIMAN' end as pola_bayar, 
@@ -244,7 +245,7 @@ class ListBanController extends Controller
                             coalesce(m.byr_tggk_pkk,0) AC_PKK, 
                             coalesce(m.byr_tggk_bng,0) AC_BNG_MRG, 
                             coalesce(m.byr_tggk_pkk,0)+coalesce(m.byr_tggk_bng,0) AC_TOTAL, 
-                            concat('C',floor(j.DUE_DAYS/30)) as CYCLE_AKHIR, 
+                            concat('C',case when floor(j.DUE_DAYS/30)>8 then 'X' else floor(j.DUE_DAYS/30) end) as CYCLE_AKHIR, 
                             case when (b.INSTALLMENT_COUNT/b.PERIOD)=1 then 'BULANAN' else 'MUSIMAN' end as pola_bayar_akhir, 
                             'jenis jaminan', 
                             g.COLLATERAL,
@@ -280,9 +281,10 @@ class ListBanController extends Controller
                                     WHERE	loan_number in (select loan_number from credit where status='A' 
                                             or (status in ('S','D') and mod_date > date_add(now(),interval -1 month)))
                                     GROUP	BY loan_number) k on k.loan_number=b.loan_number
-                            LEFT JOIN (	SELECT	loan_num, entry_date, payment_method
+                            LEFT JOIN (	SELECT	loan_num, entry_date, replace(replace(group_concat(payment_method),'AGENT EKS',''),',','') as payment_method
                                     FROM	payment
-                                    WHERE	(loan_num,entry_date,title) in (select loan_num, max(entry_date), concat('Angsuran Ke-',max(cast(replace(title,'Angsuran Ke-','') as signed))) from payment group by loan_num)) l on l.loan_num=b.loan_number
+                                    WHERE	(loan_num,entry_date,title) in (select loan_num, max(entry_date), concat('Angsuran Ke-',max(cast(replace(title,'Angsuran Ke-','') as signed))) from payment group by loan_num)
+                                    group by loan_num, entry_date) l on l.loan_num=b.loan_number
                             LEFT JOIN (	SELECT	loan_number, 
                                         sum(past_due_pcpl) as tggk_pkk, sum(past_due_intrst) as tggk_bng, 
                                             sum(paid_pcpl) as byr_tggk_pkk, sum(paid_int) as byr_tggk_bng, 
