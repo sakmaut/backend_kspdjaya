@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\M_Branch;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -311,6 +312,9 @@ class ListBanController extends Controller
 
             $build = [];
             foreach ($results as $result) {
+
+                $getUsers = User::find($result->SURVEYOR);
+
                 $build[] = [
                     "KODE CABANG" => $result->KODE ?? '',
                     "NAMA CABANG" => $result->NAMA_CABANG ?? '',
@@ -327,7 +331,7 @@ class ListBanController extends Controller
                     "NO HP2" => $result->NO_HP2 ?? '',
                     "PEKERJAAN" => $result->PEKERJAAN ?? '',
                     "SUPPLIER" => $result->supplier ?? '',
-                    "SURVEYOR" => $result->SURVEYOR ?? '',
+                    "SURVEYOR" => $getUsers ? $getUsers->fullname ?? '' : $result->SURVEYOR ?? '',
                     "CATT SURVEY" => $result->CATT_SURVEY ?? '',
                     "PKK HUTANG" => $result->PKK_HUTANG ?? 0,
                     "JML ANGS" => $result->JUMLAH_ANGSURAN ?? '',
