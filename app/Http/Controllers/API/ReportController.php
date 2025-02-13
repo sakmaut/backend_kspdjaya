@@ -550,9 +550,10 @@ class ReportController extends Controller
                     $currentJtTempo = '';
                     $currentAngs = '';
 
-                    $sisaAngs = floatval($res->INSTALLMENT ?? 0) - floatval($res->angsuran ?? 0);
-                } else {
                     $sisaAngs = $previousSisaAngs - floatval($res->angsuran ?? 0);
+                    $previousSisaAngs = $sisaAngs;
+                } else {
+                    $sisaAngs = floatval($res->INSTALLMENT ?? 0) - floatval($res->angsuran ?? 0);
                     $previousSisaAngs = $sisaAngs;
                     // Mark this entry as processed
                     array_push($checkExist, $uniqArr);
