@@ -218,14 +218,14 @@ class ListBanController extends Controller
                             b.PERIOD AS JUMLAH_ANGSURAN, 
                             b.INSTALLMENT_COUNT/b.PERIOD AS JARAK_ANGSURAN, 
                             b.INSTALLMENT_COUNT as PERIOD, 
-                            i.OS_POKOK AS OUTSTANDING,
-                            i.OS_BUNGA, 
+                            coalesce(i.OS_POKOK,b.PCPL_ORI) AS OUTSTANDING,
+                            coalesce(i.OS_BUNGA,b.INTRST_ORI) as OS_BUNGA, 
                             DATEDIFF(str_to_date('31012025','%d%m%Y'),i.TUNGGAKAN_PERTAMA) AS OVERDUE_AWAL,
                             coalesce(i.TUNGGAKAN_POKOK) as AMBC_PKK_AWAL, 
                             coalesce(i.TUNGGAKAN_BUNGA) as AMBC_BNG_AWAL, 
                             coalesce(i.TUNGGAKAN_POKOK)+coalesce(i.TUNGGAKAN_BUNGA) as AMBC_TOTAL_AWAL, 
                             concat('C',case when date_format(b.entry_date,'%m%Y')=date_format(now(),'%m%Y') then 'N'
-                                when floor((DATEDIFF(str_to_date('01022025','%d%m%Y'),k.F_ARR_CR_SCHEDL))/30)<=8 then 'M' 
+                                when floor((DATEDIFF(str_to_date('01022025','%d%m%Y'),k.F_ARR_CR_SCHEDL))/30)<=0 then 'M' 
                                 when floor((DATEDIFF(str_to_date('01022025','%d%m%Y'),k.F_ARR_CR_SCHEDL))/30)>8 then 'X' 
                                 else floor((DATEDIFF(str_to_date('01022025','%d%m%Y'),k.F_ARR_CR_SCHEDL))/30) end) AS CYCLE_AWAL,
                             b.STATUS_REC,
@@ -257,7 +257,7 @@ class ListBanController extends Controller
                             g.CHASIS_NUMBER,
                             g.PRODUCTION_YEAR,
                             g.TOTAL_JAMINAN,
-                            'nilai admin', 
+                            b.TOTAL_ADMIN, 
                             b.CUST_CODE
                         FROM  	branch AS a
                             INNER JOIN credit b ON b.BRANCH = a.ID AND b.STATUS='A' OR (b.BRANCH = a.ID AND b.STATUS in ('D','S') AND b.loan_number in (select loan_num from payment where date_format(entry_date,'%m%Y')=date_format(now(),'%m%Y')))
