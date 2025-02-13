@@ -550,25 +550,16 @@ class ReportController extends Controller
 
                 // Check for duplicate due dates and installment counts
                 if (in_array($currentJtTempo, $prevJtTempo)) {
-                    $currentJtTempo = '';
+                    $currentJtTempo = $sisaAngs;
                 } else {
                     array_push($prevJtTempo, $currentJtTempo);
                 }
 
                 if (in_array($currentAngs, $prevAngs)) {
-                    $currentAngs = '';
+                    $currentAngs = $sisaAngs;
                 } else {
                     array_push($prevAngs, $currentAngs);
                 }
-
-                // Adjust the current row's remaining balance by subtracting the previous row's Sisa Angs
-                if ($previousSisaAngs > 0) {
-                    $sisaAngs -= $previousSisaAngs;
-                }
-
-                // Ensure Sisa Angs doesn't go negative (set to 0 if negative)
-                $sisaAngs = max($sisaAngs, 0);
-
                 // Calculate remaining total bill
                 $sisaByr = number_format(abs($ttlAngs - $ttlByr));
 
@@ -589,9 +580,6 @@ class ReportController extends Controller
                     'Ovd' => $res->OD ?? 0,
                     'Stts' => $sisaByr == '0' ? 'LUNAS' : ''
                 ];
-
-                // Update the previousSisaAngs for the next iteration
-                $previousSisaAngs = $sisaAngs;
             }
 
             $creditDetail = M_Credit::with(['customer' => function ($query) {
