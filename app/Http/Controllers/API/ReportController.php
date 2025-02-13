@@ -530,57 +530,59 @@ class ReportController extends Controller
 
             $data = DB::select($sql);
 
-            if (empty($data)) {
-                return $schedule;
-            }
+            // if (empty($data)) {
+            //     return $schedule;
+            // }
 
-            $prevJtTempo = [];
-            $prevAngs = [];
-            $previousSisaAngs = 0;
+            // $prevJtTempo = [];
+            // $prevAngs = [];
+            // $previousSisaAngs = 0;
 
-            foreach ($data as $res) {
-                $ttlAngs = floatval($res->INSTALLMENT) + floatval($res->PAST_DUE_PENALTY);
-                $ttlByr = floatval($res->angsuran) + floatval($res->denda);
+            // foreach ($data as $res) {
+            //     $ttlAngs = floatval($res->INSTALLMENT) + floatval($res->PAST_DUE_PENALTY);
+            //     $ttlByr = floatval($res->angsuran) + floatval($res->denda);
 
-                $currentJtTempo = isset($res->PAYMENT_DATE) ? Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y') : '';
-                $currentAngs = isset($res->INSTALLMENT_COUNT) ? $res->INSTALLMENT_COUNT : '';
+            //     $currentJtTempo = isset($res->PAYMENT_DATE) ? Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y') : '';
+            //     $currentAngs = isset($res->INSTALLMENT_COUNT) ? $res->INSTALLMENT_COUNT : '';
 
-                // Calculate remaining installment
-                $sisaAngs = floatval($res->INSTALLMENT) - floatval($res->angsuran);
+            //     // Calculate remaining installment
+            //     $sisaAngs = floatval($res->INSTALLMENT) - floatval($res->angsuran);
 
-                // Check for duplicate due dates and installment counts
-                if (in_array($currentJtTempo, $prevJtTempo)) {
-                    $currentJtTempo = '';
-                } else {
-                    array_push($prevJtTempo, $currentJtTempo);
-                }
+            //     // Check for duplicate due dates and installment counts
+            //     if (in_array($currentJtTempo, $prevJtTempo)) {
+            //         $currentJtTempo = '';
+            //     } else {
+            //         array_push($prevJtTempo, $currentJtTempo);
+            //     }
 
-                if (in_array($currentAngs, $prevAngs)) {
-                    $currentAngs = '';
-                } else {
-                    array_push($prevAngs, $currentAngs);
-                }
-                // Calculate remaining total bill
-                $sisaByr = number_format(abs($ttlAngs - $ttlByr));
+            //     if (in_array($currentAngs, $prevAngs)) {
+            //         $currentAngs = '';
+            //     } else {
+            //         array_push($prevAngs, $currentAngs);
+            //     }
+            //     // Calculate remaining total bill
+            //     $sisaByr = number_format(abs($ttlAngs - $ttlByr));
 
-                // Insert data into the schedule array
-                $schedule['data_credit'][] = [
-                    'Jt.Tempo' => $currentJtTempo,
-                    'Angs' => $currentAngs,
-                    'Seq' => $res->INST_COUNT_INCREMENT ?? 0,
-                    'Amt Angs' => number_format($res->INSTALLMENT ?? 0),
-                    'No Ref' => $res->INVOICE ?? '',
-                    'Bank' => '',
-                    'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
-                    'Amt Bayar' => number_format($res->ORIGINAL_AMOUNT ?? 0),
-                    'Sisa Angs' => number_format($sisaAngs),
-                    'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0),
-                    'Byr Dnda' => number_format($res->denda ?? 0),
-                    'Sisa Ttl Tghn' => $sisaByr,
-                    'Ovd' => $res->OD ?? 0,
-                    'Stts' => $sisaByr == '0' ? 'LUNAS' : ''
-                ];
-            }
+            //     // Insert data into the schedule array
+            //     $schedule['data_credit'][] = [
+            //         'Jt.Tempo' => $currentJtTempo,
+            //         'Angs' => $currentAngs,
+            //         'Seq' => $res->INST_COUNT_INCREMENT ?? 0,
+            //         'Amt Angs' => number_format($res->INSTALLMENT ?? 0),
+            //         'No Ref' => $res->INVOICE ?? '',
+            //         'Bank' => '',
+            //         'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
+            //         'Amt Bayar' => number_format($res->ORIGINAL_AMOUNT ?? 0),
+            //         'Sisa Angs' => number_format($sisaAngs),
+            //         'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0),
+            //         'Byr Dnda' => number_format($res->denda ?? 0),
+            //         'Sisa Ttl Tghn' => $sisaByr,
+            //         'Ovd' => $res->OD ?? 0,
+            //         'Stts' => $sisaByr == '0' ? 'LUNAS' : ''
+            //     ];
+            // }
+            return response()->json($data, 200);
+            die();
 
             $creditDetail = M_Credit::with(['customer' => function ($query) {
                 $query->select('CUST_CODE', 'NAME');
