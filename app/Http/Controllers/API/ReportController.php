@@ -537,7 +537,7 @@ class ReportController extends Controller
             $prevJtTempo = [];
             $prevAngs = [];
 
-            $previousAngsValues = [];
+            $previousAngsValues = 0;
 
             foreach ($data as $res) {
 
@@ -552,7 +552,6 @@ class ReportController extends Controller
 
                 if (in_array($currentJtTempo, $prevJtTempo)) {
                     $currentJtTempo = '';
-                    $sisaAngs -= $sisaAngs;
                 } else {
                     array_push($prevJtTempo, $currentJtTempo);
                 }
