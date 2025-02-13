@@ -254,7 +254,7 @@ class ListBanController extends Controller
                             g.CHASIS_NUMBER,
                             g.PRODUCTION_YEAR,
                             g.TOTAL_JAMINAN,
-                            'nilai admin', 
+                            e.TOTAL_ADMIN,
                             b.CUST_CODE
                         FROM  	branch AS a
                             INNER JOIN credit b ON b.BRANCH = a.ID AND b.STATUS='A' OR (b.BRANCH = a.ID AND b.STATUS in ('D','S') AND b.loan_number in (select loan_num from payment where date_format(entry_date,'%m%Y')=date_format(now(),'%m%Y')))
@@ -370,7 +370,6 @@ class ListBanController extends Controller
                     "TAHUN" =>  $result->PRODUCTION_YEAR ?? '',
                     "NILAI PINJAMAN" => $result->TOTAL_JAMINAN ?? 0,
                     "ADMIN" =>  $result->TOTAL_ADMIN ?? '',
-                    "NILAI ADMIN" => '',
                     "CUST_ID" =>  $result->CUST_CODE ?? ''
                 ];
             }
