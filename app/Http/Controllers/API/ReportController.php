@@ -536,7 +536,6 @@ class ReportController extends Controller
 
             $prevJtTempo = [];
             $prevAngs = [];
-
             $previousSisaAngs = 0; // Variable to store the previous sisaAngs value
 
             foreach ($data as $res) {
@@ -565,10 +564,17 @@ class ReportController extends Controller
                     $sisaAngs -= $previousSisaAngs; // Reduce sisaAngs by the previous value
                 }
 
+                // Adjust the current row's remaining balance by subtracting the previous row's Sisa Angs
+                if ($previousSisaAngs > 0) {
+                    $sisaAngs -= $previousSisaAngs;
+                }
+
+                // Make sure Sisa Angs doesn't go below zero
+                $sisaAngs = max($sisaAngs, 0);
+
                 // Hitung sisa total tagihan
                 $sisaByr = number_format(abs($ttlAngs - $ttlByr));
 
-                // Masukkan data ke dalam array schedule
                 $schedule['data_credit'][] = [
                     'Jt.Tempo' => $currentJtTempo,
                     'Angs' => $currentAngs,
@@ -589,6 +595,7 @@ class ReportController extends Controller
                 // Update the previousSisaAngs for the next iteration
                 $previousSisaAngs = $sisaAngs;
             }
+
 
             $creditDetail = M_Credit::with(['customer' => function ($query) {
                 $query->select('CUST_CODE', 'NAME');
