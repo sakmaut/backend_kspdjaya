@@ -225,9 +225,9 @@ class ListBanController extends Controller
                             coalesce(i.TUNGGAKAN_BUNGA) as AMBC_BNG_AWAL, 
                             coalesce(i.TUNGGAKAN_POKOK)+coalesce(i.TUNGGAKAN_BUNGA) as AMBC_TOTAL_AWAL, 
                             concat('C',case when date_format(entry_date,'%m%Y')=date_format(now(),'%m%Y') then 'N'
-                                        when floor((DATEDIFF(str_to_date('01022025','%d%m%Y'),k.F_ARR_CR_SCHEDL))/30)<=8 then 'M' 
-                                        when floor((DATEDIFF(str_to_date('01022025','%d%m%Y'),k.F_ARR_CR_SCHEDL))/30)>8 then 'X' 
-                                        else floor((DATEDIFF(str_to_date('01022025','%d%m%Y'),k.F_ARR_CR_SCHEDL))/30) end) AS CYCLE_AWAL,
+                                when floor((DATEDIFF(str_to_date('01022025','%d%m%Y'),k.F_ARR_CR_SCHEDL))/30)<=8 then 'M' 
+                                when floor((DATEDIFF(str_to_date('01022025','%d%m%Y'),k.F_ARR_CR_SCHEDL))/30)>8 then 'X' 
+                                else floor((DATEDIFF(str_to_date('01022025','%d%m%Y'),k.F_ARR_CR_SCHEDL))/30) end) AS CYCLE_AWAL,
                             b.STATUS_REC,
                             b.STATUS_REC, 
                             case when (b.INSTALLMENT_COUNT/b.PERIOD)=1 then 'BULANAN' else 'MUSIMAN' end as pola_bayar, 
@@ -257,7 +257,7 @@ class ListBanController extends Controller
                             g.CHASIS_NUMBER,
                             g.PRODUCTION_YEAR,
                             g.TOTAL_JAMINAN,
-                            e.TOTAL_ADMIN,
+                            'nilai admin', 
                             b.CUST_CODE
                         FROM  	branch AS a
                             INNER JOIN credit b ON b.BRANCH = a.ID AND b.STATUS='A' OR (b.BRANCH = a.ID AND b.STATUS in ('D','S') AND b.loan_number in (select loan_num from payment where date_format(entry_date,'%m%Y')=date_format(now(),'%m%Y')))
@@ -298,16 +298,9 @@ class ListBanController extends Controller
                                     GROUP	BY loan_number) m on m.loan_number=b.loan_number
                             WHERE 1=1";
 
-            // Add filters dynamically
             if (!empty($getBranch) && $getBranch != 'SEMUA CABANG') {
                 $query .= " AND a.ID = '$getBranch'";
             }
-
-            // if (!empty($dateFrom)) {
-            //     $query .= " AND DATE_FORMAT(b.CREATED_AT, '%Y-%m') = '$dateFrom'";
-            // } else {
-            //     $query .= " AND b.CREATED_AT >= DATE_SUB(NOW(), INTERVAL 1 MONTH)";
-            // }
 
             $query .= " ORDER BY a.NAME, b.CREATED_AT ASC";
 
