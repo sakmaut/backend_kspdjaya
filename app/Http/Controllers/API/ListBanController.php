@@ -224,7 +224,7 @@ class ListBanController extends Controller
                             coalesce(i.TUNGGAKAN_POKOK) as AMBC_PKK_AWAL, 
                             coalesce(i.TUNGGAKAN_BUNGA) as AMBC_BNG_AWAL, 
                             coalesce(i.TUNGGAKAN_POKOK)+coalesce(i.TUNGGAKAN_BUNGA) as AMBC_TOTAL_AWAL, 
-                            concat('C',case when date_format(entry_date,'%m%Y')=date_format(now(),'%m%Y') then 'N'
+                            concat('C',case when date_format(b.entry_date,'%m%Y')=date_format(now(),'%m%Y') then 'N'
                                 when floor((DATEDIFF(str_to_date('01022025','%d%m%Y'),k.F_ARR_CR_SCHEDL))/30)<=8 then 'M' 
                                 when floor((DATEDIFF(str_to_date('01022025','%d%m%Y'),k.F_ARR_CR_SCHEDL))/30)>8 then 'X' 
                                 else floor((DATEDIFF(str_to_date('01022025','%d%m%Y'),k.F_ARR_CR_SCHEDL))/30) end) AS CYCLE_AWAL,
