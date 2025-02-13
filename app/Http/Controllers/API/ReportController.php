@@ -540,7 +540,6 @@ class ReportController extends Controller
             $previousSisaAngs = 0;
 
             foreach ($data as $res) {
-
                 $ttlAngs = floatval($res->INSTALLMENT) + floatval($res->PAST_DUE_PENALTY);
                 $ttlByr = floatval($res->angsuran) + floatval($res->denda);
 
@@ -562,6 +561,7 @@ class ReportController extends Controller
                     array_push($prevAngs, $currentAngs);
                 }
 
+                // If both $currentJtTempo and $currentAngs are empty, reduce sisaAngs by the previous value
                 if ($currentJtTempo === '' && $currentAngs === '') {
                     $sisaAngs -= $previousSisaAngs; // Reduce sisaAngs by the previous value
                 }
