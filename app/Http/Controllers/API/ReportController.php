@@ -537,7 +537,7 @@ class ReportController extends Controller
             $prevJtTempo = [];
             $prevAngs = [];
 
-            $previousAngsValues = 0;
+            $previousSisaAngs = 0;
 
             foreach ($data as $res) {
 
@@ -561,6 +561,13 @@ class ReportController extends Controller
                 } else {
                     array_push($prevAngs, $currentAngs);
                 }
+
+                if ($currentJtTempo === '' && $currentAngs === '') {
+                    $sisaAngs -= $previousSisaAngs; // Reduce sisaAngs by the previous value
+                }
+
+                // Update the previousSisaAngs for the next iteration
+                $previousSisaAngs = $sisaAngs;
 
                 // Hitung sisa total tagihan
                 $sisaByr = number_format(abs($ttlAngs - $ttlByr));
