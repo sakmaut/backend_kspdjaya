@@ -516,7 +516,7 @@ class ReportController extends Controller
                             ) AS b 
                             ON b.payment_id = a.id
                             WHERE 
-                                a.LOAN_NUM = '11000240000426'
+                                a.LOAN_NUM = '$id'
                             GROUP BY 
                                 a.LOAN_NUM, a.START_DATE, a.ENTRY_DATE, a.ORIGINAL_AMOUNT, a.INVOICE, b.angsuran, b.denda
                             ORDER BY a.ENTRY_DATE DESC
