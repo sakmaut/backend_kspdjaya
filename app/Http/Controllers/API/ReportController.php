@@ -576,7 +576,7 @@ class ReportController extends Controller
                     'Byr Dnda' => number_format($res->denda ?? 0),
                     'Sisa Ttl Tghn' => $sisaByr,
                     'Ovd' => $res->OD ?? 0,
-                    'Stts' => $sisaByr == '0' ? 'LUNAS' : ''
+                    'Stts' => $sisaByr == '0' ? 'L' : ''
                 ];
             }
 
