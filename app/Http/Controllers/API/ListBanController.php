@@ -235,7 +235,7 @@ class ListBanController extends Controller
                             coalesce(k.OS_BNG_AKHIR,0) as OS_BNG_AKHIR, 
                             j.DUE_DAYS as OVERDUE_AKHIR, 
                             b.INSTALLMENT,
-                            k.LAST_INST, 
+                            case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 then 0 else k.LAST_INST end as LAST_INST, 
                             e.INSTALLMENT_TYPE AS tipe,
                             i.TUNGGAKAN_PERTAMA,
                             m.curr_arr, 
@@ -278,7 +278,7 @@ class ListBanController extends Controller
                                 LEFT JOIN credit_2025 i on cast(i.loan_number as char) = cast(b.LOAN_NUMBER as char)
                                 LEFT JOIN first_arr j on cast(j.LOAN_NUMBER as char) = cast(b.LOAN_NUMBER as char)
                             LEFT JOIN (	SELECT	loan_number, sum(interest)-sum(coalesce(payment_value_interest,0)) as OS_BNG_AKHIR, 
-                                        min(case when paid_flag='PAID' then 0 else installment_count end) as LAST_INST, 
+                                        min(case when paid_flag='PAID' then 999 else installment_count end) as LAST_INST, 
                                         max(case when paid_flag='PAID' then payment_date else str_to_date('01011900','%d%m%Y') end) as LAST_PAY, 
                                         min(case when paid_flag<>'PAID' then payment_date else str_to_date('01013000','%d%m%Y') end) as F_ARR_CR_SCHEDL
                                     FROM	credit_schedule
