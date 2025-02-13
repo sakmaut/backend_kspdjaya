@@ -36,19 +36,19 @@ class Welcome extends Controller
     public function index(Request $request)
     {
 
-        $data = DB::table('arrears')
-            ->selectRaw('LOAN_NUMBER, min(START_DATE) as start_date, datediff(now(), min(START_DATE)) as date_diff')
-            ->where('status_rec', 'A')
-            ->groupBy('LOAN_NUMBER')
-            ->get();
+        // $data = DB::table('arrears')
+        //     ->selectRaw('LOAN_NUMBER, min(START_DATE) as start_date, datediff(now(), min(START_DATE)) as date_diff')
+        //     ->where('status_rec', 'A')
+        //     ->groupBy('LOAN_NUMBER')
+        //     ->get();
 
-        foreach ($data as $row) {
-            M_FirstArr::create([
-                'LOAN_NUMBER' => $row->LOAN_NUMBER,
-                'START_DATE' => Carbon::parse($row->start_date)->format('Y-m-d'),
-                'DATE_DIFF' => $row->date_diff
-            ]);
-        }
+        // foreach ($data as $row) {
+        //     M_FirstArr::create([
+        //         'LOAN_NUMBER' => $row->LOAN_NUMBER,
+        //         'START_DATE' => Carbon::parse($row->start_date)->format('Y-m-d'),
+        //         'DATE_DIFF' => $row->date_diff
+        //     ]);
+        // }
 
         return response()->json($this->statusApproval::DRAFT_SURVEY);
         die;
