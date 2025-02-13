@@ -536,8 +536,7 @@ class ReportController extends Controller
 
             $prevJtTempo = [];
             $prevAngs = [];
-
-            $previousSisaAngs = 0;
+            $previousSisaAngs = 0; // Variable to store the previous sisaAngs value
 
             foreach ($data as $res) {
                 $ttlAngs = floatval($res->INSTALLMENT) + floatval($res->PAST_DUE_PENALTY);
@@ -566,9 +565,6 @@ class ReportController extends Controller
                     $sisaAngs -= $previousSisaAngs; // Reduce sisaAngs by the previous value
                 }
 
-                // Update the previousSisaAngs for the next iteration
-                $previousSisaAngs = $sisaAngs;
-
                 // Hitung sisa total tagihan
                 $sisaByr = number_format(abs($ttlAngs - $ttlByr));
 
@@ -589,6 +585,8 @@ class ReportController extends Controller
                     'Ovd' => $res->OD ?? 0,
                     'Stts' => $sisaByr == '0' ? 'LUNAS' : ''
                 ];
+
+                $previousSisaAngs = $sisaAngs;
             }
 
             $creditDetail = M_Credit::with(['customer' => function ($query) {
