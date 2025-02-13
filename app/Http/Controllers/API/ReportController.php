@@ -537,6 +537,8 @@ class ReportController extends Controller
             $prevJtTempo = [];
             $prevAngs = [];
 
+            $previousAngsValues = [];
+
             foreach ($data as $res) {
 
                 $ttlAngs = floatval($res->INSTALLMENT) + floatval($res->PAST_DUE_PENALTY);
@@ -562,6 +564,15 @@ class ReportController extends Controller
                 } else {
                     array_push($prevAngs, $currentAngs);
                 }
+
+                $key = $currentJtTempo . '-' . $currentAngs;
+                if (isset($previousAngsValues[$key])) {
+                    // If a previous value exists, use it for Sisa Angs
+                    $sisaAngs = floatval($previousAngsValues[$key]);
+                }
+
+                // Store the current Sisa Angs value for future reference
+                $previousAngsValues[$key] = $sisaAngs;
 
                 // Hitung sisa total tagihan
                 $sisaByr = number_format(abs($ttlAngs - $ttlByr));
