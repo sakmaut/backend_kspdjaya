@@ -536,7 +536,7 @@ class ReportController extends Controller
 
             $prevJtTempo = [];
             $prevAngs = [];
-            $previousSisaAngs = 0; // Variable to store the previous sisaAngs value
+            $previousSisaAngs = 0;
 
             foreach ($data as $res) {
                 $ttlAngs = floatval($res->INSTALLMENT) + floatval($res->PAST_DUE_PENALTY);
@@ -545,18 +545,34 @@ class ReportController extends Controller
                 $currentJtTempo = isset($res->PAYMENT_DATE) ? Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y') : '';
                 $currentAngs = isset($res->INSTALLMENT_COUNT) ? $res->INSTALLMENT_COUNT : '';
 
-                // Hitung Sisa Angs (initial)
+                // Calculate remaining installment
                 $sisaAngs = floatval($res->INSTALLMENT) - floatval($res->angsuran);
 
-                // If there's a previous remaining balance, subtract it from the current row
-                if ($previousSisaAngs > 0) {
-                    $sisaAngs -= $previousSisaAngs; // Subtract the remaining balance of the previous row
+                // Check for duplicate due dates and installment counts
+                if (in_array($currentJtTempo, $prevJtTempo)) {
+                    $currentJtTempo = '';
+                } else {
+                    array_push($prevJtTempo, $currentJtTempo);
                 }
 
-                // If the subtraction results in a negative value, set Sisa Angs to 0
+                if (in_array($currentAngs, $prevAngs)) {
+                    $currentAngs = '';
+                } else {
+                    array_push($prevAngs, $currentAngs);
+                }
+
+                // Adjust the current row's remaining balance by subtracting the previous row's Sisa Angs
+                if ($previousSisaAngs > 0) {
+                    $sisaAngs -= $previousSisaAngs;
+                }
+
+                // Ensure Sisa Angs doesn't go negative (set to 0 if negative)
                 $sisaAngs = max($sisaAngs, 0);
 
-                // Store the current row's data into the schedule array
+                // Calculate remaining total bill
+                $sisaByr = number_format(abs($ttlAngs - $ttlByr));
+
+                // Insert data into the schedule array
                 $schedule['data_credit'][] = [
                     'Jt.Tempo' => $currentJtTempo,
                     'Angs' => $currentAngs,
@@ -569,16 +585,14 @@ class ReportController extends Controller
                     'Sisa Angs' => number_format($sisaAngs),
                     'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0),
                     'Byr Dnda' => number_format($res->denda ?? 0),
-                    'Sisa Ttl Tghn' => number_format(abs($ttlAngs - $ttlByr)),
+                    'Sisa Ttl Tghn' => $sisaByr,
                     'Ovd' => $res->OD ?? 0,
-                    'Stts' => abs($ttlAngs - $ttlByr) == 0 ? 'LUNAS' : ''
+                    'Stts' => $sisaByr == '0' ? 'LUNAS' : ''
                 ];
 
                 // Update the previousSisaAngs for the next iteration
                 $previousSisaAngs = $sisaAngs;
             }
-
-
 
             $creditDetail = M_Credit::with(['customer' => function ($query) {
                 $query->select('CUST_CODE', 'NAME');
