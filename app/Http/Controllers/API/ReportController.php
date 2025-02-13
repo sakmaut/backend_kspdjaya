@@ -536,17 +536,26 @@ class ReportController extends Controller
 
             $prevJtTempo = [];
             $prevAngs = [];
-            $previousSisaAngs = 0;
+            $previousAngsuran = 0; // Initialize a variable to store the previous "angsuran"
 
+            // Loop through each data item
             foreach ($data as $res) {
                 $ttlAngs = floatval($res->INSTALLMENT) + floatval($res->PAST_DUE_PENALTY);
                 $ttlByr = floatval($res->angsuran) + floatval($res->denda);
 
+                // Get current due date and installment count
                 $currentJtTempo = isset($res->PAYMENT_DATE) ? Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y') : '';
                 $currentAngs = isset($res->INSTALLMENT_COUNT) ? $res->INSTALLMENT_COUNT : '';
 
-                // Calculate remaining installment
-                $sisaAngs = floatval($res->INSTALLMENT) - floatval($res->angsuran);
+                // Calculate the remaining installment before summing
+                if ($previousAngsuran > 0) {
+                    $sisaAngs = floatval($res->INSTALLMENT) - floatval($previousAngsuran); // Subtract previous payment from the current installment
+                } else {
+                    $sisaAngs = floatval($res->INSTALLMENT) - floatval($res->angsuran); // Default if there's no previous installment
+                }
+
+                // Update the previous installment value with the current installment
+                $previousAngsuran = $res->angsuran;
 
                 // Check for duplicate due dates and installment counts
                 if (in_array($currentJtTempo, $prevJtTempo)) {
@@ -559,11 +568,6 @@ class ReportController extends Controller
                     $currentAngs = '';
                 } else {
                     array_push($prevAngs, $currentAngs);
-                }
-
-                if ($currentJtTempo == '' && $currentAngs == '') {
-                    // Get the previous installment before summing
-                    $sisaAngs = floatval($res->INSTALLMENT) - floatval($res->angsuran);  // adjust this logic to fit your needs
                 }
 
                 // Calculate remaining total bill
@@ -587,6 +591,7 @@ class ReportController extends Controller
                     'Stts' => $sisaByr == '0' ? 'LUNAS' : ''
                 ];
             }
+
 
             $creditDetail = M_Credit::with(['customer' => function ($query) {
                 $query->select('CUST_CODE', 'NAME');
