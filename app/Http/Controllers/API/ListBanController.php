@@ -237,7 +237,7 @@ class ListBanController extends Controller
                             b.INSTALLMENT,
                             case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 then 0 else k.LAST_INST end as LAST_INST, 
                             e.INSTALLMENT_TYPE AS tipe,
-                            i.TUNGGAKAN_PERTAMA,
+                            k.F_ARR_CR_SCHEDL as TUNGGAKAN_PERTAMA,
                             m.curr_arr, 
                             case when date_format(l.entry_date,'%m%Y')=date_format(now(),'%m%Y') then l.entry_date else null end as LAST_PAY, 
                             ' ' AS COLLECTOR,
