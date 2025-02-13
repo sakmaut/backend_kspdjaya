@@ -211,7 +211,7 @@ class ListBanController extends Controller
                             c.PHONE_PERSONAL AS NO_HP2,
                             c.OCCUPATION AS PEKERJAAN,
                             CONCAT(h.REF_PELANGGAN, ' ', h.REF_PELANGGAN_OTHER) AS supplier, 
-                            NULL AS SURVEYOR,
+                            b.MCF_ID AS SURVEYOR,
                             f.survey_note AS CATT_SURVEY,
                             b.PCPL_ORI AS PKK_HUTANG,
                             b.PERIOD AS JUMLAH_ANGSURAN, 

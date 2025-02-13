@@ -560,6 +560,12 @@ class ReportController extends Controller
                 } else {
                     array_push($prevAngs, $currentAngs);
                 }
+
+                if ($currentJtTempo == '' && $currentAngs == '') {
+                    // Get the previous installment before summing
+                    $sisaAngs = floatval($res->INSTALLMENT) - floatval($res->angsuran);  // adjust this logic to fit your needs
+                }
+
                 // Calculate remaining total bill
                 $sisaByr = number_format(abs($ttlAngs - $ttlByr));
 
