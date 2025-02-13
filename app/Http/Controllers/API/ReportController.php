@@ -536,6 +536,7 @@ class ReportController extends Controller
 
             $prevJtTempo = [];
             $prevAngs = [];
+
             $previousSisaAngs = 0; // Variable to store the previous sisaAngs value
 
             foreach ($data as $res) {
@@ -560,7 +561,6 @@ class ReportController extends Controller
                     array_push($prevAngs, $currentAngs);
                 }
 
-                // If both $currentJtTempo and $currentAngs are empty, reduce sisaAngs by the previous value
                 if ($currentJtTempo === '' && $currentAngs === '') {
                     $sisaAngs -= $previousSisaAngs; // Reduce sisaAngs by the previous value
                 }
@@ -586,6 +586,7 @@ class ReportController extends Controller
                     'Stts' => $sisaByr == '0' ? 'LUNAS' : ''
                 ];
 
+                // Update the previousSisaAngs for the next iteration
                 $previousSisaAngs = $sisaAngs;
             }
 
