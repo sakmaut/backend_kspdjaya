@@ -256,7 +256,7 @@ class ListBanController extends Controller
                             g.ENGINE_NUMBER,
                             g.CHASIS_NUMBER,
                             g.PRODUCTION_YEAR,
-                            g.TOTAL_JAMINAN,
+                            b.PCPL_ORI+b.TOTAL_ADMIN as TOTAL_PINJAMAN,
                             b.TOTAL_ADMIN, 
                             b.CUST_CODE
                         FROM  	branch AS a
@@ -368,7 +368,7 @@ class ListBanController extends Controller
                     "NO MESIN" =>  $result->ENGINE_NUMBER ?? '',
                     "NO RANGKA" =>  $result->CHASIS_NUMBER ?? '',
                     "TAHUN" =>  $result->PRODUCTION_YEAR ?? '',
-                    "NILAI PINJAMAN" => intval($result->TOTAL_JAMINAN) ?? 0,
+                    "NILAI PINJAMAN" => intval($result->TOTAL_PINJAMAN) ?? 0,
                     "ADMIN" =>  intval($result->TOTAL_ADMIN) ?? '',
                     "CUST_ID" =>  $result->CUST_CODE ?? ''
                 ];
