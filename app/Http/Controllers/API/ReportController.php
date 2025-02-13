@@ -550,28 +550,18 @@ class ReportController extends Controller
                 // Hitung sisa angsuran awal
                 $sisaAngs = floatval($res->INSTALLMENT) - floatval($res->angsuran);
 
-                // Jika currentJtTempo sudah ada di prevJtTempo, kurangi sisaAngs dengan ORIGINAL_AMOUNT
                 if (in_array($currentJtTempo, $prevJtTempo)) {
                     $currentJtTempo = '';
+                    $sisaAngs -= $sisaAngs;
                 } else {
                     array_push($prevJtTempo, $currentJtTempo);
                 }
 
-                // Jika currentAngs sudah ada di prevAngs, set currentAngs menjadi kosong
                 if (in_array($currentAngs, $prevAngs)) {
                     $currentAngs = '';
                 } else {
                     array_push($prevAngs, $currentAngs);
                 }
-
-                $key = $currentJtTempo . '-' . $currentAngs;
-                if (isset($previousAngsValues[$key])) {
-                    // If it exists, subtract the previous 'Sisa Angs' value
-                    $sisaAngs -= $previousAngsValues[$key];
-                }
-
-                // Store the current 'Sisa Angs' value for the next iteration
-                $previousAngsValues[$key] = $sisaAngs;
 
                 // Hitung sisa total tagihan
                 $sisaByr = number_format(abs($ttlAngs - $ttlByr));
@@ -586,7 +576,7 @@ class ReportController extends Controller
                     'Bank' => '',
                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
                     'Amt Bayar' => number_format($res->ORIGINAL_AMOUNT ?? 0),
-                    'Sisa Angs' => number_format($sisaAngs), // Gunakan nilai sisaAngs yang sudah dikurangi
+                    'Sisa Angs' => number_format($sisaAngs),
                     'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0),
                     'Byr Dnda' => number_format($res->denda ?? 0),
                     'Sisa Ttl Tghn' => $sisaByr,
