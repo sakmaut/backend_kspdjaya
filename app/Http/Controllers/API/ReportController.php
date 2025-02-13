@@ -546,18 +546,18 @@ class ReportController extends Controller
 
                 $uniqArr = $currentJtTempo . '-' . $currentAngs;
 
-                $sisaAngs = floatval($res->INSTALLMENT) - floatval($res->angsuran);
-
-                // Check for duplicate due dates and installment counts
                 if (in_array($uniqArr, $checkExist)) {
                     $currentJtTempo = '';
                     $currentAngs = '';
+
+                    $sisaAngs = floatval($res->INSTALLMENT ?? 0) - floatval($res->angsuran ?? 0);
                 } else {
-                    // Add the unique combination to the array
+                    $sisaAngs = $previousSisaAngs - floatval($res->angsuran ?? 0);
+                    $previousSisaAngs = $sisaAngs;
+                    // Mark this entry as processed
                     array_push($checkExist, $uniqArr);
                 }
 
-                // Calculate remaining total bill
                 $sisaByr = number_format(abs($ttlAngs - $ttlByr));
 
                 // Insert data into the schedule array
