@@ -550,13 +550,13 @@ class ReportController extends Controller
 
                 // Check for duplicate due dates and installment counts
                 if (in_array($currentJtTempo, $prevJtTempo)) {
-                    $currentJtTempo = $sisaAngs;
+                    $currentJtTempo = '';
                 } else {
                     array_push($prevJtTempo, $currentJtTempo);
                 }
 
                 if (in_array($currentAngs, $prevAngs)) {
-                    $currentAngs = $sisaAngs;
+                    $currentAngs = '';
                 } else {
                     array_push($prevAngs, $currentAngs);
                 }
