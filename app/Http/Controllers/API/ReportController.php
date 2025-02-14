@@ -534,39 +534,34 @@ class ReportController extends Controller
                 return $schedule;
             }
 
-            $prevJtTempo = [];
-            $prevAngs = [];
+            $checkExist = [];
+            $previousSisaAngs = 0;
 
             foreach ($data as $res) {
-
                 $ttlAngs = floatval($res->INSTALLMENT) + floatval($res->PAST_DUE_PENALTY);
                 $ttlByr = floatval($res->angsuran) + floatval($res->denda);
 
                 $currentJtTempo = isset($res->PAYMENT_DATE) ? Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y') : '';
                 $currentAngs = isset($res->INSTALLMENT_COUNT) ? $res->INSTALLMENT_COUNT : '';
 
-                // Hitung sisa angsuran awal
-                $sisaAngs = floatval($res->INSTALLMENT) - floatval($res->angsuran);
+                $uniqArr = $currentJtTempo . '-' . $currentAngs;
 
-                // Jika currentJtTempo sudah ada di prevJtTempo, kurangi sisaAngs dengan ORIGINAL_AMOUNT
-                if (in_array($currentJtTempo, $prevJtTempo)) {
+                if (in_array($uniqArr, $checkExist)) {
                     $currentJtTempo = '';
-                    $sisaAngs -= floatval($res->ORIGINAL_AMOUNT ?? 0);
-                } else {
-                    array_push($prevJtTempo, $currentJtTempo);
-                }
-
-                // Jika currentAngs sudah ada di prevAngs, set currentAngs menjadi kosong
-                if (in_array($currentAngs, $prevAngs)) {
                     $currentAngs = '';
+
+                    $sisaAngs = $previousSisaAngs - floatval($res->angsuran ?? 0);
+                    $previousSisaAngs = $sisaAngs;
                 } else {
-                    array_push($prevAngs, $currentAngs);
+                    $sisaAngs = floatval($res->INSTALLMENT ?? 0) - floatval($res->angsuran ?? 0);
+                    $previousSisaAngs = $sisaAngs;
+                    // Mark this entry as processed
+                    array_push($checkExist, $uniqArr);
                 }
 
-                // Hitung sisa total tagihan
                 $sisaByr = number_format(abs($ttlAngs - $ttlByr));
 
-                // Masukkan data ke dalam array schedule
+                // Insert data into the schedule array
                 $schedule['data_credit'][] = [
                     'Jt.Tempo' => $currentJtTempo,
                     'Angs' => $currentAngs,
@@ -576,12 +571,12 @@ class ReportController extends Controller
                     'Bank' => '',
                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
                     'Amt Bayar' => number_format($res->ORIGINAL_AMOUNT ?? 0),
-                    'Sisa Angs' => number_format($sisaAngs), // Gunakan nilai sisaAngs yang sudah dikurangi
+                    'Sisa Angs' => number_format($sisaAngs),
                     'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0),
                     'Byr Dnda' => number_format($res->denda ?? 0),
-                    'Sisa Ttl Tghn' => $sisaByr,
+                    'Sisa Tghn' => $sisaByr,
                     'Ovd' => $res->OD ?? 0,
-                    'Stts' => $sisaByr == '0' ? 'LUNAS' : ''
+                    '' => $sisaByr == '0' ? 'L' : ''
                 ];
             }
 

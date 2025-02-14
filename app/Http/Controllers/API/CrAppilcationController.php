@@ -765,6 +765,7 @@ class CrAppilcationController extends Controller
 
     public function generateUuidFPK(Request $request)
     {
+        DB::beginTransaction();
         try {
             $getSurveyId = $request->cr_prospect_id;
 
@@ -901,8 +902,10 @@ class CrAppilcationController extends Controller
                 $generate_uuid = $check_prospect_id->ID;
             }
 
+            DB::commit();
             return response()->json(['message' => 'OK', "status" => 200, 'response' => ['uuid' => $generate_uuid]], 200);
         } catch (\Exception $e) {
+            DB::rollback();
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
