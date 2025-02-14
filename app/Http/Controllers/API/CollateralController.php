@@ -35,21 +35,21 @@ class CollateralController extends Controller
                             ->select('a.LOAN_NUMBER', 'b.*');
 
             if (!empty($atas_nama)) {
-                $collateral = $collateral->where('b.ON_BEHALF', 'like', '%' . $atas_nama . '%');
+                $collateral->where('b.ON_BEHALF', 'like', '%' . $atas_nama . '%');
             }
 
             if (!empty($no_polisi)) {
-                $collateral = $collateral->where('b.POLICE_NUMBER', 'like', '%' . $no_polisi . '%');
+                $collateral->where('b.POLICE_NUMBER', 'like', '%' . $no_polisi . '%');
             }
 
             if (!empty($no_bpkb)) {
-                $collateral = $collateral->where('b.BPKB_NUMBER', 'like', '%' . $no_bpkb . '%');
+                $collateral->where('b.BPKB_NUMBER', 'like', '%' . $no_bpkb . '%');
             }
 
-            $collateral = $collateral->orderBy('a.CREATED_AT', 'DESC');
+            $collateral->orderBy('a.CREATED_AT', 'DESC');
 
             // Limit the result to 10 records right away
-            $collateral = $collateral->limit(10);
+            $collateral->limit(10);
 
             // Use get() to retrieve the data, which will return a Collection
             $collateralData = $collateral->get()->transform(function ($list) {
