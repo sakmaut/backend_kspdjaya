@@ -25,23 +25,28 @@ class CollateralController extends Controller
             $no_polisi = $request->query('no_polisi');
             $no_bpkb = $request->query('no_bpkb');
 
-            $collateral = M_CrCollateral::where(function ($query) {
-                $query->whereNull('DELETED_AT')
-                    ->orWhere('DELETED_AT', '');
-            });
+            $collateral = DB::table('credit as a')
+                            ->leftJoin('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
+                            ->where(function ($query) {
+                                $query->whereNull('b.DELETED_AT')
+                                    ->orWhere('b.DELETED_AT', '!=', '');
+                            })
+                            ->where('a.STATUS_REC','A')
+                            ->select('a.LOAN_NUMBER', 'b.*');
 
-            // Apply filters only if the respective parameter is not empty
             if (!empty($atas_nama)) {
-                $collateral = $collateral->where('ON_BEHALF', 'like', '%' . $atas_nama . '%');
+                $collateral = $collateral->where('b.ON_BEHALF', 'like', '%' . $atas_nama . '%');
             }
 
             if (!empty($no_polisi)) {
-                $collateral = $collateral->where('POLICE_NUMBER', 'like', '%' . $no_polisi . '%');
+                $collateral = $collateral->where('b.POLICE_NUMBER', 'like', '%' . $no_polisi . '%');
             }
 
             if (!empty($no_bpkb)) {
-                $collateral = $collateral->where('BPKB_NUMBER', 'like', '%' . $no_bpkb . '%');
+                $collateral = $collateral->where('b.BPKB_NUMBER', 'like', '%' . $no_bpkb . '%');
             }
+
+            $collateral = $collateral->orderBy('b.CREATED_AT', 'DESC');
 
             // Limit the result to 10 records right away
             $collateral = $collateral->limit(10);
@@ -51,10 +56,12 @@ class CollateralController extends Controller
                 return $this->collateralField($list);
             });
 
+            // Convert the transformed collection to an array
             $collateralData = $collateralData->toArray();
 
             // Return the transformed data as JSON
-            return response()->json($collateralData, 200);            
+            return response()->json($collateralData, 200);
+         
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
