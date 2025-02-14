@@ -66,18 +66,18 @@ class ListBanController extends Controller
 
                         // Store the total sum in the 'amount' field of the angsurans array
                         $angsurans[] = [
-                            'no_invoice' => $no_invoice,
-                            'loan_num' => $loan_num,
-                            'no_kontrak' => $loan_num,
-                            'nama_pelanggan' => $pelanggan,
-                            'user' => $user,
+                            'no' => $no++,
                             'type' => 'CASH_IN',
-                            'amount' => $totalAngsuranPokokBunga, // Store the running total here
-                            'jenis' => $item->JENIS,
+                            'no_invoice' => $no_invoice,
+                            'no_kontrak' => $loan_num,
                             'tgl' => $item->ENTRY_DATE ?? '',
                             'cabang' => $item->nama_cabang ?? '',
-                            'payment_method' => $item->PAYMENT_METHOD ?? '',
+                            'user' => $user ?? '',
+                            'position' => $item->position ?? '',
+                            'nama_pelanggan' => $pelanggan,
+                            'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
                             'keterangan' => $item->JENIS . ' ' . $item->angsuran_ke ?? '',
+                            'amount' => $totalAngsuranPokokBunga,
                         ];
                     } else if ($item->JENIS != 'PENCAIRAN') {
                         // Process normal items as before
