@@ -225,7 +225,7 @@ class ListBanController extends Controller
                             coalesce(i.TUNGGAKAN_BUNGA) as AMBC_BNG_AWAL, 
                             coalesce(i.TUNGGAKAN_POKOK)+coalesce(i.TUNGGAKAN_BUNGA) as AMBC_TOTAL_AWAL, 
                             concat('C',case when date_format(b.entry_date,'%m%Y')=date_format(now(),'%m%Y') then 'N'
-                                when date_format(k.F_ARR_CR_SCHEDL,'%m%Y')=date_format(now(),'%m%Y') then '0'
+                                when date_format(b.F_ARR_CR_SCHEDL,'%m%Y')=date_format(now(),'%m%Y') then '0'
                                 when floor((DATEDIFF(str_to_date('01022025','%d%m%Y'),k.F_ARR_CR_SCHEDL))/30)<0 then 'M' 
                                 when floor((DATEDIFF(str_to_date('01022025','%d%m%Y'),k.F_ARR_CR_SCHEDL))/30)>8 then 'X' 
                                 else floor((DATEDIFF(str_to_date('01022025','%d%m%Y'),k.F_ARR_CR_SCHEDL))/30) end) AS CYCLE_AWAL,
@@ -238,8 +238,8 @@ class ListBanController extends Controller
                             b.INSTALLMENT,
                             case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 then 0 else k.LAST_INST end as LAST_INST, 
                             e.INSTALLMENT_TYPE AS tipe,
-                            k.F_ARR_CR_SCHEDL as TUNGGAKAN_PERTAMA,
-                            m.curr_arr, 
+                            case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 then 0 else k.F_ARR_CR_SCHEDL end as F_ARR_CR_SCHEDL,
+                            case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 then 0 else m.curr_arr end as curr_arr,
                             case when date_format(l.entry_date,'%m%Y')=date_format(now(),'%m%Y') then l.entry_date else null end as LAST_PAY, 
                             ' ' AS COLLECTOR,
                             l.payment_method as cara_bayar, 

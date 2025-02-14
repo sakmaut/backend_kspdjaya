@@ -50,7 +50,7 @@ class Welcome extends Controller
         //     ]);
         // }
 
-        return response()->json($this->statusApproval::DRAFT_SURVEY);
+        return response()->json("MUACHHHHHHHHHHHHHH");
         die;
 
         $groupedData = [];
