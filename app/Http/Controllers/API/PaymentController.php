@@ -588,7 +588,10 @@ class PaymentController extends Controller
                 $data_array_attachment = [
                     'id' => Uuid::uuid4()->toString(),
                     'payment_id' => $req->uid,
-                    'file_attach' => $url ?? ''
+                    'file_attach' => $url ?? '',
+                    'create_by' => $req->user()->id ?? '',
+                    'create_position' => $req->user()->position ?? '',
+                    'create_date' => Carbon::now()
                 ];
 
                 $check = M_PaymentAttachment::where('payment_id', $req->uid)->first();

@@ -13,7 +13,10 @@ class M_PaymentAttachment extends Model
     protected $fillable = [
         'id',
         'payment_id',
-        'file_attach'
+        'file_attach',
+        'create_by',
+        'create_position',
+        'create_date'
     ];
     protected $guarded = [];
     public $incrementing = false;
