@@ -68,7 +68,8 @@ class ListBanController extends Controller
                         $angsurans[] = [
                             'no_invoice' => $no_invoice,
                             'loan_num' => $loan_num,
-                            'pelanggan' => $pelanggan,
+                            'no_kontrak' => $loan_num,
+                            'nama_pelanggan' => $pelanggan,
                             'user' => $user,
                             'amount' => $totalAngsuranPokokBunga, // Store the running total here
                             'jenis' => $item->JENIS,
