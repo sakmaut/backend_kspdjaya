@@ -65,7 +65,7 @@ class ListBanController extends Controller
                         $totalAngsuranPokokBunga += $amount;
 
                         // Store the total sum in the 'amount' field of the angsurans array
-                        $angsurans[] = [
+                        $datas['datas'][] = [
                             'no' => $no++,
                             'type' => 'CASH_IN',
                             'no_invoice' => $no_invoice,
