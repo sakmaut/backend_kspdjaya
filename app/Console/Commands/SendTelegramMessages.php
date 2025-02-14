@@ -22,20 +22,13 @@ class SendTelegramMessages extends Command
      */
     protected $description = 'Command description';
 
-    protected $senBot;
-
-    public function __construct(TelegramBotConfig $senBot)
-    {
-        parent::__construct();
-        $this->senBot = $senBot;
-    }
-
     public function handle()
     {
         $newMessages = M_TelegramBotSend::where('status', 'new')->get();
 
         foreach ($newMessages as $message) {
-            $response = $this->senBot->sendMessage($message->messages);
+
+            $response = TelegramBotConfig::sendMessage($message->messages);
 
             if ($response) {
                 $message->status = 'send';

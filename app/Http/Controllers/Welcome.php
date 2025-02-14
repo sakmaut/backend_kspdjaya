@@ -44,20 +44,6 @@ class Welcome extends Controller
         //     ]);
         // }
 
-        $newMessages = M_TelegramBotSend::where('status', 'new')->get();
-
-        // foreach ($newMessages as $message) {
-
-        //     // $mesg = new TelegramBotConfig;
-
-        //     $response = $mesg->sendMessage($message->messages);
-
-        //     if ($response) {
-        //         $message->status = 'send';
-        //         $message->save();
-        //     }
-        // }
-
         return response()->json("MUACHHHHHHHHHHHHHH");
         die;
 

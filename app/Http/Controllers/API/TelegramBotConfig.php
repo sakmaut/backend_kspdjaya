@@ -39,7 +39,7 @@ class TelegramBotConfig extends Controller
         }
     }
 
-    function sendMessage($message)
+    static function sendMessage($message)
     {
         $chat_id = "1268179862";
         $bot_token = "7442053832:AAG3pOPydTmWRiOaMbSPHVuNYMeNuiUKtS4";
