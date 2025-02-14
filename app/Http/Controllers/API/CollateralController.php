@@ -26,7 +26,7 @@ class CollateralController extends Controller
             $no_bpkb = $request->query('no_bpkb');
 
             $collateral = DB::table('credit as a')
-                                ->innerJoin('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
+                                ->join('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
                                 ->where(function ($query) {
                                     $query->whereNull('b.DELETED_AT')
                                     ->orWhere('b.DELETED_AT', '!=', '');
