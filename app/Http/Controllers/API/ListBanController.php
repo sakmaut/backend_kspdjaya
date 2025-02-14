@@ -350,7 +350,7 @@ class ListBanController extends Controller
                     "ANGSURAN" => intval($result->INSTALLMENT) ?? 0,
                     "ANGS KE" => $result->LAST_INST ?? '',
                     "TIPE ANGSURAN" => $result->tipe ?? '',
-                    "JTH TEMPO AWAL" => date("d-m-Y", strtotime($result->TUNGGAKAN_PERTAMA ?? '')),
+                    "JTH TEMPO AWAL" => date("d-m-Y", strtotime($result->F_ARR_CR_SCHEDL ?? '')),
                     "JTH TEMPO AKHIR" => date("d-m-Y", strtotime($result->curr_arr ?? '')),
                     "TGL BAYAR" => $result->LAST_PAY,
                     "KOLEKTOR" => $result->COLLECTOR,
