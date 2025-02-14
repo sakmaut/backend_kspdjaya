@@ -26,13 +26,29 @@ class CollateralController extends Controller
             $no_bpkb = $request->query('no_bpkb');
 
             $collateral = DB::table('credit as a')
-                            ->leftJoin('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
-                            ->where(function ($query) {
-                                $query->whereNull('b.DELETED_AT')
+                                ->leftJoin('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
+                                ->where(function ($query) {
+                                    $query->whereNull('b.DELETED_AT')
                                     ->orWhere('b.DELETED_AT', '!=', '');
-                            })
-                            ->where('a.STATUS_REC','A')
-                            ->select('a.LOAN_NUMBER', 'b.*');
+                                })
+                                ->where('a.STATUS', 'A')
+                                ->select(
+                                    'a.LOAN_NUMBER',
+                                    'b.ID',
+                                    'b.BRAND',
+                                    'b.TYPE',
+                                    'b.PRODUCTION_YEAR',
+                                    'b.COLOR',
+                                    'b.ON_BEHALF',
+                                    'b.POLICE_NUMBER',
+                                    'b.CHASIS_NUMBER',
+                                    'b.BPKB_ADDRESS',
+                                    'b.BPKB_NUMBER',
+                                    'b.STNK_NUMBER',
+                                    'b.INVOICE_NUMBER',
+                                    'b.STNK_VALID_DATE',
+                                    'b.VALUE'
+                                );
 
             if (!empty($atas_nama)) {
                 $collateral->where('b.ON_BEHALF', 'like', '%' . $atas_nama . '%');
@@ -48,18 +64,37 @@ class CollateralController extends Controller
 
             $collateral->orderBy('a.CREATED_AT', 'DESC');
 
-            // Limit the result to 10 records right away
+            // Limit the result to 10 records
             $collateral->limit(10);
 
-            // Use get() to retrieve the data, which will return a Collection
-            $collateralData = $collateral->get()->transform(function ($list) {
-                return $this->collateralField($list);
-            });
+            $collateralData = []; // Initialize an empty array to store the results
 
-            // Convert the transformed collection to an array
-            $collateralData = $collateralData->toArray();
+            // Fetch the collateral data
+            $collateralResults = $collateral->get(); // Call get() once
 
-            // Return the transformed data as JSON
+            // Check if data exists
+            if ($collateralResults->isNotEmpty()) {
+                foreach ($collateralResults as $value) {
+                    $collateralData[] = [  // Append each item to the array
+                        'LOAN_NUMBER'      => $value->LOAN_NUMBER,
+                        'ID'               => $value->ID,
+                        'BRAND'            => $value->BRAND,
+                        'TYPE'             => $value->TYPE,
+                        'PRODUCTION_YEAR'  => $value->PRODUCTION_YEAR,
+                        'COLOR'            => $value->COLOR,
+                        'ON_BEHALF'        => $value->ON_BEHALF,
+                        'POLICE_NUMBER'    => $value->POLICE_NUMBER,
+                        'CHASIS_NUMBER'    => $value->CHASIS_NUMBER,
+                        'BPKB_ADDRESS'     => $value->BPKB_ADDRESS,
+                        'BPKB_NUMBER'      => $value->BPKB_NUMBER,
+                        'STNK_NUMBER'      => $value->STNK_NUMBER,
+                        'INVOICE_NUMBER'   => $value->INVOICE_NUMBER,
+                        'STNK_VALID_DATE'  => $value->STNK_VALID_DATE,
+                        'VALUE'            => $value->VALUE
+                    ];
+                }
+            }
+        
             return response()->json($collateralData, 200);
          
         } catch (\Exception $e) {
