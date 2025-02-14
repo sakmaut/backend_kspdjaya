@@ -38,6 +38,8 @@ class ListBanController extends Controller
 
                 $cash_in = [];
 
+                $totalAngsuranPokokBunga = 0;
+
                 foreach ($arusKas as $item) {
 
                     $row = $item->no_invoice . $item->LOAN_NUM . $item->PELANGGAN;
@@ -48,7 +50,7 @@ class ListBanController extends Controller
                     $user = $item->fullname;
 
                     if (in_array($row, $cash_in)) {
-                        $no = 0;
+                        $no = 1;
                         $no_invoice = '';
                         $loan_num = '';
                         $pelanggan = '';
@@ -58,7 +60,25 @@ class ListBanController extends Controller
 
                     $amount = is_numeric($item->ORIGINAL_AMOUNT) ? floatval($item->ORIGINAL_AMOUNT) : 0;
 
-                    if ($item->JENIS != 'PENCAIRAN') {
+                    if ($item->JENIS == 'ANGSURAN_POKOK' || $item->JENIS == 'ANGSURAN_BUNGA') {
+                        // Add the amount of angsuran pokok and bunga to the sum
+                        $totalAngsuranPokokBunga += $amount;
+
+                        // Store the total sum in the 'amount' field of the angsurans array
+                        $angsurans[] = [
+                            'no_invoice' => $no_invoice,
+                            'loan_num' => $loan_num,
+                            'pelanggan' => $pelanggan,
+                            'user' => $user,
+                            'amount' => $totalAngsuranPokokBunga, // Store the running total here
+                            'jenis' => $item->JENIS,
+                            'tgl' => $item->ENTRY_DATE ?? '',
+                            'cabang' => $item->nama_cabang ?? '',
+                            'payment_method' => $item->PAYMENT_METHOD ?? '',
+                            'keterangan' => $item->JENIS . ' ' . $item->angsuran_ke ?? '',
+                        ];
+                    } else if ($item->JENIS != 'PENCAIRAN') {
+                        // Process normal items as before
                         $datas['datas'][] = [
                             'no' => $no++,
                             'type' => 'CASH_IN',
@@ -76,7 +96,10 @@ class ListBanController extends Controller
 
                         $totalCashin += floatval($item->ORIGINAL_AMOUNT);
                     }
+                    
                 }
+
+                $datas['totalAngsuranPokokBunga'] = $totalAngsuranPokokBunga;
 
                 foreach ($arusKas as $item) {
                     if ($item->JENIS == 'PENCAIRAN') {
