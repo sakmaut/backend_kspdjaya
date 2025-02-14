@@ -46,7 +46,7 @@ class CollateralController extends Controller
                 $collateral = $collateral->where('b.BPKB_NUMBER', 'like', '%' . $no_bpkb . '%');
             }
 
-            $collateral = $collateral->orderBy('b.CREATED_AT', 'DESC');
+            $collateral = $collateral->orderBy('a.CREATED_AT', 'DESC');
 
             // Limit the result to 10 records right away
             $collateral = $collateral->limit(10);
