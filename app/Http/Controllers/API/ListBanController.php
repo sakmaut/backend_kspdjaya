@@ -71,6 +71,7 @@ class ListBanController extends Controller
                             'no_kontrak' => $loan_num,
                             'nama_pelanggan' => $pelanggan,
                             'user' => $user,
+                            'type' => 'CASH_IN',
                             'amount' => $totalAngsuranPokokBunga, // Store the running total here
                             'jenis' => $item->JENIS,
                             'tgl' => $item->ENTRY_DATE ?? '',
