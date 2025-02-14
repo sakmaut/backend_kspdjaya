@@ -37,9 +37,7 @@ class ListBanController extends Controller
                 $totalAmount = 0;
 
                 $cash_in = [];
-
                 $totalAngsuranPokokBunga = 0;
-
                 foreach ($arusKas as $item) {
 
                     $row = $item->no_invoice . $item->LOAN_NUM . $item->PELANGGAN;
@@ -50,7 +48,7 @@ class ListBanController extends Controller
                     $user = $item->fullname;
 
                     if (in_array($row, $cash_in)) {
-                        $no = 1;
+                        $no = 0;
                         $no_invoice = '';
                         $loan_num = '';
                         $pelanggan = '';
@@ -60,48 +58,47 @@ class ListBanController extends Controller
 
                     $amount = is_numeric($item->ORIGINAL_AMOUNT) ? floatval($item->ORIGINAL_AMOUNT) : 0;
 
-                    if ($item->JENIS == 'ANGSURAN_POKOK' || $item->JENIS == 'ANGSURAN_BUNGA') {
-                        // Add the amount of angsuran pokok and bunga to the sum
-                        $totalAngsuranPokokBunga += $amount;
+                    if ($item->JENIS != 'PENCAIRAN') {
 
-                        // Store the total sum in the 'amount' field of the angsurans array
-                        $datas['datas'][] = [
-                            'no' => $no++,
-                            'type' => 'CASH_IN',
-                            'no_invoice' => $no_invoice,
-                            'no_kontrak' => $loan_num,
-                            'tgl' => $item->ENTRY_DATE ?? '',
-                            'cabang' => $item->nama_cabang ?? '',
-                            'user' => $user ?? '',
-                            'position' => $item->position ?? '',
-                            'nama_pelanggan' => $pelanggan,
-                            'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
-                            'keterangan' => 'Bayar ' . $item->angsuran_ke ?? '',
-                            'amount' => $totalAngsuranPokokBunga,
-                        ];
-                    } else if ($item->JENIS != 'PENCAIRAN') {
-                        // Process normal items as before
-                        $datas['datas'][] = [
-                            'no' => $no++,
-                            'type' => 'CASH_IN',
-                            'no_invoice' => $no_invoice,
-                            'no_kontrak' => $loan_num,
-                            'tgl' => $item->ENTRY_DATE ?? '',
-                            'cabang' => $item->nama_cabang ?? '',
-                            'user' => $user ?? '',
-                            'position' => $item->position ?? '',
-                            'nama_pelanggan' => $pelanggan,
-                            'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
-                            'keterangan' => $item->JENIS . ' ' . $item->angsuran_ke ?? '',
-                            'amount' => $amount,
-                        ];
+                        if ($item->JENIS == 'ANGSURAN_POKOK' || $item->JENIS == 'ANGSURAN_BUNGA') {
+                            // Add the amount of angsuran pokok and bunga to the sum
+                            $totalAngsuranPokokBunga += $amount;
+
+                            // Store the total sum in the 'amount' field of the angsurans array
+                            $datas['datas'][] = [
+                                'no' => $no++,
+                                'type' => 'CASH_IN',
+                                'no_invoice' => $no_invoice,
+                                'no_kontrak' => $loan_num,
+                                'tgl' => $item->ENTRY_DATE ?? '',
+                                'cabang' => $item->nama_cabang ?? '',
+                                'user' => $user ?? '',
+                                'position' => $item->position ?? '',
+                                'nama_pelanggan' => $pelanggan,
+                                'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
+                                'keterangan' => 'Bayar ' . $item->angsuran_ke ?? '',
+                                'amount' => $totalAngsuranPokokBunga,
+                            ];
+                        } else {
+                            $datas['datas'][] = [
+                                'no' => $no++,
+                                'type' => 'CASH_IN',
+                                'no_invoice' => $no_invoice,
+                                'no_kontrak' => $loan_num,
+                                'tgl' => $item->ENTRY_DATE ?? '',
+                                'cabang' => $item->nama_cabang ?? '',
+                                'user' => $user ?? '',
+                                'position' => $item->position ?? '',
+                                'nama_pelanggan' => $pelanggan,
+                                'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
+                                'keterangan' => $item->JENIS . ' ' . $item->angsuran_ke ?? '',
+                                'amount' => $amount,
+                            ];
+                        }
 
                         $totalCashin += floatval($item->ORIGINAL_AMOUNT);
                     }
-                    
                 }
-
-                $datas['totalAngsuranPokokBunga'] = $totalAngsuranPokokBunga;
 
                 foreach ($arusKas as $item) {
                     if ($item->JENIS == 'PENCAIRAN') {
