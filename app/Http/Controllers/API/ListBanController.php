@@ -284,7 +284,7 @@ class ListBanController extends Controller
                                         min(case when paid_flag<>'PAID' then payment_date else str_to_date('01013000','%d%m%Y') end) as F_ARR_CR_SCHEDL
                                     FROM	credit_schedule
                                     WHERE	loan_number in (select loan_number from credit where status='A' 
-                                            or (status in ('S','D') and mod_date > date_add(now(),interval -1 month)))
+                                            or (status in ('S','D') and loan_number in (select loan_num from payment where date_format(entry_date,'%m%Y')=date_format(now(),'%m%Y'))))
                                     GROUP	BY loan_number) k on k.loan_number=b.loan_number
                             LEFT JOIN (	SELECT	loan_num, entry_date, replace(replace(group_concat(payment_method),'AGENT EKS',''),',','') as payment_method
                                     FROM	payment
