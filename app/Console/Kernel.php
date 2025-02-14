@@ -18,6 +18,7 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->command('demo:cron')->dailyAt('16:52');
         $schedule->command('demo:cron')->dailyAt('00:30');
+        // $schedule->command('telegram:send-messages')->everyMinute();
     }
 
     /**
@@ -25,7 +26,7 @@ class Kernel extends ConsoleKernel
      */
     protected function commands(): void
     {
-        $this->load(__DIR__.'/Commands');
+        $this->load(__DIR__ . '/Commands');
 
         require base_path('routes/console.php');
     }
