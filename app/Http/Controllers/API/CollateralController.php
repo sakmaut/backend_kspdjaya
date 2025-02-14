@@ -76,21 +76,23 @@ class CollateralController extends Controller
             if ($collateralResults->isNotEmpty()) {
                 foreach ($collateralResults as $value) {
                     $collateralData[] = [  // Append each item to the array
-                        'LOAN_NUMBER'      => $value->LOAN_NUMBER,
-                        'ID'               => $value->ID,
-                        'BRAND'            => $value->BRAND,
-                        'TYPE'             => $value->TYPE,
-                        'PRODUCTION_YEAR'  => $value->PRODUCTION_YEAR,
-                        'COLOR'            => $value->COLOR,
-                        'ON_BEHALF'        => $value->ON_BEHALF,
-                        'POLICE_NUMBER'    => $value->POLICE_NUMBER,
-                        'CHASIS_NUMBER'    => $value->CHASIS_NUMBER,
-                        'BPKB_ADDRESS'     => $value->BPKB_ADDRESS,
-                        'BPKB_NUMBER'      => $value->BPKB_NUMBER,
-                        'STNK_NUMBER'      => $value->STNK_NUMBER,
-                        'INVOICE_NUMBER'   => $value->INVOICE_NUMBER,
-                        'STNK_VALID_DATE'  => $value->STNK_VALID_DATE,
-                        'VALUE'            => $value->VALUE
+                        'loan_number'       => $value->LOAN_NUMBER,
+                        'id'                => $value->ID,
+                        'merk'              => $value->BRAND,
+                        'tipe'              => $value->TYPE,
+                        'tahun'             => $value->PRODUCTION_YEAR,
+                        'warna'             => $value->COLOR,
+                        'atas_nama'         => $value->ON_BEHALF,
+                        'no_polisi'         => $value->POLICE_NUMBER,
+                        'no_mesin'          => $value->ENGINE_NUMBER,
+                        'no_rangka'         => $value->CHASIS_NUMBER,
+                        'BPKB_ADDRESS'      => $value->BPKB_ADDRESS,
+                        'no_bpkb'           => $value->BPKB_NUMBER,
+                        'no_stnk'           => $value->STNK_NUMBER,
+                        'no_faktur'         => $value->INVOICE_NUMBER,
+                        'tgl_stnk'          => $value->STNK_VALID_DATE,
+                        'nilai'             => $value->VALUE,
+                        'asal_lokasi'       => $value->VALUE
                     ];
                 }
             }
