@@ -605,6 +605,7 @@ class PaymentController extends Controller
                     'file_attach' => $url ?? '',
                     'create_by' => $req->user()->id ?? '',
                     'create_position' => $req->user()->position ?? '',
+                    'create_branch' => $req->user()->branch_id ?? '',
                     'create_date' => Carbon::now()
                 ];
 

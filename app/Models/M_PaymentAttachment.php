@@ -16,6 +16,7 @@ class M_PaymentAttachment extends Model
         'file_attach',
         'create_by',
         'create_position',
+        'create_branch',
         'create_date'
     ];
     protected $guarded = [];
