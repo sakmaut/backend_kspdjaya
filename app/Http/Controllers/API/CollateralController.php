@@ -40,6 +40,7 @@ class CollateralController extends Controller
                                     'b.PRODUCTION_YEAR',
                                     'b.COLOR',
                                     'b.ON_BEHALF',
+                                    'b.ENGINE_NUMBER',
                                     'b.POLICE_NUMBER',
                                     'b.CHASIS_NUMBER',
                                     'b.BPKB_ADDRESS',
