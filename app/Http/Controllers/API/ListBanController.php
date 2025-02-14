@@ -37,7 +37,7 @@ class ListBanController extends Controller
                 $totalAmount = 0;
 
                 $cash_in = [];
-                $totalAngsuranPokokBunga = 0;
+        
                 foreach ($arusKas as $item) {
 
                     $row = $item->no_invoice . $item->LOAN_NUM . $item->PELANGGAN;
@@ -61,10 +61,7 @@ class ListBanController extends Controller
                     if ($item->JENIS != 'PENCAIRAN') {
 
                         if ($item->JENIS == 'ANGSURAN_POKOK' || $item->JENIS == 'ANGSURAN_BUNGA') {
-                            // Add the amount of angsuran pokok and bunga to the sum
-                            $totalAngsuranPokokBunga += $amount;
-
-                            // Store the total sum in the 'amount' field of the angsurans array
+                            
                             $datas['datas'][] = [
                                 'no' => $no++,
                                 'type' => 'CASH_IN',
@@ -77,7 +74,7 @@ class ListBanController extends Controller
                                 'nama_pelanggan' => $pelanggan,
                                 'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
                                 'keterangan' => 'Bayar ' . $item->angsuran_ke ?? '',
-                                'amount' => $totalAngsuranPokokBunga,
+                                'amount' => $amount,
                             ];
                         } else {
                             $datas['datas'][] = [
