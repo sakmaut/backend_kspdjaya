@@ -76,7 +76,7 @@ class ListBanController extends Controller
                             'position' => $item->position ?? '',
                             'nama_pelanggan' => $pelanggan,
                             'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
-                            'keterangan' => $item->JENIS . ' ' . $item->angsuran_ke ?? '',
+                            'keterangan' => 'Bayar ' . $item->angsuran_ke ?? '',
                             'amount' => $totalAngsuranPokokBunga,
                         ];
                     } else if ($item->JENIS != 'PENCAIRAN') {
