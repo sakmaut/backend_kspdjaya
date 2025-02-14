@@ -45,6 +45,7 @@ class ListBanController extends Controller
                     $no_invoice = $item->no_invoice;
                     $loan_num = $item->LOAN_NUM;
                     $pelanggan = $item->PELANGGAN;
+                    $user = $item->fullname;
 
                     if (in_array($row, $cash_in)) {
                         $no = 0;
@@ -53,20 +54,19 @@ class ListBanController extends Controller
                         $pelanggan = '';
                     } else {
                         array_push($cash_in, $row);
-                        $no++;
                     }
 
                     $amount = is_numeric($item->ORIGINAL_AMOUNT) ? floatval($item->ORIGINAL_AMOUNT) : 0;
 
                     if ($item->JENIS != 'PENCAIRAN') {
                         $datas['datas'][] = [
-                            'no' => $no == 0 ? '' : $no,
+                            'no' => $no++,
                             'type' => 'CASH_IN',
                             'no_invoice' => $no_invoice,
                             'no_kontrak' => $loan_num,
                             'tgl' => $item->ENTRY_DATE ?? '',
                             'cabang' => $item->nama_cabang ?? '',
-                            'user' => $item->fullname ?? '',
+                            'user' => $user ?? '',
                             'position' => $item->position ?? '',
                             'nama_pelanggan' => $pelanggan,
                             'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
