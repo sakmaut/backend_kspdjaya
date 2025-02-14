@@ -16,6 +16,7 @@ use App\Models\M_PaymentApproval;
 use App\Models\M_PaymentAttachment;
 use App\Models\M_PaymentCancelLog;
 use App\Models\M_PaymentDetail;
+use App\Models\M_TelegramBotSend;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -28,6 +29,12 @@ use Ramsey\Uuid\Uuid;
 
 class PaymentController extends Controller
 {
+    protected $telegram;
+
+    function __construct(TelegramBotConfig $telegram)
+    {
+        $this->telegram = $telegram;
+    }
 
     public function index(Request $request)
     {
@@ -455,10 +462,13 @@ class PaymentController extends Controller
 
     private function saveKwitansi($request, $customer_detail, $no_inv)
     {
+
+        $cekPaymentMethod = $request->payment_method == 'cash' && strtolower($request->bayar_dengan_diskon) != 'ya';
+
         $save_kwitansi = [
             "PAYMENT_TYPE" => 'angsuran',
             "PAYMENT_ID" => $request->uid,
-            "STTS_PAYMENT" => $request->payment_method == 'cash' && strtolower($request->bayar_dengan_diskon) != 'ya' ? "PAID" : "PENDING",
+            "STTS_PAYMENT" => $cekPaymentMethod ? "PAID" : "PENDING",
             "NO_TRANSAKSI" => $no_inv,
             "LOAN_NUMBER" => $request->no_facility ?? null,
             "TGL_TRANSAKSI" => Carbon::now()->format('d-m-Y'),
@@ -488,6 +498,10 @@ class PaymentController extends Controller
             ['NO_TRANSAKSI' => $no_inv],
             $save_kwitansi
         );
+
+        // if (!$cekPaymentMethod) {
+        //     $this->telegram->create($save_kwitansi);
+        // }
     }
 
     function createPaymentRecords($request, $res, $tgl_angsuran, $loan_number, $no_inv, $branch, $uid)
@@ -588,7 +602,10 @@ class PaymentController extends Controller
                 $data_array_attachment = [
                     'id' => Uuid::uuid4()->toString(),
                     'payment_id' => $req->uid,
-                    'file_attach' => $url ?? ''
+                    'file_attach' => $url ?? '',
+                    'create_by' => $req->user()->id ?? '',
+                    'create_position' => $req->user()->position ?? '',
+                    'create_date' => Carbon::now()
                 ];
 
                 $check = M_PaymentAttachment::where('payment_id', $req->uid)->first();

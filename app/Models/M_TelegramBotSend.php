@@ -6,18 +6,19 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
-class M_PaymentAttachment extends Model
+class M_TelegramBotSend extends Model
 {
     use HasFactory;
-    protected $table = 'payment_attachment';
+    protected $table = 'telegram_bot_send';
+
     protected $fillable = [
         'id',
-        'payment_id',
-        'file_attach',
-        'create_by',
-        'create_position',
-        'create_date'
+        'endpoint',
+        'messages',
+        'status',
+        'created_at'
     ];
+
     protected $guarded = [];
     public $incrementing = false;
     protected $keyType = 'string';

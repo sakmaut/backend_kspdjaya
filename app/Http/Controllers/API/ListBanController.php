@@ -238,8 +238,8 @@ class ListBanController extends Controller
                             b.INSTALLMENT,
                             case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 then 0 else k.LAST_INST end as LAST_INST, 
                             e.INSTALLMENT_TYPE AS tipe,
-                            k.F_ARR_CR_SCHEDL as TUNGGAKAN_PERTAMA,
-                            m.curr_arr, 
+                            case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 then 0 else i.TUNGGAKAN_PERTAMA end as F_ARR_CR_SCHEDL,
+                            case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 then 0 else k.F_ARR_CR_SCHEDL end as curr_arr, 
                             case when date_format(l.entry_date,'%m%Y')=date_format(now(),'%m%Y') then l.entry_date else null end as LAST_PAY, 
                             ' ' AS COLLECTOR,
                             l.payment_method as cara_bayar, 
@@ -284,7 +284,7 @@ class ListBanController extends Controller
                                         min(case when paid_flag<>'PAID' then payment_date else str_to_date('01013000','%d%m%Y') end) as F_ARR_CR_SCHEDL
                                     FROM	credit_schedule
                                     WHERE	loan_number in (select loan_number from credit where status='A' 
-                                            or (status in ('S','D') and mod_date > date_add(now(),interval -1 month)))
+                                            or (status in ('S','D') and loan_number in (select loan_num from payment where date_format(entry_date,'%m%Y')=date_format(now(),'%m%Y'))))
                                     GROUP	BY loan_number) k on k.loan_number=b.loan_number
                             LEFT JOIN (	SELECT	loan_num, entry_date, replace(replace(group_concat(payment_method),'AGENT EKS',''),',','') as payment_method
                                     FROM	payment
@@ -350,7 +350,7 @@ class ListBanController extends Controller
                     "ANGSURAN" => intval($result->INSTALLMENT) ?? 0,
                     "ANGS KE" => $result->LAST_INST ?? '',
                     "TIPE ANGSURAN" => $result->tipe ?? '',
-                    "JTH TEMPO AWAL" => date("d-m-Y", strtotime($result->TUNGGAKAN_PERTAMA ?? '')),
+                    "JTH TEMPO AWAL" => date("d-m-Y", strtotime($result->F_ARR_CR_SCHEDL ?? '')),
                     "JTH TEMPO AKHIR" => date("d-m-Y", strtotime($result->curr_arr ?? '')),
                     "TGL BAYAR" => $result->LAST_PAY,
                     "KOLEKTOR" => $result->COLLECTOR,

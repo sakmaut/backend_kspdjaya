@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\API\PaymentController;
 use App\Http\Controllers\API\StatusApproval;
+use App\Http\Controllers\API\TelegramBotConfig;
 use App\Models\M_Arrears;
 use App\Models\M_Branch;
 use App\Models\M_Credit;
@@ -14,6 +15,7 @@ use App\Models\M_DeuteronomyTransactionLog;
 use App\Models\M_FirstArr;
 use App\Models\M_Payment;
 use App\Models\M_PaymentDetail;
+use App\Models\M_TelegramBotSend;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
@@ -25,14 +27,6 @@ use Illuminate\Support\Facades\URL;
 
 class Welcome extends Controller
 {
-
-    protected $statusApproval;
-
-    public function __construct(StatusApproval $statusApproval)
-    {
-        $this->statusApproval = $statusApproval;
-    }
-
     public function index(Request $request)
     {
 
@@ -50,7 +44,7 @@ class Welcome extends Controller
         //     ]);
         // }
 
-        return response()->json($this->statusApproval::DRAFT_SURVEY);
+        return response()->json("MUACHHHHHHHHHHHHHH");
         die;
 
         $groupedData = [];
