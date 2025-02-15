@@ -300,14 +300,17 @@ class ListBanController extends Controller
                                     GROUP 	BY CR_CREDIT_ID) g ON g.CR_CREDIT_ID = b.ID
                                 LEFT JOIN credit_2025 i on cast(i.loan_number as char) = cast(b.LOAN_NUMBER as char)
                                 LEFT JOIN first_arr j on cast(j.LOAN_NUMBER as char) = cast(b.LOAN_NUMBER as char)
+
                             LEFT JOIN (	SELECT	loan_number, sum(interest)-sum(coalesce(payment_value_interest,0)) as OS_BNG_AKHIR, 
-                                        min(case when cast(paid_flag as char)='PAID' then 999 else installment_count end) as LAST_INST, 
-                                        max(case when cast(paid_flag as char)='PAID' then payment_date else str_to_date('01011900','%d%m%Y') end) as LAST_PAY, 
-                                        min(case when cast(coalesce(paid_flag,'') as char)<>'PAID' then payment_date else str_to_date('01013000','%d%m%Y') end) as F_ARR_CR_SCHEDL
-                                    FROM	credit_schedule
-                                    WHERE	loan_number in (select loan_number from credit where status='A' 
-                                            or (status in ('S','D') and loan_number in (select loan_num from payment where date_format(entry_date,'%m%Y')=date_format(now(),'%m%Y'))))
-                                    GROUP	BY loan_number) k on k.loan_number=b.loan_number
+				                                case when count(ID)=sum(case when paid_flag='PAID' then 1 else 0 end) then ''
+        				                            else min(case when cast(paid_flag as char)='PAID' then 999 else installment_count end) end as LAST_INST, 
+				                                max(case when cast(paid_flag as char)='PAID' then payment_date else str_to_date('01011900','%d%m%Y') end) as LAST_PAY, 
+				                                case when count(ID)=sum(case when paid_flag='PAID' then 1 else 0 end) then ''
+        	 			                            else min(case when cast(coalesce(paid_flag,'') as char)<>'PAID' then payment_date else str_to_date('01013000','%d%m%Y') end) end as F_ARR_CR_SCHEDL
+			                            FROM	credit_schedule
+			                            WHERE	loan_number in (select loan_number from credit where status='A' 
+					                            or (status in ('S','D') and loan_number in (select loan_num from payment where date_format(entry_date,'%m%Y')=date_format(now(),'%m%Y'))))
+			                            GROUP	BY loan_number) k on k.loan_number=b.loan_number
                             LEFT JOIN (	SELECT	loan_num, entry_date, replace(replace(group_concat(payment_method),'AGENT EKS',''),',','') as payment_method
 			                            FROM	payment
 			                            WHERE	(cast(loan_num as char),date_format(entry_date,'%d%m%Y %H%i'),cast(title as char)) 
