@@ -80,15 +80,15 @@ class Welcome extends Controller
             M_CreditSchedule::create($credit_schedule);
         }
 
-        $check_exist = M_Credit::where('ORDER_NUMBER', $request->order_number)->first();
-        if ($check_exist) {
-            $SET_UUID = $check_exist->ID;
-            $cust_code = $check_exist->CUST_CODE;
+        // $check_exist = M_Credit::where('ORDER_NUMBER', $request->order_number)->first();
+        // if ($check_exist) {
+        //     $SET_UUID = $check_exist->ID;
+        //     $cust_code = $check_exist->CUST_CODE;
 
-            $this->insert_customer($request, $data, $cust_code);
-            $this->insert_customer_xtra($data, $cust_code);
-            // $this->insert_collateral($request, $data, $SET_UUID, $request->loan_number);
-        }
+        //     $this->insert_customer($request, $data, $cust_code);
+        //     $this->insert_customer_xtra($data, $cust_code);
+        //     // $this->insert_collateral($request, $data, $SET_UUID, $request->loan_number);
+        // }
 
         return response()->json("MUACHHHHHHHHHHHHHH");
         die;
