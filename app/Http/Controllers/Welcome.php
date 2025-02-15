@@ -2,16 +2,25 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\API\LocationStatus;
 use App\Http\Controllers\API\PaymentController;
 use App\Http\Controllers\API\StatusApproval;
 use App\Http\Controllers\API\TelegramBotConfig;
 use App\Models\M_Arrears;
 use App\Models\M_Branch;
 use App\Models\M_CrApplication;
+use App\Models\M_CrApplicationSpouse;
+use App\Models\M_CrCollateral;
+use App\Models\M_CrCollateralDocument;
 use App\Models\M_Credit;
 use App\Models\M_CreditSchedule;
+use App\Models\M_CrGuaranteVehicle;
+use App\Models\M_CrOrder;
 use App\Models\M_CrPersonal;
+use App\Models\M_CrPersonalExtra;
 use App\Models\M_CrProspect;
+use App\Models\M_Customer;
+use App\Models\M_CustomerExtra;
 use App\Models\M_DeuteronomyTransactionLog;
 use App\Models\M_FirstArr;
 use App\Models\M_Payment;
@@ -29,6 +38,16 @@ use Illuminate\Support\Facades\URL;
 
 class Welcome extends Controller
 {
+
+    private $timeNow;
+    protected $locationStatus;
+
+    public function __construct(LocationStatus $locationStatus)
+    {
+        $this->timeNow = Carbon::now();
+        $this->locationStatus = $locationStatus;
+    }
+
     public function index(Request $request)
     {
 
@@ -40,7 +59,6 @@ class Welcome extends Controller
 
         if (strtolower($type) == 'bulanan') {
             $data_credit_schedule = $this->generateAmortizationSchedule($set_tgl_awal, $data);
-
         } else {
             $data_credit_schedule = $this->generateAmortizationScheduleMusiman($set_tgl_awal, $data);
         }
@@ -50,7 +68,7 @@ class Welcome extends Controller
             $credit_schedule =
                 [
                     'ID' => Uuid::uuid7()->toString(),
-                    'LOAN_NUMBER' => $request->loan_number??'',
+                    'LOAN_NUMBER' => $request->loan_number ?? '',
                     'INSTALLMENT_COUNT' => $no++,
                     'PAYMENT_DATE' => parseDatetoYMD($list['tgl_angsuran']),
                     'PRINCIPAL' => $list['pokok'],
@@ -60,6 +78,16 @@ class Welcome extends Controller
                 ];
 
             M_CreditSchedule::create($credit_schedule);
+        }
+
+        $check_exist = M_Credit::where('ORDER_NUMBER', $request->order_number)->first();
+        if ($check_exist) {
+            $SET_UUID = $check_exist->ID;
+            $cust_code = $check_exist->CUST_CODE;
+
+            $this->insert_customer($request, $data, $cust_code);
+            $this->insert_customer_xtra($data, $cust_code);
+            $this->insert_collateral($request, $data, $SET_UUID, $request->loan_number);
         }
 
         return response()->json("MUACHHHHHHHHHHHHHH");
@@ -149,7 +177,7 @@ class Welcome extends Controller
 
         return response()->json('ok', 200);
     }
-    
+
 
     // function updateCreditSchedule($loan_number, $tgl_angsuran, $res, $uid)
     // {
@@ -228,14 +256,14 @@ class Welcome extends Controller
     //     ];
     // }
 
-    // function addCreditPaid($loan_number, array $data)
-    // {
-    //     $check_credit = M_Credit::where(['LOAN_NUMBER' => $loan_number])->first();
+    // // function addCreditPaid($loan_number, array $data)
+    // // {
+    // //     $check_credit = M_Credit::where(['LOAN_NUMBER' => $loan_number])->first();
 
-    //     if ($check_credit) {
-    //         $paidPrincipal = isset($data['ANGSURAN_POKOK']) ? $data['ANGSURAN_POKOK'] : 0;
-    //         $paidInterest = isset($data['ANGSURAN_BUNGA']) ? $data['ANGSURAN_BUNGA'] : 0;
-    //         $paidPenalty = isset($data['BAYAR_DENDA']) ? $data['BAYAR_DENDA'] : 0;
+    // //     if ($check_credit) {
+    // //         $paidPrincipal = isset($data['ANGSURAN_POKOK']) ? $data['ANGSURAN_POKOK'] : 0;
+    // //         $paidInterest = isset($data['ANGSURAN_BUNGA']) ? $data['ANGSURAN_BUNGA'] : 0;
+    // //         $paidPenalty = isset($data['BAYAR_DENDA']) ? $data['BAYAR_DENDA'] : 0;
 
     //         $check_credit->update([
     //             'PAID_PRINCIPAL' => floatval($check_credit->PAID_PRINCIPAL) + floatval($paidPrincipal),
@@ -348,5 +376,205 @@ class Welcome extends Controller
         }
 
         return $schedule;
+    }
+
+    private function insert_customer($request, $data, $cust_code)
+    {
+
+        $cr_personal = M_CrPersonal::where('APPLICATION_ID', $data->ID)->first();
+        $cr_order = M_CrOrder::where('APPLICATION_ID', $data->ID)->first();
+        $check_customer_ktp = M_Customer::where('ID_NUMBER', $cr_personal->ID_NUMBER)->first();
+
+        $getAttachment = DB::select(
+            "   SELECT *
+                FROM cr_survey_document AS csd
+                WHERE (TYPE, TIMEMILISECOND) IN (
+                    SELECT TYPE, MAX(TIMEMILISECOND)
+                    FROM cr_survey_document
+                    WHERE TYPE IN ('ktp', 'kk', 'ktp_pasangan')
+                        AND CR_SURVEY_ID = '$data->CR_SURVEY_ID'
+                    GROUP BY TYPE
+                )
+                ORDER BY TIMEMILISECOND DESC"
+        );
+
+        $data_customer = [
+            'NAME' => $cr_personal->NAME,
+            'ALIAS' => $cr_personal->ALIAS,
+            'GENDER' => $cr_personal->GENDER,
+            'BIRTHPLACE' => $cr_personal->BIRTHPLACE,
+            'BIRTHDATE' => $cr_personal->BIRTHDATE,
+            'BLOOD_TYPE' => $cr_personal->BLOOD_TYPE,
+            'MOTHER_NAME' => $cr_order->MOTHER_NAME,
+            'NPWP' => $cr_order->NO_NPWP,
+            'MARTIAL_STATUS' => $cr_personal->MARTIAL_STATUS,
+            'MARTIAL_DATE' => $cr_personal->MARTIAL_DATE,
+            'ID_TYPE' => $cr_personal->ID_TYPE,
+            'ID_NUMBER' => $cr_personal->ID_NUMBER,
+            'KK_NUMBER' => $cr_personal->KK,
+            'ID_ISSUE_DATE' => $cr_personal->ID_ISSUE_DATE,
+            'ID_VALID_DATE' => $cr_personal->ID_VALID_DATE,
+            'ADDRESS' => $cr_personal->ADDRESS,
+            'RT' => $cr_personal->RT,
+            'RW' => $cr_personal->RW,
+            'PROVINCE' => $cr_personal->PROVINCE,
+            'CITY' => $cr_personal->CITY,
+            'KELURAHAN' => $cr_personal->KELURAHAN,
+            'KECAMATAN' => $cr_personal->KECAMATAN,
+            'ZIP_CODE' => $cr_personal->ZIP_CODE,
+            'KK' => $cr_personal->KK,
+            'CITIZEN' => $cr_personal->CITIZEN,
+            'INS_ADDRESS' => $cr_personal->INS_ADDRESS,
+            'INS_RT' => $cr_personal->INS_RT,
+            'INS_RW' => $cr_personal->INS_RW,
+            'INS_PROVINCE' => $cr_personal->INS_PROVINCE,
+            'INS_CITY' => $cr_personal->INS_CITY,
+            'INS_KELURAHAN' => $cr_personal->INS_KELURAHAN,
+            'INS_KECAMATAN' => $cr_personal->INS_KECAMATAN,
+            'INS_ZIP_CODE' => $cr_personal->INS_ZIP_CODE,
+            'OCCUPATION' => $cr_personal->OCCUPATION,
+            'OCCUPATION_ON_ID' => $cr_personal->OCCUPATION_ON_ID,
+            'INCOME' => $cr_order->INCOME_PERSONAL,
+            'RELIGION' => $cr_personal->RELIGION,
+            'EDUCATION' => $cr_personal->EDUCATION,
+            'PROPERTY_STATUS' => $cr_personal->PROPERTY_STATUS,
+            'PHONE_HOUSE' => $cr_personal->PHONE_HOUSE,
+            'PHONE_PERSONAL' => $cr_personal->PHONE_PERSONAL,
+            'PHONE_OFFICE' => $cr_personal->PHONE_OFFICE,
+            'EXT_1' => $cr_personal->EXT_1,
+            'EXT_2' => $cr_personal->EXT_2,
+            'VERSION' => 1,
+            'CREATE_DATE' => Carbon::now(),
+            'CREATE_USER' => $request->user()->id,
+        ];
+
+        if (!$check_customer_ktp) {
+            $data_customer['ID'] = Uuid::uuid7()->toString();
+            $data_customer['CUST_CODE'] = $cust_code;
+            $last_id = M_Customer::create($data_customer);
+
+            $this->createCustomerDocuments($last_id->ID, $getAttachment);
+        } else {
+            $check_customer_ktp->update($data_customer);
+
+            $this->createCustomerDocuments($check_customer_ktp->ID, $getAttachment);
+        }
+    }
+
+    private function insert_customer_xtra($data, $cust_code)
+    {
+
+        $cr_personal = M_CrPersonal::where('APPLICATION_ID', $data->ID)->first();
+        $cr_personal_extra = M_CrPersonalExtra::where('APPLICATION_ID', $data->ID)->first();
+        $cr_spouse = M_CrApplicationSpouse::where('APPLICATION_ID', $data->ID)->first();
+        $check_customer_ktp = M_Customer::where('ID_NUMBER', $cr_personal->ID_NUMBER)->first();
+        $cr_order = M_CrOrder::where('APPLICATION_ID', $data->ID)->first();
+        $update = M_CustomerExtra::where('CUST_CODE', $check_customer_ktp->CUST_CODE)->first();
+
+
+        $data_customer_xtra = [
+            'OTHER_OCCUPATION_1' => $cr_personal_extra->OTHER_OCCUPATION_1 ?? null,
+            'OTHER_OCCUPATION_2' => $cr_personal_extra->OTHER_OCCUPATION_2 ?? null,
+            'SPOUSE_NAME' =>  $cr_spouse->NAME ?? null,
+            'SPOUSE_BIRTHPLACE' =>  $cr_spouse->BIRTHPLACE ?? null,
+            'SPOUSE_BIRTHDATE' =>  $cr_spouse->BIRTHDATE ?? null,
+            'SPOUSE_ID_NUMBER' => $cr_spouse->NUMBER_IDENTITY ?? null,
+            'SPOUSE_INCOME' => $cr_order->INCOME_SPOUSE ?? null,
+            'SPOUSE_ADDRESS' => $cr_spouse->ADDRESS ?? null,
+            'SPOUSE_OCCUPATION' => $cr_spouse->OCCUPATION ?? null,
+            'SPOUSE_RT' => null,
+            'SPOUSE_RW' => null,
+            'SPOUSE_PROVINCE' => null,
+            'SPOUSE_CITY' => null,
+            'SPOUSE_KELURAHAN' => null,
+            'SPOUSE_KECAMATAN' => null,
+            'SPOUSE_ZIP_CODE' => null,
+            'INS_ADDRESS' => null,
+            'INS_RT' => null,
+            'INS_RW' => null,
+            'INS_PROVINCE' => null,
+            'INS_CITY' => null,
+            'INS_KELURAHAN' => null,
+            'INS_KECAMATAN' => null,
+            'INS_ZIP_CODE' => null,
+            'EMERGENCY_NAME' => $cr_personal_extra->EMERGENCY_NAME ?? null,
+            'EMERGENCY_ADDRESS' => $cr_personal_extra->EMERGENCY_ADDRESS ?? null,
+            'EMERGENCY_RT' => $cr_personal_extra->EMERGENCY_RT ?? null,
+            'EMERGENCY_RW' => $cr_personal_extra->EMERGENCY_RW ?? null,
+            'EMERGENCY_PROVINCE' => $cr_personal_extra->EMERGENCY_PROVINCE ?? null,
+            'EMERGENCYL_CITY' => $cr_personal_extra->EMERGENCY_CITY ?? null,
+            'EMERGENCY_KELURAHAN' => $cr_personal_extra->EMERGENCY_KELURAHAN ?? null,
+            'EMERGENCYL_KECAMATAN' => $cr_personal_extra->EMERGENCY_KECAMATAN ?? null,
+            'EMERGENCY_ZIP_CODE' => $cr_personal_extra->EMERGENCY_ZIP_CODE ?? null,
+            'EMERGENCY_PHONE_HOUSE' => $cr_personal_extra->EMERGENCY_PHONE_HOUSE ?? null,
+            'EMERGENCY_PHONE_PERSONAL' => $cr_personal_extra->EMERGENCY_PHONE_PERSONAL ?? null
+        ];
+
+        if (!$update) {
+            $data_customer_xtra['ID'] = Uuid::uuid7()->toString();
+            $data_customer_xtra['CUST_CODE'] =  $cust_code;
+            M_CustomerExtra::create($data_customer_xtra);
+        } else {
+            $update->update($data_customer_xtra);
+        }
+    }
+
+    private function insert_collateral($request, $data, $lastID, $loan_number)
+    {
+        $data_collateral = M_CrGuaranteVehicle::where('CR_SURVEY_ID', $data->CR_SURVEY_ID)->where(function ($query) {
+            $query->whereNull('DELETED_AT')
+                ->orWhere('DELETED_AT', '');
+        })->get();
+
+        $doc = $this->attachment_guarante($data->CR_SURVEY_ID, "'no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri'");
+
+        $setHeaderID = '';
+        foreach ($doc as $res) {
+            $setHeaderID = $res->COUNTER_ID ?? '';
+        }
+
+        if ($data_collateral->isNotEmpty()) {
+            foreach ($data_collateral as $res) {
+                $data_jaminan = [
+                    'HEADER_ID' => $setHeaderID,
+                    'CR_CREDIT_ID' => $lastID ?? null,
+                    'TYPE' => $res->TYPE ?? null,
+                    'BRAND' => $res->BRAND ?? null,
+                    'PRODUCTION_YEAR' => $res->PRODUCTION_YEAR ?? null,
+                    'COLOR' => $res->COLOR ?? null,
+                    'ON_BEHALF' => $res->ON_BEHALF ?? null,
+                    'POLICE_NUMBER' => $res->POLICE_NUMBER ?? null,
+                    'CHASIS_NUMBER' => $res->CHASIS_NUMBER ?? null,
+                    'ENGINE_NUMBER' => $res->ENGINE_NUMBER ?? null,
+                    'BPKB_NUMBER' => $res->BPKB_NUMBER ?? null,
+                    'BPKB_ADDRESS' => $res->BPKB_ADDRESS ?? null,
+                    'STNK_NUMBER' => $res->STNK_NUMBER ?? null,
+                    'INVOICE_NUMBER' => $res->INVOICE_NUMBER ?? null,
+                    'STNK_VALID_DATE' => $res->STNK_VALID_DATE ?? null,
+                    'VALUE' => $res->VALUE ?? null,
+                    'LOCATION_BRANCH' => $data->BRANCH,
+                    'COLLATERAL_FLAG' => $data->BRANCH,
+                    'VERSION' => 1,
+                    'CREATE_DATE' => Carbon::now(),
+                    'CREATE_BY' => $request->user()->id,
+                ];
+
+                $execute = M_CrCollateral::create($data_jaminan);
+
+                $statusLog = 'NEW ' . $loan_number ?? '';
+                $this->locationStatus->createLocationStatusLog($execute->ID, $data->BRANCH, $statusLog);
+
+                foreach ($doc as $res) {
+                    $custmer_doc_data = [
+                        'COLLATERAL_ID' => $execute->ID,
+                        'TYPE' => $res->TYPE,
+                        'COUNTER_ID' => $res->COUNTER_ID,
+                        'PATH' => $res->PATH
+                    ];
+
+                    M_CrCollateralDocument::create($custmer_doc_data);
+                }
+            }
+        }
     }
 }
