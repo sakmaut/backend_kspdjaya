@@ -17,6 +17,7 @@ use App\Models\M_Payment;
 use App\Models\M_PaymentDetail;
 use App\Models\M_TelegramBotSend;
 use Carbon\Carbon;
+use DateTime;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -30,18 +31,16 @@ class Welcome extends Controller
     public function index(Request $request)
     {
 
-        // $data = DB::table('arrears')
-        //     ->selectRaw('LOAN_NUMBER, min(START_DATE) as start_date, datediff(now(), min(START_DATE)) as date_diff')
-        //     ->where('status_rec', 'A')
-        //     ->groupBy('LOAN_NUMBER')
-        //     ->get();
+        // $type = $data->INSTALLMENT_TYPE;
 
-        // foreach ($data as $row) {
-        //     M_FirstArr::create([
-        //         'LOAN_NUMBER' => $row->LOAN_NUMBER,
-        //         'START_DATE' => Carbon::parse($row->start_date)->format('Y-m-d'),
-        //         'DATE_DIFF' => $row->date_diff
-        //     ]);
+        // if (strtolower($type) == 'bulanan') {
+        //     $data_credit_schedule = $this->generateAmortizationSchedule($set_tgl_awal, $data);
+
+        //     $installment_count = count($data_credit_schedule);
+        // } else {
+        //     $data_credit_schedule = $this->generateAmortizationScheduleMusiman($set_tgl_awal, $data);
+
+        //     $installment_count = count($data_credit_schedule);
         // }
 
         return response()->json("MUACHHHHHHHHHHHHHH");
@@ -224,5 +223,110 @@ class Welcome extends Controller
                 'PAID_PENALTY' => floatval($check_credit->PAID_PENALTY) + floatval($paidPenalty)
             ]);
         }
+    }
+
+    private function generateAmortizationSchedule($setDate, $data)
+    {
+        $schedule = [];
+        $remainingBalance = $data->POKOK_PEMBAYARAN;
+        $term = ceil($data->TENOR);
+        $angsuran = $data->INSTALLMENT;
+        $suku_bunga_konversi = ($data->FLAT_RATE / 100);
+        $ttal_bunga = $data->TOTAL_INTEREST;
+        $totalInterestPaid = 0;
+
+        for ($i = 1; $i <= $term; $i++) {
+            $interest = round($remainingBalance * $suku_bunga_konversi, 2);
+
+            if ($i < $term) {
+                $principalPayment = round($angsuran - $interest, 2);
+            } else {
+                $principalPayment = round($remainingBalance, 2);
+                $interest = round($ttal_bunga - $totalInterestPaid, 2);
+            }
+
+            $totalPayment = round($principalPayment + $interest, 2);
+            $remainingBalance = round($remainingBalance - $principalPayment, 2);
+            $totalInterestPaid += $interest;
+            if ($i == $term) {
+                $remainingBalance = 0.00;
+            }
+
+            $schedule[] = [
+                'angsuran_ke' => $i,
+                'tgl_angsuran' => setPaymentDate($setDate, $i),
+                'baki_debet_awal' => floatval($remainingBalance + $principalPayment),
+                'pokok' => floatval($principalPayment),
+                'bunga' => floatval($interest),
+                'total_angsuran' => floatval($totalPayment),
+                'baki_debet' => floatval($remainingBalance)
+            ];
+        }
+
+        return $schedule;
+    }
+
+    private function generateAmortizationScheduleMusiman($setDate, $data)
+    {
+        $schedule = [];
+        $remainingBalance = $data->POKOK_PEMBAYARAN;  // Initial loan amount (POKOK_PEMBAYARAN)
+        $term = ceil($data->TENOR);  // Loan term in months (TENOR)
+        $angsuran = $data->INSTALLMENT;  // Monthly installment (INSTALLMENT)
+        $suku_bunga_konversi = round($data->FLAT_RATE / 100, 10);  // Monthly interest rate (FLAT_RATE divided by 100)
+        $ttal_bunga = $data->TOTAL_INTEREST;  // Total interest (TOTAL_INTEREST)
+        $totalInterestPaid = 0;  // Total interest paid so far
+
+        $tenorList = [
+            '3' => 1,
+            '6' => 1,
+            '12' => 2,
+            '18' => 3
+        ];
+
+        $term = $tenorList[$term] ?? 0;
+
+        $monthsToAdd = ($data->TENOR / $tenorList[$data->TENOR]) ?? 0;
+
+        $startDate = new DateTime($setDate);
+
+        for ($i = 1; $i <= $term; $i++) {
+
+            $interest = round($remainingBalance * $suku_bunga_konversi, 2);
+
+            if ($i < $term) {
+                $principalPayment = round($angsuran - $interest, 2);
+            } else {
+                $principalPayment = round($remainingBalance, 2);
+                $interest = round($ttal_bunga - $totalInterestPaid, 2);
+            }
+
+            $totalPayment = round($principalPayment + $interest, 2);
+            $remainingBalance = round($remainingBalance - $principalPayment, 2);
+            $totalInterestPaid += $interest;
+
+            if ($i == $term) {
+                $remainingBalance = 0.00;
+            }
+
+            $paymentDate = clone $startDate;
+
+            $paymentDate->modify("+{$monthsToAdd} months");
+
+            // Format the date as required (e.g., 'Y-m-d')
+            $formattedPaymentDate = $paymentDate->format('Y-m-d');
+
+            $schedule[] = [
+                'angsuran_ke' => $i,
+                'tgl_angsuran' => $formattedPaymentDate,
+                'pokok' => floatval($principalPayment),
+                'bunga' => floatval($interest),
+                'total_angsuran' => floatval($totalPayment),
+                'baki_debet' => floatval($remainingBalance)
+            ];
+
+            $startDate = $paymentDate;
+        }
+
+        return $schedule;
     }
 }
