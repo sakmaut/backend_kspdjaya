@@ -311,7 +311,7 @@ class ListBanController extends Controller
                             LEFT JOIN (	SELECT	loan_num, entry_date, replace(replace(group_concat(payment_method),'AGENT EKS',''),',','') as payment_method
 			                            FROM	payment
 			                            WHERE	(cast(loan_num as char),date_format(entry_date,'%d%m%Y %H%i'),cast(title as char)) 
-					                                in (cast(loan_num as char), date_format(max(entry_date),'%d%m%Y %H%i'), concat('Angsuran Ke-',max(cast(replace(title,'Angsuran Ke-','') as signed))) from payment group by loan_num)
+					                                in (select cast(loan_num as char), date_format(max(entry_date),'%d%m%Y %H%i'), concat('Angsuran Ke-',max(cast(replace(title,'Angsuran Ke-','') as signed))) from payment group by loan_num)
 			                            group by loan_num, entry_date) l on l.loan_num=b.loan_number
                             LEFT JOIN (	SELECT	loan_number, 
                                         sum(past_due_pcpl) as tggk_pkk, sum(past_due_intrst) as tggk_bng, 
