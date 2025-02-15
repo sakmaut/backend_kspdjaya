@@ -271,7 +271,7 @@ class ListBanController extends Controller
                             coalesce(k.AMBC_PKK_AKHIR,0)+coalesce(k.AMBC_BNG_AKHIR,0) as AMBC_TOTAL_AKHIR, 
                             coalesce(m.BAYAR_POKOK,0) AC_PKK, 
                             coalesce(m.BAYAR_BUNGA,0) AC_BNG_MRG, 
-                            coalesce(m.BAYAR_POKOK,0)+coalesce(m.BAYAR_POKOK,0) AC_TOTAL, 
+                            coalesce(m.BAYAR_POKOK,0)+coalesce(m.BAYAR_BUNGA,0) AC_TOTAL, 
                             concat('C',case when floor(j.DUE_DAYS/30)>8 then 'X' else floor(j.DUE_DAYS/30) end) as CYCLE_AKHIR, 
                             case when (b.INSTALLMENT_COUNT/b.PERIOD)=1 then 'BULANAN' else 'MUSIMAN' end as pola_bayar_akhir, 
                             'jenis jaminan', 
