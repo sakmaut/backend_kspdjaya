@@ -249,8 +249,9 @@ class ListBanController extends Controller
                             concat('C',case when date_format(b.entry_date,'%m%Y')=date_format(now(),'%m%Y') then 'N'
 		                                    when date_format(case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 then now() else coalesce(i.TUNGGAKAN_PERTAMA,k.F_ARR_CR_SCHEDL) end,'%m%Y')=date_format(now(),'%m%Y') then '0'
 		                                    when floor((DATEDIFF(str_to_date('01022025','%d%m%Y'),case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 then 0 else coalesce(i.TUNGGAKAN_PERTAMA,k.F_ARR_CR_SCHEDL) end))/30)<0 then 'M' 
+                                            when (DATEDIFF(str_to_date('01022025','%d%m%Y'),case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 then now() else coalesce(i.TUNGGAKAN_PERTAMA,k.F_ARR_CR_SCHEDL) end)) between 211 and 240 then '8' 
 		                                    when ceil((DATEDIFF(str_to_date('01022025','%d%m%Y'),case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 then 0 else coalesce(i.TUNGGAKAN_PERTAMA,k.F_ARR_CR_SCHEDL) end))/30)>=8 then 'X' 
-                                            else ceil((DATEDIFF(str_to_date('01022025','%d%m%Y'),case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 then 0 else coalesce(i.TUNGGAKAN_PERTAMA,k.F_ARR_CR_SCHEDL) end))/30) end) AS CYCLE_AWAL,
+                                            else ceil((DATEDIFF(str_to_date('01022025','%d%m%Y'),case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 then 0 else coalesce(i.TUNGGAKAN_PERTAMA,k.F_ARR_CR_SCHEDL) end))/30) end) AS CYCLE_AWAL,                            
                             b.STATUS_REC,
                             b.STATUS_REC, 
                             case when (b.INSTALLMENT_COUNT/b.PERIOD)=1 then 'BULANAN' else 'MUSIMAN' end as pola_bayar, 
@@ -378,7 +379,7 @@ class ListBanController extends Controller
                     "TIPE ANGSURAN" => $result->tipe ?? '',
                     "JTH TEMPO AWAL" => $result->F_ARR_CR_SCHEDL == '0' ? '': date("d-m-Y", strtotime($result->F_ARR_CR_SCHEDL ?? '')),
                     "JTH TEMPO AKHIR" => $result->curr_arr == '0' || $result->curr_arr == '' || $result->curr_arr == 'null'? '' : date("d-m-Y", strtotime($result->curr_arr ?? '')),
-                    "TGL BAYAR" => $result->LAST_PAY,
+                    "TGL BAYAR" => date("d-m-Y", strtotime($result->LAST_PAY ?? '')),
                     "KOLEKTOR" => $result->COLLECTOR,
                     "CARA BYR" => $result->cara_bayar,
                     "AMBC PKK_AKHIR" => intval($result->AMBC_PKK_AKHIR) ?? 0,
