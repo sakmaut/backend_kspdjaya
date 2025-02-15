@@ -559,20 +559,6 @@ class Welcome extends Controller
                 ];
 
                 $execute = M_CrCollateral::create($data_jaminan);
-
-                $statusLog = 'NEW ' . $loan_number ?? '';
-                $this->locationStatus->createLocationStatusLog($execute->ID, $data->BRANCH, $statusLog);
-
-                foreach ($doc as $res) {
-                    $custmer_doc_data = [
-                        'COLLATERAL_ID' => $execute->ID,
-                        'TYPE' => $res->TYPE,
-                        'COUNTER_ID' => $res->COUNTER_ID,
-                        'PATH' => $res->PATH
-                    ];
-
-                    M_CrCollateralDocument::create($custmer_doc_data);
-                }
             }
         }
     }
