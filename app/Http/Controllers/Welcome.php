@@ -20,6 +20,7 @@ use App\Models\M_CrPersonal;
 use App\Models\M_CrPersonalExtra;
 use App\Models\M_CrProspect;
 use App\Models\M_Customer;
+use App\Models\M_CustomerDocument;
 use App\Models\M_CustomerExtra;
 use App\Models\M_DeuteronomyTransactionLog;
 use App\Models\M_FirstArr;
@@ -452,11 +453,29 @@ class Welcome extends Controller
             $data_customer['CUST_CODE'] = $cust_code;
             $last_id = M_Customer::create($data_customer);
 
-            // $this->createCustomerDocuments($last_id->ID, $getAttachment);
+            $this->createCustomerDocuments($last_id->ID, $getAttachment);
         } else {
             $check_customer_ktp->update($data_customer);
 
-            // $this->createCustomerDocuments($check_customer_ktp->ID, $getAttachment);
+            $this->createCustomerDocuments($check_customer_ktp->ID, $getAttachment);
+        }
+    }
+
+    private function createCustomerDocuments($customerId, $attachments)
+    {
+
+        M_CustomerDocument::where('CUSTOMER_ID', $customerId)->delete();
+
+        foreach ($attachments as $res) {
+            $custmer_doc_data = [
+                'CUSTOMER_ID' => $customerId,
+                'TYPE' => $res->TYPE,
+                'COUNTER_ID' => $res->COUNTER_ID,
+                'PATH' => $res->PATH,
+                'TIMESTAMP' => round(microtime(true) * 1000)
+            ];
+
+            M_CustomerDocument::create($custmer_doc_data);
         }
     }
 
@@ -522,20 +541,20 @@ class Welcome extends Controller
     {
         $data_collateral = M_CrGuaranteVehicle::where('CR_SURVEY_ID', $data->CR_SURVEY_ID)->where(function ($query) {
             $query->whereNull('DELETED_AT')
-                ->orWhere('DELETED_AT', '');
+            ->orWhere('DELETED_AT', '');
         })->get();
 
-        // $doc = $this->attachment_guarante($data->CR_SURVEY_ID, "'no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri'");
+        $doc = $this->attachment_guarante($data->CR_SURVEY_ID, "'no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri'");
 
-        // $setHeaderID = '';
-        // foreach ($doc as $res) {
-        //     $setHeaderID = $res->COUNTER_ID ?? '';
-        // }
+        $setHeaderID = '';
+        foreach ($doc as $res) {
+            $setHeaderID = $res->COUNTER_ID ?? '';
+        }
 
         if ($data_collateral->isNotEmpty()) {
             foreach ($data_collateral as $res) {
                 $data_jaminan = [
-                    'HEADER_ID' => '',
+                    'HEADER_ID' => $setHeaderID,
                     'CR_CREDIT_ID' => $lastID ?? null,
                     'TYPE' => $res->TYPE ?? null,
                     'BRAND' => $res->BRAND ?? null,
@@ -551,15 +570,47 @@ class Welcome extends Controller
                     'INVOICE_NUMBER' => $res->INVOICE_NUMBER ?? null,
                     'STNK_VALID_DATE' => $res->STNK_VALID_DATE ?? null,
                     'VALUE' => $res->VALUE ?? null,
-                    'LOCATION_BRANCH' => $data->BRANCH ?? '',
-                    'COLLATERAL_FLAG' => $data->BRANCH ?? '',
+                    'LOCATION_BRANCH' => $data->BRANCH,
+                    'COLLATERAL_FLAG' => $data->BRANCH,
                     'VERSION' => 1,
-                    'CREATE_DATE' => Carbon::now(),
-                    'CREATE_BY' => $request->user()->id ?? 'alex',
+                    'CREATE_DATE' => $this->timeNow,
+                    'CREATE_BY' => $request->user()->id,
                 ];
 
                 $execute = M_CrCollateral::create($data_jaminan);
+
+                $statusLog = 'NEW ' . $loan_number ?? '';
+                $this->locationStatus->createLocationStatusLog($execute->ID, $data->BRANCH, $statusLog);
+
+                foreach ($doc as $res) {
+                    $custmer_doc_data = [
+                        'COLLATERAL_ID' => $execute->ID,
+                        'TYPE' => $res->TYPE,
+                        'COUNTER_ID' => $res->COUNTER_ID,
+                        'PATH' => $res->PATH
+                    ];
+
+                    M_CrCollateralDocument::create($custmer_doc_data);
+                }
             }
         }
+    }
+
+    public function attachment_guarante($survey_id, $data)
+    {
+        $documents = DB::select(
+            "   SELECT *
+                FROM cr_survey_document AS csd
+                WHERE (TYPE, TIMEMILISECOND) IN (
+                    SELECT TYPE, MAX(TIMEMILISECOND)
+                    FROM cr_survey_document
+                    WHERE TYPE IN ($data)
+                        AND CR_SURVEY_ID = '$survey_id'
+                    GROUP BY TYPE
+                )
+                ORDER BY TIMEMILISECOND DESC"
+        );
+
+        return $documents;
     }
 }
