@@ -45,14 +45,12 @@ class Welcome extends Controller
             $data_credit_schedule = $this->generateAmortizationScheduleMusiman($set_tgl_awal, $data);
         }
 
-        $check_exist = M_Credit::where('ORDER_NUMBER', $request->order_number)->first();
-
         $no = 1;
         foreach ($data_credit_schedule as $list) {
             $credit_schedule =
                 [
                     'ID' => Uuid::uuid7()->toString(),
-                    'LOAN_NUMBER' => $check_exist?$check_exist->LOAN_NUMBER:'',
+                    'LOAN_NUMBER' => $request->loan_number??'',
                     'INSTALLMENT_COUNT' => $no++,
                     'PAYMENT_DATE' => parseDatetoYMD($list['tgl_angsuran']),
                     'PRINCIPAL' => $list['pokok'],
