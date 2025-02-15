@@ -317,13 +317,13 @@ class ListBanController extends Controller
 			WHERE	loan_number in (select loan_number from credit where status='A' 
 					or (status in ('S','D') and loan_number in (select loan_num from payment where date_format(entry_date,'%m%Y')=date_format(now(),'%m%Y'))))
 			GROUP	BY loan_number) k on k.loan_number=b.loan_number
-                            LEFT JOIN (	SELECT	loan_num, entry_date, replace(replace(group_concat(payment_method),'AGENT EKS',''),',','') as payment_method
+                            LEFT JOIN (	SELECT	loan_num, str_to_date(date_format(entry_date,'%d%m%Y'),'%d%m%Y'), replace(replace(group_concat(payment_method),'AGENT EKS',''),',','') as payment_method
 			                            FROM	payment
 			                            WHERE	(cast(loan_num as char),date_format(entry_date,'%d%m%Y %H%i'),cast(title as char)) 
 					                                in (select cast(loan_num as char), date_format(max(entry_date),'%d%m%Y %H%i'), concat('Angsuran Ke-',max(cast(replace(title,'Angsuran Ke-','') as signed))) from payment group by loan_num)
-			                            group by loan_num, entry_date) l on l.loan_num=b.loan_number
+			                            group by loan_num, str_to_date(date_format(entry_date,'%d%m%Y'),'%d%m%Y')) l on l.loan_num=b.loan_number
                             LEFT JOIN (	SELECT	s1.LOAN_NUM, 
-				sum(case when s2.ACC_KEYS='ANGSURAN_POKOK' then s2.ORIGINAL_AMOUNT else 0 end) as BAYAR_POKOK, 
+				sum(case when s2.ACC_KEYS in (''BAYAR_POKOK','ANGSURAN_POKOK') then s2.ORIGINAL_AMOUNT else 0 end) as BAYAR_POKOK, 
         			sum(case when s2.ACC_KEYS='ANGSURAN_BUNGA' then s2.ORIGINAL_AMOUNT else 0 end) as BAYAR_BUNGA        
 			FROM	payment s1
 				inner join payment_detail s2 on s2.PAYMENT_ID=s1.ID
