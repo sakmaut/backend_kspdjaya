@@ -379,7 +379,7 @@ class ListBanController extends Controller
                     "TIPE ANGSURAN" => $result->tipe ?? '',
                     "JTH TEMPO AWAL" => $result->F_ARR_CR_SCHEDL == '0' ? '': date("d-m-Y", strtotime($result->F_ARR_CR_SCHEDL ?? '')),
                     "JTH TEMPO AKHIR" => $result->curr_arr == '0' || $result->curr_arr == '' || $result->curr_arr == 'null'? '' : date("d-m-Y", strtotime($result->curr_arr ?? '')),
-                    "TGL BAYAR" => date("d-m-Y", strtotime($result->LAST_PAY ?? '')),
+                    "TGL BAYAR" => $result->LAST_PAY == '0' || $result->LAST_PAY == '' || $result->LAST_PAY == 'null' ? '' : date("d-m-Y", strtotime($result->LAST_PAY ?? '')),
                     "KOLEKTOR" => $result->COLLECTOR,
                     "CARA BYR" => $result->cara_bayar,
                     "AMBC PKK_AKHIR" => intval($result->AMBC_PKK_AKHIR) ?? 0,
