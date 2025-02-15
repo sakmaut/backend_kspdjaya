@@ -260,7 +260,7 @@ class ListBanController extends Controller
                             b.INSTALLMENT,
                             case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 then 0 else k.LAST_INST end as LAST_INST, 
                             e.INSTALLMENT_TYPE AS tipe,
-                            case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 then 0 else i.TUNGGAKAN_PERTAMA end as F_ARR_CR_SCHEDL,
+                            case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 then 0 else coalesce(i.TUNGGAKAN_PERTAMA,k.F_ARR_CR_SCHEDL) end as F_ARR_CR_SCHEDL,
                             case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 then 0 else k.F_ARR_CR_SCHEDL end as curr_arr, 
                             case when date_format(l.entry_date,'%m%Y')=date_format(now(),'%m%Y') then l.entry_date else null end as LAST_PAY, 
                             ' ' AS COLLECTOR,
@@ -301,9 +301,9 @@ class ListBanController extends Controller
                                 LEFT JOIN credit_2025 i on cast(i.loan_number as char) = cast(b.LOAN_NUMBER as char)
                                 LEFT JOIN first_arr j on cast(j.LOAN_NUMBER as char) = cast(b.LOAN_NUMBER as char)
                             LEFT JOIN (	SELECT	loan_number, sum(interest)-sum(coalesce(payment_value_interest,0)) as OS_BNG_AKHIR, 
-                                        min(case when paid_flag='PAID' then 999 else installment_count end) as LAST_INST, 
-                                        max(case when paid_flag='PAID' then payment_date else str_to_date('01011900','%d%m%Y') end) as LAST_PAY, 
-                                        min(case when paid_flag<>'PAID' then payment_date else str_to_date('01013000','%d%m%Y') end) as F_ARR_CR_SCHEDL
+                                        min(case when cast(paid_flag as char)='PAID' then 999 else installment_count end) as LAST_INST, 
+                                        max(case when cast(paid_flag as char)='PAID' then payment_date else str_to_date('01011900','%d%m%Y') end) as LAST_PAY, 
+                                        min(case when cast(coalesce(paid_flag,'') as char)<>'PAID' then payment_date else str_to_date('01013000','%d%m%Y') end) as F_ARR_CR_SCHEDL
                                     FROM	credit_schedule
                                     WHERE	loan_number in (select loan_number from credit where status='A' 
                                             or (status in ('S','D') and loan_number in (select loan_num from payment where date_format(entry_date,'%m%Y')=date_format(now(),'%m%Y'))))
