@@ -25,36 +25,81 @@ class CollateralController extends Controller
             $no_polisi = $request->query('no_polisi');
             $no_bpkb = $request->query('no_bpkb');
 
-            $collateral = M_CrCollateral::where(function ($query) {
-                $query->whereNull('DELETED_AT')
-                    ->orWhere('DELETED_AT', '');
-            });
+            $collateral = DB::table('credit as a')
+                                ->join('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
+                                ->where(function ($query) {
+                                    $query->whereNull('b.DELETED_AT')
+                                    ->orWhere('b.DELETED_AT', '!=', '');
+                                })
+                                ->where('a.STATUS', 'A')
+                                ->select(
+                                    'a.LOAN_NUMBER',
+                                    'b.ID',
+                                    'b.BRAND',
+                                    'b.TYPE',
+                                    'b.PRODUCTION_YEAR',
+                                    'b.COLOR',
+                                    'b.ON_BEHALF',
+                                    'b.ENGINE_NUMBER',
+                                    'b.POLICE_NUMBER',
+                                    'b.CHASIS_NUMBER',
+                                    'b.BPKB_ADDRESS',
+                                    'b.BPKB_NUMBER',
+                                    'b.STNK_NUMBER',
+                                    'b.INVOICE_NUMBER',
+                                    'b.STNK_VALID_DATE',
+                                    'b.VALUE'
+                                );
 
-            // Apply filters only if the respective parameter is not empty
             if (!empty($atas_nama)) {
-                $collateral = $collateral->where('ON_BEHALF', 'like', '%' . $atas_nama . '%');
+                $collateral->where('b.ON_BEHALF', 'like', '%' . $atas_nama . '%');
             }
 
             if (!empty($no_polisi)) {
-                $collateral = $collateral->where('POLICE_NUMBER', 'like', '%' . $no_polisi . '%');
+                $collateral->where('b.POLICE_NUMBER', 'like', '%' . $no_polisi . '%');
             }
 
             if (!empty($no_bpkb)) {
-                $collateral = $collateral->where('BPKB_NUMBER', 'like', '%' . $no_bpkb . '%');
+                $collateral->where('b.BPKB_NUMBER', 'like', '%' . $no_bpkb . '%');
             }
 
-            // Limit the result to 10 records right away
-            $collateral = $collateral->limit(10);
+            $collateral->orderBy('a.CREATED_AT', 'DESC');
 
-            // Use get() to retrieve the data, which will return a Collection
-            $collateralData = $collateral->get()->transform(function ($list) {
-                return $this->collateralField($list);
-            });
+            // Limit the result to 10 records
+            $collateral->limit(10);
 
-            $collateralData = $collateralData->toArray();
+            $collateralData = []; // Initialize an empty array to store the results
 
-            // Return the transformed data as JSON
-            return response()->json($collateralData, 200);            
+            // Fetch the collateral data
+            $collateralResults = $collateral->get(); // Call get() once
+
+            // Check if data exists
+            if ($collateralResults->isNotEmpty()) {
+                foreach ($collateralResults as $value) {
+                    $collateralData[] = [  // Append each item to the array
+                        'loan_number'       => $value->LOAN_NUMBER,
+                        'id'                => $value->ID,
+                        'merk'              => $value->BRAND,
+                        'tipe'              => $value->TYPE,
+                        'tahun'             => $value->PRODUCTION_YEAR,
+                        'warna'             => $value->COLOR,
+                        'atas_nama'         => $value->ON_BEHALF,
+                        'no_polisi'         => $value->POLICE_NUMBER,
+                        'no_mesin'          => $value->ENGINE_NUMBER,
+                        'no_rangka'         => $value->CHASIS_NUMBER,
+                        'BPKB_ADDRESS'      => $value->BPKB_ADDRESS,
+                        'no_bpkb'           => $value->BPKB_NUMBER,
+                        'no_stnk'           => $value->STNK_NUMBER,
+                        'no_faktur'         => $value->INVOICE_NUMBER,
+                        'tgl_stnk'          => $value->STNK_VALID_DATE,
+                        'nilai'             => $value->VALUE,
+                        'asal_lokasi'       => $value->VALUE
+                    ];
+                }
+            }
+        
+            return response()->json($collateralData, 200);
+         
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);

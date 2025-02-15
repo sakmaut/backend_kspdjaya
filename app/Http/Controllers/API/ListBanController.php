@@ -38,6 +38,8 @@ class ListBanController extends Controller
 
                 $cash_in = [];
 
+                $totalAngsuranPokokBunga = 0;
+        
                 foreach ($arusKas as $item) {
 
                     $row = $item->no_invoice . $item->LOAN_NUM . $item->PELANGGAN;
@@ -45,34 +47,54 @@ class ListBanController extends Controller
                     $no_invoice = $item->no_invoice;
                     $loan_num = $item->LOAN_NUM;
                     $pelanggan = $item->PELANGGAN;
+                    $user = $item->fullname;
 
                     if (in_array($row, $cash_in)) {
-                        $no = 0;
                         $no_invoice = '';
                         $loan_num = '';
                         $pelanggan = '';
                     } else {
                         array_push($cash_in, $row);
-                        $no++;
                     }
 
                     $amount = is_numeric($item->ORIGINAL_AMOUNT) ? floatval($item->ORIGINAL_AMOUNT) : 0;
 
                     if ($item->JENIS != 'PENCAIRAN') {
-                        $datas['datas'][] = [
-                            'no' => $no == 0 ? '' : $no,
-                            'type' => 'CASH_IN',
-                            'no_invoice' => $no_invoice,
-                            'no_kontrak' => $loan_num,
-                            'tgl' => $item->ENTRY_DATE ?? '',
-                            'cabang' => $item->nama_cabang ?? '',
-                            'user' => $item->fullname ?? '',
-                            'position' => $item->position ?? '',
-                            'nama_pelanggan' => $pelanggan,
-                            'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
-                            'keterangan' => $item->JENIS . ' ' . $item->angsuran_ke ?? '',
-                            'amount' => $amount,
-                        ];
+
+                        if ($item->JENIS == 'ANGSURAN_POKOK' || $item->JENIS == 'ANGSURAN_BUNGA') {
+
+                            $totalAngsuranPokokBunga += $amount;
+
+                            $datas['datas'][] = [
+                                'no' => $no++,
+                                'type' => 'CASH_IN',
+                                'no_invoice' => $no_invoice,
+                                'no_kontrak' => $loan_num,
+                                'tgl' => $item->ENTRY_DATE ?? '',
+                                'cabang' => $item->nama_cabang ?? '',
+                                'user' => $user ?? '',
+                                'position' => $item->position ?? '',
+                                'nama_pelanggan' => $pelanggan,
+                                'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
+                                'keterangan' => 'Bayar ' . $item->angsuran_ke ?? '',
+                                'amount' => $totalAngsuranPokokBunga,
+                            ];
+                        } else {
+                            $datas['datas'][] = [
+                                'no' => $no++,
+                                'type' => 'CASH_IN',
+                                'no_invoice' => $no_invoice,
+                                'no_kontrak' => $loan_num,
+                                'tgl' => $item->ENTRY_DATE ?? '',
+                                'cabang' => $item->nama_cabang ?? '',
+                                'user' => $user ?? '',
+                                'position' => $item->position ?? '',
+                                'nama_pelanggan' => $pelanggan,
+                                'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
+                                'keterangan' => $item->JENIS . ' ' . $item->angsuran_ke ?? '',
+                                'amount' => $amount,
+                            ];
+                        }
 
                         $totalCashin += floatval($item->ORIGINAL_AMOUNT);
                     }
@@ -238,7 +260,7 @@ class ListBanController extends Controller
                             b.INSTALLMENT,
                             case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 then 0 else k.LAST_INST end as LAST_INST, 
                             e.INSTALLMENT_TYPE AS tipe,
-                            case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 then 0 else i.TUNGGAKAN_PERTAMA end as F_ARR_CR_SCHEDL,
+                            case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 then 0 else coalesce(i.TUNGGAKAN_PERTAMA,k.F_ARR_CR_SCHEDL) end as F_ARR_CR_SCHEDL,
                             case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 then 0 else k.F_ARR_CR_SCHEDL end as curr_arr, 
                             case when date_format(l.entry_date,'%m%Y')=date_format(now(),'%m%Y') then l.entry_date else null end as LAST_PAY, 
                             ' ' AS COLLECTOR,
@@ -279,9 +301,9 @@ class ListBanController extends Controller
                                 LEFT JOIN credit_2025 i on cast(i.loan_number as char) = cast(b.LOAN_NUMBER as char)
                                 LEFT JOIN first_arr j on cast(j.LOAN_NUMBER as char) = cast(b.LOAN_NUMBER as char)
                             LEFT JOIN (	SELECT	loan_number, sum(interest)-sum(coalesce(payment_value_interest,0)) as OS_BNG_AKHIR, 
-                                        min(case when paid_flag='PAID' then 999 else installment_count end) as LAST_INST, 
-                                        max(case when paid_flag='PAID' then payment_date else str_to_date('01011900','%d%m%Y') end) as LAST_PAY, 
-                                        min(case when paid_flag<>'PAID' then payment_date else str_to_date('01013000','%d%m%Y') end) as F_ARR_CR_SCHEDL
+                                        min(case when cast(paid_flag as char)='PAID' then 999 else installment_count end) as LAST_INST, 
+                                        max(case when cast(paid_flag as char)='PAID' then payment_date else str_to_date('01011900','%d%m%Y') end) as LAST_PAY, 
+                                        min(case when cast(coalesce(paid_flag,'') as char)<>'PAID' then payment_date else str_to_date('01013000','%d%m%Y') end) as F_ARR_CR_SCHEDL
                                     FROM	credit_schedule
                                     WHERE	loan_number in (select loan_number from credit where status='A' 
                                             or (status in ('S','D') and loan_number in (select loan_num from payment where date_format(entry_date,'%m%Y')=date_format(now(),'%m%Y'))))
@@ -350,8 +372,8 @@ class ListBanController extends Controller
                     "ANGSURAN" => intval($result->INSTALLMENT) ?? 0,
                     "ANGS KE" => $result->LAST_INST ?? '',
                     "TIPE ANGSURAN" => $result->tipe ?? '',
-                    "JTH TEMPO AWAL" => date("d-m-Y", strtotime($result->F_ARR_CR_SCHEDL ?? '')),
-                    "JTH TEMPO AKHIR" => date("d-m-Y", strtotime($result->curr_arr ?? '')),
+                    "JTH TEMPO AWAL" => $result->F_ARR_CR_SCHEDL == '0' ? '': date("d-m-Y", strtotime($result->F_ARR_CR_SCHEDL ?? '')),
+                    "JTH TEMPO AKHIR" => $result->curr_arr == '0' ? '' : date("d-m-Y", strtotime($result->curr_arr ?? '')),
                     "TGL BAYAR" => $result->LAST_PAY,
                     "KOLEKTOR" => $result->COLLECTOR,
                     "CARA BYR" => $result->cara_bayar,

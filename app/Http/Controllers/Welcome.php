@@ -7,6 +7,7 @@ use App\Http\Controllers\API\StatusApproval;
 use App\Http\Controllers\API\TelegramBotConfig;
 use App\Models\M_Arrears;
 use App\Models\M_Branch;
+use App\Models\M_CrApplication;
 use App\Models\M_Credit;
 use App\Models\M_CreditSchedule;
 use App\Models\M_CrPersonal;
@@ -17,6 +18,7 @@ use App\Models\M_Payment;
 use App\Models\M_PaymentDetail;
 use App\Models\M_TelegramBotSend;
 use Carbon\Carbon;
+use DateTime;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -30,18 +32,28 @@ class Welcome extends Controller
     public function index(Request $request)
     {
 
-        // $data = DB::table('arrears')
-        //     ->selectRaw('LOAN_NUMBER, min(START_DATE) as start_date, datediff(now(), min(START_DATE)) as date_diff')
-        //     ->where('status_rec', 'A')
-        //     ->groupBy('LOAN_NUMBER')
-        //     ->get();
+        $data = M_CrApplication::where('ORDER_NUMBER', $request->order_number)->first();
 
-        // foreach ($data as $row) {
-        //     M_FirstArr::create([
-        //         'LOAN_NUMBER' => $row->LOAN_NUMBER,
-        //         'START_DATE' => Carbon::parse($row->start_date)->format('Y-m-d'),
-        //         'DATE_DIFF' => $row->date_diff
-        //     ]);
+        $set_tgl_awal = $request->tgl_awal;
+
+        $type = $data->INSTALLMENT_TYPE;
+
+        if (strtolower($type) == 'bulanan') {
+             $this->generateAmortizationSchedule($set_tgl_awal, $data);
+
+        } else {
+             $this->generateAmortizationScheduleMusiman($set_tgl_awal, $data);
+        }
+        // $type = $data->INSTALLMENT_TYPE;
+
+        // if (strtolower($type) == 'bulanan') {
+        //     $data_credit_schedule = $this->generateAmortizationSchedule($set_tgl_awal, $data);
+
+        //     $installment_count = count($data_credit_schedule);
+        // } else {
+        //     $data_credit_schedule = $this->generateAmortizationScheduleMusiman($set_tgl_awal, $data);
+
+        //     $installment_count = count($data_credit_schedule);
         // }
 
         return response()->json("MUACHHHHHHHHHHHHHH");
@@ -131,98 +143,204 @@ class Welcome extends Controller
 
         return response()->json('ok', 200);
     }
+    
 
-    function updateCreditSchedule($loan_number, $tgl_angsuran, $res, $uid)
+    // function updateCreditSchedule($loan_number, $tgl_angsuran, $res, $uid)
+    // {
+    //     $credit_schedule = M_CreditSchedule::where([
+    //         'LOAN_NUMBER' => $loan_number,
+    //         'PAYMENT_DATE' => date('Y-m-d', strtotime($tgl_angsuran))
+    //     ])->first();
+
+    //     if ($credit_schedule) {
+    //         $byr_angsuran = $res['details'][0]['bayar_angsuran'];
+
+    //         $valBeforePrincipal = $credit_schedule ? $credit_schedule->PAYMENT_VALUE_PRINCIPAL : 0;
+    //         $valBeforeInterest = $credit_schedule ? $credit_schedule->PAYMENT_VALUE_INTEREST : 0;
+    //         $getPrincipal = $credit_schedule ? $credit_schedule->PRINCIPAL : 0;
+    //         $getInterest = $credit_schedule ? $credit_schedule->INTEREST : 0;
+
+    //         if ($credit_schedule->PAID_FLAG == 'PAID') {
+    //             $data = $this->preparePaymentData($uid, 'ANGSURAN_POKOK', $getPrincipal);
+    //             M_PaymentDetail::create($data);
+    //             $this->addCreditPaid($loan_number, ['ANGSURAN_POKOK' => $getPrincipal]);
+
+    //             $data = $this->preparePaymentData($uid, 'ANGSURAN_BUNGA', $getInterest);
+    //             M_PaymentDetail::create($data);
+    //             $this->addCreditPaid($loan_number, ['ANGSURAN_BUNGA' => $getInterest]);
+    //         } else {
+    //             $new_payment_value_principal = $valBeforePrincipal;
+    //             $new_payment_value_interest = $valBeforeInterest;
+
+    //             // Process principal payment if needed
+    //             if ($valBeforePrincipal < $getPrincipal) {
+    //                 $remaining_to_principal = $getPrincipal - $valBeforePrincipal;
+
+    //                 if ($byr_angsuran >= $remaining_to_principal) {
+    //                     $new_payment_value_principal = $getPrincipal;
+    //                     $remaining_payment = $byr_angsuran - $remaining_to_principal;
+    //                 } else {
+    //                     $new_payment_value_principal += $byr_angsuran;
+    //                     $remaining_payment = 0;
+    //                 }
+    //             } else {
+    //                 $remaining_payment = $byr_angsuran;
+    //             }
+
+    //             // Update interest if the principal is fully paid
+    //             if ($new_payment_value_principal == $getPrincipal) {
+    //                 if ($valBeforeInterest < $getInterest) {
+    //                     $new_payment_value_interest = min($valBeforeInterest + $remaining_payment, $getInterest);
+    //                 }
+    //             }
+
+    //             // Insert payment details for principal if there is a change
+    //             $valPrincipal = $new_payment_value_principal - $valBeforePrincipal;
+    //             if ($valPrincipal > 0) {
+    //                 $data = $this->preparePaymentData($uid, 'ANGSURAN_POKOK', $valPrincipal);
+    //                 M_PaymentDetail::create($data);
+    //                 $this->addCreditPaid($loan_number, ['ANGSURAN_POKOK' => $valPrincipal]);
+    //             }
+
+    //             // Insert payment details for interest if there is a change
+    //             $valInterest = $new_payment_value_interest - $valBeforeInterest;
+    //             if ($valInterest > 0) {
+    //                 $data = $this->preparePaymentData($uid, 'ANGSURAN_BUNGA', $valInterest);
+    //                 M_PaymentDetail::create($data);
+    //                 $this->addCreditPaid($loan_number, ['ANGSURAN_BUNGA' => $valInterest]);
+    //             }
+    //         }
+    //     }
+    // }
+
+    // function preparePaymentData($payment_id, $acc_key, $amount)
+    // {
+    //     return [
+    //         'PAYMENT_ID' => $payment_id,
+    //         'ACC_KEYS' => $acc_key,
+    //         'ORIGINAL_AMOUNT' => $amount
+    //     ];
+    // }
+
+    // function addCreditPaid($loan_number, array $data)
+    // {
+    //     $check_credit = M_Credit::where(['LOAN_NUMBER' => $loan_number])->first();
+
+    //     if ($check_credit) {
+    //         $paidPrincipal = isset($data['ANGSURAN_POKOK']) ? $data['ANGSURAN_POKOK'] : 0;
+    //         $paidInterest = isset($data['ANGSURAN_BUNGA']) ? $data['ANGSURAN_BUNGA'] : 0;
+    //         $paidPenalty = isset($data['BAYAR_DENDA']) ? $data['BAYAR_DENDA'] : 0;
+
+    //         $check_credit->update([
+    //             'PAID_PRINCIPAL' => floatval($check_credit->PAID_PRINCIPAL) + floatval($paidPrincipal),
+    //             'PAID_INTEREST' => floatval($check_credit->PAID_INTEREST) + floatval($paidInterest),
+    //             'PAID_PENALTY' => floatval($check_credit->PAID_PENALTY) + floatval($paidPenalty)
+    //         ]);
+    //     }
+    // }
+
+    private function generateAmortizationSchedule($setDate, $data)
     {
-        $credit_schedule = M_CreditSchedule::where([
-            'LOAN_NUMBER' => $loan_number,
-            'PAYMENT_DATE' => date('Y-m-d', strtotime($tgl_angsuran))
-        ])->first();
+        $schedule = [];
+        $remainingBalance = $data->POKOK_PEMBAYARAN;
+        $term = ceil($data->TENOR);
+        $angsuran = $data->INSTALLMENT;
+        $suku_bunga_konversi = ($data->FLAT_RATE / 100);
+        $ttal_bunga = $data->TOTAL_INTEREST;
+        $totalInterestPaid = 0;
 
-        if ($credit_schedule) {
-            $byr_angsuran = $res['details'][0]['bayar_angsuran'];
+        for ($i = 1; $i <= $term; $i++) {
+            $interest = round($remainingBalance * $suku_bunga_konversi, 2);
 
-            $valBeforePrincipal = $credit_schedule ? $credit_schedule->PAYMENT_VALUE_PRINCIPAL : 0;
-            $valBeforeInterest = $credit_schedule ? $credit_schedule->PAYMENT_VALUE_INTEREST : 0;
-            $getPrincipal = $credit_schedule ? $credit_schedule->PRINCIPAL : 0;
-            $getInterest = $credit_schedule ? $credit_schedule->INTEREST : 0;
-
-            if ($credit_schedule->PAID_FLAG == 'PAID') {
-                $data = $this->preparePaymentData($uid, 'ANGSURAN_POKOK', $getPrincipal);
-                M_PaymentDetail::create($data);
-                $this->addCreditPaid($loan_number, ['ANGSURAN_POKOK' => $getPrincipal]);
-
-                $data = $this->preparePaymentData($uid, 'ANGSURAN_BUNGA', $getInterest);
-                M_PaymentDetail::create($data);
-                $this->addCreditPaid($loan_number, ['ANGSURAN_BUNGA' => $getInterest]);
+            if ($i < $term) {
+                $principalPayment = round($angsuran - $interest, 2);
             } else {
-                $new_payment_value_principal = $valBeforePrincipal;
-                $new_payment_value_interest = $valBeforeInterest;
-
-                // Process principal payment if needed
-                if ($valBeforePrincipal < $getPrincipal) {
-                    $remaining_to_principal = $getPrincipal - $valBeforePrincipal;
-
-                    if ($byr_angsuran >= $remaining_to_principal) {
-                        $new_payment_value_principal = $getPrincipal;
-                        $remaining_payment = $byr_angsuran - $remaining_to_principal;
-                    } else {
-                        $new_payment_value_principal += $byr_angsuran;
-                        $remaining_payment = 0;
-                    }
-                } else {
-                    $remaining_payment = $byr_angsuran;
-                }
-
-                // Update interest if the principal is fully paid
-                if ($new_payment_value_principal == $getPrincipal) {
-                    if ($valBeforeInterest < $getInterest) {
-                        $new_payment_value_interest = min($valBeforeInterest + $remaining_payment, $getInterest);
-                    }
-                }
-
-                // Insert payment details for principal if there is a change
-                $valPrincipal = $new_payment_value_principal - $valBeforePrincipal;
-                if ($valPrincipal > 0) {
-                    $data = $this->preparePaymentData($uid, 'ANGSURAN_POKOK', $valPrincipal);
-                    M_PaymentDetail::create($data);
-                    $this->addCreditPaid($loan_number, ['ANGSURAN_POKOK' => $valPrincipal]);
-                }
-
-                // Insert payment details for interest if there is a change
-                $valInterest = $new_payment_value_interest - $valBeforeInterest;
-                if ($valInterest > 0) {
-                    $data = $this->preparePaymentData($uid, 'ANGSURAN_BUNGA', $valInterest);
-                    M_PaymentDetail::create($data);
-                    $this->addCreditPaid($loan_number, ['ANGSURAN_BUNGA' => $valInterest]);
-                }
+                $principalPayment = round($remainingBalance, 2);
+                $interest = round($ttal_bunga - $totalInterestPaid, 2);
             }
+
+            $totalPayment = round($principalPayment + $interest, 2);
+            $remainingBalance = round($remainingBalance - $principalPayment, 2);
+            $totalInterestPaid += $interest;
+            if ($i == $term) {
+                $remainingBalance = 0.00;
+            }
+
+            $schedule[] = [
+                'angsuran_ke' => $i,
+                'tgl_angsuran' => setPaymentDate($setDate, $i),
+                'baki_debet_awal' => floatval($remainingBalance + $principalPayment),
+                'pokok' => floatval($principalPayment),
+                'bunga' => floatval($interest),
+                'total_angsuran' => floatval($totalPayment),
+                'baki_debet' => floatval($remainingBalance)
+            ];
         }
+
+        return $schedule;
     }
 
-    function preparePaymentData($payment_id, $acc_key, $amount)
+    private function generateAmortizationScheduleMusiman($setDate, $data)
     {
-        return [
-            'PAYMENT_ID' => $payment_id,
-            'ACC_KEYS' => $acc_key,
-            'ORIGINAL_AMOUNT' => $amount
+        $schedule = [];
+        $remainingBalance = $data->POKOK_PEMBAYARAN;  // Initial loan amount (POKOK_PEMBAYARAN)
+        $term = ceil($data->TENOR);  // Loan term in months (TENOR)
+        $angsuran = $data->INSTALLMENT;  // Monthly installment (INSTALLMENT)
+        $suku_bunga_konversi = round($data->FLAT_RATE / 100, 10);  // Monthly interest rate (FLAT_RATE divided by 100)
+        $ttal_bunga = $data->TOTAL_INTEREST;  // Total interest (TOTAL_INTEREST)
+        $totalInterestPaid = 0;  // Total interest paid so far
+
+        $tenorList = [
+            '3' => 1,
+            '6' => 1,
+            '12' => 2,
+            '18' => 3
         ];
-    }
 
-    public function addCreditPaid($loan_number, array $data)
-    {
-        $check_credit = M_Credit::where(['LOAN_NUMBER' => $loan_number])->first();
+        $term = $tenorList[$term] ?? 0;
 
-        if ($check_credit) {
-            $paidPrincipal = isset($data['ANGSURAN_POKOK']) ? $data['ANGSURAN_POKOK'] : 0;
-            $paidInterest = isset($data['ANGSURAN_BUNGA']) ? $data['ANGSURAN_BUNGA'] : 0;
-            $paidPenalty = isset($data['BAYAR_DENDA']) ? $data['BAYAR_DENDA'] : 0;
+        $monthsToAdd = ($data->TENOR / $tenorList[$data->TENOR]) ?? 0;
 
-            $check_credit->update([
-                'PAID_PRINCIPAL' => floatval($check_credit->PAID_PRINCIPAL) + floatval($paidPrincipal),
-                'PAID_INTEREST' => floatval($check_credit->PAID_INTEREST) + floatval($paidInterest),
-                'PAID_PENALTY' => floatval($check_credit->PAID_PENALTY) + floatval($paidPenalty)
-            ]);
+        $startDate = new DateTime($setDate);
+
+        for ($i = 1; $i <= $term; $i++) {
+
+            $interest = round($remainingBalance * $suku_bunga_konversi, 2);
+
+            if ($i < $term) {
+                $principalPayment = round($angsuran - $interest, 2);
+            } else {
+                $principalPayment = round($remainingBalance, 2);
+                $interest = round($ttal_bunga - $totalInterestPaid, 2);
+            }
+
+            $totalPayment = round($principalPayment + $interest, 2);
+            $remainingBalance = round($remainingBalance - $principalPayment, 2);
+            $totalInterestPaid += $interest;
+
+            if ($i == $term) {
+                $remainingBalance = 0.00;
+            }
+
+            $paymentDate = clone $startDate;
+
+            $paymentDate->modify("+{$monthsToAdd} months");
+
+            // Format the date as required (e.g., 'Y-m-d')
+            $formattedPaymentDate = $paymentDate->format('Y-m-d');
+
+            $schedule[] = [
+                'angsuran_ke' => $i,
+                'tgl_angsuran' => $formattedPaymentDate,
+                'pokok' => floatval($principalPayment),
+                'bunga' => floatval($interest),
+                'total_angsuran' => floatval($totalPayment),
+                'baki_debet' => floatval($remainingBalance)
+            ];
+
+            $startDate = $paymentDate;
         }
+
+        return $schedule;
     }
 }

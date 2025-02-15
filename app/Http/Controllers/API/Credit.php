@@ -78,6 +78,7 @@ class Credit extends Controller
             )
             ->leftJoin('branch as b', 'b.id', '=', 'a.branch_id')
             ->where('a.position', 'KAPOS')
+            ->where('a.status', 'active')
             ->where('b.id', $branchID)
             ->first();
 
