@@ -80,15 +80,15 @@ class Welcome extends Controller
             M_CreditSchedule::create($credit_schedule);
         }
 
-        // $check_exist = M_Credit::where('ORDER_NUMBER', $request->order_number)->first();
-        // if ($check_exist) {
-        //     $SET_UUID = $check_exist->ID;
-        //     $cust_code = $check_exist->CUST_CODE;
+        $check_exist = M_Credit::where('ORDER_NUMBER', $request->order_number)->first();
+        if ($check_exist) {
+            $SET_UUID = $check_exist->ID;
+            $cust_code = $check_exist->CUST_CODE;
 
-        //     $this->insert_customer($request, $data, $cust_code);
-        //     $this->insert_customer_xtra($data, $cust_code);
-        //     // $this->insert_collateral($request, $data, $SET_UUID, $request->loan_number);
-        // }
+            $this->insert_customer($request, $data, $cust_code);
+            $this->insert_customer_xtra($data, $cust_code);
+            $this->insert_collateral($request, $data, $SET_UUID, $request->loan_number);
+        }
 
         return response()->json("MUACHHHHHHHHHHHHHH");
         die;
@@ -452,11 +452,11 @@ class Welcome extends Controller
             $data_customer['CUST_CODE'] = $cust_code;
             $last_id = M_Customer::create($data_customer);
 
-            $this->createCustomerDocuments($last_id->ID, $getAttachment);
+            // $this->createCustomerDocuments($last_id->ID, $getAttachment);
         } else {
             $check_customer_ktp->update($data_customer);
 
-            $this->createCustomerDocuments($check_customer_ktp->ID, $getAttachment);
+            // $this->createCustomerDocuments($check_customer_ktp->ID, $getAttachment);
         }
     }
 
