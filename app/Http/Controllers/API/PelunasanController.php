@@ -563,7 +563,7 @@ class PelunasanController extends Controller
             "JUMLAH_UANG" => $request->UANG_PELANGGAN,
             "NAMA_BANK" => $request->NAMA_BANK,
             "NO_REKENING" => $request->NO_REKENING,
-            "CREATED_BY" => $request->user()->fullname
+            "CREATED_BY" => $request->user()->id
         ];
 
         M_Kwitansi::create($data);
