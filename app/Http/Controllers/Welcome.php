@@ -1,4 +1,4 @@
-<?php
+<!-- <?php
 
 namespace App\Http\Controllers;
 
@@ -221,63 +221,63 @@ class Welcome extends Controller
         ];
     }
 
-    public function addCreditPaid($loan_number, array $data)
-    {
-        $check_credit = M_Credit::where(['LOAN_NUMBER' => $loan_number])->first();
+    // public function addCreditPaid($loan_number, array $data)
+    // {
+    //     $check_credit = M_Credit::where(['LOAN_NUMBER' => $loan_number])->first();
 
-        if ($check_credit) {
-            $paidPrincipal = isset($data['ANGSURAN_POKOK']) ? $data['ANGSURAN_POKOK'] : 0;
-            $paidInterest = isset($data['ANGSURAN_BUNGA']) ? $data['ANGSURAN_BUNGA'] : 0;
-            $paidPenalty = isset($data['BAYAR_DENDA']) ? $data['BAYAR_DENDA'] : 0;
+    //     if ($check_credit) {
+    //         $paidPrincipal = isset($data['ANGSURAN_POKOK']) ? $data['ANGSURAN_POKOK'] : 0;
+    //         $paidInterest = isset($data['ANGSURAN_BUNGA']) ? $data['ANGSURAN_BUNGA'] : 0;
+    //         $paidPenalty = isset($data['BAYAR_DENDA']) ? $data['BAYAR_DENDA'] : 0;
 
-            $check_credit->update([
-                'PAID_PRINCIPAL' => floatval($check_credit->PAID_PRINCIPAL) + floatval($paidPrincipal),
-                'PAID_INTEREST' => floatval($check_credit->PAID_INTEREST) + floatval($paidInterest),
-                'PAID_PENALTY' => floatval($check_credit->PAID_PENALTY) + floatval($paidPenalty)
-            ]);
-        }
-    }
+    //         $check_credit->update([
+    //             'PAID_PRINCIPAL' => floatval($check_credit->PAID_PRINCIPAL) + floatval($paidPrincipal),
+    //             'PAID_INTEREST' => floatval($check_credit->PAID_INTEREST) + floatval($paidInterest),
+    //             'PAID_PENALTY' => floatval($check_credit->PAID_PENALTY) + floatval($paidPenalty)
+    //         ]);
+    //     }
+    // }
 
-    private function generateAmortizationSchedule($setDate, $data)
-    {
-        $schedule = [];
-        $remainingBalance = $data->POKOK_PEMBAYARAN;
-        $term = ceil($data->TENOR);
-        $angsuran = $data->INSTALLMENT;
-        $suku_bunga_konversi = ($data->FLAT_RATE / 100);
-        $ttal_bunga = $data->TOTAL_INTEREST;
-        $totalInterestPaid = 0;
+    // private function generateAmortizationSchedule($setDate, $data)
+    // {
+    //     $schedule = [];
+    //     $remainingBalance = $data->POKOK_PEMBAYARAN;
+    //     $term = ceil($data->TENOR);
+    //     $angsuran = $data->INSTALLMENT;
+    //     $suku_bunga_konversi = ($data->FLAT_RATE / 100);
+    //     $ttal_bunga = $data->TOTAL_INTEREST;
+    //     $totalInterestPaid = 0;
 
-        for ($i = 1; $i <= $term; $i++) {
-            $interest = round($remainingBalance * $suku_bunga_konversi, 2);
+    //     for ($i = 1; $i <= $term; $i++) {
+    //         $interest = round($remainingBalance * $suku_bunga_konversi, 2);
 
-            if ($i < $term) {
-                $principalPayment = round($angsuran - $interest, 2);
-            } else {
-                $principalPayment = round($remainingBalance, 2);
-                $interest = round($ttal_bunga - $totalInterestPaid, 2);
-            }
+    //         if ($i < $term) {
+    //             $principalPayment = round($angsuran - $interest, 2);
+    //         } else {
+    //             $principalPayment = round($remainingBalance, 2);
+    //             $interest = round($ttal_bunga - $totalInterestPaid, 2);
+    //         }
 
-            $totalPayment = round($principalPayment + $interest, 2);
-            $remainingBalance = round($remainingBalance - $principalPayment, 2);
-            $totalInterestPaid += $interest;
-            if ($i == $term) {
-                $remainingBalance = 0.00;
-            }
+    //         $totalPayment = round($principalPayment + $interest, 2);
+    //         $remainingBalance = round($remainingBalance - $principalPayment, 2);
+    //         $totalInterestPaid += $interest;
+    //         if ($i == $term) {
+    //             $remainingBalance = 0.00;
+    //         }
 
-            $schedule[] = [
-                'angsuran_ke' => $i,
-                'tgl_angsuran' => setPaymentDate($setDate, $i),
-                'baki_debet_awal' => floatval($remainingBalance + $principalPayment),
-                'pokok' => floatval($principalPayment),
-                'bunga' => floatval($interest),
-                'total_angsuran' => floatval($totalPayment),
-                'baki_debet' => floatval($remainingBalance)
-            ];
-        }
+    //         $schedule[] = [
+    //             'angsuran_ke' => $i,
+    //             'tgl_angsuran' => setPaymentDate($setDate, $i),
+    //             'baki_debet_awal' => floatval($remainingBalance + $principalPayment),
+    //             'pokok' => floatval($principalPayment),
+    //             'bunga' => floatval($interest),
+    //             'total_angsuran' => floatval($totalPayment),
+    //             'baki_debet' => floatval($remainingBalance)
+    //         ];
+    //     }
 
-        return $schedule;
-    }
+    //     return $schedule;
+    // }
 
     private function generateAmortizationScheduleMusiman($setDate, $data)
     {
@@ -342,4 +342,4 @@ class Welcome extends Controller
 
         return $schedule;
     }
-}
+} -->
