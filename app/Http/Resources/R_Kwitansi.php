@@ -10,6 +10,7 @@ use App\Models\M_KwitansiStructurDetail;
 use App\Models\M_LogPrint;
 use App\Models\M_Payment;
 use App\Models\M_PaymentAttachment;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -83,6 +84,8 @@ class R_Kwitansi extends JsonResource
 
         $logPrint = M_LogPrint::where('ID', $this->NO_TRANSAKSI)->first();
 
+        $getUser = User::find($this->CREATED_BY);
+
         return [
             "id" => $this->ID,
             "payment_id" => $this->PAYMENT_ID,
@@ -115,7 +118,7 @@ class R_Kwitansi extends JsonResource
             'attachment' => $attachment,
             'struktur' => $details??[],
             "STATUS" => $this->STTS_PAYMENT ?? null,
-            "created_by" => $this->CREATED_BY,
+            "created_by" => $getUser ? $getUser->fullname ?? $getUser->username : $this->CREATED_BY ?? '',
             "print_ke" =>  intval($logPrint->COUNT??0),
         ];
     }
