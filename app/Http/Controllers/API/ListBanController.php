@@ -259,7 +259,7 @@ class ListBanController extends Controller
                             coalesce(k.OS_BNG_AKHIR,0) as OS_BNG_AKHIR, 
                             j.DUE_DAYS as OVERDUE_AKHIR, 
                             b.INSTALLMENT,
-                            case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 then 0 else k.LAST_INST end as LAST_INST, 
+                            case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 then 0 else i.INST_COUNT end as LAST_INST, 
                             e.INSTALLMENT_TYPE AS tipe,
                             case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 then 0 else coalesce(i.TUNGGAKAN_PERTAMA,k.F_ARR_CR_SCHEDL) end as F_ARR_CR_SCHEDL,
                             case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 then 0 else k.F_ARR_CR_SCHEDL end as curr_arr, 
