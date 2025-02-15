@@ -328,6 +328,7 @@ class ListBanController extends Controller
 			FROM	payment s1
 				inner join payment_detail s2 on s2.PAYMENT_ID=s1.ID
 			WHERE	date_format(s1.ENTRY_DATE,'%m%Y')=date_format(now(),'%m%Y')
+                    and s2.ACC_KEYS in ('BAYAR_POKOK','ANGSURAN_POKOK','ANGSURAN_BUNGA')
 			GROUP	BY s1.LOAN_NUM) m on m.loan_num=b.loan_number
                             WHERE 1=1";
 
