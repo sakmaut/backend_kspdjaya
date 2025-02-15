@@ -7,6 +7,7 @@ use App\Http\Controllers\API\StatusApproval;
 use App\Http\Controllers\API\TelegramBotConfig;
 use App\Models\M_Arrears;
 use App\Models\M_Branch;
+use App\Models\M_CrApplication;
 use App\Models\M_Credit;
 use App\Models\M_CreditSchedule;
 use App\Models\M_CrPersonal;
@@ -30,19 +31,21 @@ class Welcome extends Controller
     public function index(Request $request)
     {
 
-        // $data = DB::table('arrears')
-        //     ->selectRaw('LOAN_NUMBER, min(START_DATE) as start_date, datediff(now(), min(START_DATE)) as date_diff')
-        //     ->where('status_rec', 'A')
-        //     ->groupBy('LOAN_NUMBER')
-        //     ->get();
+        $data = M_CrApplication::where('ORDER_NUMBER', $request->order_number)->first();
 
-        // foreach ($data as $row) {
-        //     M_FirstArr::create([
-        //         'LOAN_NUMBER' => $row->LOAN_NUMBER,
-        //         'START_DATE' => Carbon::parse($row->start_date)->format('Y-m-d'),
-        //         'DATE_DIFF' => $row->date_diff
-        //     ]);
-        // }
+        $set_tgl_awal = $request->tgl_awal;
+
+        $type = $data->INSTALLMENT_TYPE;
+
+        if (strtolower($type) == 'bulanan') {
+            $data_credit_schedule = $this->generateAmortizationSchedule($set_tgl_awal, $data);
+
+            $installment_count = count($data_credit_schedule);
+        } else {
+            $data_credit_schedule = $this->generateAmortizationScheduleMusiman($set_tgl_awal, $data);
+
+            $installment_count = count($data_credit_schedule);
+        }
 
         return response()->json("MUACHHHHHHHHHHHHHH");
         die;
