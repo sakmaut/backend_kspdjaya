@@ -59,7 +59,6 @@ class Welcome extends Controller
 
         if (strtolower($type) == 'bulanan') {
             $data_credit_schedule = $this->generateAmortizationSchedule($set_tgl_awal, $data);
-
         } else {
             $data_credit_schedule = $this->generateAmortizationScheduleMusiman($set_tgl_awal, $data);
         }
@@ -69,7 +68,7 @@ class Welcome extends Controller
             $credit_schedule =
                 [
                     'ID' => Uuid::uuid7()->toString(),
-                    'LOAN_NUMBER' => $request->loan_number??'',
+                    'LOAN_NUMBER' => $request->loan_number ?? '',
                     'INSTALLMENT_COUNT' => $no++,
                     'PAYMENT_DATE' => parseDatetoYMD($list['tgl_angsuran']),
                     'PRINCIPAL' => $list['pokok'],
@@ -82,7 +81,7 @@ class Welcome extends Controller
         }
 
         $check_exist = M_Credit::where('ORDER_NUMBER', $request->order_number)->first();
-        if($check_exist){
+        if ($check_exist) {
             $SET_UUID = $check_exist->ID;
             $cust_code = $check_exist->CUST_CODE;
 
@@ -178,7 +177,7 @@ class Welcome extends Controller
 
         return response()->json('ok', 200);
     }
-    
+
 
     // function updateCreditSchedule($loan_number, $tgl_angsuran, $res, $uid)
     // {
@@ -578,5 +577,4 @@ class Welcome extends Controller
             }
         }
     }
-
 }
