@@ -525,17 +525,17 @@ class Welcome extends Controller
                 ->orWhere('DELETED_AT', '');
         })->get();
 
-        $doc = $this->attachment_guarante($data->CR_SURVEY_ID, "'no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri'");
+        // $doc = $this->attachment_guarante($data->CR_SURVEY_ID, "'no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri'");
 
-        $setHeaderID = '';
-        foreach ($doc as $res) {
-            $setHeaderID = $res->COUNTER_ID ?? '';
-        }
+        // $setHeaderID = '';
+        // foreach ($doc as $res) {
+        //     $setHeaderID = $res->COUNTER_ID ?? '';
+        // }
 
         if ($data_collateral->isNotEmpty()) {
             foreach ($data_collateral as $res) {
                 $data_jaminan = [
-                    'HEADER_ID' => $setHeaderID,
+                    'HEADER_ID' => '',
                     'CR_CREDIT_ID' => $lastID ?? null,
                     'TYPE' => $res->TYPE ?? null,
                     'BRAND' => $res->BRAND ?? null,
