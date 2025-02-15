@@ -49,6 +49,7 @@ class Credit extends Controller
 
     public function index(Request $request)
     {
+        DB::beginTransaction();
         try {
             $data = M_CrApplication::where('ORDER_NUMBER', $request->order_number)->first();
 
@@ -56,8 +57,12 @@ class Credit extends Controller
                 throw new Exception("Order Number Is Not Exist", 404);
             }
 
-            return response()->json($this->buildData($request, $data), 200);
+            $execute = $this->buildData($request, $data);
+
+            DB::commit();
+            return response()->json($execute, 200);
         } catch (\Exception $e) {
+            DB::rollback();
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
