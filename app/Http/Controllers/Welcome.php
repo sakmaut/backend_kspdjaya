@@ -58,35 +58,35 @@ class Welcome extends Controller
 
         $type = $data->INSTALLMENT_TYPE;
 
-        if (strtolower($type) == 'bulanan') {
-            $data_credit_schedule = $this->generateAmortizationSchedule($set_tgl_awal, $data);
-        } else {
-            $data_credit_schedule = $this->generateAmortizationScheduleMusiman($set_tgl_awal, $data);
-        }
+        // if (strtolower($type) == 'bulanan') {
+        //     $data_credit_schedule = $this->generateAmortizationSchedule($set_tgl_awal, $data);
+        // } else {
+        //     $data_credit_schedule = $this->generateAmortizationScheduleMusiman($set_tgl_awal, $data);
+        // }
 
-        $no = 1;
-        foreach ($data_credit_schedule as $list) {
-            $credit_schedule =
-                [
-                    'ID' => Uuid::uuid7()->toString(),
-                    'LOAN_NUMBER' => $request->loan_number ?? '',
-                    'INSTALLMENT_COUNT' => $no++,
-                    'PAYMENT_DATE' => parseDatetoYMD($list['tgl_angsuran']),
-                    'PRINCIPAL' => $list['pokok'],
-                    'INTEREST' => $list['bunga'],
-                    'INSTALLMENT' => $list['total_angsuran'],
-                    'PRINCIPAL_REMAINS' => $list['baki_debet']
-                ];
+        // $no = 1;
+        // foreach ($data_credit_schedule as $list) {
+        //     $credit_schedule =
+        //         [
+        //             'ID' => Uuid::uuid7()->toString(),
+        //             'LOAN_NUMBER' => $request->loan_number ?? '',
+        //             'INSTALLMENT_COUNT' => $no++,
+        //             'PAYMENT_DATE' => parseDatetoYMD($list['tgl_angsuran']),
+        //             'PRINCIPAL' => $list['pokok'],
+        //             'INTEREST' => $list['bunga'],
+        //             'INSTALLMENT' => $list['total_angsuran'],
+        //             'PRINCIPAL_REMAINS' => $list['baki_debet']
+        //         ];
 
-            M_CreditSchedule::create($credit_schedule);
-        }
+        //     M_CreditSchedule::create($credit_schedule);
+        // }
 
         $check_exist = M_Credit::where('ORDER_NUMBER', $request->order_number)->first();
         if ($check_exist) {
             $SET_UUID = $check_exist->ID;
             $cust_code = $check_exist->CUST_CODE;
 
-            $this->insert_customer($request, $data, $cust_code);
+            // $this->insert_customer($request, $data, $cust_code);
             $this->insert_customer_xtra($data, $cust_code);
             $this->insert_collateral($request, $data, $SET_UUID, $request->loan_number);
         }
@@ -574,7 +574,7 @@ class Welcome extends Controller
                     'COLLATERAL_FLAG' => $data->BRANCH,
                     'VERSION' => 1,
                     'CREATE_DATE' => $this->timeNow,
-                    'CREATE_BY' => $request->user()->id,
+                    'CREATE_BY' => '61',
                 ];
 
                 $execute = M_CrCollateral::create($data_jaminan);
