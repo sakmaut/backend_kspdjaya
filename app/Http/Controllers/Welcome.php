@@ -444,7 +444,7 @@ class Welcome extends Controller
             'EXT_2' => $cr_personal-> EXT_2 ?? '',
             'VERSION' => 1,
             'CREATE_DATE' => Carbon::now(),
-            'CREATE_USER' => $request->user()->id,
+            'CREATE_USER' => $request->user()->id?? 'alex',
         ];
 
         if (!$check_customer_ktp) {
@@ -551,11 +551,11 @@ class Welcome extends Controller
                     'INVOICE_NUMBER' => $res->INVOICE_NUMBER ?? null,
                     'STNK_VALID_DATE' => $res->STNK_VALID_DATE ?? null,
                     'VALUE' => $res->VALUE ?? null,
-                    'LOCATION_BRANCH' => $data->BRANCH,
-                    'COLLATERAL_FLAG' => $data->BRANCH,
+                    'LOCATION_BRANCH' => $data->BRANCH ?? '',
+                    'COLLATERAL_FLAG' => $data->BRANCH ?? '',
                     'VERSION' => 1,
                     'CREATE_DATE' => Carbon::now(),
-                    'CREATE_BY' => $request->user()->id,
+                    'CREATE_BY' => $request->user()->id ?? 'alex',
                 ];
 
                 $execute = M_CrCollateral::create($data_jaminan);
