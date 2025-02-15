@@ -6,6 +6,7 @@ use App\Models\M_Branch;
 use App\Models\M_KwitansiStructurDetail;
 use App\Models\M_Payment;
 use App\Models\M_PaymentAttachment;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -36,6 +37,8 @@ class R_Pelunasan extends JsonResource
             ];
         })->toArray();
 
+        $getUser = User::find($this->CREATED_BY);
+
         return [
             "id" => $this->ID,
             "no_transaksi" => $this->NO_TRANSAKSI,
@@ -63,7 +66,7 @@ class R_Pelunasan extends JsonResource
             "terbilang" => bilangan($this->TOTAL_BAYAR) ?? null,
             'attachment' => $attachment,
             "STATUS" => $payment->STTS_RCRD ?? null,
-            "created_by" => $this->CREATED_BY,
+            "created_by" => $getUser ? $getUser->fullname ?? $getUser->username : $this->CREATED_BY ?? '',
             "created_at" => $this->CREATED_AT,
         ];
     }
