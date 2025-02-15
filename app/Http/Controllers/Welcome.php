@@ -24,6 +24,7 @@ use App\Models\M_CustomerDocument;
 use App\Models\M_CustomerExtra;
 use App\Models\M_DeuteronomyTransactionLog;
 use App\Models\M_FirstArr;
+use App\Models\M_LocationStatus;
 use App\Models\M_Payment;
 use App\Models\M_PaymentDetail;
 use App\Models\M_TelegramBotSend;
@@ -580,7 +581,15 @@ class Welcome extends Controller
                 $execute = M_CrCollateral::create($data_jaminan);
 
                 $statusLog = 'NEW ' . $loan_number ?? '';
-                $this->locationStatus->createLocationStatusLog($execute->ID, $data->BRANCH, $statusLog);
+
+                M_LocationStatus::create( [
+                    'TYPE' => 'kendaraan',
+                    'COLLATERAL_ID' => $execute->ID,
+                    'LOCATION' => $data->BRANCH,
+                    'STATUS' => $statusLog,
+                    'CREATE_BY' => '66',
+                    'CREATED_AT' => now(),
+                ]);
 
                 foreach ($doc as $res) {
                     $custmer_doc_data = [
