@@ -39,11 +39,11 @@ class Welcome extends Controller
         $type = $data->INSTALLMENT_TYPE;
 
         if (strtolower($type) == 'bulanan') {
-            $data_credit_schedule = $this->generateAmortizationSchedule($set_tgl_awal, $data);
+             $this->generateAmortizationSchedule($set_tgl_awal, $data);
 
-            $installment_count = count($data_credit_schedule);
         } else {
-            $data_credit_schedule = $this->generateAmortizationScheduleMusiman($set_tgl_awal, $data);
+             $this->generateAmortizationScheduleMusiman($set_tgl_awal, $data);
+        }
         // $type = $data->INSTALLMENT_TYPE;
 
         // if (strtolower($type) == 'bulanan') {
@@ -143,100 +143,101 @@ class Welcome extends Controller
 
         return response()->json('ok', 200);
     }
+    
 
-    function updateCreditSchedule($loan_number, $tgl_angsuran, $res, $uid)
-    {
-        $credit_schedule = M_CreditSchedule::where([
-            'LOAN_NUMBER' => $loan_number,
-            'PAYMENT_DATE' => date('Y-m-d', strtotime($tgl_angsuran))
-        ])->first();
+    // function updateCreditSchedule($loan_number, $tgl_angsuran, $res, $uid)
+    // {
+    //     $credit_schedule = M_CreditSchedule::where([
+    //         'LOAN_NUMBER' => $loan_number,
+    //         'PAYMENT_DATE' => date('Y-m-d', strtotime($tgl_angsuran))
+    //     ])->first();
 
-        if ($credit_schedule) {
-            $byr_angsuran = $res['details'][0]['bayar_angsuran'];
+    //     if ($credit_schedule) {
+    //         $byr_angsuran = $res['details'][0]['bayar_angsuran'];
 
-            $valBeforePrincipal = $credit_schedule ? $credit_schedule->PAYMENT_VALUE_PRINCIPAL : 0;
-            $valBeforeInterest = $credit_schedule ? $credit_schedule->PAYMENT_VALUE_INTEREST : 0;
-            $getPrincipal = $credit_schedule ? $credit_schedule->PRINCIPAL : 0;
-            $getInterest = $credit_schedule ? $credit_schedule->INTEREST : 0;
+    //         $valBeforePrincipal = $credit_schedule ? $credit_schedule->PAYMENT_VALUE_PRINCIPAL : 0;
+    //         $valBeforeInterest = $credit_schedule ? $credit_schedule->PAYMENT_VALUE_INTEREST : 0;
+    //         $getPrincipal = $credit_schedule ? $credit_schedule->PRINCIPAL : 0;
+    //         $getInterest = $credit_schedule ? $credit_schedule->INTEREST : 0;
 
-            if ($credit_schedule->PAID_FLAG == 'PAID') {
-                $data = $this->preparePaymentData($uid, 'ANGSURAN_POKOK', $getPrincipal);
-                M_PaymentDetail::create($data);
-                $this->addCreditPaid($loan_number, ['ANGSURAN_POKOK' => $getPrincipal]);
+    //         if ($credit_schedule->PAID_FLAG == 'PAID') {
+    //             $data = $this->preparePaymentData($uid, 'ANGSURAN_POKOK', $getPrincipal);
+    //             M_PaymentDetail::create($data);
+    //             $this->addCreditPaid($loan_number, ['ANGSURAN_POKOK' => $getPrincipal]);
 
-                $data = $this->preparePaymentData($uid, 'ANGSURAN_BUNGA', $getInterest);
-                M_PaymentDetail::create($data);
-                $this->addCreditPaid($loan_number, ['ANGSURAN_BUNGA' => $getInterest]);
-            } else {
-                $new_payment_value_principal = $valBeforePrincipal;
-                $new_payment_value_interest = $valBeforeInterest;
+    //             $data = $this->preparePaymentData($uid, 'ANGSURAN_BUNGA', $getInterest);
+    //             M_PaymentDetail::create($data);
+    //             $this->addCreditPaid($loan_number, ['ANGSURAN_BUNGA' => $getInterest]);
+    //         } else {
+    //             $new_payment_value_principal = $valBeforePrincipal;
+    //             $new_payment_value_interest = $valBeforeInterest;
 
-                // Process principal payment if needed
-                if ($valBeforePrincipal < $getPrincipal) {
-                    $remaining_to_principal = $getPrincipal - $valBeforePrincipal;
+    //             // Process principal payment if needed
+    //             if ($valBeforePrincipal < $getPrincipal) {
+    //                 $remaining_to_principal = $getPrincipal - $valBeforePrincipal;
 
-                    if ($byr_angsuran >= $remaining_to_principal) {
-                        $new_payment_value_principal = $getPrincipal;
-                        $remaining_payment = $byr_angsuran - $remaining_to_principal;
-                    } else {
-                        $new_payment_value_principal += $byr_angsuran;
-                        $remaining_payment = 0;
-                    }
-                } else {
-                    $remaining_payment = $byr_angsuran;
-                }
+    //                 if ($byr_angsuran >= $remaining_to_principal) {
+    //                     $new_payment_value_principal = $getPrincipal;
+    //                     $remaining_payment = $byr_angsuran - $remaining_to_principal;
+    //                 } else {
+    //                     $new_payment_value_principal += $byr_angsuran;
+    //                     $remaining_payment = 0;
+    //                 }
+    //             } else {
+    //                 $remaining_payment = $byr_angsuran;
+    //             }
 
-                // Update interest if the principal is fully paid
-                if ($new_payment_value_principal == $getPrincipal) {
-                    if ($valBeforeInterest < $getInterest) {
-                        $new_payment_value_interest = min($valBeforeInterest + $remaining_payment, $getInterest);
-                    }
-                }
+    //             // Update interest if the principal is fully paid
+    //             if ($new_payment_value_principal == $getPrincipal) {
+    //                 if ($valBeforeInterest < $getInterest) {
+    //                     $new_payment_value_interest = min($valBeforeInterest + $remaining_payment, $getInterest);
+    //                 }
+    //             }
 
-                // Insert payment details for principal if there is a change
-                $valPrincipal = $new_payment_value_principal - $valBeforePrincipal;
-                if ($valPrincipal > 0) {
-                    $data = $this->preparePaymentData($uid, 'ANGSURAN_POKOK', $valPrincipal);
-                    M_PaymentDetail::create($data);
-                    $this->addCreditPaid($loan_number, ['ANGSURAN_POKOK' => $valPrincipal]);
-                }
+    //             // Insert payment details for principal if there is a change
+    //             $valPrincipal = $new_payment_value_principal - $valBeforePrincipal;
+    //             if ($valPrincipal > 0) {
+    //                 $data = $this->preparePaymentData($uid, 'ANGSURAN_POKOK', $valPrincipal);
+    //                 M_PaymentDetail::create($data);
+    //                 $this->addCreditPaid($loan_number, ['ANGSURAN_POKOK' => $valPrincipal]);
+    //             }
 
-                // Insert payment details for interest if there is a change
-                $valInterest = $new_payment_value_interest - $valBeforeInterest;
-                if ($valInterest > 0) {
-                    $data = $this->preparePaymentData($uid, 'ANGSURAN_BUNGA', $valInterest);
-                    M_PaymentDetail::create($data);
-                    $this->addCreditPaid($loan_number, ['ANGSURAN_BUNGA' => $valInterest]);
-                }
-            }
-        }
-    }
+    //             // Insert payment details for interest if there is a change
+    //             $valInterest = $new_payment_value_interest - $valBeforeInterest;
+    //             if ($valInterest > 0) {
+    //                 $data = $this->preparePaymentData($uid, 'ANGSURAN_BUNGA', $valInterest);
+    //                 M_PaymentDetail::create($data);
+    //                 $this->addCreditPaid($loan_number, ['ANGSURAN_BUNGA' => $valInterest]);
+    //             }
+    //         }
+    //     }
+    // }
 
-    function preparePaymentData($payment_id, $acc_key, $amount)
-    {
-        return [
-            'PAYMENT_ID' => $payment_id,
-            'ACC_KEYS' => $acc_key,
-            'ORIGINAL_AMOUNT' => $amount
-        ];
-    }
+    // function preparePaymentData($payment_id, $acc_key, $amount)
+    // {
+    //     return [
+    //         'PAYMENT_ID' => $payment_id,
+    //         'ACC_KEYS' => $acc_key,
+    //         'ORIGINAL_AMOUNT' => $amount
+    //     ];
+    // }
 
-    public function addCreditPaid($loan_number, array $data)
-    {
-        $check_credit = M_Credit::where(['LOAN_NUMBER' => $loan_number])->first();
+    // function addCreditPaid($loan_number, array $data)
+    // {
+    //     $check_credit = M_Credit::where(['LOAN_NUMBER' => $loan_number])->first();
 
-        if ($check_credit) {
-            $paidPrincipal = isset($data['ANGSURAN_POKOK']) ? $data['ANGSURAN_POKOK'] : 0;
-            $paidInterest = isset($data['ANGSURAN_BUNGA']) ? $data['ANGSURAN_BUNGA'] : 0;
-            $paidPenalty = isset($data['BAYAR_DENDA']) ? $data['BAYAR_DENDA'] : 0;
+    //     if ($check_credit) {
+    //         $paidPrincipal = isset($data['ANGSURAN_POKOK']) ? $data['ANGSURAN_POKOK'] : 0;
+    //         $paidInterest = isset($data['ANGSURAN_BUNGA']) ? $data['ANGSURAN_BUNGA'] : 0;
+    //         $paidPenalty = isset($data['BAYAR_DENDA']) ? $data['BAYAR_DENDA'] : 0;
 
-            $check_credit->update([
-                'PAID_PRINCIPAL' => floatval($check_credit->PAID_PRINCIPAL) + floatval($paidPrincipal),
-                'PAID_INTEREST' => floatval($check_credit->PAID_INTEREST) + floatval($paidInterest),
-                'PAID_PENALTY' => floatval($check_credit->PAID_PENALTY) + floatval($paidPenalty)
-            ]);
-        }
-    }
+    //         $check_credit->update([
+    //             'PAID_PRINCIPAL' => floatval($check_credit->PAID_PRINCIPAL) + floatval($paidPrincipal),
+    //             'PAID_INTEREST' => floatval($check_credit->PAID_INTEREST) + floatval($paidInterest),
+    //             'PAID_PENALTY' => floatval($check_credit->PAID_PENALTY) + floatval($paidPenalty)
+    //         ]);
+    //     }
+    // }
 
     private function generateAmortizationSchedule($setDate, $data)
     {
