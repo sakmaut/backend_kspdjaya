@@ -182,42 +182,46 @@ class PelunasanController extends Controller
 
             $detail_customer = M_Customer::where('CUST_CODE', $credit->CUST_CODE)->firstOrFail();
 
-            $discounts = $request->only(['DISKON_POKOK', 'DISKON_PINALTI', 'DISKON_BUNGA', 'DISKON_DENDA']);
+            $status = "PENDING";
 
-            $status = "PAID";
+            // $discounts = $request->only(['DISKON_POKOK', 'DISKON_PINALTI', 'DISKON_BUNGA', 'DISKON_DENDA']);
 
-            if (array_sum($discounts) > 0 || strtolower($request->METODE_PEMBAYARAN) === 'transfer') {
-                $status = "PENDING";
-            }
+            // $status = "PAID";
+
+            // if (array_sum($discounts) > 0 || strtolower($request->METODE_PEMBAYARAN) === 'transfer') {
+            //     $status = "PENDING";
+            // }
 
             if (!M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->exists()) {
                 $this->saveKwitansi($request, $detail_customer, $no_inv, $status);
                 $this->proccessKwitansiDetail($request, $loan_number, $no_inv);
             }
 
-            if ($status === "PAID") {
-                $this->proccess($request, $loan_number, $no_inv, $status);
-            } else {
-                $creditSchedule = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)
-                    ->where(function ($query) {
-                        $query->where('PAID_FLAG', '!=', 'PAID')->orWhereNull('PAID_FLAG');
-                    })
-                    ->orderBy('PAYMENT_DATE', 'asc')
-                    ->get();
+            $creditSchedule = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)
+                ->where(function ($query) {
+                    $query->where('PAID_FLAG', '!=', 'PAID')->orWhereNull('PAID_FLAG');
+                })
+                ->orderBy('PAYMENT_DATE', 'asc')
+                ->get();
 
-                $checkArr = M_Arrears::where([
-                    'LOAN_NUMBER' => $loan_number,
-                    'STATUS_REC' => 'A'
-                ])->get();
+            $checkArr = M_Arrears::where([
+                'LOAN_NUMBER' => $loan_number,
+                'STATUS_REC' => 'A'
+            ])->get();
 
-                foreach ($creditSchedule as $res) {
-                    $res->update(['PAID_FLAG' => 'PENDING']);
-                }
-
-                foreach ($checkArr as $ress) {
-                    $ress->update(['STATUS_REC' => 'PENDING']);
-                }
+            foreach ($creditSchedule as $res) {
+                $res->update(['PAID_FLAG' => 'PENDING']);
             }
+
+            foreach ($checkArr as $ress) {
+                $ress->update(['STATUS_REC' => 'PENDING']);
+            }
+
+            // if ($status === "PAID") {
+            //     $this->proccess($request, $loan_number, $no_inv, $status);
+            // } else {
+                
+            // }
 
             $data = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
 
