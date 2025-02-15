@@ -407,7 +407,7 @@ class Welcome extends Controller
             'MOTHER_NAME' => $cr_order->MOTHER_NAME??'',
             'NPWP' => $cr_order->NO_NPWP ?? '',
             'MARTIAL_STATUS' => $cr_personal->MARTIAL_STATUS ?? '',
-            'MARTIAL_DATE' => $cr_personal->MARTIAL_DATE ?? '',
+            'MARTIAL_DATE' => $cr_personal->MARTIAL_DATE ?? null,
             'ID_TYPE' => $cr_personal->ID_TYPE ?? '',
             'ID_NUMBER' => $cr_personal-> ID_NUMBER ?? '',
             'KK_NUMBER' => $cr_personal-> KK ?? '',
