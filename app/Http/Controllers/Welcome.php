@@ -39,22 +39,30 @@ class Welcome extends Controller
         $type = $data->INSTALLMENT_TYPE;
 
         if (strtolower($type) == 'bulanan') {
-             $this->generateAmortizationSchedule($set_tgl_awal, $data);
+            $data_credit_schedule = $this->generateAmortizationSchedule($set_tgl_awal, $data);
 
         } else {
-             $this->generateAmortizationScheduleMusiman($set_tgl_awal, $data);
+            $data_credit_schedule = $this->generateAmortizationScheduleMusiman($set_tgl_awal, $data);
         }
-        // $type = $data->INSTALLMENT_TYPE;
 
-        // if (strtolower($type) == 'bulanan') {
-        //     $data_credit_schedule = $this->generateAmortizationSchedule($set_tgl_awal, $data);
+        $check_exist = M_Credit::where('ORDER_NUMBER', $request->order_number)->first();
 
-        //     $installment_count = count($data_credit_schedule);
-        // } else {
-        //     $data_credit_schedule = $this->generateAmortizationScheduleMusiman($set_tgl_awal, $data);
+        $no = 1;
+        foreach ($data_credit_schedule as $list) {
+            $credit_schedule =
+                [
+                    'ID' => Uuid::uuid7()->toString(),
+                    'LOAN_NUMBER' => $check_exist?$check_exist->LOAN_NUMBER:'',
+                    'INSTALLMENT_COUNT' => $no++,
+                    'PAYMENT_DATE' => parseDatetoYMD($list['tgl_angsuran']),
+                    'PRINCIPAL' => $list['pokok'],
+                    'INTEREST' => $list['bunga'],
+                    'INSTALLMENT' => $list['total_angsuran'],
+                    'PRINCIPAL_REMAINS' => $list['baki_debet']
+                ];
 
-        //     $installment_count = count($data_credit_schedule);
-        // }
+            M_CreditSchedule::create($credit_schedule);
+        }
 
         return response()->json("MUACHHHHHHHHHHHHHH");
         die;
