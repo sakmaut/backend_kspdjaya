@@ -24,6 +24,7 @@ use App\Models\M_CustomerDocument;
 use App\Models\M_CustomerExtra;
 use App\Models\M_DeuteronomyTransactionLog;
 use App\Models\M_FirstArr;
+use App\Models\M_KwitansiStructurDetail;
 use App\Models\M_LocationStatus;
 use App\Models\M_Payment;
 use App\Models\M_PaymentDetail;
@@ -52,6 +53,67 @@ class Welcome extends Controller
 
     public function index(Request $request)
     {
+        $no_inv = $request->no_fasilitas;
+        $setDAte = '2025-02-03 16:19:27';
+
+        if (isset($request->struktur) && is_array($request->struktur)) {
+            foreach ($request->struktur as $res) {
+
+                M_KwitansiStructurDetail::firstOrCreate([
+                    'no_invoice' => $no_inv,
+                    'key' => $res['key'] ?? '',
+                    'loan_number' => $res['loan_number'] ?? ''
+                ], [
+                    'angsuran_ke' => $res['angsuran_ke'] ?? '',
+                    'tgl_angsuran' => $res['tgl_angsuran'] ?? '',
+                    'principal' => $res['principal'] ?? '',
+                    'interest' => $res['interest'] ?? '',
+                    'installment' => $res['installment'] ?? '',
+                    'principal_remains' => $res['principal_remains'] ?? '',
+                    'payment' => $res['payment'] ?? '',
+                    'bayar_angsuran' => $res['bayar_angsuran'] ?? '',
+                    'bayar_denda' => $res['bayar_denda'] ?? '',
+                    'total_bayar' => $res['total_bayar'] ?? '',
+                    'flag' => $res['flag'] ?? '',
+                    'denda' => $res['denda'] ?? '',
+                    'diskon_denda' => strtolower($request->bayar_dengan_diskon) == 'ya' ? 1 : 0
+                ]);
+
+                $loan_number = $res['loan_number'];
+                $tgl_angsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
+                $uid = Uuid::uuid7()->toString();
+
+                $this->updateCreditSchedule($loan_number, $tgl_angsuran, $res, $uid);
+
+                M_Payment::create([
+                    'ID' => $uid,
+                    'ACC_KEY' => 'angsuran',
+                    'STTS_RCRD' => 'PAID',
+                    'INVOICE' => $no_inv,
+                    'NO_TRX' => $request->uid,
+                    'PAYMENT_METHOD' => $request->payment_method,
+                    'BRANCH' => 'ANJ',
+                    'LOAN_NUM' => $loan_number,
+                    'VALUE_DATE' => null,
+                    'ENTRY_DATE' => $setDAte,
+                    'SUSPENSION_PENALTY_FLAG' => $request->penangguhan_denda ?? '',
+                    'TITLE' => 'Angsuran Ke-' . $res['angsuran_ke'],
+                    'ORIGINAL_AMOUNT' => ($res['bayar_angsuran'] + $res['bayar_denda']),
+                    'OS_AMOUNT' => $os_amount ?? 0,
+                    'START_DATE' => $tgl_angsuran,
+                    'END_DATE' => $setDAte,
+                    'USER_ID' => '39',
+                    'AUTH_BY' => '',
+                    'AUTH_DATE' => $setDAte,
+                    'ARREARS_ID' => $res['id_arrear'] ?? '',
+                    'BANK_NAME' => round(microtime(true) * 1000)
+                ]);
+            }
+        }
+
+        return response()->json('ok');
+
+        die;
 
         $data = M_CrApplication::where('ORDER_NUMBER', $request->order_number)->first();
 
@@ -96,6 +158,35 @@ class Welcome extends Controller
         die;
 
         $groupedData = [];
+
+        // function telBot()
+        // {
+        //     $newMessages = M_TelegramBotSend::where('status', 'new')->get();
+
+        //     $datas = [];
+        //     foreach ($newMessages as $message) {
+        //         $getJson = $message->messages;
+        //         if (!empty($getJson)) {
+        //             $convert = json_decode($getJson, true);
+        //             $findBRanch = M_Branch::find($convert['BRANCH_CODE']);
+
+        //             // Wrap ternary operator in parentheses for correct evaluation
+        //             $buildMsg = " MINTA APPROVAL PEMBAYARAN" . "\n" .
+        //                 'Tipe = ' . $convert['PAYMENT_TYPE'] . "\n" .
+        //                 'Status = Pending' . "\n" .
+        //                 'No Transaksi = ' . $convert['NO_TRANSAKSI'] . "\n" .
+        //                 'No Kontrak = ' . $convert['LOAN_NUMBER'] . "\n" .
+        //                 'Cabang = ' . ($findBRanch ? $findBRanch->NAME : '') . "\n" .
+        //                 'Tgl Transaksi = ' . $convert['TGL_TRANSAKSI'];
+
+        //             $response = TelegramBotConfig::sendMessage($buildMsg);
+
+        //             if ($response) {
+        //                 $newMessages->update(['status' => 'send']);
+        //             }
+        //         }
+        //     }
+        // }
 
         foreach ($request->all() as $item) {
             // Use no_invoice and angsuran_ke as the key for grouping
@@ -181,99 +272,99 @@ class Welcome extends Controller
     }
 
 
-    // function updateCreditSchedule($loan_number, $tgl_angsuran, $res, $uid)
-    // {
-    //     $credit_schedule = M_CreditSchedule::where([
-    //         'LOAN_NUMBER' => $loan_number,
-    //         'PAYMENT_DATE' => date('Y-m-d', strtotime($tgl_angsuran))
-    //     ])->first();
+    function updateCreditSchedule($loan_number, $tgl_angsuran, $res, $uid)
+    {
+        $credit_schedule = M_CreditSchedule::where([
+            'LOAN_NUMBER' => $loan_number,
+            'PAYMENT_DATE' => date('Y-m-d', strtotime($tgl_angsuran))
+        ])->first();
 
-    //     if ($credit_schedule) {
-    //         $byr_angsuran = $res['details'][0]['bayar_angsuran'];
+        if ($credit_schedule) {
+            $byr_angsuran = $res['details'][0]['bayar_angsuran'] ?? $res['bayar_angsuran'];
 
-    //         $valBeforePrincipal = $credit_schedule ? $credit_schedule->PAYMENT_VALUE_PRINCIPAL : 0;
-    //         $valBeforeInterest = $credit_schedule ? $credit_schedule->PAYMENT_VALUE_INTEREST : 0;
-    //         $getPrincipal = $credit_schedule ? $credit_schedule->PRINCIPAL : 0;
-    //         $getInterest = $credit_schedule ? $credit_schedule->INTEREST : 0;
+            $valBeforePrincipal = $credit_schedule ? $credit_schedule->PAYMENT_VALUE_PRINCIPAL : 0;
+            $valBeforeInterest = $credit_schedule ? $credit_schedule->PAYMENT_VALUE_INTEREST : 0;
+            $getPrincipal = $credit_schedule ? $credit_schedule->PRINCIPAL : 0;
+            $getInterest = $credit_schedule ? $credit_schedule->INTEREST : 0;
 
-    //         if ($credit_schedule->PAID_FLAG == 'PAID') {
-    //             $data = $this->preparePaymentData($uid, 'ANGSURAN_POKOK', $getPrincipal);
-    //             M_PaymentDetail::create($data);
-    //             $this->addCreditPaid($loan_number, ['ANGSURAN_POKOK' => $getPrincipal]);
+            if ($credit_schedule->PAID_FLAG == 'PAID') {
+                $data = $this->preparePaymentData($uid, 'ANGSURAN_POKOK', $getPrincipal);
+                M_PaymentDetail::create($data);
+                $this->addCreditPaid($loan_number, ['ANGSURAN_POKOK' => $getPrincipal]);
 
-    //             $data = $this->preparePaymentData($uid, 'ANGSURAN_BUNGA', $getInterest);
-    //             M_PaymentDetail::create($data);
-    //             $this->addCreditPaid($loan_number, ['ANGSURAN_BUNGA' => $getInterest]);
-    //         } else {
-    //             $new_payment_value_principal = $valBeforePrincipal;
-    //             $new_payment_value_interest = $valBeforeInterest;
+                $data = $this->preparePaymentData($uid, 'ANGSURAN_BUNGA', $getInterest);
+                M_PaymentDetail::create($data);
+                $this->addCreditPaid($loan_number, ['ANGSURAN_BUNGA' => $getInterest]);
+            } else {
+                $new_payment_value_principal = $valBeforePrincipal;
+                $new_payment_value_interest = $valBeforeInterest;
 
-    //             // Process principal payment if needed
-    //             if ($valBeforePrincipal < $getPrincipal) {
-    //                 $remaining_to_principal = $getPrincipal - $valBeforePrincipal;
+                // Process principal payment if needed
+                if ($valBeforePrincipal < $getPrincipal) {
+                    $remaining_to_principal = $getPrincipal - $valBeforePrincipal;
 
-    //                 if ($byr_angsuran >= $remaining_to_principal) {
-    //                     $new_payment_value_principal = $getPrincipal;
-    //                     $remaining_payment = $byr_angsuran - $remaining_to_principal;
-    //                 } else {
-    //                     $new_payment_value_principal += $byr_angsuran;
-    //                     $remaining_payment = 0;
-    //                 }
-    //             } else {
-    //                 $remaining_payment = $byr_angsuran;
-    //             }
+                    if ($byr_angsuran >= $remaining_to_principal) {
+                        $new_payment_value_principal = $getPrincipal;
+                        $remaining_payment = $byr_angsuran - $remaining_to_principal;
+                    } else {
+                        $new_payment_value_principal += $byr_angsuran;
+                        $remaining_payment = 0;
+                    }
+                } else {
+                    $remaining_payment = $byr_angsuran;
+                }
 
-    //             // Update interest if the principal is fully paid
-    //             if ($new_payment_value_principal == $getPrincipal) {
-    //                 if ($valBeforeInterest < $getInterest) {
-    //                     $new_payment_value_interest = min($valBeforeInterest + $remaining_payment, $getInterest);
-    //                 }
-    //             }
+                // Update interest if the principal is fully paid
+                if ($new_payment_value_principal == $getPrincipal) {
+                    if ($valBeforeInterest < $getInterest) {
+                        $new_payment_value_interest = min($valBeforeInterest + $remaining_payment, $getInterest);
+                    }
+                }
 
-    //             // Insert payment details for principal if there is a change
-    //             $valPrincipal = $new_payment_value_principal - $valBeforePrincipal;
-    //             if ($valPrincipal > 0) {
-    //                 $data = $this->preparePaymentData($uid, 'ANGSURAN_POKOK', $valPrincipal);
-    //                 M_PaymentDetail::create($data);
-    //                 $this->addCreditPaid($loan_number, ['ANGSURAN_POKOK' => $valPrincipal]);
-    //             }
+                // Insert payment details for principal if there is a change
+                $valPrincipal = $new_payment_value_principal - $valBeforePrincipal;
+                if ($valPrincipal > 0) {
+                    $data = $this->preparePaymentData($uid, 'ANGSURAN_POKOK', $valPrincipal);
+                    M_PaymentDetail::create($data);
+                    $this->addCreditPaid($loan_number, ['ANGSURAN_POKOK' => $valPrincipal]);
+                }
 
-    //             // Insert payment details for interest if there is a change
-    //             $valInterest = $new_payment_value_interest - $valBeforeInterest;
-    //             if ($valInterest > 0) {
-    //                 $data = $this->preparePaymentData($uid, 'ANGSURAN_BUNGA', $valInterest);
-    //                 M_PaymentDetail::create($data);
-    //                 $this->addCreditPaid($loan_number, ['ANGSURAN_BUNGA' => $valInterest]);
-    //             }
-    //         }
-    //     }
-    // }
+                // Insert payment details for interest if there is a change
+                $valInterest = $new_payment_value_interest - $valBeforeInterest;
+                if ($valInterest > 0) {
+                    $data = $this->preparePaymentData($uid, 'ANGSURAN_BUNGA', $valInterest);
+                    M_PaymentDetail::create($data);
+                    $this->addCreditPaid($loan_number, ['ANGSURAN_BUNGA' => $valInterest]);
+                }
+            }
+        }
+    }
 
-    // function preparePaymentData($payment_id, $acc_key, $amount)
-    // {
-    //     return [
-    //         'PAYMENT_ID' => $payment_id,
-    //         'ACC_KEYS' => $acc_key,
-    //         'ORIGINAL_AMOUNT' => $amount
-    //     ];
-    // }
+    function preparePaymentData($payment_id, $acc_key, $amount)
+    {
+        return [
+            'PAYMENT_ID' => $payment_id,
+            'ACC_KEYS' => $acc_key,
+            'ORIGINAL_AMOUNT' => $amount
+        ];
+    }
 
-    // // function addCreditPaid($loan_number, array $data)
-    // // {
-    // //     $check_credit = M_Credit::where(['LOAN_NUMBER' => $loan_number])->first();
+    function addCreditPaid($loan_number, array $data)
+    {
+        $check_credit = M_Credit::where(['LOAN_NUMBER' => $loan_number])->first();
 
-    // //     if ($check_credit) {
-    // //         $paidPrincipal = isset($data['ANGSURAN_POKOK']) ? $data['ANGSURAN_POKOK'] : 0;
-    // //         $paidInterest = isset($data['ANGSURAN_BUNGA']) ? $data['ANGSURAN_BUNGA'] : 0;
-    // //         $paidPenalty = isset($data['BAYAR_DENDA']) ? $data['BAYAR_DENDA'] : 0;
+        if ($check_credit) {
+            $paidPrincipal = isset($data['ANGSURAN_POKOK']) ? $data['ANGSURAN_POKOK'] : 0;
+            $paidInterest = isset($data['ANGSURAN_BUNGA']) ? $data['ANGSURAN_BUNGA'] : 0;
+            $paidPenalty = isset($data['BAYAR_DENDA']) ? $data['BAYAR_DENDA'] : 0;
 
-    //         $check_credit->update([
-    //             'PAID_PRINCIPAL' => floatval($check_credit->PAID_PRINCIPAL) + floatval($paidPrincipal),
-    //             'PAID_INTEREST' => floatval($check_credit->PAID_INTEREST) + floatval($paidInterest),
-    //             'PAID_PENALTY' => floatval($check_credit->PAID_PENALTY) + floatval($paidPenalty)
-    //         ]);
-    //     }
-    // }
+            $check_credit->update([
+                'PAID_PRINCIPAL' => floatval($check_credit->PAID_PRINCIPAL) + floatval($paidPrincipal),
+                'PAID_INTEREST' => floatval($check_credit->PAID_INTEREST) + floatval($paidInterest),
+                'PAID_PENALTY' => floatval($check_credit->PAID_PENALTY) + floatval($paidPenalty)
+            ]);
+        }
+    }
 
     private function generateAmortizationSchedule($setDate, $data)
     {
@@ -400,19 +491,19 @@ class Welcome extends Controller
         );
 
         $data_customer = [
-            'NAME' => $cr_personal-> NAME ?? null,
-            'ALIAS' => $cr_personal-> ALIAS ?? null,
-            'GENDER' => $cr_personal-> GENDER ?? null,
-            'BIRTHPLACE' => $cr_personal-> BIRTHPLACE ?? null,
-            'BIRTHDATE' => $cr_personal-> BIRTHDATE ?? null,
-            'BLOOD_TYPE' => $cr_personal-> BLOOD_TYPE ?? null,
-            'MOTHER_NAME' => $cr_order->MOTHER_NAME??null,
+            'NAME' => $cr_personal->NAME ?? null,
+            'ALIAS' => $cr_personal->ALIAS ?? null,
+            'GENDER' => $cr_personal->GENDER ?? null,
+            'BIRTHPLACE' => $cr_personal->BIRTHPLACE ?? null,
+            'BIRTHDATE' => $cr_personal->BIRTHDATE ?? null,
+            'BLOOD_TYPE' => $cr_personal->BLOOD_TYPE ?? null,
+            'MOTHER_NAME' => $cr_order->MOTHER_NAME ?? null,
             'NPWP' => $cr_order->NO_NPWP ?? null,
             'MARTIAL_STATUS' => $cr_personal->MARTIAL_STATUS ?? null,
             'MARTIAL_DATE' => $cr_personal->MARTIAL_DATE ?? null,
             'ID_TYPE' => $cr_personal->ID_TYPE ?? null,
-            'ID_NUMBER' => $cr_personal-> ID_NUMBER ?? null,
-            'KK_NUMBER' => $cr_personal-> KK ?? null,
+            'ID_NUMBER' => $cr_personal->ID_NUMBER ?? null,
+            'KK_NUMBER' => $cr_personal->KK ?? null,
             'ID_ISSUE_DATE' => $cr_personal->ID_ISSUE_DATE ?? null,
             'ID_VALID_DATE' => $cr_personal->ID_VALID_DATE ?? null,
             'ADDRESS' => $cr_personal->ADDRESS ?? null,
@@ -421,32 +512,32 @@ class Welcome extends Controller
             'PROVINCE' => $cr_personal->PROVINCE ?? null,
             'CITY' => $cr_personal->CITY ?? null,
             'KELURAHAN' => $cr_personal->KELURAHAN ?? null,
-            'KECAMATAN' => $cr_personal-> KECAMATAN ?? null,
-            'ZIP_CODE' => $cr_personal-> ZIP_CODE ?? null,
-            'KK' => $cr_personal-> KK ?? null,
-            'CITIZEN' => $cr_personal-> CITIZEN ?? null,
-            'INS_ADDRESS' => $cr_personal-> INS_ADDRESS ?? null,
-            'INS_RT' => $cr_personal-> INS_RT ?? null,
-            'INS_RW' => $cr_personal-> INS_RW ?? null,
-            'INS_PROVINCE' => $cr_personal-> INS_PROVINCE ?? null,
-            'INS_CITY' => $cr_personal-> INS_CITY ?? null,
-            'INS_KELURAHAN' => $cr_personal-> INS_KELURAHAN ?? null,
-            'INS_KECAMATAN' => $cr_personal-> INS_KECAMATAN ?? null,
-            'INS_ZIP_CODE' => $cr_personal-> INS_ZIP_CODE ?? null,
-            'OCCUPATION' => $cr_personal-> OCCUPATION ?? null,
-            'OCCUPATION_ON_ID' => $cr_personal-> OCCUPATION_ON_ID ?? null,
-            'INCOME' => $cr_order-> INCOME_PERSONAL ?? null,
-            'RELIGION' => $cr_personal-> RELIGION ?? null,
-            'EDUCATION' => $cr_personal-> EDUCATION ?? null,
-            'PROPERTY_STATUS' => $cr_personal-> PROPERTY_STATUS ?? null,
-            'PHONE_HOUSE' => $cr_personal-> PHONE_HOUSE ?? null,
-            'PHONE_PERSONAL' => $cr_personal-> PHONE_PERSONAL ?? null,
-            'PHONE_OFFICE' => $cr_personal-> PHONE_OFFICE ?? null,
-            'EXT_1' => $cr_personal-> EXT_1 ?? null,
-            'EXT_2' => $cr_personal-> EXT_2 ?? null,
+            'KECAMATAN' => $cr_personal->KECAMATAN ?? null,
+            'ZIP_CODE' => $cr_personal->ZIP_CODE ?? null,
+            'KK' => $cr_personal->KK ?? null,
+            'CITIZEN' => $cr_personal->CITIZEN ?? null,
+            'INS_ADDRESS' => $cr_personal->INS_ADDRESS ?? null,
+            'INS_RT' => $cr_personal->INS_RT ?? null,
+            'INS_RW' => $cr_personal->INS_RW ?? null,
+            'INS_PROVINCE' => $cr_personal->INS_PROVINCE ?? null,
+            'INS_CITY' => $cr_personal->INS_CITY ?? null,
+            'INS_KELURAHAN' => $cr_personal->INS_KELURAHAN ?? null,
+            'INS_KECAMATAN' => $cr_personal->INS_KECAMATAN ?? null,
+            'INS_ZIP_CODE' => $cr_personal->INS_ZIP_CODE ?? null,
+            'OCCUPATION' => $cr_personal->OCCUPATION ?? null,
+            'OCCUPATION_ON_ID' => $cr_personal->OCCUPATION_ON_ID ?? null,
+            'INCOME' => $cr_order->INCOME_PERSONAL ?? null,
+            'RELIGION' => $cr_personal->RELIGION ?? null,
+            'EDUCATION' => $cr_personal->EDUCATION ?? null,
+            'PROPERTY_STATUS' => $cr_personal->PROPERTY_STATUS ?? null,
+            'PHONE_HOUSE' => $cr_personal->PHONE_HOUSE ?? null,
+            'PHONE_PERSONAL' => $cr_personal->PHONE_PERSONAL ?? null,
+            'PHONE_OFFICE' => $cr_personal->PHONE_OFFICE ?? null,
+            'EXT_1' => $cr_personal->EXT_1 ?? null,
+            'EXT_2' => $cr_personal->EXT_2 ?? null,
             'VERSION' => 1,
             'CREATE_DATE' => Carbon::now(),
-            'CREATE_USER' => $request->user()->id?? 'alex',
+            'CREATE_USER' => $request->user()->id ?? 'alex',
         ];
 
         if (!$check_customer_ktp) {
@@ -542,7 +633,7 @@ class Welcome extends Controller
     {
         $data_collateral = M_CrGuaranteVehicle::where('CR_SURVEY_ID', $data->CR_SURVEY_ID)->where(function ($query) {
             $query->whereNull('DELETED_AT')
-            ->orWhere('DELETED_AT', '');
+                ->orWhere('DELETED_AT', '');
         })->get();
 
         $doc = $this->attachment_guarante($data->CR_SURVEY_ID, "'no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri'");
@@ -582,7 +673,7 @@ class Welcome extends Controller
 
                 $statusLog = 'NEW ' . $loan_number ?? '';
 
-                M_LocationStatus::create( [
+                M_LocationStatus::create([
                     'TYPE' => 'kendaraan',
                     'COLLATERAL_ID' => $execute->ID,
                     'LOCATION' => $data->BRANCH,
