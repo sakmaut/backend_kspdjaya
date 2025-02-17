@@ -53,6 +53,36 @@ class Welcome extends Controller
     public function index(Request $request)
     {
 
+        // $newMessages = M_TelegramBotSend::where('status', 'new')->get();
+
+        // $datas = [];
+        // foreach ($newMessages as $message) {
+        //     $getJson = $message->messages;
+        //     if (!empty($getJson)) {
+        //         $convert = json_decode($getJson, true);
+        //         $findBRanch = M_Branch::find($convert['BRANCH_CODE']);
+
+        //         // Wrap ternary operator in parentheses for correct evaluation
+        //         $buildMsg = " MINTA APPROVAL PEMBAYARAN" . "\n" .
+        //             'Tipe = ' . $convert['PAYMENT_TYPE'] . "\n" .
+        //             'Status = Pending' . "\n" .
+        //             'No Transaksi = ' . $convert['NO_TRANSAKSI'] . "\n" .
+        //             'No Kontrak = ' . $convert['LOAN_NUMBER'] . "\n" .
+        //             'Cabang = ' . ($findBRanch ? $findBRanch->NAME : '') . "\n" .
+        //             'Tgl Transaksi = ' . $convert['TGL_TRANSAKSI'];
+
+        //         $response = TelegramBotConfig::sendMessage($buildMsg);
+
+        //         if ($response) {
+        //             $newMessages->update(['status' => 'send']);
+        //         }
+        //     }
+        // }
+
+        return response()->json('ok');
+
+        die;
+
         $data = M_CrApplication::where('ORDER_NUMBER', $request->order_number)->first();
 
         $set_tgl_awal = $request->tgl_awal;
@@ -400,19 +430,19 @@ class Welcome extends Controller
         );
 
         $data_customer = [
-            'NAME' => $cr_personal-> NAME ?? null,
-            'ALIAS' => $cr_personal-> ALIAS ?? null,
-            'GENDER' => $cr_personal-> GENDER ?? null,
-            'BIRTHPLACE' => $cr_personal-> BIRTHPLACE ?? null,
-            'BIRTHDATE' => $cr_personal-> BIRTHDATE ?? null,
-            'BLOOD_TYPE' => $cr_personal-> BLOOD_TYPE ?? null,
-            'MOTHER_NAME' => $cr_order->MOTHER_NAME??null,
+            'NAME' => $cr_personal->NAME ?? null,
+            'ALIAS' => $cr_personal->ALIAS ?? null,
+            'GENDER' => $cr_personal->GENDER ?? null,
+            'BIRTHPLACE' => $cr_personal->BIRTHPLACE ?? null,
+            'BIRTHDATE' => $cr_personal->BIRTHDATE ?? null,
+            'BLOOD_TYPE' => $cr_personal->BLOOD_TYPE ?? null,
+            'MOTHER_NAME' => $cr_order->MOTHER_NAME ?? null,
             'NPWP' => $cr_order->NO_NPWP ?? null,
             'MARTIAL_STATUS' => $cr_personal->MARTIAL_STATUS ?? null,
             'MARTIAL_DATE' => $cr_personal->MARTIAL_DATE ?? null,
             'ID_TYPE' => $cr_personal->ID_TYPE ?? null,
-            'ID_NUMBER' => $cr_personal-> ID_NUMBER ?? null,
-            'KK_NUMBER' => $cr_personal-> KK ?? null,
+            'ID_NUMBER' => $cr_personal->ID_NUMBER ?? null,
+            'KK_NUMBER' => $cr_personal->KK ?? null,
             'ID_ISSUE_DATE' => $cr_personal->ID_ISSUE_DATE ?? null,
             'ID_VALID_DATE' => $cr_personal->ID_VALID_DATE ?? null,
             'ADDRESS' => $cr_personal->ADDRESS ?? null,
@@ -421,32 +451,32 @@ class Welcome extends Controller
             'PROVINCE' => $cr_personal->PROVINCE ?? null,
             'CITY' => $cr_personal->CITY ?? null,
             'KELURAHAN' => $cr_personal->KELURAHAN ?? null,
-            'KECAMATAN' => $cr_personal-> KECAMATAN ?? null,
-            'ZIP_CODE' => $cr_personal-> ZIP_CODE ?? null,
-            'KK' => $cr_personal-> KK ?? null,
-            'CITIZEN' => $cr_personal-> CITIZEN ?? null,
-            'INS_ADDRESS' => $cr_personal-> INS_ADDRESS ?? null,
-            'INS_RT' => $cr_personal-> INS_RT ?? null,
-            'INS_RW' => $cr_personal-> INS_RW ?? null,
-            'INS_PROVINCE' => $cr_personal-> INS_PROVINCE ?? null,
-            'INS_CITY' => $cr_personal-> INS_CITY ?? null,
-            'INS_KELURAHAN' => $cr_personal-> INS_KELURAHAN ?? null,
-            'INS_KECAMATAN' => $cr_personal-> INS_KECAMATAN ?? null,
-            'INS_ZIP_CODE' => $cr_personal-> INS_ZIP_CODE ?? null,
-            'OCCUPATION' => $cr_personal-> OCCUPATION ?? null,
-            'OCCUPATION_ON_ID' => $cr_personal-> OCCUPATION_ON_ID ?? null,
-            'INCOME' => $cr_order-> INCOME_PERSONAL ?? null,
-            'RELIGION' => $cr_personal-> RELIGION ?? null,
-            'EDUCATION' => $cr_personal-> EDUCATION ?? null,
-            'PROPERTY_STATUS' => $cr_personal-> PROPERTY_STATUS ?? null,
-            'PHONE_HOUSE' => $cr_personal-> PHONE_HOUSE ?? null,
-            'PHONE_PERSONAL' => $cr_personal-> PHONE_PERSONAL ?? null,
-            'PHONE_OFFICE' => $cr_personal-> PHONE_OFFICE ?? null,
-            'EXT_1' => $cr_personal-> EXT_1 ?? null,
-            'EXT_2' => $cr_personal-> EXT_2 ?? null,
+            'KECAMATAN' => $cr_personal->KECAMATAN ?? null,
+            'ZIP_CODE' => $cr_personal->ZIP_CODE ?? null,
+            'KK' => $cr_personal->KK ?? null,
+            'CITIZEN' => $cr_personal->CITIZEN ?? null,
+            'INS_ADDRESS' => $cr_personal->INS_ADDRESS ?? null,
+            'INS_RT' => $cr_personal->INS_RT ?? null,
+            'INS_RW' => $cr_personal->INS_RW ?? null,
+            'INS_PROVINCE' => $cr_personal->INS_PROVINCE ?? null,
+            'INS_CITY' => $cr_personal->INS_CITY ?? null,
+            'INS_KELURAHAN' => $cr_personal->INS_KELURAHAN ?? null,
+            'INS_KECAMATAN' => $cr_personal->INS_KECAMATAN ?? null,
+            'INS_ZIP_CODE' => $cr_personal->INS_ZIP_CODE ?? null,
+            'OCCUPATION' => $cr_personal->OCCUPATION ?? null,
+            'OCCUPATION_ON_ID' => $cr_personal->OCCUPATION_ON_ID ?? null,
+            'INCOME' => $cr_order->INCOME_PERSONAL ?? null,
+            'RELIGION' => $cr_personal->RELIGION ?? null,
+            'EDUCATION' => $cr_personal->EDUCATION ?? null,
+            'PROPERTY_STATUS' => $cr_personal->PROPERTY_STATUS ?? null,
+            'PHONE_HOUSE' => $cr_personal->PHONE_HOUSE ?? null,
+            'PHONE_PERSONAL' => $cr_personal->PHONE_PERSONAL ?? null,
+            'PHONE_OFFICE' => $cr_personal->PHONE_OFFICE ?? null,
+            'EXT_1' => $cr_personal->EXT_1 ?? null,
+            'EXT_2' => $cr_personal->EXT_2 ?? null,
             'VERSION' => 1,
             'CREATE_DATE' => Carbon::now(),
-            'CREATE_USER' => $request->user()->id?? 'alex',
+            'CREATE_USER' => $request->user()->id ?? 'alex',
         ];
 
         if (!$check_customer_ktp) {
@@ -542,7 +572,7 @@ class Welcome extends Controller
     {
         $data_collateral = M_CrGuaranteVehicle::where('CR_SURVEY_ID', $data->CR_SURVEY_ID)->where(function ($query) {
             $query->whereNull('DELETED_AT')
-            ->orWhere('DELETED_AT', '');
+                ->orWhere('DELETED_AT', '');
         })->get();
 
         $doc = $this->attachment_guarante($data->CR_SURVEY_ID, "'no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri'");
@@ -582,7 +612,7 @@ class Welcome extends Controller
 
                 $statusLog = 'NEW ' . $loan_number ?? '';
 
-                M_LocationStatus::create( [
+                M_LocationStatus::create([
                     'TYPE' => 'kendaraan',
                     'COLLATERAL_ID' => $execute->ID,
                     'LOCATION' => $data->BRANCH,
