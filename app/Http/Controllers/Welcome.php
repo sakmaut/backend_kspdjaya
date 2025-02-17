@@ -50,6 +50,10 @@ class Welcome extends Controller
 
     public function index()
     {
+
+        return response()->json('OK');
+        die;
+
         $query = "  SELECT  a.NO_TRANSAKSI,
                             a.LOAN_NUMBER,
                             a.PAYMENT_TYPE,
