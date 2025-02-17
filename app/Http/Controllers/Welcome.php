@@ -53,11 +53,9 @@ class Welcome extends Controller
 
     public function index(Request $request)
     {
-        $no_inv = $request->no_inv;
+        $no_inv = $request->no_fasilitas;
+        $setDAte = '2025-02-03 16:19:27';
 
-        return response()->json('ok');
-
-        die;
         if (isset($request->struktur) && is_array($request->struktur)) {
             foreach ($request->struktur as $res) {
 
@@ -94,19 +92,19 @@ class Welcome extends Controller
                     'INVOICE' => $no_inv,
                     'NO_TRX' => $request->uid,
                     'PAYMENT_METHOD' => $request->payment_method,
-                    'BRANCH' => $branch->CODE_NUMBER,
+                    'BRANCH' => 'ANJ',
                     'LOAN_NUM' => $loan_number,
                     'VALUE_DATE' => null,
-                    'ENTRY_DATE' => now(),
+                    'ENTRY_DATE' => $setDAte,
                     'SUSPENSION_PENALTY_FLAG' => $request->penangguhan_denda ?? '',
                     'TITLE' => 'Angsuran Ke-' . $res['angsuran_ke'],
                     'ORIGINAL_AMOUNT' => ($res['bayar_angsuran'] + $res['bayar_denda']),
                     'OS_AMOUNT' => $os_amount ?? 0,
                     'START_DATE' => $tgl_angsuran,
-                    'END_DATE' => now(),
-                    'USER_ID' => $request->user()->id,
-                    'AUTH_BY' => $request->user()->fullname ?? '',
-                    'AUTH_DATE' => now(),
+                    'END_DATE' => $setDAte,
+                    'USER_ID' => '39',
+                    'AUTH_BY' => '',
+                    'AUTH_DATE' => $setDAte,
                     'ARREARS_ID' => $res['id_arrear'] ?? '',
                     'BANK_NAME' => round(microtime(true) * 1000)
                 ]);
@@ -282,7 +280,7 @@ class Welcome extends Controller
         ])->first();
 
         if ($credit_schedule) {
-            $byr_angsuran = $res['details'][0]['bayar_angsuran'];
+            $byr_angsuran = $res['details'][0]['bayar_angsuran'] ?? $res['bayar_angsuran'];
 
             $valBeforePrincipal = $credit_schedule ? $credit_schedule->PAYMENT_VALUE_PRINCIPAL : 0;
             $valBeforeInterest = $credit_schedule ? $credit_schedule->PAYMENT_VALUE_INTEREST : 0;
@@ -351,22 +349,22 @@ class Welcome extends Controller
         ];
     }
 
-    // // function addCreditPaid($loan_number, array $data)
-    // // {
-    // //     $check_credit = M_Credit::where(['LOAN_NUMBER' => $loan_number])->first();
+    function addCreditPaid($loan_number, array $data)
+    {
+        $check_credit = M_Credit::where(['LOAN_NUMBER' => $loan_number])->first();
 
-    // //     if ($check_credit) {
-    // //         $paidPrincipal = isset($data['ANGSURAN_POKOK']) ? $data['ANGSURAN_POKOK'] : 0;
-    // //         $paidInterest = isset($data['ANGSURAN_BUNGA']) ? $data['ANGSURAN_BUNGA'] : 0;
-    // //         $paidPenalty = isset($data['BAYAR_DENDA']) ? $data['BAYAR_DENDA'] : 0;
+        if ($check_credit) {
+            $paidPrincipal = isset($data['ANGSURAN_POKOK']) ? $data['ANGSURAN_POKOK'] : 0;
+            $paidInterest = isset($data['ANGSURAN_BUNGA']) ? $data['ANGSURAN_BUNGA'] : 0;
+            $paidPenalty = isset($data['BAYAR_DENDA']) ? $data['BAYAR_DENDA'] : 0;
 
-    //         $check_credit->update([
-    //             'PAID_PRINCIPAL' => floatval($check_credit->PAID_PRINCIPAL) + floatval($paidPrincipal),
-    //             'PAID_INTEREST' => floatval($check_credit->PAID_INTEREST) + floatval($paidInterest),
-    //             'PAID_PENALTY' => floatval($check_credit->PAID_PENALTY) + floatval($paidPenalty)
-    //         ]);
-    //     }
-    // }
+            $check_credit->update([
+                'PAID_PRINCIPAL' => floatval($check_credit->PAID_PRINCIPAL) + floatval($paidPrincipal),
+                'PAID_INTEREST' => floatval($check_credit->PAID_INTEREST) + floatval($paidInterest),
+                'PAID_PENALTY' => floatval($check_credit->PAID_PENALTY) + floatval($paidPenalty)
+            ]);
+        }
+    }
 
     private function generateAmortizationSchedule($setDate, $data)
     {
