@@ -220,7 +220,7 @@ class PelunasanController extends Controller
             // if ($status === "PAID") {
             //     $this->proccess($request, $loan_number, $no_inv, $status);
             // } else {
-                
+
             // }
 
             $data = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
@@ -515,6 +515,7 @@ class PelunasanController extends Controller
                 'PAID_PENALTY' => floatval($credit->PAID_PENALTY) + floatval($res['bayar_denda']),
                 'DISCOUNT_PENALTY' => floatval($credit->DISCOUNT_PENALTY) + floatval($res['diskon_denda']),
                 'STATUS' => 'D',
+                'STATUS_REC' => 'PT',
                 'END_DATE' => now()
             ]);
         }
