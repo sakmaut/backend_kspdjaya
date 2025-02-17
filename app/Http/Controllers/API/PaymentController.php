@@ -501,9 +501,9 @@ class PaymentController extends Controller
             $save_kwitansi
         );
 
-        // if (!$cekPaymentMethod) {
-        //     $this->telegram->create($save_kwitansi);
-        // }
+        if (!$cekPaymentMethod) {
+            $this->telegram->create($save_kwitansi);
+        }
     }
 
     function createPaymentRecords($request, $res, $tgl_angsuran, $loan_number, $no_inv, $branch, $uid)
