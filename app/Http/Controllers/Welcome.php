@@ -24,6 +24,7 @@ use App\Models\M_CustomerDocument;
 use App\Models\M_CustomerExtra;
 use App\Models\M_DeuteronomyTransactionLog;
 use App\Models\M_FirstArr;
+use App\Models\M_KwitansiStructurDetail;
 use App\Models\M_LocationStatus;
 use App\Models\M_Payment;
 use App\Models\M_PaymentDetail;
@@ -52,32 +53,63 @@ class Welcome extends Controller
 
     public function index(Request $request)
     {
+        $no_inv = $request->no_fasilitas;
+        $setDAte = '2025-02-03 16:19:27';
 
-        // $newMessages = M_TelegramBotSend::where('status', 'new')->get();
+        if (isset($request->struktur) && is_array($request->struktur)) {
+            foreach ($request->struktur as $res) {
 
-        // $datas = [];
-        // foreach ($newMessages as $message) {
-        //     $getJson = $message->messages;
-        //     if (!empty($getJson)) {
-        //         $convert = json_decode($getJson, true);
-        //         $findBRanch = M_Branch::find($convert['BRANCH_CODE']);
+                M_KwitansiStructurDetail::firstOrCreate([
+                    'no_invoice' => $no_inv,
+                    'key' => $res['key'] ?? '',
+                    'loan_number' => $res['loan_number'] ?? ''
+                ], [
+                    'angsuran_ke' => $res['angsuran_ke'] ?? '',
+                    'tgl_angsuran' => $res['tgl_angsuran'] ?? '',
+                    'principal' => $res['principal'] ?? '',
+                    'interest' => $res['interest'] ?? '',
+                    'installment' => $res['installment'] ?? '',
+                    'principal_remains' => $res['principal_remains'] ?? '',
+                    'payment' => $res['payment'] ?? '',
+                    'bayar_angsuran' => $res['bayar_angsuran'] ?? '',
+                    'bayar_denda' => $res['bayar_denda'] ?? '',
+                    'total_bayar' => $res['total_bayar'] ?? '',
+                    'flag' => $res['flag'] ?? '',
+                    'denda' => $res['denda'] ?? '',
+                    'diskon_denda' => strtolower($request->bayar_dengan_diskon) == 'ya' ? 1 : 0
+                ]);
 
-        //         // Wrap ternary operator in parentheses for correct evaluation
-        //         $buildMsg = " MINTA APPROVAL PEMBAYARAN" . "\n" .
-        //             'Tipe = ' . $convert['PAYMENT_TYPE'] . "\n" .
-        //             'Status = Pending' . "\n" .
-        //             'No Transaksi = ' . $convert['NO_TRANSAKSI'] . "\n" .
-        //             'No Kontrak = ' . $convert['LOAN_NUMBER'] . "\n" .
-        //             'Cabang = ' . ($findBRanch ? $findBRanch->NAME : '') . "\n" .
-        //             'Tgl Transaksi = ' . $convert['TGL_TRANSAKSI'];
+                $loan_number = $res['loan_number'];
+                $tgl_angsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
+                $uid = Uuid::uuid7()->toString();
 
-        //         $response = TelegramBotConfig::sendMessage($buildMsg);
+                $this->updateCreditSchedule($loan_number, $tgl_angsuran, $res, $uid);
 
-        //         if ($response) {
-        //             $newMessages->update(['status' => 'send']);
-        //         }
-        //     }
-        // }
+                M_Payment::create([
+                    'ID' => $uid,
+                    'ACC_KEY' => 'angsuran',
+                    'STTS_RCRD' => 'PAID',
+                    'INVOICE' => $no_inv,
+                    'NO_TRX' => $request->uid,
+                    'PAYMENT_METHOD' => $request->payment_method,
+                    'BRANCH' => 'ANJ',
+                    'LOAN_NUM' => $loan_number,
+                    'VALUE_DATE' => null,
+                    'ENTRY_DATE' => $setDAte,
+                    'SUSPENSION_PENALTY_FLAG' => $request->penangguhan_denda ?? '',
+                    'TITLE' => 'Angsuran Ke-' . $res['angsuran_ke'],
+                    'ORIGINAL_AMOUNT' => ($res['bayar_angsuran'] + $res['bayar_denda']),
+                    'OS_AMOUNT' => $os_amount ?? 0,
+                    'START_DATE' => $tgl_angsuran,
+                    'END_DATE' => $setDAte,
+                    'USER_ID' => '39',
+                    'AUTH_BY' => '',
+                    'AUTH_DATE' => $setDAte,
+                    'ARREARS_ID' => $res['id_arrear'] ?? '',
+                    'BANK_NAME' => round(microtime(true) * 1000)
+                ]);
+            }
+        }
 
         return response()->json('ok');
 
@@ -126,6 +158,35 @@ class Welcome extends Controller
         die;
 
         $groupedData = [];
+
+        // function telBot()
+        // {
+        //     $newMessages = M_TelegramBotSend::where('status', 'new')->get();
+
+        //     $datas = [];
+        //     foreach ($newMessages as $message) {
+        //         $getJson = $message->messages;
+        //         if (!empty($getJson)) {
+        //             $convert = json_decode($getJson, true);
+        //             $findBRanch = M_Branch::find($convert['BRANCH_CODE']);
+
+        //             // Wrap ternary operator in parentheses for correct evaluation
+        //             $buildMsg = " MINTA APPROVAL PEMBAYARAN" . "\n" .
+        //                 'Tipe = ' . $convert['PAYMENT_TYPE'] . "\n" .
+        //                 'Status = Pending' . "\n" .
+        //                 'No Transaksi = ' . $convert['NO_TRANSAKSI'] . "\n" .
+        //                 'No Kontrak = ' . $convert['LOAN_NUMBER'] . "\n" .
+        //                 'Cabang = ' . ($findBRanch ? $findBRanch->NAME : '') . "\n" .
+        //                 'Tgl Transaksi = ' . $convert['TGL_TRANSAKSI'];
+
+        //             $response = TelegramBotConfig::sendMessage($buildMsg);
+
+        //             if ($response) {
+        //                 $newMessages->update(['status' => 'send']);
+        //             }
+        //         }
+        //     }
+        // }
 
         foreach ($request->all() as $item) {
             // Use no_invoice and angsuran_ke as the key for grouping
@@ -211,99 +272,99 @@ class Welcome extends Controller
     }
 
 
-    // function updateCreditSchedule($loan_number, $tgl_angsuran, $res, $uid)
-    // {
-    //     $credit_schedule = M_CreditSchedule::where([
-    //         'LOAN_NUMBER' => $loan_number,
-    //         'PAYMENT_DATE' => date('Y-m-d', strtotime($tgl_angsuran))
-    //     ])->first();
+    function updateCreditSchedule($loan_number, $tgl_angsuran, $res, $uid)
+    {
+        $credit_schedule = M_CreditSchedule::where([
+            'LOAN_NUMBER' => $loan_number,
+            'PAYMENT_DATE' => date('Y-m-d', strtotime($tgl_angsuran))
+        ])->first();
 
-    //     if ($credit_schedule) {
-    //         $byr_angsuran = $res['details'][0]['bayar_angsuran'];
+        if ($credit_schedule) {
+            $byr_angsuran = $res['details'][0]['bayar_angsuran'] ?? $res['bayar_angsuran'];
 
-    //         $valBeforePrincipal = $credit_schedule ? $credit_schedule->PAYMENT_VALUE_PRINCIPAL : 0;
-    //         $valBeforeInterest = $credit_schedule ? $credit_schedule->PAYMENT_VALUE_INTEREST : 0;
-    //         $getPrincipal = $credit_schedule ? $credit_schedule->PRINCIPAL : 0;
-    //         $getInterest = $credit_schedule ? $credit_schedule->INTEREST : 0;
+            $valBeforePrincipal = $credit_schedule ? $credit_schedule->PAYMENT_VALUE_PRINCIPAL : 0;
+            $valBeforeInterest = $credit_schedule ? $credit_schedule->PAYMENT_VALUE_INTEREST : 0;
+            $getPrincipal = $credit_schedule ? $credit_schedule->PRINCIPAL : 0;
+            $getInterest = $credit_schedule ? $credit_schedule->INTEREST : 0;
 
-    //         if ($credit_schedule->PAID_FLAG == 'PAID') {
-    //             $data = $this->preparePaymentData($uid, 'ANGSURAN_POKOK', $getPrincipal);
-    //             M_PaymentDetail::create($data);
-    //             $this->addCreditPaid($loan_number, ['ANGSURAN_POKOK' => $getPrincipal]);
+            if ($credit_schedule->PAID_FLAG == 'PAID') {
+                $data = $this->preparePaymentData($uid, 'ANGSURAN_POKOK', $getPrincipal);
+                M_PaymentDetail::create($data);
+                $this->addCreditPaid($loan_number, ['ANGSURAN_POKOK' => $getPrincipal]);
 
-    //             $data = $this->preparePaymentData($uid, 'ANGSURAN_BUNGA', $getInterest);
-    //             M_PaymentDetail::create($data);
-    //             $this->addCreditPaid($loan_number, ['ANGSURAN_BUNGA' => $getInterest]);
-    //         } else {
-    //             $new_payment_value_principal = $valBeforePrincipal;
-    //             $new_payment_value_interest = $valBeforeInterest;
+                $data = $this->preparePaymentData($uid, 'ANGSURAN_BUNGA', $getInterest);
+                M_PaymentDetail::create($data);
+                $this->addCreditPaid($loan_number, ['ANGSURAN_BUNGA' => $getInterest]);
+            } else {
+                $new_payment_value_principal = $valBeforePrincipal;
+                $new_payment_value_interest = $valBeforeInterest;
 
-    //             // Process principal payment if needed
-    //             if ($valBeforePrincipal < $getPrincipal) {
-    //                 $remaining_to_principal = $getPrincipal - $valBeforePrincipal;
+                // Process principal payment if needed
+                if ($valBeforePrincipal < $getPrincipal) {
+                    $remaining_to_principal = $getPrincipal - $valBeforePrincipal;
 
-    //                 if ($byr_angsuran >= $remaining_to_principal) {
-    //                     $new_payment_value_principal = $getPrincipal;
-    //                     $remaining_payment = $byr_angsuran - $remaining_to_principal;
-    //                 } else {
-    //                     $new_payment_value_principal += $byr_angsuran;
-    //                     $remaining_payment = 0;
-    //                 }
-    //             } else {
-    //                 $remaining_payment = $byr_angsuran;
-    //             }
+                    if ($byr_angsuran >= $remaining_to_principal) {
+                        $new_payment_value_principal = $getPrincipal;
+                        $remaining_payment = $byr_angsuran - $remaining_to_principal;
+                    } else {
+                        $new_payment_value_principal += $byr_angsuran;
+                        $remaining_payment = 0;
+                    }
+                } else {
+                    $remaining_payment = $byr_angsuran;
+                }
 
-    //             // Update interest if the principal is fully paid
-    //             if ($new_payment_value_principal == $getPrincipal) {
-    //                 if ($valBeforeInterest < $getInterest) {
-    //                     $new_payment_value_interest = min($valBeforeInterest + $remaining_payment, $getInterest);
-    //                 }
-    //             }
+                // Update interest if the principal is fully paid
+                if ($new_payment_value_principal == $getPrincipal) {
+                    if ($valBeforeInterest < $getInterest) {
+                        $new_payment_value_interest = min($valBeforeInterest + $remaining_payment, $getInterest);
+                    }
+                }
 
-    //             // Insert payment details for principal if there is a change
-    //             $valPrincipal = $new_payment_value_principal - $valBeforePrincipal;
-    //             if ($valPrincipal > 0) {
-    //                 $data = $this->preparePaymentData($uid, 'ANGSURAN_POKOK', $valPrincipal);
-    //                 M_PaymentDetail::create($data);
-    //                 $this->addCreditPaid($loan_number, ['ANGSURAN_POKOK' => $valPrincipal]);
-    //             }
+                // Insert payment details for principal if there is a change
+                $valPrincipal = $new_payment_value_principal - $valBeforePrincipal;
+                if ($valPrincipal > 0) {
+                    $data = $this->preparePaymentData($uid, 'ANGSURAN_POKOK', $valPrincipal);
+                    M_PaymentDetail::create($data);
+                    $this->addCreditPaid($loan_number, ['ANGSURAN_POKOK' => $valPrincipal]);
+                }
 
-    //             // Insert payment details for interest if there is a change
-    //             $valInterest = $new_payment_value_interest - $valBeforeInterest;
-    //             if ($valInterest > 0) {
-    //                 $data = $this->preparePaymentData($uid, 'ANGSURAN_BUNGA', $valInterest);
-    //                 M_PaymentDetail::create($data);
-    //                 $this->addCreditPaid($loan_number, ['ANGSURAN_BUNGA' => $valInterest]);
-    //             }
-    //         }
-    //     }
-    // }
+                // Insert payment details for interest if there is a change
+                $valInterest = $new_payment_value_interest - $valBeforeInterest;
+                if ($valInterest > 0) {
+                    $data = $this->preparePaymentData($uid, 'ANGSURAN_BUNGA', $valInterest);
+                    M_PaymentDetail::create($data);
+                    $this->addCreditPaid($loan_number, ['ANGSURAN_BUNGA' => $valInterest]);
+                }
+            }
+        }
+    }
 
-    // function preparePaymentData($payment_id, $acc_key, $amount)
-    // {
-    //     return [
-    //         'PAYMENT_ID' => $payment_id,
-    //         'ACC_KEYS' => $acc_key,
-    //         'ORIGINAL_AMOUNT' => $amount
-    //     ];
-    // }
+    function preparePaymentData($payment_id, $acc_key, $amount)
+    {
+        return [
+            'PAYMENT_ID' => $payment_id,
+            'ACC_KEYS' => $acc_key,
+            'ORIGINAL_AMOUNT' => $amount
+        ];
+    }
 
-    // // function addCreditPaid($loan_number, array $data)
-    // // {
-    // //     $check_credit = M_Credit::where(['LOAN_NUMBER' => $loan_number])->first();
+    function addCreditPaid($loan_number, array $data)
+    {
+        $check_credit = M_Credit::where(['LOAN_NUMBER' => $loan_number])->first();
 
-    // //     if ($check_credit) {
-    // //         $paidPrincipal = isset($data['ANGSURAN_POKOK']) ? $data['ANGSURAN_POKOK'] : 0;
-    // //         $paidInterest = isset($data['ANGSURAN_BUNGA']) ? $data['ANGSURAN_BUNGA'] : 0;
-    // //         $paidPenalty = isset($data['BAYAR_DENDA']) ? $data['BAYAR_DENDA'] : 0;
+        if ($check_credit) {
+            $paidPrincipal = isset($data['ANGSURAN_POKOK']) ? $data['ANGSURAN_POKOK'] : 0;
+            $paidInterest = isset($data['ANGSURAN_BUNGA']) ? $data['ANGSURAN_BUNGA'] : 0;
+            $paidPenalty = isset($data['BAYAR_DENDA']) ? $data['BAYAR_DENDA'] : 0;
 
-    //         $check_credit->update([
-    //             'PAID_PRINCIPAL' => floatval($check_credit->PAID_PRINCIPAL) + floatval($paidPrincipal),
-    //             'PAID_INTEREST' => floatval($check_credit->PAID_INTEREST) + floatval($paidInterest),
-    //             'PAID_PENALTY' => floatval($check_credit->PAID_PENALTY) + floatval($paidPenalty)
-    //         ]);
-    //     }
-    // }
+            $check_credit->update([
+                'PAID_PRINCIPAL' => floatval($check_credit->PAID_PRINCIPAL) + floatval($paidPrincipal),
+                'PAID_INTEREST' => floatval($check_credit->PAID_INTEREST) + floatval($paidInterest),
+                'PAID_PENALTY' => floatval($check_credit->PAID_PENALTY) + floatval($paidPenalty)
+            ]);
+        }
+    }
 
     private function generateAmortizationSchedule($setDate, $data)
     {
