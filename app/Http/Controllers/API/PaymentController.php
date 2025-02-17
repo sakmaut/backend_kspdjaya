@@ -303,6 +303,7 @@ class PaymentController extends Controller
 
         if ($checkCreditSchedule->isEmpty() && $checkArrears->isEmpty()) {
             $status = 'D';
+            $status_rec = 'CL';
         } else {
             $status = 'A';
         }
@@ -310,6 +311,7 @@ class PaymentController extends Controller
         if ($check_credit) {
             $check_credit->update([
                 'STATUS' => $status,
+                'STATUS_REC' => $status_rec ?? 'AC',
             ]);
         }
     }
