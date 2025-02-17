@@ -53,63 +53,63 @@ class Welcome extends Controller
 
     public function index(Request $request)
     {
-        $no_inv = $request->no_fasilitas;
-        $setDAte = '2025-02-03 16:19:27';
+        // $no_inv = $request->no_fasilitas;
+        // $setDAte = '2025-02-03 16:19:27';
 
-        if (isset($request->struktur) && is_array($request->struktur)) {
-            foreach ($request->struktur as $res) {
+        // if (isset($request->struktur) && is_array($request->struktur)) {
+        //     foreach ($request->struktur as $res) {
 
-                M_KwitansiStructurDetail::firstOrCreate([
-                    'no_invoice' => $no_inv,
-                    'key' => $res['key'] ?? '',
-                    'loan_number' => $res['loan_number'] ?? ''
-                ], [
-                    'angsuran_ke' => $res['angsuran_ke'] ?? '',
-                    'tgl_angsuran' => $res['tgl_angsuran'] ?? '',
-                    'principal' => $res['principal'] ?? '',
-                    'interest' => $res['interest'] ?? '',
-                    'installment' => $res['installment'] ?? '',
-                    'principal_remains' => $res['principal_remains'] ?? '',
-                    'payment' => $res['payment'] ?? '',
-                    'bayar_angsuran' => $res['bayar_angsuran'] ?? '',
-                    'bayar_denda' => $res['bayar_denda'] ?? '',
-                    'total_bayar' => $res['total_bayar'] ?? '',
-                    'flag' => $res['flag'] ?? '',
-                    'denda' => $res['denda'] ?? '',
-                    'diskon_denda' => strtolower($request->bayar_dengan_diskon) == 'ya' ? 1 : 0
-                ]);
+        //         M_KwitansiStructurDetail::firstOrCreate([
+        //             'no_invoice' => $no_inv,
+        //             'key' => $res['key'] ?? '',
+        //             'loan_number' => $res['loan_number'] ?? ''
+        //         ], [
+        //             'angsuran_ke' => $res['angsuran_ke'] ?? '',
+        //             'tgl_angsuran' => $res['tgl_angsuran'] ?? '',
+        //             'principal' => $res['principal'] ?? '',
+        //             'interest' => $res['interest'] ?? '',
+        //             'installment' => $res['installment'] ?? '',
+        //             'principal_remains' => $res['principal_remains'] ?? '',
+        //             'payment' => $res['payment'] ?? '',
+        //             'bayar_angsuran' => $res['bayar_angsuran'] ?? '',
+        //             'bayar_denda' => $res['bayar_denda'] ?? '',
+        //             'total_bayar' => $res['total_bayar'] ?? '',
+        //             'flag' => $res['flag'] ?? '',
+        //             'denda' => $res['denda'] ?? '',
+        //             'diskon_denda' => strtolower($request->bayar_dengan_diskon) == 'ya' ? 1 : 0
+        //         ]);
 
-                $loan_number = $res['loan_number'];
-                $tgl_angsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
-                $uid = Uuid::uuid7()->toString();
+        //         $loan_number = $res['loan_number'];
+        //         $tgl_angsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
+        //         $uid = Uuid::uuid7()->toString();
 
-                $this->updateCreditSchedule($loan_number, $tgl_angsuran, $res, $uid);
+        //         $this->updateCreditSchedule($loan_number, $tgl_angsuran, $res, $uid);
 
-                M_Payment::create([
-                    'ID' => $uid,
-                    'ACC_KEY' => 'angsuran',
-                    'STTS_RCRD' => 'PAID',
-                    'INVOICE' => $no_inv,
-                    'NO_TRX' => $request->uid,
-                    'PAYMENT_METHOD' => $request->payment_method,
-                    'BRANCH' => 'ANJ',
-                    'LOAN_NUM' => $loan_number,
-                    'VALUE_DATE' => null,
-                    'ENTRY_DATE' => $setDAte,
-                    'SUSPENSION_PENALTY_FLAG' => $request->penangguhan_denda ?? '',
-                    'TITLE' => 'Angsuran Ke-' . $res['angsuran_ke'],
-                    'ORIGINAL_AMOUNT' => ($res['bayar_angsuran'] + $res['bayar_denda']),
-                    'OS_AMOUNT' => $os_amount ?? 0,
-                    'START_DATE' => $tgl_angsuran,
-                    'END_DATE' => $setDAte,
-                    'USER_ID' => '39',
-                    'AUTH_BY' => '',
-                    'AUTH_DATE' => $setDAte,
-                    'ARREARS_ID' => $res['id_arrear'] ?? '',
-                    'BANK_NAME' => round(microtime(true) * 1000)
-                ]);
-            }
-        }
+        //         M_Payment::create([
+        //             'ID' => $uid,
+        //             'ACC_KEY' => 'angsuran',
+        //             'STTS_RCRD' => 'PAID',
+        //             'INVOICE' => $no_inv,
+        //             'NO_TRX' => $request->uid,
+        //             'PAYMENT_METHOD' => $request->payment_method,
+        //             'BRANCH' => 'ANJ',
+        //             'LOAN_NUM' => $loan_number,
+        //             'VALUE_DATE' => null,
+        //             'ENTRY_DATE' => $setDAte,
+        //             'SUSPENSION_PENALTY_FLAG' => $request->penangguhan_denda ?? '',
+        //             'TITLE' => 'Angsuran Ke-' . $res['angsuran_ke'],
+        //             'ORIGINAL_AMOUNT' => ($res['bayar_angsuran'] + $res['bayar_denda']),
+        //             'OS_AMOUNT' => $os_amount ?? 0,
+        //             'START_DATE' => $tgl_angsuran,
+        //             'END_DATE' => $setDAte,
+        //             'USER_ID' => '39',
+        //             'AUTH_BY' => '',
+        //             'AUTH_DATE' => $setDAte,
+        //             'ARREARS_ID' => $res['id_arrear'] ?? '',
+        //             'BANK_NAME' => round(microtime(true) * 1000)
+        //         ]);
+        //     }
+        // }
 
         return response()->json('ok');
 
