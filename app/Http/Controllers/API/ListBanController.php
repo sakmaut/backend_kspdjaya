@@ -249,28 +249,29 @@ class ListBanController extends Controller
                             concat('C',case when date_format(b.entry_date,'%m%Y')=date_format(now(),'%m%Y') then 'N'
 		                                    when date_format(case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 then now() else coalesce(i.TUNGGAKAN_PERTAMA,k.F_ARR_CR_SCHEDL) end,'%m%Y')=date_format(now(),'%m%Y') then '0'
 		                                    when floor((DATEDIFF(str_to_date('01022025','%d%m%Y'),case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 then 0 else coalesce(i.TUNGGAKAN_PERTAMA,k.F_ARR_CR_SCHEDL) end))/30)<0 then 'M' 
+                                            when (DATEDIFF(str_to_date('01022025','%d%m%Y'),case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 then now() else coalesce(i.TUNGGAKAN_PERTAMA,k.F_ARR_CR_SCHEDL) end)) between 211 and 240 then '8' 
 		                                    when ceil((DATEDIFF(str_to_date('01022025','%d%m%Y'),case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 then 0 else coalesce(i.TUNGGAKAN_PERTAMA,k.F_ARR_CR_SCHEDL) end))/30)>=8 then 'X' 
-                                            else ceil((DATEDIFF(str_to_date('01022025','%d%m%Y'),case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 then 0 else coalesce(i.TUNGGAKAN_PERTAMA,k.F_ARR_CR_SCHEDL) end))/30) end) AS CYCLE_AWAL,
+                                            else ceil((DATEDIFF(str_to_date('01022025','%d%m%Y'),case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 then 0 else coalesce(i.TUNGGAKAN_PERTAMA,k.F_ARR_CR_SCHEDL) end))/30) end) AS CYCLE_AWAL,                            
                             b.STATUS_REC,
                             b.STATUS_REC, 
                             case when (b.INSTALLMENT_COUNT/b.PERIOD)=1 then 'BULANAN' else 'MUSIMAN' end as pola_bayar, 
                             b.PCPL_ORI-b.PAID_PRINCIPAL OS_PKK_AKHIR, 
                             coalesce(k.OS_BNG_AKHIR,0) as OS_BNG_AKHIR, 
                             j.DUE_DAYS as OVERDUE_AKHIR, 
-                            k.LAST_INST as INSTALLMENT,
-                            case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 then 0 else k.LAST_INST end as LAST_INST, 
+                            b.INSTALLMENT,
+                            case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 then 0 else i.INST_COUNT end as LAST_INST, 
                             e.INSTALLMENT_TYPE AS tipe,
                             case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 then 0 else coalesce(i.TUNGGAKAN_PERTAMA,k.F_ARR_CR_SCHEDL) end as F_ARR_CR_SCHEDL,
                             case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 then 0 else k.F_ARR_CR_SCHEDL end as curr_arr, 
                             case when date_format(l.entry_date,'%m%Y')=date_format(now(),'%m%Y') then l.entry_date else null end as LAST_PAY, 
                             ' ' AS COLLECTOR,
                             l.payment_method as cara_bayar, 
-                            coalesce(m.tggk_pkk,0) as AMBC_PKK_AKHIR, 
-                            coalesce(m.tggk_bng,0) as AMBC_BNG_AKHIR, 
-                            coalesce(m.tggk_pkk,0)+coalesce(m.tggk_bng,0) as AMBC_TOTAL_AKHIR, 
-                            coalesce(m.byr_tggk_pkk,0) AC_PKK, 
-                            coalesce(m.byr_tggk_bng,0) AC_BNG_MRG, 
-                            coalesce(m.byr_tggk_pkk,0)+coalesce(m.byr_tggk_bng,0) AC_TOTAL, 
+                            coalesce(k.AMBC_PKK_AKHIR,0) as AMBC_PKK_AKHIR, 
+                            coalesce(k.AMBC_BNG_AKHIR,0) as AMBC_BNG_AKHIR, 
+                            coalesce(k.AMBC_PKK_AKHIR,0)+coalesce(k.AMBC_BNG_AKHIR,0) as AMBC_TOTAL_AKHIR, 
+                            coalesce(m.BAYAR_POKOK,0) AC_PKK, 
+                            coalesce(m.BAYAR_BUNGA,0) AC_BNG_MRG, 
+                            coalesce(m.BAYAR_POKOK,0)+coalesce(m.BAYAR_BUNGA,0) AC_TOTAL, 
                             concat('C',case when floor(j.DUE_DAYS/30)>8 then 'X' else floor(j.DUE_DAYS/30) end) as CYCLE_AKHIR, 
                             case when (b.INSTALLMENT_COUNT/b.PERIOD)=1 then 'BULANAN' else 'MUSIMAN' end as pola_bayar_akhir, 
                             'jenis jaminan', 
@@ -300,26 +301,38 @@ class ListBanController extends Controller
                                     GROUP 	BY CR_CREDIT_ID) g ON g.CR_CREDIT_ID = b.ID
                                 LEFT JOIN credit_2025 i on cast(i.loan_number as char) = cast(b.LOAN_NUMBER as char)
                                 LEFT JOIN first_arr j on cast(j.LOAN_NUMBER as char) = cast(b.LOAN_NUMBER as char)
-                            LEFT JOIN (	SELECT	loan_number, sum(interest)-sum(coalesce(payment_value_interest,0)) as OS_BNG_AKHIR, 
-                                        min(case when cast(paid_flag as char)='PAID' then 999 else installment_count end) as LAST_INST, 
-                                        max(case when cast(paid_flag as char)='PAID' then payment_date else str_to_date('01011900','%d%m%Y') end) as LAST_PAY, 
-                                        min(case when cast(coalesce(paid_flag,'') as char)<>'PAID' then payment_date else str_to_date('01013000','%d%m%Y') end) as F_ARR_CR_SCHEDL
-                                    FROM	credit_schedule
-                                    WHERE	loan_number in (select loan_number from credit where status='A' 
-                                            or (status in ('S','D') and loan_number in (select loan_num from payment where date_format(entry_date,'%m%Y')=date_format(now(),'%m%Y'))))
-                                    GROUP	BY loan_number) k on k.loan_number=b.loan_number
-                            LEFT JOIN (	SELECT	loan_num, entry_date, replace(replace(group_concat(payment_method),'AGENT EKS',''),',','') as payment_method
+
+                            LEFT JOIN (	SELECT	loan_number, sum(interest)-sum(coalesce(payment_value_interest,0))-sum(discount_interest) as OS_BNG_AKHIR, 
+				                                sum(principal)-sum(coalesce(payment_value_principal,0))-sum(discount_principal) as OS_PKK_AKHIR, 
+				case when count(ID)=sum(case when paid_flag='PAID' then 1 else 0 end) then ''
+        				else min(case when cast(paid_flag as char)='PAID' then 999 else installment_count end) end as LAST_INST, 
+				max(case when cast(paid_flag as char)='PAID' then payment_date else str_to_date('01011900','%d%m%Y') end) as LAST_PAY, 
+				case when count(ID)=sum(case when paid_flag='PAID' then 1 else 0 end) then ''
+        	 			else min(case when cast(coalesce(paid_flag,'') as char)<>'PAID' then payment_date else str_to_date('01013000','%d%m%Y') end) end as F_ARR_CR_SCHEDL,
+				sum(case when payment_date < str_to_date(concat('01',date_format(date_add(now(),interval 1 month),'%m%Y')),'%d%m%Y') and paid_flag='PAID' then (interest-payment_value_interest-discount_interest)
+            	 			else 0 end) as AMBC_BNG_AKHIR, 
+				sum(case when payment_date < str_to_date(concat('01',date_format(date_add(now(),interval 1 month),'%m%Y')),'%d%m%Y') and paid_flag='PAID' then (principal-payment_value_principal-discount_principal)
+            	 			else 0 end) as AMBC_PKK_AKHIR
+			FROM	credit_schedule
+			WHERE	loan_number in (select loan_number from credit where status='A' 
+					or (status in ('S','D') and loan_number in (select loan_num from payment where date_format(entry_date,'%m%Y')=date_format(now(),'%m%Y'))))
+			GROUP	BY loan_number) k on k.loan_number=b.loan_number
+                            LEFT JOIN (	SELECT	loan_num, str_to_date(date_format(entry_date,'%d%m%Y'),'%d%m%Y') as entry_date, replace(replace(group_concat(payment_method),'AGENT EKS',''),',','') as payment_method
 			                            FROM	payment
-			                            WHERE	(cast(loan_num as char),date_format(entry_date,'%d%m%Y %H%i'),cast(title as char)) 
-					                                in (select cast(loan_num as char), date_format(max(entry_date),'%d%m%Y %H%i'), concat('Angsuran Ke-',max(cast(replace(title,'Angsuran Ke-','') as signed))) from payment group by loan_num)
-			                            group by loan_num, entry_date) l on l.loan_num=b.loan_number
-                            LEFT JOIN (	SELECT	loan_number, 
-                                        sum(past_due_pcpl) as tggk_pkk, sum(past_due_intrst) as tggk_bng, 
-                                            sum(paid_pcpl) as byr_tggk_pkk, sum(paid_int) as byr_tggk_bng, 
-                                        min(start_date) as curr_arr
-                                    FROM	arrears
-                                    WHERE	STATUS_REC='A'
-                                    GROUP	BY loan_number) m on m.loan_number=b.loan_number
+			                            WHERE	(cast(loan_num as char),date_format(entry_date,'%d%m%Y %H%i'),cast(title as char)) in 
+                                        (select cast(s1.loan_num as char), date_format(max(s1.entry_date),'%d%m%Y %H%i'), concat('Angsuran Ke-',max(cast(replace(s1.title,'Angsuran Ke-','') as signed))) 
+         				                 from 	payment s1
+         					                    inner join payment_detail s2 on s2.PAYMENT_ID=s1.ID and s2.ACC_KEYS in ('ANGSURAN_POKOK','BAYAR_POKOK','ANGSURAN_BUNGA')
+         				                 group 	by s1.loan_num)
+			                            group by loan_num, str_to_date(date_format(entry_date,'%d%m%Y'),'%d%m%Y')) l on l.loan_num=b.loan_number
+                            LEFT JOIN (	SELECT	s1.LOAN_NUM, 
+				sum(case when s2.ACC_KEYS in ('BAYAR_POKOK','ANGSURAN_POKOK') then s2.ORIGINAL_AMOUNT else 0 end) as BAYAR_POKOK, 
+        			sum(case when s2.ACC_KEYS='ANGSURAN_BUNGA' then s2.ORIGINAL_AMOUNT else 0 end) as BAYAR_BUNGA        
+			FROM	payment s1
+				inner join payment_detail s2 on s2.PAYMENT_ID=s1.ID
+			WHERE	date_format(s1.ENTRY_DATE,'%m%Y')=date_format(now(),'%m%Y')
+                    and s2.ACC_KEYS in ('BAYAR_POKOK','ANGSURAN_POKOK','ANGSURAN_BUNGA')
+			GROUP	BY s1.LOAN_NUM) m on m.loan_num=b.loan_number
                             WHERE 1=1";
 
             if (!empty($getBranch) && $getBranch != 'SEMUA CABANG') {
@@ -374,8 +387,8 @@ class ListBanController extends Controller
                     "ANGS KE" => $result->LAST_INST ?? '',
                     "TIPE ANGSURAN" => $result->tipe ?? '',
                     "JTH TEMPO AWAL" => $result->F_ARR_CR_SCHEDL == '0' ? '': date("d-m-Y", strtotime($result->F_ARR_CR_SCHEDL ?? '')),
-                    "JTH TEMPO AKHIR" => $result->curr_arr == '0' ? '' : date("d-m-Y", strtotime($result->curr_arr ?? '')),
-                    "TGL BAYAR" => $result->LAST_PAY,
+                    "JTH TEMPO AKHIR" => $result->curr_arr == '0' || $result->curr_arr == '' || $result->curr_arr == 'null'? '' : date("d-m-Y", strtotime($result->curr_arr ?? '')),
+                    "TGL BAYAR" => $result->LAST_PAY == '0' || $result->LAST_PAY == '' || $result->LAST_PAY == 'null' ? '' : date("d-m-Y", strtotime($result->LAST_PAY ?? '')),
                     "KOLEKTOR" => $result->COLLECTOR,
                     "CARA BYR" => $result->cara_bayar,
                     "AMBC PKK_AKHIR" => intval($result->AMBC_PKK_AKHIR) ?? 0,
