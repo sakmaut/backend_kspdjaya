@@ -39,7 +39,7 @@ class ListBanController extends Controller
                 $cash_in = [];
 
                 $totalAngsuranPokokBunga = 0;
-        
+
                 foreach ($arusKas as $item) {
 
                     $row = $item->no_invoice . $item->LOAN_NUM . $item->PELANGGAN;
@@ -309,9 +309,9 @@ class ListBanController extends Controller
 				max(case when cast(paid_flag as char)='PAID' then payment_date else str_to_date('01011900','%d%m%Y') end) as LAST_PAY, 
 				case when count(ID)=sum(case when paid_flag='PAID' then 1 else 0 end) then ''
         	 			else min(case when cast(coalesce(paid_flag,'') as char)<>'PAID' then payment_date else str_to_date('01013000','%d%m%Y') end) end as F_ARR_CR_SCHEDL,
-				sum(case when payment_date < str_to_date(concat('01',date_format(date_add(now(),interval 1 month),'%m%Y')),'%d%m%Y') and paid_flag='PAID' then (interest-payment_value_interest-discount_interest)
+				sum(case when payment_date < str_to_date(concat('01',date_format(date_add(now(),interval 1 month),'%m%Y')),'%d%m%Y') and paid_flag<>'PAID' then (interest-payment_value_interest-discount_interest)
             	 			else 0 end) as AMBC_BNG_AKHIR, 
-				sum(case when payment_date < str_to_date(concat('01',date_format(date_add(now(),interval 1 month),'%m%Y')),'%d%m%Y') and paid_flag='PAID' then (principal-payment_value_principal-discount_principal)
+				sum(case when payment_date < str_to_date(concat('01',date_format(date_add(now(),interval 1 month),'%m%Y')),'%d%m%Y') and paid_flag<>'PAID' then (principal-payment_value_principal-discount_principal)
             	 			else 0 end) as AMBC_PKK_AKHIR
 			FROM	credit_schedule
 			WHERE	loan_number in (select loan_number from credit where status='A' 
@@ -386,8 +386,8 @@ class ListBanController extends Controller
                     "ANGSURAN" => intval($result->INSTALLMENT) ?? 0,
                     "ANGS KE" => $result->LAST_INST ?? '',
                     "TIPE ANGSURAN" => $result->tipe ?? '',
-                    "JTH TEMPO AWAL" => $result->F_ARR_CR_SCHEDL == '0' ? '': date("d-m-Y", strtotime($result->F_ARR_CR_SCHEDL ?? '')),
-                    "JTH TEMPO AKHIR" => $result->curr_arr == '0' || $result->curr_arr == '' || $result->curr_arr == 'null'? '' : date("d-m-Y", strtotime($result->curr_arr ?? '')),
+                    "JTH TEMPO AWAL" => $result->F_ARR_CR_SCHEDL == '0' ? '' : date("d-m-Y", strtotime($result->F_ARR_CR_SCHEDL ?? '')),
+                    "JTH TEMPO AKHIR" => $result->curr_arr == '0' || $result->curr_arr == '' || $result->curr_arr == 'null' ? '' : date("d-m-Y", strtotime($result->curr_arr ?? '')),
                     "TGL BAYAR" => $result->LAST_PAY == '0' || $result->LAST_PAY == '' || $result->LAST_PAY == 'null' ? '' : date("d-m-Y", strtotime($result->LAST_PAY ?? '')),
                     "KOLEKTOR" => $result->COLLECTOR,
                     "CARA BYR" => $result->cara_bayar,
