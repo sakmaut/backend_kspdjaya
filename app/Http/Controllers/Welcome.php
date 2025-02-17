@@ -53,6 +53,34 @@ class Welcome extends Controller
 
     public function index(Request $request)
     {
+
+        // $newMessages = M_TelegramBotSend::where('status', 'new')->get();
+
+        // foreach ($newMessages as $message) {
+        //     $getJson = $message->messages;
+        //     if (!empty($getJson)) {
+        //         $convert = json_decode($getJson, true);
+        //         $findBRanch = M_Branch::find($convert['BRANCH_CODE']);
+
+        //         // Wrap ternary operator in parentheses for correct evaluation
+        //         $buildMsg = " MINTA APPROVAL PEMBAYARAN" . "\n" .
+        //             'Tipe = ' . $convert['PAYMENT_TYPE'] . "\n" .
+        //             'Status = Pending' . "\n" .
+        //             'No Transaksi = ' . $convert['NO_TRANSAKSI'] . "\n" .
+        //             'No Kontrak = ' . $convert['LOAN_NUMBER'] . "\n" .
+        //             'Cabang = ' . ($findBRanch ? $findBRanch->NAME : '') . "\n" .
+        //             'Tgl Transaksi = ' . $convert['TGL_TRANSAKSI'];
+
+        //         TelegramBotConfig::sendMessage($buildMsg);
+
+        //         $update = M_TelegramBotSend::find($message->id);
+
+        //         if ($update) {
+        //             $update->update(['status' => 'send']);
+        //         }
+        //     }
+        // }
+
         // $no_inv = $request->no_fasilitas;
         // $setDAte = '2025-02-03 16:19:27';
 
@@ -163,7 +191,6 @@ class Welcome extends Controller
         // {
         //     $newMessages = M_TelegramBotSend::where('status', 'new')->get();
 
-        //     $datas = [];
         //     foreach ($newMessages as $message) {
         //         $getJson = $message->messages;
         //         if (!empty($getJson)) {
@@ -182,7 +209,7 @@ class Welcome extends Controller
         //             $response = TelegramBotConfig::sendMessage($buildMsg);
 
         //             if ($response) {
-        //                 $newMessages->update(['status' => 'send']);
+        //                 $message->update(['status' => 'send']);
         //             }
         //         }
         //     }

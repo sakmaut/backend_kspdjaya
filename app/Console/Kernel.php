@@ -18,7 +18,7 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->command('demo:cron')->dailyAt('16:52');
         $schedule->command('demo:cron')->dailyAt('00:30');
-        // $schedule->command('telegram:send-messages')->everyMinute();
+        $schedule->command('app:send-telegram-messages')->everyMinute();
     }
 
     /**
