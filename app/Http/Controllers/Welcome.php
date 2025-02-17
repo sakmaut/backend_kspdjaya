@@ -55,6 +55,9 @@ class Welcome extends Controller
     {
         $no_inv = $request->no_inv;
 
+        return response()->json('ok');
+
+        die;
         if (isset($request->struktur) && is_array($request->struktur)) {
             foreach ($request->struktur as $res) {
 
