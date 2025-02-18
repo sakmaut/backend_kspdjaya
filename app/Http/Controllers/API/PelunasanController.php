@@ -217,12 +217,6 @@ class PelunasanController extends Controller
                 $ress->update(['STATUS_REC' => 'PENDING']);
             }
 
-            if ($status === "PAID") {
-                $this->proccess($request, $loan_number, $no_inv, $status);
-            } else {
-
-            }
-
             $data = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
 
             $dto = new R_KwitansiPelunasan($data);
