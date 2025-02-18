@@ -55,7 +55,7 @@ class Welcome extends Controller
 
         // return response()->json('OK');
         // die;
-        DB::transaction();
+        DB::beginTransaction();
         try {
             $query = "  SELECT  a.NO_TRANSAKSI,
                             a.LOAN_NUMBER,
@@ -116,9 +116,6 @@ class Welcome extends Controller
                 ];
             }
 
-            // return response()->json($structuredData);
-            // die;
-
             foreach ($structuredData as $request) {
                 $no_inv = $request['no_fasilitas'];
                 $getCodeBranch = M_Branch::findOrFail($request['cabang']);
@@ -155,8 +152,8 @@ class Welcome extends Controller
             DB::commit();
             return response()->json("MUACHHHHHHHHHHHHHH");
         } catch (\Throwable $e) {
-            DB::rollBack();
-            return response()->json($e . getMessage());
+            DB::rollback();
+            return response()->json(['message' => $e->getMessage()], 500);
         }
     }
 
