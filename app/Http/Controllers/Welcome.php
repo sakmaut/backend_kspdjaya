@@ -82,7 +82,7 @@ class Welcome extends Controller
                     WHERE a.STTS_PAYMENT = 'PAID'
                         -- AND a.NO_TRANSAKSI = '$inv'
                         AND a.PAYMENT_TYPE = 'angsuran'
-                       AND a.CREATED_AT > str_to_date($setDate,'%Y%m%d')
+                       AND a.CREATED_AT > str_to_date('$setDate','%Y%m%d')
                         AND (b.installment != 0 OR b.bayar_angsuran != 0 OR b.bayar_denda != 0 OR b.diskon_denda != 0)  
 					ORDER BY a.LOAN_NUMBER,a.TGL_TRANSAKSI ASC";
 
