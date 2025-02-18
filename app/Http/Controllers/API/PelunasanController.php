@@ -228,7 +228,7 @@ class PelunasanController extends Controller
             $dto = new R_KwitansiPelunasan($data);
 
             DB::commit();
-            return response()->json('ok', 200);
+            return response()->json($dto, 200);
         } catch (\Exception $e) {
             DB::rollback();
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
