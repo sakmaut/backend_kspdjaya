@@ -150,6 +150,12 @@ class Credit extends Controller
 
         if (!$check_exist && $request->flag == 'yes') {
 
+            $checkLoanNumberExist = M_Credit::where('LOAN_NUMBER', $loan_number)->first();
+
+            if ($checkLoanNumberExist) {
+                throw new Exception("Loan Number Exist", 500);
+            }
+
             $this->insert_credit($SET_UUID, $request, $data, $loan_number, $installment_count, $cust_code);
 
             $no = 1;
