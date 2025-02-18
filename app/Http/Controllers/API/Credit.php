@@ -146,7 +146,7 @@ class Credit extends Controller
                 ->orWhere('DELETED_AT', '');
         })->get();
 
-        $data = [
+        $array_build = [
             "no_perjanjian" => !$check_exist && $request->flag == 'yes' ? $loan_number ?? null : $check_exist->LOAN_NUMBER ?? null,
             "cabang" => 'CABANG ' . strtoupper($pihak1->name ?? null),
             "kota" => strtoupper($pihak1->city ?? null),
@@ -189,7 +189,7 @@ class Credit extends Controller
             $getCollateral = M_CrCollateral::where('CR_CREDIT_ID', $check_exist->ID)->get();
 
             foreach ($getCollateral as $list) {
-                $data['jaminan'][] = [
+                $array_build['jaminan'][] = [
                     "type" => "kendaraan",
                     'counter_id' => $list->HEADER_ID,
                     "atr" => [
@@ -214,7 +214,7 @@ class Credit extends Controller
             }
         } else {
             foreach ($guarente_vehicle as $list) {
-                $data['jaminan'][] = [
+                $array_build['jaminan'][] = [
                     "type" => "kendaraan",
                     'counter_id' => $list->HEADER_ID,
                     "atr" => [
@@ -240,7 +240,7 @@ class Credit extends Controller
         }
 
         foreach ($cr_guarantor as $list) {
-            $data['penjamin'][] = [
+            $array_build['penjamin'][] = [
                 "id" => $list->ID ?? null,
                 "nama" => $list->NAME ?? null,
                 "jenis_kelamin" => $list->GENDER ?? null,
@@ -334,7 +334,6 @@ class Credit extends Controller
             'CREATED_BY' => $request->user()->id,
             'CREATED_AT' => Carbon::now(),
         ];
-
 
         if (!$check_customer_ktp) {
             $data_credit['CUST_CODE'] = $cust_code;
