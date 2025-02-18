@@ -467,6 +467,12 @@ class PaymentController extends Controller
 
         $cekPaymentMethod = $request->payment_method == 'cash' && strtolower($request->bayar_dengan_diskon) != 'ya';
 
+        $checkKwitansiExist = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
+
+        if ($checkKwitansiExist) {
+            throw new Exception("Kwitansi Exist", 500);
+        }
+
         $save_kwitansi = [
             "PAYMENT_TYPE" => 'angsuran',
             "PAYMENT_ID" => $request->uid,
