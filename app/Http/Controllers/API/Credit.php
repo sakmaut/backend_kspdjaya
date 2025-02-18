@@ -290,7 +290,7 @@ class Credit extends Controller
             $this->insert_collateral_sertification($request, $data, $SET_UUID);
         }
 
-        return $data;
+        return $array_build;
     }
 
     private function insert_credit($SET_UUID, $request, $data, $loan_number, $installment_count, $cust_code)
