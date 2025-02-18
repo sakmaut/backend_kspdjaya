@@ -39,6 +39,8 @@ use Ramsey\Uuid\Uuid;
 use Image;
 use Illuminate\Support\Facades\URL;
 
+use function Symfony\Component\Mailer\Event\getMessage;
+
 class Welcome extends Controller
 {
     protected $locationStatus;
@@ -53,8 +55,9 @@ class Welcome extends Controller
 
         // return response()->json('OK');
         // die;
-
-        $query = "  SELECT  a.NO_TRANSAKSI,
+        DB::transaction();
+        try {
+            $query = "  SELECT  a.NO_TRANSAKSI,
                             a.LOAN_NUMBER,
                             a.PAYMENT_TYPE,
                             a.METODE_PEMBAYARAN,
@@ -73,84 +76,88 @@ class Welcome extends Controller
                         ORDER BY a.LOAN_NUMBER, a.TGL_TRANSAKSI ASC
             ";
 
-        $results = DB::select($query);
+            $results = DB::select($query);
 
-        $structuredData = [];
+            $structuredData = [];
 
-        foreach ($results as $result) {
+            foreach ($results as $result) {
 
-            if (!isset($structuredData[$result->NO_TRANSAKSI])) {
-                $structuredData[$result->NO_TRANSAKSI] = [
-                    'payment_type' => $result->PAYMENT_TYPE,
-                    'payment_method' => $result->METODE_PEMBAYARAN,
-                    'no_transaksi' => $result->NO_TRANSAKSI,
-                    'no_fasilitas' => $result->LOAN_NUMBER,
-                    'cabang' =>  $result->BRANCH_CODE,
-                    'created_by' => $result->CREATED_BY,
-                    'created_at' => $result->CREATED_AT,
-                    'struktur' => [],
+                if (!isset($structuredData[$result->NO_TRANSAKSI])) {
+                    $structuredData[$result->NO_TRANSAKSI] = [
+                        'payment_type' => $result->PAYMENT_TYPE,
+                        'payment_method' => $result->METODE_PEMBAYARAN,
+                        'no_transaksi' => $result->NO_TRANSAKSI,
+                        'no_fasilitas' => $result->LOAN_NUMBER,
+                        'cabang' =>  $result->BRANCH_CODE,
+                        'created_by' => $result->CREATED_BY,
+                        'created_at' => $result->CREATED_AT,
+                        'struktur' => [],
+                    ];
+                }
+
+                $structuredData[$result->NO_TRANSAKSI]['struktur'][] = [
+                    'id' => $result->id,
+                    'no_invoice' => $result->NO_TRANSAKSI,
+                    'key' => $result->key,
+                    'angsuran_ke' => $result->angsuran_ke,
+                    'loan_number' => $result->LOAN_NUMBER,
+                    'tgl_angsuran' => $result->tgl_angsuran,
+                    'principal' => $result->principal,
+                    'interest' => $result->interest,
+                    'installment' => $result->installment,
+                    'principal_remains' => $result->principal_remains,
+                    'payment' => $result->payment,
+                    'bayar_angsuran' => $result->bayar_angsuran,
+                    'bayar_denda' => $result->bayar_denda,
+                    'total_bayar' => $result->total_bayar,
+                    'flag' => $result->flag,
+                    'denda' => $result->denda,
+                    'diskon_denda' => $result->diskon_denda,
                 ];
             }
 
-            $structuredData[$result->NO_TRANSAKSI]['struktur'][] = [
-                'id' => $result->id,
-                'no_invoice' => $result->NO_TRANSAKSI,
-                'key' => $result->key,
-                'angsuran_ke' => $result->angsuran_ke,
-                'loan_number' => $result->LOAN_NUMBER,
-                'tgl_angsuran' => $result->tgl_angsuran,
-                'principal' => $result->principal,
-                'interest' => $result->interest,
-                'installment' => $result->installment,
-                'principal_remains' => $result->principal_remains,
-                'payment' => $result->payment,
-                'bayar_angsuran' => $result->bayar_angsuran,
-                'bayar_denda' => $result->bayar_denda,
-                'total_bayar' => $result->total_bayar,
-                'flag' => $result->flag,
-                'denda' => $result->denda,
-                'diskon_denda' => $result->diskon_denda,
-            ];
-        }
+            // return response()->json($structuredData);
+            // die;
 
-        // return response()->json($structuredData);
-        // die;
+            foreach ($structuredData as $request) {
+                $no_inv = $request['no_fasilitas'];
+                $getCodeBranch = M_Branch::findOrFail($request['cabang']);
+                $struktur = $request['struktur'];
 
-        foreach ($structuredData as $request) {
-            $no_inv = $request['no_fasilitas'];
-            $getCodeBranch = M_Branch::findOrFail($request['cabang']);
-            $struktur = $request['struktur'];
+                if (isset($struktur) && is_array($struktur)) {
+                    foreach ($struktur as $res) {
 
-            if (isset($struktur) && is_array($struktur)) {
-                foreach ($struktur as $res) {
+                        M_KwitansiStructurDetail::firstOrCreate([
+                            'no_invoice' => $no_inv,
+                            'key' => $res['key'] ?? '',
+                            'loan_number' => $res['loan_number'] ?? ''
+                        ], [
+                            'angsuran_ke' => $res['angsuran_ke'] ?? '',
+                            'tgl_angsuran' => $res['tgl_angsuran'] ?? '',
+                            'principal' => $res['principal'] ?? '',
+                            'interest' => $res['interest'] ?? '',
+                            'installment' => $res['installment'] ?? '',
+                            'principal_remains' => $res['principal_remains'] ?? '',
+                            'payment' => $res['payment'] ?? '',
+                            'bayar_angsuran' => $res['bayar_angsuran'] ?? '',
+                            'bayar_denda' => $res['bayar_denda'] ?? '',
+                            'total_bayar' => $res['total_bayar'] ?? '',
+                            'flag' => $res['flag'] ?? '',
+                            'denda' => $res['denda'] ?? '',
+                            'diskon_denda' => $res['diskon_denda']
+                        ]);
 
-                    M_KwitansiStructurDetail::firstOrCreate([
-                        'no_invoice' => $no_inv,
-                        'key' => $res['key'] ?? '',
-                        'loan_number' => $res['loan_number'] ?? ''
-                    ], [
-                        'angsuran_ke' => $res['angsuran_ke'] ?? '',
-                        'tgl_angsuran' => $res['tgl_angsuran'] ?? '',
-                        'principal' => $res['principal'] ?? '',
-                        'interest' => $res['interest'] ?? '',
-                        'installment' => $res['installment'] ?? '',
-                        'principal_remains' => $res['principal_remains'] ?? '',
-                        'payment' => $res['payment'] ?? '',
-                        'bayar_angsuran' => $res['bayar_angsuran'] ?? '',
-                        'bayar_denda' => $res['bayar_denda'] ?? '',
-                        'total_bayar' => $res['total_bayar'] ?? '',
-                        'flag' => $res['flag'] ?? '',
-                        'denda' => $res['denda'] ?? '',
-                        'diskon_denda' => $res['diskon_denda']
-                    ]);
-
-                    $this->processPaymentStructure($res, $request, $getCodeBranch, $no_inv);
+                        $this->processPaymentStructure($res, $request, $getCodeBranch, $no_inv);
+                    }
                 }
             }
-        }
 
-        return response()->json("MUACHHHHHHHHHHHHHH");
-        die;
+            DB::commit();
+            return response()->json("MUACHHHHHHHHHHHHHH");
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json($e . getMessage());
+        }
     }
 
     //  $groupedData = [];
