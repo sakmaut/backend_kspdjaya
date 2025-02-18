@@ -541,6 +541,13 @@ class PelunasanController extends Controller
 
     private function saveKwitansi($request, $customer, $no_inv, $status)
     {
+
+        $checkKwitansiExist = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
+
+        if ($checkKwitansiExist) {
+            throw new Exception("Kwitansi Exist", 500);
+        }
+
         $data = [
             "PAYMENT_TYPE" => 'pelunasan',
             "PAYMENT_ID" => $request->payment_id,
