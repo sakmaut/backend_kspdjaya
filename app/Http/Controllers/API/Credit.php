@@ -115,9 +115,13 @@ class Credit extends Controller
         }
 
         $schedule = [];
-        $check_exist = M_Credit::where('ORDER_NUMBER', $request->order_number)->first();
 
-        if ($check_exist != null && !empty($check_exist->LOAN_NUMBER)) {
+        $getCreditData = M_Credit::where('ORDER_NUMBER', $request->order_number);
+
+        $check_exist = $getCreditData->first();
+        $check_count = $getCreditData->count();
+
+        if ($check_exist && !empty($check_exist->LOAN_NUMBER)) {
             $credit_schedule = M_CreditSchedule::where('LOAN_NUMBER', $check_exist->LOAN_NUMBER)->get();
 
             $no = 1;
@@ -142,63 +146,24 @@ class Credit extends Controller
                 ->orWhere('DELETED_AT', '');
         })->get();
 
-        $guarente_sertificat = M_CrGuaranteSertification::where('CR_SURVEY_ID', $data->CR_SURVEY_ID)->where(function ($query) {
-            $query->whereNull('DELETED_AT')
-                ->orWhere('DELETED_AT', '');
-        })->get();
-
-
-        if (!$check_exist && $request->flag == 'yes') {
-
-            $checkLoanNumberExist = M_Credit::where('LOAN_NUMBER', $loan_number)->first();
-
-            if ($checkLoanNumberExist) {
-                throw new Exception("Loan Number Exist", 500);
-            }
-
-            $this->insert_credit($SET_UUID, $request, $data, $loan_number, $installment_count, $cust_code);
-
-            $no = 1;
-            foreach ($data_credit_schedule as $list) {
-                $credit_schedule =
-                    [
-                        'ID' => Uuid::uuid7()->toString(),
-                        'LOAN_NUMBER' => $loan_number,
-                        'INSTALLMENT_COUNT' => $no++,
-                        'PAYMENT_DATE' => parseDatetoYMD($list['tgl_angsuran']),
-                        'PRINCIPAL' => $list['pokok'],
-                        'INTEREST' => $list['bunga'],
-                        'INSTALLMENT' => $list['total_angsuran'],
-                        'PRINCIPAL_REMAINS' => $list['baki_debet']
-                    ];
-
-                M_CreditSchedule::create($credit_schedule);
-            }
-
-            $this->insert_customer($request, $data, $cust_code);
-            $this->insert_customer_xtra($data, $cust_code);
-            $this->insert_collateral($request, $data, $SET_UUID, $loan_number);
-            $this->insert_collateral_sertification($request, $data, $SET_UUID);
-        }
-
         $data = [
             "no_perjanjian" => !$check_exist && $request->flag == 'yes' ? $loan_number ?? null : $check_exist->LOAN_NUMBER ?? null,
-            "cabang" => 'CABANG ' . strtoupper($pihak1->name) ?? null,
-            "kota" => strtoupper($pihak1->city) ?? null,
-            "alamat_kantor" => strtoupper($pihak1->address) ?? null,
+            "cabang" => 'CABANG ' . strtoupper($pihak1->name ?? null),
+            "kota" => strtoupper($pihak1->city ?? null),
+            "alamat_kantor" => strtoupper($pihak1->address ?? null),
             "tgl_cetak" => !empty($check_exist) ? Carbon::parse($check_exist->CREATED_AT)->format('Y-m-d') : null,
             "tgl_awal_angsuran" => !empty($check_exist) ? Carbon::parse($check_exist->INSTALLMENT_DATE)->format('Y-m-d') : Carbon::parse($set_tgl_awal)->format('Y-m-d'),
             "flag" => !$check_exist ? 0 : 1,
             "pihak_1" => [
-                "nama" => strtoupper($pihak1->fullname) ?? null,
-                "jabatan" => strtoupper($pihak1->position) ?? null,
-                "no_ktp" => strtoupper($pihak1->no_ktp) ?? null,
-                "alamat" => strtoupper($pihak1->alamat) ?? null
+                "nama" => strtoupper($pihak1->fullname ?? null),
+                "jabatan" => strtoupper($pihak1->position ?? null),
+                "no_ktp" => strtoupper($pihak1->no_ktp ?? null),
+                "alamat" => strtoupper($pihak1->alamat ?? null)
             ],
             "pihak_2" => [
-                "nama" => strtoupper($cr_personal->NAME) ?? null,
-                "no_identitas" => strtoupper($cr_personal->ID_NUMBER) ?? null,
-                "alamat" => strtoupper($cr_personal->ADDRESS) ?? null
+                "nama" => strtoupper($cr_personal->NAME ?? null),
+                "no_identitas" => strtoupper($cr_personal->ID_NUMBER ?? null),
+                "alamat" => strtoupper($cr_personal->ADDRESS ?? null)
             ],
             "penjamin" => [],
             "pasangan" => [
@@ -290,6 +255,39 @@ class Credit extends Controller
                 "no_hp" => $list->MOBILE_NUMBER ?? null,
                 "pendapatan" => $list->INCOME ?? null,
             ];
+        }
+
+        if (!$check_exist && $check_count <= 1 && $request->flag == 'yes') {
+
+            $checkLoanNumberExist = M_Credit::where('LOAN_NUMBER', $loan_number)->first();
+
+            if ($checkLoanNumberExist) {
+                throw new Exception("Loan Number Exist", 500);
+            }
+
+            $this->insert_credit($SET_UUID, $request, $data, $loan_number, $installment_count, $cust_code);
+
+            $no = 1;
+            foreach ($data_credit_schedule as $list) {
+                $credit_schedule =
+                    [
+                        'ID' => Uuid::uuid7()->toString(),
+                        'LOAN_NUMBER' => $loan_number,
+                        'INSTALLMENT_COUNT' => $no++,
+                        'PAYMENT_DATE' => parseDatetoYMD($list['tgl_angsuran']),
+                        'PRINCIPAL' => $list['pokok'],
+                        'INTEREST' => $list['bunga'],
+                        'INSTALLMENT' => $list['total_angsuran'],
+                        'PRINCIPAL_REMAINS' => $list['baki_debet']
+                    ];
+
+                M_CreditSchedule::create($credit_schedule);
+            }
+
+            $this->insert_customer($request, $data, $cust_code);
+            $this->insert_customer_xtra($data, $cust_code);
+            $this->insert_collateral($request, $data, $SET_UUID, $loan_number);
+            $this->insert_collateral_sertification($request, $data, $SET_UUID);
         }
 
         return $data;
