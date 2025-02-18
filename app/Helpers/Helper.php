@@ -12,12 +12,12 @@ use Ramsey\Uuid\Uuid;
 if (!function_exists('checkDateIfNull')) {
     function checkDateIfNull($param)
     {
-        return $param == null ? null:date('Y-m-d',strtotime($param));
+        return $param == null ? null : date('Y-m-d', strtotime($param));
     }
 }
 
 if (!function_exists('compareData')) {
-    function compareData($modelName, $id, $newData,$request)
+    function compareData($modelName, $id, $newData, $request)
     {
         $dataOLD = $modelName::find($id);
 
@@ -27,7 +27,7 @@ if (!function_exists('compareData')) {
 
         $differences = [];
 
-        $excludeKeys = ['updated_by', 'updated_at','mod_user','mod_date'];
+        $excludeKeys = ['updated_by', 'updated_at', 'mod_user', 'mod_date'];
 
         foreach ($newData as $key => $value) {
 
@@ -52,7 +52,7 @@ if (!function_exists('compareData')) {
                     'altered_by' => $request->user()->id ?? 0,
                     'altered_time' => Carbon::now()->format('Y-m-d H:i:s')
                 ];
-    
+
                 M_TransactionLog::create($dataLog);
             }
         }
@@ -60,79 +60,82 @@ if (!function_exists('compareData')) {
 }
 
 if (!function_exists('generateCode')) {
-    function generateCode($request, $table, $column) {
+    function generateCode($request, $table, $column)
+    {
         $branchId = $request->user()->branch_id;
         $branch = M_Branch::find($branchId);
-    
+
         if (!$branch) {
             throw new Exception("Cabang tidak ditemukan.");
         }
-    
+
         $branchCodeNumber = $branch->CODE_NUMBER;
         $latestRecord = DB::table($table)
             ->select($column)
-            ->where($column, 'like', $branchCodeNumber.'%')
+            ->where($column, 'like', $branchCodeNumber . '%')
             ->orderByRaw("CAST(SUBSTRING($column, LENGTH(?)+1) AS UNSIGNED) DESC", [$branchCodeNumber])
             ->first();
-    
-        $lastSequence = $latestRecord ? (int) substr($latestRecord->$column, strlen($branchCodeNumber) + 7, 5) + 1 : 1;
-    
+
+        $lastSequence = $latestRecord ? (int) substr($latestRecord->$column, strlen($branchCodeNumber) + 4, 5) + 1 : 1;
+
         $currentDate = Carbon::now();
         $year = $currentDate->format('y');
         $month = $currentDate->format('m');
-    
+
         return sprintf("%s%s%s%05d", $branchCodeNumber, $year, $month, $lastSequence);
     }
 }
 
 if (!function_exists('generateCodePrefix')) {
-    function generateCodePrefix($request, $table, $column, $prefix) {
+    function generateCodePrefix($request, $table, $column, $prefix)
+    {
         // Get the branch ID and find the branch
         $branchId = $request->user()->branch_id;
         $branch = M_Branch::findOrFail($branchId);
         $branchCodeNumber = $branch->CODE_NUMBER;
-    
+
         // Handle null prefix with a default empty string
         $prefix = $prefix ?? '';
-    
+
         // Calculate total prefix length including hyphen
         $prefixWithHyphen = $prefix . '-';
-    
+
         // Query to find the latest record, ensuring proper numerical sorting
         $latestRecord = DB::table($table)
             ->select($column)
             ->where($column, 'like', '%' . $branchCodeNumber . '%')
             ->orderByRaw("CAST(SUBSTRING($column, -5) AS UNSIGNED) DESC")
             ->first();
-    
+
         // Extract last sequence dynamically based on calculated prefix length
-        $lastSequence = $latestRecord 
-            ? (int) substr($latestRecord->$column, -5) + 1 
+        $lastSequence = $latestRecord
+            ? (int) substr($latestRecord->$column, -5) + 1
             : 1;
-    
+
         // Current date
         $year = date('y');
         $month = date('m');
-    
+
         // Generate and return the code
         return sprintf("%s%s%s%s%05d", $prefixWithHyphen, $branchCodeNumber, $year, $month, $lastSequence);
     }
 }
 
 if (!function_exists('generateCodeJaminan')) {
-    function generateCodeJaminan($request, $table, $column, $prefix) {
+    function generateCodeJaminan($request, $table, $column, $prefix)
+    {
         static $counter = 0;  // Static variable to maintain count between function calls
-        
+
         $branchId = $request->user()->branch_id;
         $branch = M_Branch::findOrFail($branchId);
         $branchCodeNumber = $branch->CODE_NUMBER;
-        
+
         // Handle null prefix with a default empty string
         $prefix = $prefix ?? '';
-        
+
         // Calculate total prefix length including hyphen
         $prefixWithHyphen = $prefix ? $prefix . '-' : '';
-        
+
         if ($counter === 0) {
             // Only query the database for the first call
             $latestRecord = DB::table($table)
@@ -140,91 +143,94 @@ if (!function_exists('generateCodeJaminan')) {
                 ->where($column, 'like', '%' . $branchCodeNumber . '%')
                 ->orderByRaw("CAST(SUBSTRING($column, -5) AS UNSIGNED) DESC")
                 ->first();
-            
+
             // Extract last sequence dynamically based on calculated prefix length
             $lastSequence = $latestRecord
                 ? (int) substr($latestRecord->$column, -5)
                 : 0;
-                
+
             $counter = $lastSequence;
         }
-        
+
         // Increment counter for each call
         $counter++;
-        
+
         // Current year and month with leading zeroes for consistent length
         $year = date('y');  // Two digits of the current year
         $month = date('m'); // Two digits of the current month
-        
+
         // Format the code: prefix, branch code, year, month, and sequence
         $newCode = sprintf("%s%s%s%s%05d", $prefixWithHyphen, $branchCodeNumber, $year, $month, $counter);
-        
+
         return $newCode;
     }
 }
 
 if (!function_exists('generateCodeKwitansi')) {
-    function generateCodeKwitansi($request, $table, $column, $prefix) {
+    function generateCodeKwitansi($request, $table, $column, $prefix)
+    {
         // Get the branch ID and find the branch
         $branchId = $request->user()->branch_id;
         $branch = M_Branch::findOrFail($branchId);
         $branchCodeNumber = $branch->CODE_NUMBER;
-    
+
         // Handle null prefix with a default empty string
         $prefix = $prefix ?? '';
-    
+
         // Calculate total prefix length including hyphen
         $prefixWithHyphen = $prefix . '-';
-    
+
         // Query to find the latest record, ensuring proper numerical sorting
         $latestRecord = DB::table($table)
             ->select($column)
             ->where($column, 'like', '%' . $branchCodeNumber . '%')
             ->orderByRaw("CAST(SUBSTRING($column, -5) AS UNSIGNED) DESC")
             ->first();
-    
+
         // Extract last sequence dynamically based on calculated prefix length
-        $lastSequence = $latestRecord 
-            ? (int) substr($latestRecord->$column, -5) + 1 
+        $lastSequence = $latestRecord
+            ? (int) substr($latestRecord->$column, -5) + 1
             : 1;
-    
+
         // Current date
         $year = date('y');
         $month = date('m');
-        $uniq =$branchCodeNumber .$request->user()->id.'-';
-    
+        $uniq = $branchCodeNumber . $request->user()->id . '-';
+
         // Generate and return the code
-        return sprintf("%s%s%s%s%05d", $prefixWithHyphen,$uniq, $year, $month, $lastSequence);
+        return sprintf("%s%s%s%s%05d", $prefixWithHyphen, $uniq, $year, $month, $lastSequence);
     }
 }
 
 if (!function_exists('generateCustCode')) {
-    function generateCustCode($request, $table, $column) {
+    function generateCustCode($request, $table, $column)
+    {
         $branch = M_Branch::find($request->user()->branch_id);
-        
+
         if (!$branch) {
             throw new Exception("Cabang tidak ditemukan.");
         }
-    
+
         $branchCodeNumber = $branch->CODE_NUMBER;
         $latestRecord = DB::table($table)
-            ->where($column, 'like', $branchCodeNumber.'%')
+            ->where($column, 'like', $branchCodeNumber . '%')
             ->orderByRaw("CAST(SUBSTRING($column, LENGTH(?) + 1) AS UNSIGNED) DESC", [$branchCodeNumber])
             ->first();
-    
+
         $lastSequence = ($latestRecord ? (int) substr($latestRecord->$column, strlen($branchCodeNumber) + 3, 5) : 0) + 1;
-    
+
         return sprintf("%s%05d", $branchCodeNumber, $lastSequence);
-    }     
+    }
 }
 
 
 if (!function_exists('angkaKeKata')) {
-    function angkaKeKata($angka,$rupiah = true) {
+    function angkaKeKata($angka, $rupiah = true)
+    {
         $angka = abs($angka);
         $kata = array("", "satu", "dua", "tiga", "empat", "lima", "enam", "tujuh", "delapan", "sembilan", "sepuluh", "sebelas");
         $hasil = "";
-    
+
         if ($angka < 12) {
             $hasil = " " . $kata[$angka];
         } else if ($angka < 20) {
@@ -247,10 +253,10 @@ if (!function_exists('angkaKeKata')) {
             $hasil = angkaKeKata(floor($angka / 1000000000000)) . " triliun" . angkaKeKata($angka % 1000000000000);
         }
 
-        if($rupiah){
+        if ($rupiah) {
             $final_result = str_replace("rupiah", "", $hasil) . " rupiah";
             $cleaned = preg_replace('/\s+/', ' ', $final_result);
-        }else{
+        } else {
             $final_result = str_replace("rupiah", "", $hasil);
             $cleaned = preg_replace('/\s+/', ' ', $final_result);
         }
@@ -279,7 +285,8 @@ if (!function_exists('angkaKeKata')) {
 //     }
 // }
 
-function add_months($date_str, $months) {
+function add_months($date_str, $months)
+{
     $date = explode('-', $date_str);
     $year = $date[0];
     $month = $date[1];
@@ -302,101 +309,108 @@ function add_months($date_str, $months) {
 }
 
 
-if(!function_exists('bilangan')){
-    function bilangan($principal,$currency = true) {
+if (!function_exists('bilangan')) {
+    function bilangan($principal, $currency = true)
+    {
 
-        if ($currency){
+        if ($currency) {
             $formattedNumber = 'Rp. ' . number_format($principal);
             $principalInWords = strtoupper(angkaKeKata(round($principal, 2)));
-        }else{
+        } else {
             $formattedNumber = number_format($principal);
-            $principalInWords = strtoupper(angkaKeKata(round($principal, 2),false));
+            $principalInWords = strtoupper(angkaKeKata(round($principal, 2), false));
         }
-       
+
         $formattedPrincipal = $formattedNumber . ' (' . $principalInWords . ')';
         return str_replace(' ( ', ' (', $formattedPrincipal);
     }
 }
 
-if(!function_exists('converttodecimal')){
-    function converttodecimal($number) {
+if (!function_exists('converttodecimal')) {
+    function converttodecimal($number)
+    {
         return floatval(str_replace(',', '',  $number));
     }
 }
 
-if(!function_exists('excelRate')){
-function excelRate($nper, $pmt, $pv, $fv = 0, $type = 0, $guess = 0.1) {
-    $tolerance = 1.0e-15; // Toleransi tinggi untuk presisi
-    $maxIterations = 500;
+if (!function_exists('excelRate')) {
+    function excelRate($nper, $pmt, $pv, $fv = 0, $type = 0, $guess = 0.1)
+    {
+        $tolerance = 1.0e-15; // Toleransi tinggi untuk presisi
+        $maxIterations = 500;
 
-    if ($nper <= 0) {
-        return false;
-    }
-
-    $rate = $guess;
-    for ($i = 0; $i < $maxIterations; $i++) {
-        $f = calculateRateEquation($rate, $nper, $pmt, $pv, $fv, $type);
-        $df = calculateRateDerivative($rate, $nper, $pmt, $pv, $fv, $type);
-
-        if (abs($df) < $tolerance) {
+        if ($nper <= 0) {
             return false;
         }
 
-        $newRate = $rate - $f / $df;
+        $rate = $guess;
+        for ($i = 0; $i < $maxIterations; $i++) {
+            $f = calculateRateEquation($rate, $nper, $pmt, $pv, $fv, $type);
+            $df = calculateRateDerivative($rate, $nper, $pmt, $pv, $fv, $type);
 
-        // Cek konvergensi
-        if (abs($newRate - $rate) < $tolerance) {
-            return ceilToPrecision($newRate, 10);
+            if (abs($df) < $tolerance) {
+                return false;
+            }
+
+            $newRate = $rate - $f / $df;
+
+            // Cek konvergensi
+            if (abs($newRate - $rate) < $tolerance) {
+                return ceilToPrecision($newRate, 10);
+            }
+
+            $rate = $newRate;
         }
 
-        $rate = $newRate;
+        return false;
     }
-
-    return false;
-}
 }
 
-if(!function_exists('calculateRateEquation')){
-function calculateRateEquation($rate, $nper, $pmt, $pv, $fv, $type) {
-    if (abs($rate) < 1e-15) {
-        return $pv + $pmt * $nper + $fv;
+if (!function_exists('calculateRateEquation')) {
+    function calculateRateEquation($rate, $nper, $pmt, $pv, $fv, $type)
+    {
+        if (abs($rate) < 1e-15) {
+            return $pv + $pmt * $nper + $fv;
+        }
+
+        $pow = pow(1 + $rate, $nper);
+        return $pv * $pow
+            + $pmt * (1 + $rate * $type) * (($pow - 1) / $rate)
+            + $fv;
     }
-
-    $pow = pow(1 + $rate, $nper);
-    return $pv * $pow
-         + $pmt * (1 + $rate * $type) * (($pow - 1) / $rate)
-         + $fv;
-}
 }
 
-if(!function_exists('calculateRateDerivative')){
-function calculateRateDerivative($rate, $nper, $pmt, $pv, $fv, $type) {
-    if (abs($rate) < 1e-15) {
-        return $pv * $nper + $pmt * $nper * $type;
+if (!function_exists('calculateRateDerivative')) {
+    function calculateRateDerivative($rate, $nper, $pmt, $pv, $fv, $type)
+    {
+        if (abs($rate) < 1e-15) {
+            return $pv * $nper + $pmt * $nper * $type;
+        }
+
+        $pow1 = pow(1 + $rate, $nper - 1);
+        $pow2 = pow(1 + $rate, $nper);
+
+        return $pv * $nper * $pow1
+            + $pmt * $type * $nper * (1 + $rate)
+            + $pmt * ($nper * $pow1 - (($pow2 - 1) / ($rate * $rate)));
     }
-
-    $pow1 = pow(1 + $rate, $nper - 1);
-    $pow2 = pow(1 + $rate, $nper);
-
-    return $pv * $nper * $pow1
-          + $pmt * $type * $nper * (1 + $rate)
-          + $pmt * ($nper * $pow1 - (($pow2 - 1) / ($rate * $rate)));
-}
 }
 
-if(!function_exists('ceilToPrecision')){
-    function ceilToPrecision($number, $precision) {
+if (!function_exists('ceilToPrecision')) {
+    function ceilToPrecision($number, $precision)
+    {
         $factor = pow(10, $precision);
         return round($number * $factor) / $factor;
     }
 }
 
-if(!function_exists('getCustomerDocument')){
-    function getCustomerDocument($cust_id, $param) {
-        $param = implode(',', array_map(function($type) {
+if (!function_exists('getCustomerDocument')) {
+    function getCustomerDocument($cust_id, $param)
+    {
+        $param = implode(',', array_map(function ($type) {
             return "'" . addslashes($type) . "'"; // Escape each type
         }, $param));
-        
+
         $documents = DB::select(
             "   SELECT *
                 FROM customer_document AS csd
@@ -414,8 +428,9 @@ if(!function_exists('getCustomerDocument')){
     }
 }
 
-if(!function_exists('parseDate')){
-    function parseDatetoYMD($date) {
+if (!function_exists('parseDate')) {
+    function parseDatetoYMD($date)
+    {
         $dateTime = DateTime::createFromFormat('Y-m-d', $date);
         $formattedDate = $dateTime->format('Y-m-d');
 
@@ -423,32 +438,33 @@ if(!function_exists('parseDate')){
     }
 }
 
-if(!function_exists('setPaymentDate')){
-    function setPaymentDate($setDate, $monthIncrement = 1) {
+if (!function_exists('setPaymentDate')) {
+    function setPaymentDate($setDate, $monthIncrement = 1)
+    {
         // Convert the input date to a timestamp
         $timestamp = strtotime($setDate);
-        
+
         // Get the day of the month from the input date
         $dayOfMonth = date('d', $timestamp);
-        
+
         // If the day is between 26 and 31, set the date to the 1st of the next month
         if ($dayOfMonth >= 26) {
             $timestamp = strtotime("first day of next month", $timestamp);
         }
-    
+
         // Increment the month by the specified amount
         $newDate = strtotime("+$monthIncrement month", $timestamp);
-        
+
         // Get the last day of the new month
         $newMonthLastDay = date('t', $newDate);
         // Get the current day of the new date
         $newDateDay = date('d', $newDate);
-    
+
         // If the day of the new date is greater than the last day of the new month, set it to the last day of that month
         if ($newDateDay > $newMonthLastDay) {
             $newDate = strtotime("last day of this month", $newDate);
         }
-    
+
         // Return the formatted date
         return date('Y-m-d', $newDate);
     }
