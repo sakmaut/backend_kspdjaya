@@ -55,8 +55,8 @@ class Welcome extends Controller
     public function index()
     {
 
-        return response()->json('OK');
-        die;
+        // return response()->json('OK');
+        // die;
         DB::beginTransaction();
         try {
             $query = "  SELECT  a.NO_TRANSAKSI,
@@ -74,13 +74,15 @@ class Welcome extends Controller
                         LEFT JOIN kwitansi_structur_detail b 
                         ON b.no_invoice = a.NO_TRANSAKSI
                     WHERE a.STTS_PAYMENT = 'PAID'
-                        AND a.LOAN_NUMBER = '11201240000233'
-                        AND a.PAYMENT_TYPE = 'angsuran'
+                        AND a.LOAN_NUMBER = '11103230000086'
+                        AND a.PAYMENT_TYPE = 'pelunasan'
+                        -- AND a.PAYMENT_TYPE = 'angsuran'
                        AND a.CREATED_AT > str_to_date('20250201','%Y%m%d')
-                        AND (b.installment != 0 OR b.bayar_angsuran != 0 OR b.bayar_denda != 0 OR b.diskon_denda != 0)  
+                        -- AND (b.installment != 0 OR b.bayar_angsuran != 0 OR b.bayar_denda != 0 OR b.diskon_denda != 0)  
 					ORDER BY a.LOAN_NUMBER,a.TGL_TRANSAKSI ASC;
             ";
 
+            DB::commit();
             $results = DB::select($query);
 
             $structuredData = [];
@@ -689,6 +691,16 @@ class Welcome extends Controller
                 $this->updateCreditPelunasan($res, $loan_number);
             }
         }
+    }
+
+    function proccessPaymentDetail($payment_id, $acc_key, $amount)
+    {
+        M_PaymentDetail::create([
+            'ID' => Uuid::uuid7()->toString(),
+            'PAYMENT_ID' => $payment_id,
+            'ACC_KEYS' => $acc_key,
+            'ORIGINAL_AMOUNT' => $amount
+        ]);
     }
 
     function proccessPayment($request, $uid, $no_inv, $status, $res)
