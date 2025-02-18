@@ -192,30 +192,32 @@ class PelunasanController extends Controller
             //     $status = "PENDING";
             // }
 
-            if (!M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->exists()) {
-                $this->saveKwitansi($request, $detail_customer, $no_inv, $status);
-                $this->proccessKwitansiDetail($request, $loan_number, $no_inv);
-            }
+            $this->proccessKwitansiDetail($request, $loan_number, $no_inv);
 
-            $creditSchedule = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)
-                ->where(function ($query) {
-                    $query->where('PAID_FLAG', '!=', 'PAID')->orWhereNull('PAID_FLAG');
-                })
-                ->orderBy('PAYMENT_DATE', 'asc')
-                ->get();
+            // if (!M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->exists()) {
+            //     $this->saveKwitansi($request, $detail_customer, $no_inv, $status);
+            //     $this->proccessKwitansiDetail($request, $loan_number, $no_inv);
+            // }
 
-            $checkArr = M_Arrears::where([
-                'LOAN_NUMBER' => $loan_number,
-                'STATUS_REC' => 'A'
-            ])->get();
+            // $creditSchedule = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)
+            //     ->where(function ($query) {
+            //         $query->where('PAID_FLAG', '!=', 'PAID')->orWhereNull('PAID_FLAG');
+            //     })
+            //     ->orderBy('PAYMENT_DATE', 'asc')
+            //     ->get();
 
-            foreach ($creditSchedule as $res) {
-                $res->update(['PAID_FLAG' => 'PENDING']);
-            }
+            // $checkArr = M_Arrears::where([
+            //     'LOAN_NUMBER' => $loan_number,
+            //     'STATUS_REC' => 'A'
+            // ])->get();
 
-            foreach ($checkArr as $ress) {
-                $ress->update(['STATUS_REC' => 'PENDING']);
-            }
+            // foreach ($creditSchedule as $res) {
+            //     $res->update(['PAID_FLAG' => 'PENDING']);
+            // }
+
+            // foreach ($checkArr as $ress) {
+            //     $ress->update(['STATUS_REC' => 'PENDING']);
+            // }
 
             // if ($status === "PAID") {
             //     $this->proccess($request, $loan_number, $no_inv, $status);
@@ -223,12 +225,12 @@ class PelunasanController extends Controller
 
             // }
 
-            $data = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
+            // $data = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
 
-            $dto = new R_KwitansiPelunasan($data);
+            // $dto = new R_KwitansiPelunasan($data);
 
             DB::commit();
-            return response()->json($dto, 200);
+            return response()->json('ok', 200);
         } catch (\Exception $e) {
             DB::rollback();
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
@@ -640,10 +642,10 @@ class PelunasanController extends Controller
             )
             ->get();
 
-        $this->principalCalculate($request, $loan_number, $no_inv, $creditSchedules);
+        // $this->principalCalculate($request, $loan_number, $no_inv, $creditSchedules);
         $this->interestCalculate($request, $loan_number, $no_inv, $creditSchedules);
-        $arrears = M_Arrears::where(['LOAN_NUMBER' => $loan_number, 'STATUS_REC' => 'A'])->get();
-        $this->arrearsCalculate($request, $loan_number, $no_inv, $arrears);
+        // $arrears = M_Arrears::where(['LOAN_NUMBER' => $loan_number, 'STATUS_REC' => 'A'])->get();
+        // $this->arrearsCalculate($request, $loan_number, $no_inv, $arrears);
     }
 
     private function principalCalculate($request, $loan_number, $no_inv, $creditSchedule)
@@ -661,71 +663,87 @@ class PelunasanController extends Controller
         );
     }
 
+    // private function interestCalculate($request, $loan_number, $no_inv, $creditSchedule)
+    // {
+    //     $this->calculatePrincipal(
+    //         $request->BAYAR_BUNGA,
+    //         $request->DISKON_BUNGA,
+    //         $creditSchedule,
+    //         'INTEREST',
+    //         'PAYMENT_VALUE_INTEREST',
+    //         'BAYAR_BUNGA',
+    //         'DISKON_BUNGA',
+    //         $loan_number,
+    //         $no_inv
+    //     );
+    // }
+
     private function interestCalculate($request, $loan_number, $no_inv, $creditSchedule)
     {
         $remainingPayment = $request->BAYAR_BUNGA;
         $remainingDiscount = $request->DISKON_BUNGA;
         $currentDate = now(); // Get the current date
 
-        foreach ($creditSchedule as $res) {
-            $valBefore = $res->PAYMENT_VALUE_INTEREST;
-            $getAmount = $res->INTEREST;
-            $getDate = $res->PAYMENT_DATE;
+        foreach ($creditSchedule as $index => $res) {
+            $valBefore = $res->PAYMENT_VALUE_INTEREST; // Previous paid interest value
+            $getAmount = $res->INTEREST; // Total interest due for this row
+            $getDate = $res->PAYMENT_DATE; // Payment date for this row
 
-            // Proceed only if there's an amount to pay and the payment date is in the future
+            // Step 1: Calculate remaining amount to pay for interest
             if ($valBefore < $getAmount) {
-                // Calculate the amount left to pay
+                // Calculate the remaining amount of interest to pay
                 $remainingToPay = $getAmount - $valBefore;
 
-                // Step 1: Pay interest
+                // Step 2: Pay interest (BAYAR_BUNGA) first
                 if ($remainingPayment >= $remainingToPay) {
                     // Full payment for interest
                     $newPaymentValue = $getAmount;
-                    $remainingPayment -= $remainingToPay;
+                    $remainingPayment -= $remainingToPay; // Subtract the full amount from the payment
                 } else {
                     // Partial payment for interest
                     $newPaymentValue = $valBefore + $remainingPayment;
-                    $remainingPayment = 0; // No payment left
+                    $remainingPayment = 0; // All payment is used up
                 }
 
-                // Apply the interest payment to the schedule
+                // Apply the interest payment (BAYAR_BUNGA) to the schedule
                 $param['BAYAR_BUNGA'] = $newPaymentValue;
                 $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
 
-                // Step 2: Apply discount if there is remaining payment
-                if ($remainingPayment == 0 && $remainingDiscount > 0) {
-                    $remainingToDiscount = $getAmount - $newPaymentValue;
+                // Step 3: Handle discount (DISKON_BUNGA) after paying the interest
+                if ($remainingDiscount > 0) {
+                    $remainingToDiscount = $getAmount - $newPaymentValue; // Remaining interest that could be discounted
 
                     if ($remainingDiscount >= $remainingToDiscount) {
-                        // Full discount
+                        // Apply full discount
                         $param['DISKON_BUNGA'] = $remainingToDiscount;
-                        $remainingDiscount -= $remainingToDiscount;
+                        $remainingDiscount -= $remainingToDiscount; // Subtract the used discount
                     } else {
-                        // Partial discount
+                        // Apply partial discount
                         $param['DISKON_BUNGA'] = $remainingDiscount;
-                        $remainingDiscount = 0; // No discount left
+                        $remainingDiscount = 0; // No more discount left
                     }
 
-                    // Apply the discount to the schedule
+                    // Apply the discount (DISKON_BUNGA) to the schedule
                     $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
                 }
+            }
 
-                // Step 3: If no payment left and discount is fully used, move to next row
-                if ($remainingPayment == 0 && $remainingDiscount == 0) {
-                    // If there's any remaining balance after interest and discount, move to the next schedule
-                    continue; // This will move to the next loop iteration and apply the process to the next row.
-                }
+            // Step 4: If payment and discount are both finished, continue to the next row
+            if ($remainingPayment == 0 && $remainingDiscount == 0) {
+                continue; // Move to the next row in the schedule
             }
         }
 
-        // If payment and discount are both zero, you can set the payment values to the interest or discount interest
-        if ($remainingPayment == 0 && $remainingDiscount == 0) {
-            // Set interest value as the payment value or apply discount if applicable.
-            $param['BAYAR_BUNGA'] = $getAmount; // For the current row
-            $param['DISKON_BUNGA'] = $getAmount; // Adjust based on the scenario
-            $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
+        // Step 5: If discount is 0 and remaining interest exists, apply interest to DISKON_BUNGA
+        if ($remainingDiscount == 0 && $remainingPayment == 0) {
+            $lastRow = end($creditSchedule); // Get the last row
+
+            // Set DISKON_BUNGA to the interest value of the last row if no discount is left
+            $param['DISKON_BUNGA'] = $lastRow->INTEREST;
+            $this->insertKwitansiDetail($loan_number, $no_inv, $lastRow, $param);
         }
     }
+
 
 
     // private function interestCalculate($request, $loan_number, $no_inv, $creditSchedule)
