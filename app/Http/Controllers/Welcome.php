@@ -98,7 +98,7 @@ class Welcome extends Controller
                 'key' => $result->key,
                 'angsuran_ke' => $result->angsuran_ke,
                 'loan_number' => $result->LOAN_NUMBER,
-                'tgl_angsuran' => $result->TGL_TRANSAKSI,
+                'tgl_angsuran' => $result->tgl_angsuran,
                 'principal' => $result->principal,
                 'interest' => $result->interest,
                 'installment' => $result->installment,
@@ -342,7 +342,7 @@ class Welcome extends Controller
 
         if ($credit_schedule || $byr_angsuran != 0 || $flag != 'PAID') {
 
-            $payment_value = $byr_angsuran;
+            $payment_value = $byr_angsuran + $credit_schedule->PAYMENT_VALUE;
 
             $valBeforePrincipal = $credit_schedule->PAYMENT_VALUE_PRINCIPAL;
             $valBeforeInterest = $credit_schedule->PAYMENT_VALUE_INTEREST;
