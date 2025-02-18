@@ -62,26 +62,6 @@ if (!function_exists('compareData')) {
 if (!function_exists('generateCode')) {
     function generateCode($request, $table, $column)
     {
-
-        // $latestRecord = DB::table($table)
-        //     ->select($column)
-        //     ->where($column, 'like', '%' . $branchCodeNumber . '%')
-        //     ->orderByRaw("CAST(SUBSTRING($column, -5) AS UNSIGNED) DESC")
-        //     ->first();
-
-        // // Extract last sequence dynamically based on calculated prefix length
-        // $lastSequence = $latestRecord
-        //     ? (int) substr($latestRecord->$column, -5) + 1
-        //     : 1;
-
-        // // Current date
-        // $year = date('y');
-        // $month = date('m');
-        // $uniq = $branchCodeNumber . $request->user()->id . '-';
-
-        // // Generate and return the code
-        // return sprintf("%s%s%s%s%05d", $uniq, $year, $month, $lastSequence);
-
         $branchId = $request->user()->branch_id;
         $branch = M_Branch::find($branchId);
 
