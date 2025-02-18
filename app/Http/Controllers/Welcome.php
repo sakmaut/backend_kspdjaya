@@ -67,10 +67,10 @@ class Welcome extends Controller
                         LEFT JOIN kwitansi_structur_detail b 
                         ON b.no_invoice = a.NO_TRANSAKSI
                     WHERE a.STTS_PAYMENT = 'PAID'
+                        AND a.LOAN_NUMBER = 'up'
                         AND a.PAYMENT_TYPE = 'angsuran'
                         AND (b.installment != 0 OR b.bayar_angsuran != 0 OR b.bayar_denda != 0 OR b.diskon_denda != 0)
                         ORDER BY a.LOAN_NUMBER, a.TGL_TRANSAKSI ASC
-                    LIMIT 1
             ";
 
         $results = DB::select($query);
