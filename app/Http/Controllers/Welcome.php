@@ -504,8 +504,8 @@ class Welcome extends Controller
             }
 
             $updates['PAID_PENALTY'] = $getPenalty;
-            $updates['END_DATE'] = $request->created_at;
-            $updates['UPDATED_AT'] = $request->created_at;
+            $updates['END_DATE'] = $request['created_at'];
+            $updates['UPDATED_AT'] = $request['created_at'];
             if (!empty($updates)) {
                 $check_arrears->update($updates);
             }
@@ -572,8 +572,8 @@ class Welcome extends Controller
             $this->addCreditPaid($loan_number, ['BAYAR_DENDA' => $bayar_denda]);
 
             $updates['PAID_PENALTY'] = $new_penalty;
-            $updates['END_DATE'] = $request->created_at;
-            $updates['UPDATED_AT'] = $request->created_at;
+            $updates['END_DATE'] = $request['created_at'];
+            $updates['UPDATED_AT'] = $request['created_at'];
             $updates['STATUS_REC'] = 'A';
 
             if (!empty($updates)) {
