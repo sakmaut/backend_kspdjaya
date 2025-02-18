@@ -663,18 +663,70 @@ class PelunasanController extends Controller
 
     private function interestCalculate($request, $loan_number, $no_inv, $creditSchedule)
     {
-        $this->calculatePrincipal(
-            $request->BAYAR_BUNGA,
-            $request->DISKON_BUNGA,
-            $creditSchedule,
-            'INTEREST',
-            'PAYMENT_VALUE_INTEREST',
-            'BAYAR_BUNGA',
-            'DISKON_BUNGA',
-            $loan_number,
-            $no_inv
-        );
+        $remainingPayment = $request->BAYAR_BUNGA;
+        $remainingDiscount = $request->DISKON_BUNGA;
+        $currentDate = now(); // Get the current date
+
+        foreach ($creditSchedule as $res) {
+            $valBefore = $res->PAYMENT_VALUE_INTEREST;
+            $getAmount = $res->INTEREST;
+            $getDate = $res->PAYMENT_DATE;
+
+            // Proceed only if there's an amount to pay and the payment date is in the future
+            if ($valBefore < $getAmount) {
+                // Calculate the amount left to pay
+                $remainingToPay = $getAmount - $valBefore;
+
+                // Step 1: Pay interest
+                if ($remainingPayment >= $remainingToPay) {
+                    // Full payment for interest
+                    $newPaymentValue = $getAmount;
+                    $remainingPayment -= $remainingToPay;
+                } else {
+                    // Partial payment for interest
+                    $newPaymentValue = $valBefore + $remainingPayment;
+                    $remainingPayment = 0; // No payment left
+                }
+
+                // Apply the interest payment to the schedule
+                $param['BAYAR_BUNGA'] = $newPaymentValue;
+                $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
+
+                // Step 2: Apply discount if there is remaining payment
+                if ($remainingPayment == 0 && $remainingDiscount > 0) {
+                    $remainingToDiscount = $getAmount - $newPaymentValue;
+
+                    if ($remainingDiscount >= $remainingToDiscount) {
+                        // Full discount
+                        $param['DISKON_BUNGA'] = $remainingToDiscount;
+                        $remainingDiscount -= $remainingToDiscount;
+                    } else {
+                        // Partial discount
+                        $param['DISKON_BUNGA'] = $remainingDiscount;
+                        $remainingDiscount = 0; // No discount left
+                    }
+
+                    // Apply the discount to the schedule
+                    $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
+                }
+
+                // Step 3: If no payment left and discount is fully used, move to next row
+                if ($remainingPayment == 0 && $remainingDiscount == 0) {
+                    // If there's any remaining balance after interest and discount, move to the next schedule
+                    continue; // This will move to the next loop iteration and apply the process to the next row.
+                }
+            }
+        }
+
+        // If payment and discount are both zero, you can set the payment values to the interest or discount interest
+        if ($remainingPayment == 0 && $remainingDiscount == 0) {
+            // Set interest value as the payment value or apply discount if applicable.
+            $param['BAYAR_BUNGA'] = $getAmount; // For the current row
+            $param['DISKON_BUNGA'] = $getAmount; // Adjust based on the scenario
+            $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
+        }
     }
+
 
     // private function interestCalculate($request, $loan_number, $no_inv, $creditSchedule)
     // {
@@ -718,59 +770,6 @@ class PelunasanController extends Controller
     //                     $remainingDiscount = 0; // No discount left
     //                 }
 
-    //                 $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
-    //             }
-    //         }
-    //     }
-    // }
-
-    // private function interestCalculate($request, $loan_number, $no_inv, $creditSchedule)
-    // {
-    //     $remainingPayment = $request->BAYAR_BUNGA;
-    //     $remainingDiscount = $request->DISKON_BUNGA;
-
-    //     foreach ($creditSchedule as $res) {
-    //         $valBefore = $res->PAYMENT_VALUE_INTEREST;
-    //         $getAmount = $res->INTEREST;
-            
-    //         if ($valBefore < $getAmount) {
-    //             $remainingToPay = $getAmount - $valBefore;
-
-    //             // If enough payment is available to cover the remaining amount
-    //             if ($remainingPayment >= $remainingToPay) {
-    //                 $newPaymentValue = $getAmount; // Full payment
-    //                 $remainingPayment -= $remainingToPay; // Subtract the paid amount
-    //             } else {
-    //                 $newPaymentValue = $valBefore + $remainingPayment;
-    //                 $remainingPayment = 0;
-    //             }
-
-    //             // Apply the payment to the schedule
-    //             $param['BAYAR_BUNGA'] = $newPaymentValue;
-    //             $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
-
-    //             // Handle the discount if applicable
-    //             if ($remainingDiscount > 0) {
-    //                 $remainingToDiscount = $getAmount - $newPaymentValue;
-
-    //                 if ($remainingDiscount >= $remainingToDiscount) {
-    //                     $param['DISKON_BUNGA'] = $remainingToDiscount; // Full discount
-    //                     $remainingDiscount -= $remainingToDiscount; // Subtract the used discount
-    //                 } else {
-    //                     $param['DISKON_BUNGA'] = $remainingDiscount; // Partial discount
-    //                     $remainingDiscount = 0; // No discount left
-    //                 }
-
-    //                 $this->insertKwitansiDetail($loan_number,
-    //                     $no_inv,
-    //                     $res,
-    //                     $param
-    //                 );
-    //             }
-    //         } else if ($valBefore == $getAmount) {
-    //             if ($remainingPayment > 0) {
-    //                 $param['DISKON_BUNGA'] = $remainingPayment;
-    //                 $remainingPayment = 0; // No payment left
     //                 $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
     //             }
     //         }
