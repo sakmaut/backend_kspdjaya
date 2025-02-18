@@ -342,7 +342,7 @@ class Welcome extends Controller
 
         if ($credit_schedule || $byr_angsuran != 0 || $flag != 'PAID') {
 
-            $payment_value = $byr_angsuran + $credit_schedule->PAYMENT_VALUE;
+            $payment_value = $byr_angsuran;
 
             $valBeforePrincipal = $credit_schedule->PAYMENT_VALUE_PRINCIPAL;
             $valBeforeInterest = $credit_schedule->PAYMENT_VALUE_INTEREST;
