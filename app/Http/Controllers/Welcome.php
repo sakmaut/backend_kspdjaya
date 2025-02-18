@@ -84,6 +84,81 @@ class Welcome extends Controller
                        AND a.CREATED_AT > str_to_date('20250201','%Y%m%d')
                         AND (b.installment != 0 OR b.bayar_angsuran != 0 OR b.bayar_denda != 0 OR b.diskon_denda != 0)  
 					ORDER BY a.LOAN_NUMBER,a.TGL_TRANSAKSI ASC";
+
+                $resultsAngsuran = DB::select($queryAngsuran);
+                $structuredDataAngsuran = [];
+
+                foreach ($resultsAngsuran as $result) {
+
+                    if (!isset($structuredDataAngsuran[$result->NO_TRANSAKSI])) {
+                        $structuredDataAngsuran[$result->NO_TRANSAKSI] = [
+                            'payment_type' => $result->PAYMENT_TYPE,
+                            'payment_method' => $result->METODE_PEMBAYARAN,
+                            'no_transaksi' => $result->NO_TRANSAKSI,
+                            'no_fasilitas' => $result->LOAN_NUMBER,
+                            'bayar_pinalty' => $result->PINALTY_PELUNASAN,
+                            'diskon_pinalty' => $result->DISKON_PINALTY_PELUNASAN,
+                            'cabang' =>  $result->BRANCH_CODE,
+                            'created_by' => $result->CREATED_BY,
+                            'created_at' => $result->CREATED_AT,
+                            'struktur' => [],
+                        ];
+                    }
+
+                    $structuredDataAngsuran[$result->NO_TRANSAKSI]['struktur'][] = [
+                        'id' => $result->id,
+                        'no_invoice' => $result->NO_TRANSAKSI,
+                        'key' => $result->key,
+                        'angsuran_ke' => $result->angsuran_ke,
+                        'loan_number' => $result->LOAN_NUMBER,
+                        'tgl_angsuran' => $result->tgl_angsuran,
+                        'principal' => $result->principal,
+                        'interest' => $result->interest,
+                        'installment' => $result->installment,
+                        'principal_remains' => $result->principal_remains,
+                        'payment' => $result->payment,
+                        'bayar_angsuran' => $result->bayar_angsuran,
+                        'bayar_denda' => $result->bayar_denda,
+                        'total_bayar' => $result->total_bayar,
+                        'flag' => $result->flag,
+                        'denda' => $result->denda,
+                        'diskon_denda' => $result->diskon_denda,
+                    ];
+                }
+
+                foreach ($structuredDataAngsuran as $request) {
+                    $no_inv = $request['no_transaksi'];
+                    $loan_number = $request['no_fasilitas'];
+                    $getCodeBranch = M_Branch::findOrFail($request['cabang']);
+                    $struktur = $request['struktur'];
+
+                    if (isset($struktur) && is_array($struktur)) {
+                        foreach ($struktur as $res) {
+
+                            M_KwitansiStructurDetail::firstOrCreate([
+                                'no_invoice' => $no_inv,
+                                'key' => $res['key'] ?? '',
+                                'loan_number' => $res['loan_number'] ?? ''
+                            ], [
+                                'angsuran_ke' => $res['angsuran_ke'] ?? '',
+                                'tgl_angsuran' => $res['tgl_angsuran'] ?? '',
+                                'principal' => $res['principal'] ?? '',
+                                'interest' => $res['interest'] ?? '',
+                                'installment' => $res['installment'] ?? '',
+                                'principal_remains' => $res['principal_remains'] ?? '',
+                                'payment' => $res['payment'] ?? '',
+                                'bayar_angsuran' => $res['bayar_angsuran'] ?? '',
+                                'bayar_denda' => $res['bayar_denda'] ?? '',
+                                'total_bayar' => $res['total_bayar'] ?? '',
+                                'flag' => $res['flag'] ?? '',
+                                'denda' => $res['denda'] ?? '',
+                                'diskon_denda' => $res['diskon_denda']
+                            ]);
+
+                            $this->processPaymentStructure($res, $request, $getCodeBranch, $no_inv);
+                        }
+                    }
+                }
             }else{
                 $queryPelunasan = "  SELECT  a.NO_TRANSAKSI,
                                 a.LOAN_NUMBER,
@@ -104,135 +179,59 @@ class Welcome extends Controller
                         AND a.PAYMENT_TYPE = 'pelunasan'
                        AND a.CREATED_AT > str_to_date('20250201','%Y%m%d')
 					ORDER BY a.LOAN_NUMBER,a.TGL_TRANSAKSI ASC";
-            }
 
+                $resultsPelunasan = DB::select($queryPelunasan);
 
-            DB::commit();
-            $resultsAngsuran = DB::select($queryAngsuran);
-            $resultsPelunasan = DB::select($queryPelunasan);
+                $structuredDataPelunasan = [];
 
-            $structuredDataAngsuran = [];
-            $structuredDataPelunasan = [];
+                foreach ($resultsPelunasan as $result) {
 
-            foreach ($resultsAngsuran as $result) {
-
-                if (!isset($structuredDataAngsuran[$result->NO_TRANSAKSI])) {
-                    $structuredDataAngsuran[$result->NO_TRANSAKSI] = [
-                        'payment_type' => $result->PAYMENT_TYPE,
-                        'payment_method' => $result->METODE_PEMBAYARAN,
-                        'no_transaksi' => $result->NO_TRANSAKSI,
-                        'no_fasilitas' => $result->LOAN_NUMBER,
-                        'bayar_pinalty' => $result->PINALTY_PELUNASAN,
-                        'diskon_pinalty' => $result->DISKON_PINALTY_PELUNASAN,
-                        'cabang' =>  $result->BRANCH_CODE,
-                        'created_by' => $result->CREATED_BY,
-                        'created_at' => $result->CREATED_AT,
-                        'struktur' => [],
-                    ];
-                }
-
-                $structuredDataAngsuran[$result->NO_TRANSAKSI]['struktur'][] = [
-                    'id' => $result->id,
-                    'no_invoice' => $result->NO_TRANSAKSI,
-                    'key' => $result->key,
-                    'angsuran_ke' => $result->angsuran_ke,
-                    'loan_number' => $result->LOAN_NUMBER,
-                    'tgl_angsuran' => $result->tgl_angsuran,
-                    'principal' => $result->principal,
-                    'interest' => $result->interest,
-                    'installment' => $result->installment,
-                    'principal_remains' => $result->principal_remains,
-                    'payment' => $result->payment,
-                    'bayar_angsuran' => $result->bayar_angsuran,
-                    'bayar_denda' => $result->bayar_denda,
-                    'total_bayar' => $result->total_bayar,
-                    'flag' => $result->flag,
-                    'denda' => $result->denda,
-                    'diskon_denda' => $result->diskon_denda,
-                ];
-            }
-
-            foreach ($resultsPelunasan as $result) {
-
-                if (!isset($structuredDataPelunasan[$result->NO_TRANSAKSI])) {
-                    $structuredDataPelunasan[$result->NO_TRANSAKSI] = [
-                        'payment_type' => $result->PAYMENT_TYPE,
-                        'payment_method' => $result->METODE_PEMBAYARAN,
-                        'no_transaksi' => $result->NO_TRANSAKSI,
-                        'no_fasilitas' => $result->LOAN_NUMBER,
-                        'bayar_pinalty' => $result->PINALTY_PELUNASAN,
-                        'diskon_pinalty' => $result->DISKON_PINALTY_PELUNASAN,
-                        'cabang' =>  $result->BRANCH_CODE,
-                        'created_by' => $result->CREATED_BY,
-                        'created_at' => $result->CREATED_AT,
-                        'struktur' => [],
-                    ];
-                }
-
-                $structuredDataPelunasan[$result->NO_TRANSAKSI]['struktur'][] = [
-                    'id' => $result->id,
-                    'no_invoice' => $result->NO_TRANSAKSI,
-                    'key' => $result->key,
-                    'angsuran_ke' => $result->angsuran_ke,
-                    'loan_number' => $result->LOAN_NUMBER,
-                    'tgl_angsuran' => $result->tgl_angsuran,
-                    'principal' => $result->principal,
-                    'interest' => $result->interest,
-                    'installment' => $result->installment,
-                    'principal_remains' => $result->principal_remains,
-                    'payment' => $result->payment,
-                    'bayar_angsuran' => $result->bayar_angsuran,
-                    'bayar_denda' => $result->bayar_denda,
-                    'total_bayar' => $result->total_bayar,
-                    'flag' => $result->flag,
-                    'denda' => $result->denda,
-                    'diskon_denda' => $result->diskon_denda,
-                ];
-            }
-
-            foreach ($structuredDataPelunasan as $request) {
-                $no_inv = $request['no_transaksi'];
-                $loan_number = $request['no_fasilitas'];
-                $getCodeBranch = M_Branch::findOrFail($request['cabang']);
-                $struktur = $request['struktur'];
-
-                if (isset($struktur) && is_array($struktur)) {
-                    foreach ($struktur as $res) {
-                        $this->proccess($request, $loan_number, $no_inv, 'PAID');
+                    if (!isset($structuredDataPelunasan[$result->NO_TRANSAKSI])) {
+                        $structuredDataPelunasan[$result->NO_TRANSAKSI] = [
+                            'payment_type' => $result->PAYMENT_TYPE,
+                            'payment_method' => $result->METODE_PEMBAYARAN,
+                            'no_transaksi' => $result->NO_TRANSAKSI,
+                            'no_fasilitas' => $result->LOAN_NUMBER,
+                            'bayar_pinalty' => $result->PINALTY_PELUNASAN,
+                            'diskon_pinalty' => $result->DISKON_PINALTY_PELUNASAN,
+                            'cabang' =>  $result->BRANCH_CODE,
+                            'created_by' => $result->CREATED_BY,
+                            'created_at' => $result->CREATED_AT,
+                            'struktur' => [],
+                        ];
                     }
+
+                    $structuredDataPelunasan[$result->NO_TRANSAKSI]['struktur'][] = [
+                        'id' => $result->id,
+                        'no_invoice' => $result->NO_TRANSAKSI,
+                        'key' => $result->key,
+                        'angsuran_ke' => $result->angsuran_ke,
+                        'loan_number' => $result->LOAN_NUMBER,
+                        'tgl_angsuran' => $result->tgl_angsuran,
+                        'principal' => $result->principal,
+                        'interest' => $result->interest,
+                        'installment' => $result->installment,
+                        'principal_remains' => $result->principal_remains,
+                        'payment' => $result->payment,
+                        'bayar_angsuran' => $result->bayar_angsuran,
+                        'bayar_denda' => $result->bayar_denda,
+                        'total_bayar' => $result->total_bayar,
+                        'flag' => $result->flag,
+                        'denda' => $result->denda,
+                        'diskon_denda' => $result->diskon_denda,
+                    ];
                 }
-            }
 
-            foreach ($structuredDataAngsuran as $request) {
-                $no_inv = $request['no_transaksi'];
-                $loan_number = $request['no_fasilitas'];
-                $getCodeBranch = M_Branch::findOrFail($request['cabang']);
-                $struktur = $request['struktur'];
+                foreach ($structuredDataPelunasan as $request) {
+                    $no_inv = $request['no_transaksi'];
+                    $loan_number = $request['no_fasilitas'];
+                    $getCodeBranch = M_Branch::findOrFail($request['cabang']);
+                    $struktur = $request['struktur'];
 
-                if (isset($struktur) && is_array($struktur)) {
-                    foreach ($struktur as $res) {
-
-                        M_KwitansiStructurDetail::firstOrCreate([
-                            'no_invoice' => $no_inv,
-                            'key' => $res['key'] ?? '',
-                            'loan_number' => $res['loan_number'] ?? ''
-                        ], [
-                            'angsuran_ke' => $res['angsuran_ke'] ?? '',
-                            'tgl_angsuran' => $res['tgl_angsuran'] ?? '',
-                            'principal' => $res['principal'] ?? '',
-                            'interest' => $res['interest'] ?? '',
-                            'installment' => $res['installment'] ?? '',
-                            'principal_remains' => $res['principal_remains'] ?? '',
-                            'payment' => $res['payment'] ?? '',
-                            'bayar_angsuran' => $res['bayar_angsuran'] ?? '',
-                            'bayar_denda' => $res['bayar_denda'] ?? '',
-                            'total_bayar' => $res['total_bayar'] ?? '',
-                            'flag' => $res['flag'] ?? '',
-                            'denda' => $res['denda'] ?? '',
-                            'diskon_denda' => $res['diskon_denda']
-                        ]);
-
-                        $this->processPaymentStructure($res, $request, $getCodeBranch, $no_inv);
+                    if (isset($struktur) && is_array($struktur)) {
+                        foreach ($struktur as $res) {
+                            $this->proccess($request, $loan_number, $no_inv, 'PAID');
+                        }
                     }
                 }
             }
