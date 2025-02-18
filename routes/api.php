@@ -35,6 +35,7 @@ Route::post('auth/login', [AuthController::class, 'login'])->name('login');
 Route::get('auth/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 
 Route::post('welcome', [Welcome::class, 'index']);
+Route::get('jobArrears', [Welcome::class, 'job']);
 
 Route::middleware(['auth:sanctum', 'check.access'])->group(function () {
     Route::resource('users', UsersController::class)->only(['index']);
