@@ -67,7 +67,7 @@ class Welcome extends Controller
                         LEFT JOIN kwitansi_structur_detail b 
                         ON b.no_invoice = a.NO_TRANSAKSI
                     WHERE a.STTS_PAYMENT = 'PAID'
-                        AND a.LOAN_NUMBER = '11105240000847'
+                        AND a.LOAN_NUMBER = '11201240000233'
                         AND a.PAYMENT_TYPE = 'angsuran'
                         AND (b.installment != 0 OR b.bayar_angsuran != 0 OR b.bayar_denda != 0 OR b.diskon_denda != 0)
                         ORDER BY a.LOAN_NUMBER, a.TGL_TRANSAKSI ASC
