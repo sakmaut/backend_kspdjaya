@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\API\LocationStatus;
 use App\Http\Controllers\API\PaymentController;
+use App\Http\Controllers\API\PelunasanController;
 use App\Http\Controllers\API\StatusApproval;
 use App\Http\Controllers\API\TelegramBotConfig;
 use App\Models\M_Arrears;
@@ -24,6 +25,7 @@ use App\Models\M_CustomerDocument;
 use App\Models\M_CustomerExtra;
 use App\Models\M_DeuteronomyTransactionLog;
 use App\Models\M_FirstArr;
+use App\Models\M_KwitansiDetailPelunasan;
 use App\Models\M_KwitansiStructurDetail;
 use App\Models\M_LocationStatus;
 use App\Models\M_Payment;
@@ -53,8 +55,8 @@ class Welcome extends Controller
     public function index()
     {
 
-        // return response()->json('OK');
-        // die;
+        return response()->json('OK');
+        die;
         DB::beginTransaction();
         try {
             $query = "  SELECT  a.NO_TRANSAKSI,
@@ -72,8 +74,9 @@ class Welcome extends Controller
                     WHERE a.STTS_PAYMENT = 'PAID'
                         AND a.LOAN_NUMBER = '11201240000233'
                         AND a.PAYMENT_TYPE = 'angsuran'
-                        AND (b.installment != 0 OR b.bayar_angsuran != 0 OR b.bayar_denda != 0 OR b.diskon_denda != 0)
-                        ORDER BY a.LOAN_NUMBER, a.TGL_TRANSAKSI ASC
+                       AND a.CREATED_AT > str_to_date('20250201','%Y%m%d')
+                        AND (b.installment != 0 OR b.bayar_angsuran != 0 OR b.bayar_denda != 0 OR b.diskon_denda != 0)  
+					ORDER BY a.LOAN_NUMBER,a.TGL_TRANSAKSI ASC;
             ";
 
             $results = DB::select($query);
@@ -117,34 +120,39 @@ class Welcome extends Controller
             }
 
             foreach ($structuredData as $request) {
-                $no_inv = $request['no_fasilitas'];
+                $no_inv = $request['no_transaksi'];
+                $loan_number = $request['no_fasilitas'];
                 $getCodeBranch = M_Branch::findOrFail($request['cabang']);
                 $struktur = $request['struktur'];
 
-                if (isset($struktur) && is_array($struktur)) {
-                    foreach ($struktur as $res) {
+                if ($request['payment_type'] === 'pelunasan') {
+                    $this->proccess($request, $loan_number, $no_inv, 'PAID');
+                } else {
+                    if (isset($struktur) && is_array($struktur)) {
+                        foreach ($struktur as $res) {
 
-                        M_KwitansiStructurDetail::firstOrCreate([
-                            'no_invoice' => $no_inv,
-                            'key' => $res['key'] ?? '',
-                            'loan_number' => $res['loan_number'] ?? ''
-                        ], [
-                            'angsuran_ke' => $res['angsuran_ke'] ?? '',
-                            'tgl_angsuran' => $res['tgl_angsuran'] ?? '',
-                            'principal' => $res['principal'] ?? '',
-                            'interest' => $res['interest'] ?? '',
-                            'installment' => $res['installment'] ?? '',
-                            'principal_remains' => $res['principal_remains'] ?? '',
-                            'payment' => $res['payment'] ?? '',
-                            'bayar_angsuran' => $res['bayar_angsuran'] ?? '',
-                            'bayar_denda' => $res['bayar_denda'] ?? '',
-                            'total_bayar' => $res['total_bayar'] ?? '',
-                            'flag' => $res['flag'] ?? '',
-                            'denda' => $res['denda'] ?? '',
-                            'diskon_denda' => $res['diskon_denda']
-                        ]);
+                            M_KwitansiStructurDetail::firstOrCreate([
+                                'no_invoice' => $no_inv,
+                                'key' => $res['key'] ?? '',
+                                'loan_number' => $res['loan_number'] ?? ''
+                            ], [
+                                'angsuran_ke' => $res['angsuran_ke'] ?? '',
+                                'tgl_angsuran' => $res['tgl_angsuran'] ?? '',
+                                'principal' => $res['principal'] ?? '',
+                                'interest' => $res['interest'] ?? '',
+                                'installment' => $res['installment'] ?? '',
+                                'principal_remains' => $res['principal_remains'] ?? '',
+                                'payment' => $res['payment'] ?? '',
+                                'bayar_angsuran' => $res['bayar_angsuran'] ?? '',
+                                'bayar_denda' => $res['bayar_denda'] ?? '',
+                                'total_bayar' => $res['total_bayar'] ?? '',
+                                'flag' => $res['flag'] ?? '',
+                                'denda' => $res['denda'] ?? '',
+                                'diskon_denda' => $res['diskon_denda']
+                            ]);
 
-                        $this->processPaymentStructure($res, $request, $getCodeBranch, $no_inv);
+                            $this->processPaymentStructure($res, $request, $getCodeBranch, $no_inv);
+                        }
                     }
                 }
             }
@@ -639,6 +647,189 @@ class Welcome extends Controller
                 'PAID_PRINCIPAL' => floatval($check_credit->PAID_PRINCIPAL) + floatval($paidPrincipal),
                 'PAID_INTEREST' => floatval($check_credit->PAID_INTEREST) + floatval($paidInterest),
                 'PAID_PENALTY' => floatval($check_credit->PAID_PENALTY) + floatval($paidPenalty)
+            ]);
+        }
+    }
+
+    function proccess($request, $loan_number, $no_inv, $status)
+    {
+        $pelunasanKwitansiDetail = M_KwitansiDetailPelunasan::where(['no_invoice' => $no_inv, 'loan_number' => $loan_number])->get();
+
+        $this->proccessPinaltyPayment($request, $no_inv, $status, $loan_number);
+
+        if (!empty($pelunasanKwitansiDetail)) {
+            foreach ($pelunasanKwitansiDetail as $res) {
+                $uid = Uuid::uuid7()->toString();
+                $this->proccessPayment($request, $uid, $no_inv, $status, $res);
+
+                $paymentDetails = [
+                    'BAYAR_POKOK' => $res['bayar_pokok'] ?? 0,
+                    'BAYAR_BUNGA' => $res['bayar_bunga'] ?? 0,
+                    'BAYAR_DENDA' => $res['bayar_denda'] ?? 0,
+                    'DISKON_POKOK' => $res['diskon_pokok'] ?? 0,
+                    'DISKON_BUNGA' => $res['diskon_bunga'] ?? 0,
+                    'DISKON_DENDA' => $res['diskon_denda'] ?? 0,
+                ];
+
+                foreach ($paymentDetails as $type => $amount) {
+                    if ($amount != 0) {
+                        $this->proccessPaymentDetail($uid, $type, $amount);
+                    }
+                }
+
+                if ($res['installment'] != 0) {
+                    $this->updateCreditSchedulePelunasan($loan_number, $res);
+                }
+
+                $this->updateArrearsPelunasan($loan_number, $res);
+                $this->updateCreditPelunasan($res, $loan_number);
+            }
+        }
+    }
+
+    function proccessPayment($request, $uid, $no_inv, $status, $res)
+    {
+        $originalAmount = (
+            ($res['bayar_pokok'] ?? 0) +
+            ($res['bayar_bunga'] ?? 0) +
+            ($res['bayar_denda'] ?? 0) +
+            ($res['diskon_pokok'] ?? 0) +
+            ($res['diskon_bunga'] ?? 0) +
+            ($res['diskon_denda'] ?? 0));
+
+        M_Payment::create([
+            'ID' => $uid,
+            'ACC_KEY' => 'Pelunasan Angsuran Ke-' . ($res['angsuran_ke'] ?? ''),
+            'STTS_RCRD' => $status,
+            'NO_TRX' => $no_inv,
+            'PAYMENT_METHOD' => $request->METODE_PEMBAYARAN ?? '',
+            'INVOICE' => $no_inv,
+            'BRANCH' => M_Branch::find($request->user()->branch_id)->CODE_NUMBER ?? '',
+            'LOAN_NUM' => $res['loan_number'] ?? '',
+            'ENTRY_DATE' => Carbon::now(),
+            'TITLE' => 'Angsuran Ke-' . ($res['angsuran_ke'] ?? ''),
+            'ORIGINAL_AMOUNT' => $originalAmount,
+            'START_DATE' => $res['tgl_angsuran'] ?? '',
+            'END_DATE' => Carbon::now(),
+            'USER_ID' => $request->user()->id,
+            'AUTH_BY' => $request->user()->fullname ?? '',
+            'AUTH_DATE' => Carbon::now()
+        ]);
+    }
+
+    function proccessPinaltyPayment($request, $no_inv, $status, $loan_number)
+    {
+        $uid = Uuid::uuid7()->toString();
+
+        M_Payment::create([
+            'ID' => $uid,
+            'ACC_KEY' => 'Bayar Pelunasan Pinalty',
+            'STTS_RCRD' => $status,
+            'NO_TRX' => $no_inv,
+            'PAYMENT_METHOD' => $request->METODE_PEMBAYARAN ?? '',
+            'INVOICE' => $no_inv,
+            'BRANCH' => M_Branch::find($request->user()->branch_id)->CODE_NUMBER ?? '',
+            'LOAN_NUM' => $loan_number ?? '',
+            'ENTRY_DATE' => Carbon::now(),
+            'TITLE' => 'Bayar Pelunasan Pinalty',
+            'ORIGINAL_AMOUNT' => $request->BAYAR_PINALTI ?? 0,
+            'END_DATE' => Carbon::now(),
+            'USER_ID' => $request->user()->id,
+            'AUTH_BY' => $request->user()->fullname ?? '',
+            'AUTH_DATE' => Carbon::now()
+        ]);
+
+        if ($request->BAYAR_PINALTI != 0) {
+            $this->proccessPaymentDetail($uid, 'BAYAR PELUNASAN PINALTY', $request->BAYAR_PINALTI ?? 0);
+        }
+
+        if ($request->DISKON_PINALTI != 0) {
+            $this->proccessPaymentDetail($uid, 'BAYAR PELUNASAN DISKON PINALTY', $request->DISKON_PINALTI ?? 0);
+        }
+    }
+
+    function updateCreditSchedulePelunasan($loan_number, $res)
+    {
+
+        $getCreditSchedule = M_CreditSchedule::where(['LOAN_NUMBER' => $loan_number, 'PAYMENT_DATE' => $res['tgl_angsuran']])->first();
+
+        if ($getCreditSchedule) {
+
+            $valBeforePrincipal = $getCreditSchedule->PAYMENT_VALUE_PRINCIPAL;
+            $valBeforeInterest = $getCreditSchedule->PAYMENT_VALUE_INTEREST;
+            $valBeforeDiscPrincipal = $getCreditSchedule->DISCOUNT_PRINCIPAL;
+            $valBeforeDiscInterest = $getCreditSchedule->DISCOUNT_INTEREST;
+
+            $ttlPrincipal = floatval($valBeforePrincipal) + floatval($res['bayar_pokok'] ?? 0);
+            $ttlInterest = floatval($valBeforeInterest) + floatval($res['bayar_bunga'] ?? 0);
+            $ttlDiscPrincipal = floatval($valBeforeDiscPrincipal) + floatval($res['diskon_pokok'] ?? 0);
+            $ttlDiscInterest = floatval($valBeforeDiscInterest) + floatval($res['diskon_bunga'] ?? 0);
+
+            $getCreditSchedule->update([
+                'PAYMENT_VALUE_PRINCIPAL' => $ttlPrincipal,
+                'PAYMENT_VALUE_INTEREST' => $ttlInterest,
+                'DISCOUNT_PRINCIPAL' => $ttlDiscPrincipal,
+                'DISCOUNT_INTEREST' => $ttlDiscInterest,
+                'PAID_FLAG' => 'PAID'
+            ]);
+
+            $ttlPayment = $ttlPrincipal + $ttlInterest + $ttlDiscPrincipal + $ttlDiscInterest;
+
+            $getCreditSchedule->update([
+                'PAYMENT_VALUE' => $ttlPayment
+            ]);
+        }
+    }
+
+    function updateArrearsPelunasan($loan_number, $res)
+    {
+        $getArrears = M_Arrears::where([
+            'LOAN_NUMBER' => $loan_number,
+            'START_DATE' => $res['tgl_angsuran'],
+        ])->first();
+
+        if ($getArrears) {
+            $ttlPrincipal = floatval($getArrears->PAID_PCPL) + floatval($res['bayar_pokok'] ?? 0);
+            $ttlInterest = floatval($getArrears->PAID_INT) + floatval($res['bayar_bunga'] ?? 0);
+            $ttlPenalty = floatval($getArrears->PAID_PENALTY) + floatval($res['bayar_denda'] ?? 0);
+            $ttlDiscPrincipal = floatval($getArrears->WOFF_PCPL) + floatval($res['diskon_pokok'] ?? 0);
+            $ttlDiscInterest = floatval($getArrears->WOFF_INT) + floatval($res['diskon_bunga'] ?? 0);
+            $ttlDiscPenalty = floatval($getArrears->WOFF_PENALTY) + floatval($res['diskon_denda'] ?? 0);
+
+            $getArrears->update([
+                'END_DATE' => Carbon::now()->format('Y-m-d') ?? null,
+                'PAID_PCPL' => $ttlPrincipal ?? 0,
+                'PAID_INT' => $ttlInterest ?? 0,
+                'PAID_PENALTY' => $ttlPenalty ?? 0,
+                'WOFF_PCPL' => $ttlDiscPrincipal ?? 0,
+                'WOFF_INT' => $ttlDiscInterest ?? 0,
+                'WOFF_PENALTY' => $ttlDiscPenalty ?? 0,
+                'UPDATED_AT' => Carbon::now(),
+            ]);
+
+            $checkDiscountArrears = ($ttlDiscPrincipal + $ttlDiscInterest + $ttlDiscPenalty) == 0;
+
+            $getArrears->update([
+                'STATUS_REC' => $checkDiscountArrears ? 'S' : 'D',
+            ]);
+        }
+    }
+
+    function updateCreditPelunasan($res, $loan_number)
+    {
+        $credit = M_Credit::where('LOAN_NUMBER', $loan_number)->first();
+
+        if ($credit) {
+            $credit->update([
+                'PAID_PRINCIPAL' => floatval($credit->PAID_PRINCIPAL) + floatval($res['bayar_pokok']),
+                'PAID_INTEREST' => floatval($credit->PAID_INTEREST) + floatval($res['bayar_bunga']),
+                'DISCOUNT_PRINCIPAL' => floatval($credit->DISCOUNT_PRINCIPAL) + floatval($res['diskon_pokok']),
+                'DISCOUNT_INTEREST' => floatval($credit->DISCOUNT_INTEREST) + floatval($res['diskon_bunga']),
+                'PAID_PENALTY' => floatval($credit->PAID_PENALTY) + floatval($res['bayar_denda']),
+                'DISCOUNT_PENALTY' => floatval($credit->DISCOUNT_PENALTY) + floatval($res['diskon_denda']),
+                'STATUS' => 'D',
+                'STATUS_REC' => 'PT',
+                'END_DATE' => now()
             ]);
         }
     }
