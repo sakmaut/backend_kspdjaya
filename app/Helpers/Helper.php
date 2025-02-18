@@ -63,33 +63,59 @@ if (!function_exists('generateCode')) {
     function generateCode($request, $table, $column)
     {
 
+        // $branchId = $request->user()->branch_id;
+        // $branch = M_Branch::findOrFail($branchId);
+
+        // if (!$branch) {
+        //     throw new Exception("Cabang tidak ditemukan.");
+        // }
+
+        // $branchCodeNumber = $branch->CODE_NUMBER;
+
+        // $latestRecord = DB::table($table)
+        //     ->select($column)
+        //     ->where($column, 'like', '%' . $branchCodeNumber . '%')
+        //     ->orderByRaw("CAST(SUBSTRING($column, -5) AS UNSIGNED) DESC")
+        //     ->first();
+
+        // // Extract last sequence dynamically based on calculated prefix length
+        // $lastSequence = $latestRecord
+        //     ? (int) substr($latestRecord->$column, -5) + 1
+        //     : 1;
+
+        // // Current date
+        // $year = date('y');
+        // $month = date('m');
+        // $uniq = $branchCodeNumber . $request->user()->id . '-';
+
+        // // Generate and return the code
+        // return sprintf("%s%s%s%s%05d", $uniq, $year, $month, $lastSequence);
+
         $branchId = $request->user()->branch_id;
-        $branch = M_Branch::findOrFail($branchId);
+        $branch = M_Branch::find($branchId);
 
         if (!$branch) {
             throw new Exception("Cabang tidak ditemukan.");
         }
 
         $branchCodeNumber = $branch->CODE_NUMBER;
-
         $latestRecord = DB::table($table)
             ->select($column)
-            ->where($column, 'like', '%' . $branchCodeNumber . '%')
-            ->orderByRaw("CAST(SUBSTRING($column, -5) AS UNSIGNED) DESC")
+            ->where($column, 'like', $branchCodeNumber . '%')
+            ->orderByRaw("CAST(SUBSTRING($column, LENGTH(?)+1) AS UNSIGNED) DESC", [$branchCodeNumber])
             ->first();
 
-        // Extract last sequence dynamically based on calculated prefix length
-        $lastSequence = $latestRecord
-            ? (int) substr($latestRecord->$column, -5) + 1
-            : 1;
+        $lastSequence = $latestRecord ? (int) substr(
+            $latestRecord->$column,
+            strlen($branchCodeNumber) + 4,
+            5
+        ) + 1 : 1;
 
-        // Current date
-        $year = date('y');
-        $month = date('m');
-        $uniq = $branchCodeNumber . $request->user()->id . '-';
+        $currentDate = Carbon::now();
+        $year = $currentDate->format('y');
+        $month = $currentDate->format('m');
 
-        // Generate and return the code
-        return sprintf("%s%s%s%s%05d", $uniq, $year, $month, $lastSequence);
+        return sprintf("%s%s%s%05d", $branchCodeNumber, $year, $month, $lastSequence);
     }
 }
 
