@@ -36,7 +36,8 @@ class DemoCron extends Command
     {
         try {
 
-            $setDate = DB::raw('CURDATE()');
+            // $setDate = DB::raw('CURDATE()');
+            $setDate = '2025-02-01';
 
             $query = DB::table('credit_schedule')
                 ->where('PAYMENT_DATE', '<=', $setDate)
