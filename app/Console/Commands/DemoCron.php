@@ -57,8 +57,8 @@ class DemoCron extends Command
 
             $arrearsData = [];
             foreach ($query as $result) {
-                $date = date('Y-m-d');
-                // $date = date($setDate);
+                // $date = date('Y-m-d');
+                $date = '2025-02-01';
                 $daysDiff = (strtotime($date) - strtotime($result->PAYMENT_DATE)) / (60 * 60 * 24);
                 $pastDuePenalty = $result->INSTALLMENT * ($daysDiff * 0.005);
 
