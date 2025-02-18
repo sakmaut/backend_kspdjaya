@@ -318,9 +318,9 @@ class Welcome extends Controller
         $this->updateCreditSchedule($loan_number, $tgl_angsuran, $res, $uid);
 
         if (isset($res['diskon_denda']) && $res['diskon_denda'] == 1) {
-            $this->updateDiscountArrears($loan_number, $tgl_angsuran, $res, $uid);
+            $this->updateDiscountArrears($request, $loan_number, $tgl_angsuran, $res, $uid);
         } else {
-            $this->updateArrears($loan_number, $tgl_angsuran, $res, $uid);
+            $this->updateArrears($request, $loan_number, $tgl_angsuran, $res, $uid);
         }
 
         if ($res['bayar_angsuran'] != 0 || $res['bayar_denda'] != 0 || (isset($res['diskon_denda']) && $res['diskon_denda'] == 1)) {
@@ -439,7 +439,7 @@ class Welcome extends Controller
         }
     }
 
-    private function updateDiscountArrears($loan_number, $tgl_angsuran, $res, $uid)
+    private function updateDiscountArrears($request, $loan_number, $tgl_angsuran, $res, $uid)
     {
         $check_arrears = M_Arrears::where([
             'LOAN_NUMBER' => $loan_number,
@@ -500,8 +500,8 @@ class Welcome extends Controller
             }
 
             $updates['PAID_PENALTY'] = $getPenalty;
-            $updates['END_DATE'] = now();
-            $updates['UPDATED_AT'] = now();
+            $updates['END_DATE'] = $request->TGL_TRANSAKSI;
+            $updates['UPDATED_AT'] = $request->TGL_TRANSAKSI;
             if (!empty($updates)) {
                 $check_arrears->update($updates);
             }
@@ -510,7 +510,7 @@ class Welcome extends Controller
         }
     }
 
-    private function updateArrears($loan_number, $tgl_angsuran, $res, $uid)
+    private function updateArrears($request, $loan_number, $tgl_angsuran, $res, $uid)
     {
         $check_arrears = M_Arrears::where([
             'LOAN_NUMBER' => $loan_number,
@@ -568,8 +568,8 @@ class Welcome extends Controller
             $this->addCreditPaid($loan_number, ['BAYAR_DENDA' => $bayar_denda]);
 
             $updates['PAID_PENALTY'] = $new_penalty;
-            $updates['END_DATE'] = now();
-            $updates['UPDATED_AT'] = now();
+            $updates['END_DATE'] = $request->TGL_TRANSAKSI;
+            $updates['UPDATED_AT'] = $request->TGL_TRANSAKSI;
             $updates['STATUS_REC'] = 'A';
 
             if (!empty($updates)) {
