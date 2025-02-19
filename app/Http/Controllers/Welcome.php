@@ -55,8 +55,8 @@ class Welcome extends Controller
     public function index(Request $req)
     {
 
-        return response()->json('OK');
-        die;
+        // return response()->json('OK');
+        // die;
         DB::beginTransaction();
         try {
 
@@ -125,6 +125,59 @@ class Welcome extends Controller
                         'denda' => $result->denda,
                         'diskon_denda' => $result->diskon_denda,
                     ];
+                }
+
+                $arrearsData = [];
+                foreach ($structuredDataAngsuran as $request) {
+                    $struktur = $request['struktur'];
+
+                    if (isset($struktur) && is_array($struktur)) {
+                        foreach ($struktur as $res) {
+
+                            $paymntDate = date('Y-m-d', strtotime($res['tgl_angsuran']));
+
+                            $getCrditSchedule = "   SELECT LOAN_NUMBER,PAYMENT_DATE,PRINCIPAL,INTEREST,INSTALLMENT
+                                                    FROM credit_schedule 
+                                                    WHERE PAYMENT_DATE = '$paymntDate' 
+                                                        AND LOAN_NUMBER = '{$res['loan_number']}'
+                                                        AND (PAID_FLAG IS NULL OR PAID_FLAG = '') ";
+
+
+                            $updateArrears = DB::select($getCrditSchedule);
+
+                            foreach ($updateArrears as $list) {
+                                $date = date('Y-m-d');
+                                $daysDiff = (strtotime($date) - strtotime($list->PAYMENT_DATE)) / (60 * 60 * 24);
+                                $pastDuePenalty = $list->INSTALLMENT * ($daysDiff * 0.005);
+
+                                $arrearsData[] = [
+                                    'ID' => Uuid::uuid7()->toString(),
+                                    'STATUS_REC' => 'A',
+                                    'LOAN_NUMBER' => $list->LOAN_NUMBER,
+                                    'START_DATE' => $list->PAYMENT_DATE,
+                                    'END_DATE' => null,
+                                    'PAST_DUE_PCPL' => $list->PRINCIPAL ?? 0,
+                                    'PAST_DUE_INTRST' => $list->INTEREST ?? 0,
+                                    'PAST_DUE_PENALTY' => $pastDuePenalty ?? 0
+                                ];
+                            }
+                        }
+                    }
+                }
+
+                foreach ($arrearsData as $data) {
+                    $existingArrears = M_Arrears::where([
+                        'LOAN_NUMBER' => $data['LOAN_NUMBER'],
+                        'START_DATE' => $data['START_DATE'],
+                        'STATUS_REC' => 'A'
+                    ])->first();
+
+                    if ($existingArrears) {
+                        $existingArrears->update([
+                            'PAST_DUE_PENALTY' => $data['PAST_DUE_PENALTY'] ?? 0,
+                            'UPDATED_AT' => Carbon::now('Asia/Jakarta')
+                        ]);
+                    }
                 }
 
                 foreach ($structuredDataAngsuran as $request) {
