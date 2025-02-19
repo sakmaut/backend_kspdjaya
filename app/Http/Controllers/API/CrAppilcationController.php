@@ -182,6 +182,7 @@ class CrAppilcationController extends Controller
 
     public function update(Request $request, $id)
     {
+        DB::beginTransaction();
         try {
             $request->validate([
                 'flag_pengajuan' => 'required|string',
@@ -200,31 +201,18 @@ class CrAppilcationController extends Controller
             $this->insert_cr_personal($request, $id);
             $this->insert_cr_order($request, $surveyID, $id);
             $this->insert_cr_personal_extra($request, $id);
+
             if (!empty($request->penjamin)) {
                 $this->insert_cr_guarantor($request, $id);
             }
+
             if (!empty($request->pasangan)) {
                 $this->insert_cr_spouse($request, $id);
             }
+
             $this->insert_bank_account($request, $id);
             $this->insert_taksasi($request, $surveyID);
             $this->insert_application_approval($request, $id, $surveyID, $request->flag_pengajuan);
-
-            // if($request->user()->position === 'KAPOS'){
-            //     $data_approval['application_result'] = 'DROR';
-
-            //     $approval_change = M_SurveyApproval::where('CR_SURVEY_ID', $surveyID)->first();
-
-            //     if ($approval_change) {
-            //         $approval_change->update(['APPROVAL_RESULT' => 'DROR']);
-            //         $approvalLog = new ApprovalLog();
-            //         $approvalLog->surveyApprovalLog("AUTO_APPROVED_BY_SYSTEM", $approval_change->ID, 'DROR');
-            //     }
-
-            //     $checkApproval= M_ApplicationApproval::where('cr_application_id', $id)->first();
-
-            //     $checkApproval->update($data_approval);
-            // }
 
             if (collect($request->jaminan)->isNotEmpty()) {
                 foreach ($request->jaminan as $result) {
@@ -397,8 +385,10 @@ class CrAppilcationController extends Controller
                 }
             }
 
+            DB::commit();
             return response()->json(['message' => 'Updated Successfully', "status" => 200], 200);
         } catch (\Exception $e) {
+            DB::rollback();
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
