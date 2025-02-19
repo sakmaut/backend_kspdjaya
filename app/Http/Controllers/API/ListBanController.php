@@ -25,7 +25,7 @@ class ListBanController extends Controller
                 $date = Carbon::createFromTimestamp($timestamp);
 
                 // Format the date as Y-m-d
-                $formattedDate = $date->format('Y-m-d');
+                $formattedDate = $date->format('Ymd');
 
                 $dateFrom = $formattedDate;
                 $cabangId = $request->cabang_id;
@@ -60,9 +60,7 @@ class ListBanController extends Controller
                     $amount = is_numeric($item->ORIGINAL_AMOUNT) ? floatval($item->ORIGINAL_AMOUNT) : 0;
 
                     if ($item->JENIS != 'PENCAIRAN') {
-
                         if ($item->JENIS == 'ANGSURAN_POKOK' || $item->JENIS == 'ANGSURAN_BUNGA') {
-
                             $totalAngsuranPokokBunga += $amount;
 
                             $datas['datas'][] = [
@@ -76,7 +74,7 @@ class ListBanController extends Controller
                                 'position' => $item->position ?? '',
                                 'nama_pelanggan' => $pelanggan,
                                 'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
-                                'keterangan' => 'Bayar ' . $item->angsuran_ke ?? '',
+                                'keterangan' => 'Bayar ' . ($item->angsuran_ke ?? ''),
                                 'amount' => $totalAngsuranPokokBunga,
                             ];
                         } else {
@@ -91,12 +89,12 @@ class ListBanController extends Controller
                                 'position' => $item->position ?? '',
                                 'nama_pelanggan' => $pelanggan,
                                 'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
-                                'keterangan' => $item->JENIS . ' ' . $item->angsuran_ke ?? '',
+                                'keterangan' => $item->JENIS . ' ' . ($item->angsuran_ke ?? ''),
                                 'amount' => $amount,
                             ];
                         }
 
-                        $totalCashin += floatval($item->ORIGINAL_AMOUNT);
+                        $totalCashin += $amount;
                     }
                 }
 
@@ -199,13 +197,13 @@ class ListBanController extends Controller
                     INNER JOIN credit b2 ON b2.LOAN_NUMBER = b.LOAN_NUM
                     INNER JOIN customer b3 ON b3.CUST_CODE = b2.CUST_CODE
                     INNER JOIN users u ON u.id = b.user_id 
-                    WHERE b.ENTRY_DATE = '$dateFrom'
+                    WHERE DATE_FORMAT(b.ENTRY_DATE,'%Y%m%d') = STR_TO_DATE('$dateFrom','%Y%m%d')
                 ";
 
         if (!empty($cabangId) && $cabangId != 'SEMUA CABANG') {
             $query .= " AND b.BRANCH_ID = '" . $cabangId . "'";
         }
-        // Execute the query with parameters
+
         $result = DB::select($query);
 
         return $result;
