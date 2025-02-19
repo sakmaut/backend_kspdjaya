@@ -129,25 +129,27 @@ class PaymentController extends Controller
                         }
                     }
 
-                    M_KwitansiStructurDetail::firstOrCreate([
-                        'no_invoice' => $no_inv,
-                        'key' => $res['key'] ?? '',
-                        'loan_number' => $res['loan_number'] ?? ''
-                    ], [
-                        'angsuran_ke' => $res['angsuran_ke'] ?? '',
-                        'tgl_angsuran' => $res['tgl_angsuran'] ?? '',
-                        'principal' => $res['principal'] ?? '',
-                        'interest' => $res['interest'] ?? '',
-                        'installment' => $res['installment'] ?? '',
-                        'principal_remains' => $res['principal_remains'] ?? '',
-                        'payment' => $res['payment'] ?? '',
-                        'bayar_angsuran' => $res['bayar_angsuran'] ?? '',
-                        'bayar_denda' => $res['bayar_denda'] ?? '',
-                        'total_bayar' => $res['total_bayar'] ?? '',
-                        'flag' => $res['flag'] ?? '',
-                        'denda' => $res['denda'] ?? '',
-                        'diskon_denda' => strtolower($request->bayar_dengan_diskon) == 'ya' ? 1 : 0
-                    ]);
+                    if ($res['bayar_angsuran'] != 0 && $res['bayar_denda'] != 0 || strtolower($request->bayar_dengan_diskon) == 'ya') {
+                        M_KwitansiStructurDetail::firstOrCreate([
+                            'no_invoice' => $no_inv,
+                            'key' => $res['key'] ?? '',
+                            'loan_number' => $res['loan_number'] ?? ''
+                        ], [
+                            'angsuran_ke' => $res['angsuran_ke'] ?? '',
+                            'tgl_angsuran' => $res['tgl_angsuran'] ?? '',
+                            'principal' => $res['principal'] ?? '',
+                            'interest' => $res['interest'] ?? '',
+                            'installment' => $res['installment'] ?? '',
+                            'principal_remains' => $res['principal_remains'] ?? '',
+                            'payment' => $res['payment'] ?? '',
+                            'bayar_angsuran' => $res['bayar_angsuran'] ?? '',
+                            'bayar_denda' => $res['bayar_denda'] ?? '',
+                            'total_bayar' => $res['total_bayar'] ?? '',
+                            'flag' => $res['flag'] ?? '',
+                            'denda' => $res['denda'] ?? '',
+                            'diskon_denda' => strtolower($request->bayar_dengan_diskon) == 'ya' ? 1 : 0
+                        ]);
+                    }
 
                     if ($check_method_payment && strtolower($request->bayar_dengan_diskon) != 'ya') {
                         $this->processPaymentStructure($res, $request, $getCodeBranch, $no_inv);
