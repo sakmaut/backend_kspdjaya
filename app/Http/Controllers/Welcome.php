@@ -146,7 +146,7 @@ class Welcome extends Controller
                             $updateArrears = DB::select($getCrditSchedule);
 
                             foreach ($updateArrears as $list) {
-                                $date = date('Y-m-d');
+                                $date = date('Y-m-d', strtotime($request['created_at']));
                                 $daysDiff = (strtotime($date) - strtotime($list->PAYMENT_DATE)) / (60 * 60 * 24);
                                 $pastDuePenalty = $list->INSTALLMENT * ($daysDiff * 0.005);
 
