@@ -678,7 +678,7 @@ class PaymentController extends Controller
 
                 if ($kwitansi->PAYMENT_TYPE === 'pelunasan') {
                     $pelunasan = new PelunasanController();
-                    return $pelunasan->proccessCancel($kwitansi->LOAN_NUMBER, $getInvoice, 'CANCEL');
+                    $pelunasan->proccessCancel($kwitansi->LOAN_NUMBER, $getInvoice, 'CANCEL');
                 } else {
 
                     if (isset($request->struktur) && is_array($request->struktur)) {
@@ -742,6 +742,8 @@ class PaymentController extends Controller
             ];
 
             M_PaymentApproval::create($data_approval);
+
+
             DB::commit();
             return response()->json(['message' => 'success'], 200);
         } catch (\Exception $e) {
