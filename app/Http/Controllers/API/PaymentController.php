@@ -129,7 +129,7 @@ class PaymentController extends Controller
                         }
                     }
 
-                    if ($res['bayar_angsuran'] != 0 && $res['bayar_denda'] != 0 || strtolower($request->bayar_dengan_diskon) == 'ya') {
+                    if ($res['bayar_angsuran'] != 0 || $res['bayar_denda'] != 0 || strtolower($request->bayar_dengan_diskon) == 'ya') {
                         M_KwitansiStructurDetail::firstOrCreate([
                             'no_invoice' => $no_inv,
                             'key' => $res['key'] ?? '',
