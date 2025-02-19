@@ -574,9 +574,9 @@ class ReportController extends Controller
                     'Sisa Angs' => number_format($sisaAngs),
                     'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0),
                     'Byr Dnda' => number_format($res->denda ?? 0),
-                    'Sisa Tghn' => $sisaByr,
+                    'Sisa Tghn' => (floatval($sisaAngs) + floatval($res->PAST_DUE_PENALTY)) - floatval($res->denda),
                     'Ovd' => $res->OD ?? 0,
-                    '' => $sisaByr == '0' ? 'L' : ''
+                    '' => $sisaAngs == '0' && $res->PAST_DUE_PENALTY == '0' ? 'L' : ''
                 ];
             }
 
