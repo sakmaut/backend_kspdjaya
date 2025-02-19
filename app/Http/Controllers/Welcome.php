@@ -55,8 +55,8 @@ class Welcome extends Controller
     public function index(Request $req)
     {
 
-        // return response()->json('OK');
-        // die;
+        return response()->json('OK');
+        die;
         DB::beginTransaction();
         try {
 
@@ -64,7 +64,7 @@ class Welcome extends Controller
             $type = $req->tipe;
             $setDate = $req->tgl;
 
-            if($type == 'angsuran'){
+            if ($type == 'angsuran') {
                 $queryAngsuran = "  SELECT  a.NO_TRANSAKSI,
                                 a.LOAN_NUMBER,
                                 a.PAYMENT_TYPE,
@@ -160,7 +160,7 @@ class Welcome extends Controller
                         }
                     }
                 }
-            }else{
+            } else {
                 $queryPelunasan = "  SELECT  a.NO_TRANSAKSI,
                                 a.LOAN_NUMBER,
                                 a.PAYMENT_TYPE,
@@ -1367,7 +1367,8 @@ class Welcome extends Controller
     //     return $documents;
     // }
 
-    public function job(){
+    public function job()
+    {
         try {
 
             // $setDate = DB::raw('CURDATE()');
@@ -1426,7 +1427,7 @@ class Welcome extends Controller
 
             return response()->json('ok', 200);
         } catch (\Exception $e) {
-            return response()->json($e->getMessage(),500);
+            return response()->json($e->getMessage(), 500);
         }
     }
 }
