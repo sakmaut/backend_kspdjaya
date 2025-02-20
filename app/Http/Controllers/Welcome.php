@@ -232,11 +232,24 @@ class Welcome extends Controller
                     }
                 }
             } else {
-                $getDetail = $this->checkCredit($cekINV->LOAN_NUMBER);
-                $jml = $cekINV->JUMLAH_UANG;
+                // $getDetail = $this->checkCredit($cekINV->LOAN_NUMBER);
+                // $jml = $cekINV->JUMLAH_UANG;
 
-                return response()->json($getDetail->original);
-                die;
+
+                // foreach ($getDetail->original as $res) {
+                //     $sisa_pokok = $res->SISA_POKOK;
+                //     $tunggakan_bunga = $res->TUNGGAKAN_BUNGA;
+                //     $pinalti = $res->PINALTI;
+                //     $denda = $res->DENDA;
+                // }
+
+                // // $sisa_pokok = $getDetail->original['SISA_POKOK'];
+                // // $tunggakan_bunga = $getDetail->original['TUNGGAKAN_BUNGA'];
+                // // $pinalti = $getDetail->original['PINALTI'];
+                // // $denda = $getDetail->original['DENDA'];
+
+                // return response()->json($getDetail->original);
+                // die;
 
                 // $structuredDataPelunasan = [];
 
