@@ -144,7 +144,7 @@ class PelunasanController2 extends Controller
 
             $build = [
                 'jumlah_uang' => $cekINV->JUMLAH_UANG,
-                'details' => $getDetail
+                'details' => $getDetail->original
             ];
 
             return response()->json($build);
