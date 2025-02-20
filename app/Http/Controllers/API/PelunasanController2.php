@@ -142,10 +142,18 @@ class PelunasanController2 extends Controller
 
             $getDetail = $this->checkCredit($cekINV->LOAN_NUMBER);
 
-            $build = [
-                'jumlah_uang' => $cekINV->JUMLAH_UANG,
-                'details' => $getDetail->original
-            ];
+            $build = [];
+            foreach ($getDetail->original as $list) {
+                $build = [
+                    "SISA_POKOK" => $list['SISA_POKOK'],
+                    "TUNGGAKAN_BUNGA" => $list['TUNGGAKAN_BUNGA'],
+                    "PINALTI" => $list['PINALTI'],
+                    "DENDA" => $list['DENDA'],
+                    "TUNGGAKAN_DENDA" => $list['TUNGGAKAN_DENDA'],
+                    "DISC_BUNGA" => $list['DISC_BUNGA'],
+                    'UANG_PELANGGAN' => $cekINV['JUMLAH_UANG']
+                ];
+            }
 
             return response()->json($build);
             die;
@@ -163,7 +171,6 @@ class PelunasanController2 extends Controller
             return response()->json("MUACHHHHHHHHHHHHHH", 200);
         } catch (\Exception $e) {
             DB::rollback();
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage()], 500);
         }
     }
@@ -424,57 +431,6 @@ class PelunasanController2 extends Controller
                 'DISCOUNT_PENALTY' => floatval($credit->DISCOUNT_PENALTY) - floatval($res['diskon_denda']),
                 'STATUS' => 'A',
                 'END_DATE' => now()
-            ]);
-        }
-    }
-
-    private function saveKwitansi($request, $customer, $no_inv, $status)
-    {
-
-        $checkKwitansiExist = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
-
-        if ($checkKwitansiExist) {
-            throw new Exception("Kwitansi Exist", 500);
-        }
-
-        $data = [
-            "PAYMENT_TYPE" => 'pelunasan',
-            "PAYMENT_ID" => $request->payment_id,
-            "STTS_PAYMENT" => $status,
-            "NO_TRANSAKSI" => $no_inv,
-            "LOAN_NUMBER" => $request->LOAN_NUMBER,
-            "TGL_TRANSAKSI" => Carbon::now(),
-            "CUST_CODE" => $customer->CUST_CODE,
-            "BRANCH_CODE" => $request->user()->branch_id,
-            "NAMA" => $customer->NAME,
-            "ALAMAT" => $customer->ADDRESS,
-            "RT" => $customer->RT,
-            "RW" => $customer->RW,
-            "PROVINSI" => $customer->PROVINCE,
-            "KOTA" => $customer->CITY,
-            "KECAMATAN" => $customer->KECAMATAN,
-            "KELURAHAN" => $customer->KELURAHAN,
-            "METODE_PEMBAYARAN" => $request->METODE_PEMBAYARAN,
-            "TOTAL_BAYAR" => $request->TOTAL_BAYAR ?? 0,
-            "PINALTY_PELUNASAN" => $request->BAYAR_PINALTI ?? 0,
-            "DISKON_PINALTY_PELUNASAN" => $request->DISKON_PINALTI ?? 0,
-            "PEMBULATAN" => $request->PEMBULATAN,
-            "DISKON" => $request->PEMBULATAN,
-            "KEMBALIAN" => $request->KEMBALIAN,
-            "JUMLAH_UANG" => $request->UANG_PELANGGAN,
-            "NAMA_BANK" => $request->NAMA_BANK,
-            "NO_REKENING" => $request->NO_REKENING,
-            "CREATED_BY" => $request->user()->id
-        ];
-
-        M_Kwitansi::create($data);
-
-        $getCredit = M_Credit::where('LOAN_NUMBER', $request->LOAN_NUMBER)->first();
-
-        if ($getCredit) {
-            $getCredit->update([
-                "PINALTY_PELUNASAN" => $request->BAYAR_PINALTI ?? 0,
-                "DISKON_PINALTY_PELUNASAN" => $request->DISKON_PINALTI ?? 0,
             ]);
         }
     }
