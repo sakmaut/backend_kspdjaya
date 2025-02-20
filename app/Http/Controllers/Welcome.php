@@ -150,7 +150,7 @@ class Welcome extends Controller
 
                             $updateArrears = DB::select($getCrditSchedule);
 
-                            if ($res['bayar_denda'] != 0 && empty($updateArrears)) {
+                            if (empty($updateArrears)) {
                                 throw new Exception("Arrears Date Not Found", 404);
                             }
 
