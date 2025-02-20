@@ -127,7 +127,7 @@ class PelunasanController2 extends Controller
         }
     }
 
-    public function processPelunasan(Request $request)
+    public function getDetail(Request $request)
     {
         DB::beginTransaction();
         try {
@@ -151,15 +151,26 @@ class PelunasanController2 extends Controller
                     "DENDA" => $list['DENDA'],
                     "TUNGGAKAN_DENDA" => $list['TUNGGAKAN_DENDA'],
                     "DISC_BUNGA" => $list['DISC_BUNGA'],
-                    'UANG_PELANGGAN' => $cekINV['JUMLAH_UANG']
+                    'UANG_PELANGGAN' => $cekINV['JUMLAH_UANG'],
+                    'LOAN_NUMBER' => $cekINV['LOAN_NUMBER'],
+                    'INVOICE' => $cekINV['NO_TRANSAKSI']
                 ];
             }
 
-            return response()->json($build);
-            die;
+            DB::commit();
+            return response()->json($build, 200);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+    }
 
-            $loan_number = $cekINV->LOAN_NUMBER;
-            $no_inv = $cekINV->NO_TRANSAKSI;
+    public function propel(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $loan_number = $request->LOAN_NUMBER;
+            $no_inv = $request->INVOICE;
 
             $execute = $this->proccessKwitansiDetail($request, $loan_number, $no_inv);
 
@@ -168,7 +179,7 @@ class PelunasanController2 extends Controller
             }
 
             DB::commit();
-            return response()->json("MUACHHHHHHHHHHHHHH", 200);
+            return response()->json("MUACH MUACHH MUACHHH", 200);
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json(['message' => $e->getMessage()], 500);
