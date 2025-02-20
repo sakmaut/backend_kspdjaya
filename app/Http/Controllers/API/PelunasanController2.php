@@ -140,6 +140,63 @@ class PelunasanController2 extends Controller
                 throw new Exception("Invoice Not Found", 500);
             }
 
+            $arrearsData = [];
+            $getCrditSchedule = "   SELECT LOAN_NUMBER,PAYMENT_DATE,PRINCIPAL,INTEREST,INSTALLMENT,PAYMENT_VALUE_PRINCIPAL,PAYMENT_VALUE_INTEREST
+                                    FROM credit_schedule 
+                                    WHERE LOAN_NUMBER = '$cekINV->LOAN_NUMBER'
+                                        AND (PAID_FLAG IS NULL OR PAID_FLAG = '') ";
+
+
+            $updateArrears = DB::select($getCrditSchedule);
+
+            foreach ($updateArrears as $list) {
+                $date = date('Y-m-d', strtotime($cekINV->CREATED_AT));
+                $daysDiff = (strtotime($date) - strtotime($list->PAYMENT_DATE)) / (60 * 60 * 24);
+                $pastDuePenalty = $list->INSTALLMENT * ($daysDiff * 0.005);
+
+                if ($pastDuePenalty <= 0) {
+                    $pastDuePenalty = 0;
+                }
+
+                $arrearsData[] = [
+                    'ID' => Uuid::uuid7()->toString(),
+                    'STATUS_REC' => 'A',
+                    'LOAN_NUMBER' => $list->LOAN_NUMBER,
+                    'START_DATE' => $list->PAYMENT_DATE,
+                    'END_DATE' => null,
+                    'PAST_DUE_PCPL' => $list->PRINCIPAL ?? 0,
+                    'PAST_DUE_INTRST' => $list->INTEREST ?? 0,
+                    'PAST_DUE_PENALTY' => $pastDuePenalty ?? 0,
+                    'PAID_PCPL' => $list->PAYMENT_VALUE_PRINCIPAL ?? 0,
+                    'PAID_INT' => $list->PAYMENT_VALUE_INTEREST ?? 0,
+                    'PAID_PENALTY' => 0,
+                    'CREATED_AT' => Carbon::now('Asia/Jakarta')
+                ];
+            }
+
+            if(!empty($arrearsData)){
+                foreach ($arrearsData as $data) {
+                    $existingArrears = M_Arrears::where([
+                        'LOAN_NUMBER' => $data['LOAN_NUMBER'],
+                        'START_DATE' => $data['START_DATE'],
+                        'STATUS_REC' => 'A'
+                    ])->first();
+
+                    if ($existingArrears) {
+                        $existingArrears->update([
+                            'PAST_DUE_PENALTY' => $data['PAST_DUE_PENALTY'] ?? 0,
+                            'UPDATED_AT' => Carbon::now('Asia/Jakarta')
+                        ]);
+                    } else {
+                        $getNow = date('Y-m-d');
+
+                        if ($data['START_DATE'] < $getNow) {
+                            M_Arrears::create($data);
+                        }
+                    }
+                }
+            }
+
             $getDetail = $this->checkCredit($cekINV->LOAN_NUMBER);
 
             $build = [];
