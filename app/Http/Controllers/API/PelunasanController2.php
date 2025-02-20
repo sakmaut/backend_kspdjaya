@@ -136,6 +136,10 @@ class PelunasanController2 extends Controller
 
             $cekINV = M_Kwitansi::where('NO_TRANSAKSI', $inv)->first();
 
+            if(!$cekINV){
+                throw new Exception("Invoice NOt Found", 500);
+            }
+
             $getDetail = $this->checkCredit($cekINV->LOAN_NUMBER);
 
             return response()->json($getDetail->original);
