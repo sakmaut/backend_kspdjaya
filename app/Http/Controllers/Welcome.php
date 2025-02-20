@@ -191,7 +191,11 @@ class Welcome extends Controller
                             'UPDATED_AT' => Carbon::now('Asia/Jakarta')
                         ]);
                     } else {
-                        M_Arrears::create($data);
+                        $getNow = date('Y-m-d');
+
+                        if ($data['START_DATE'] < $getNow) {
+                            M_Arrears::create($data);
+                        }
                     }
                 }
 
@@ -747,7 +751,7 @@ class Welcome extends Controller
             $total1 = floatval($new_payment_value_principal) + floatval($new_payment_value_interest) + floatval($new_penalty);
             $total2 = floatval($getPrincipal) + floatval($getInterest) + floatval($getPenalty);
 
-            if (($total1 != $total2 && $total1 != 0 && $total2 != 0) || $new_penalty > $getPenalty && $getPenalty != 0) {
+            if ($total1 != $total2 || ($new_penalty > $getPenalty)) {
                 $check_arrears->update(['STATUS_REC' => 'S']);
             }
         }
