@@ -153,7 +153,9 @@ class PelunasanController2 extends Controller
                     "DISC_BUNGA" => $list['DISC_BUNGA'],
                     'UANG_PELANGGAN' => $cekINV['JUMLAH_UANG'],
                     'LOAN_NUMBER' => $cekINV['LOAN_NUMBER'],
-                    'INVOICE' => $cekINV['NO_TRANSAKSI']
+                    'INVOICE' => $cekINV['NO_TRANSAKSI'],
+                    'CREATED_BY' => $cekINV['CREATED_BY'],
+                    'CREATED_AT' => $cekINV['CREATED_AT']
                 ];
             }
 
