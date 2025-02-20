@@ -491,6 +491,10 @@ class Welcome extends Controller
             'PAYMENT_DATE' => $tgl_angsuran
         ])->first();
 
+        if (!$credit_schedule) {
+            throw new Exception("Credit Schedule Not Found", 404);
+        }
+
         $byr_angsuran = $res['bayar_angsuran'];
         $flag = $res['flag'];
 
@@ -566,6 +570,10 @@ class Welcome extends Controller
     {
 
         $check_credit = M_Credit::where(['LOAN_NUMBER' => $loan_number])->first();
+
+        if (!$check_credit) {
+            throw new Exception("Credit Not Found", 404);
+        }
 
         $checkCreditSchedule = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)
             ->where(function ($query) {
