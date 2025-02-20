@@ -163,7 +163,11 @@ class Welcome extends Controller
                                     'END_DATE' => null,
                                     'PAST_DUE_PCPL' => $list->PRINCIPAL ?? 0,
                                     'PAST_DUE_INTRST' => $list->INTEREST ?? 0,
-                                    'PAST_DUE_PENALTY' => $pastDuePenalty ?? 0
+                                    'PAST_DUE_PENALTY' => $pastDuePenalty ?? 0,
+                                    'PAID_PCPL' => 0,
+                                    'PAID_INT' => 0,
+                                    'PAID_PENALTY' => 0,
+                                    'CREATED_AT' => Carbon::now('Asia/Jakarta')
                                 ];
                             }
                         }
@@ -182,6 +186,8 @@ class Welcome extends Controller
                             'PAST_DUE_PENALTY' => $data['PAST_DUE_PENALTY'] ?? 0,
                             'UPDATED_AT' => Carbon::now('Asia/Jakarta')
                         ]);
+                    } else {
+                        M_Arrears::create($data);
                     }
                 }
 
