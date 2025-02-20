@@ -22,44 +22,9 @@ use Ramsey\Uuid\Uuid;
 
 class PelunasanController2 extends Controller
 {
-    public function index(Request $request)
+    private function checkCredit($loan_number)
     {
         try {
-
-            $notrx = $request->query('notrx');
-            $nama = $request->query('nama');
-            $no_kontrak = $request->query('no_kontrak');
-
-            $data = M_Kwitansi::where('PAYMENT_TYPE', 'pelunasan')->orderBy('CREATED_AT', 'DESC')->limit(10);
-
-            if (!empty($notrx)) {
-                $data = $data->where('NO_TRANSAKSI', 'like', '%' . $notrx . '%');
-            }
-
-            if (!empty($nama)) {
-                $data = $data->where('NAMA', 'like', '%' . $nama . '%');
-            }
-
-            if (!empty($no_kontrak)) {
-                $data = $data->where('LOAN_NUMBER', 'like', '%' . $no_kontrak . '%');
-            }
-
-            $results = $data->get();
-
-            $dto = R_Pelunasan::collection($results);
-
-            return response()->json($dto, 200);
-        } catch (\Exception $e) {
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
-        }
-    }
-
-    public function checkCredit(Request $request)
-    {
-        try {
-
-            $loan_number = $request->loan_number;
 
             $allQuery = "SELECT 
                             (a.PCPL_ORI - COALESCE(a.PAID_PRINCIPAL, 0)) AS SISA_POKOK,
@@ -141,9 +106,9 @@ class PelunasanController2 extends Controller
                 return [
                     'SISA_POKOK' => round(floatval($item->SISA_POKOK), 2),
                     'TUNGGAKAN_BUNGA' => round(floatval($item->TUNGGAKAN_BUNGA), 2),
-                    'TUNGGAKAN_DENDA' => round(floatval($item->TUNGGAKAN_DENDA), 2),
-                    'DENDA' => round(floatval($item->DENDA), 2),
                     'PINALTI' => round(floatval($item->PINALTI), 2),
+                    'DENDA' => round(floatval($item->DENDA), 2),
+                    'TUNGGAKAN_DENDA' => round(floatval($item->TUNGGAKAN_DENDA), 2),
                 ];
             }, $result);
 
@@ -158,15 +123,24 @@ class PelunasanController2 extends Controller
 
             return response()->json($processedResults, 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
 
-    public function processPayment(Request $request)
+    public function processPelunasan(Request $request)
     {
         DB::beginTransaction();
         try {
+
+            $inv = $request->no_invoice;
+
+            $cekINV = M_Kwitansi::where('NO_TRANSAKSI', $inv)->first();
+
+            $getDetail = $this->checkCredit($cekINV->LOAN_NUMBER);
+
+            return response()->json($getDetail->original);
+
+            die;
 
             $check = $request->only(['BAYAR_POKOK', 'BAYAR_BUNGA', 'BAYAR_PINALTI', 'BAYAR_DENDA', 'DISKON_POKOK', 'DISKON_PINALTI', 'DISKON_BUNGA', 'DISKON_DENDA']);
 
