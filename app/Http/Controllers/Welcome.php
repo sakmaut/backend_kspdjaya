@@ -150,10 +150,6 @@ class Welcome extends Controller
 
                             $updateArrears = DB::select($getCrditSchedule);
 
-                            if (empty($updateArrears)) {
-                                throw new Exception("Arrears Date Not Found", 404);
-                            }
-
                             foreach ($updateArrears as $list) {
                                 $date = date('Y-m-d', strtotime($request['created_at']));
                                 $daysDiff = (strtotime($date) - strtotime($list->PAYMENT_DATE)) / (60 * 60 * 24);
@@ -180,6 +176,10 @@ class Welcome extends Controller
                         'START_DATE' => $data['START_DATE'],
                         'STATUS_REC' => 'A'
                     ])->first();
+
+                    if ($existingArrears) {
+                        throw new Exception("Arrears Date Not Found OR Is Actived", 404);
+                    }
 
                     if ($existingArrears) {
                         $existingArrears->update([
