@@ -87,6 +87,11 @@ class Welcome extends Controller
 					ORDER BY a.LOAN_NUMBER,a.TGL_TRANSAKSI ASC";
 
                 $resultsAngsuran = DB::select($queryAngsuran);
+
+                if (empty($resultsAngsuran)) {
+                    throw new Exception("Invoice Not Found", 404);
+                }
+
                 $structuredDataAngsuran = [];
 
                 foreach ($resultsAngsuran as $result) {
@@ -144,6 +149,10 @@ class Welcome extends Controller
 
 
                             $updateArrears = DB::select($getCrditSchedule);
+
+                            if (empty($updateArrears)) {
+                                throw new Exception("Arrears Date Not Found", 404);
+                            }
 
                             foreach ($updateArrears as $list) {
                                 $date = date('Y-m-d', strtotime($request['created_at']));
