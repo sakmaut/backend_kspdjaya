@@ -154,6 +154,10 @@ class PelunasanController2 extends Controller
                     'UANG_PELANGGAN' => $cekINV['JUMLAH_UANG'],
                     'LOAN_NUMBER' => $cekINV['LOAN_NUMBER'],
                     'INVOICE' => $cekINV['NO_TRANSAKSI'],
+                    'METODE_PEMBAYARAN' => $cekINV['METODE_PEMBAYARAN'],
+                    'BRANCH_CODE' => $cekINV['BRANCH_CODE'],
+                    'PINALTY_PELUNASAN' => $cekINV['PINALTY_PELUNASAN'],
+                    'DISKON_PINALTY_PELUNASAN' => $cekINV['DISKON_PINALTY_PELUNASAN'],
                     'CREATED_BY' => $cekINV['CREATED_BY'],
                     'CREATED_AT' => $cekINV['CREATED_AT']
                 ];
@@ -171,8 +175,8 @@ class PelunasanController2 extends Controller
     {
         DB::beginTransaction();
         try {
-            $loan_number = $request->LOAN_NUMBER;
-            $no_inv = $request->INVOICE;
+            $loan_number = $request['LOAN_NUMBER'];
+            $no_inv = $request['INVOICE'];
 
             $execute = $this->proccessKwitansiDetail($request, $loan_number, $no_inv);
 
@@ -239,18 +243,18 @@ class PelunasanController2 extends Controller
             'ACC_KEY' => 'Pelunasan Angsuran Ke-' . ($res['angsuran_ke'] ?? ''),
             'STTS_RCRD' => $status,
             'NO_TRX' => $no_inv,
-            'PAYMENT_METHOD' => $request->METODE_PEMBAYARAN ?? '',
+            'PAYMENT_METHOD' => $request['METODE_PEMBAYARAN'] ?? '',
             'INVOICE' => $no_inv,
-            'BRANCH' => M_Branch::find($request->user()->branch_id)->CODE_NUMBER ?? '',
+            'BRANCH' => M_Branch::find($request['BRANCH_CODE'])->CODE_NUMBER ?? '',
             'LOAN_NUM' => $res['loan_number'] ?? '',
-            'ENTRY_DATE' => Carbon::now(),
+            'ENTRY_DATE' => $request['CREATED_AT'] ?? null,
             'TITLE' => 'Angsuran Ke-' . ($res['angsuran_ke'] ?? ''),
             'ORIGINAL_AMOUNT' => $originalAmount,
             'START_DATE' => $res['tgl_angsuran'] ?? '',
-            'END_DATE' => Carbon::now(),
-            'USER_ID' => $request->user()->id,
-            'AUTH_BY' => $request->user()->fullname ?? '',
-            'AUTH_DATE' => Carbon::now()
+            'END_DATE' => $request['CREATED_AT'] ?? null,
+            'USER_ID' => $request['CREATED_BY'],
+            'AUTH_BY' => 'NOVA',
+            'AUTH_DATE' => $request['CREATED_AT'] ?? null
         ]);
     }
 
@@ -263,17 +267,17 @@ class PelunasanController2 extends Controller
             'ACC_KEY' => 'Bayar Pelunasan Pinalty',
             'STTS_RCRD' => $status,
             'NO_TRX' => $no_inv,
-            'PAYMENT_METHOD' => $request->METODE_PEMBAYARAN ?? '',
+            'PAYMENT_METHOD' => $request['METODE_PEMBAYARAN'] ?? '',
             'INVOICE' => $no_inv,
-            'BRANCH' => M_Branch::find($request->user()->branch_id)->CODE_NUMBER ?? '',
+            'BRANCH' => M_Branch::find($request['BRANCH_CODE'])->CODE_NUMBER ?? '',
             'LOAN_NUM' => $loan_number ?? '',
-            'ENTRY_DATE' => Carbon::now(),
+            'ENTRY_DATE' => $request['CREATED_AT'] ?? null,
             'TITLE' => 'Bayar Pelunasan Pinalty',
-            'ORIGINAL_AMOUNT' => $request->BAYAR_PINALTI ?? 0,
-            'END_DATE' => Carbon::now(),
-            'USER_ID' => $request->user()->id,
-            'AUTH_BY' => $request->user()->fullname ?? '',
-            'AUTH_DATE' => Carbon::now()
+            'ORIGINAL_AMOUNT' => $request['BAYAR_PINALTI'] ?? 0,
+            'END_DATE' => $request['CREATED_AT'] ?? null,
+            'USER_ID' => $request['CREATED_BY'],
+            'AUTH_BY' => 'NOVA',
+            'AUTH_DATE' => $request['CREATED_AT'] ?? null
         ]);
 
         if ($request->BAYAR_PINALTI != 0) {
@@ -289,6 +293,7 @@ class PelunasanController2 extends Controller
     {
 
         $getCreditSchedule = M_CreditSchedule::where(['LOAN_NUMBER' => $loan_number, 'PAYMENT_DATE' => $res['tgl_angsuran']])->first();
+        
 
         if ($getCreditSchedule) {
 
@@ -315,36 +320,8 @@ class PelunasanController2 extends Controller
             $getCreditSchedule->update([
                 'PAYMENT_VALUE' => $ttlPayment
             ]);
-        }
-    }
-
-    function cancelCreditSchedule($loan_number, $res)
-    {
-
-        $getCreditSchedule = M_CreditSchedule::where(['LOAN_NUMBER' => $loan_number, 'PAYMENT_DATE' => $res['tgl_angsuran']])->first();
-
-        if ($getCreditSchedule) {
-
-            $valBeforePrincipal = $getCreditSchedule->PAYMENT_VALUE_PRINCIPAL;
-            $valBeforeInterest = $getCreditSchedule->PAYMENT_VALUE_INTEREST;
-            $valBeforeDiscPrincipal = $getCreditSchedule->DISCOUNT_PRINCIPAL;
-            $valBeforeDiscInterest = $getCreditSchedule->DISCOUNT_INTEREST;
-            $valPaymentValue = $getCreditSchedule->PAYMENT_VALUE;
-
-            $ttlPrincipal = floatval($valBeforePrincipal) - floatval($res['bayar_pokok'] ?? 0);
-            $ttlInterest = floatval($valBeforeInterest) - floatval($res['bayar_bunga'] ?? 0);
-            $ttlDiscPrincipal = floatval($valBeforeDiscPrincipal) - floatval($res['diskon_pokok'] ?? 0);
-            $ttlDiscInterest = floatval($valBeforeDiscInterest) - floatval($res['diskon_bunga'] ?? 0);
-            $ttlPayment = $valPaymentValue - (floatval($res['bayar_pokok'] ?? 0) + floatval($res['bayar_bunga'] ?? 0) + floatval($res['diskon_pokok'] ?? 0) + floatval($res['diskon_bunga'] ?? 0));
-
-            $getCreditSchedule->update([
-                'PAYMENT_VALUE_PRINCIPAL' => $ttlPrincipal,
-                'PAYMENT_VALUE_INTEREST' => $ttlInterest,
-                'DISCOUNT_PRINCIPAL' => $ttlDiscPrincipal,
-                'DISCOUNT_INTEREST' => $ttlDiscInterest,
-                'PAYMENT_VALUE' => $ttlPayment,
-                'PAID_FLAG' => ''
-            ]);
+        }else{
+            throw new Exception("Credit Schedule Not Found", 404);
         }
     }
 
@@ -379,35 +356,8 @@ class PelunasanController2 extends Controller
             $getArrears->update([
                 'STATUS_REC' => $checkDiscountArrears ? 'S' : 'D',
             ]);
-        }
-    }
-
-    function cancelArrears($loan_number, $res)
-    {
-        $getArrears = M_Arrears::where([
-            'LOAN_NUMBER' => $loan_number,
-            'START_DATE' => $res['tgl_angsuran'],
-        ])->first();
-
-        if ($getArrears) {
-            $ttlPrincipal = floatval($getArrears->PAID_PCPL) - floatval($res['bayar_pokok'] ?? 0);
-            $ttlInterest = floatval($getArrears->PAID_INT) - floatval($res['bayar_bunga'] ?? 0);
-            $ttlPenalty = floatval($getArrears->PAID_PENALTY) - floatval($res['bayar_denda'] ?? 0);
-            $ttlDiscPrincipal = floatval($getArrears->WOFF_PCPL) - floatval($res['diskon_pokok'] ?? 0);
-            $ttlDiscInterest = floatval($getArrears->WOFF_INT) - floatval($res['diskon_bunga'] ?? 0);
-            $ttlDiscPenalty = floatval($getArrears->WOFF_PENALTY) - floatval($res['diskon_denda'] ?? 0);
-
-            $getArrears->update([
-                'END_DATE' => Carbon::now()->format('Y-m-d'),
-                'PAID_PCPL' => $ttlPrincipal ?? 0,
-                'PAID_INT' => $ttlInterest ?? 0,
-                'PAID_PENALTY' => $ttlPenalty ?? 0,
-                'WOFF_PCPL' => $ttlDiscPrincipal ?? 0,
-                'WOFF_INT' => $ttlDiscInterest ?? 0,
-                'WOFF_PENALTY' => $ttlDiscPenalty ?? 0,
-                'STATUS_REC' => 'A',
-                'UPDATED_AT' => Carbon::now(),
-            ]);
+        } else {
+            throw new Exception("Arrears Not Found", 404);
         }
     }
 
@@ -427,24 +377,8 @@ class PelunasanController2 extends Controller
                 'STATUS_REC' => 'PT',
                 'END_DATE' => now()
             ]);
-        }
-    }
-
-    function cancelCredit($loan_number, $res)
-    {
-        $credit = M_Credit::where('LOAN_NUMBER', $loan_number)->first();
-
-        if ($credit) {
-            $credit->update([
-                'PAID_PRINCIPAL' => floatval($credit->PAID_PRINCIPAL) - floatval($res['bayar_pokok']),
-                'PAID_INTEREST' => floatval($credit->PAID_INTEREST) - floatval($res['bayar_bunga']),
-                'DISCOUNT_PRINCIPAL' => floatval($credit->DISCOUNT_PRINCIPAL) - floatval($res['diskon_pokok']),
-                'DISCOUNT_INTEREST' => floatval($credit->DISCOUNT_INTEREST) - floatval($res['diskon_bunga']),
-                'PAID_PENALTY' => floatval($credit->PAID_PENALTY) - floatval($res['bayar_denda']),
-                'DISCOUNT_PENALTY' => floatval($credit->DISCOUNT_PENALTY) - floatval($res['diskon_denda']),
-                'STATUS' => 'A',
-                'END_DATE' => now()
-            ]);
+        } else {
+            throw new Exception("Credit Not Found", 404);
         }
     }
 
