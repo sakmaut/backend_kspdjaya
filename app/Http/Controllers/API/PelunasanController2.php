@@ -235,11 +235,9 @@ class PelunasanController2 extends Controller
             $loan_number = $request['LOAN_NUMBER'];
             $no_inv = $request['INVOICE'];
 
-            $execute = $this->proccessKwitansiDetail($request, $loan_number, $no_inv);
+            $this->proccessKwitansiDetail($request, $loan_number, $no_inv);
 
-            if($execute){
-                $this->proccess($request, $loan_number, $no_inv, 'PAID');
-            }
+            $this->proccess($request, $loan_number, $no_inv, 'PAID');
 
             DB::commit();
             return response()->json("MUACH MUACHH MUACHHH", 200);
