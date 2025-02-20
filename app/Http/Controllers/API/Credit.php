@@ -351,6 +351,14 @@ class Credit extends Controller
             $data_credit['CUST_CODE'] = $check_customer_ktp->CUST_CODE;
         }
 
+        $existingLoanNumbers = [];
+
+        $existingLoanNumbers[] = $data_credit['LOAN_NUMBER'];
+
+        if (count($existingLoanNumbers) !== count(array_unique($existingLoanNumbers))) {
+            return response()->json(['error' => 'Duplicate LOAN_NUMBER in the array. Record not inserted.'], 409);
+        }
+
         $credit = M_Credit::create($data_credit);
         $last_id = $credit->id;
 
