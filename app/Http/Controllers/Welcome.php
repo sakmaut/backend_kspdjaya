@@ -177,10 +177,6 @@ class Welcome extends Controller
                         'STATUS_REC' => 'A'
                     ])->first();
 
-                    if (!$existingArrears) {
-                        throw new Exception("Arrears Date Not Found OR Is Actived", 404);
-                    }
-
                     if ($existingArrears) {
                         $existingArrears->update([
                             'PAST_DUE_PENALTY' => $data['PAST_DUE_PENALTY'] ?? 0,
