@@ -56,8 +56,8 @@ class Welcome extends Controller
     public function index(Request $req)
     {
 
-        return response()->json('OK');
-        die;
+        // return response()->json('OK');
+        // die;
         DB::beginTransaction();
         try {
 
