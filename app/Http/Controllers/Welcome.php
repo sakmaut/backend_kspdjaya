@@ -155,6 +155,10 @@ class Welcome extends Controller
                                 $daysDiff = (strtotime($date) - strtotime($list->PAYMENT_DATE)) / (60 * 60 * 24);
                                 $pastDuePenalty = $list->INSTALLMENT * ($daysDiff * 0.005);
 
+                                if ($pastDuePenalty <= 0) {
+                                    $pastDuePenalty = 0;
+                                }
+
                                 $arrearsData[] = [
                                     'ID' => Uuid::uuid7()->toString(),
                                     'STATUS_REC' => 'A',
