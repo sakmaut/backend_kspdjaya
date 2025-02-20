@@ -236,6 +236,12 @@ class Welcome extends Controller
 
                 $getDetail = new PelunasanController();
 
+                $request = Request::create('/check-credit', 'POST', [
+                    'loan_number' => '12345', // Replace with the actual loan number you want to check
+                ]);
+
+                // Call the checkCredit method and get the response
+                $response = $getDetail->checkCredit($request);
 
                 return response()->json($getDetail);
                 die;
@@ -726,6 +732,7 @@ class Welcome extends Controller
 
             $updates['PAID_PENALTY'] = $new_penalty;
             $updates['END_DATE'] = $request['created_at'];
+            $updates['TRNS_CODE'] = 'BOTEX';
             $updates['UPDATED_AT'] = $request['created_at'];
             $updates['STATUS_REC'] = 'A';
 
@@ -733,8 +740,8 @@ class Welcome extends Controller
                 $check_arrears->update($updates);
             }
 
-            $total1 = floatval($new_payment_value_principal) + floatval($new_payment_value_interest) + floatval($new_penalty);
-            $total2 = floatval($getPrincipal) + floatval($getInterest) + floatval($getPenalty);
+            $total1 = round(floatval($new_payment_value_principal) + floatval($new_payment_value_interest) + floatval($new_penalty), 2);
+            $total2 = round(floatval($getPrincipal) + floatval($getInterest) + floatval($getPenalty), 2);
 
             if ($total1 == $total2 || ($new_penalty > $getPenalty)) {
                 $check_arrears->update(['STATUS_REC' => 'S']);
