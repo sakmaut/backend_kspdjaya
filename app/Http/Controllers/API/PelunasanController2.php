@@ -142,65 +142,25 @@ class PelunasanController2 extends Controller
 
             $getDetail = $this->checkCredit($cekINV->LOAN_NUMBER);
 
-            return response()->json($getDetail->original);
+            $build = [
+                'jumlah_uang' => $cekINV->JUMLAH_UANG,
+                'details' => $getDetail
+            ];
 
+            return response()->json($build);
             die;
 
-            $check = $request->only(['BAYAR_POKOK', 'BAYAR_BUNGA', 'BAYAR_PINALTI', 'BAYAR_DENDA', 'DISKON_POKOK', 'DISKON_PINALTI', 'DISKON_BUNGA', 'DISKON_DENDA']);
+            $loan_number = $cekINV->LOAN_NUMBER;
+            $no_inv = $cekINV->NO_TRANSAKSI;
 
-            if (array_sum($check) == 0) {
-                throw new Exception('Null Kabeh');
+            $execute = $this->proccessKwitansiDetail($request, $loan_number, $no_inv);
+
+            if($execute){
+                $this->proccess($request, $loan_number, $no_inv, 'PAID');
             }
-
-            $loan_number = $request->LOAN_NUMBER;
-
-            $no_inv = generateCodeKwitansi($request, 'kwitansi', 'NO_TRANSAKSI', 'INV');
-
-            $credit = M_Credit::where('LOAN_NUMBER', $loan_number)->firstOrFail();
-
-            $detail_customer = M_Customer::where('CUST_CODE', $credit->CUST_CODE)->firstOrFail();
-
-            $status = "PENDING";
-
-            // $discounts = $request->only(['DISKON_POKOK', 'DISKON_PINALTI', 'DISKON_BUNGA', 'DISKON_DENDA']);
-
-            // $status = "PAID";
-
-            // if (array_sum($discounts) > 0 || strtolower($request->METODE_PEMBAYARAN) === 'transfer') {
-            //     $status = "PENDING";
-            // }
-
-            if (!M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->exists()) {
-                $this->saveKwitansi($request, $detail_customer, $no_inv, $status);
-                $this->proccessKwitansiDetail($request, $loan_number, $no_inv);
-            }
-
-            $creditSchedule = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)
-                ->where(function ($query) {
-                    $query->where('PAID_FLAG', '!=', 'PAID')->orWhereNull('PAID_FLAG');
-                })
-                ->orderBy('PAYMENT_DATE', 'asc')
-                ->get();
-
-            $checkArr = M_Arrears::where([
-                'LOAN_NUMBER' => $loan_number,
-                'STATUS_REC' => 'A'
-            ])->get();
-
-            foreach ($creditSchedule as $res) {
-                $res->update(['PAID_FLAG' => 'PENDING']);
-            }
-
-            foreach ($checkArr as $ress) {
-                $ress->update(['STATUS_REC' => 'PENDING']);
-            }
-
-            $data = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
-
-            $dto = new R_KwitansiPelunasan($data);
 
             DB::commit();
-            return response()->json($dto, 200);
+            return response()->json("MUACHHHHHHHHHHHHHH", 200);
         } catch (\Exception $e) {
             DB::rollback();
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
@@ -241,53 +201,6 @@ class PelunasanController2 extends Controller
                 $this->updateArrears($loan_number, $res);
                 $this->updateCredit($res, $loan_number);
             }
-        }
-    }
-
-    function proccessCancel($loan_number, $no_inv, $status)
-    {
-        try {
-            $pelunasanKwitansiDetail = M_KwitansiDetailPelunasan::where(['no_invoice' => $no_inv, 'loan_number' => $loan_number])->get();
-
-            $kwitansi = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
-
-            if ($kwitansi) {
-                $kwitansi->update(['STTS_PAYMENT' => $status]);
-            }
-
-            $getCredit = M_Credit::where('LOAN_NUMBER', $loan_number)->first();
-
-            if ($getCredit) {
-                $getCredit->update([
-                    "PINALTY_PELUNASAN" => floatval($getCredit->PINALTY_PELUNASAN ?? 0) - floatval($kwitansi->PINALTY_PELUNASAN ?? 0),
-                    "DISKON_PINALTY_PELUNASAN" => floatval($getCredit->DISKON_PINALTY_PELUNASAN ?? 0) - floatval($kwitansi->DISKON_PINALTY_PELUNASAN ?? 0),
-                ]);
-            }
-
-            $payment = M_Payment::where('INVOICE', $no_inv)->get();
-
-            if (!empty($payment)) {
-                foreach ($payment as $list) {
-                    $list->update(['STTS_PAYMENT' => $status]);
-                }
-            }
-
-            if (!empty($pelunasanKwitansiDetail)) {
-                foreach ($pelunasanKwitansiDetail as $res) {
-
-                    if ($res['installment'] != 0) {
-                        $this->cancelCreditSchedule($loan_number, $res);
-                    }
-
-                    if ($res['bayar_denda'] != 0 || $res['diskon_denda'] != 0) {
-                        $this->cancelArrears($loan_number, $res);
-                    }
-
-                    $this->cancelCredit($loan_number, $res);
-                }
-            }
-        } catch (\Throwable $e) {
-            return $e->getMessage();
         }
     }
 
