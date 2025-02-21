@@ -175,6 +175,9 @@ class PelunasanController2 extends Controller
                 ];
             }
 
+            // return \response()->json($arrearsData);
+            // die;
+
             if (!empty($arrearsData)) {
                 foreach ($arrearsData as $data) {
                     $existingArrears = M_Arrears::where([
@@ -238,7 +241,7 @@ class PelunasanController2 extends Controller
 
             $this->proccessKwitansiDetail($request, $loan_number, $no_inv);
 
-            $this->proccess($request, $loan_number, $no_inv, 'PAID');
+            // $this->proccess($request, $loan_number, $no_inv, 'PAID');
 
             DB::commit();
             return response()->json("MUACH MUACHH MUACHHH", 200);
@@ -556,7 +559,7 @@ class PelunasanController2 extends Controller
 
     private function arrearsCalculate($request, $loan_number, $no_inv, $arrears)
     {
-        $this->calculatePrincipal(
+        $this->calculateArrears(
             $request->BAYAR_DENDA,
             $request->DISKON_DENDA,
             $arrears,
@@ -624,13 +627,67 @@ class PelunasanController2 extends Controller
         }
     }
 
+    private function calculateArrears($paymentAmount, $discountAmount, $schedule, $fieldKey, $valueKey, $paymentParam, $discountParam, $loan_number, $no_inv)
+    {
+        $remainingPayment = $paymentAmount;
+        $remainingDiscount = $discountAmount;
+
+        foreach ($schedule as $res) {
+            // Get the current value of the field and payment status
+            $valBefore = $res->{$valueKey};
+            $getAmount = $res->{$fieldKey};
+
+            // Proceed only if there's an amount to pay
+            if ($valBefore < $getAmount) {
+                // Calculate the amount left to pay
+                $remainingToPay = $getAmount - $valBefore;
+
+                // If enough payment is available to cover the remaining amount
+                if ($remainingPayment >= $remainingToPay) {
+                    $newPaymentValue = $getAmount; // Full payment
+                    $remainingPayment -= $remainingToPay; // Subtract the paid amount
+                } else {
+                    $newPaymentValue = $valBefore + $remainingPayment;
+                    $remainingPayment = 0;
+                }
+
+                // Apply the payment to the schedule
+                // $param[$paymentParam] = $newPaymentValue;
+                // $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
+
+                // Handle the discount if applicable
+                if ($remainingDiscount > 0) {
+                    $remainingToDiscount = $getAmount - $newPaymentValue;
+
+                    if ($remainingDiscount >= $remainingToDiscount) {
+                        $param[$discountParam] = $remainingToDiscount; // Full discount
+                        $remainingDiscount -= $remainingToDiscount; // Subtract the used discount
+                    } else {
+                        $param[$discountParam] = $remainingDiscount; // Partial discount
+                        $remainingDiscount = 0; // No discount left
+                    }
+
+                    $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
+                }
+            }
+        }
+
+
+        if ($remainingPayment > 0) {
+            $param[$paymentParam] = $remainingPayment;
+        }
+
+        if ($remainingDiscount > 0) {
+            $param[$discountParam] = $remainingDiscount;
+        }
+    }
+
     function insertKwitansiDetail($loan_number, $no_inv, $res, $param = [])
     {
         $tgl_angsuran = $res['PAYMENT_DATE'] ?? $res['START_DATE'] ?? null;
 
         // Cek apakah data sudah ada berdasarkan no_invoice, tgl_angsuran, dan loan_number
         $checkDetail = M_KwitansiDetailPelunasan::where([
-            'angsuran_ke' => $res['INSTALLMENT_COUNT'],
             'tgl_angsuran' => $tgl_angsuran,
             'loan_number' => $loan_number,
         ])->first();
