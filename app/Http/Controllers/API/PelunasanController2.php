@@ -181,9 +181,7 @@ class PelunasanController2 extends Controller
                         'LOAN_NUMBER' => $data['LOAN_NUMBER'],
                         'START_DATE' => $data['START_DATE'],
                         'STATUS_REC' => 'A'
-                    ])
-                        ->orderBy('START_DATE', 'ASC')
-                        ->first();
+                    ])->first();
 
                     if ($existingArrears) {
                         $existingArrears->update([
