@@ -22,7 +22,7 @@ use Ramsey\Uuid\Uuid;
 
 class PelunasanController2 extends Controller
 {
-    private function checkCredit($loan_number)
+    private function checkCredit($loan_number, $date)
     {
         try {
 
@@ -49,11 +49,11 @@ class PelunasanController2 extends Controller
                                             (SELECT MAX(PAYMENT_DATE) 
                                             FROM credit_schedule 
                                             WHERE LOAN_NUMBER = '{$loan_number}'  
-                                            AND PAYMENT_DATE < NOW())
+                                            AND PAYMENT_DATE < $date)
                                         )
                                         FROM credit_schedule
                                         WHERE LOAN_NUMBER = '{$loan_number}' 
-                                        AND PAYMENT_DATE > NOW()
+                                        AND PAYMENT_DATE > $date
                                     )
                                 GROUP BY LOAN_NUMBER
                             ) b ON b.LOAN_NUMBER = a.LOAN_NUMBER
@@ -70,11 +70,11 @@ class PelunasanController2 extends Controller
                                                     (SELECT MAX(PAYMENT_DATE)
                                                     FROM credit_schedule
                                                     WHERE LOAN_NUMBER = '{$loan_number}'
-                                                    AND PAYMENT_DATE < NOW())
+                                                    AND PAYMENT_DATE < $date)
                                                 )
                                                 FROM credit_schedule
                                                 WHERE LOAN_NUMBER = '{$loan_number}'
-                                                AND PAYMENT_DATE > NOW()
+                                                AND PAYMENT_DATE > $date
                                             )
                                         GROUP BY LOAN_NUMBER
                             ) AS d ON d.LOAN_NUMBER = a.LOAN_NUMBER
@@ -200,7 +200,7 @@ class PelunasanController2 extends Controller
                 }
             }
 
-            $getDetail = $this->checkCredit($cekINV->LOAN_NUMBER);
+            $getDetail = $this->checkCredit($cekINV->LOAN_NUMBER, date('Y-m-d', strtotime($cekINV->CREATED_AT)));
 
             $build = [];
             foreach ($getDetail->original as $list) {
