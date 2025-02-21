@@ -43,6 +43,14 @@ class ListBanController extends Controller
 
                     $row = $item->no_invoice . $item->LOAN_NUM . $item->PELANGGAN;
 
+                    $cabang = $item->nama_cabang;
+                    $tgl = $item->ENTRY_DATE;
+                    $user = $item->fullname;
+                    $no_invoice = $item->no_invoice;
+                    $loan_num = $item->LOAN_NUM;
+                    $pelanggan = $item->PELANGGAN;
+                    $position = $item->position;
+
                     if (!in_array($row, $cash_in)) {
                         $cash_in[] = $row;
 
@@ -53,21 +61,15 @@ class ListBanController extends Controller
                         } else {
                             // Set counter for PENCAIRAN items, but use the last CASH_IN no. and add 1
                             $currentNo = $last_cash_in_no + 1;
-                            $no_pencairan = $currentNo + 1; // Continue for next PENCAIRAN
                         }
                     } else {
                         // If duplicate, don't increment counter, just set empty string
                         $currentNo = '';
+                        $cabang = '';
+                        $tgl = '';
+                        $user = '';
+                        $position = '';
                     }
-
-
-                    $cabang = $item->nama_cabang;
-                    $tgl = $item->ENTRY_DATE;
-                    $user = $item->fullname;
-                    $no_invoice = $item->no_invoice;
-                    $loan_num = $item->LOAN_NUM;
-                    $pelanggan = $item->PELANGGAN;
-                    $position = $item->position;
 
                     $amount = is_numeric($item->ORIGINAL_AMOUNT) ? floatval($item->ORIGINAL_AMOUNT) : 0;
 
