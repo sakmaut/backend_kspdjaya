@@ -191,7 +191,7 @@ class PelunasanController2 extends Controller
                             'UPDATED_AT' => Carbon::now('Asia/Jakarta')
                         ]);
                     } else {
-                        $getNow = date('Y-m-d');
+                        $getNow = date('Y-m-d', strtotime($cekINV->CREATED_AT));
 
                         if ($data['START_DATE'] < $getNow) {
                             M_Arrears::create($data);
