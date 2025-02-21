@@ -85,8 +85,10 @@ class ListBanController extends Controller
                                 'position' => $position ?? '',
                                 'nama_pelanggan' => $pelanggan,
                                 'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
-                                'keterangan' => 'BAYAR ' . $item->JENIS == 'DENDA' ? $item->JENIS : '' . ' ' . ($item->JENIS == 'ANGSURAN' ? $item->angsuran_ke ??'' : '') . ' ' . $item->no_invoice,
-                                'amount' => $amount,  // The amount is correctly assigned
+                                'keterangan' => 'BAYAR ' . ($item->JENIS == 'DENDA' ? $item->JENIS : '') .
+                                                ($item->JENIS == 'ANGSURAN' && $item->angsuran_ke ? ' Angsuran Ke-' . $item->angsuran_ke : '') .
+                                                ' ' . $item->no_invoice,
+                                'amount' => $amount, 
                             ];
 
                             // Add to totalCashin only if the amount is valid
