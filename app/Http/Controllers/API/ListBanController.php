@@ -47,7 +47,6 @@ class ListBanController extends Controller
                         $currentNo = '';  // Skip this iteration
                     }
 
-                    $no = $no++;
                     $cabang = $item->nama_cabang;
                     $tgl = $item->ENTRY_DATE;
                     $user = $item->fullname;
@@ -55,19 +54,6 @@ class ListBanController extends Controller
                     $loan_num = $item->LOAN_NUM;
                     $pelanggan = $item->PELANGGAN;
                     $position = $item->position;
-
-                    if (in_array($row, $cash_in)) {
-                        $no = '';
-                        $cabang = '';
-                        $tgl = '';
-                        $user = '';
-                        $position = '';
-                        $no_invoice = '';
-                        $loan_num = '';
-                        $pelanggan = '';
-                    } else {
-                        array_push($cash_in, $row);
-                    }
 
                     $amount = is_numeric($item->ORIGINAL_AMOUNT) ? floatval($item->ORIGINAL_AMOUNT) : 0;
 
