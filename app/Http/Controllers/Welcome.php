@@ -84,7 +84,7 @@ class Welcome extends Controller
                         AND a.NO_TRANSAKSI = '$inv'
                         AND a.PAYMENT_TYPE = 'angsuran'
                         AND (b.installment != 0 OR b.bayar_angsuran != 0 OR b.bayar_denda != 0 OR b.diskon_denda != 0)  
-					ORDER BY a.LOAN_NUMBER,a.TGL_TRANSAKSI ASC";
+					ORDER BY b.tgl_angsuran ASC";
 
                 $resultsAngsuran = DB::select($queryAngsuran);
 
