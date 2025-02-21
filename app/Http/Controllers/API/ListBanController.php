@@ -76,22 +76,25 @@ class ListBanController extends Controller
                     $amount = is_numeric($item->ORIGINAL_AMOUNT) ? floatval($item->ORIGINAL_AMOUNT) : 0;
 
                     if ($item->JENIS != 'PENCAIRAN') {
-                        $datas['datas'][] = [
-                            'no' => $currentNo,
-                            'type' => 'CASH_IN',
-                            'no_invoice' => $no_invoice,
-                            'no_kontrak' => $loan_num,
-                            'tgl' => $tgl ?? '',
-                            'cabang' => $cabang ?? '',
-                            'user' => $user ?? '',
-                            'position' => $position ?? '',
-                            'nama_pelanggan' => $pelanggan,
-                            'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
-                            'keterangan' => $item->JENIS . ' ' . ($item->angsuran_ke ?? '') . ' ' . $item->no_invoice,
-                            'amount' => $amount,
-                        ];
+                        if ($amount != 0) {
+                            $datas['datas'][] = [
+                                'no' => $currentNo,  // Use the current counter for CASH_IN
+                                'type' => 'CASH_IN',
+                                'no_invoice' => $no_invoice,
+                                'no_kontrak' => $loan_num,
+                                'tgl' => $tgl ?? '',
+                                'cabang' => $cabang ?? '',
+                                'user' => $user ?? '',
+                                'position' => $position ?? '',
+                                'nama_pelanggan' => $pelanggan,
+                                'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
+                                'keterangan' => $item->JENIS . ' ' . ($item->angsuran_ke ?? '') . ' ' . $item->no_invoice,
+                                'amount' => $amount,  // The amount is correctly assigned
+                            ];
 
-                        $totalCashin += $amount;
+                            // Add to totalCashin only if the amount is valid
+                            $totalCashin += $amount;
+                        }
                     }
                 }
 
