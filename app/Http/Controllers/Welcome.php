@@ -684,6 +684,16 @@ class Welcome extends Controller
     function createPaymentRecords($request, $res, $tgl_angsuran, $loan_number, $no_inv, $branch, $uid)
     {
 
+        $cekPaid = M_CreditSchedule::where([
+            'LOAN_NUMBER' => $loan_number,
+            'PAYMENT_DATE' => $tgl_angsuran,
+            'PAID_FLAG' => 'PAID'
+        ])->first();
+
+        if ($cekPaid) {
+            throw new Exception("Credit Has PAID", 500);
+        }
+
         M_Payment::create([
             'ID' => $uid,
             'ACC_KEY' => $res['flag'] == 'PAID' ? 'angsuran_denda' : $request['payment_type'] ?? '',
