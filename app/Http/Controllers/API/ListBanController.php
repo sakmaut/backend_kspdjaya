@@ -219,7 +219,7 @@ class ListBanController extends Controller
             $query .= " AND b.BRANCH_ID = '" . $cabangId . "'";
         }
 
-        $query .= "ORDER BY b.no_invoice DESC";
+        $query .= "ORDER BY left(b.no_invoice,9) DESC";
 
         $result = DB::select($query);
 
