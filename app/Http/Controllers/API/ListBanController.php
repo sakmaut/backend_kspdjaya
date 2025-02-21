@@ -90,7 +90,7 @@ class ListBanController extends Controller
                             'user' => $item->fullname ?? '',
                             'position' => $item->position ?? '',
                             'nama_pelanggan' => $item->PELANGGAN ?? '',
-                            'keterangan' => 'PENCAIRAN NO KONTRAK ' . $item->LOAN_NUM ?? '',
+                            'keterangan' => 'PENCAIRAN NO KONTRAK ' . $item->LOAN_NUM ?? ' ' . $item->no_invoice,
                             'amount' => $getTttl,
                         ];
 
