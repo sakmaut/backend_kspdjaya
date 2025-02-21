@@ -169,6 +169,7 @@ class Welcome extends Controller
                                 'PAID_PCPL' => $list->PAYMENT_VALUE_PRINCIPAL ?? 0,
                                 'PAID_INT' => $list->PAYMENT_VALUE_INTEREST ?? 0,
                                 'PAID_PENALTY' => 0,
+                                'KWITANSI_DATE' => $date,
                                 'CREATED_AT' => Carbon::now('Asia/Jakarta')
                             ];
                         }
@@ -191,7 +192,7 @@ class Welcome extends Controller
                         'UPDATED_AT' => Carbon::now('Asia/Jakarta')
                     ]);
                 } else {
-                    $getNow = date('Y-m-d');
+                    $getNow = $data['KWITANSI_DATE'];
 
                     if ($data['START_DATE'] < $getNow) {
                         M_Arrears::create($data);
