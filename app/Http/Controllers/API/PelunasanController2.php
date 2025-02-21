@@ -494,20 +494,20 @@ class PelunasanController2 extends Controller
         $this->arrearsCalculate($request, $loan_number, $no_inv, $arrears);
     }
 
-    private function principalCalculate($request, $loan_number, $no_inv, $creditSchedule)
-    {
-        $this->calculatePrincipal(
-            $request->BAYAR_POKOK,
-            $request->DISKON_POKOK,
-            $creditSchedule,
-            'PRINCIPAL',
-            'PAYMENT_VALUE_PRINCIPAL',
-            'BAYAR_POKOK',
-            'DISKON_POKOK',
-            $loan_number,
-            $no_inv
-        );
-    }
+    // private function principalCalculate($request, $loan_number, $no_inv, $creditSchedule)
+    // {
+    //     $this->calculatePrincipal(
+    //         $request->BAYAR_POKOK,
+    //         $request->DISKON_POKOK,
+    //         $creditSchedule,
+    //         'PRINCIPAL',
+    //         'PAYMENT_VALUE_PRINCIPAL',
+    //         'BAYAR_POKOK',
+    //         'DISKON_POKOK',
+    //         $loan_number,
+    //         $no_inv
+    //     );
+    // }
 
     private function interestCalculate($request, $loan_number, $no_inv, $creditSchedule)
     {
@@ -571,15 +571,15 @@ class PelunasanController2 extends Controller
         );
     }
 
-    private function calculatePrincipal($paymentAmount, $discountAmount, $schedule, $fieldKey, $valueKey, $paymentParam, $discountParam, $loan_number, $no_inv)
+    private function principalCalculate($request, $loan_number, $no_inv, $creditSchedule)
     {
-        $remainingPayment = $paymentAmount;
-        $remainingDiscount = $discountAmount;
+        $remainingPayment = $request->BAYAR_POKOK;
+        $remainingDiscount = $request->DISKON_POKOK;
 
-        foreach ($schedule as $res) {
+        foreach ($creditSchedule as $res) {
             // Get the current value of the field and payment status
-            $valBefore = $res->{$valueKey};
-            $getAmount = $res->{$fieldKey};
+            $valBefore = $res->{'PAYMENT_VALUE_PRINCIPAL'};
+            $getAmount = $res->{'PRINCIPAL'};
 
             // Proceed only if there's an amount to pay
             if ($valBefore < $getAmount) {
@@ -588,15 +588,15 @@ class PelunasanController2 extends Controller
 
                 // If enough payment is available to cover the remaining amount
                 if ($remainingPayment >= $remainingToPay) {
-                    $newPaymentValue = $getAmount; // Full payment
+                    $newPaymentValue = $remainingPayment; // Full payment
                     $remainingPayment -= $remainingToPay; // Subtract the paid amount
                 } else {
                     $newPaymentValue = $valBefore + $remainingPayment;
                     $remainingPayment = 0;
                 }
-
                 // Apply the payment to the schedule
-                $param[$paymentParam] = $newPaymentValue;
+               
+                $param['BAYAR_POKOK'] = $newPaymentValue;
                 $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
 
                 // Handle the discount if applicable
@@ -604,10 +604,10 @@ class PelunasanController2 extends Controller
                     $remainingToDiscount = $getAmount - $newPaymentValue;
 
                     if ($remainingDiscount >= $remainingToDiscount) {
-                        $param[$discountParam] = $remainingToDiscount; // Full discount
+                        $param['DISKON_POKOK'] = $remainingToDiscount; // Full discount
                         $remainingDiscount -= $remainingToDiscount; // Subtract the used discount
                     } else {
-                        $param[$discountParam] = $remainingDiscount; // Partial discount
+                        $param['DISKON_POKOK'] = $remainingDiscount; // Partial discount
                         $remainingDiscount = 0; // No discount left
                     }
 
@@ -618,11 +618,11 @@ class PelunasanController2 extends Controller
 
 
         if ($remainingPayment > 0) {
-            $param[$paymentParam] = $remainingPayment;
+            $param['BAYAR_POKOK'] = $remainingPayment;
         }
 
         if ($remainingDiscount > 0) {
-            $param[$discountParam] = $remainingDiscount;
+            $param['DISKON_POKOK'] = $remainingDiscount;
         }
     }
 
