@@ -99,7 +99,7 @@ class PelunasanController2 extends Controller
                     select	sum(INTEREST-coalesce(PAYMENT_VALUE_INTEREST,0)) as DISC_BUNGA
 					from	credit_schedule
 					where	LOAN_NUMBER = '{$loan_number}'
-							and PAYMENT_DATE>now()
+							and PAYMENT_DATE> '$date'
             ");
 
             $processedResults = array_map(function ($item) {
