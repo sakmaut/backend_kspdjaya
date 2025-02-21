@@ -553,14 +553,26 @@ class PelunasanController2 extends Controller
                     }
 
                     $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
-                } else {
-                    // If DISKON_BUNGA is 0, set it to the value of getAmount
-                    $param['DISKON_BUNGA'] = $getAmount; // Set DISKON_BUNGA to the interest amount
+                }
+            }
+        }
+
+        // If both BAYAR_BUNGA and DISKON_BUNGA are fully paid, apply remaining discount to INTEREST
+        if ($remainingPayment == 0 && $remainingDiscount == 0) {
+            foreach ($creditSchedule as $res) {
+                $getAmount = $res->INTEREST;
+                if ($remainingDiscount > 0) {
+                    // Apply the remaining discount to interest if both payments are complete
+                    $discountFromInterest = min($remainingDiscount, $getAmount);
+                    $param['DISKON_BUNGA'] = $discountFromInterest;
+                    $param['INTEREST'] = $getAmount - $discountFromInterest; // Adjust interest
+
                     $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
                 }
             }
         }
     }
+
 
     private function arrearsCalculate($request, $loan_number, $no_inv, $arrears)
     {

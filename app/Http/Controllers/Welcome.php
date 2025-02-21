@@ -227,14 +227,16 @@ class Welcome extends Controller
                             'diskon_denda' => $res['diskon_denda']
                         ]);
 
-                        $cekPaid = M_CreditSchedule::where([
-                            'LOAN_NUMBER' => $res['loan_number'],
-                            'PAYMENT_DATE' => Carbon::parse($res['tgl_angsuran'])->format('Y-m-d'),
-                            'PAID_FLAG' => 'PAID'
-                        ])->first();
+                        if ($res['bayar_angsuran'] != 0) {
+                            $cekPaid = M_CreditSchedule::where([
+                                'LOAN_NUMBER' => $res['loan_number'],
+                                'PAYMENT_DATE' => Carbon::parse($res['tgl_angsuran'])->format('Y-m-d'),
+                                'PAID_FLAG' => 'PAID'
+                            ])->first();
 
-                        if ($cekPaid) {
-                            throw new Exception("Credit Schedule Sudah PAID", 500);
+                            if ($cekPaid) {
+                                throw new Exception("Credit Schedule Sudah PAID", 500);
+                            }
                         }
 
                         $this->processPaymentStructure($res, $request, $getCodeBranch, $no_inv);
