@@ -54,16 +54,13 @@ class ListBanController extends Controller
                     if (!in_array($row, $cash_in)) {
                         $cash_in[] = $row;
 
-                        // Set counter for CASH_IN items
                         if ($item->JENIS != 'PENCAIRAN') {
                             $currentNo = $no_cash_in++;  // This is for CASH_IN
                             $last_cash_in_no = $currentNo;  // Update last CASH_IN no.
                         } else {
-                            // Set counter for PENCAIRAN items, but use the last CASH_IN no. and add 1
                             $currentNo = $last_cash_in_no + 1;
                         }
                     } else {
-                        // If duplicate, don't increment counter, just set empty string
                         $currentNo = '';
                         $cabang = '';
                         $tgl = '';
@@ -88,7 +85,7 @@ class ListBanController extends Controller
                                 'position' => $position ?? '',
                                 'nama_pelanggan' => $pelanggan,
                                 'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
-                                'keterangan' => $item->JENIS . ' ' . ($item->angsuran_ke ?? '') . ' ' . $item->no_invoice,
+                                'keterangan' => 'BAYAR '.$item->JENIS . ' ' . $item->JENIS == 'ANGSURAN' ? ($item->angsuran_ke ?? '') :''. ' ' . $item->no_invoice,
                                 'amount' => $amount,  // The amount is correctly assigned
                             ];
 
@@ -123,7 +120,7 @@ class ListBanController extends Controller
 
                 $datas['ttl_cash_in'] = $totalCashin;
                 $datas['ttl_cash_out'] = $totalAmount;
-                $datas['ttl_all'] = $totalCashin - $totalAmount;
+                $datas['ttl_all'] = $totalCashin + $totalAmount;
             } else {
                 $datas = [];
             }
@@ -219,7 +216,7 @@ class ListBanController extends Controller
             $query .= " AND b.BRANCH_ID = '" . $cabangId . "'";
         }
 
-        $query .= "ORDER BY left(b.no_invoice,9) DESC";
+        $query .= "ORDER BY b.no_invoice DESC";
 
         $result = DB::select($query);
 
