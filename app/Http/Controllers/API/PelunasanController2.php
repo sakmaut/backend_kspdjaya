@@ -279,7 +279,7 @@ class PelunasanController2 extends Controller
                 }
 
                 $this->updateArrears($loan_number, $res);
-                $this->updateCredit($res, $loan_number);
+                $this->updateCredit($request, $res, $loan_number);
             }
         }
     }
@@ -415,7 +415,7 @@ class PelunasanController2 extends Controller
         }
     }
 
-    function updateCredit($res, $loan_number)
+    function updateCredit($request, $res, $loan_number)
     {
         $credit = M_Credit::where('LOAN_NUMBER', $loan_number)->first();
 
@@ -427,6 +427,8 @@ class PelunasanController2 extends Controller
                 'DISCOUNT_INTEREST' => floatval($credit->DISCOUNT_INTEREST) + floatval($res['diskon_bunga']),
                 'PAID_PENALTY' => floatval($credit->PAID_PENALTY) + floatval($res['bayar_denda']),
                 'DISCOUNT_PENALTY' => floatval($credit->DISCOUNT_PENALTY) + floatval($res['diskon_denda']),
+                'PINALTY_PELUNASAN' => $request['PINALTY_PELUNASAN'],
+                'DISKON_PINALTY_PELUNASAN' => $request['DISKON_PINALTY_PELUNASAN'],
                 'STATUS' => 'D',
                 'STATUS_REC' => 'PT',
                 'END_DATE' => now()
