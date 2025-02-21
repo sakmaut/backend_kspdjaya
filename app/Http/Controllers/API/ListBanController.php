@@ -69,6 +69,8 @@ class ListBanController extends Controller
                         $tgl = '';
                         $user = '';
                         $position = '';
+                        $loan_num = '';
+                        $pelanggan = '';
                     }
 
                     $amount = is_numeric($item->ORIGINAL_AMOUNT) ? floatval($item->ORIGINAL_AMOUNT) : 0;
