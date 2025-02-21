@@ -588,12 +588,14 @@ class PelunasanController2 extends Controller
 
                 // If enough payment is available to cover the remaining amount
                 if ($remainingPayment >= $remainingToPay) {
-                    $newPaymentValue = $remainingPayment; // Full payment
+                    $newPaymentValue = $getAmount; // Full payment
                     $remainingPayment -= $remainingToPay; // Subtract the paid amount
                 } else {
                     $newPaymentValue = $valBefore + $remainingPayment;
                     $remainingPayment = 0;
                 }
+
+
                 // Apply the payment to the schedule
                
                 $param['BAYAR_POKOK'] = $newPaymentValue;
