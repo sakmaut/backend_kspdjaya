@@ -96,7 +96,7 @@ class ListBanController extends Controller
                         $getTttl = floatval($item->ORIGINAL_AMOUNT) - floatval($item->admin_fee);
 
                         $datas['datas'][] = [
-                            'no' => $last_cash_in_no++,
+                            'no' => $last_cash_in_no++,  
                             'type' => 'CASH_OUT',
                             'no_kontrak' => $item->LOAN_NUM ?? '',
                             'tgl' => $item->ENTRY_DATE ?? '',
