@@ -377,7 +377,9 @@ class PelunasanController extends Controller
     function updateCreditSchedule($loan_number, $res)
     {
 
-        $getCreditSchedule = M_CreditSchedule::where(['LOAN_NUMBER' => $loan_number, 'PAYMENT_DATE' => $res['tgl_angsuran']])->first();
+        $getCreditSchedule = M_CreditSchedule::where(['LOAN_NUMBER' => $loan_number, 'PAYMENT_DATE' => $res['tgl_angsuran']])
+            ->orderBy('PAYMENT_DATE', 'ASC')
+            ->first();
 
         if ($getCreditSchedule) {
 
@@ -410,7 +412,7 @@ class PelunasanController extends Controller
     function cancelCreditSchedule($loan_number, $res)
     {
 
-        $getCreditSchedule = M_CreditSchedule::where(['LOAN_NUMBER' => $loan_number, 'PAYMENT_DATE' => $res['tgl_angsuran']])->first();
+        $getCreditSchedule = M_CreditSchedule::where(['LOAN_NUMBER' => $loan_number, 'PAYMENT_DATE' => $res['tgl_angsuran']])->orderBy('PAYMENT_DATE', 'ASC')->first();
 
         if ($getCreditSchedule) {
 
@@ -442,7 +444,7 @@ class PelunasanController extends Controller
         $getArrears = M_Arrears::where([
             'LOAN_NUMBER' => $loan_number,
             'START_DATE' => $res['tgl_angsuran'],
-        ])->first();
+        ])->orderBy('START_DATE', 'ASC')->first();
 
         if ($getArrears) {
             $ttlPrincipal = floatval($getArrears->PAID_PCPL) + floatval($res['bayar_pokok'] ?? 0);
@@ -476,7 +478,7 @@ class PelunasanController extends Controller
         $getArrears = M_Arrears::where([
             'LOAN_NUMBER' => $loan_number,
             'START_DATE' => $res['tgl_angsuran'],
-        ])->first();
+        ])->orderBy('START_DATE', 'ASC')->first();
 
         if ($getArrears) {
             $ttlPrincipal = floatval($getArrears->PAID_PCPL) - floatval($res['bayar_pokok'] ?? 0);

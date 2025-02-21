@@ -214,7 +214,9 @@ class PaymentController extends Controller
         $credit_schedule = M_CreditSchedule::where([
             'LOAN_NUMBER' => $loan_number,
             'PAYMENT_DATE' => $tgl_angsuran
-        ])->first();
+        ])
+            ->orderBy('PAYMENT_DATE', 'ASC')
+            ->first();
 
         $byr_angsuran = $res['bayar_angsuran'];
         $flag = $res['flag'];
@@ -323,7 +325,7 @@ class PaymentController extends Controller
         $check_arrears = M_Arrears::where([
             'LOAN_NUMBER' => $loan_number,
             'START_DATE' => $tgl_angsuran
-        ])->first();
+        ])->orderBy('START_DATE', 'ASC')->first();
 
         $byr_angsuran = $res['bayar_angsuran'];
         $bayar_denda = $res['bayar_denda'];
@@ -394,7 +396,7 @@ class PaymentController extends Controller
         $check_arrears = M_Arrears::where([
             'LOAN_NUMBER' => $loan_number,
             'START_DATE' => $tgl_angsuran
-        ])->first();
+        ])->orderBy('START_DATE', 'ASC')->first();
 
         $byr_angsuran = $res['bayar_angsuran'];
         $bayar_denda = $res['bayar_denda'];
