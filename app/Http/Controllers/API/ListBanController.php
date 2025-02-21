@@ -29,12 +29,13 @@ class ListBanController extends Controller
 
                 $arusKas = $this->queryArusKas($cabangId, $formattedDate);
 
-                $no = 1;
+                $no_cash_in = 1;  // Start counter for CASH_IN
+                $no_pencairan = 1;
+
                 $totalCashin = 0;
                 $totalAmount = 0;
 
                 $cash_in = [];
-                $lastValidNo = $no; 
 
                 foreach ($arusKas as $item) {
 
@@ -42,10 +43,19 @@ class ListBanController extends Controller
 
                     if (!in_array($row, $cash_in)) {
                         $cash_in[] = $row;
-                        $currentNo = $lastValidNo++;  // Use lastValidNo to increment
+
+                        // Set counter for CASH_IN items
+                        if ($item->JENIS != 'PENCAIRAN') {
+                            $currentNo = $no_cash_in++;
+                        } else {
+                            // Set counter for PENCAIRAN items
+                            $currentNo = $no_pencairan++;
+                        }
                     } else {
-                        $currentNo = '';  // Skip this iteration
+                        // If duplicate, don't increment counter, just set empty string
+                        $currentNo = '';
                     }
+
 
                     $cabang = $item->nama_cabang;
                     $tgl = $item->ENTRY_DATE;
@@ -75,10 +85,6 @@ class ListBanController extends Controller
 
                         $totalCashin += $amount;
                     }
-
-                    if ($currentNo !== '') {
-                        $lastValidNo = $currentNo;
-                    }
                 }
 
                 foreach ($arusKas as $item) {
@@ -87,7 +93,7 @@ class ListBanController extends Controller
                         $getTttl = floatval($item->ORIGINAL_AMOUNT) - floatval($item->admin_fee);
 
                         $datas['datas'][] = [
-                            'no' => $lastValidNo++, 
+                            'no' => $no_pencairan++, 
                             'type' => 'CASH_OUT',
                             'no_kontrak' => $item->LOAN_NUM ?? '',
                             'tgl' => $item->ENTRY_DATE ?? '',
