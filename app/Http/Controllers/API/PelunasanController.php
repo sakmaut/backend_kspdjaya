@@ -402,8 +402,10 @@ class PelunasanController extends Controller
             ]);
 
             $ttlPayment = $ttlPrincipal + $ttlInterest + $ttlDiscPrincipal + $ttlDiscInterest;
+            $insufficientPay = $getCreditSchedule->INSTALLMENT - $ttlPayment;
 
             $getCreditSchedule->update([
+                'INSUFFICIENT_PAYMENT' => $insufficientPay == 0 ? 0 : $insufficientPay,
                 'PAYMENT_VALUE' => $ttlPayment
             ]);
         }
@@ -784,7 +786,6 @@ class PelunasanController extends Controller
 
         // Cek apakah data sudah ada berdasarkan no_invoice, tgl_angsuran, dan loan_number
         $checkDetail = M_KwitansiDetailPelunasan::where([
-            'angsuran_ke' => $res['INSTALLMENT_COUNT'],
             'tgl_angsuran' => $tgl_angsuran,
             'loan_number' => $loan_number,
         ])->first();
