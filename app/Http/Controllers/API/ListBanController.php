@@ -123,7 +123,7 @@ class ListBanController extends Controller
 
                 $datas['ttl_cash_in'] = $totalCashin;
                 $datas['ttl_cash_out'] = $totalAmount;
-                $datas['ttl_all'] = $totalCashin + $totalAmount;
+                $datas['ttl_all'] = $totalCashin - $totalAmount;
             } else {
                 $datas = [];
             }
