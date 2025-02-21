@@ -22,7 +22,7 @@ use Ramsey\Uuid\Uuid;
 
 class PelunasanController2 extends Controller
 {
-    private function checkCredit($loan_number)
+    private function checkCredit($loan_number, $date)
     {
         try {
 
@@ -49,11 +49,11 @@ class PelunasanController2 extends Controller
                                             (SELECT MAX(PAYMENT_DATE) 
                                             FROM credit_schedule 
                                             WHERE LOAN_NUMBER = '{$loan_number}'  
-                                            AND PAYMENT_DATE < NOW())
+                                            AND PAYMENT_DATE < $date)
                                         )
                                         FROM credit_schedule
                                         WHERE LOAN_NUMBER = '{$loan_number}' 
-                                        AND PAYMENT_DATE > NOW()
+                                        AND PAYMENT_DATE > $date
                                     )
                                 GROUP BY LOAN_NUMBER
                             ) b ON b.LOAN_NUMBER = a.LOAN_NUMBER
@@ -70,11 +70,11 @@ class PelunasanController2 extends Controller
                                                     (SELECT MAX(PAYMENT_DATE)
                                                     FROM credit_schedule
                                                     WHERE LOAN_NUMBER = '{$loan_number}'
-                                                    AND PAYMENT_DATE < NOW())
+                                                    AND PAYMENT_DATE < $date)
                                                 )
                                                 FROM credit_schedule
                                                 WHERE LOAN_NUMBER = '{$loan_number}'
-                                                AND PAYMENT_DATE > NOW()
+                                                AND PAYMENT_DATE > $date
                                             )
                                         GROUP BY LOAN_NUMBER
                             ) AS d ON d.LOAN_NUMBER = a.LOAN_NUMBER
@@ -99,7 +99,7 @@ class PelunasanController2 extends Controller
                     select	sum(INTEREST-coalesce(PAYMENT_VALUE_INTEREST,0)) as DISC_BUNGA
 					from	credit_schedule
 					where	LOAN_NUMBER = '{$loan_number}'
-							and PAYMENT_DATE>now()
+							and PAYMENT_DATE> '$date'
             ");
 
             $processedResults = array_map(function ($item) {
@@ -136,7 +136,7 @@ class PelunasanController2 extends Controller
 
             $cekINV = M_Kwitansi::where('NO_TRANSAKSI', $inv)->first();
 
-            if(!$cekINV){
+            if (!$cekINV) {
                 throw new Exception("Invoice Not Found", 500);
             }
 
@@ -144,7 +144,8 @@ class PelunasanController2 extends Controller
             $getCrditSchedule = "   SELECT LOAN_NUMBER,PAYMENT_DATE,PRINCIPAL,INTEREST,INSTALLMENT,PAYMENT_VALUE_PRINCIPAL,PAYMENT_VALUE_INTEREST
                                     FROM credit_schedule 
                                     WHERE LOAN_NUMBER = '$cekINV->LOAN_NUMBER'
-                                        AND (PAID_FLAG IS NULL OR PAID_FLAG = '') ";
+                                        AND (PAID_FLAG IS NULL OR PAID_FLAG = '')
+                                    ORDER BY PAYMENT_DATE ASC ";
 
 
             $updateArrears = DB::select($getCrditSchedule);
@@ -174,13 +175,15 @@ class PelunasanController2 extends Controller
                 ];
             }
 
-            if(!empty($arrearsData)){
+            if (!empty($arrearsData)) {
                 foreach ($arrearsData as $data) {
                     $existingArrears = M_Arrears::where([
                         'LOAN_NUMBER' => $data['LOAN_NUMBER'],
                         'START_DATE' => $data['START_DATE'],
                         'STATUS_REC' => 'A'
-                    ])->first();
+                    ])
+                        ->orderBy('START_DATE', 'ASC')
+                        ->first();
 
                     if ($existingArrears) {
                         $existingArrears->update([
@@ -197,7 +200,7 @@ class PelunasanController2 extends Controller
                 }
             }
 
-            $getDetail = $this->checkCredit($cekINV->LOAN_NUMBER);
+            $getDetail = $this->checkCredit($cekINV->LOAN_NUMBER, date('Y-m-d', strtotime($cekINV->CREATED_AT)));
 
             $build = [];
             foreach ($getDetail->original as $list) {
@@ -347,8 +350,8 @@ class PelunasanController2 extends Controller
     function updateCreditSchedule($loan_number, $res)
     {
 
-        $getCreditSchedule = M_CreditSchedule::where(['LOAN_NUMBER' => $loan_number, 'PAYMENT_DATE' => $res['tgl_angsuran']])->first();
-        
+        $getCreditSchedule = M_CreditSchedule::where(['LOAN_NUMBER' => $loan_number, 'PAYMENT_DATE' => $res['tgl_angsuran']])->orderBy('PAYMENT_DATE', 'ASC')->first();
+
 
         if ($getCreditSchedule) {
 
@@ -375,7 +378,7 @@ class PelunasanController2 extends Controller
             $getCreditSchedule->update([
                 'PAYMENT_VALUE' => $ttlPayment
             ]);
-        }else{
+        } else {
             throw new Exception("Credit Schedule Not Found", 404);
         }
     }
@@ -385,7 +388,7 @@ class PelunasanController2 extends Controller
         $getArrears = M_Arrears::where([
             'LOAN_NUMBER' => $loan_number,
             'START_DATE' => $res['tgl_angsuran'],
-        ])->first();
+        ])->orderBy('START_DATE', 'ASC')->first();
 
         if ($getArrears) {
             $ttlPrincipal = floatval($getArrears->PAID_PCPL) + floatval($res['bayar_pokok'] ?? 0);
@@ -411,8 +414,6 @@ class PelunasanController2 extends Controller
             $getArrears->update([
                 'STATUS_REC' => $checkDiscountArrears ? 'S' : 'D',
             ]);
-        } else {
-            throw new Exception("Arrears Not Found", 404);
         }
     }
 
