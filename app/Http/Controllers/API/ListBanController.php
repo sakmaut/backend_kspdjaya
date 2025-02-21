@@ -23,14 +23,11 @@ class ListBanController extends Controller
 
                 $timestamp = intval($request->dari) / 1000;
                 $date = Carbon::createFromTimestamp($timestamp);
+                $formattedDate = $date->format('Y-m-d');
 
-                // Format the date as Y-m-d
-                $formattedDate = $date->format('Ymd');
-
-                $dateFrom = $formattedDate;
                 $cabangId = $request->cabang_id;
 
-                $arusKas = $this->queryArusKas($cabangId, $dateFrom);
+                $arusKas = $this->queryArusKas($cabangId, $formattedDate);
 
                 $no = 1;
                 $totalCashin = 0;
@@ -60,39 +57,20 @@ class ListBanController extends Controller
                     $amount = is_numeric($item->ORIGINAL_AMOUNT) ? floatval($item->ORIGINAL_AMOUNT) : 0;
 
                     if ($item->JENIS != 'PENCAIRAN') {
-                        if ($item->JENIS == 'ANGSURAN_POKOK' || $item->JENIS == 'ANGSURAN_BUNGA') {
-                            $totalAngsuranPokokBunga += $amount;
-
-                            $datas['datas'][] = [
-                                'no' => $no++,
-                                'type' => 'CASH_IN',
-                                'no_invoice' => $no_invoice,
-                                'no_kontrak' => $loan_num,
-                                'tgl' => $item->ENTRY_DATE ?? '',
-                                'cabang' => $item->nama_cabang ?? '',
-                                'user' => $user ?? '',
-                                'position' => $item->position ?? '',
-                                'nama_pelanggan' => $pelanggan,
-                                'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
-                                'keterangan' => 'Bayar ' . ($item->angsuran_ke ?? ''),
-                                'amount' => $totalAngsuranPokokBunga,
-                            ];
-                        } else {
-                            $datas['datas'][] = [
-                                'no' => $no++,
-                                'type' => 'CASH_IN',
-                                'no_invoice' => $no_invoice,
-                                'no_kontrak' => $loan_num,
-                                'tgl' => $item->ENTRY_DATE ?? '',
-                                'cabang' => $item->nama_cabang ?? '',
-                                'user' => $user ?? '',
-                                'position' => $item->position ?? '',
-                                'nama_pelanggan' => $pelanggan,
-                                'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
-                                'keterangan' => $item->JENIS . ' ' . ($item->angsuran_ke ?? ''),
-                                'amount' => $amount,
-                            ];
-                        }
+                        $datas['datas'][] = [
+                            'no' => $no++,
+                            'type' => 'CASH_IN',
+                            'no_invoice' => $no_invoice,
+                            'no_kontrak' => $loan_num,
+                            'tgl' => $item->ENTRY_DATE ?? '',
+                            'cabang' => $item->nama_cabang ?? '',
+                            'user' => $user ?? '',
+                            'position' => $item->position ?? '',
+                            'nama_pelanggan' => $pelanggan,
+                            'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
+                            'keterangan' => $item->JENIS . ' ' . ($item->angsuran_ke ?? ''),
+                            'amount' => $amount,
+                        ];
 
                         $totalCashin += $amount;
                     }
@@ -155,12 +133,15 @@ class ListBanController extends Controller
                         u.position
                     FROM (
                         SELECT 
-                            a.ACC_KEYS AS JENIS, 
+                            CASE 
+                                WHEN a.ACC_KEYS LIKE '%DENDA%' THEN 'DENDA' 
+                                ELSE 'ANGSURAN' 
+                            END AS JENIS, 
                             b.BRANCH AS BRANCH, 
                             d.ID AS BRANCH_ID, 
                             d.NAME AS nama_cabang,
                             DATE_FORMAT(b.ENTRY_DATE, '%Y-%m-%d') AS ENTRY_DATE, 
-                            a.ORIGINAL_AMOUNT,
+                            SUM(a.ORIGINAL_AMOUNT) AS ORIGINAL_AMOUNT,
                             b.LOAN_NUM,
                             b.PAYMENT_METHOD,
                             b.INVOICE AS no_invoice,
@@ -172,9 +153,21 @@ class ListBanController extends Controller
                         INNER JOIN payment b ON b.ID = a.PAYMENT_ID
                         LEFT JOIN arrears c ON c.ID = b.ARREARS_ID
                         LEFT JOIN branch d ON d.CODE_NUMBER = b.BRANCH
-
+                        GROUP BY 
+                            CASE 
+                                WHEN a.ACC_KEYS LIKE '%DENDA%' THEN 'DENDA' 
+                                ELSE 'ANGSURAN' 
+                            END, 
+                            b.BRANCH, 
+                            d.ID, 
+                            d.NAME, 
+                            DATE_FORMAT(b.ENTRY_DATE, '%Y-%m-%d'), 
+                            b.LOAN_NUM,
+                            b.PAYMENT_METHOD,
+                            b.INVOICE,
+                            b.TITLE,
+                            b.USER_ID
                         UNION ALL
-
                         SELECT 
                             'PENCAIRAN' AS JENIS, 
                             b.CODE_NUMBER AS BRANCH,
@@ -196,8 +189,8 @@ class ListBanController extends Controller
                     ) AS b
                     INNER JOIN credit b2 ON b2.LOAN_NUMBER = b.LOAN_NUM
                     INNER JOIN customer b3 ON b3.CUST_CODE = b2.CUST_CODE
-                    INNER JOIN users u ON u.id = b.user_id 
-                    WHERE DATE_FORMAT(b.ENTRY_DATE,'%Y%m%d') = STR_TO_DATE('$dateFrom','%Y%m%d')
+                    INNER JOIN users u ON u.id = b.user_id
+                    WHERE b.ENTRY_DATE = '$dateFrom'
                 ";
 
         if (!empty($cabangId) && $cabangId != 'SEMUA CABANG') {
