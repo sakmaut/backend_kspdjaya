@@ -427,8 +427,8 @@ class PelunasanController2 extends Controller
                 'DISCOUNT_INTEREST' => floatval($credit->DISCOUNT_INTEREST) + floatval($res['diskon_bunga']),
                 'PAID_PENALTY' => floatval($credit->PAID_PENALTY) + floatval($res['bayar_denda']),
                 'DISCOUNT_PENALTY' => floatval($credit->DISCOUNT_PENALTY) + floatval($res['diskon_denda']),
-                'PINALTY_PELUNASAN' => $request['PINALTY_PELUNASAN'],
-                'DISKON_PINALTY_PELUNASAN' => $request['DISKON_PINALTY_PELUNASAN'],
+                'PINALTY_PELUNASAN' => $request['BAYAR_PINALTI'],
+                'DISKON_PINALTY_PELUNASAN' => $request['DISKON_PINALTI'],
                 'STATUS' => 'D',
                 'STATUS_REC' => 'PT',
                 'END_DATE' => now()
