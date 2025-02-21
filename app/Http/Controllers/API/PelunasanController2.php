@@ -175,9 +175,6 @@ class PelunasanController2 extends Controller
                 ];
             }
 
-            // return \response()->json($arrearsData);
-            // die;
-
             if (!empty($arrearsData)) {
                 foreach ($arrearsData as $data) {
                     $existingArrears = M_Arrears::where([
@@ -651,9 +648,10 @@ class PelunasanController2 extends Controller
                     $remainingPayment = 0;
                 }
 
-                // Apply the payment to the schedule
-                // $param[$paymentParam] = $newPaymentValue;
-                // $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
+                if($paymentAmount != 0){
+                    $param[$paymentParam] = $newPaymentValue;
+                    $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
+                }
 
                 // Handle the discount if applicable
                 if ($remainingDiscount > 0) {
