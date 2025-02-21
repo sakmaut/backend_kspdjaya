@@ -37,6 +37,8 @@ class ListBanController extends Controller
 
                 $cash_in = [];
 
+                $last_cash_in_no = $no_cash_in; 
+
                 foreach ($arusKas as $item) {
 
                     $row = $item->no_invoice . $item->LOAN_NUM . $item->PELANGGAN;
@@ -46,9 +48,10 @@ class ListBanController extends Controller
 
                         // Set counter for CASH_IN items
                         if ($item->JENIS != 'PENCAIRAN') {
-                            $currentNo = $no_cash_in++;
+                            $currentNo = $no_cash_in++;  // This is for CASH_IN
+                            $last_cash_in_no = $currentNo;  // Update last CASH_IN no.
                         } else {
-                            // Set counter for PENCAIRAN items
+                            // Set counter for PENCAIRAN items, but use the last CASH_IN no.
                             $currentNo = $no_pencairan++;
                         }
                     } else {
@@ -93,7 +96,7 @@ class ListBanController extends Controller
                         $getTttl = floatval($item->ORIGINAL_AMOUNT) - floatval($item->admin_fee);
 
                         $datas['datas'][] = [
-                            'no' => $no_pencairan++, 
+                            'no' => $last_cash_in_no++,
                             'type' => 'CASH_OUT',
                             'no_kontrak' => $item->LOAN_NUM ?? '',
                             'tgl' => $item->ENTRY_DATE ?? '',
