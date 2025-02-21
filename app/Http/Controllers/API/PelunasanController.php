@@ -683,33 +683,27 @@ class PelunasanController extends Controller
                     $remainingPayment = 0;
                 }
 
-                // Apply the payment to the schedule
-                $param['BAYAR_BUNGA'] = $newPaymentValue;
+                // Initialize the parameter array
+                $param = [
+                    'BAYAR_BUNGA' => $newPaymentValue,
+                    'DISKON_BUNGA' => 0, // Default value
+                ];
+
+                // Jika BAYAR_BUNGA sudah == INTEREST, maka DISKON_BUNGA = 0
+                if ($newPaymentValue == $getAmount) {
+                    $param['DISKON_BUNGA'] = 0;
+                } else {
+                    // Jika BAYAR_BUNGA belum mencapai INTEREST, hitung DISKON_BUNGA
+                    $param['DISKON_BUNGA'] = $getAmount - $newPaymentValue;
+                }
+
+                // Apply the payment and discount to the schedule in one call
                 $this->insertKwitansiDetail(
                     $loan_number,
                     $no_inv,
                     $res,
                     $param
                 );
-
-                // Handle the discount if applicable
-                if ($remainingDiscount > 0) {
-                    $remainingToDiscount = $getAmount - $newPaymentValue;
-
-                    if ($remainingDiscount >= $remainingToDiscount) {
-                        $param['DISKON_BUNGA'] = $remainingToDiscount; // Full discount
-                        $remainingDiscount -= $remainingToDiscount; // Subtract the used discount
-                    } else {
-                        $param['DISKON_BUNGA'] = $remainingDiscount; // Partial discount
-                        $remainingDiscount = 0; // No discount left
-                    }
-
-                    $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
-                } else {
-                    // If DISKON_BUNGA is 0, set it to the value of getAmount
-                    $param['DISKON_BUNGA'] = $getAmount; // Set DISKON_BUNGA to the interest amount
-                    $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
-                }
             }
         }
     }
@@ -788,17 +782,32 @@ class PelunasanController extends Controller
     {
         $tgl_angsuran = $res['PAYMENT_DATE'] ?? $res['START_DATE'] ?? null;
 
+        // Cek apakah data sudah ada berdasarkan no_invoice, tgl_angsuran, dan loan_number
         $checkDetail = M_KwitansiDetailPelunasan::where([
-            'no_invoice' => $no_inv,
+            'angsuran_ke' => $res['INSTALLMENT_COUNT'],
             'tgl_angsuran' => $tgl_angsuran,
+            'loan_number' => $loan_number,
         ])->first();
 
-        $credit = M_CreditSchedule::where([
-            'LOAN_NUMBER' => $loan_number,
-            'PAYMENT_DATE' => $tgl_angsuran,
-        ])->first();
+        // Jika data sudah ada, update field yang relevan
+        if ($checkDetail) {
+            $fields = ['BAYAR_POKOK', 'DISKON_POKOK', 'BAYAR_BUNGA', 'DISKON_BUNGA', 'BAYAR_DENDA', 'DISKON_DENDA'];
 
-        if (!$checkDetail) {
+            foreach ($fields as $field) {
+                if (isset($param[$field])) {
+                    // Update hanya jika nilai baru tidak sama dengan nilai yang sudah ada
+                    if ($checkDetail->{strtolower($field)} != $param[$field]) {
+                        $checkDetail->update([strtolower($field) => $param[$field]]);
+                    }
+                }
+            }
+        } else {
+            // Jika data belum ada, buat baris baru
+            $credit = M_CreditSchedule::where([
+                'LOAN_NUMBER' => $loan_number,
+                'PAYMENT_DATE' => $tgl_angsuran,
+            ])->first();
+
             M_KwitansiDetailPelunasan::create([
                 'no_invoice' => $no_inv ?? '',
                 'loan_number' => $loan_number ?? '',
@@ -812,14 +821,6 @@ class PelunasanController extends Controller
                 'diskon_bunga' => $param['DISKON_BUNGA'] ?? 0,
                 'diskon_denda' => $param['DISKON_DENDA'] ?? 0,
             ]);
-        } else {
-            $fields = ['BAYAR_POKOK', 'DISKON_POKOK', 'BAYAR_BUNGA', 'DISKON_BUNGA', 'BAYAR_DENDA', 'DISKON_DENDA'];
-
-            foreach ($fields as $field) {
-                if (isset($param[$field]) && $param[$field] != 0) {
-                    $checkDetail->update([strtolower($field) => $param[$field]]);
-                }
-            }
         }
     }
 }
