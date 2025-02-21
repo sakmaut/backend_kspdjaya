@@ -691,7 +691,7 @@ class Welcome extends Controller
         ])->first();
 
         if ($cekPaid) {
-            throw new Exception("Credit Has PAID", 500);
+            throw new Exception("Credit Schedule Sudah PAID", 500);
         }
 
         M_Payment::create([
