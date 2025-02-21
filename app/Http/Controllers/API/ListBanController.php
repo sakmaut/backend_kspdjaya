@@ -68,7 +68,7 @@ class ListBanController extends Controller
                             'position' => $item->position ?? '',
                             'nama_pelanggan' => $pelanggan,
                             'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
-                            'keterangan' => $item->JENIS . ' ' . ($item->angsuran_ke ?? ''),
+                            'keterangan' => $item->JENIS . ' ' . ($item->angsuran_ke ?? '') . ' ' . $item->no_invoice,
                             'amount' => $amount,
                         ];
 
@@ -90,7 +90,7 @@ class ListBanController extends Controller
                             'user' => $item->fullname ?? '',
                             'position' => $item->position ?? '',
                             'nama_pelanggan' => $item->PELANGGAN ?? '',
-                            'keterangan' => 'PENCAIRAN NO KONTRAK ' . $item->LOAN_NUM ?? ' ' . $item->no_invoice,
+                            'keterangan' => 'PENCAIRAN NO KONTRAK ' . $item->LOAN_NUM ?? '',
                             'amount' => $getTttl,
                         ];
 
