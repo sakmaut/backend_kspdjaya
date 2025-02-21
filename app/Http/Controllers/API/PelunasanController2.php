@@ -372,8 +372,10 @@ class PelunasanController2 extends Controller
             ]);
 
             $ttlPayment = $ttlPrincipal + $ttlInterest + $ttlDiscPrincipal + $ttlDiscInterest;
+            $insufficientPay = $getCreditSchedule->INSTALLMENT - $ttlPayment;
 
             $getCreditSchedule->update([
+                'INSUFFICIENT_PAYMENT' => $insufficientPay == 0 ? 0 : $insufficientPay,
                 'PAYMENT_VALUE' => $ttlPayment
             ]);
         } else {
