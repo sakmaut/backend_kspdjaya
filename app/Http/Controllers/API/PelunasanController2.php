@@ -49,11 +49,11 @@ class PelunasanController2 extends Controller
                                             (SELECT MAX(PAYMENT_DATE) 
                                             FROM credit_schedule 
                                             WHERE LOAN_NUMBER = '{$loan_number}'  
-                                            AND PAYMENT_DATE < $date)
+                                            AND PAYMENT_DATE < '$date')
                                         )
                                         FROM credit_schedule
                                         WHERE LOAN_NUMBER = '{$loan_number}' 
-                                        AND PAYMENT_DATE > $date
+                                        AND PAYMENT_DATE > '$date'
                                     )
                                 GROUP BY LOAN_NUMBER
                             ) b ON b.LOAN_NUMBER = a.LOAN_NUMBER
@@ -70,11 +70,11 @@ class PelunasanController2 extends Controller
                                                     (SELECT MAX(PAYMENT_DATE)
                                                     FROM credit_schedule
                                                     WHERE LOAN_NUMBER = '{$loan_number}'
-                                                    AND PAYMENT_DATE < $date)
+                                                    AND PAYMENT_DATE < '$date')
                                                 )
                                                 FROM credit_schedule
                                                 WHERE LOAN_NUMBER = '{$loan_number}'
-                                                AND PAYMENT_DATE > $date
+                                                AND PAYMENT_DATE > '$date'
                                             )
                                         GROUP BY LOAN_NUMBER
                             ) AS d ON d.LOAN_NUMBER = a.LOAN_NUMBER
