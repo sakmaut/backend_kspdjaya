@@ -34,12 +34,18 @@ class ListBanController extends Controller
                 $totalAmount = 0;
 
                 $cash_in = [];
-
-                $totalAngsuranPokokBunga = 0;
+                $lastValidNo = $no; 
 
                 foreach ($arusKas as $item) {
 
                     $row = $item->no_invoice . $item->LOAN_NUM . $item->PELANGGAN;
+
+                    if (!in_array($row, $cash_in)) {
+                        $cash_in[] = $row;
+                        $currentNo = $lastValidNo++;  // Use lastValidNo to increment
+                    } else {
+                        $currentNo = '';  // Skip this iteration
+                    }
 
                     $no = $no++;
                     $cabang = $item->nama_cabang;
@@ -67,7 +73,7 @@ class ListBanController extends Controller
 
                     if ($item->JENIS != 'PENCAIRAN') {
                         $datas['datas'][] = [
-                            'no' => $no++,
+                            'no' => $currentNo,
                             'type' => 'CASH_IN',
                             'no_invoice' => $no_invoice,
                             'no_kontrak' => $loan_num,
@@ -83,6 +89,10 @@ class ListBanController extends Controller
 
                         $totalCashin += $amount;
                     }
+
+                    if ($currentNo !== '') {
+                        $lastValidNo = $currentNo;
+                    }
                 }
 
                 foreach ($arusKas as $item) {
@@ -91,7 +101,7 @@ class ListBanController extends Controller
                         $getTttl = floatval($item->ORIGINAL_AMOUNT) - floatval($item->admin_fee);
 
                         $datas['datas'][] = [
-                            'no' => $no++,
+                            'no' => $lastValidNo++, 
                             'type' => 'CASH_OUT',
                             'no_kontrak' => $item->LOAN_NUM ?? '',
                             'tgl' => $item->ENTRY_DATE ?? '',
