@@ -145,7 +145,8 @@ class Welcome extends Controller
                                                     FROM credit_schedule 
                                                     WHERE PAYMENT_DATE = '$paymntDate' 
                                                         AND LOAN_NUMBER = '{$res['loan_number']}'
-                                                        AND (PAID_FLAG IS NULL OR PAID_FLAG = '') ";
+                                                        AND (PAID_FLAG IS NULL OR PAID_FLAG = '')
+                                                    ORDER BY PAYMENT_DATE ASC";
 
 
                             $updateArrears = DB::select($getCrditSchedule);
@@ -183,7 +184,9 @@ class Welcome extends Controller
                         'LOAN_NUMBER' => $data['LOAN_NUMBER'],
                         'START_DATE' => $data['START_DATE'],
                         'STATUS_REC' => 'A'
-                    ])->first();
+                    ])
+                        ->orderBy('START_DATE', 'ASC')
+                        ->first();
 
                     if ($existingArrears) {
                         $existingArrears->update([
@@ -495,7 +498,7 @@ class Welcome extends Controller
         $credit_schedule = M_CreditSchedule::where([
             'LOAN_NUMBER' => $loan_number,
             'PAYMENT_DATE' => $tgl_angsuran
-        ])->first();
+        ])->orderBy('PAYMENT_DATE', 'ASC')->first();
 
         if (!$credit_schedule) {
             throw new Exception("Credit Schedule Not Found", 404);
@@ -612,7 +615,7 @@ class Welcome extends Controller
         $check_arrears = M_Arrears::where([
             'LOAN_NUMBER' => $loan_number,
             'START_DATE' => $tgl_angsuran
-        ])->first();
+        ])->orderBy('START_DATE', 'ASC')->first();
 
         $byr_angsuran = $res['bayar_angsuran'];
         $bayar_denda = $res['bayar_denda'];
@@ -683,7 +686,7 @@ class Welcome extends Controller
         $check_arrears = M_Arrears::where([
             'LOAN_NUMBER' => $loan_number,
             'START_DATE' => $tgl_angsuran
-        ])->first();
+        ])->orderBy('START_DATE', 'ASC')->first();
 
         $byr_angsuran = $res['bayar_angsuran'];
         $bayar_denda = $res['bayar_denda'];
@@ -953,7 +956,7 @@ class Welcome extends Controller
         $getArrears = M_Arrears::where([
             'LOAN_NUMBER' => $loan_number,
             'START_DATE' => $res['tgl_angsuran'],
-        ])->first();
+        ])->orderBy('START_DATE', 'ASC')->first();
 
         if ($getArrears) {
             $ttlPrincipal = floatval($getArrears->PAID_PCPL) + floatval($res['bayar_pokok'] ?? 0);

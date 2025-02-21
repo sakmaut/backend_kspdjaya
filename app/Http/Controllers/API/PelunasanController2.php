@@ -136,7 +136,7 @@ class PelunasanController2 extends Controller
 
             $cekINV = M_Kwitansi::where('NO_TRANSAKSI', $inv)->first();
 
-            if(!$cekINV){
+            if (!$cekINV) {
                 throw new Exception("Invoice Not Found", 500);
             }
 
@@ -144,7 +144,8 @@ class PelunasanController2 extends Controller
             $getCrditSchedule = "   SELECT LOAN_NUMBER,PAYMENT_DATE,PRINCIPAL,INTEREST,INSTALLMENT,PAYMENT_VALUE_PRINCIPAL,PAYMENT_VALUE_INTEREST
                                     FROM credit_schedule 
                                     WHERE LOAN_NUMBER = '$cekINV->LOAN_NUMBER'
-                                        AND (PAID_FLAG IS NULL OR PAID_FLAG = '') ";
+                                        AND (PAID_FLAG IS NULL OR PAID_FLAG = '')
+                                    ORDER BY PAYMENT_DATE ASC ";
 
 
             $updateArrears = DB::select($getCrditSchedule);
@@ -174,13 +175,15 @@ class PelunasanController2 extends Controller
                 ];
             }
 
-            if(!empty($arrearsData)){
+            if (!empty($arrearsData)) {
                 foreach ($arrearsData as $data) {
                     $existingArrears = M_Arrears::where([
                         'LOAN_NUMBER' => $data['LOAN_NUMBER'],
                         'START_DATE' => $data['START_DATE'],
                         'STATUS_REC' => 'A'
-                    ])->first();
+                    ])
+                        ->orderBy('START_DATE', 'ASC')
+                        ->first();
 
                     if ($existingArrears) {
                         $existingArrears->update([
@@ -347,8 +350,8 @@ class PelunasanController2 extends Controller
     function updateCreditSchedule($loan_number, $res)
     {
 
-        $getCreditSchedule = M_CreditSchedule::where(['LOAN_NUMBER' => $loan_number, 'PAYMENT_DATE' => $res['tgl_angsuran']])->first();
-        
+        $getCreditSchedule = M_CreditSchedule::where(['LOAN_NUMBER' => $loan_number, 'PAYMENT_DATE' => $res['tgl_angsuran']])->orderBy('PAYMENT_DATE', 'ASC')->first();
+
 
         if ($getCreditSchedule) {
 
@@ -375,7 +378,7 @@ class PelunasanController2 extends Controller
             $getCreditSchedule->update([
                 'PAYMENT_VALUE' => $ttlPayment
             ]);
-        }else{
+        } else {
             throw new Exception("Credit Schedule Not Found", 404);
         }
     }
@@ -385,7 +388,7 @@ class PelunasanController2 extends Controller
         $getArrears = M_Arrears::where([
             'LOAN_NUMBER' => $loan_number,
             'START_DATE' => $res['tgl_angsuran'],
-        ])->first();
+        ])->orderBy('START_DATE', 'ASC')->first();
 
         if ($getArrears) {
             $ttlPrincipal = floatval($getArrears->PAID_PCPL) + floatval($res['bayar_pokok'] ?? 0);
