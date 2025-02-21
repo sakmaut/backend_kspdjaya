@@ -48,12 +48,14 @@ class ListBanController extends Controller
                     $no_invoice = $item->no_invoice;
                     $loan_num = $item->LOAN_NUM;
                     $pelanggan = $item->PELANGGAN;
+                    $position = $item->position;
 
                     if (in_array($row, $cash_in)) {
-                        $no = 0;
+                        $no = '';
                         $cabang = '';
                         $tgl = '';
                         $user = '';
+                        $position = '';
                         $no_invoice = '';
                         $loan_num = '';
                         $pelanggan = '';
@@ -72,7 +74,7 @@ class ListBanController extends Controller
                             'tgl' => $tgl ?? '',
                             'cabang' => $cabang ?? '',
                             'user' => $user ?? '',
-                            'position' => $item->position ?? '',
+                            'position' => $position ?? '',
                             'nama_pelanggan' => $pelanggan,
                             'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
                             'keterangan' => $item->JENIS . ' ' . ($item->angsuran_ke ?? '') . ' ' . $item->no_invoice,
