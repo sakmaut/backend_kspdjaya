@@ -581,23 +581,22 @@ class PelunasanController2 extends Controller
             $valBefore = $res->{'PAYMENT_VALUE_PRINCIPAL'};
             $getAmount = $res->{'PRINCIPAL'};
 
-            // Proceed only if there's an amount to pay
-            if ($valBefore < $getAmount) {
-                // Calculate the amount left to pay
-                $remainingToPay = $getAmount - $valBefore;
+            $remainingToPay = $getAmount - $valBefore;
 
+            // Proceed only if there's an amount left to pay
+            if ($remainingToPay > 0) {
                 // If enough payment is available to cover the remaining amount
                 if ($remainingPayment >= $remainingToPay) {
-                    $newPaymentValue = $getAmount; // Full payment
+                    // Full payment for the remaining amount
+                    $newPaymentValue = $remainingToPay;
                     $remainingPayment -= $remainingToPay; // Subtract the paid amount
                 } else {
-                    $newPaymentValue = $valBefore + $remainingPayment;
-                    $remainingPayment = 0;
+                    // Partial payment
+                    $newPaymentValue = $remainingPayment;
+                    $remainingPayment = 0; // All payment used
                 }
 
-
                 // Apply the payment to the schedule
-               
                 $param['BAYAR_POKOK'] = $newPaymentValue;
                 $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
 
@@ -617,7 +616,6 @@ class PelunasanController2 extends Controller
                 }
             }
         }
-
 
         if ($remainingPayment > 0) {
             $param['BAYAR_POKOK'] = $remainingPayment;
