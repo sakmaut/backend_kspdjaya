@@ -143,7 +143,7 @@ class CustomerController extends Controller
                     })
                         ->orWhereNotIn('b.STATUS_REC', ['S', 'D']);
                 })
-                ->orderBy('  a.PAYMENT_DATE', 'ASC')
+                ->orderBy('a.PAYMENT_DATE', 'ASC')
                 ->select(
                     'a.LOAN_NUMBER',
                     'a.INSTALLMENT_COUNT',
