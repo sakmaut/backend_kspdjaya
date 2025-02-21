@@ -414,8 +414,6 @@ class PelunasanController2 extends Controller
             $getArrears->update([
                 'STATUS_REC' => $checkDiscountArrears ? 'S' : 'D',
             ]);
-        } else {
-            throw new Exception("Arrears Not Found", 404);
         }
     }
 
