@@ -579,7 +579,7 @@ class ReportController extends Controller
                     'No Ref' => $res->INVOICE ?? '',
                     'Bank' => '',
                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
-                    'Amt Bayar' => number_format($res->ORIGINAL_AMOUNT ?? 0),
+                    'Amt Bayar' => number_format($res->ORIGINAL_AMOUNT ?? 0 - $res->denda ?? 0),
                     'Sisa Angs' => number_format(max($sisaAngs - $res->ORIGINAL_AMOUNT, 0)), // Ensure no negative Sisa Angs
                     'Denda' => $res->OD != 0 ? number_format($res->PAST_DUE_PENALTY ?? 0) : "0",
                     'Byr Dnda' => number_format($res->denda ?? 0),
