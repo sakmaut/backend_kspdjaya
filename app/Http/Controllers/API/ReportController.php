@@ -555,7 +555,7 @@ class ReportController extends Controller
                     // If the entry has already been processed, reset values and calculate based on previous Sisa Angs
                     $currentJtTempo = '';
                     $currentAngs = '';
-                    $amtAngs = $res->INSTALLMENT ?? 0 - $res->ORIGINAL_AMOUNT ?? 0;
+                    $amtAngs = floatval($res->INSTALLMENT ?? 0) - floatval($res->ORIGINAL_AMOUNT ?? 0);
 
                     // Calculate remaining installment after previous value and current payment
                     $sisaAngs = max($previousSisaAngs - floatval($res->angsuran ?? 0), 0); // Avoid negative value
