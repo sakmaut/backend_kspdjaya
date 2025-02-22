@@ -575,7 +575,7 @@ class ReportController extends Controller
                     'Jt.Tempo' => $currentJtTempo,
                     'Angs' => $currentAngs,
                     'Seq' => $res->INST_COUNT_INCREMENT ?? 0,
-                    'Amt Angs' => number_format($res->INSTALLMENT ?? 0),
+                    'Amt Angs' => number_format(max($sisaAngs - $res->ORIGINAL_AMOUNT, 0)),
                     'No Ref' => $res->INVOICE ?? '',
                     'Bank' => '',
                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
