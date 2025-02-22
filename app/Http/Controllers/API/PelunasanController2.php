@@ -496,44 +496,26 @@ class PelunasanController2 extends Controller
         $this->arrearsCalculate($request, $loan_number, $no_inv, $arrears);
     }
 
-    // private function principalCalculate($request, $loan_number, $no_inv, $creditSchedule)
-    // {
-    //     $this->calculatePrincipal(
-    //         $request->BAYAR_POKOK,
-    //         $request->DISKON_POKOK,
-    //         $creditSchedule,
-    //         'PRINCIPAL',
-    //         'PAYMENT_VALUE_PRINCIPAL',
-    //         'BAYAR_POKOK',
-    //         'DISKON_POKOK',
-    //         $loan_number,
-    //         $no_inv
-    //     );
-    // }
-
     private function interestCalculate($request, $loan_number, $no_inv, $creditSchedule)
     {
         $remainingPayment = $request->BAYAR_BUNGA;
-        $remainingDiscount = $request->DISKON_BUNGA;
 
         foreach ($creditSchedule as $res) {
             $valBefore = $res->PAYMENT_VALUE_INTEREST;
             $getAmount = $res->INTEREST;
 
             if ($valBefore < $getAmount) {
-                // Calculate the amount left to pay
+               
                 $remainingToPay = $getAmount - $valBefore;
 
-                // If enough payment is available to cover the remaining amount
                 if ($remainingPayment >= $remainingToPay) {
-                    $newPaymentValue = $getAmount; // Full payment
-                    $remainingPayment -= $remainingToPay; // Subtract the paid amount
+                    $newPaymentValue = $getAmount; 
+                    $remainingPayment -= $remainingToPay;
                 } else {
                     $newPaymentValue = $valBefore + $remainingPayment;
                     $remainingPayment = 0;
                 }
 
-                // Initialize the parameter array
                 $param = [
                     'BAYAR_BUNGA' => $newPaymentValue,
                     'DISKON_BUNGA' => 0, // Default value

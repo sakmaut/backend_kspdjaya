@@ -29,13 +29,6 @@ use Ramsey\Uuid\Uuid;
 
 class PaymentController extends Controller
 {
-    protected $telegram;
-
-    function __construct(TelegramBotConfig $telegram)
-    {
-        $this->telegram = $telegram;
-    }
-
     public function index(Request $request)
     {
         try {
@@ -512,7 +505,12 @@ class PaymentController extends Controller
         );
 
         if (!$cekPaymentMethod) {
-            $this->telegram->create($save_kwitansi);
+            M_TelegramBotSend::create([
+                'endpoint' => $request->url(),
+                'messages' => json_encode($save_kwitansi),
+                'status' => 'new',
+                "created_at" => Carbon::now()
+            ]);
         }
     }
 
