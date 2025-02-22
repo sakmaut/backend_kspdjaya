@@ -555,6 +555,7 @@ class ReportController extends Controller
                     // If the entry has already been processed, reset values and calculate based on previous Sisa Angs
                     $currentJtTempo = '';
                     $currentAngs = '';
+                    $amtAngs = $res->INSTALLMENT ?? 0 - $res->ORIGINAL_AMOUNT ?? 0;
 
                     // Calculate remaining installment after previous value and current payment
                     $sisaAngs = max($previousSisaAngs - floatval($res->angsuran ?? 0), 0); // Avoid negative value
@@ -563,6 +564,7 @@ class ReportController extends Controller
                     // First-time calculation for this entry
                     $sisaAngs = max(floatval($res->INSTALLMENT ?? 0) - floatval($res->angsuran ?? 0), 0); // Avoid negative value
                     $previousSisaAngs = $sisaAngs;
+                    $amtAngs = $res->INSTALLMENT;
 
                     // Mark this entry as processed
                     array_push($checkExist, $uniqArr);
@@ -575,7 +577,7 @@ class ReportController extends Controller
                     'Jt.Tempo' => $currentJtTempo,
                     'Angs' => $currentAngs,
                     'Seq' => $res->INST_COUNT_INCREMENT ?? 0,
-                    'Amt Angs' => number_format(floatval($res->INSTALLMENT ?? 0) - floatval($res->ORIGINAL_AMOUNT ?? 0)),
+                    'Amt Angs' => number_format($amtAngs ?? 0),
                     'No Ref' => $res->INVOICE ?? '',
                     'Bank' => '',
                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
