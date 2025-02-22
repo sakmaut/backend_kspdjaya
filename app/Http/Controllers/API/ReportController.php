@@ -478,13 +478,17 @@ class ReportController extends Controller
                             mp.angsuran,
                             mp.denda,
                            CASE
-                                WHEN c.PAST_DUE_PENALTY != 0 
-                                THEN DATEDIFF(
+                                WHEN c.PAST_DUE_PENALTY != 0 THEN 
+                                    GREATEST(
+                                        DATEDIFF(
                                             CASE
                                                 WHEN mp.ENTRY_DATE IS NULL OR TRIM(mp.ENTRY_DATE) = '' THEN NOW()
                                                 ELSE mp.ENTRY_DATE
                                             END,
-                                           a.PAYMENT_DATE)
+                                            a.PAYMENT_DATE
+                                        ),
+                                        0
+                                    )
                                 ELSE 0
                             END AS OD
                         from
@@ -559,8 +563,6 @@ class ReportController extends Controller
                     array_push($checkExist, $uniqArr);
                 }
 
-                $sisaByr = number_format(abs($ttlAngs - $ttlByr));
-
                 // Insert data into the schedule array
                 $schedule['data_credit'][] = [
                     'Jt.Tempo' => $currentJtTempo,
@@ -572,7 +574,7 @@ class ReportController extends Controller
                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
                     'Amt Bayar' => number_format($res->ORIGINAL_AMOUNT ?? 0),
                     'Sisa Angs' => number_format($sisaAngs),
-                    'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0),
+                    'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0 * $res->OD ?? 0),
                     'Byr Dnda' => number_format($res->denda ?? 0),
                     'Sisa Tghn' => number_format((floatval($sisaAngs) + floatval($res->PAST_DUE_PENALTY)) - floatval($res->denda)),
                     'Ovd' => $res->OD ?? 0,
