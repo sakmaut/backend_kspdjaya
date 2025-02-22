@@ -552,33 +552,37 @@ class ReportController extends Controller
                 $uniqArr = $currentJtTempo . '-' . $currentAngs;
 
                 if (in_array($uniqArr, $checkExist)) {
+                    // If the entry has already been processed, reset values and calculate based on previous Sisa Angs
                     $currentJtTempo = '';
                     $currentAngs = '';
 
-                    $sisaAngs = $previousSisaAngs - floatval($res->angsuran ?? 0);
+                    // Calculate remaining installment after previous value and current payment
+                    $sisaAngs = max($previousSisaAngs - floatval($res->angsuran ?? 0), 0); // Avoid negative value
                     $previousSisaAngs = $sisaAngs;
                 } else {
-                    $sisaAngs = floatval($res->INSTALLMENT ?? 0) - floatval($res->angsuran ?? 0);
+                    // First-time calculation for this entry
+                    $sisaAngs = max(floatval($res->INSTALLMENT ?? 0) - floatval($res->angsuran ?? 0), 0); // Avoid negative value
                     $previousSisaAngs = $sisaAngs;
+
                     // Mark this entry as processed
                     array_push($checkExist, $uniqArr);
                 }
 
-                $sisaTghn = number_format((floatval($sisaAngs) + floatval($res->PAST_DUE_PENALTY)) - floatval($res->denda));
+                $sisaTghn = number_format((floatval($sisaAngs) + floatval($res->PAST_DUE_PENALTY ?? 0)) - floatval($res->denda ?? 0), 2);
 
                 // Insert data into the schedule array
                 $schedule['data_credit'][] = [
                     'Jt.Tempo' => $currentJtTempo,
                     'Angs' => $currentAngs,
                     'Seq' => $res->INST_COUNT_INCREMENT ?? 0,
-                    'Amt Angs' => number_format($res->INSTALLMENT ?? 0),
+                    'Amt Angs' => number_format($res->INSTALLMENT ?? 0, 2),
                     'No Ref' => $res->INVOICE ?? '',
                     'Bank' => '',
                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
-                    'Amt Bayar' => number_format($res->ORIGINAL_AMOUNT ?? 0),
-                    'Sisa Angs' => number_format(max($sisaAngs - $res->ORIGINAL_AMOUNT, 0)),
-                    'Denda' => $res->OD != 0 ? number_format($res->PAST_DUE_PENALTY ?? 0) : "0",
-                    'Byr Dnda' => number_format($res->denda ?? 0),
+                    'Amt Bayar' => number_format($res->ORIGINAL_AMOUNT ?? 0, 2),
+                    'Sisa Angs' => number_format(max($sisaAngs - $res->ORIGINAL_AMOUNT, 0), 2), // Ensure no negative Sisa Angs
+                    'Denda' => $res->OD != 0 ? number_format($res->PAST_DUE_PENALTY ?? 0, 2) : "0",
+                    'Byr Dnda' => number_format($res->denda ?? 0, 2),
                     'Sisa Tghn' => $sisaTghn,
                     'Ovd' => $res->OD ?? 0,
                     '' => $sisaTghn == '0' ? 'L' : ''
