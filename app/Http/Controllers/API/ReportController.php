@@ -574,7 +574,7 @@ class ReportController extends Controller
                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
                     'Amt Bayar' => number_format($res->ORIGINAL_AMOUNT ?? 0),
                     'Sisa Angs' => number_format($sisaAngs),
-                    'Denda' => $res->OD != 0 ? number_format($res->PAST_DUE_PENALTY ?? 0) : 0,
+                    'Denda' => $res->OD != 0 ? number_format($res->PAST_DUE_PENALTY ?? 0) : "0",
                     'Byr Dnda' => number_format($res->denda ?? 0),
                     'Sisa Tghn' => number_format((floatval($sisaAngs) + floatval($res->PAST_DUE_PENALTY)) - floatval($res->denda)),
                     'Ovd' => $res->OD ?? 0,
