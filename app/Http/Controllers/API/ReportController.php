@@ -512,7 +512,11 @@ class ReportController extends Controller
                             LEFT JOIN (
                                 SELECT  
                                     payment_id, 
-                                    SUM(CASE WHEN ACC_KEYS = 'ANGSURAN_POKOK' OR ACC_KEYS = 'ANGSURAN_BUNGA' THEN ORIGINAL_AMOUNT ELSE 0 END) AS angsuran,
+                                    SUM(CASE WHEN ACC_KEYS = 'ANGSURAN_POKOK' OR ACC_KEYS = 'ANGSURAN_BUNGA' 
+                                                OR ACC_KEYS = 'BAYAR_POKOK' 
+                                                OR ACC_KEYS = 'BAYAR_BUNGA'
+                                                OR ACC_KEYS = 'DISKON_POKOK'
+                                                OR ACC_KEYS = 'DISKON_BUNGA' THEN ORIGINAL_AMOUNT ELSE 0 END) AS angsuran,
                                     SUM(CASE WHEN ACC_KEYS = 'BAYAR_DENDA' THEN ORIGINAL_AMOUNT ELSE 0 END) AS denda
                                 FROM 
                                     payment_detail 
