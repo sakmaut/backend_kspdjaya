@@ -517,7 +517,7 @@ class ReportController extends Controller
                                                 OR ACC_KEYS = 'BAYAR_BUNGA'
                                                 OR ACC_KEYS = 'DISKON_POKOK'
                                                 OR ACC_KEYS = 'DISKON_BUNGA' THEN ORIGINAL_AMOUNT ELSE 0 END) AS angsuran,
-                                    SUM(CASE WHEN ACC_KEYS = 'BAYAR_DENDA' THEN ORIGINAL_AMOUNT ELSE 0 END) AS denda
+                                    SUM(CASE WHEN ACC_KEYS = 'BAYAR_DENDA' OR ACC_KEYS = 'DISKON_DENDA'  THEN ORIGINAL_AMOUNT ELSE 0 END) AS denda
                                 FROM 
                                     payment_detail 
                                 GROUP BY payment_id
