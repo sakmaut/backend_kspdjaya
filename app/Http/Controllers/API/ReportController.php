@@ -575,14 +575,14 @@ class ReportController extends Controller
                     'Jt.Tempo' => $currentJtTempo,
                     'Angs' => $currentAngs,
                     'Seq' => $res->INST_COUNT_INCREMENT ?? 0,
-                    'Amt Angs' => number_format($res->INSTALLMENT ?? 0, 2),
+                    'Amt Angs' => number_format($res->INSTALLMENT ?? 0),
                     'No Ref' => $res->INVOICE ?? '',
                     'Bank' => '',
                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
-                    'Amt Bayar' => number_format($res->ORIGINAL_AMOUNT ?? 0, 2),
-                    'Sisa Angs' => number_format(max($sisaAngs - $res->ORIGINAL_AMOUNT, 0), 2), // Ensure no negative Sisa Angs
-                    'Denda' => $res->OD != 0 ? number_format($res->PAST_DUE_PENALTY ?? 0, 2) : "0",
-                    'Byr Dnda' => number_format($res->denda ?? 0, 2),
+                    'Amt Bayar' => number_format($res->ORIGINAL_AMOUNT ?? 0),
+                    'Sisa Angs' => number_format(max($sisaAngs - $res->ORIGINAL_AMOUNT, 0)), // Ensure no negative Sisa Angs
+                    'Denda' => $res->OD != 0 ? number_format($res->PAST_DUE_PENALTY ?? 0) : "0",
+                    'Byr Dnda' => number_format($res->denda ?? 0),
                     'Sisa Tghn' => "0",
                     'Ovd' => $res->OD ?? 0,
                     '' => $sisaTghn == '0' ? 'L' : ''
