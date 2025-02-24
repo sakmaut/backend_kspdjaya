@@ -688,7 +688,7 @@ class Welcome extends Controller
             $total1 = round(floatval($new_payment_value_principal) + floatval($new_payment_value_interest) + floatval($new_penalty), 2);
             $total2 = round(floatval($getPrincipal) + floatval($getInterest) + floatval($getPenalty), 2);
 
-            if ($total1 == $total2 || ($new_penalty > $getPenalty)) {
+            if ($total1 == $total2 || (floatval($new_penalty) > floatval($getPenalty))) {
                 $check_arrears->update(['STATUS_REC' => 'S']);
             }
         }
