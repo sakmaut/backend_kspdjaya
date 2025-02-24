@@ -552,6 +552,7 @@ class ReportController extends Controller
                     $currentJtTempo = '';
                     $currentAngs = '';
                     $amtAngs = floatval($res->ORIGINAL_AMOUNT ?? 0) - floatval($res->denda ?? 0);
+                    $remainingInstallment = 0;
 
                     // Calculate remaining installment after previous value and current payment
                     $sisaAngs = max($previousSisaAngs - floatval($res->angsuran ?? 0), 0); // Avoid negative value
@@ -561,6 +562,7 @@ class ReportController extends Controller
                     $sisaAngs = max(floatval($res->INSTALLMENT ?? 0) - floatval($res->angsuran ?? 0), 0); // Avoid negative value
                     $previousSisaAngs = $sisaAngs;
                     $amtAngs = $res->INSTALLMENT;
+                    $remainingInstallment = floatval($res->ORIGINAL_AMOUNT ?? 0) - floatval($res->denda ?? 0);
 
                     // Mark this entry as processed
                     array_push($checkExist, $uniqArr);
@@ -578,7 +580,7 @@ class ReportController extends Controller
                     'Bank' => '',
                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
                     'Amt Bayar' => number_format(floatval($res->ORIGINAL_AMOUNT ?? 0) - floatval($res->denda ?? 0)),
-                    'Sisa Angs' => number_format($amtAngs ?? 0), // Ensure no negative Sisa Angs
+                    'Sisa Angs' => number_format($remainingInstallment ?? 0), // Ensure no negative Sisa Angs
                     'Denda' => $res->OD != 0 ? number_format($res->PAST_DUE_PENALTY ?? 0) : "0",
                     'Byr Dnda' => number_format($res->denda ?? 0),
                     'Sisa Tghn' => "0",
