@@ -568,6 +568,7 @@ class ReportController extends Controller
 
                 $sisaTghn = number_format((floatval($sisaAngs) + floatval($res->PAST_DUE_PENALTY ?? 0)) - floatval($res->denda ?? 0), 2);
                 $amtBayar =  number_format(floatval($res->ORIGINAL_AMOUNT ?? 0) - floatval($res->denda ?? 0));
+                $sisaAngss = floatval( $amtAngs ?? 0 ) - floatval($amtBayar ?? 0);
 
                 // Insert data into the schedule array
                 $schedule['data_credit'][] = [
@@ -579,7 +580,7 @@ class ReportController extends Controller
                     'Bank' => '',
                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
                     'Amt Bayar' => number_format($amtBayar ?? 0),
-                    'Sisa Angs' => number_format((float)($amtAngs ?? 0) - (float)($amtBayar ?? 0)),
+                    'Sisa Angs' => number_format($sisaAngss),
                     'Denda' => $res->OD != 0 ? number_format($res->PAST_DUE_PENALTY ?? 0) : "0",
                     'Byr Dnda' => number_format($res->denda ?? 0),
                     'Sisa Tghn' => "0",
