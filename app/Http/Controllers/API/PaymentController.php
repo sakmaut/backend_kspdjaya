@@ -96,6 +96,9 @@ class PaymentController extends Controller
     {
         DB::beginTransaction();
         try {
+
+            die;
+
             $no_inv = generateCodeKwitansi($request, 'kwitansi', 'NO_TRANSAKSI', 'INV');
 
             $getCodeBranch = M_Branch::findOrFail($request->user()->branch_id);
