@@ -478,18 +478,14 @@ class ReportController extends Controller
                             mp.angsuran,
                             mp.denda,
                            CASE
-                                WHEN c.PAST_DUE_PENALTY != 0 THEN 
-                                    GREATEST(
-                                        DATEDIFF(
-                                            COALESCE(
-                                                NULLIF(TRIM(mp.ENTRY_DATE), ''), 
-                                                DATE_FORMAT(NOW(), '%Y-%m-%d')
-                                            ),
-                                            a.PAYMENT_DATE
-                                        ),
-                                        0
-                                    )
-                                ELSE 0
+                                WHEN DATEDIFF(
+                                    COALESCE(DATE_FORMAT(mp.ENTRY_DATE, '%Y-%m-%d'), DATE_FORMAT(NOW(), '%Y-%m-%d')),
+                                    a.PAYMENT_DATE
+                                ) < 0 THEN 0
+                                ELSE DATEDIFF(
+                                    COALESCE(DATE_FORMAT(mp.ENTRY_DATE, '%Y-%m-%d'), DATE_FORMAT(NOW(), '%Y-%m-%d')),
+                                    a.PAYMENT_DATE
+                                )
                             END AS OD
                         from
                             credit_schedule as a
