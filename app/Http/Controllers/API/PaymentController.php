@@ -504,14 +504,14 @@ class PaymentController extends Controller
             $save_kwitansi
         );
 
-        if (!$cekPaymentMethod) {
-            M_TelegramBotSend::create([
-                'endpoint' => $request->url(),
-                'messages' => json_encode($save_kwitansi),
-                'status' => 'new',
-                "created_at" => Carbon::now()
-            ]);
-        }
+        // if (!$cekPaymentMethod) {
+        //     M_TelegramBotSend::create([
+        //         'endpoint' => $request->url(),
+        //         'messages' => json_encode($save_kwitansi),
+        //         'status' => 'new',
+        //         "created_at" => Carbon::now()
+        //     ]);
+        // }
     }
 
     function createPaymentRecords($request, $res, $tgl_angsuran, $loan_number, $no_inv, $branch, $uid)
