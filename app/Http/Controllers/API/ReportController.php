@@ -478,13 +478,17 @@ class ReportController extends Controller
                             mp.angsuran,
                             mp.denda,
                            CASE
-                                WHEN c.PAST_DUE_PENALTY != 0 
-                                THEN DATEDIFF(
+                                WHEN c.PAST_DUE_PENALTY != 0 THEN 
+                                    GREATEST(
+                                        DATEDIFF(
                                             CASE
                                                 WHEN mp.ENTRY_DATE IS NULL OR TRIM(mp.ENTRY_DATE) = '' THEN NOW()
                                                 ELSE mp.ENTRY_DATE
                                             END,
-                                           a.PAYMENT_DATE)
+                                            a.PAYMENT_DATE
+                                        ),
+                                        0
+                                    )
                                 ELSE 0
                             END AS OD
                         from
@@ -508,8 +512,12 @@ class ReportController extends Controller
                             LEFT JOIN (
                                 SELECT  
                                     payment_id, 
-                                    SUM(CASE WHEN ACC_KEYS = 'ANGSURAN_POKOK' OR ACC_KEYS = 'ANGSURAN_BUNGA' THEN ORIGINAL_AMOUNT ELSE 0 END) AS angsuran,
-                                    SUM(CASE WHEN ACC_KEYS = 'BAYAR_DENDA' THEN ORIGINAL_AMOUNT ELSE 0 END) AS denda
+                                    SUM(CASE WHEN ACC_KEYS = 'ANGSURAN_POKOK' OR ACC_KEYS = 'ANGSURAN_BUNGA' 
+                                                OR ACC_KEYS = 'BAYAR_POKOK' 
+                                                OR ACC_KEYS = 'BAYAR_BUNGA'
+                                                OR ACC_KEYS = 'DISKON_POKOK'
+                                                OR ACC_KEYS = 'DISKON_BUNGA' THEN ORIGINAL_AMOUNT ELSE 0 END) AS angsuran,
+                                    SUM(CASE WHEN ACC_KEYS = 'BAYAR_DENDA' OR ACC_KEYS = 'DISKON_DENDA'  THEN ORIGINAL_AMOUNT ELSE 0 END) AS denda
                                 FROM 
                                     payment_detail 
                                 GROUP BY payment_id
@@ -538,45 +546,48 @@ class ReportController extends Controller
             $previousSisaAngs = 0;
 
             foreach ($data as $res) {
-                $ttlAngs = floatval($res->INSTALLMENT) + floatval($res->PAST_DUE_PENALTY);
-                $ttlByr = floatval($res->angsuran) + floatval($res->denda);
-
                 $currentJtTempo = isset($res->PAYMENT_DATE) ? Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y') : '';
                 $currentAngs = isset($res->INSTALLMENT_COUNT) ? $res->INSTALLMENT_COUNT : '';
 
                 $uniqArr = $currentJtTempo . '-' . $currentAngs;
 
                 if (in_array($uniqArr, $checkExist)) {
+                    // If the entry has already been processed, reset values and calculate based on previous Sisa Angs
                     $currentJtTempo = '';
                     $currentAngs = '';
+                    $amtAngs = floatval($res->ORIGINAL_AMOUNT ?? 0) - floatval($res->denda ?? 0);
 
-                    $sisaAngs = $previousSisaAngs - floatval($res->angsuran ?? 0);
+                    // Calculate remaining installment after previous value and current payment
+                    $sisaAngs = max($previousSisaAngs - floatval($res->angsuran ?? 0), 0); // Avoid negative value
                     $previousSisaAngs = $sisaAngs;
                 } else {
-                    $sisaAngs = floatval($res->INSTALLMENT ?? 0) - floatval($res->angsuran ?? 0);
+                    // First-time calculation for this entry
+                    $sisaAngs = max(floatval($res->INSTALLMENT ?? 0) - floatval($res->angsuran ?? 0), 0); // Avoid negative value
                     $previousSisaAngs = $sisaAngs;
+                    $amtAngs = $res->INSTALLMENT;
+
                     // Mark this entry as processed
                     array_push($checkExist, $uniqArr);
                 }
 
-                $sisaByr = number_format(abs($ttlAngs - $ttlByr));
+                $sisaTghn = number_format((floatval($sisaAngs) + floatval($res->PAST_DUE_PENALTY ?? 0)) - floatval($res->denda ?? 0), 2);
 
                 // Insert data into the schedule array
                 $schedule['data_credit'][] = [
                     'Jt.Tempo' => $currentJtTempo,
                     'Angs' => $currentAngs,
                     'Seq' => $res->INST_COUNT_INCREMENT ?? 0,
-                    'Amt Angs' => number_format($res->INSTALLMENT ?? 0),
+                    'Amt Angs' => number_format($amtAngs ?? 0),
                     'No Ref' => $res->INVOICE ?? '',
                     'Bank' => '',
                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
-                    'Amt Bayar' => number_format($res->ORIGINAL_AMOUNT ?? 0),
-                    'Sisa Angs' => number_format($sisaAngs),
-                    'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0),
+                    'Amt Bayar' => number_format(floatval($res->ORIGINAL_AMOUNT ?? 0) - floatval($res->denda ?? 0)),
+                    'Sisa Angs' => number_format(max($sisaAngs - $res->ORIGINAL_AMOUNT, 0)), // Ensure no negative Sisa Angs
+                    'Denda' => $res->OD != 0 ? number_format($res->PAST_DUE_PENALTY ?? 0) : "0",
                     'Byr Dnda' => number_format($res->denda ?? 0),
-                    'Sisa Tghn' => number_format((floatval($sisaAngs) + floatval($res->PAST_DUE_PENALTY)) - floatval($res->denda)),
+                    'Sisa Tghn' => "0",
                     'Ovd' => $res->OD ?? 0,
-                    '' => $sisaAngs == '0' && $res->PAST_DUE_PENALTY == '0' ? 'L' : ''
+                    '' => $sisaTghn == '0' ? 'L' : ''
                 ];
             }
 

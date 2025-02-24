@@ -29,50 +29,71 @@ class ListBanController extends Controller
 
                 $arusKas = $this->queryArusKas($cabangId, $formattedDate);
 
-                $no = 1;
+                $no_cash_in = 1;  // Start counter for CASH_IN
+                $no_pencairan = 1;
+
                 $totalCashin = 0;
                 $totalAmount = 0;
 
                 $cash_in = [];
 
-                $totalAngsuranPokokBunga = 0;
+                $last_cash_in_no = $no_cash_in - 1; 
 
                 foreach ($arusKas as $item) {
 
                     $row = $item->no_invoice . $item->LOAN_NUM . $item->PELANGGAN;
 
+                    $cabang = $item->nama_cabang;
+                    $tgl = $item->ENTRY_DATE;
+                    $user = $item->fullname;
                     $no_invoice = $item->no_invoice;
                     $loan_num = $item->LOAN_NUM;
                     $pelanggan = $item->PELANGGAN;
-                    $user = $item->fullname;
+                    $position = $item->position;
 
-                    if (in_array($row, $cash_in)) {
-                        $no_invoice = '';
+                    if (!in_array($row, $cash_in)) {
+                        $cash_in[] = $row;
+
+                        if ($item->JENIS != 'PENCAIRAN') {
+                            $currentNo = $no_cash_in++;  // This is for CASH_IN
+                            $last_cash_in_no = $currentNo;  // Update last CASH_IN no.
+                        } else {
+                            $currentNo = $last_cash_in_no + 1;
+                        }
+                    } else {
+                        $currentNo = '';
+                        $cabang = '';
+                        $tgl = '';
+                        $user = '';
+                        $position = '';
                         $loan_num = '';
                         $pelanggan = '';
-                    } else {
-                        array_push($cash_in, $row);
                     }
 
                     $amount = is_numeric($item->ORIGINAL_AMOUNT) ? floatval($item->ORIGINAL_AMOUNT) : 0;
 
                     if ($item->JENIS != 'PENCAIRAN') {
-                        $datas['datas'][] = [
-                            'no' => $no++,
-                            'type' => 'CASH_IN',
-                            'no_invoice' => $no_invoice,
-                            'no_kontrak' => $loan_num,
-                            'tgl' => $item->ENTRY_DATE ?? '',
-                            'cabang' => $item->nama_cabang ?? '',
-                            'user' => $user ?? '',
-                            'position' => $item->position ?? '',
-                            'nama_pelanggan' => $pelanggan,
-                            'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
-                            'keterangan' => $item->JENIS . ' ' . ($item->angsuran_ke ?? '') . ' ' . $item->no_invoice,
-                            'amount' => $amount,
-                        ];
+                        if ($amount != 0) {
+                            $datas['datas'][] = [
+                                'no' => $currentNo,  // Use the current counter for CASH_IN
+                                'type' => 'CASH_IN',
+                                'no_invoice' => $no_invoice,
+                                'no_kontrak' => $loan_num,
+                                'tgl' => $tgl ?? '',
+                                'cabang' => $cabang ?? '',
+                                'user' => $user ?? '',
+                                'position' => $position ?? '',
+                                'nama_pelanggan' => $pelanggan,
+                                'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
+                                'keterangan' => 'BAYAR ' . ($item->JENIS == 'DENDA' ? $item->JENIS : '') .
+                                                ($item->JENIS == 'ANGSURAN' && $item->angsuran_ke ? $item->angsuran_ke : '') .
+                                                ' ' . $item->no_invoice,
+                                'amount' => $amount, 
+                            ];
 
-                        $totalCashin += $amount;
+                            // Add to totalCashin only if the amount is valid
+                            $totalCashin += $amount;
+                        }
                     }
                 }
 
@@ -82,7 +103,7 @@ class ListBanController extends Controller
                         $getTttl = floatval($item->ORIGINAL_AMOUNT) - floatval($item->admin_fee);
 
                         $datas['datas'][] = [
-                            'no' => $no++,
+                            'no' => $last_cash_in_no + 1,
                             'type' => 'CASH_OUT',
                             'no_kontrak' => $item->LOAN_NUM ?? '',
                             'tgl' => $item->ENTRY_DATE ?? '',
@@ -95,6 +116,7 @@ class ListBanController extends Controller
                         ];
 
                         $totalAmount += $getTttl;
+                        $last_cash_in_no++;
                     }
                 }
 
@@ -190,12 +212,13 @@ class ListBanController extends Controller
                     INNER JOIN credit b2 ON b2.LOAN_NUMBER = b.LOAN_NUM
                     INNER JOIN customer b3 ON b3.CUST_CODE = b2.CUST_CODE
                     INNER JOIN users u ON u.id = b.user_id
-                    WHERE b.ENTRY_DATE = '$dateFrom'
-                ";
+                    WHERE b.ENTRY_DATE = '$dateFrom'";
 
         if (!empty($cabangId) && $cabangId != 'SEMUA CABANG') {
             $query .= " AND b.BRANCH_ID = '" . $cabangId . "'";
         }
+
+        $query .= "ORDER BY b.no_invoice DESC";
 
         $result = DB::select($query);
 
