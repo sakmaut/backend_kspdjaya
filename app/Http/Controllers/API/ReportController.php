@@ -481,11 +481,10 @@ class ReportController extends Controller
                                 WHEN c.PAST_DUE_PENALTY != 0 THEN 
                                     GREATEST(
                                         DATEDIFF(
-                                            COALESCE(mp.ENTRY_DATE,DATE_FORMAT(NOW(),%Y-%m-%d)),
-                                            -- CASE
-                                            --     WHEN mp.ENTRY_DATE IS NULL OR TRIM(mp.ENTRY_DATE) = '' THEN NOW()
-                                            --     ELSE mp.ENTRY_DATE
-                                            -- END,
+                                            COALESCE(
+                                                NULLIF(TRIM(mp.ENTRY_DATE), ''), 
+                                                DATE_FORMAT(NOW(), '%Y-%m-%d')
+                                            ),
                                             a.PAYMENT_DATE
                                         ),
                                         0
