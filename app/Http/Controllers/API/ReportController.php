@@ -567,7 +567,7 @@ class ReportController extends Controller
                 }
 
                 $sisaTghn = number_format((floatval($sisaAngs) + floatval($res->PAST_DUE_PENALTY ?? 0)) - floatval($res->denda ?? 0), 2);
-                $amtBayar =  number_format(floatval($res->ORIGINAL_AMOUNT ?? 0) - floatval($res->denda ?? 0));
+                $amtBayar =  floatval($res->ORIGINAL_AMOUNT ?? 0) - floatval($res->denda ?? 0);
                 $sisaAngss = floatval( $amtAngs ?? 0 ) - floatval($amtBayar ?? 0);
 
                 // Insert data into the schedule array
