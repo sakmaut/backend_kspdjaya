@@ -331,10 +331,12 @@ class ListBanController extends Controller
 			WHERE	loan_number in (select loan_number from credit where status='A' 
 					or (status in ('S','D') and loan_number in (select loan_num from payment where date_format(entry_date,'%m%Y')=date_format(now(),'%m%Y'))))
 			GROUP	BY loan_number) k on k.loan_number=b.loan_number
-                            LEFT JOIN (	SELECT	loan_num, str_to_date(date_format(entry_date,'%d%m%Y'),'%d%m%Y') as entry_date, replace(replace(group_concat(payment_method),'AGENT EKS',''),',','') as payment_method
+                            LEFT JOIN (	SELECT	loan_num, str_to_date(date_format(entry_date,'%d%m%Y'),'%d%m%Y') as entry_date, 
+                                                replace(replace(group_concat(payment_method),'AGENT EKS',''),',','') as payment_method, 
+                                                concat('Angsuran Ke-',max(cast(replace(title,'Angsuran Ke-','') as signed)))
 			                            FROM	payment
-			                            WHERE	(cast(loan_num as char),date_format(entry_date,'%d%m%Y %H%i'),cast(title as char)) in 
-                                        (select cast(s1.loan_num as char), date_format(max(s1.entry_date),'%d%m%Y %H%i'), concat('Angsuran Ke-',max(cast(replace(s1.title,'Angsuran Ke-','') as signed))) 
+			                            WHERE	(cast(loan_num as char),date_format(entry_date,'%d%m%Y %H%i')) in 
+                                        (select cast(s1.loan_num as char), date_format(max(s1.entry_date),'%d%m%Y %H%i') 
          				                 from 	payment s1
          					                    inner join payment_detail s2 on s2.PAYMENT_ID=s1.ID and s2.ACC_KEYS in ('ANGSURAN_POKOK','BAYAR_POKOK','ANGSURAN_BUNGA')
          				                 group 	by s1.loan_num)
