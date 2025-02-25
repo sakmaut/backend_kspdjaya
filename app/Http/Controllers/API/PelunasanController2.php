@@ -231,6 +231,10 @@ class PelunasanController2 extends Controller
 
     public function propel(Request $request)
     {
+
+        return response()->json('OK');
+        die;
+
         DB::beginTransaction();
         try {
             $loan_number = $request['LOAN_NUMBER'];
@@ -505,11 +509,11 @@ class PelunasanController2 extends Controller
             $getAmount = $res->INTEREST;
 
             if ($valBefore < $getAmount) {
-               
+
                 $remainingToPay = $getAmount - $valBefore;
 
                 if ($remainingPayment >= $remainingToPay) {
-                    $newPaymentValue = $getAmount; 
+                    $newPaymentValue = $getAmount;
                     $remainingPayment -= $remainingToPay;
                 } else {
                     $newPaymentValue = $valBefore + $remainingPayment;
@@ -634,7 +638,7 @@ class PelunasanController2 extends Controller
                     $remainingPayment = 0;
                 }
 
-                if($paymentAmount != 0){
+                if ($paymentAmount != 0) {
                     $param[$paymentParam] = $newPaymentValue;
                     $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
                 }
