@@ -554,7 +554,7 @@ class ReportController extends Controller
                     $amtAngs = floatval($res->ORIGINAL_AMOUNT ?? 0) - floatval($res->denda ?? 0);
                     $sisaAngs = max($previousSisaAngs - floatval($res->angsuran ?? 0), 0);
 
-                    $dendas = floatval($dendas ?? 0) - floatval($res->denda ?? 0);
+                    $dendas = floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->denda ?? 0);
 
                     $previousSisaAngs = $sisaAngs;
                 } else {
