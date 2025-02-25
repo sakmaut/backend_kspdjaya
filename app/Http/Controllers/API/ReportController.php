@@ -540,9 +540,9 @@ class ReportController extends Controller
 
             $checkExist = [];
             $previousSisaAngs = 0;
-            $previousPastDuePrincipal = 0; 
+            $setPinalty = 0;
 
-            foreach ($data as $index => $res) {
+            foreach ($data as $res) {
                 $currentJtTempo = isset($res->PAYMENT_DATE) ? Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y') : '';
                 $currentAngs = isset($res->INSTALLMENT_COUNT) ? $res->INSTALLMENT_COUNT : '';
 
@@ -554,18 +554,16 @@ class ReportController extends Controller
                     $amtAngs = floatval($res->ORIGINAL_AMOUNT ?? 0) - floatval($res->denda ?? 0);
                     $sisaAngs = max($previousSisaAngs - floatval($res->angsuran ?? 0), 0);
 
-                    $dendas = $index === 0 ? floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->denda ?? 0) : max($previousPastDuePrincipal - floatval($res->denda ?? 0), 0);
+                    $setPinalty = floatval($setPinalty ?? 0) - floatval($res->denda ?? 0);
 
                     $previousSisaAngs = $sisaAngs;
                 } else {
                     $sisaAngs = max(floatval($res->INSTALLMENT ?? 0) - floatval($res->angsuran ?? 0), 0);
                     $previousSisaAngs = $sisaAngs;
                     $amtAngs = $res->INSTALLMENT;
-                    $dendas = floatval($res->PAST_DUE_PENALTY ?? 0);
+                    $setPinalty = floatval($res->PAST_DUE_PENALTY ?? 0);
                     array_push($checkExist, $uniqArr);
                 }
-
-                $previousPastDuePrincipal = floatval($res->PAST_DUE_PRINCIPAL ?? 0);
 
                 $sisaTghn = number_format((floatval($sisaAngs) + floatval($res->PAST_DUE_PENALTY ?? 0)) - floatval($res->denda ?? 0), 2);
                 $amtBayar =  floatval($res->ORIGINAL_AMOUNT ?? 0) - floatval($res->denda ?? 0);
@@ -581,7 +579,7 @@ class ReportController extends Controller
                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
                     'Amt Bayar' => number_format($amtBayar ?? 0),
                     'Sisa Angs' => number_format($sisaAngss),
-                    'Denda' => number_format($previousPastDuePrincipal),
+                    'Denda' =>  number_format($setPinalty),
                     'Byr Dnda' => number_format($res->denda ?? 0),
                     'Sisa Tghn' => '0',
                     'Ovd' => $res->OD ?? 0,
