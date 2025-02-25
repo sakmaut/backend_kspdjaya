@@ -554,13 +554,14 @@ class ReportController extends Controller
                     $currentAngs = '';
                     $amtAngs = floatval($res->ORIGINAL_AMOUNT ?? 0) - floatval($res->denda ?? 0);
                     $sisaAngs = max($previousSisaAngs - floatval($res->angsuran ?? 0), 0);
-                    $dendas = floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->denda ?? 0);
+                    $dendas = $dendas;
                     $previousSisaAngs = $sisaAngs;
                 } else {
                     $sisaAngs = max(floatval($res->INSTALLMENT ?? 0) - floatval($res->angsuran ?? 0), 0);
                     $previousSisaAngs = $sisaAngs;
                     $amtAngs = $res->INSTALLMENT;
                     $previousDendaPaymentDate = floatval($res->PAST_DUE_PENALTY ?? 0);
+                    $dendas = floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->denda ?? 0);
 
                     array_push($checkExist, $uniqArr);
                 }
