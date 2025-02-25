@@ -552,6 +552,7 @@ class ReportController extends Controller
                     $currentJtTempo = '';
                     $currentAngs = '';
                     $amtAngs = floatval($res->ORIGINAL_AMOUNT ?? 0) - floatval($res->denda ?? 0);
+                    $sisaDenda = floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->denda ?? 0);
 
                     // Calculate remaining installment after previous value and current payment
                     $sisaAngs = max($previousSisaAngs - floatval($res->angsuran ?? 0), 0); // Avoid negative value
@@ -561,6 +562,7 @@ class ReportController extends Controller
                     $sisaAngs = max(floatval($res->INSTALLMENT ?? 0) - floatval($res->angsuran ?? 0), 0); // Avoid negative value
                     $previousSisaAngs = $sisaAngs;
                     $amtAngs = $res->INSTALLMENT;
+                    $sisaDenda = floatval($res->PAST_DUE_PENALTY ?? 0);
 
                     // Mark this entry as processed
                     array_push($checkExist, $uniqArr);
@@ -568,7 +570,7 @@ class ReportController extends Controller
 
                 $sisaTghn = number_format((floatval($sisaAngs) + floatval($res->PAST_DUE_PENALTY ?? 0)) - floatval($res->denda ?? 0), 2);
                 $amtBayar =  floatval($res->ORIGINAL_AMOUNT ?? 0) - floatval($res->denda ?? 0);
-                $sisaAngss = floatval( $amtAngs ?? 0 ) - floatval($amtBayar ?? 0);
+                $sisaAngss = floatval($amtAngs ?? 0) - floatval($amtBayar ?? 0);
 
                 // Insert data into the schedule array
                 $schedule['data_credit'][] = [
@@ -581,7 +583,7 @@ class ReportController extends Controller
                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
                     'Amt Bayar' => number_format($amtBayar ?? 0),
                     'Sisa Angs' => number_format($sisaAngss),
-                    'Denda' => $res->OD != 0 ? number_format($res->PAST_DUE_PENALTY ?? 0) : "0",
+                    'Denda' => $sisaDenda,
                     'Byr Dnda' => number_format($res->denda ?? 0),
                     'Sisa Tghn' => "0",
                     'Ovd' => $res->OD ?? 0,
