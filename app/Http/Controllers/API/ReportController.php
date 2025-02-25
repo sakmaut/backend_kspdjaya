@@ -548,25 +548,19 @@ class ReportController extends Controller
                 $uniqArr = $currentJtTempo . '-' . $currentAngs;
 
                 if (in_array($uniqArr, $checkExist)) {
-                    // If the entry has already been processed, reset values and calculate based on previous Sisa Angs
                     $currentJtTempo = '';
                     $currentAngs = '';
                     $amtAngs = floatval($res->ORIGINAL_AMOUNT ?? 0) - floatval($res->denda ?? 0);
+                    $sisaDenda = max(floatval($res->denda ?? 0) - floatval($res->PAST_DUE_PENALTY ?? 0), 0);
 
-
-                    $sisaDenda = floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->denda ?? 0);
-
-                    // Calculate remaining installment after previous value and current payment
-                    $sisaAngs = max($previousSisaAngs - floatval($res->angsuran ?? 0), 0); // Avoid negative value
+                    $sisaAngs = max($previousSisaAngs - floatval($res->angsuran ?? 0), 0);
                     $previousSisaAngs = $sisaAngs;
                 } else {
-                    // First-time calculation for this entry
-                    $sisaAngs = max(floatval($res->INSTALLMENT ?? 0) - floatval($res->angsuran ?? 0), 0); // Avoid negative value
+                    $sisaAngs = max(floatval($res->INSTALLMENT ?? 0) - floatval($res->angsuran ?? 0), 0);
                     $previousSisaAngs = $sisaAngs;
                     $amtAngs = $res->INSTALLMENT;
                     $sisaDenda = $res->PAST_DUE_PENALTY;
 
-                    // Mark this entry as processed
                     array_push($checkExist, $uniqArr);
                 }
 
