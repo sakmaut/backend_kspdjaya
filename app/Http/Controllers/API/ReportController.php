@@ -542,7 +542,6 @@ class ReportController extends Controller
             $previousSisaAngs = 0;
             $previousDendaPaymentDate = 0;
             $dendas = 0;
-            $paymentDateCount = [];
 
             foreach ($data as $res) {
                 $currentJtTempo = isset($res->PAYMENT_DATE) ? Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y') : '';
@@ -550,16 +549,14 @@ class ReportController extends Controller
 
                 $uniqArr = $currentJtTempo . '-' . $currentAngs;
 
-                if (!isset($paymentDateCount[$currentJtTempo])) {
-                    $paymentDateCount[$currentJtTempo] = 0;
-                }
-                $paymentDateCount[$currentJtTempo]++;
-
                 if (in_array($uniqArr, $checkExist)) {
                     $currentJtTempo = '';
                     $currentAngs = '';
                     $amtAngs = floatval($res->ORIGINAL_AMOUNT ?? 0) - floatval($res->denda ?? 0);
                     $sisaAngs = max($previousSisaAngs - floatval($res->angsuran ?? 0), 0);
+
+                    $dendas = floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->denda ?? 0);
+
                     $previousSisaAngs = $sisaAngs;
                 } else {
                     $sisaAngs = max(floatval($res->INSTALLMENT ?? 0) - floatval($res->angsuran ?? 0), 0);
@@ -567,12 +564,7 @@ class ReportController extends Controller
                     $amtAngs = $res->INSTALLMENT;
                     $previousDendaPaymentDate = floatval($res->PAST_DUE_PENALTY ?? 0);
 
-                    if ($paymentDateCount[$currentJtTempo] == 2) {
-                        $dendas = floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->denda ?? 0);
-                    } else {
-                        $dendas = $dendas; // Keep the previous value
-                    }
-
+                    $dendas = floatval($res->PAST_DUE_PENALTY ?? 0);
                     array_push($checkExist, $uniqArr);
                 }
 
