@@ -569,7 +569,7 @@ class ReportController extends Controller
                 $amtBayar =  floatval($res->ORIGINAL_AMOUNT ?? 0) - floatval($res->denda ?? 0);
                 $sisaAngss = floatval($amtAngs ?? 0) - floatval($amtBayar ?? 0);
 
-                $determinePenalty = number_format(floatval($setPinalty) - floatval($res->denda ?? 0));
+                $determinePenalty = floatval($setPinalty) - floatval($res->denda ?? 0);
                 $denda = ($res->INST_COUNT_INCREMENT == 1) ? $res->PAST_DUE_PENALTY ?? 0 : $determinePenalty??0;
 
                 $schedule['data_credit'][] = [
