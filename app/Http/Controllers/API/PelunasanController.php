@@ -130,12 +130,12 @@ class PelunasanController extends Controller
 
             $result = DB::select($allQuery);
 
-            $query2 = DB::select("
-                    select	sum(INTEREST-coalesce(PAYMENT_VALUE_INTEREST,0)) as DISC_BUNGA
-					from	credit_schedule
-					where	LOAN_NUMBER = '{$loan_number}'
-							and PAYMENT_DATE>now()
-            ");
+            // $query2 = DB::select("
+            //         select	sum(INTEREST-coalesce(PAYMENT_VALUE_INTEREST,0)) as DISC_BUNGA
+            // 		from	credit_schedule
+            // 		where	LOAN_NUMBER = '{$loan_number}'
+            // 				and PAYMENT_DATE>now()
+            // ");
 
             $processedResults = array_map(function ($item) {
                 return [
@@ -144,17 +144,18 @@ class PelunasanController extends Controller
                     'TUNGGAKAN_DENDA' => round(floatval($item->TUNGGAKAN_DENDA), 2),
                     'DENDA' => round(floatval($item->DENDA), 2),
                     'PINALTI' => round(floatval($item->PINALTI), 2),
+                    'DISC_BUNGA' => round(floatval($item->DISC_BUNGA), 2)
                 ];
             }, $result);
 
-            $discBunga = 0;
-            if (!empty($query2) && isset($query2[0]->DISC_BUNGA)) {
-                $discBunga = round(floatval($query2[0]->DISC_BUNGA), 2);
-            }
+            // $discBunga = 0;
+            // if (!empty($query2) && isset($query2[0]->DISC_BUNGA)) {
+            //     $discBunga = round(floatval($query2[0]->DISC_BUNGA), 2);
+            // }
 
-            foreach ($processedResults as &$processedResult) {
-                $processedResult['DISC_BUNGA'] = $discBunga;
-            }
+            // foreach ($processedResults as &$processedResult) {
+            //     $processedResult['DISC_BUNGA'] = $discBunga;
+            // }
 
             return response()->json($processedResults, 200);
         } catch (\Exception $e) {
@@ -702,7 +703,7 @@ class PelunasanController extends Controller
             $param['DISKON_POKOK'] = $remainingDiscount;
         }
     }
-    
+
     private function interestCalculate($request, $loan_number, $no_inv, $creditSchedule)
     {
         $remainingPayment = $request->BAYAR_BUNGA;
