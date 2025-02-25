@@ -582,7 +582,7 @@ class ReportController extends Controller
                     'Sisa Angs' => number_format($sisaAngss),
                     'Denda' =>  number_format($dendas ?? 0),
                     'Byr Dnda' => number_format($res->denda ?? 0),
-                    'Sisa Tghn' => number_format($dendas ?? 0 - $res->denda ?? 0),
+                    'Sisa Tghn' => number_format(floatval($dendas ?? 0) - floatval($res->denda ?? 0)),
                     'Ovd' => $res->OD ?? 0,
                     '' => $sisaTghn == '0' ? 'L' : ''
                 ];
