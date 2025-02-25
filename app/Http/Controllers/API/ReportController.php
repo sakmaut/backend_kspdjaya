@@ -540,7 +540,7 @@ class ReportController extends Controller
 
             $checkExist = [];
             $previousSisaAngs = 0;
-            $previousDendaPaymentDate = null;
+            $previousDendaPaymentDate = 0;
 
             foreach ($data as $res) {
                 $currentJtTempo = isset($res->PAYMENT_DATE) ? Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y') : '';
@@ -552,7 +552,6 @@ class ReportController extends Controller
                     $currentJtTempo = '';
                     $currentAngs = '';
                     $amtAngs = floatval($res->ORIGINAL_AMOUNT ?? 0) - floatval($res->denda ?? 0);
-                    $sisaDenda = max(floatval($res->denda ?? 0) - floatval($res->PAST_DUE_PENALTY ?? 0), 0);
 
                     $sisaAngs = max($previousSisaAngs - floatval($res->angsuran ?? 0), 0);
                     $previousSisaAngs = $sisaAngs;
@@ -560,7 +559,7 @@ class ReportController extends Controller
                     $sisaAngs = max(floatval($res->INSTALLMENT ?? 0) - floatval($res->angsuran ?? 0), 0);
                     $previousSisaAngs = $sisaAngs;
                     $amtAngs = $res->INSTALLMENT;
-                    $sisaDenda = $res->PAST_DUE_PENALTY;
+                    $previousDendaPaymentDate = floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->denda ?? 0);
 
                     array_push($checkExist, $uniqArr);
                 }
@@ -568,17 +567,6 @@ class ReportController extends Controller
                 $sisaTghn = number_format((floatval($sisaAngs) + floatval($res->PAST_DUE_PENALTY ?? 0)) - floatval($res->denda ?? 0), 2);
                 $amtBayar =  floatval($res->ORIGINAL_AMOUNT ?? 0) - floatval($res->denda ?? 0);
                 $sisaAngss = floatval($amtAngs ?? 0) - floatval($amtBayar ?? 0);
-
-                if ($previousDendaPaymentDate !== null && $res->denda > 0) {
-                    $previousDate = Carbon::parse($previousDendaPaymentDate);
-                    $currentDate = Carbon::parse($res->ENTRY_DATE); // Assuming ENTRY_DATE is when denda is paid
-                    $daysDifference = $previousDate->diffInDays($currentDate);
-
-                    // Reduce the fine based on days difference (optional formula, you can modify)
-                    $sisaDenda = max($sisaDenda - $daysDifference, 0);
-                }
-
-                $previousDendaPaymentDate = $res->ENTRY_DATE;
 
                 // Insert data into the schedule array
                 $schedule['data_credit'][] = [
@@ -591,7 +579,7 @@ class ReportController extends Controller
                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
                     'Amt Bayar' => number_format($amtBayar ?? 0),
                     'Sisa Angs' => number_format($sisaAngss),
-                    'Denda' => number_format($sisaDenda ?? 0),
+                    'Denda' => number_format($previousDendaPaymentDate ?? 0),
                     'Byr Dnda' => number_format($res->denda ?? 0),
                     'Sisa Tghn' => "0",
                     'Ovd' => $res->OD ?? 0,
