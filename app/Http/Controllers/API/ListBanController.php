@@ -37,7 +37,7 @@ class ListBanController extends Controller
 
                 $cash_in = [];
 
-                $last_cash_in_no = $no_cash_in - 1; 
+                $last_cash_in_no = $no_cash_in - 1;
 
                 foreach ($arusKas as $item) {
 
@@ -86,9 +86,9 @@ class ListBanController extends Controller
                                 'nama_pelanggan' => $pelanggan,
                                 'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
                                 'keterangan' => 'BAYAR ' . ($item->JENIS == 'DENDA' ? $item->JENIS : '') .
-                                                ($item->JENIS == 'ANGSURAN' && $item->angsuran_ke ? $item->angsuran_ke : '') .
-                                                ' ' . $item->no_invoice,
-                                'amount' => $amount, 
+                                    ($item->JENIS == 'ANGSURAN' && $item->angsuran_ke ? $item->angsuran_ke : '') .
+                                    ' ' . $item->no_invoice,
+                                'amount' => $amount,
                             ];
 
                             // Add to totalCashin only if the amount is valid
@@ -400,7 +400,7 @@ class ListBanController extends Controller
                     "ANGSURAN" => intval($result->INSTALLMENT) ?? 0,
                     "ANGS KE" => $result->LAST_INST ?? '',
                     "TIPE ANGSURAN" => $result->tipe ?? '',
-                    "JTH TEMPO AWAL" => $result->F_ARR_CR_SCHEDL == '0' ? '' : date("d-m-Y", strtotime($result->F_ARR_CR_SCHEDL ?? '')),
+                    "JTH TEMPO AWAL" => $result->F_ARR_CR_SCHEDL == '0' || $result->curr_arr == '' ? '' : date("d-m-Y", strtotime($result->F_ARR_CR_SCHEDL ?? '')),
                     "JTH TEMPO AKHIR" => $result->curr_arr == '0' || $result->curr_arr == '' || $result->curr_arr == 'null' ? '' : date("d-m-Y", strtotime($result->curr_arr ?? '')),
                     "TGL BAYAR" => $result->LAST_PAY == '0' || $result->LAST_PAY == '' || $result->LAST_PAY == 'null' ? '' : date("d-m-Y", strtotime($result->LAST_PAY ?? '')),
                     "KOLEKTOR" => $result->COLLECTOR,
