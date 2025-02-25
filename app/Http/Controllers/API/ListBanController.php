@@ -37,7 +37,7 @@ class ListBanController extends Controller
 
                 $cash_in = [];
 
-                $last_cash_in_no = $no_cash_in - 1; 
+                $last_cash_in_no = $no_cash_in - 1;
 
                 foreach ($arusKas as $item) {
 
@@ -86,9 +86,9 @@ class ListBanController extends Controller
                                 'nama_pelanggan' => $pelanggan,
                                 'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
                                 'keterangan' => 'BAYAR ' . ($item->JENIS == 'DENDA' ? $item->JENIS : '') .
-                                                ($item->JENIS == 'ANGSURAN' && $item->angsuran_ke ? $item->angsuran_ke : '') .
-                                                ' ' . $item->no_invoice,
-                                'amount' => $amount, 
+                                    ($item->JENIS == 'ANGSURAN' && $item->angsuran_ke ? $item->angsuran_ke : '') .
+                                    ' ' . $item->no_invoice,
+                                'amount' => $amount,
                             ];
 
                             // Add to totalCashin only if the amount is valid
@@ -331,10 +331,12 @@ class ListBanController extends Controller
 			WHERE	loan_number in (select loan_number from credit where status='A' 
 					or (status in ('S','D') and loan_number in (select loan_num from payment where date_format(entry_date,'%m%Y')=date_format(now(),'%m%Y'))))
 			GROUP	BY loan_number) k on k.loan_number=b.loan_number
-                            LEFT JOIN (	SELECT	loan_num, str_to_date(date_format(entry_date,'%d%m%Y'),'%d%m%Y') as entry_date, replace(replace(group_concat(payment_method),'AGENT EKS',''),',','') as payment_method
+                            LEFT JOIN (	SELECT	loan_num, str_to_date(date_format(entry_date,'%d%m%Y'),'%d%m%Y') as entry_date, 
+                                                replace(replace(group_concat(payment_method),'AGENT EKS',''),',','') as payment_method, 
+                                                concat('Angsuran Ke-',max(cast(replace(title,'Angsuran Ke-','') as signed)))
 			                            FROM	payment
-			                            WHERE	(cast(loan_num as char),date_format(entry_date,'%d%m%Y %H%i'),cast(title as char)) in 
-                                        (select cast(s1.loan_num as char), date_format(max(s1.entry_date),'%d%m%Y %H%i'), concat('Angsuran Ke-',max(cast(replace(s1.title,'Angsuran Ke-','') as signed))) 
+			                            WHERE	(cast(loan_num as char),date_format(entry_date,'%d%m%Y %H%i')) in 
+                                        (select cast(s1.loan_num as char), date_format(max(s1.entry_date),'%d%m%Y %H%i') 
          				                 from 	payment s1
          					                    inner join payment_detail s2 on s2.PAYMENT_ID=s1.ID and s2.ACC_KEYS in ('ANGSURAN_POKOK','BAYAR_POKOK','ANGSURAN_BUNGA')
          				                 group 	by s1.loan_num)
@@ -400,7 +402,7 @@ class ListBanController extends Controller
                     "ANGSURAN" => intval($result->INSTALLMENT) ?? 0,
                     "ANGS KE" => $result->LAST_INST ?? '',
                     "TIPE ANGSURAN" => $result->tipe ?? '',
-                    "JTH TEMPO AWAL" => $result->F_ARR_CR_SCHEDL == '0' ? '' : date("d-m-Y", strtotime($result->F_ARR_CR_SCHEDL ?? '')),
+                    "JTH TEMPO AWAL" => $result->F_ARR_CR_SCHEDL == '0' || $result->F_ARR_CR_SCHEDL == '' || $result->F_ARR_CR_SCHEDL == 'null' ? '' : date("d-m-Y", strtotime($result->F_ARR_CR_SCHEDL ?? '')),
                     "JTH TEMPO AKHIR" => $result->curr_arr == '0' || $result->curr_arr == '' || $result->curr_arr == 'null' ? '' : date("d-m-Y", strtotime($result->curr_arr ?? '')),
                     "TGL BAYAR" => $result->LAST_PAY == '0' || $result->LAST_PAY == '' || $result->LAST_PAY == 'null' ? '' : date("d-m-Y", strtotime($result->LAST_PAY ?? '')),
                     "KOLEKTOR" => $result->COLLECTOR,

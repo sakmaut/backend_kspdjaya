@@ -55,9 +55,67 @@ class Welcome extends Controller
 
     public function index(Request $req)
     {
+        // 11106230000105
 
-        // return response()->json('OK');
-        // die;
+        $arrearsData = [];
+        $getCrditSchedule = "   SELECT LOAN_NUMBER,PAYMENT_DATE,PRINCIPAL,INTEREST,INSTALLMENT,PAYMENT_VALUE_PRINCIPAL,PAYMENT_VALUE_INTEREST
+                                    FROM credit_schedule 
+                                    WHERE LOAN_NUMBER = '11106230000105'
+                                        AND (PAID_FLAG IS NULL OR PAID_FLAG = '')
+                                    ORDER BY PAYMENT_DATE ASC ";
+
+
+        $updateArrears = DB::select($getCrditSchedule);
+
+        foreach ($updateArrears as $list) {
+            $date = date('Y-m-d');
+            $daysDiff = (strtotime($date) - strtotime($list->PAYMENT_DATE)) / (60 * 60 * 24);
+            $pastDuePenalty = $list->INSTALLMENT * ($daysDiff * 0.005);
+
+            if ($pastDuePenalty <= 0) {
+                $pastDuePenalty = 0;
+            }
+
+            $arrearsData[] = [
+                'ID' => Uuid::uuid7()->toString(),
+                'STATUS_REC' => 'A',
+                'LOAN_NUMBER' => $list->LOAN_NUMBER,
+                'START_DATE' => $list->PAYMENT_DATE,
+                'END_DATE' => null,
+                'PAST_DUE_PCPL' => $list->PRINCIPAL ?? 0,
+                'PAST_DUE_INTRST' => $list->INTEREST ?? 0,
+                'PAST_DUE_PENALTY' => $pastDuePenalty ?? 0,
+                'PAID_PCPL' => $list->PAYMENT_VALUE_PRINCIPAL ?? 0,
+                'PAID_INT' => $list->PAYMENT_VALUE_INTEREST ?? 0,
+                'PAID_PENALTY' => 0,
+                'CREATED_AT' => Carbon::now('Asia/Jakarta')
+            ];
+        }
+
+        if (!empty($arrearsData)) {
+            foreach ($arrearsData as $data) {
+                $existingArrears = M_Arrears::where([
+                    'LOAN_NUMBER' => $data['LOAN_NUMBER'],
+                    'START_DATE' => $data['START_DATE'],
+                    'STATUS_REC' => 'A'
+                ])->first();
+
+                if ($existingArrears) {
+                    $existingArrears->update([
+                        'PAST_DUE_PENALTY' => $data['PAST_DUE_PENALTY'] ?? 0,
+                        'UPDATED_AT' => Carbon::now('Asia/Jakarta')
+                    ]);
+                } else {
+                    $getNow = date('Y-m-d');
+                    if ($data['START_DATE'] < $getNow) {
+                        M_Arrears::create($data);
+                    }
+                }
+            }
+        }
+
+        return response()->json('OK');
+        die;
         DB::beginTransaction();
         try {
 
