@@ -540,7 +540,7 @@ class ReportController extends Controller
 
             $checkExist = [];
             $previousSisaAngs = 0;
-            $previousDendaPaymentDate = 0;
+            $previousDendaPaymentDate = null;
 
             foreach ($data as $res) {
                 $currentJtTempo = isset($res->PAYMENT_DATE) ? Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y') : '';
