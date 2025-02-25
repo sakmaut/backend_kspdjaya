@@ -553,7 +553,7 @@ class ReportController extends Controller
                     $currentAngs = '';
                     $amtAngs = floatval($res->ORIGINAL_AMOUNT ?? 0) - floatval($res->denda ?? 0);
                     $sisaAngs = max($previousSisaAngs - floatval($res->angsuran ?? 0), 0);
-                    $previousDendaPaymentDate = floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->denda ?? 0);
+                    $dendas = floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->denda ?? 0);
                     $previousSisaAngs = $sisaAngs;
                 } else {
                     $sisaAngs = max(floatval($res->INSTALLMENT ?? 0) - floatval($res->angsuran ?? 0), 0);
@@ -579,7 +579,7 @@ class ReportController extends Controller
                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
                     'Amt Bayar' => number_format($amtBayar ?? 0),
                     'Sisa Angs' => number_format($sisaAngss),
-                    'Denda' => number_format($previousDendaPaymentDate),
+                    'Denda' => number_format($previousDendaPaymentDate ?? $dendas),
                     'Byr Dnda' => number_format($res->denda ?? 0),
                     'Sisa Tghn' => "0",
                     'Ovd' => $res->OD ?? 0,
