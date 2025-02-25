@@ -570,7 +570,7 @@ class ReportController extends Controller
                 $sisaAngss = floatval($amtAngs ?? 0) - floatval($amtBayar ?? 0);
 
                 $determinePenalty = number_format(floatval($setPinalty) - floatval($res->denda ?? 0));
-                $denda = ($res->INST_COUNT_INCREMENT == 1) ? number_format($res->PAST_DUE_PENALTY ?? 0) : $determinePenalty;
+                $denda = ($res->INST_COUNT_INCREMENT == 1) ? $res->PAST_DUE_PENALTY ?? 0 : $determinePenalty??0;
 
                 $schedule['data_credit'][] = [
                     'Jt.Tempo' => $currentJtTempo,
