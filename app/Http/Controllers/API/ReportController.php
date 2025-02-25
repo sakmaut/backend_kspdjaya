@@ -552,7 +552,6 @@ class ReportController extends Controller
                     $currentJtTempo = '';
                     $currentAngs = '';
                     $amtAngs = floatval($res->ORIGINAL_AMOUNT ?? 0) - floatval($res->denda ?? 0);
-                    $sisaDenda = floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->denda ?? 0);
                     $sisaDenda = $res->PAST_DUE_PENALTY;
 
                     // Calculate remaining installment after previous value and current payment
@@ -563,7 +562,7 @@ class ReportController extends Controller
                     $sisaAngs = max(floatval($res->INSTALLMENT ?? 0) - floatval($res->angsuran ?? 0), 0); // Avoid negative value
                     $previousSisaAngs = $sisaAngs;
                     $amtAngs = $res->INSTALLMENT;
-                    $sisaDenda = max(floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->denda ?? 0));
+                    $sisaDenda = floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->denda ?? 0);
 
                     // Mark this entry as processed
                     array_push($checkExist, $uniqArr);
