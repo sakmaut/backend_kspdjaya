@@ -554,7 +554,7 @@ class ReportController extends Controller
                     $amtAngs = floatval($res->ORIGINAL_AMOUNT ?? 0) - floatval($res->denda ?? 0);
                     $sisaAngs = max($previousSisaAngs - floatval($res->angsuran ?? 0), 0);
 
-                    $dendas = floatval($dendas ?? 0) - floatval($res->denda ?? 0);
+                    $dendas = floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->denda ?? 0);
 
                     $previousSisaAngs = $sisaAngs;
                 } else {
@@ -568,6 +568,7 @@ class ReportController extends Controller
                 $sisaTghn = number_format((floatval($sisaAngs) + floatval($res->PAST_DUE_PENALTY ?? 0)) - floatval($res->denda ?? 0), 2);
                 $amtBayar =  floatval($res->ORIGINAL_AMOUNT ?? 0) - floatval($res->denda ?? 0);
                 $sisaAngss = floatval($amtAngs ?? 0) - floatval($amtBayar ?? 0);
+                $sisaDenda = number_format(floatval($dendas ?? 0) - floatval($res->denda ?? 0));
 
                 // Insert data into the schedule array
                 $schedule['data_credit'][] = [
@@ -580,9 +581,9 @@ class ReportController extends Controller
                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
                     'Amt Bayar' => number_format($amtBayar ?? 0),
                     'Sisa Angs' => number_format($sisaAngss),
-                    'Denda' =>  number_format($dendas ?? 0),
+                    'Denda' =>  number_format($sisaDenda ?? 0),
                     'Byr Dnda' => number_format($res->denda ?? 0),
-                    'Sisa Tghn' => '0',
+                    'Sisa Tghn' => number_format(floatval($dendas ?? 0) - floatval($res->denda ?? 0)),
                     'Ovd' => $res->OD ?? 0,
                     '' => $sisaTghn == '0' ? 'L' : ''
                 ];
