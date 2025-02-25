@@ -571,17 +571,19 @@ class ReportController extends Controller
 
                 $determinePenalty  = number_format(floatval($setPinalty ?? 0) - floatval($res->denda ?? 0));
 
+                $counter = $res->INST_COUNT_INCREMENT;
+
                 $schedule['data_credit'][] = [
                     'Jt.Tempo' => $currentJtTempo,
                     'Angs' => $currentAngs,
-                    'Seq' => $res->INST_COUNT_INCREMENT ?? 0,
+                    'Seq' => $counter ?? 0,
                     'Amt Angs' => number_format($amtAngs ?? 0),
                     'No Ref' => $res->INVOICE ?? '',
                     'Bank' => '',
                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
                     'Amt Bayar' => number_format($amtBayar ?? 0),
                     'Sisa Angs' => number_format($sisaAngss),
-                    'Denda' =>  number_format($setPinalty),
+                    'Denda' =>  $counter == 1 ? number_format($res->PAST_DUE_PENALTY??0) : $determinePenalty,
                     'Byr Dnda' => number_format($res->denda ?? 0),
                     'Sisa Tghn' => $determinePenalty ,
                     'Ovd' => $res->OD ?? 0,
