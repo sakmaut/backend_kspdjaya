@@ -554,7 +554,7 @@ class ReportController extends Controller
                     $amtAngs = floatval($res->ORIGINAL_AMOUNT ?? 0) - floatval($res->denda ?? 0);
                     $sisaAngs = max($previousSisaAngs - floatval($res->angsuran ?? 0), 0);
 
-                    $setPinalty = floatval($setPinalty ?? 0) - floatval($res->denda ?? 0);
+                    $setPinalty -= floatval($res->denda ?? 0);
 
                     $previousSisaAngs = $sisaAngs;
                 } else {
@@ -569,21 +569,20 @@ class ReportController extends Controller
                 $amtBayar =  floatval($res->ORIGINAL_AMOUNT ?? 0) - floatval($res->denda ?? 0);
                 $sisaAngss = floatval($amtAngs ?? 0) - floatval($amtBayar ?? 0);
 
-                $determinePenalty  = number_format(floatval($setPinalty ?? 0) - floatval($res->denda ?? 0));
-
-                $counter = $res->INST_COUNT_INCREMENT;
+                $determinePenalty = number_format(floatval($setPinalty) - floatval($res->denda ?? 0));
+                $denda = ($res->INST_COUNT_INCREMENT == 1) ? number_format($res->PAST_DUE_PENALTY ?? 0) : $determinePenalty;
 
                 $schedule['data_credit'][] = [
                     'Jt.Tempo' => $currentJtTempo,
                     'Angs' => $currentAngs,
-                    'Seq' => $counter ?? 0,
+                    'Seq' => $res->INST_COUNT_INCREMENT ?? 0,
                     'Amt Angs' => number_format($amtAngs ?? 0),
                     'No Ref' => $res->INVOICE ?? '',
                     'Bank' => '',
                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
                     'Amt Bayar' => number_format($amtBayar ?? 0),
                     'Sisa Angs' => number_format($sisaAngss),
-                    'Denda' =>  $counter == 1 ? number_format($res->PAST_DUE_PENALTY??0) : $determinePenalty,
+                    'Denda' => $denda,
                     'Byr Dnda' => number_format($res->denda ?? 0),
                     'Sisa Tghn' => "0" ,
                     'Ovd' => $res->OD ?? 0,
