@@ -572,7 +572,7 @@ class ReportController extends Controller
 
                 $sisaTghn = number_format((floatval($sisaAngs) + floatval($res->PAST_DUE_PENALTY ?? 0)) - floatval($res->denda ?? 0), 2);
                 $amtBayar =  floatval($res->ORIGINAL_AMOUNT ?? 0) - floatval($res->denda ?? 0);
-                $sisaAngss = floatval($amtAngs ?? 0) - floatval($amtBayar ?? 0);
+                $sisaAngs = floatval($amtAngs ?? 0) - floatval($amtBayar ?? 0);
 
                 $sisaDendaBayar = floatval($sisaDenda) - floatval($amtBayar);
 
@@ -589,7 +589,7 @@ class ReportController extends Controller
                     'Bank' => '',
                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
                     'Amt Bayar' => number_format($amtBayar ?? 0),
-                    'Sisa Angs' => number_format($sisaAngss),
+                    'Sisa Angs' => number_format($sisaAngs),
                     'Denda' => $sisaDendaFinal != 0 ? number_format($sisaDendaFinal ?? 0) : number_format($previousDendaPaymentDate ?? 0),
                     'Byr Dnda' => number_format($res->denda ?? 0),
                     'Sisa Tghn' => "0",
