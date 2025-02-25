@@ -542,7 +542,7 @@ class ReportController extends Controller
             $previousSisaAngs = 0;
             $previousDendaPaymentDate = 0;
 
-            foreach ($data as $index => $res) {
+            foreach ($data as $res) {
                 $currentJtTempo = isset($res->PAYMENT_DATE) ? Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y') : '';
                 $currentAngs = isset($res->INSTALLMENT_COUNT) ? $res->INSTALLMENT_COUNT : '';
 
@@ -564,14 +564,6 @@ class ReportController extends Controller
                     array_push($checkExist, $uniqArr);
                 }
 
-                if ($index > 0 && $res->INST_COUNT_INCREMENT == 2) {
-                    // If it's not the first row and INST_COUNT_INCREMENT is 2, adjust the 'Denda'
-                    $denda = floatval($previousDendaPaymentDate ?? 0) - floatval($res->denda ?? 0);
-                } else {
-                    // Otherwise, don't adjust Denda
-                    $denda = floatval($res->denda ?? 0);
-                }
-
                 $sisaTghn = number_format((floatval($sisaAngs) + floatval($res->PAST_DUE_PENALTY ?? 0)) - floatval($res->denda ?? 0), 2);
                 $amtBayar =  floatval($res->ORIGINAL_AMOUNT ?? 0) - floatval($res->denda ?? 0);
                 $sisaAngss = floatval($amtAngs ?? 0) - floatval($amtBayar ?? 0);
@@ -587,7 +579,7 @@ class ReportController extends Controller
                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
                     'Amt Bayar' => number_format($amtBayar ?? 0),
                     'Sisa Angs' => number_format($sisaAngss),
-                    'Denda' => number_format($denda),
+                    'Denda' => number_format(floatval($previousDendaPaymentDate ?? 0) - floatval($res->denda ?? 0)),
                     'Byr Dnda' => number_format($res->denda ?? 0),
                     'Sisa Tghn' => "0",
                     'Ovd' => $res->OD ?? 0,
