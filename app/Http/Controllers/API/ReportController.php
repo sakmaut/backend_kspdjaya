@@ -540,7 +540,6 @@ class ReportController extends Controller
 
             $checkExist = [];
             $previousSisaAngs = 0;
-            $previousDendaPaymentDate = 0;
             $dendas = 0;
 
             foreach ($data as $res) {
@@ -555,14 +554,14 @@ class ReportController extends Controller
                     $amtAngs = floatval($res->ORIGINAL_AMOUNT ?? 0) - floatval($res->denda ?? 0);
                     $sisaAngs = max($previousSisaAngs - floatval($res->angsuran ?? 0), 0);
 
-                    $dendas = floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->denda ?? 0);
+                    $dendas = floatval($dendas ?? 0) - floatval($res->denda ?? 0);
 
                     $previousSisaAngs = $sisaAngs;
                 } else {
                     $sisaAngs = max(floatval($res->INSTALLMENT ?? 0) - floatval($res->angsuran ?? 0), 0);
                     $previousSisaAngs = $sisaAngs;
                     $amtAngs = $res->INSTALLMENT;
-                    $previousDendaPaymentDate = floatval($res->PAST_DUE_PENALTY ?? 0);
+                    $dendas = floatval($res->PAST_DUE_PENALTY ?? 0);
                     array_push($checkExist, $uniqArr);
                 }
 
@@ -581,7 +580,7 @@ class ReportController extends Controller
                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
                     'Amt Bayar' => number_format($amtBayar ?? 0),
                     'Sisa Angs' => number_format($sisaAngss),
-                    'Denda' => $dendas != 0 ? number_format($dendas ?? 0) : number_format($previousDendaPaymentDate ?? 0),
+                    'Denda' =>  number_format($dendas ?? 0),
                     'Byr Dnda' => number_format($res->denda ?? 0),
                     'Sisa Tghn' => "0",
                     'Ovd' => $res->OD ?? 0,
