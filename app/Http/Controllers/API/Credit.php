@@ -392,7 +392,7 @@ class Credit extends Controller
             'BIRTHPLACE' => $cr_personal->BIRTHPLACE,
             'BIRTHDATE' => $cr_personal->BIRTHDATE,
             'BLOOD_TYPE' => $cr_personal->BLOOD_TYPE,
-            'MOTHER_NAME' => $cr_order->MOTHER_NAME ?? '',
+            'MOTHER_NAME' => $cr_order->MOTHER_NAME,
             'NPWP' => $cr_order->NO_NPWP,
             'MARTIAL_STATUS' => $cr_personal->MARTIAL_STATUS,
             'MARTIAL_DATE' => $cr_personal->MARTIAL_DATE,
