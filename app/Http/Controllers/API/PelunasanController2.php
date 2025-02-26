@@ -238,10 +238,6 @@ class PelunasanController2 extends Controller
     {
         $pelunasanKwitansiDetail = M_KwitansiDetailPelunasan::where(['no_invoice' => $no_inv, 'loan_number' => $loan_number])->get();
 
-        if (!empty($pelunasanKwitansiDetail)) {
-            throw new Exception("Kwitansi Detail Sudah Terbentuk", 500);
-        }
-
         $this->proccessPinaltyPayment($request, $no_inv, $status, $loan_number);
 
         if (!empty($pelunasanKwitansiDetail)) {
