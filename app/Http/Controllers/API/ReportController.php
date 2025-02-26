@@ -477,6 +477,7 @@ class ReportController extends Controller
                             mp.INVOICE,
                             mp.angsuran,
                             mp.denda,
+                            (c.PAST_DUE_PENALTY - mp.denda) as sisa_denda,
                            CASE
                                 WHEN DATEDIFF(
                                     COALESCE(DATE_FORMAT(mp.ENTRY_DATE, '%Y-%m-%d'), DATE_FORMAT(NOW(), '%Y-%m-%d')),
@@ -540,7 +541,6 @@ class ReportController extends Controller
 
             $checkExist = [];
             $previousSisaAngs = 0;
-            $setPinalty = 0;
 
             foreach ($data as $res) {
                 $currentJtTempo = isset($res->PAYMENT_DATE) ? Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y') : '';
@@ -554,7 +554,7 @@ class ReportController extends Controller
                     $amtAngs = floatval($res->ORIGINAL_AMOUNT ?? 0) - floatval($res->denda ?? 0);
                     $sisaAngs = max($previousSisaAngs - floatval($res->angsuran ?? 0), 0);
 
-                    $setPinalty -= floatval($res->denda ?? 0);
+                    $setPinalty = floatval($res->sisa_denda ?? 0);
 
                     $previousSisaAngs = $sisaAngs;
                 } else {
@@ -569,9 +569,6 @@ class ReportController extends Controller
                 $amtBayar =  floatval($res->ORIGINAL_AMOUNT ?? 0) - floatval($res->denda ?? 0);
                 $sisaAngss = floatval($amtAngs ?? 0) - floatval($amtBayar ?? 0);
 
-                $determinePenalty = floatval($setPinalty) - floatval($res->denda ?? 0);
-                $denda = ($res->INST_COUNT_INCREMENT == 1) ? $res->PAST_DUE_PENALTY ?? 0 : $determinePenalty??0;
-
                 $schedule['data_credit'][] = [
                     'Jt.Tempo' => $currentJtTempo,
                     'Angs' => $currentAngs,
@@ -582,9 +579,9 @@ class ReportController extends Controller
                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
                     'Amt Bayar' => number_format($amtBayar ?? 0),
                     'Sisa Angs' => number_format($sisaAngss),
-                    'Denda' => number_format(abs($denda)),
+                    'Denda' => number_format($setPinalty),
                     'Byr Dnda' => number_format($res->denda ?? 0),
-                    'Sisa Tghn' => "0" ,
+                    'Sisa Tghn' => "0",
                     'Ovd' => $res->OD ?? 0,
                     '' => $sisaTghn == '0' ? 'L' : ''
                 ];
