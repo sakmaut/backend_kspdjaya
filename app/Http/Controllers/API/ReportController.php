@@ -498,7 +498,7 @@ class ReportController extends Controller
                             SELECT  
                                 a.LOAN_NUM,
                                 DATE(a.ENTRY_DATE) AS ENTRY_DATE, 
-                                MAX(DATE(a.START_DATE)) AS START_DATE,
+                                DATE(a.START_DATE) AS START_DATE,
                                 ROW_NUMBER() OVER (PARTITION BY a.START_DATE ORDER BY a.ENTRY_DATE) AS INST_COUNT_INCREMENT,
                                 a.ORIGINAL_AMOUNT,
                                 a.INVOICE,
@@ -520,11 +520,7 @@ class ReportController extends Controller
                                 GROUP BY payment_id
                             ) AS b 
                             ON b.payment_id = a.id
-                            WHERE 
-                                a.LOAN_NUM = '$id'
-                            GROUP BY 
-                                a.LOAN_NUM, a.START_DATE, a.ENTRY_DATE, a.ORIGINAL_AMOUNT, a.INVOICE, b.angsuran, b.denda
-                            ORDER BY a.ENTRY_DATE DESC
+                            WHERE a.LOAN_NUM = '$id'
                         ) as mp
                         on mp.LOAN_NUM = a.LOAN_NUMBER
                         and date_format(mp.START_DATE,'%d%m%Y') = date_format(a.PAYMENT_DATE,'%d%m%Y')
