@@ -224,7 +224,7 @@ class PelunasanController2 extends Controller
 
             $this->proccessKwitansiDetail($request, $loan_number, $no_inv);
 
-            $this->proccess($request, $loan_number, $no_inv, 'PAID');
+            // $this->proccess($request, $loan_number, $no_inv, 'PAID');
 
             DB::commit();
             return response()->json("MUACH MUACHH MUACHHH", 200);
@@ -545,13 +545,12 @@ class PelunasanController2 extends Controller
         $remainingDiscount = $request->DISKON_POKOK;
 
         foreach ($creditSchedule as $res) {
-            // Get the current value of the field and payment status
+
             $valBefore = $res->{'PAYMENT_VALUE_PRINCIPAL'};
             $getAmount = $res->{'PRINCIPAL'};
 
             $remainingToPay = $getAmount - $valBefore;
 
-            // Proceed only if there's an amount left to pay
             if ($remainingToPay > 0) {
                 // If enough payment is available to cover the remaining amount
                 if ($remainingPayment >= $remainingToPay) {
@@ -561,7 +560,7 @@ class PelunasanController2 extends Controller
                 } else {
                     // Partial payment
                     $newPaymentValue = $remainingPayment;
-                    $remainingPayment = 0; // All payment used
+                    $remainingPayment = 0;
                 }
 
                 // Apply the payment to the schedule
