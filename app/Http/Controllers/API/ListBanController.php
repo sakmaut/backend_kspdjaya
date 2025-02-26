@@ -85,9 +85,7 @@ class ListBanController extends Controller
                                 'position' => $position ?? '',
                                 'nama_pelanggan' => $pelanggan,
                                 'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
-                                'keterangan' => 'BAYAR ' . ($item->JENIS == 'DENDA' ? $item->JENIS : '') .
-                                    $item->angsuran_ke .
-                                    ' ' . $item->no_invoice,
+                                'keterangan' => 'BAYAR '.$item->angsuran_ke .' (' . $item->no_invoice.')',
                                 'amount' => $amount,
                             ];
 
