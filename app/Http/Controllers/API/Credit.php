@@ -177,7 +177,7 @@ class Credit extends Controller
             "tenor" => bilangan($data->TENOR, false) ?? null,
             "credit_id" => !empty($check_exist) ? $check_exist->ID : null,
             "tgl_awal_pk" => !empty($check_exist) ? Carbon::parse($check_exist->ENTRY_DATE)->format('Y-m-d') : parseDatetoYMD($set_tgl_awal),
-            "tgl_akhir_pk" => !empty($check_exist) ? Carbon::parse($check_exist->END_DATE)->format('Y-m-d') : add_months(parseDatetoYMD($set_tgl_awal), $loanTerm),
+            "tgl_akhir_pk" => !empty($check_exist) ? Carbon::parse($check_exist->ENTRY_DATE)->addMonths(intval($check_exist->PERIOD))->format('Y-m-d') : '',
             "angsuran" => bilangan($angsuran) ?? null,
             "opt_periode" => $data->OPT_PERIODE ?? null,
             "jaminan" => [],
