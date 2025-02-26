@@ -583,7 +583,7 @@ class ReportController extends Controller
                     'Sisa Angs' => number_format($sisaAngss),
                     'Denda' => number_format($setPinalty),
                     'Byr Dnda' => number_format($res->denda ?? 0),
-                    'Sisa Tghn' => number_format($setSisaDenda),
+                    'Sisa Tghn' => number_format($res->sisa_denda),
                     'Ovd' => $res->OD ?? 0,
                     '' => $sisaTghn == '0' ? 'L' : ''
                 ];
