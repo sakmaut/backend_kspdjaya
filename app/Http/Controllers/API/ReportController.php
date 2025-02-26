@@ -477,6 +477,7 @@ class ReportController extends Controller
                             mp.INVOICE,
                             mp.angsuran,
                             mp.denda,
+                            (c.PAST_DUE_PENALTY - mp.denda) as sisa_denda,
                            CASE
                                 WHEN DATEDIFF(
                                     COALESCE(DATE_FORMAT(mp.ENTRY_DATE, '%Y-%m-%d'), DATE_FORMAT(NOW(), '%Y-%m-%d')),
@@ -497,7 +498,7 @@ class ReportController extends Controller
                             SELECT  
                                 a.LOAN_NUM,
                                 DATE(a.ENTRY_DATE) AS ENTRY_DATE, 
-                                MAX(DATE(a.START_DATE)) AS START_DATE,
+                                DATE(a.START_DATE) AS START_DATE,
                                 ROW_NUMBER() OVER (PARTITION BY a.START_DATE ORDER BY a.ENTRY_DATE) AS INST_COUNT_INCREMENT,
                                 a.ORIGINAL_AMOUNT,
                                 a.INVOICE,
@@ -519,11 +520,7 @@ class ReportController extends Controller
                                 GROUP BY payment_id
                             ) AS b 
                             ON b.payment_id = a.id
-                            WHERE 
-                                a.LOAN_NUM = '$id'
-                            GROUP BY 
-                                a.LOAN_NUM, a.START_DATE, a.ENTRY_DATE, a.ORIGINAL_AMOUNT, a.INVOICE, b.angsuran, b.denda
-                            ORDER BY a.ENTRY_DATE DESC
+                            WHERE a.LOAN_NUM = '$id'
                         ) as mp
                         on mp.LOAN_NUM = a.LOAN_NUMBER
                         and date_format(mp.START_DATE,'%d%m%Y') = date_format(a.PAYMENT_DATE,'%d%m%Y')
@@ -540,7 +537,8 @@ class ReportController extends Controller
 
             $checkExist = [];
             $previousSisaAngs = 0;
-            $dendas = 0;
+            $setPinalty = 0;
+            $setSisaDenda = 0;
 
             foreach ($data as $res) {
                 $currentJtTempo = isset($res->PAYMENT_DATE) ? Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y') : '';
@@ -554,14 +552,15 @@ class ReportController extends Controller
                     $amtAngs = floatval($res->ORIGINAL_AMOUNT ?? 0) - floatval($res->denda ?? 0);
                     $sisaAngs = max($previousSisaAngs - floatval($res->angsuran ?? 0), 0);
 
-                    $dendas = floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->denda ?? 0);
+                    $setPinalty = floatval($setSisaDenda ?? 0);
 
                     $previousSisaAngs = $sisaAngs;
                 } else {
                     $sisaAngs = max(floatval($res->INSTALLMENT ?? 0) - floatval($res->angsuran ?? 0), 0);
                     $previousSisaAngs = $sisaAngs;
                     $amtAngs = $res->INSTALLMENT;
-                    $dendas = floatval($res->PAST_DUE_PENALTY ?? 0);
+                    $setPinalty = floatval($res->PAST_DUE_PENALTY ?? 0);
+                    $setSisaDenda = floatval($res->PAST_DUE_PENALTY ?? 0) -  floatval($res->denda ?? 0);
                     array_push($checkExist, $uniqArr);
                 }
 
@@ -579,11 +578,11 @@ class ReportController extends Controller
                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
                     'Amt Bayar' => number_format($amtBayar ?? 0),
                     'Sisa Angs' => number_format($sisaAngss),
-                    'Denda' =>  number_format($dendas),
+                    'Denda' => number_format($setPinalty),
                     'Byr Dnda' => number_format($res->denda ?? 0),
-                    'Sisa Tghn' => '0',
-                    'Ovd' => $res->OD ?? 0,
-                    '' => $sisaTghn == '0' ? 'L' : ''
+                    'Sisa Tghn' => "0",
+                    'Ovd' => $res->OD ?? 0
+                    // '' => $sisaTghn == '0' ? 'L' : ''
                 ];
             }
 
