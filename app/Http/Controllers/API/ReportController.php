@@ -454,10 +454,11 @@ class ReportController extends Controller
         try {
             $schedule = [
                 'detail' => [],
-                'data_credit' => []
+                'data_credit' => [],
+                'total' => []
             ];
 
-            $sql = "    SELECT
+            $sql = "SELECT
                             a.INSTALLMENT_COUNT,
                             a.PAYMENT_DATE,
                             a.PRINCIPAL,
@@ -499,6 +500,8 @@ class ReportController extends Controller
                                 a.LOAN_NUM,
                                 DATE(a.ENTRY_DATE) AS ENTRY_DATE, 
                                 DATE(a.START_DATE) AS START_DATE,
+                                -- @row_num := IF(@prev_start_date = a.START_DATE, @row_num + 1, 1) AS INST_COUNT_INCREMENT,
+                                -- @prev_start_date := a.START_DATE,
                                 ROW_NUMBER() OVER (PARTITION BY a.START_DATE ORDER BY a.ENTRY_DATE) AS INST_COUNT_INCREMENT,
                                 a.ORIGINAL_AMOUNT,
                                 a.INVOICE,
@@ -528,7 +531,6 @@ class ReportController extends Controller
                             a.LOAN_NUMBER = '$id'
                         order by a.PAYMENT_DATE,mp.ENTRY_DATE asc";
 
-
             $data = DB::select($sql);
 
             if (empty($data)) {
@@ -539,6 +541,9 @@ class ReportController extends Controller
             $previousSisaAngs = 0;
             $setPinalty = 0;
             $setSisaDenda = 0;
+            $ttlAmtAngs = 0;
+            $ttlAmtBayar  = 0;
+            $ttlDdenda  = 0;
 
             foreach ($data as $res) {
                 $currentJtTempo = isset($res->PAYMENT_DATE) ? Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y') : '';
@@ -562,11 +567,15 @@ class ReportController extends Controller
                     $setPinalty = floatval($res->PAST_DUE_PENALTY ?? 0);
                     $setSisaDenda = floatval($res->PAST_DUE_PENALTY ?? 0) -  floatval($res->denda ?? 0);
                     array_push($checkExist, $uniqArr);
+
+                    $ttlAmtAngs += $res->INSTALLMENT;
+                    $ttlDdenda  += $res->PAST_DUE_PENALTY;
                 }
 
-                $sisaTghn = number_format((floatval($sisaAngs) + floatval($res->PAST_DUE_PENALTY ?? 0)) - floatval($res->denda ?? 0), 2);
                 $amtBayar =  floatval($res->ORIGINAL_AMOUNT ?? 0) - floatval($res->denda ?? 0);
                 $sisaAngss = floatval($amtAngs ?? 0) - floatval($amtBayar ?? 0);
+
+                $ttlAmtBayar += $amtBayar;
 
                 $schedule['data_credit'][] = [
                     'Jt.Tempo' => $currentJtTempo,
@@ -585,6 +594,12 @@ class ReportController extends Controller
                     // '' => $sisaTghn == '0' ? 'L' : ''
                 ];
             }
+
+            $schedule['total'] = [
+                'ttlAmtAngs' => $ttlAmtAngs ?? '0',
+                'ttlSisaAngs' => $ttlAmtAngs - $ttlAmtBayar ?? '0',
+                'ttlDenda' => $ttlDdenda ?? '0',
+            ];
 
             $creditDetail = M_Credit::with(['customer' => function ($query) {
                 $query->select('CUST_CODE', 'NAME');
