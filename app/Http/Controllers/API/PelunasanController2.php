@@ -545,13 +545,12 @@ class PelunasanController2 extends Controller
         $remainingDiscount = $request->DISKON_POKOK;
 
         foreach ($creditSchedule as $res) {
-            // Get the current value of the field and payment status
+
             $valBefore = $res->{'PAYMENT_VALUE_PRINCIPAL'};
             $getAmount = $res->{'PRINCIPAL'};
 
             $remainingToPay = $getAmount - $valBefore;
 
-            // Proceed only if there's an amount left to pay
             if ($remainingToPay > 0) {
                 // If enough payment is available to cover the remaining amount
                 if ($remainingPayment >= $remainingToPay) {
@@ -561,26 +560,30 @@ class PelunasanController2 extends Controller
                 } else {
                     // Partial payment
                     $newPaymentValue = $remainingPayment;
-                    $remainingPayment = 0; // All payment used
+                    $remainingPayment = 0;
                 }
 
                 // Apply the payment to the schedule
                 $param['BAYAR_POKOK'] = $newPaymentValue;
                 $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
 
-                // Handle the discount if applicable
-                if ($remainingDiscount > 0) {
-                    $remainingToDiscount = $getAmount - $newPaymentValue;
+                $totalPaymentAndPrincipal = $valBefore + $newPaymentValue;
 
-                    if ($remainingDiscount >= $remainingToDiscount) {
-                        $param['DISKON_POKOK'] = $remainingToDiscount; // Full discount
-                        $remainingDiscount -= $remainingToDiscount; // Subtract the used discount
-                    } else {
-                        $param['DISKON_POKOK'] = $remainingDiscount; // Partial discount
-                        $remainingDiscount = 0; // No discount left
+                if ($totalPaymentAndPrincipal < $getAmount) {
+                    // Handle the discount if applicable
+                    if ($remainingDiscount > 0) {
+                        $remainingToDiscount = $getAmount - $newPaymentValue;
+
+                        if ($remainingDiscount >= $remainingToDiscount) {
+                            $param['DISKON_POKOK'] = $remainingToDiscount; // Full discount
+                            $remainingDiscount -= $remainingToDiscount; // Subtract the used discount
+                        } else {
+                            $param['DISKON_POKOK'] = $remainingDiscount; // Partial discount
+                            $remainingDiscount = 0; // No discount left
+                        }
+
+                        $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
                     }
-
-                    $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
                 }
             }
         }
