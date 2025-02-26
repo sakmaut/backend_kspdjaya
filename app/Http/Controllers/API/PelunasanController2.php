@@ -351,9 +351,9 @@ class PelunasanController2 extends Controller
 
     function updateCreditSchedule($loan_number, $res)
     {
-
-        $getCreditSchedule = M_CreditSchedule::where(['LOAN_NUMBER' => $loan_number, 'PAYMENT_DATE' => $res['tgl_angsuran']])->orderBy('PAYMENT_DATE', 'ASC')->first();
-
+        $getCreditSchedule = M_CreditSchedule::where(['LOAN_NUMBER' => $loan_number, 'PAYMENT_DATE' => $res['tgl_angsuran']])
+            ->orderBy('PAYMENT_DATE', 'ASC')
+            ->first();
 
         if ($getCreditSchedule) {
 
@@ -382,8 +382,6 @@ class PelunasanController2 extends Controller
                 'INSUFFICIENT_PAYMENT' => $insufficientPay == 0 ? 0 : $insufficientPay,
                 'PAYMENT_VALUE' => $ttlPayment
             ]);
-        } else {
-            throw new Exception("Credit Schedule Not Found", 404);
         }
     }
 
