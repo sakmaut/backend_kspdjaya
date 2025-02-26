@@ -552,22 +552,21 @@ class ReportController extends Controller
                     $amtAngs = floatval($res->ORIGINAL_AMOUNT ?? 0) - floatval($res->denda ?? 0);
                     $sisaAngs = max($previousSisaAngs - floatval($res->angsuran ?? 0), 0);
 
+                    $setPinalty = floatval($setSisaDenda ?? 0);
+
                     $previousSisaAngs = $sisaAngs;
                 } else {
                     $sisaAngs = max(floatval($res->INSTALLMENT ?? 0) - floatval($res->angsuran ?? 0), 0);
                     $previousSisaAngs = $sisaAngs;
                     $amtAngs = $res->INSTALLMENT;
                     $setPinalty = floatval($res->PAST_DUE_PENALTY ?? 0);
+                    $setSisaDenda = floatval($res->PAST_DUE_PENALTY ?? 0) -  floatval($res->denda ?? 0);
                     array_push($checkExist, $uniqArr);
                 }
 
                 $sisaTghn = number_format((floatval($sisaAngs) + floatval($res->PAST_DUE_PENALTY ?? 0)) - floatval($res->denda ?? 0), 2);
                 $amtBayar =  floatval($res->ORIGINAL_AMOUNT ?? 0) - floatval($res->denda ?? 0);
                 $sisaAngss = floatval($amtAngs ?? 0) - floatval($amtBayar ?? 0);
-
-                if (in_array($uniqArr, $checkExist)) {
-                    $setSisaDenda = floatval($res->sisa_denda ?? 0);
-                }
 
                 $schedule['data_credit'][] = [
                     'Jt.Tempo' => $currentJtTempo,
@@ -581,7 +580,7 @@ class ReportController extends Controller
                     'Sisa Angs' => number_format($sisaAngss),
                     'Denda' => number_format($setPinalty),
                     'Byr Dnda' => number_format($res->denda ?? 0),
-                    'Sisa Tghn' => number_format($setSisaDenda),
+                    'Sisa Tghn' => "0",
                     'Ovd' => $res->OD ?? 0,
                     '' => $sisaTghn == '0' ? 'L' : ''
                 ];
