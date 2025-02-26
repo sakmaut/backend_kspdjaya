@@ -568,19 +568,23 @@ class PelunasanController2 extends Controller
                 $param['BAYAR_POKOK'] = $newPaymentValue;
                 $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
 
-                // Handle the discount if applicable
-                if ($remainingDiscount > 0) {
-                    $remainingToDiscount = $getAmount - $newPaymentValue;
+                $totalPaymentAndPrincipal = $valBefore + $newPaymentValue;
 
-                    if ($remainingDiscount >= $remainingToDiscount) {
-                        $param['DISKON_POKOK'] = $remainingToDiscount; // Full discount
-                        $remainingDiscount -= $remainingToDiscount; // Subtract the used discount
-                    } else {
-                        $param['DISKON_POKOK'] = $remainingDiscount; // Partial discount
-                        $remainingDiscount = 0; // No discount left
+                if ($totalPaymentAndPrincipal < $getAmount) {
+                    // Handle the discount if applicable
+                    if ($remainingDiscount > 0) {
+                        $remainingToDiscount = $getAmount - $newPaymentValue;
+
+                        if ($remainingDiscount >= $remainingToDiscount) {
+                            $param['DISKON_POKOK'] = $remainingToDiscount; // Full discount
+                            $remainingDiscount -= $remainingToDiscount; // Subtract the used discount
+                        } else {
+                            $param['DISKON_POKOK'] = $remainingDiscount; // Partial discount
+                            $remainingDiscount = 0; // No discount left
+                        }
+
+                        $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
                     }
-
-                    $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
                 }
             }
         }
