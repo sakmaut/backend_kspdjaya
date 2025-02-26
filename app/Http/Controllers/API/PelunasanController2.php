@@ -482,65 +482,6 @@ class PelunasanController2 extends Controller
         $this->arrearsCalculate($request, $loan_number, $no_inv, $arrears);
     }
 
-    private function interestCalculate($request, $loan_number, $no_inv, $creditSchedule)
-    {
-        $remainingPayment = $request->BAYAR_BUNGA;
-
-        foreach ($creditSchedule as $res) {
-            $valBefore = $res->PAYMENT_VALUE_INTEREST;
-            $getAmount = $res->INTEREST;
-
-            if ($valBefore < $getAmount) {
-
-                $remainingToPay = $getAmount - $valBefore;
-
-                if ($remainingPayment >= $remainingToPay) {
-                    $newPaymentValue = $getAmount;
-                    $remainingPayment -= $remainingToPay;
-                } else {
-                    $newPaymentValue = $valBefore + $remainingPayment;
-                    $remainingPayment = 0;
-                }
-
-                $param = [
-                    'BAYAR_BUNGA' => $newPaymentValue,
-                    'DISKON_BUNGA' => 0, // Default value
-                ];
-
-                // Jika BAYAR_BUNGA sudah == INTEREST, maka DISKON_BUNGA = 0
-                if ($newPaymentValue == $getAmount) {
-                    $param['DISKON_BUNGA'] = 0;
-                } else {
-                    // Jika BAYAR_BUNGA belum mencapai INTEREST, hitung DISKON_BUNGA
-                    $param['DISKON_BUNGA'] = $getAmount - $newPaymentValue;
-                }
-
-                // Apply the payment and discount to the schedule in one call
-                $this->insertKwitansiDetail(
-                    $loan_number,
-                    $no_inv,
-                    $res,
-                    $param
-                );
-            }
-        }
-    }
-
-    private function arrearsCalculate($request, $loan_number, $no_inv, $arrears)
-    {
-        $this->calculateArrears(
-            $request->BAYAR_DENDA,
-            $request->DISKON_DENDA,
-            $arrears,
-            'PAST_DUE_PENALTY',
-            'PAID_PENALTY',
-            'BAYAR_DENDA',
-            'DISKON_DENDA',
-            $loan_number,
-            $no_inv
-        );
-    }
-
     private function principalCalculate($request, $loan_number, $no_inv, $creditSchedule)
     {
         $remainingPayment = $request->BAYAR_POKOK;
@@ -596,17 +537,70 @@ class PelunasanController2 extends Controller
         }
     }
 
+    private function interestCalculate($request, $loan_number, $no_inv, $creditSchedule)
+    {
+        $remainingPayment = $request->BAYAR_BUNGA;
+
+        foreach ($creditSchedule as $res) {
+            $valBefore = $res->PAYMENT_VALUE_INTEREST;
+            $getAmount = $res->INTEREST;
+
+            if ($valBefore < $getAmount) {
+                $remainingToPay = $getAmount - $valBefore;
+
+                if ($remainingPayment >= $remainingToPay) {
+                    $newPaymentValue = $getAmount;
+                    $remainingPayment -= $remainingToPay;
+                } else {
+                    $newPaymentValue = $valBefore + $remainingPayment;
+                    $remainingPayment = 0;
+                }
+
+                $param = [
+                    'BAYAR_BUNGA' => $newPaymentValue,
+                    'DISKON_BUNGA' => 0,
+                ];
+
+                if ($newPaymentValue == $getAmount) {
+                    $param['DISKON_BUNGA'] = 0;
+                } else {
+                    $param['DISKON_BUNGA'] = $getAmount - $newPaymentValue;
+                }
+
+                $this->insertKwitansiDetail(
+                    $loan_number,
+                    $no_inv,
+                    $res,
+                    $param
+                );
+            }
+        }
+    }
+
+    private function arrearsCalculate($request, $loan_number, $no_inv, $arrears)
+    {
+        $this->calculateArrears(
+            $request->BAYAR_DENDA,
+            $request->DISKON_DENDA,
+            $arrears,
+            'PAST_DUE_PENALTY',
+            'PAID_PENALTY',
+            'BAYAR_DENDA',
+            'DISKON_DENDA',
+            $loan_number,
+            $no_inv
+        );
+    }
+
     private function calculateArrears($paymentAmount, $discountAmount, $schedule, $fieldKey, $valueKey, $paymentParam, $discountParam, $loan_number, $no_inv)
     {
         $remainingPayment = $paymentAmount;
         $remainingDiscount = $discountAmount;
 
         foreach ($schedule as $res) {
-            // Get the current value of the field and payment status
             $valBefore = $res->{$valueKey};
             $getAmount = $res->{$fieldKey};
 
-            // Proceed only if there's an amount to pay
             if ($valBefore < $getAmount) {
                 // Calculate the amount left to pay
                 $remainingToPay = $getAmount - $valBefore;
