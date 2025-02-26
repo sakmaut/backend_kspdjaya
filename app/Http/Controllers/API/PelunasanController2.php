@@ -231,10 +231,6 @@ class PelunasanController2 extends Controller
 
     public function propel(Request $request)
     {
-
-        return response()->json('OK');
-        die;
-
         DB::beginTransaction();
         try {
             $loan_number = $request['LOAN_NUMBER'];
