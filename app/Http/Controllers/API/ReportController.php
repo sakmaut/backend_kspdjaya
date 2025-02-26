@@ -597,6 +597,7 @@ class ReportController extends Controller
 
             $schedule['total'] = [
                 'ttlAmtAngs' => $ttlAmtAngs ?? '0',
+                'ttlAmtBayar' => $ttlAmtBayar ?? '0',
                 'ttlSisaAngs' => $ttlAmtAngs - $ttlAmtBayar ?? '0',
                 'ttlDenda' => $ttlDdenda ?? '0',
             ];
