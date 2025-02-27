@@ -187,12 +187,14 @@ class ListBanController extends Controller
 
                         $datas['datas'][] = [
                             'type' => 'CASH_OUT',
+                            'no_invoice' => '',
                             'no_kontrak' => $item->LOAN_NUM ?? '',
                             'tgl' => $item->ENTRY_DATE ?? '',
                             'cabang' => $item->nama_cabang ?? '',
                             'user' => $item->fullname ?? '',
                             'position' => $item->position ?? '',
                             'nama_pelanggan' => $item->PELANGGAN ?? '',
+                            'metode_pembayaran' => '',
                             'keterangan' => 'PENCAIRAN NO KONTRAK ' . $item->LOAN_NUM ?? '',
                             'amount' => $getTttl,
                         ];
