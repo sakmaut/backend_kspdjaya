@@ -488,6 +488,10 @@ class PelunasanController2 extends Controller
             $valBefore = $res->PAYMENT_VALUE_INTEREST;
             $getAmount = $res->INTEREST;
 
+            if ($valBefore < 0) {
+                $valBefore = 0;
+            }
+
             if ($valBefore < $getAmount) {
 
                 $remainingToPay = $getAmount - $valBefore;
@@ -496,24 +500,28 @@ class PelunasanController2 extends Controller
                     $newPaymentValue = $getAmount;
                     $remainingPayment -= $remainingToPay;
                 } else {
-                    $newPaymentValue = $valBefore + $remainingPayment;
+                    $newPaymentValue = $remainingPayment;
                     $remainingPayment = 0;
                 }
 
+                $valDiskon = $getAmount - $newPaymentValue;
+                $check = $valDiskon + $valBefore;
+
+                $bayarBunga = ($check == $getAmount ? 0 : $newPaymentValue - $valBefore);
+                $bayarBunga = max(0, $bayarBunga);
+
+                // Set parameters for Kwitansi detail
                 $param = [
-                    'BAYAR_BUNGA' => $newPaymentValue,
-                    'DISKON_BUNGA' => 0, // Default value
+                    'BAYAR_BUNGA' => $bayarBunga,
+                    'DISKON_BUNGA' => 0,
                 ];
 
-                // Jika BAYAR_BUNGA sudah == INTEREST, maka DISKON_BUNGA = 0
                 if ($newPaymentValue == $getAmount) {
                     $param['DISKON_BUNGA'] = 0;
                 } else {
-                    // Jika BAYAR_BUNGA belum mencapai INTEREST, hitung DISKON_BUNGA
-                    $param['DISKON_BUNGA'] = $getAmount - $newPaymentValue;
+                    $param['DISKON_BUNGA'] = $valDiskon;
                 }
 
-                // Apply the payment and discount to the schedule in one call
                 $this->insertKwitansiDetail(
                     $loan_number,
                     $no_inv,

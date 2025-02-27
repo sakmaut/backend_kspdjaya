@@ -11,6 +11,127 @@ use Illuminate\Support\Facades\DB;
 
 class ListBanController extends Controller
 {
+    // public function index(Request $request)
+    // {
+    //     try {
+    //         $datas = [
+    //             'tgl_tarik' => $request->dari ?? '',
+    //             'datas' => []
+    //         ];
+
+    //         if (!empty($request->dari)) {
+
+    //             $timestamp = intval($request->dari) / 1000;
+    //             $date = Carbon::createFromTimestamp($timestamp);
+    //             $formattedDate = $date->format('Y-m-d');
+
+    //             $cabangId = $request->cabang_id;
+
+    //             $arusKas = $this->queryArusKas($cabangId, $formattedDate);
+
+    //             $no_cash_in = 1;  // Start counter for CASH_IN
+    //             $no_pencairan = 1;
+
+    //             $totalCashin = 0;
+    //             $totalAmount = 0;
+
+    //             $cash_in = [];
+
+    //             $last_cash_in_no = $no_cash_in - 1;
+
+    //             foreach ($arusKas as $item) {
+
+    //                 $row = $item->no_invoice . $item->LOAN_NUM . $item->PELANGGAN;
+
+    //                 $cabang = $item->nama_cabang;
+    //                 $tgl = $item->ENTRY_DATE;
+    //                 $user = $item->fullname;
+    //                 $no_invoice = $item->no_invoice;
+    //                 $loan_num = $item->LOAN_NUM;
+    //                 $pelanggan = $item->PELANGGAN;
+    //                 $position = $item->position;
+    //                 $payment_method = $item->PAYMENT_METHOD;
+
+    //                 if (!in_array($row, $cash_in)) {
+    //                     $cash_in[] = $row;
+
+    //                     if ($item->JENIS != 'PENCAIRAN') {
+    //                         $currentNo = $no_cash_in++;  // This is for CASH_IN
+    //                         $last_cash_in_no = $currentNo;  // Update last CASH_IN no.
+    //                     } else {
+    //                         $currentNo = $last_cash_in_no + 1;
+    //                     }
+    //                 } else {
+    //                     $currentNo = '';
+    //                     $cabang = '';
+    //                     $tgl = '';
+    //                     $user = '';
+    //                     $position = '';
+    //                     $loan_num = '';
+    //                     $pelanggan = '';
+    //                 }
+
+    //                 $amount = is_numeric($item->ORIGINAL_AMOUNT) ? floatval($item->ORIGINAL_AMOUNT) : 0;
+
+    //                 if ($item->JENIS != 'PENCAIRAN') {
+    //                     if ($amount != 0) {
+    //                         $datas['datas'][] = [
+    //                             'no' => $currentNo,
+    //                             'type' => 'CASH_IN',
+    //                             'no_invoice' => $no_invoice,
+    //                             'no_kontrak' => $loan_num,
+    //                             'tgl' => $tgl ?? '',
+    //                             'cabang' => $cabang ?? '',
+    //                             'user' => $user ?? '',
+    //                             'position' => $position ?? '',
+    //                             'nama_pelanggan' => $pelanggan,
+    //                             'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
+    //                             'keterangan' => 'BAYAR ' . $item->angsuran_ke . ' (' . $item->no_invoice . ')',
+    //                             'amount' => $amount,
+    //                         ];
+
+    //                         $totalCashin += $amount;
+    //                     }
+    //                 }
+    //             }
+
+    //             foreach ($arusKas as $item) {
+    //                 if ($item->JENIS == 'PENCAIRAN') {
+
+    //                     $getTttl = floatval($item->ORIGINAL_AMOUNT) - floatval($item->admin_fee);
+
+    //                     $datas['datas'][] = [
+    //                         'no' => $last_cash_in_no + 1,
+    //                         'type' => 'CASH_OUT',
+    //                         'no_kontrak' => $item->LOAN_NUM ?? '',
+    //                         'tgl' => $item->ENTRY_DATE ?? '',
+    //                         'cabang' => $item->nama_cabang ?? '',
+    //                         'user' => $item->fullname ?? '',
+    //                         'position' => $item->position ?? '',
+    //                         'nama_pelanggan' => $item->PELANGGAN ?? '',
+    //                         'keterangan' => 'PENCAIRAN NO KONTRAK ' . $item->LOAN_NUM ?? '',
+    //                         'amount' => "(-) " . number_format($getTttl),
+    //                     ];
+
+    //                     $totalAmount += $getTttl;
+    //                     $last_cash_in_no++;
+    //                 }
+    //             }
+
+    //             $datas['ttl_cash_in'] = $totalCashin;
+    //             $datas['ttl_cash_out'] = $totalAmount;
+    //             $datas['ttl_all'] = $totalCashin - $totalAmount;
+    //         } else {
+    //             $datas = [];
+    //         }
+
+    //         return response()->json($datas, 200);
+    //     } catch (\Exception $e) {
+    //         ActivityLogger::logActivity($request, $e->getMessage(), 500);
+    //         return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+    //     }
+    // }
+
     public function index(Request $request)
     {
         try {
@@ -29,19 +150,7 @@ class ListBanController extends Controller
 
                 $arusKas = $this->queryArusKas($cabangId, $formattedDate);
 
-                $no_cash_in = 1;  // Start counter for CASH_IN
-                $no_pencairan = 1;
-
-                $totalCashin = 0;
-                $totalAmount = 0;
-
-                $cash_in = [];
-
-                $last_cash_in_no = $no_cash_in - 1;
-
                 foreach ($arusKas as $item) {
-
-                    $row = $item->no_invoice . $item->LOAN_NUM . $item->PELANGGAN;
 
                     $cabang = $item->nama_cabang;
                     $tgl = $item->ENTRY_DATE;
@@ -50,33 +159,11 @@ class ListBanController extends Controller
                     $loan_num = $item->LOAN_NUM;
                     $pelanggan = $item->PELANGGAN;
                     $position = $item->position;
-                    $payment_method = $item->PAYMENT_METHOD;
-
-                    if (!in_array($row, $cash_in)) {
-                        $cash_in[] = $row;
-
-                        if ($item->JENIS != 'PENCAIRAN') {
-                            $currentNo = $no_cash_in++;  // This is for CASH_IN
-                            $last_cash_in_no = $currentNo;  // Update last CASH_IN no.
-                        } else {
-                            $currentNo = $last_cash_in_no + 1;
-                        }
-                    } else {
-                        $currentNo = '';
-                        $cabang = '';
-                        $tgl = '';
-                        $user = '';
-                        $position = '';
-                        $loan_num = '';
-                        $pelanggan = '';
-                    }
-
                     $amount = is_numeric($item->ORIGINAL_AMOUNT) ? floatval($item->ORIGINAL_AMOUNT) : 0;
 
                     if ($item->JENIS != 'PENCAIRAN') {
                         if ($amount != 0) {
                             $datas['datas'][] = [
-                                'no' => $currentNo,
                                 'type' => 'CASH_IN',
                                 'no_invoice' => $no_invoice,
                                 'no_kontrak' => $loan_num,
@@ -89,8 +176,6 @@ class ListBanController extends Controller
                                 'keterangan' => 'BAYAR ' . $item->angsuran_ke . ' (' . $item->no_invoice . ')',
                                 'amount' => $amount,
                             ];
-
-                            $totalCashin += $amount;
                         }
                     }
                 }
@@ -101,26 +186,20 @@ class ListBanController extends Controller
                         $getTttl = floatval($item->ORIGINAL_AMOUNT) - floatval($item->admin_fee);
 
                         $datas['datas'][] = [
-                            'no' => $last_cash_in_no + 1,
                             'type' => 'CASH_OUT',
+                            'no_invoice' => '',
                             'no_kontrak' => $item->LOAN_NUM ?? '',
                             'tgl' => $item->ENTRY_DATE ?? '',
                             'cabang' => $item->nama_cabang ?? '',
                             'user' => $item->fullname ?? '',
                             'position' => $item->position ?? '',
                             'nama_pelanggan' => $item->PELANGGAN ?? '',
+                            'metode_pembayaran' => '',
                             'keterangan' => 'PENCAIRAN NO KONTRAK ' . $item->LOAN_NUM ?? '',
-                            'amount' => "(-) " . number_format($getTttl),
+                            'amount' => $getTttl,
                         ];
-
-                        $totalAmount += $getTttl;
-                        $last_cash_in_no++;
                     }
                 }
-
-                $datas['ttl_cash_in'] = $totalCashin;
-                $datas['ttl_cash_out'] = $totalAmount;
-                $datas['ttl_all'] = $totalCashin - $totalAmount;
             } else {
                 $datas = [];
             }
