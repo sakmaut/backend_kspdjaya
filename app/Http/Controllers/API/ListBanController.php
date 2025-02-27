@@ -85,7 +85,7 @@ class ListBanController extends Controller
                                 'position' => $position ?? '',
                                 'nama_pelanggan' => $pelanggan,
                                 'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
-                                'keterangan' => 'BAYAR '.$item->angsuran_ke .' (' . $item->no_invoice.')',
+                                'keterangan' => 'BAYAR ' . $item->angsuran_ke . ' (' . $item->no_invoice . ')',
                                 'amount' => $amount,
                             ];
 
@@ -110,7 +110,7 @@ class ListBanController extends Controller
                             'position' => $item->position ?? '',
                             'nama_pelanggan' => $item->PELANGGAN ?? '',
                             'keterangan' => 'PENCAIRAN NO KONTRAK ' . $item->LOAN_NUM ?? '',
-                            'amount' => $getTttl,
+                            'amount' => "(-)" . $getTttl,
                         ];
 
                         $totalAmount += $getTttl;
@@ -120,7 +120,7 @@ class ListBanController extends Controller
 
                 $datas['ttl_cash_in'] = $totalCashin;
                 $datas['ttl_cash_out'] = $totalAmount;
-                $datas['ttl_all'] = $totalCashin + $totalAmount;
+                $datas['ttl_all'] = $totalCashin - $totalAmount;
             } else {
                 $datas = [];
             }
@@ -211,7 +211,7 @@ class ListBanController extends Controller
         //             INNER JOIN customer b3 ON b3.CUST_CODE = b2.CUST_CODE
         //             INNER JOIN users u ON u.id = b.user_id
         //             WHERE b.ENTRY_DATE = '$dateFrom'";
-        
+
         $query = "SELECT 
                         b.JENIS,
                         b.BRANCH,
