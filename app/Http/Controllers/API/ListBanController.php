@@ -50,6 +50,7 @@ class ListBanController extends Controller
                     $loan_num = $item->LOAN_NUM;
                     $pelanggan = $item->PELANGGAN;
                     $position = $item->position;
+                    $payment_method = $item->PAYMENT_METHOD;
 
                     if (!in_array($row, $cash_in)) {
                         $cash_in[] = $row;
@@ -74,24 +75,40 @@ class ListBanController extends Controller
 
                     if ($item->JENIS != 'PENCAIRAN') {
                         if ($amount != 0) {
-                            $datas['datas'][] = [
-                                'no' => $currentNo,  // Use the current counter for CASH_IN
-                                'type' => 'CASH_IN',
-                                'no_invoice' => $no_invoice,
-                                'no_kontrak' => $loan_num,
-                                'tgl' => $tgl ?? '',
-                                'cabang' => $cabang ?? '',
-                                'user' => $user ?? '',
-                                'position' => $position ?? '',
-                                'nama_pelanggan' => $pelanggan,
-                                'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
-                                'keterangan' => 'BAYAR ' . ($item->JENIS == 'DENDA' ? $item->JENIS : '') .
-                                    ($item->JENIS == 'ANGSURAN' && $item->angsuran_ke ? $item->angsuran_ke : '') .
-                                    ' ' . $item->no_invoice,
-                                'amount' => $amount,
-                            ];
+                            if (strtolower($payment_method) == 'cash') {
+                                $datas['datas'][] = [
+                                    'no' => $currentNo,
+                                    'metode' => $payment_method,
+                                    'type' => 'CASH_IN',
+                                    'no_invoice' => $no_invoice,
+                                    'no_kontrak' => $loan_num,
+                                    'tgl' => $tgl ?? '',
+                                    'cabang' => $cabang ?? '',
+                                    'user' => $user ?? '',
+                                    'position' => $position ?? '',
+                                    'nama_pelanggan' => $pelanggan,
+                                    'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
+                                    'keterangan' => 'BAYAR ' . $item->angsuran_ke . ' (' . $item->no_invoice . ')',
+                                    'amount' => $amount,
+                                ];
+                            } else {
+                                $datas['datas'][] = [
+                                    'no' => $currentNo,
+                                    'metode' => $payment_method,
+                                    'type' => 'CASH_IN',
+                                    'no_invoice' => $no_invoice,
+                                    'no_kontrak' => $loan_num,
+                                    'tgl' => $tgl ?? '',
+                                    'cabang' => $cabang ?? '',
+                                    'user' => $user ?? '',
+                                    'position' => $position ?? '',
+                                    'nama_pelanggan' => $pelanggan,
+                                    'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
+                                    'keterangan' => 'BAYAR ' . $item->angsuran_ke . ' (' . $item->no_invoice . ')',
+                                    'amount' => $amount,
+                                ];
+                            }
 
-                            // Add to totalCashin only if the amount is valid
                             $totalCashin += $amount;
                         }
                     }
@@ -112,7 +129,7 @@ class ListBanController extends Controller
                             'position' => $item->position ?? '',
                             'nama_pelanggan' => $item->PELANGGAN ?? '',
                             'keterangan' => 'PENCAIRAN NO KONTRAK ' . $item->LOAN_NUM ?? '',
-                            'amount' => $getTttl,
+                            'amount' => "(-) " . number_format($getTttl),
                         ];
 
                         $totalAmount += $getTttl;
@@ -122,7 +139,7 @@ class ListBanController extends Controller
 
                 $datas['ttl_cash_in'] = $totalCashin;
                 $datas['ttl_cash_out'] = $totalAmount;
-                $datas['ttl_all'] = $totalCashin + $totalAmount;
+                $datas['ttl_all'] = $totalCashin - $totalAmount;
             } else {
                 $datas = [];
             }
@@ -136,8 +153,7 @@ class ListBanController extends Controller
 
     private function queryArusKas($cabangId, $dateFrom)
     {
-
-        $query = "  SELECT 
+        $query = "SELECT 
                         b.JENIS,
                         b.BRANCH,
                         b.BRANCH_ID,
@@ -155,10 +171,8 @@ class ListBanController extends Controller
                         u.position
                     FROM (
                         SELECT 
-                            CASE 
-                                WHEN a.ACC_KEYS LIKE '%DENDA%' THEN 'DENDA' 
-                                ELSE 'ANGSURAN' 
-                            END AS JENIS, 
+                            case when a.ACC_KEYS like '%DENDA%' then 'DENDA'
+        	 				else b.TITLE end AS JENIS, 
                             b.BRANCH AS BRANCH, 
                             d.ID AS BRANCH_ID, 
                             d.NAME AS nama_cabang,
@@ -167,7 +181,8 @@ class ListBanController extends Controller
                             b.LOAN_NUM,
                             b.PAYMENT_METHOD,
                             b.INVOICE AS no_invoice,
-                            b.TITLE AS angsuran_ke,
+                            case when a.ACC_KEYS like '%DENDA%' then 'DENDA'
+        	 				else b.TITLE end AS angsuran_ke,
                             b.USER_ID AS user_id,
                             '' AS admin_fee
                         FROM 
@@ -176,10 +191,7 @@ class ListBanController extends Controller
                         LEFT JOIN arrears c ON c.ID = b.ARREARS_ID
                         LEFT JOIN branch d ON d.CODE_NUMBER = b.BRANCH
                         GROUP BY 
-                            CASE 
-                                WHEN a.ACC_KEYS LIKE '%DENDA%' THEN 'DENDA' 
-                                ELSE 'ANGSURAN' 
-                            END, 
+                            case when a.ACC_KEYS like '%DENDA%' then 'DENDA' else b.TITLE end, 
                             b.BRANCH, 
                             d.ID, 
                             d.NAME, 
@@ -187,8 +199,9 @@ class ListBanController extends Controller
                             b.LOAN_NUM,
                             b.PAYMENT_METHOD,
                             b.INVOICE,
-                            b.TITLE,
-                            b.USER_ID
+                            case when a.ACC_KEYS like '%DENDA%' then 'DENDA'
+        	 				else b.TITLE end,
+                            b.USER_ID  
                         UNION ALL
                         SELECT 
                             'PENCAIRAN' AS JENIS, 
