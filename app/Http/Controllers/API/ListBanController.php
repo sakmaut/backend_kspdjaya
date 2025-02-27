@@ -110,7 +110,7 @@ class ListBanController extends Controller
                             'position' => $item->position ?? '',
                             'nama_pelanggan' => $item->PELANGGAN ?? '',
                             'keterangan' => 'PENCAIRAN NO KONTRAK ' . $item->LOAN_NUM ?? '',
-                            'amount' => "(-)" . $getTttl,
+                            'amount' => "(-)" . number_format($getTttl),
                         ];
 
                         $totalAmount += $getTttl;
