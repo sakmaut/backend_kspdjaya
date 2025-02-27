@@ -74,7 +74,7 @@ class CustomerController extends Controller
                 ])
                 ->leftJoin('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
                 ->leftJoin('customer as c', 'c.CUST_CODE', '=', 'a.CUST_CODE')
-                ->where('a.STATUS', '!=', 'D');
+                ->where('a.STATUS', 'A');
 
             if (!empty($request->nama)) {
                 $query->when($request->nama, function ($query, $nama) {
