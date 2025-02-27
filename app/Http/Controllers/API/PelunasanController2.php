@@ -224,7 +224,7 @@ class PelunasanController2 extends Controller
 
             $this->proccessKwitansiDetail($request, $loan_number, $no_inv);
 
-            $this->proccess($request, $loan_number, $no_inv, 'PAID');
+            // $this->proccess($request, $loan_number, $no_inv, 'PAID');
 
             DB::commit();
             return response()->json("MUACH MUACHH MUACHHH", 200);
@@ -474,10 +474,10 @@ class PelunasanController2 extends Controller
             )
             ->get();
 
-        $this->principalCalculate($request, $loan_number, $no_inv, $creditSchedules);
+        // $this->principalCalculate($request, $loan_number, $no_inv, $creditSchedules);
         $this->interestCalculate($request, $loan_number, $no_inv, $creditSchedules);
-        $arrears = M_Arrears::where(['LOAN_NUMBER' => $loan_number, 'STATUS_REC' => 'A'])->get();
-        $this->arrearsCalculate($request, $loan_number, $no_inv, $arrears);
+        // $arrears = M_Arrears::where(['LOAN_NUMBER' => $loan_number, 'STATUS_REC' => 'A'])->get();
+        // $this->arrearsCalculate($request, $loan_number, $no_inv, $arrears);
     }
 
     private function interestCalculate($request, $loan_number, $no_inv, $creditSchedule)
@@ -502,26 +502,24 @@ class PelunasanController2 extends Controller
 
                 $param = [
                     'BAYAR_BUNGA' => $newPaymentValue,
-                    'DISKON_BUNGA' => 0, // Default value
+                    'DISKON_BUNGA' => 0,
                 ];
 
-                $totalPaymentAndInterest = $valBefore + $newPaymentValue;
+                $valDiskon =  $getAmount - $newPaymentValue;
+                $totalPaymentAndInterest = $valBefore + $valDiskon;
 
-                if ($totalPaymentAndInterest < $getAmount) {
-
-                    if ($newPaymentValue == $getAmount) {
-                        $param['DISKON_BUNGA'] = 0;
-                    } else {
-                        $param['DISKON_BUNGA'] = $getAmount - $newPaymentValue;
-                    }
-
-                    $this->insertKwitansiDetail(
-                        $loan_number,
-                        $no_inv,
-                        $res,
-                        $param
-                    );
+                if ($totalPaymentAndInterest == $getAmount) {
+                    $param['DISKON_BUNGA'] = 0;
+                } else {
+                    $param['DISKON_BUNGA'] = $valDiskon;
                 }
+
+                $this->insertKwitansiDetail(
+                    $loan_number,
+                    $no_inv,
+                    $res,
+                    $param
+                );
             }
         }
     }
