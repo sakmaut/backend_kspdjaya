@@ -194,7 +194,7 @@ class ListBanController extends Controller
                             'position' => $item->position ?? '',
                             'nama_pelanggan' => $item->PELANGGAN ?? '',
                             'keterangan' => 'PENCAIRAN NO KONTRAK ' . $item->LOAN_NUM ?? '',
-                            'amount' => "(-) " . number_format($getTttl),
+                            'amount' => $getTttl,
                         ];
                     }
                 }
