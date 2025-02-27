@@ -488,6 +488,10 @@ class PelunasanController2 extends Controller
             $valBefore = $res->PAYMENT_VALUE_INTEREST;
             $getAmount = $res->INTEREST;
 
+            if ($valBefore < 0) {
+                $valBefore = 0;
+            }
+
             if ($valBefore < $getAmount) {
 
                 $remainingToPay = $getAmount - $valBefore;
@@ -503,8 +507,12 @@ class PelunasanController2 extends Controller
                 $valDiskon = $getAmount - $newPaymentValue;
                 $check = $valDiskon + $valBefore;
 
+                $bayarBunga = ($check == $getAmount ? 0 : $newPaymentValue - $valBefore);
+                $bayarBunga = max(0, $bayarBunga);
+
+                // Set parameters for Kwitansi detail
                 $param = [
-                    'BAYAR_BUNGA' => $check == $getAmount ? 0 : $newPaymentValue,
+                    'BAYAR_BUNGA' => $bayarBunga,
                     'DISKON_BUNGA' => 0,
                 ];
 
