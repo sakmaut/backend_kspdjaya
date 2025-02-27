@@ -496,19 +496,20 @@ class PelunasanController2 extends Controller
                     $newPaymentValue = $getAmount;
                     $remainingPayment -= $remainingToPay;
                 } else {
-                    $newPaymentValue = $valBefore + $remainingPayment;
+                    // $newPaymentValue = $valBefore + $remainingPayment;
+                    $newPaymentValue = $remainingPayment;
                     $remainingPayment = 0;
                 }
 
+                $valDiskon = $getAmount - $newPaymentValue;
+                $check = $valDiskon + $valBefore;
+
                 $param = [
-                    'BAYAR_BUNGA' => $newPaymentValue,
+                    'BAYAR_BUNGA' => $check == $getAmount ? 0 : $newPaymentValue,
                     'DISKON_BUNGA' => 0,
                 ];
 
-                $valDiskon =  $getAmount - $newPaymentValue;
-                $totalPaymentAndInterest = $valBefore + $valDiskon;
-
-                if ($totalPaymentAndInterest == $getAmount) {
+                if ($newPaymentValue == $getAmount) {
                     $param['DISKON_BUNGA'] = 0;
                 } else {
                     $param['DISKON_BUNGA'] = $valDiskon;
