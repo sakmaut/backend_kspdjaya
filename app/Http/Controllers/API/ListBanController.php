@@ -75,39 +75,21 @@ class ListBanController extends Controller
 
                     if ($item->JENIS != 'PENCAIRAN') {
                         if ($amount != 0) {
-                            if (strtolower($payment_method) == 'cash') {
-                                $datas['datas'][] = [
-                                    'no' => $currentNo,
-                                    'metode' => $payment_method,
-                                    'type' => 'CASH_IN',
-                                    'no_invoice' => $no_invoice,
-                                    'no_kontrak' => $loan_num,
-                                    'tgl' => $tgl ?? '',
-                                    'cabang' => $cabang ?? '',
-                                    'user' => $user ?? '',
-                                    'position' => $position ?? '',
-                                    'nama_pelanggan' => $pelanggan,
-                                    'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
-                                    'keterangan' => 'BAYAR ' . $item->angsuran_ke . ' (' . $item->no_invoice . ')',
-                                    'amount' => $amount,
-                                ];
-                            } else {
-                                $datas['datas'][] = [
-                                    'no' => $currentNo,
-                                    'metode' => $payment_method,
-                                    'type' => 'CASH_IN',
-                                    'no_invoice' => $no_invoice,
-                                    'no_kontrak' => $loan_num,
-                                    'tgl' => $tgl ?? '',
-                                    'cabang' => $cabang ?? '',
-                                    'user' => $user ?? '',
-                                    'position' => $position ?? '',
-                                    'nama_pelanggan' => $pelanggan,
-                                    'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
-                                    'keterangan' => 'BAYAR ' . $item->angsuran_ke . ' (' . $item->no_invoice . ')',
-                                    'amount' => $amount,
-                                ];
-                            }
+                            $datas['datas'][] = [
+                                'no' => $currentNo,
+                                'metode' => $payment_method,
+                                'type' => 'CASH_IN',
+                                'no_invoice' => $no_invoice,
+                                'no_kontrak' => $loan_num,
+                                'tgl' => $tgl ?? '',
+                                'cabang' => $cabang ?? '',
+                                'user' => $user ?? '',
+                                'position' => $position ?? '',
+                                'nama_pelanggan' => $pelanggan,
+                                'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
+                                'keterangan' => 'BAYAR ' . $item->angsuran_ke . ' (' . $item->no_invoice . ')',
+                                'amount' => $amount,
+                            ];
 
                             $totalCashin += $amount;
                         }
