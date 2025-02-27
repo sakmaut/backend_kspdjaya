@@ -50,6 +50,7 @@ class ListBanController extends Controller
                     $loan_num = $item->LOAN_NUM;
                     $pelanggan = $item->PELANGGAN;
                     $position = $item->position;
+                    $payment_method = $item->PAYMENT_METHOD;
 
                     if (!in_array($row, $cash_in)) {
                         $cash_in[] = $row;
@@ -74,22 +75,40 @@ class ListBanController extends Controller
 
                     if ($item->JENIS != 'PENCAIRAN') {
                         if ($amount != 0) {
-                            $datas['datas'][] = [
-                                'no' => $currentNo,  // Use the current counter for CASH_IN
-                                'type' => 'CASH_IN',
-                                'no_invoice' => $no_invoice,
-                                'no_kontrak' => $loan_num,
-                                'tgl' => $tgl ?? '',
-                                'cabang' => $cabang ?? '',
-                                'user' => $user ?? '',
-                                'position' => $position ?? '',
-                                'nama_pelanggan' => $pelanggan,
-                                'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
-                                'keterangan' => 'BAYAR ' . $item->angsuran_ke . ' (' . $item->no_invoice . ')',
-                                'amount' => $amount,
-                            ];
+                            if (strtolower($payment_method) == 'cash') {
+                                $datas['datas'][] = [
+                                    'no' => $currentNo,
+                                    'metode' => $payment_method,
+                                    'type' => 'CASH_IN',
+                                    'no_invoice' => $no_invoice,
+                                    'no_kontrak' => $loan_num,
+                                    'tgl' => $tgl ?? '',
+                                    'cabang' => $cabang ?? '',
+                                    'user' => $user ?? '',
+                                    'position' => $position ?? '',
+                                    'nama_pelanggan' => $pelanggan,
+                                    'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
+                                    'keterangan' => 'BAYAR ' . $item->angsuran_ke . ' (' . $item->no_invoice . ')',
+                                    'amount' => $amount,
+                                ];
+                            } else {
+                                $datas['datas'][] = [
+                                    'no' => $currentNo,
+                                    'metode' => $payment_method,
+                                    'type' => 'CASH_IN',
+                                    'no_invoice' => $no_invoice,
+                                    'no_kontrak' => $loan_num,
+                                    'tgl' => $tgl ?? '',
+                                    'cabang' => $cabang ?? '',
+                                    'user' => $user ?? '',
+                                    'position' => $position ?? '',
+                                    'nama_pelanggan' => $pelanggan,
+                                    'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
+                                    'keterangan' => 'BAYAR ' . $item->angsuran_ke . ' (' . $item->no_invoice . ')',
+                                    'amount' => $amount,
+                                ];
+                            }
 
-                            // Add to totalCashin only if the amount is valid
                             $totalCashin += $amount;
                         }
                     }
@@ -134,84 +153,6 @@ class ListBanController extends Controller
 
     private function queryArusKas($cabangId, $dateFrom)
     {
-
-        // $query = "  SELECT 
-        //                 b.JENIS,
-        //                 b.BRANCH,
-        //                 b.BRANCH_ID,
-        //                 b.ENTRY_DATE,
-        //                 b.ORIGINAL_AMOUNT,
-        //                 b.LOAN_NUM,
-        //                 b3.NAME AS PELANGGAN,
-        //                 b.PAYMENT_METHOD,
-        //                 b.nama_cabang,
-        //                 b.no_invoice,
-        //                 b.angsuran_ke,
-        //                 b.admin_fee,
-        //                 b.user_id,
-        //                 u.fullname,
-        //                 u.position
-        //             FROM (
-        //                 SELECT 
-        //                     CASE 
-        //                         WHEN a.ACC_KEYS LIKE '%DENDA%' THEN 'DENDA' 
-        //                         ELSE 'ANGSURAN' 
-        //                     END AS JENIS, 
-        //                     b.BRANCH AS BRANCH, 
-        //                     d.ID AS BRANCH_ID, 
-        //                     d.NAME AS nama_cabang,
-        //                     DATE_FORMAT(b.ENTRY_DATE, '%Y-%m-%d') AS ENTRY_DATE, 
-        //                     SUM(a.ORIGINAL_AMOUNT) AS ORIGINAL_AMOUNT,
-        //                     b.LOAN_NUM,
-        //                     b.PAYMENT_METHOD,
-        //                     b.INVOICE AS no_invoice,
-        //                     b.TITLE AS angsuran_ke,
-        //                     b.USER_ID AS user_id,
-        //                     '' AS admin_fee
-        //                 FROM 
-        //                     payment_detail a
-        //                 INNER JOIN payment b ON b.ID = a.PAYMENT_ID
-        //                 LEFT JOIN arrears c ON c.ID = b.ARREARS_ID
-        //                 LEFT JOIN branch d ON d.CODE_NUMBER = b.BRANCH
-        //                 GROUP BY 
-        //                     CASE 
-        //                         WHEN a.ACC_KEYS LIKE '%DENDA%' THEN 'DENDA' 
-        //                         ELSE 'ANGSURAN' 
-        //                     END, 
-        //                     b.BRANCH, 
-        //                     d.ID, 
-        //                     d.NAME, 
-        //                     DATE_FORMAT(b.ENTRY_DATE, '%Y-%m-%d'), 
-        //                     b.LOAN_NUM,
-        //                     b.PAYMENT_METHOD,
-        //                     b.INVOICE,
-        //                     b.TITLE,
-        //                     b.USER_ID
-        //                 UNION ALL
-        //                 SELECT 
-        //                     'PENCAIRAN' AS JENIS, 
-        //                     b.CODE_NUMBER AS BRANCH,
-        //                     b.ID AS BRANCH_ID, 
-        //                     b.NAME AS nama_cabang,
-        //                     DATE_FORMAT(a.CREATED_AT, '%Y-%m-%d') AS ENTRY_DATE,
-        //                     a.PCPL_ORI AS ORIGINAL_AMOUNT,
-        //                     a.LOAN_NUMBER AS LOAN_NUM,
-        //                     'cash' AS PAYMENT_METHOD,
-        //                     '' AS no_invoice,
-        //                     '' AS angsuran_ke,
-        //                     a.CREATED_BY AS user_id,
-        //                     a.TOTAL_ADMIN AS admin_fee
-        //                 FROM 
-        //                     credit a
-        //                 INNER JOIN branch b ON b.id = a.BRANCH
-        //                 WHERE 
-        //                     a.STATUS = 'A'
-        //             ) AS b
-        //             INNER JOIN credit b2 ON b2.LOAN_NUMBER = b.LOAN_NUM
-        //             INNER JOIN customer b3 ON b3.CUST_CODE = b2.CUST_CODE
-        //             INNER JOIN users u ON u.id = b.user_id
-        //             WHERE b.ENTRY_DATE = '$dateFrom'";
-
         $query = "SELECT 
                         b.JENIS,
                         b.BRANCH,
