@@ -77,7 +77,6 @@ class ListBanController extends Controller
                         if ($amount != 0) {
                             $datas['datas'][] = [
                                 'no' => $currentNo,
-                                'metode' => $payment_method,
                                 'type' => 'CASH_IN',
                                 'no_invoice' => $no_invoice,
                                 'no_kontrak' => $loan_num,
