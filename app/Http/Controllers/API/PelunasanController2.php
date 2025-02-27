@@ -505,21 +505,23 @@ class PelunasanController2 extends Controller
                     'DISKON_BUNGA' => 0, // Default value
                 ];
 
-                // Jika BAYAR_BUNGA sudah == INTEREST, maka DISKON_BUNGA = 0
-                if ($newPaymentValue == $getAmount) {
-                    $param['DISKON_BUNGA'] = 0;
-                } else {
-                    // Jika BAYAR_BUNGA belum mencapai INTEREST, hitung DISKON_BUNGA
-                    $param['DISKON_BUNGA'] = $getAmount - $newPaymentValue;
-                }
+                $totalPaymentAndInterest = $valBefore + $newPaymentValue;
 
-                // Apply the payment and discount to the schedule in one call
-                $this->insertKwitansiDetail(
-                    $loan_number,
-                    $no_inv,
-                    $res,
-                    $param
-                );
+                if ($totalPaymentAndInterest < $getAmount) {
+
+                    if ($newPaymentValue == $getAmount) {
+                        $param['DISKON_BUNGA'] = 0;
+                    } else {
+                        $param['DISKON_BUNGA'] = $getAmount - $newPaymentValue;
+                    }
+
+                    $this->insertKwitansiDetail(
+                        $loan_number,
+                        $no_inv,
+                        $res,
+                        $param
+                    );
+                }
             }
         }
     }
