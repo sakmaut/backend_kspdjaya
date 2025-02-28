@@ -420,7 +420,7 @@ class Welcome extends Controller
                     'LOCATION_BRANCH' => $data->BRANCH,
                     'COLLATERAL_FLAG' => $data->BRANCH,
                     'VERSION' => 1,
-                    'CREATE_DATE' => $this->timeNow,
+                    'CREATE_DATE' => now(),
                     'CREATE_BY' => '61',
                 ];
 
