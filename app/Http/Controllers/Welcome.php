@@ -88,7 +88,8 @@ class Welcome extends Controller
 
         if ($check_exist) {
             $SET_UUID = $check_exist->ID;
-            $cust_code = $check_exist->CUST_CODE;
+            // $cust_code = $check_exist->CUST_CODE;
+            $cust_code = generateCustCode($request, 'customer', 'CUST_CODE');
 
             $this->insert_customer($request, $data, $cust_code);
             $this->insert_customer_xtra($data, $cust_code);
