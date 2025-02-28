@@ -324,6 +324,13 @@ class PelunasanController extends Controller
             ($res['diskon_bunga'] ?? 0) +
             ($res['diskon_denda'] ?? 0));
 
+        $kwitansi = M_Kwitansi::where(['NO_TRANSAKSI' => $no_inv])->first();
+
+        if ($kwitansi) {
+            $user_id = $kwitansi->CREATED_BY;
+            $getCodeBranch = M_Branch::find($kwitansi->BRANCH_CODE);
+        }
+
         M_Payment::create([
             'ID' => $uid,
             'ACC_KEY' => 'Pelunasan Angsuran Ke-' . ($res['angsuran_ke'] ?? ''),
@@ -331,14 +338,14 @@ class PelunasanController extends Controller
             'NO_TRX' => $no_inv,
             'PAYMENT_METHOD' => $request->METODE_PEMBAYARAN ?? '',
             'INVOICE' => $no_inv,
-            'BRANCH' => M_Branch::find($request->user()->branch_id)->CODE_NUMBER ?? '',
+            'BRANCH' =>  $getCodeBranch->CODE_NUMBER ?? M_Branch::find($request->user()->branch_id)->CODE_NUMBER,
             'LOAN_NUM' => $res['loan_number'] ?? '',
             'ENTRY_DATE' => Carbon::now(),
             'TITLE' => 'Angsuran Ke-' . ($res['angsuran_ke'] ?? ''),
             'ORIGINAL_AMOUNT' => $originalAmount,
             'START_DATE' => $res['tgl_angsuran'] ?? '',
             'END_DATE' => Carbon::now(),
-            'USER_ID' => $request->user()->id,
+            'USER_ID' => $user_id ?? $request->user()->id,
             'AUTH_BY' => $request->user()->fullname ?? '',
             'AUTH_DATE' => Carbon::now()
         ]);
