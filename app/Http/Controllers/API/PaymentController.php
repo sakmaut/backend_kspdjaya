@@ -181,7 +181,7 @@ class PaymentController extends Controller
         }
     }
 
-    private function processPaymentStructure($res, $request, $getCodeBranch, $no_inv)
+    private function processPaymentStructure($res, $request, $getCodeBranch, $no_inv, $kwitansi = null)
     {
         $loan_number = $res['loan_number'];
         $tgl_angsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
@@ -196,7 +196,7 @@ class PaymentController extends Controller
         }
 
         if ($res['bayar_angsuran'] != 0 || $res['bayar_denda'] != 0 || (isset($res['diskon_denda']) && $res['diskon_denda'] == 1)) {
-            $this->createPaymentRecords($request, $res, $tgl_angsuran, $loan_number, $no_inv, $getCodeBranch, $uid);
+            $this->createPaymentRecords($request, $res, $tgl_angsuran, $loan_number, $no_inv, $getCodeBranch, $uid, $kwitansi = null);
         }
 
         $this->updateCredit($loan_number);
@@ -514,8 +514,14 @@ class PaymentController extends Controller
         // }
     }
 
-    function createPaymentRecords($request, $res, $tgl_angsuran, $loan_number, $no_inv, $branch, $uid)
+    function createPaymentRecords($request, $res, $tgl_angsuran, $loan_number, $no_inv, $branch, $uid, $kwitansi = null)
     {
+
+        if ($kwitansi != null) {
+            $user_id = $kwitansi->CREATED_BY;
+            $getCodeBranch = M_Branch::find($kwitansi->BRANCH_COE);
+        }
+
         M_Payment::create([
             'ID' => $uid,
             'ACC_KEY' => $res['flag'] == 'PAID' ? 'angsuran_denda' : $request->pembayaran ?? '',
@@ -523,7 +529,7 @@ class PaymentController extends Controller
             'INVOICE' => $no_inv,
             'NO_TRX' => $request->uid,
             'PAYMENT_METHOD' => $request->payment_method,
-            'BRANCH' => $branch->CODE_NUMBER,
+            'BRANCH' =>  $getCodeBranch ?  $getCodeBranch->CODE_NUMBER : $branch->CODE_NUMBER,
             'LOAN_NUM' => $loan_number,
             'VALUE_DATE' => null,
             'ENTRY_DATE' => now(),
@@ -533,7 +539,7 @@ class PaymentController extends Controller
             'OS_AMOUNT' => $os_amount ?? 0,
             'START_DATE' => $tgl_angsuran,
             'END_DATE' => now(),
-            'USER_ID' => $request->user()->id,
+            'USER_ID' => $user_id ? $user_id : $request->user()->id,
             'AUTH_BY' => $request->user()->fullname ?? '',
             'AUTH_DATE' => now(),
             'ARREARS_ID' => $res['id_arrear'] ?? '',
@@ -667,7 +673,7 @@ class PaymentController extends Controller
                     if (isset($request->struktur) && is_array($request->struktur)) {
                         foreach ($request->struktur as $res) {
                             $request->merge(['approval' => 'approve', 'pembayaran' => $res['bayar_denda'] != 0 ? 'angsuran_denda' : 'angsuran']);
-                            $this->processPaymentStructure($res, $request, $getCodeBranch, $getInvoice);
+                            $this->processPaymentStructure($res, $request, $getCodeBranch, $getInvoice, $kwitansi);
                         }
                     }
                 }
