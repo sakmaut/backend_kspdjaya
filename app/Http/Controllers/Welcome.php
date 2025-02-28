@@ -421,7 +421,7 @@ class Welcome extends Controller
                     'COLLATERAL_FLAG' => $data->BRANCH,
                     'VERSION' => 1,
                     'CREATE_DATE' => now(),
-                    'CREATE_BY' => '61',
+                    'CREATE_BY' => $data->CREATE_BY ?? 0,
                 ];
 
                 $execute = M_CrCollateral::create($data_jaminan);
