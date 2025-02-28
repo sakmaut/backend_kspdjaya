@@ -45,7 +45,7 @@ class PaymentController extends Controller
             $data = M_Kwitansi::orderBy('CREATED_AT', 'DESC');
 
             if (strtolower($getPosition) == 'ho') {
-                $data->where('STTS_PAYMENT', '=', 'PENDING');
+                $data->whereIn('STTS_PAYMENT', ['PENDING', 'PAID']);
             } else {
                 $data->where('BRANCH_CODE', '=', $getBranch);
 
