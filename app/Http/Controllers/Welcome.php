@@ -55,46 +55,69 @@ class Welcome extends Controller
 
     public function index(Request $request)
     {
-        $data = M_CrApplication::where('ORDER_NUMBER', $request->order_number)->first();
+        try {
+            $data = M_CrApplication::where('ORDER_NUMBER', $request->order_number)->first();
 
-        $set_tgl_awal = $request->tgl_awal;
+            // $set_tgl_awal = $request->tgl_awal;
 
-        $type = $data->INSTALLMENT_TYPE;
+            // $type = $data->INSTALLMENT_TYPE;
 
-        // if (strtolower($type) == 'bulanan') {
-        //     $data_credit_schedule = $this->generateAmortizationSchedule($set_tgl_awal, $data);
-        // } else {
-        //     $data_credit_schedule = $this->generateAmortizationScheduleMusiman($set_tgl_awal, $data);
-        // }
+            // if (strtolower($type) == 'bulanan') {
+            //     $data_credit_schedule = $this->generateAmortizationSchedule($set_tgl_awal, $data);
+            // } else {
+            //     $data_credit_schedule = $this->generateAmortizationScheduleMusiman($set_tgl_awal, $data);
+            // }
 
-        // $no = 1;
-        // foreach ($data_credit_schedule as $list) {
-        //     $credit_schedule =
-        //         [
-        //             'ID' => Uuid::uuid7()->toString(),
-        //             'LOAN_NUMBER' => $request->loan_number ?? '',
-        //             'INSTALLMENT_COUNT' => $no++,
-        //             'PAYMENT_DATE' => parseDatetoYMD($list['tgl_angsuran']),
-        //             'PRINCIPAL' => $list['pokok'],
-        //             'INTEREST' => $list['bunga'],
-        //             'INSTALLMENT' => $list['total_angsuran'],
-        //             'PRINCIPAL_REMAINS' => $list['baki_debet']
-        //         ];
+            // $no = 1;
+            // foreach ($data_credit_schedule as $list) {
+            //     $credit_schedule =
+            //         [
+            //             'ID' => Uuid::uuid7()->toString(),
+            //             'LOAN_NUMBER' => $request->loan_number ?? '',
+            //             'INSTALLMENT_COUNT' => $no++,
+            //             'PAYMENT_DATE' => parseDatetoYMD($list['tgl_angsuran']),
+            //             'PRINCIPAL' => $list['pokok'],
+            //             'INTEREST' => $list['bunga'],
+            //             'INSTALLMENT' => $list['total_angsuran'],
+            //             'PRINCIPAL_REMAINS' => $list['baki_debet']
+            //         ];
 
-        //     M_CreditSchedule::create($credit_schedule);
-        // }
+            //     M_CreditSchedule::create($credit_schedule);
+            // }
 
-        $check_exist = M_Credit::where('ORDER_NUMBER', $request->order_number)->first();
+            $check_exist = M_Credit::where('ORDER_NUMBER', $request->order_number)->first();
 
-        if ($check_exist) {
-            $SET_UUID = $check_exist->ID;
-            // $cust_code = $check_exist->CUST_CODE;
-            $cust_code = generateCustCode($request, 'customer', 'CUST_CODE');
+            if ($check_exist) {
+                // $SET_UUID = $check_exist->ID;
+                // $cust_code = $check_exist->CUST_CODE;
+                $cust_code = generateCustCode($check_exist->BRANCH, 'customer', 'CUST_CODE');
 
-            $this->insert_customer($request, $data, $cust_code);
-            $this->insert_customer_xtra($data, $cust_code);
-            // $this->insert_collateral($request, $data, $SET_UUID, $request->loan_number);
+                $this->insert_customer($request, $data, $cust_code);
+                $this->insert_customer_xtra($data, $cust_code);
+                // $this->insert_collateral($request, $data, $SET_UUID, $request->loan_number);
+            }
+        } catch (\Throwable $e) {
+            return response()->json($e->getMessage(), 500);
         }
+    }
+
+    function generateCustCode($branchId, $table, $column)
+    {
+        $branch = M_Branch::find($branchId);
+
+        if (!$branch) {
+            throw new Exception("Cabang tidak ditemukan.");
+        }
+
+        $branchCodeNumber = $branch->CODE_NUMBER;
+        $latestRecord = DB::table($table)
+            ->where($column, 'like', $branchCodeNumber . '%')
+            ->orderByRaw("CAST(SUBSTRING($column, LENGTH(?) + 1) AS UNSIGNED) DESC", [$branchCodeNumber])
+            ->first();
+
+        $lastSequence = ($latestRecord ? (int) substr($latestRecord->$column, strlen($branchCodeNumber) + 3, 5) : 0) + 1;
+
+        return sprintf("%s%05d", $branchCodeNumber, $lastSequence);
     }
 
     private function generateAmortizationSchedule($setDate, $data)
@@ -311,7 +334,6 @@ class Welcome extends Controller
         $check_customer_ktp = M_Customer::where('ID_NUMBER', $cr_personal->ID_NUMBER)->first();
         $cr_order = M_CrOrder::where('APPLICATION_ID', $data->ID)->first();
         $update = M_CustomerExtra::where('CUST_CODE', $check_customer_ktp->CUST_CODE)->first();
-
 
         $data_customer_xtra = [
             'OTHER_OCCUPATION_1' => $cr_personal_extra->OTHER_OCCUPATION_1 ?? null,
