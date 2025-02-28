@@ -90,7 +90,7 @@ class Welcome extends Controller
             if ($check_exist) {
                 // $SET_UUID = $check_exist->ID;
                 // $cust_code = $check_exist->CUST_CODE;
-                $cust_code = generateCustCode($check_exist->BRANCH, 'customer', 'CUST_CODE');
+                $cust_code = $this->generateCustCodesss($check_exist->BRANCH, 'customer', 'CUST_CODE');
 
                 $this->insert_customer($request, $data, $cust_code);
                 $this->insert_customer_xtra($data, $cust_code);
@@ -103,7 +103,7 @@ class Welcome extends Controller
         }
     }
 
-    function generateCustCode($branchId, $table, $column)
+    function generateCustCodesss($branchId, $table, $column)
     {
         $branch = M_Branch::find($branchId);
 
