@@ -348,6 +348,13 @@ class PelunasanController extends Controller
     {
         $uid = Uuid::uuid7()->toString();
 
+        $kwitansi = M_Kwitansi::where(['NO_TRANSAKSI' => $no_inv])->first();
+
+        if ($kwitansi) {
+            $user_id = $kwitansi->CREATED_BY;
+            $getCodeBranch = M_Branch::find($kwitansi->BRANCH_CODE);
+        }
+
         M_Payment::create([
             'ID' => $uid,
             'ACC_KEY' => 'Bayar Pelunasan Pinalty',
@@ -355,13 +362,13 @@ class PelunasanController extends Controller
             'NO_TRX' => $no_inv,
             'PAYMENT_METHOD' => $request->METODE_PEMBAYARAN ?? '',
             'INVOICE' => $no_inv,
-            'BRANCH' => M_Branch::find($request->user()->branch_id)->CODE_NUMBER ?? '',
+            'BRANCH' =>  $getCodeBranch->CODE_NUMBER ?? M_Branch::find($request->user()->branch_id)->CODE_NUMBER,
             'LOAN_NUM' => $loan_number ?? '',
             'ENTRY_DATE' => Carbon::now(),
             'TITLE' => 'Bayar Pelunasan Pinalty',
             'ORIGINAL_AMOUNT' => $request->BAYAR_PINALTI ?? 0,
             'END_DATE' => Carbon::now(),
-            'USER_ID' => $request->user()->id,
+            'USER_ID' => $user_id ?? $request->user()->id,
             'AUTH_BY' => $request->user()->fullname ?? '',
             'AUTH_DATE' => Carbon::now()
         ]);
