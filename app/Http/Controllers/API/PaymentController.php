@@ -540,7 +540,7 @@ class PaymentController extends Controller
             'OS_AMOUNT' => $os_amount ?? 0,
             'START_DATE' => $tgl_angsuran,
             'END_DATE' => now(),
-            'USER_ID' => $user_id ? $user_id : $request->user()->id,
+            'USER_ID' => $user_id ?? $request->user()->id,
             'AUTH_BY' => $request->user()->fullname ?? '',
             'AUTH_DATE' => now(),
             'ARREARS_ID' => $res['id_arrear'] ?? '',
