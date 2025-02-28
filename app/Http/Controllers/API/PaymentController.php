@@ -48,6 +48,7 @@ class PaymentController extends Controller
                 // $data->where('STTS_PAYMENT', '=', 'PENDING');
                 $data->whereIn('STTS_PAYMENT', ['PENDING', 'PAID']);
                 $data->where('METODE_PEMBAYARAN', '=', 'transfer');
+                $data->whereDate('created_at', Carbon::today());
             } else {
                 $data->where('BRANCH_CODE', '=', $getBranch);
 
