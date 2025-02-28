@@ -92,11 +92,11 @@ class Welcome extends Controller
                 // $cust_code = $check_exist->CUST_CODE;
                 $cust_code = $this->generateCustCodesss($check_exist->BRANCH, 'customer', 'CUST_CODE');
 
-                $this->insert_customer($request, $data, $cust_code);
-                $this->insert_customer_xtra($data, $cust_code);
+                // $this->insert_customer($request, $data, $cust_code);
+                // $this->insert_customer_xtra($data, $cust_code);
                 $this->insert_collateral($request, $data, $SET_UUID, $request->loan_number);
 
-                $check_exist->update(['CUST_CODE' => $cust_code]);
+                // $check_exist->update(['CUST_CODE' => $cust_code]);
             }
 
             return response()->json("OK");
