@@ -517,6 +517,7 @@ class PaymentController extends Controller
     function createPaymentRecords($request, $res, $tgl_angsuran, $loan_number, $no_inv, $branch, $uid, $kwitansi = null)
     {
 
+        $getCodeBranch = null;
         if ($kwitansi != null) {
             $user_id = $kwitansi->CREATED_BY;
             $getCodeBranch = M_Branch::find($kwitansi->BRANCH_COE);
