@@ -521,7 +521,7 @@ class PaymentController extends Controller
 
         if ($kwitansi) {
             $user_id = $kwitansi->CREATED_BY;
-            $getCodeBranch = M_Branch::find($kwitansi->BRANCH_COE);
+            $getCodeBranch = M_Branch::find($kwitansi->BRANCH_CODE);
         }
 
         M_Payment::create([
