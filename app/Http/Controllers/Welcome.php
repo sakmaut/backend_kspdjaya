@@ -96,6 +96,8 @@ class Welcome extends Controller
                 $this->insert_customer_xtra($data, $cust_code);
                 // $this->insert_collateral($request, $data, $SET_UUID, $request->loan_number);
             }
+
+            return response()->json("OK");
         } catch (\Throwable $e) {
             return response()->json($e->getMessage(), 500);
         }
