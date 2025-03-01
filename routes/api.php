@@ -39,12 +39,8 @@ Route::get('jobArrears', [Welcome::class, 'job']);
 Route::post('botpel', [PelunasanController2::class, 'getDetail']);
 Route::post('propel', [PelunasanController2::class, 'propel']);
 
-Route::middleware(['auth:sanctum', 'check.access'])->group(function () {
-    Route::resource('users', UsersController::class)->only(['index']);
-    // Route::resource('taksasi', TaksasiController::class)->only(['index']);
-});
-
 Route::middleware('auth:sanctum')->group(function () {
+    Route::resource('users', UsersController::class)->only(['index']);
     // Route Group Master Menu
     Route::get('fpk_kapos', [CrAppilcationController::class, 'showKapos']);
     Route::get('fpk_ho', [CrAppilcationController::class, 'showHo']);

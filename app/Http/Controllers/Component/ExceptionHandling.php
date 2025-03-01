@@ -2,10 +2,21 @@
 
 namespace App\Http\Controllers\Component;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Ramsey\Uuid\Uuid;
 
-class ExceptionHandling extends Controller
-{
-    //
+class ExceptionHandling{
+
+    function logError($e,$request){
+        $errorUuid = Uuid::uuid7()->toString();
+
+        Log::error($errorUuid, [
+            'exception' => $e->getMessage(),
+            'url' => $request->fullUrl(),
+            'user' => $request->user()->username,
+            'fullname' => $request->user()->fullname,
+            'position' => $request->user()->position
+        ]);
+    }
+
 }
