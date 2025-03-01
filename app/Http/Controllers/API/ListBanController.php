@@ -387,7 +387,7 @@ class ListBanController extends Controller
                                     FROM 	cr_collateral 
                                     GROUP 	BY CR_CREDIT_ID) g ON g.CR_CREDIT_ID = b.ID
                                 LEFT JOIN credit_2025 i on cast(i.loan_number as char) = cast(b.LOAN_NUMBER as char) 
-                                                        and date_format(i.back_date,'%d%m%Y')=str_to_date('02282025','%d%m%Y')
+                                                        and date_format(i.back_date,'%d%m%Y')=str_to_date('28022025','%d%m%Y')
                                 LEFT JOIN first_arr j on cast(j.LOAN_NUMBER as char) = cast(b.LOAN_NUMBER as char)
 
                             LEFT JOIN (	SELECT	loan_number, sum(interest)-sum(coalesce(payment_value_interest,0))-sum(discount_interest) as OS_BNG_AKHIR, 
