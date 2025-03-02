@@ -31,7 +31,7 @@ class UserRepositories implements UsersRepositoryInterface
 
     function create($request)
     {
-        $data_array = [
+        $data = [
             'username' => $request->username ?? '',
             'email' => $request->username . '@gmail.com',
             'password' => !empty($request->password) ? bcrypt($request->password) : bcrypt($request->username),
@@ -42,17 +42,16 @@ class UserRepositories implements UsersRepositoryInterface
             'alamat' => $request->alamat ?? '',
             'gender' => $request->gender ?? '',
             'mobile_number' => $request->no_hp ?? '',
-            'status' => $request->status == '' ? 'active' : $request->status,
+            'status' => $request->status == '' ? 'active' : strtolower($request->status),
             'created_by' => $request->user()->id
         ];
 
-        return User::create($data_array);
+        return $this->userEntity::create($data);
     }
 
     function update($request, $userById)
     {
-
-        $data_user = [
+        $data = [
             'username' => $request->username ?? '',
             'fullname' => $request->nama ?? '',
             'branch_id' => $request->cabang_id ?? '',
@@ -61,25 +60,36 @@ class UserRepositories implements UsersRepositoryInterface
             'alamat' => $request->alamat ?? '',
             'gender' => $request->gender ?? '',
             'mobile_number' => $request->no_hp ?? '',
-            'status' => $request->status ?? '',
+            'status' => strtolower($request->status) ?? '',
             'updated_by' => $request->user()->id ?? '',
             'updated_at' => Carbon::now() ?? null
         ];
 
         if (isset($request->password) && !empty($request->password)) {
-            $data_user['password'] = bcrypt($request->password);
+            $data['password'] = bcrypt($request->password);
         }
 
-        return $userById->update($data_user);
+        return $userById->update($data);
     }
 
     function delete($request, $userById)
     {
-        $data_user = [
+        $data = [
             'deleted_by' => $request->user()->id,
             'deleted_at' => Carbon::now() ?? null
         ];
 
-        return $userById->update($data_user);
+        return $userById->update($data);
+    }
+
+    function resetPassword($request, $userByUsername)
+    {
+        $data = [
+            'password' => bcrypt($request->username),
+            'updated_by' => $request->user()->id ?? '',
+            'updated_at' => Carbon::now() ?? null
+        ];
+
+        return $userByUsername->update($data);
     }
 }

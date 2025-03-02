@@ -10,4 +10,5 @@ interface UsersRepositoryInterface
     function create($request);
     function update($request, $userById);
     function delete($request, $userById);
+    function resetPassword($request, $userByUsername);
 }
