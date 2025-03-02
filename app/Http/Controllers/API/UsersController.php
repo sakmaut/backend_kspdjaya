@@ -242,7 +242,6 @@ class UsersController extends Controller
     {
         DB::beginTransaction();
         try {
-            // Autentikasi pengguna
             if (!Auth::guard('web')->attempt($request->only('username', 'password'))) {
                 return response()->json(['message' => 'Invalid Credential'], 401);
             }
@@ -252,12 +251,11 @@ class UsersController extends Controller
             $request->user()->tokens()->delete();
     
             DB::commit();
-            ActivityLogger::logActivity($request, "Success", 200);
             return response()->json(['message' => 'Kata sandi berhasil diperbarui'], 200);
         } catch (\Exception $e) {
             DB::rollback();
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage()], 500);
+            $this->log->logError($e, $request);
+            return response()->json(['message' => "Internal Server Error"], 500);
         }
     }
     
@@ -270,20 +268,20 @@ class UsersController extends Controller
                 'username' => 'required|string'
             ]);
 
-            $user_query = User::where('username',$request->username)->first();
+            $userByUsername = $this->usersRepository->findUserByUsername($request->username);
 
-            if(!$user_query){
-                throw new Exception('User Not Found');
+            if (!$userByUsername) {
+                throw new Exception("User Not Found", 404);
             }
 
-            $user_query->update(['password' => bcrypt($request->username)]);
+            $this->usersRepository->resetPassword($request, $userByUsername);
     
             DB::commit();
             return response()->json(['message' => 'reset password successfully'], 200);
         } catch (\Exception $e) {
             DB::rollback();
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+            $this->log->logError($e, $request);
+            return response()->json(['message' => "Internal Server Error"], 500);
         }
     }
 
