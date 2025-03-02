@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Http\Controllers\Repositories\Branch\BranchRepository;
+use App\Http\Controllers\Repositories\Branch\BranchRepositoryInterface;
 use App\Http\Controllers\Repositories\Users\UserRepositories;
 use App\Http\Controllers\Repositories\Users\UsersRepositoryInterface;
 use Carbon\Carbon;
@@ -19,6 +21,7 @@ class AppServiceProvider extends ServiceProvider
         Carbon::setLocale('id');
 
         $this->app->bind(UsersRepositoryInterface::class,UserRepositories::class);
+        $this->app->bind(BranchRepositoryInterface::class, BranchRepository::class);
     }
 
     /**
