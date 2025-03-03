@@ -16,7 +16,7 @@ class R_BranchDetail extends JsonResource
     {
         return [
             'ID' => $this->ID,
-            'CODE' => $this->CODE,
+            'CODE' => $this->CODE_NUMBER,
             'NAME' => $this->NAME,
             'ADDRESS' => $this->ADDRESS,
             'RT' => $this->RT,
@@ -30,7 +30,7 @@ class R_BranchDetail extends JsonResource
             'PHONE_1' => $this->PHONE_1,
             'PHONE_2' => $this->PHONE_2,
             'PHONE_3' => $this->PHONE_3,
-            'DESCR' =>$this->DESCR
+            'DESCR' => $this->DESCR
         ];
     }
 }
