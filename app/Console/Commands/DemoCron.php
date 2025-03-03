@@ -34,8 +34,6 @@ class DemoCron extends Command
      */
     public function handle()
     {
-
-
         DB::beginTransaction();
 
         try {
@@ -100,6 +98,27 @@ class DemoCron extends Command
                     M_Arrears::create($data);
                 }
             }
+
+            DB::table('first_arr')->delete();
+
+            $data = DB::table('arrears')
+                ->selectRaw('LOAN_NUMBER, min(START_DATE) as start_date, datediff(now(), min(START_DATE)) as date_diff')
+                ->where('status_rec', 'A')
+                ->groupBy('LOAN_NUMBER')
+                ->get();
+
+            foreach ($data as $row) {
+                M_FirstArr::create([
+                    'LOAN_NUMBER' => $row->LOAN_NUMBER,
+                    'START_DATE' => $row->start_date,
+                    'DATE_DIFF' => $row->date_diff
+                ]);
+            }
+
+            M_CronJobLog::create([
+                'STATUS' => 'SUCCESS',
+                'DESCRIPTION' => 'Records processed successfully'
+            ]);
 
             DB::commit();
         } catch (\Exception $e) {
