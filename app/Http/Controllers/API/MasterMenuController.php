@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\API\ActivityLogger;
+use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Repositories\Menu\MenuRepository;
 use App\Http\Resources\R_MasterMenu;
 use Illuminate\Http\Request;
 use App\Models\M_MasterMenu;
@@ -15,56 +17,65 @@ use Illuminate\Support\Facades\DB;
 class MasterMenuController extends Controller
 {
 
+    protected $menuRepository;
+    protected $log;
+
+    public function __construct(MenuRepository $menuRepository, ExceptionHandling $log)
+    {
+        $this->menuRepository = $menuRepository;
+        $this->log = $log;
+    }
+
     public function index(Request $req)
     {
         try {
-            $data = M_MasterMenu::where(function($query) {
-                                    $query->where(function($q) {
-                                        $q->whereNull('deleted_by')
-                                        ->orWhere('deleted_by', '');
-                                    });
-                                    // ->whereNotNull('parent')
-                                    // ->where('parent', '!=', '');
-                                })
-                                ->orWhere('menu_name', 'home')
-                                ->orderBy('order', 'asc')
-                                ->get();
+            $data = M_MasterMenu::where(function ($query) {
+                $query->where(function ($q) {
+                    $q->whereNull('deleted_by')
+                        ->orWhere('deleted_by', '');
+                });
+                // ->whereNotNull('parent')
+                // ->where('parent', '!=', '');
+            })
+                ->orWhere('menu_name', 'home')
+                ->orderBy('order', 'asc')
+                ->get();
 
 
             $dto = R_MasterMenu::collection($data);
 
-            ActivityLogger::logActivity($req,"Success",200);
+            ActivityLogger::logActivity($req, "Success", 200);
             return response()->json(['message' => 'OK', "status" => 200, 'response' => $dto], 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($req,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+            ActivityLogger::logActivity($req, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
 
-    public function show(Request $req,$id)
+    public function show(Request $req, $id)
     {
         try {
-            $check = M_MasterMenu::where('id',$id)
-                                ->where(function($query) {
-                                    $query->whereNull('deleted_by')
-                                        ->orWhere('deleted_by', '');
-                                    })->firstOrFail();
+            $check = M_MasterMenu::where('id', $id)
+                ->where(function ($query) {
+                    $query->whereNull('deleted_by')
+                        ->orWhere('deleted_by', '');
+                })->firstOrFail();
 
             $dto = R_MasterMenu::collection([$check]);
 
-            ActivityLogger::logActivity($req,"Success",200);
-            return response()->json(['message' => 'OK',"status" => 200,'response' => $dto], 200);
+            ActivityLogger::logActivity($req, "Success", 200);
+            return response()->json(['message' => 'OK', "status" => 200, 'response' => $dto], 200);
         } catch (ModelNotFoundException $e) {
-            ActivityLogger::logActivity($req,'Data Not Found',404);
-            return response()->json(['message' => 'Data Not Found',"status" => 404], 404);
+            ActivityLogger::logActivity($req, 'Data Not Found', 404);
+            return response()->json(['message' => 'Data Not Found', "status" => 404], 404);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($req,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+            ActivityLogger::logActivity($req, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
 
     public function store(Request $req)
-    { 
+    {
         DB::beginTransaction();
         try {
             $req->validate([
@@ -77,29 +88,29 @@ class MasterMenuController extends Controller
             $req['status'] = 'Active';
             $req['created_by'] = $req->user()->id;
 
-            if($req->parent == ""){
+            if ($req->parent == "") {
                 $req['parent'] = 0;
-            }else{
+            } else {
                 $req['parent'] = $req->parent;
             }
 
             $create =  M_MasterMenu::create($req->all());
             DB::commit();
-            ActivityLogger::logActivity($req,"Success",200);
+            ActivityLogger::logActivity($req, "Success", 200);
             return response()->json(['message' => 'Master Menu created successfully', "status" => 200, 'response' => $create], 200);
         } catch (QueryException $e) {
             DB::rollback();
-            ActivityLogger::logActivity($req,$e->getMessage(),409);
+            ActivityLogger::logActivity($req, $e->getMessage(), 409);
             return response()->json(['message' => $e->getMessage(), "status" => 409], 409);
         } catch (\Exception $e) {
             DB::rollback();
-            ActivityLogger::logActivity($req,$e->getMessage(),500);
+            ActivityLogger::logActivity($req, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
 
-    public function update(Request $req,$id)
-    { 
+    public function update(Request $req, $id)
+    {
         DB::beginTransaction();
         try {
             $menu = M_MasterMenu::findOrFail($id);
@@ -110,43 +121,43 @@ class MasterMenuController extends Controller
             ]);
 
             DB::commit();
-            ActivityLogger::logActivity($req,"Success",200);
+            ActivityLogger::logActivity($req, "Success", 200);
             return response()->json(['message' => 'Master Menu updated successfully'], 200);
         } catch (ModelNotFoundException $e) {
             DB::rollback();
-            ActivityLogger::logActivity($req,'Data Not Found',404);
+            ActivityLogger::logActivity($req, 'Data Not Found', 404);
             return response()->json(['message' => 'Data Not Found', "status" => 404], 404);
         } catch (\Exception $e) {
             DB::rollback();
-            ActivityLogger::logActivity($req,$e->getMessage(),500);
+            ActivityLogger::logActivity($req, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
 
-    public function destroy(Request $req,$id)
-    { 
+    public function destroy(Request $req, $id)
+    {
         DB::beginTransaction();
         try {
-            
+
             $menu = M_MasterMenu::findOrFail($id);
 
             $update = [
-                'deleted_by' =>$req->user()->id,
+                'deleted_by' => $req->user()->id,
                 'deleted_at' =>  Carbon::now()->format('Y-m-d H:i:s')
             ];
 
             $menu->update($update);
-            
+
             DB::commit();
-            ActivityLogger::logActivity($req,"Success",200);
+            ActivityLogger::logActivity($req, "Success", 200);
             return response()->json(['message' => 'Master Menu deleted successfully', "status" => 200], 200);
         } catch (ModelNotFoundException $e) {
             DB::rollback();
-            ActivityLogger::logActivity($req,'Data Not Found',404);
+            ActivityLogger::logActivity($req, 'Data Not Found', 404);
             return response()->json(['message' => 'Data Not Found', "status" => 404], 404);
         } catch (\Exception $e) {
             DB::rollback();
-            ActivityLogger::logActivity($req,$e->getMessage(),500);
+            ActivityLogger::logActivity($req, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
@@ -154,12 +165,12 @@ class MasterMenuController extends Controller
     public function menuSubList(Request $req)
     {
         try {
-            $data= M_MasterMenu::buildMenuArray($req);
-        
-            return response()->json(['message' => 'OK', "status" => 200, 'response' =>$data], 200);
+            $data = M_MasterMenu::buildMenuArray($req);
+
+            return response()->json(['message' => 'OK', "status" => 200, 'response' => $data], 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($req,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+            ActivityLogger::logActivity($req, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
 }
