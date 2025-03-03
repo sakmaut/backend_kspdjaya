@@ -20,6 +20,6 @@ class ExceptionHandling
             'position' => $request->user()->position
         ]);
 
-        return response()->json(['message' => "Internal Server Error: $errorUuid"], 500);
+        return response()->json(['message' => "Internal Server Error: $e"], 500);
     }
 }

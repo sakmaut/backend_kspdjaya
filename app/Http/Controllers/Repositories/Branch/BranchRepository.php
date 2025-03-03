@@ -107,13 +107,13 @@ class BranchRepository implements BranchRepositoryInterface
 
         $branchByCode = $this->findBranchByCodeNumber($getCode);
 
-        if ($branchByCode && $branchByCode->id != $branchId) {
+        if ($branchByCode && $branchByCode->ID != $branchId) {
             throw new Exception("Code Branch Is Exist", 404);
         }
 
         $branchByName = $this->findBranchByName($getName);
 
-        if ($branchByName && $branchByName->id != $branchId) {
+        if ($branchByName && $branchByName->ID != $branchId) {
             throw new Exception("Code Name Is Exist", 404);
         }
 
