@@ -60,19 +60,19 @@ class Welcome extends Controller
             return response()->json("MAU APA");
             die;
 
-            $orderNumbers = [
-                'COR/20250225/01172',
-                'COR/20250224/01158',
-                'COR/20250224/01163',
-                'COR/20250225/01171',
-                'COR/20250225/01175',
-                'COR/20250225/01182',
-                'COR/20250224/01169',
-                'COR/20250225/01174',
-                'COR/20250225/01181'
-            ];
+            // $orderNumbers = [
+            //     'COR/20250225/01172',
+            //     'COR/20250224/01158',
+            //     'COR/20250224/01163',
+            //     'COR/20250225/01171',
+            //     'COR/20250225/01175',
+            //     'COR/20250225/01182',
+            //     'COR/20250224/01169',
+            //     'COR/20250225/01174',
+            //     'COR/20250225/01181'
+            // ];
 
-            // $data = M_CrApplication::where('ORDER_NUMBER', $request->order_number)->first();
+            $data = M_CrApplication::where('ORDER_NUMBER', $request->order_number)->first();
 
             // $set_tgl_awal = $request->tgl_awal;
 
@@ -101,32 +101,32 @@ class Welcome extends Controller
             //     M_CreditSchedule::create($credit_schedule);
             // }
 
-            $results = DB::table('cr_application as a')
-                ->join('credit as b', 'b.ORDER_NUMBER', '=', 'a.ORDER_NUMBER')
-                ->whereIn('b.ORDER_NUMBER', $orderNumbers)
-                ->select('a.CR_SURVEY_ID', 'a.BRANCH', 'a.CREATE_BY', 'b.ID')
-                ->get();
+            // $results = DB::table('cr_application as a')
+            //     ->join('credit as b', 'b.ORDER_NUMBER', '=', 'a.ORDER_NUMBER')
+            //     ->whereIn('b.ORDER_NUMBER', $orderNumbers)
+            //     ->select('a.CR_SURVEY_ID', 'a.BRANCH', 'a.CREATE_BY', 'b.ID')
+            //     ->get();
 
-            if ($results->isNotEmpty()) {
-                foreach ($results as $res) {
-                    $this->insert_collateral($res);
-                }
-            }
-
-
-            // $check_exist = M_Credit::where('ORDER_NUMBER', $request->order_number)->first();
-
-            // if ($check_exist) {
-            //     $SET_UUID = $check_exist->ID;
-            //     // $cust_code = $check_exist->CUST_CODE;
-            //     $cust_code = $this->generateCustCodesss($check_exist->BRANCH, 'customer', 'CUST_CODE');
-
-            //     // $this->insert_customer($request, $data, $cust_code);
-            //     // $this->insert_customer_xtra($data, $cust_code);
-            //     $this->insert_collateral($request, $data, $SET_UUID, $request->loan_number);
-
-            //     // $check_exist->update(['CUST_CODE' => $cust_code]);
+            // if ($results->isNotEmpty()) {
+            //     foreach ($results as $res) {
+            //         $this->insert_collateral($res);
+            //     }
             // }
+
+
+            $check_exist = M_Credit::where('ORDER_NUMBER', $request->order_number)->first();
+
+            if ($check_exist) {
+                $SET_UUID = $check_exist->ID;
+                // $cust_code = $check_exist->CUST_CODE;
+                $cust_code = $this->generateCustCodesss($check_exist->BRANCH, 'customer', 'CUST_CODE');
+
+                $this->insert_customer($request, $data, $cust_code);
+                $this->insert_customer_xtra($data, $cust_code);
+                // $this->insert_collateral($request, $data, $SET_UUID, $request->loan_number);
+
+                $check_exist->update(['CUST_CODE' => $cust_code]);
+            }
 
             return response()->json("OK");
         } catch (\Throwable $e) {
