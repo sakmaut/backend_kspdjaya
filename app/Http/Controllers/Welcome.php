@@ -57,8 +57,8 @@ class Welcome extends Controller
     {
         try {
 
-            // return response()->json("MAU APA");
-            // die;
+            return response()->json("MAU APA");
+            die;
 
             // $orderNumbers = [
             //     'COR/20250225/01172',
