@@ -56,7 +56,26 @@ class Welcome extends Controller
     public function index(Request $request)
     {
         try {
-            $data = M_CrApplication::where('ORDER_NUMBER', $request->order_number)->first();
+
+            $orderNumbers = [
+                'COR/20250201/00691', 'COR/20250201/00694', 'COR/20250201/00695', 'COR/20250203/00696', 'COR/20250203/00709',
+                'COR/20250203/00711', 'COR/20250203/00713', 'COR/20250203/00717', 'COR/20250204/00731', 'COR/20250204/00734',
+                'COR/20250204/00766', 'COR/20250204/00774', 'COR/20250205/00789', 'COR/20250205/00795', 'COR/20250205/00807',
+                'COR/20250206/00810', 'COR/20250206/00816', 'COR/20250206/00829', 'COR/20250207/00833', 'COR/20250207/00837',
+                'COR/20250207/00851', 'COR/20250208/00860', 'COR/20250208/00863', 'COR/20250210/00883', 'COR/20250211/00890',
+                'COR/20250211/00893', 'COR/20250211/00898', 'COR/20250211/00914', 'COR/20250211/00916', 'COR/20250212/00917',
+                'COR/20250212/00919', 'COR/20250212/00926', 'COR/20250212/00933', 'COR/20250213/00943', 'COR/20250213/00950',
+                'COR/20250213/00954', 'COR/20250214/00964', 'COR/20250214/00968', 'COR/20250214/00978', 'COR/20250215/00982',
+                'COR/20250215/00991', 'COR/20250215/00997', 'COR/20250217/00998', 'COR/20250217/00999', 'COR/20250217/01010',
+                'COR/20250217/01028', 'COR/20250218/01031', 'COR/20250218/01039', 'COR/20250218/01049', 'COR/20250218/01050',
+                'COR/20250218/01054', 'COR/20250219/01056', 'COR/20250219/01063', 'COR/20250219/01066', 'COR/20250219/01070',
+                'COR/20250219/01078', 'COR/20250220/01088', 'COR/20250220/01091', 'COR/20250221/01106', 'COR/20250221/01121',
+                'COR/20250221/01123', 'COR/20250222/01124', 'COR/20250222/01128', 'COR/20250222/01132', 'COR/20250222/01134',
+                'COR/20250222/01141', 'COR/20250224/01157', 'COR/20250224/01161', 'COR/20250225/01173', 'COR/20250225/01176',
+                'COR/20250225/01177', 'COR/20250225/01180'
+            ];
+
+            // $data = M_CrApplication::where('ORDER_NUMBER', $request->order_number)->first();
 
             // $set_tgl_awal = $request->tgl_awal;
 
@@ -85,19 +104,32 @@ class Welcome extends Controller
             //     M_CreditSchedule::create($credit_schedule);
             // }
 
-            $check_exist = M_Credit::where('ORDER_NUMBER', $request->order_number)->first();
+            $results = DB::table('cr_application as a')
+                ->join('credit as b', 'b.ORDER_NUMBER', '=', 'a.ORDER_NUMBER')
+                ->whereIn('b.ORDER_NUMBER', $orderNumbers)
+                ->select('a.CR_SURVEY_ID', 'a.BRANCH', 'a.CREATE_BY', 'b.ID')
+                ->get();
 
-            if ($check_exist) {
-                $SET_UUID = $check_exist->ID;
-                // $cust_code = $check_exist->CUST_CODE;
-                $cust_code = $this->generateCustCodesss($check_exist->BRANCH, 'customer', 'CUST_CODE');
-
-                // $this->insert_customer($request, $data, $cust_code);
-                // $this->insert_customer_xtra($data, $cust_code);
-                $this->insert_collateral($request, $data, $SET_UUID, $request->loan_number);
-
-                // $check_exist->update(['CUST_CODE' => $cust_code]);
+            if ($results->isNotEmpty()) {
+                foreach ($results as $res) {
+                    $this->insert_collateral($res);
+                }
             }
+
+
+            // $check_exist = M_Credit::where('ORDER_NUMBER', $request->order_number)->first();
+
+            // if ($check_exist) {
+            //     $SET_UUID = $check_exist->ID;
+            //     // $cust_code = $check_exist->CUST_CODE;
+            //     $cust_code = $this->generateCustCodesss($check_exist->BRANCH, 'customer', 'CUST_CODE');
+
+            //     // $this->insert_customer($request, $data, $cust_code);
+            //     // $this->insert_customer_xtra($data, $cust_code);
+            //     $this->insert_collateral($request, $data, $SET_UUID, $request->loan_number);
+
+            //     // $check_exist->update(['CUST_CODE' => $cust_code]);
+            // }
 
             return response()->json("OK");
         } catch (\Throwable $e) {
@@ -386,7 +418,7 @@ class Welcome extends Controller
         }
     }
 
-    private function insert_collateral($request, $data, $lastID, $loan_number)
+    private function insert_collateral($data)
     {
         $data_collateral = M_CrGuaranteVehicle::where('CR_SURVEY_ID', $data->CR_SURVEY_ID)->where(function ($query) {
             $query->whereNull('DELETED_AT')
@@ -404,7 +436,7 @@ class Welcome extends Controller
             foreach ($data_collateral as $res) {
                 $data_jaminan = [
                     'HEADER_ID' => $setHeaderID,
-                    'CR_CREDIT_ID' => $lastID ?? null,
+                    'CR_CREDIT_ID' => $data->ID ?? null,
                     'TYPE' => $res->TYPE ?? null,
                     'BRAND' => $res->BRAND ?? null,
                     'PRODUCTION_YEAR' => $res->PRODUCTION_YEAR ?? null,
@@ -427,17 +459,6 @@ class Welcome extends Controller
                 ];
 
                 $execute = M_CrCollateral::create($data_jaminan);
-
-                $statusLog = 'NEW ' . $loan_number ?? '';
-
-                M_LocationStatus::create([
-                    'TYPE' => 'kendaraan',
-                    'COLLATERAL_ID' => $execute->ID,
-                    'LOCATION' => $data->BRANCH,
-                    'STATUS' => $statusLog,
-                    'CREATE_BY' => '66',
-                    'CREATED_AT' => now(),
-                ]);
 
                 foreach ($doc as $res) {
                     $custmer_doc_data = [
