@@ -57,6 +57,9 @@ class Welcome extends Controller
     {
         try {
 
+            return response()->json("MAU APA");
+            die;
+
             $orderNumbers = [
                 'COR/20250201/00691', 'COR/20250201/00694', 'COR/20250201/00695', 'COR/20250203/00696', 'COR/20250203/00709',
                 'COR/20250203/00711', 'COR/20250203/00713', 'COR/20250203/00717', 'COR/20250204/00731', 'COR/20250204/00734',
