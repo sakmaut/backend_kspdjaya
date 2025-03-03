@@ -76,8 +76,8 @@ class BranchController extends Controller
         DB::beginTransaction();
         try {
             $request->validate([
-                'CODE' => 'required',
-                'NAME' => 'required'
+                'CODE' => 'unique:branch,code,' . $id,
+                'NAME' => 'unique:branch,name,' . $id
             ]);
 
             $this->branchRepository->update($request, $id);
