@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers\Repositories\Branch;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use GuzzleHttp\Psr7\Request;
 
 interface BranchRepositoryInterface
 {
     function getActiveBranch();
+    function findBranchById($id);
+    function findBranchByCode($code);
+    function findBranchByName($name);
+    function getMaxCodeBranch();
+    function create($request);
 }

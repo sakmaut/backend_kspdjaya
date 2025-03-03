@@ -7,34 +7,19 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\Repositories\Users\UserRepositories;
 use App\Http\Resources\R_User;
 use App\Models\M_Branch;
-use App\Models\M_HrEmployeeDocument;
-use App\Models\M_HrRolling;
-use App\Models\M_JabatanAccessMenu;
-use App\Models\M_MasterUserAccessMenu;
-use App\Models\User;
 use Carbon\Carbon;
 use Exception;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\URL;
-use Illuminate\Support\Facades\Validator;
-use Ramsey\Uuid\Uuid;
 
 class UsersController extends Controller
 {
-    private $current_time;
     protected $usersRepository;
     protected $log;
 
-    public function __construct(UserRepositories $usersRepository,ExceptionHandling $log)
+    public function __construct(UserRepositories $usersRepository, ExceptionHandling $log)
     {
-        $this->current_time = Carbon::now()->format('Y-m-d H:i:s');
         $this->usersRepository = $usersRepository;
         $this->log = $log;
     }
@@ -46,28 +31,26 @@ class UsersController extends Controller
 
             $dto = R_User::collection($getActiveUsers);
 
-            return response()->json(['message' => 'OK','response' => $dto], 200);
+            return response()->json(['message' => 'OK', 'response' => $dto], 200);
         } catch (\Exception $e) {
-            $this->log->logError($e,$request);
-            return response()->json(['message' => "Internal Server Error"], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
-    public function show(Request $request,$id)
+    public function show(Request $request, $id)
     {
         try {
             $userById = $this->usersRepository->findUserByid($id);
 
-            if(!$userById){
+            if (!$userById) {
                 throw new Exception("Users Not Found", 404);
             }
 
             $dto = new R_User($userById);
 
-            return response()->json(['message' => 'OK','response' => $dto], 200);
+            return response()->json(['message' => 'OK', 'response' => $dto], 200);
         } catch (\Exception $e) {
-            $this->log->logError($e, $request);
-            return response()->json(['message' => "Internal Server Error"], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
@@ -75,7 +58,7 @@ class UsersController extends Controller
     // {
     //     DB::beginTransaction();
     //     try {
-         
+
     //         foreach ($request->all as $list) {
     //             $data_array = [
     //                 'username' => $list['username'],
@@ -91,10 +74,10 @@ class UsersController extends Controller
     //                 'status' => 'Active',
     //                 'created_by' => 'SYSTEM'
     //             ];
-            
+
     //             User::create($data_array);
     //         } 
-    
+
     //         DB::commit();
     //         ActivityLogger::logActivity($request,"Success",200);
     //         return response()->json(['message' => 'created successfully',"status" => 200], 200);
@@ -141,12 +124,11 @@ class UsersController extends Controller
             return response()->json(['message' => 'created successfully'], 200);
         } catch (\Exception $e) {
             DB::rollback();
-            $this->log->logError($e, $request);
-            return response()->json(['message' => "Internal Server Error"], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
-    public function update(Request $request,$id)
+    public function update(Request $request, $id)
     {
         DB::beginTransaction();
         try {
@@ -166,13 +148,12 @@ class UsersController extends Controller
             return response()->json(['message' => 'updated successfully'], 200);
         } catch (\Exception $e) {
             DB::rollback();
-            $this->log->logError($e, $request);
-            return response()->json(['message' => "Internal Server Error"], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
-    public function destroy(Request $request,$id)
-    { 
+    public function destroy(Request $request, $id)
+    {
         DB::beginTransaction();
         try {
             $userById = $this->usersRepository->findUserByid($id);
@@ -187,8 +168,7 @@ class UsersController extends Controller
             return response()->json(['message' => 'deleted successfully'], 200);
         } catch (\Exception $e) {
             DB::rollback();
-            $this->log->logError($e, $request);
-            return response()->json(['message' => "Internal Server Error"], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
@@ -245,25 +225,24 @@ class UsersController extends Controller
             if (!Auth::guard('web')->attempt($request->only('username', 'password'))) {
                 return response()->json(['message' => 'Invalid Credential'], 401);
             }
-    
+
             // Perbarui kata sandi
             $request->user()->update(['password' => bcrypt($request->new_password)]);
             $request->user()->tokens()->delete();
-    
+
             DB::commit();
             return response()->json(['message' => 'Kata sandi berhasil diperbarui'], 200);
         } catch (\Exception $e) {
             DB::rollback();
-            $this->log->logError($e, $request);
-            return response()->json(['message' => "Internal Server Error"], 500);
+            return $this->log->logError($e, $request);
         }
     }
-    
+
 
     public function resetPassword(Request $request)
     {
         DB::beginTransaction();
-        try {    
+        try {
             $request->validate([
                 'username' => 'required|string'
             ]);
@@ -275,14 +254,12 @@ class UsersController extends Controller
             }
 
             $this->usersRepository->resetPassword($request, $userByUsername);
-    
+
             DB::commit();
             return response()->json(['message' => 'reset password successfully'], 200);
         } catch (\Exception $e) {
             DB::rollback();
-            $this->log->logError($e, $request);
-            return response()->json(['message' => "Internal Server Error"], 500);
+            return $this->log->logError($e, $request);
         }
     }
-
 }

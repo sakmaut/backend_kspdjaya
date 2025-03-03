@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Component;
 use Illuminate\Support\Facades\Log;
 use Ramsey\Uuid\Uuid;
 
-class ExceptionHandling{
+class ExceptionHandling
+{
 
-    function logError($e,$request){
+    function logError($e, $request)
+    {
         $errorUuid = Uuid::uuid7()->toString();
 
         Log::error($errorUuid, [
@@ -17,6 +19,7 @@ class ExceptionHandling{
             'fullname' => $request->user()->fullname,
             'position' => $request->user()->position
         ]);
-    }
 
+        return response()->json(['message' => "Internal Server Error: $errorUuid"], 500);
+    }
 }
