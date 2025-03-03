@@ -8,8 +8,10 @@ interface BranchRepositoryInterface
 {
     function getActiveBranch();
     function findBranchById($id);
-    function findBranchByCode($code);
+    function findBranchByCodeNumber($code);
     function findBranchByName($name);
     function getMaxCodeBranch();
     function create($request);
+    function update($request, $branchId);
+    function delete($request, $branchId);
 }
