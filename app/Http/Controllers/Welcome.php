@@ -75,8 +75,6 @@ class Welcome extends Controller
                 'COR/20250225/01177', 'COR/20250225/01180'
             ];
 
-            $data = M_CrApplication::whereIn('ORDER_NUMBER', $orderNumbers)->get();
-
             // $data = M_CrApplication::where('ORDER_NUMBER', $request->order_number)->first();
 
             // $set_tgl_awal = $request->tgl_awal;
@@ -106,14 +104,15 @@ class Welcome extends Controller
             //     M_CreditSchedule::create($credit_schedule);
             // }
 
-            $credit = M_Credit::whereIn('ORDER_NUMBER', $orderNumbers)->get();
+            $results = DB::table('cr_application as a')
+                ->join('credit as b', 'b.ORDER_NUMBER', '=', 'a.ORDER_NUMBER')
+                ->whereIn('b.ORDER_NUMBER', $orderNumbers)
+                ->select('a.CR_SURVEY_ID', 'a.BRANCH', 'a.CREATE_BY', 'b.ID')
+                ->get();
 
-            if ($credit->isNotEmpty()) {
-                foreach ($data as $res) {
-                    foreach ($credit as $list) {
-                        $setUuid = $list->ID;
-                        $this->insert_collateral($request, $res, $setUuid, $request->loan_number);
-                    }
+            if ($results->isNotEmpty()) {
+                foreach ($results as $res) {
+                    $this->insert_collateral($res);
                 }
             }
 
@@ -419,7 +418,7 @@ class Welcome extends Controller
         }
     }
 
-    private function insert_collateral($request, $data, $lastID, $loan_number)
+    private function insert_collateral($data)
     {
         $data_collateral = M_CrGuaranteVehicle::where('CR_SURVEY_ID', $data->CR_SURVEY_ID)->where(function ($query) {
             $query->whereNull('DELETED_AT')
@@ -437,7 +436,7 @@ class Welcome extends Controller
             foreach ($data_collateral as $res) {
                 $data_jaminan = [
                     'HEADER_ID' => $setHeaderID,
-                    'CR_CREDIT_ID' => $lastID ?? null,
+                    'CR_CREDIT_ID' => $data->ID ?? null,
                     'TYPE' => $res->TYPE ?? null,
                     'BRAND' => $res->BRAND ?? null,
                     'PRODUCTION_YEAR' => $res->PRODUCTION_YEAR ?? null,
@@ -460,17 +459,6 @@ class Welcome extends Controller
                 ];
 
                 $execute = M_CrCollateral::create($data_jaminan);
-
-                $statusLog = 'NEW ' . $loan_number ?? '';
-
-                M_LocationStatus::create([
-                    'TYPE' => 'kendaraan',
-                    'COLLATERAL_ID' => $execute->ID,
-                    'LOCATION' => $data->BRANCH,
-                    'STATUS' => $statusLog,
-                    'CREATE_BY' => '66',
-                    'CREATED_AT' => now(),
-                ]);
 
                 foreach ($doc as $res) {
                     $custmer_doc_data = [
