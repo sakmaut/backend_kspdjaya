@@ -16,14 +16,12 @@ class R_User extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $branch = M_Branch::find($this->branch_id);
-        
         return [
             'id' => $this->id,
             'username' => $this->username,
             'nama' => $this->fullname,
-            'cabang_id' => $branch->ID ?? null,
-            'cabang_nama' => $branch->NAME ?? null,
+            'cabang_id' => $this->branch->ID ?? null,
+            'cabang_nama' => $this->branch->NAME ?? null,
             'jabatan' => $this->position,
             'no_ktp' => $this->no_ktp,
             'alamat' => $this->alamat,

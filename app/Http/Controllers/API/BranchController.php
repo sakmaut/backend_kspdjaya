@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Repositories\Branch\BranchRepository;
 use App\Http\Resources\R_Branch;
 use App\Http\Resources\R_BranchDetail;
 use App\Models\M_Branch;
@@ -15,17 +17,27 @@ use Illuminate\Support\Facades\Validator;
 
 class BranchController extends Controller
 {
+
+    protected $usersRepository;
+    protected $log;
+
+    public function __construct(BranchRepository $usersRepository, ExceptionHandling $log)
+    {
+        $this->usersRepository = $usersRepository;
+        $this->log = $log;
+    }
+
     public function index(Request $request)
     {
         try {
-            $data =  M_Branch::whereNull('DELETED_BY')->orWhere('DELETED_BY','')->get();
-            $dto = R_Branch::collection($data);
+            $getAllBranch = $this->usersRepository->getActiveBranch();
 
-            ActivityLogger::logActivity($request,"Success",200);
-            return response()->json(['message' => 'OK',"status" => 200,'response' => $dto], 200);
+            $dto = R_Branch::collection($getAllBranch);
+
+            return response()->json(['message' => 'OK','response' => $dto], 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+            $this->log->logError($e, $request);
+            return response()->json(['message' => "Internal Server Error"], 500);
         }
     }
 
@@ -35,8 +47,7 @@ class BranchController extends Controller
             $check = M_Branch::where('id',$id)->firstOrFail();
             $dto = new R_BranchDetail($check);
 
-            ActivityLogger::logActivity($req,"Success",200);
-            return response()->json(['message' => 'OK',"status" => 200,'response' => $dto], 200);
+            return response()->json(['message' => 'OK','response' => $dto], 200);
         } catch (ModelNotFoundException $e) {
             ActivityLogger::logActivity($req,'Data Not Found',404);
             return response()->json(['message' => 'Data Not Found',"status" => 404], 404);
