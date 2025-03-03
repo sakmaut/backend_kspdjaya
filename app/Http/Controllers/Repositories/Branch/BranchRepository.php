@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Repositories\Branch;
 use App\Http\Controllers\Component\GeneratedCode;
 use App\Models\M_Branch;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Http\Request;
 
 class BranchRepository implements BranchRepositoryInterface
@@ -30,7 +31,7 @@ class BranchRepository implements BranchRepositoryInterface
         return $this->branchEntity::where('ID', $id)->first();
     }
 
-    function findBranchByCode($code)
+    function findBranchByCodeNumber($code)
     {
         return $this->branchEntity::where('CODE', $code)->first();
     }
@@ -47,9 +48,23 @@ class BranchRepository implements BranchRepositoryInterface
 
     function create($request)
     {
+        $getCode = $request->CODE;
+        $getName = $request->NAME;
+
+        $branchByCode = $this->findBranchByCodeNumber($getCode);
+
+        if ($branchByCode) {
+            throw new Exception("Code Branch Is Exist", 404);
+        }
+
+        $branchByName = $this->findBranchByName($getName);
+
+        if ($branchByName) {
+            throw new Exception("Code Name Is Exist", 404);
+        }
+
         $data = [
             'CODE' => $this->branchCode() ?? '',
-            'CODE' => 013,
             'CODE_NUMBER' => strtoupper($request->CODE) ?? '',
             'NAME' => $request->NAME ?? '',
             'ADDRESS' => $request->ADDRESS ?? '',
@@ -66,11 +81,80 @@ class BranchRepository implements BranchRepositoryInterface
             'PHONE_3' => $request->PHONE_3 ?? '',
             'DESCR' => $request->DESCR ?? '',
             'STATUS' => 'Active',
-            'CREATE_DATE' => Carbon::now() ?? null,
+            'CREATE_DATE' => Carbon::now()->format('Y-m-d') ?? null,
             'CREATE_USER' => $request->user()->id ?? '',
         ];
 
+        $existingBranch = $this->findBranchByCodeNumber($data['CODE_NUMBER']);
+
+        if ($existingBranch) {
+            throw new Exception('Branch with this code already exists.', 400);
+        }
+
         return $this->branchEntity::create($data);
+    }
+
+    function update($request, $branchId)
+    {
+        $getCode = $request->CODE;
+        $getName = $request->NAME;
+
+        $branchById = $this->findBranchById($branchId);
+
+        if (!$branchById) {
+            throw new Exception("Branch Id Not Found", 404);
+        }
+
+        $branchByCode = $this->findBranchByCodeNumber($getCode);
+
+        if ($branchByCode && $branchByCode->id != $branchId) {
+            throw new Exception("Code Branch Is Exist", 404);
+        }
+
+        $branchByName = $this->findBranchByName($getName);
+
+        if ($branchByName && $branchByName->id != $branchId) {
+            throw new Exception("Code Name Is Exist", 404);
+        }
+
+        $data = [
+            'CODE_NUMBER' => strtoupper($request->CODE) ?? '',
+            'NAME' => $request->NAME ?? '',
+            'ADDRESS' => $request->ADDRESS ?? '',
+            'RT' => $request->RT ?? '',
+            'RW' => $request->RW ?? '',
+            'PROVINCE' => $request->PROVINCE ?? '',
+            'CITY' => $request->CITY ?? '',
+            'KELURAHAN' => $request->KELURAHAN ?? '',
+            'KECAMATAN' => $request->KECAMATAN ?? '',
+            'ZIP_CODE' => $request->ZIP_CODE ?? '',
+            'LOCATION' => $request->LOCATION ?? '',
+            'PHONE_1' => $request->PHONE_1 ?? '',
+            'PHONE_2' => $request->PHONE_2 ?? '',
+            'PHONE_3' => $request->PHONE_3 ?? '',
+            'DESCR' => $request->DESCR ?? '',
+            'STATUS' => 'Active',
+            'MOD_DATE' => Carbon::now()->format('Y-m-d') ?? null,
+            'MOD_USER' => $request->user()->id ?? '',
+        ];
+
+        return $branchById->update($data);
+    }
+
+    function delete($request, $branchId)
+    {
+        $branchById = $this->findBranchById($branchId);
+
+        if (!$branchById) {
+            throw new Exception("Branch Id Not Found", 404);
+        }
+
+        $data = [
+            'DELETED_AT' => Carbon::now()->format('Y-m-d') ?? null,
+            'DELETED_BY' => $request->user()->id ?? '',
+        ];
+
+        return $branchById->update($data);
     }
 
     function branchCode()
