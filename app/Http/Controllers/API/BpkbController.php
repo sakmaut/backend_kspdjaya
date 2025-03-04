@@ -309,10 +309,10 @@ class BpkbController extends Controller
     {
         $documents = DB::select(
             "   SELECT *
-                FROM cr_collateral_document AS csd
+                FROM cr_collateral_document_release AS csd
                 WHERE (TYPE, COUNTER_ID) IN (
                     SELECT TYPE, MAX(COUNTER_ID)
-                    FROM cr_collateral_document
+                    FROM cr_collateral_document_release
                     WHERE TYPE IN ($data)
                         AND COLLATERAL_ID = '$collateralId'
                     GROUP BY TYPE
