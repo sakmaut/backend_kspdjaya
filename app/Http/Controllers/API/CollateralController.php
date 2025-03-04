@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Models\M_BpkbDetail;
 use App\Models\M_Branch;
 use App\Models\M_CrCollateral;
 use App\Models\M_CrCollateralDocument;
@@ -296,6 +297,12 @@ class CollateralController extends Controller
                 ];
 
                 M_CrCollateralDocumentRelease::create($collateral);
+
+                $checkCollateral = M_CrCollateral::where('ID', $req->uid)->first();
+
+                if ($checkCollateral) {
+                    $checkCollateral->update(['STATUS' => 'RILIS']);
+                }
 
                 DB::commit();
                 return response()->json(['message' => 'Image upload successfully', 'response' => $url], 200);

@@ -24,15 +24,14 @@ class BpkbController extends Controller
                             e.NAME as posisi_berkas,
                             b.LOAN_NUMBER as no_kontrak, 
                             c.NAME as debitur,
-                            b.STATUS,
-                            coalesce(f.STATUS,'NORMAL') as status_jaminan,
+                            b.STATUS as status_credit,
+                            a.STATUS as status_jaminan,
                             a.*
                     FROM	cr_collateral a
                             inner join credit b on b.ID = a.CR_CREDIT_ID
                             inner join customer c on c.CUST_CODE = b.CUST_CODE
                             left join branch d on d.ID = a.COLLATERAL_FLAG
                             left join branch e on e.ID = a.LOCATION_BRANCH
-                            left join bpkb_detail f on f.COLLATERAL_ID = a.ID
                     WHERE	a.LOCATION_BRANCH = '$branch' ";
 
             $results = DB::select($sql);
@@ -45,7 +44,7 @@ class BpkbController extends Controller
                     'nama_debitur' => $list->debitur ?? NULL,
                     'order_number' => $list->no_kontrak ?? NULL,
                     'no_jaminan' => $list->BPKB_NUMBER ?? NULL,
-                    'status_kontrak' => $list->STATUS == 'D' ? 'inactive' : 'active',
+                    'status_kontrak' => $list->status_credit == 'D' ? 'inactive' : 'active',
                     'id' => $list->ID,
                     'status_jaminan' => $list->status_jaminan,
                     "tipe" => $list->TYPE,
@@ -63,7 +62,7 @@ class BpkbController extends Controller
                     "asal_lokasi" => $list->pos_pencairan ?? '',
                     "lokasi" => $list->posisi_berkas ?? $list->LOCATION_BRANCH,
                     "document" => $this->getCollateralDocument($list->ID, ['no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri']) ?? null,
-                    "document_rilis" => $this->attachment($list->ID, "'rilis'") ?? null,
+                    "document_rilis" => $this->attachment($list->ID, "'doc_rilis'") ?? null,
                 ];
             }
 
