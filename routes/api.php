@@ -149,6 +149,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::resource('log_print', LogPrintController::class);
 
     Route::post('listBanTest', [ListBanController::class, 'listBanTest']);
+
+    Route::post('lap_pembayaran', [ReportController::class, 'lapPembayaran']);
 });
 
 
