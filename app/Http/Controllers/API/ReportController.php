@@ -631,9 +631,12 @@ class ReportController extends Controller
     public function collateralAllReport(Request $request)
     {
         try {
-            $sql = "SELECT	d.NAME as pos_pencairan, e.NAME as posisi_berkas,
-                            b.LOAN_NUMBER as no_kontrak, c.NAME as debitur,
-                            a.POLICE_NUMBER, coalesce(f.STATUS,'NORMAL') as status
+            $sql = "SELECT	d.NAME as pos_pencairan, 
+                            e.NAME as posisi_berkas,
+                            b.LOAN_NUMBER as no_kontrak, 
+                            c.NAME as debitur,
+                            a.*, 
+                            coalesce(f.STATUS,'NORMAL') as status
                     FROM	cr_collateral a
                             inner join credit b on b.ID = a.CR_CREDIT_ID
                             inner join customer c on c.CUST_CODE = b.CUST_CODE
@@ -641,6 +644,7 @@ class ReportController extends Controller
                             left join branch e on e.ID = a.LOCATION_BRANCH
                             left join bpkb_detail f on f.COLLATERAL_ID = a.ID
                     WHERE	(1=1)";
+
             if ($request->pos && $request->pos != "SEMUA POS") {
                 $sql .= "and d.NAME like '%$request->pos%'";
             }
@@ -671,8 +675,21 @@ class ReportController extends Controller
                     'posisi_berkas' => $result->posisi_berkas ?? '',
                     'no_kontrak' => $result->no_kontrak ?? '',
                     'nama_debitur' => $result->debitur ?? '',
+                    "tipe" => $result->TYPE,
+                    "merk" => $result->BRAND,
+                    "tahun" => $result->PRODUCTION_YEAR,
+                    "warna" => $result->COLOR,
+                    "atas_nama" => $result->ON_BEHALF,
                     'no_polisi' => $result->POLICE_NUMBER ?? '',
+                    "no_rangka" => $result->CHASIS_NUMBER ?? '',
+                    "no_mesin" => $result->ENGINE_NUMBER ?? '',
+                    "no_bpkb" => $result->BPKB_NUMBER ?? '',
+                    "no_stnk" => $result->STNK_NUMBER ?? '',
+                    "tgl_stnk" => $result->STNK_VALID_DATE ?? '',
+                    "nilai" => (int) $result->VALUE ?? '',
                     'status' => $result->status ?? '',
+                    "document" => $this->getCollateralDocument($result->ID, ['no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri']) ?? null,
+                    "document_rilis" => $this->attachment($result->ID, "'rilis'") ?? null,
                 ];
             }
 
@@ -776,5 +793,34 @@ class ReportController extends Controller
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
+    }
+
+    public function attachment($collateralId, $data)
+    {
+        $documents = DB::select(
+            "   SELECT *
+                FROM cr_collateral_document AS csd
+                WHERE (TYPE, COUNTER_ID) IN (
+                    SELECT TYPE, MAX(COUNTER_ID)
+                    FROM cr_collateral_document
+                    WHERE TYPE IN ($data)
+                        AND COLLATERAL_ID = '$collateralId'
+                    GROUP BY TYPE
+                )
+                ORDER BY COUNTER_ID DESC"
+        );
+
+        return $documents;
+    }
+
+    function getCollateralDocument($creditID, $param)
+    {
+
+        $documents = DB::table('cr_collateral_document')
+            ->whereIn('TYPE', $param)
+            ->where('COLLATERAL_ID', '=', $creditID)
+            ->get();
+
+        return $documents;
     }
 }
