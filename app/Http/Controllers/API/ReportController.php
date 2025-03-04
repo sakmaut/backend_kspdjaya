@@ -748,34 +748,28 @@ class ReportController extends Controller
     public function lapPembayaran(Request $request)
     {
         try {
-            $getPosition = $request->user()->position;
-
             $dari = $request->dari;
             $cabang = $request->cabang_id;
 
             $data = M_Kwitansi::where('STTS_PAYMENT', '=', 'PAID')->orderBy('CREATED_AT', 'DESC');
 
-            $dto = [];
-            if (strtolower($getPosition) == 'ho') {
+            if (empty($cabang) && (empty($dari) || $dari == 'null')) {
+                $data->where(DB::raw('DATE_FORMAT(CREATED_AT,"%Y%m%d")'), Carbon::now()->format('Ymd'));
+            } else {
 
-                if (empty($cabang) && (empty($dari) || $dari == 'null')) {
-                    $data->where(DB::raw('DATE_FORMAT(CREATED_AT,"%Y%m%d")'), Carbon::now()->format('Ymd'));
-                } else {
-
-                    if ($dari != 'null') {
-                        $formattedDate = Carbon::parse($dari)->format('Ymd');
-                        $data->where(DB::raw('DATE_FORMAT(CREATED_AT,"%Y%m%d")'), $formattedDate);
-                    }
-
-                    if (!empty($cabang)) {
-                        $data->where('BRANCH_CODE', $cabang);
-                    }
+                if ($dari != 'null') {
+                    $formattedDate = Carbon::parse($dari)->format('Ymd');
+                    $data->where(DB::raw('DATE_FORMAT(CREATED_AT,"%Y%m%d")'), $formattedDate);
                 }
 
-                $results = $data->get();
-
-                $dto = R_Kwitansi::collection($results);
+                if (!empty($cabang)) {
+                    $data->where('BRANCH_CODE', $cabang);
+                }
             }
+
+            $results = $data->get();
+
+            $dto = R_Kwitansi::collection($results);
 
             return response()->json($dto, 200);
         } catch (\Exception $e) {
