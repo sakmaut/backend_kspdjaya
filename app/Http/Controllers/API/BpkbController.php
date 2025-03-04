@@ -63,7 +63,7 @@ class BpkbController extends Controller
                     "asal_lokasi" => $list->pos_pencairan ?? '',
                     "lokasi" => $list->posisi_berkas ?? $list->LOCATION_BRANCH,
                     "document" => $this->getCollateralDocument($list->ID, ['no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri']) ?? null,
-                    "document_rilis" => $this->attachment($list->ID, "'rilis'") ?? null,
+                    "document_rilis" => $this->attachment($list->ID, "'doc_rilis'") ?? null,
                 ];
             }
 
