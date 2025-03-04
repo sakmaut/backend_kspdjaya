@@ -110,9 +110,9 @@ class MasterMenuController extends Controller
     public function menuSubList(Request $request)
     {
         try {
-            $data =  $this->menuRepository->getListAccessMenuUser($request);
+            // $data =  $this->menuRepository->getListAccessMenuUser($request);
 
-            // $data = M_MasterMenu::buildMenuArray($request);
+            $data = M_MasterMenu::buildMenuArray($request);
 
             return response()->json(['message' => 'OK', 'response' => $data], 200);
         } catch (\Exception $e) {

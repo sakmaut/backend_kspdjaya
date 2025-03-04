@@ -65,9 +65,6 @@ class MenuRepository implements MenuRepositoryInterface
             $query->where('status', 'active');
         }])
             ->where('users_id', $userId)
-            ->whereHas('masterMenu', function ($query) {
-                $query->whereNotNull('id');
-            })
             ->get();
 
         return $query;
