@@ -19,7 +19,7 @@ class TimeAccessMiddleware
         $currentTime = Carbon::now()->format('H'); // Jam dalam format 24 jam
 
         if ($currentTime >= 23 || $currentTime < 3) {
-            return response()->json(['message' => 'Akses API dibatasi pada jam 11 malam hingga 3 pagi.'], 403);
+            abort(403, 'Akses API dibatasi pada jam 11 malam hingga 3 pagi.');
         }
 
         // Jika tidak ada masalah, lanjutkan ke request berikutnya
