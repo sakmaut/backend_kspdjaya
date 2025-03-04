@@ -107,23 +107,14 @@ class MasterMenuController extends Controller
         }
     }
 
-    public function menuSubList(Request $req)
+    public function menuSubList(Request $request)
     {
         try {
-            $data = M_MasterMenu::buildMenuArray($req);
-
-            // $userId = $req->user()->id;
-
-            // $data = M_MasterUserAccessMenu::with(['masterMenu' => function ($query) {
-            //     $query->where('status', 'active');
-            // }])
-            //     ->where('users_id', $userId)
-            //     ->get();
+            $data =  $this->menuRepository->getListAccessMenuUser($request);
 
             return response()->json(['message' => 'OK', 'response' => $data], 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($req, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+            return $this->log->logError($e, $request);
         }
     }
 }
