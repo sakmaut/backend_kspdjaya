@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\M_Branch;
 use App\Models\M_CrCollateral;
 use App\Models\M_CrCollateralDocument;
+use App\Models\M_CrCollateralDocumentRelease;
 use App\Models\M_CrCollateralSertification;
 use Carbon\Carbon;
 use Exception;
@@ -257,6 +258,56 @@ class CollateralController extends Controller
             DB::rollback();
             ActivityLogger::logActivity($req, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+        }
+    }
+
+    public function uploadImageRelease(Request $req)
+    {
+        DB::beginTransaction();
+        try {
+
+            $this->validate($req, [
+                'image' => 'required|string',
+                'type' => 'required|string',
+                'collateral_id' => 'required|string'
+            ]);
+
+            if (preg_match('/^data:image\/(\w+);base64,/', $req->image, $type)) {
+                $data = substr($req->image, strpos($req->image, ',') + 1);
+                $data = base64_decode($data);
+
+                // Generate a unique filename
+                $extension = strtolower($type[1]); // Get the image extension
+                $fileName = Uuid::uuid7()->toString() . '.' . $extension;
+
+                // Store the image
+                $image_path = Storage::put("public/Cr_Collateral_Release/{$fileName}", $data);
+                $image_path = str_replace('public/', '', $image_path);
+
+                $url = URL::to('/') . '/storage/' . 'Cr_Collateral_Release/' . $fileName;
+
+                $collateral = [
+                    'COLLATERAL_ID' => $req->collateral_id,
+                    'TYPE' => $req->type,
+                    'COUNTER_ID' => round(microtime(true) * 1000),
+                    'PATH' => $url ?? '',
+                    'CREATED_BY' => $req->user()->id ?? '',
+                    'CREATED_AT' => Carbon::now() ?? null
+                ];
+
+                M_CrCollateralDocumentRelease::create($collateral);
+
+                DB::commit();
+                return response()->json(['message' => 'Image upload successfully', 'response' => $url], 200);
+            } else {
+                DB::rollback();
+                ActivityLogger::logActivity($req, 'No image file provided', 400);
+                return response()->json(['message' => 'No image file provided'], 400);
+            }
+        } catch (\Exception $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($req, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage()], 500);
         }
     }
 }

@@ -145,6 +145,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::resource('collateral', CollateralController::class);
     Route::post('collateral_attachment', [CollateralController::class, 'uploadImage']);
+    Route::post('collateral_attachment_rilis', [CollateralController::class, 'uploadImageRelease']);
     Route::post('inquiryList', [ReportController::class, 'inquiryList']);
     Route::resource('log_print', LogPrintController::class);
 
