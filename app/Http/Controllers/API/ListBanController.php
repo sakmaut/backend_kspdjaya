@@ -746,7 +746,7 @@ class ListBanController extends Controller
                     "NO MESIN" =>  $result->ENGINE_NUMBER ?? '',
                     "NO RANGKA" =>  $result->CHASIS_NUMBER ?? '',
                     "TAHUN" =>  $result->PRODUCTION_YEAR ?? '',
-                    "NILAI PINJAMAN" => intval($result->TOTAL_PINJAMAN) ?? 0,
+                    "NILAI PINJAMAN" => intval($result->NILAI_PINJAMAN) ?? 0,
                     "ADMIN" =>  intval($result->TOTAL_ADMIN) ?? '',
                     "CUST_ID" =>  $result->CUST_CODE ?? ''
                 ];
