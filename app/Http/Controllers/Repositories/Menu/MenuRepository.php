@@ -152,35 +152,34 @@ class MenuRepository implements MenuRepositoryInterface
     function getListAccessMenuUser($request)
     {
         $getlistMenu = $this->getListAccessMenuByUserId($request);
-
         $menuArray = [];
         $homeParent = null;
 
-        foreach ($getlistMenu as $menuItem) {
+        // foreach ($getlistMenu as $menuItem) {
 
-            $getMenu = $menuItem['masterMenu'];
+        //     $getMenu = $menuItem['masterMenu'];
 
-            if ($getMenu['menu_name'] === 'home' && $getMenu['parent'] === null) {
-                $homeParent = $getMenu;
-                break;
-            }
-        }
+        //     if ($getMenu['menu_name'] === 'home' && $getMenu['parent'] === null) {
+        //         $homeParent = $getMenu;
+        //         break;
+        //     }
+        // }
 
-        if ($homeParent) {
-            $menuArray[$homeParent->id] = [
-                'menuid' => $homeParent->id,
-                'menuitem' => [
-                    'labelmenu' => $homeParent->menu_name,
-                    'routename' => $homeParent->route,
-                    'leading' => explode(',', $homeParent->leading),
-                    'action' => $homeParent->action,
-                    'ability' => $homeParent->ability,
-                    'submenu' => []
-                ]
-            ];
-        }
+        // if ($homeParent) {
+        //     $menuArray[$homeParent->id] = [
+        //         'menuid' => $homeParent->id,
+        //         'menuitem' => [
+        //             'labelmenu' => $homeParent->menu_name,
+        //             'routename' => $homeParent->route,
+        //             'leading' => explode(',', $homeParent->leading),
+        //             'action' => $homeParent->action,
+        //             'ability' => $homeParent->ability,
+        //             'submenu' => []
+        //         ]
+        //     ];
+        // }
 
-        return $menuArray;
+        return $getlistMenu;
         
 
         // foreach ($getlistMenu as $listMenu) {
