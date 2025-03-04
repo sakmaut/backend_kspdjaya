@@ -24,16 +24,14 @@ class BpkbController extends Controller
                             e.NAME as posisi_berkas,
                             b.LOAN_NUMBER as no_kontrak, 
                             c.NAME as debitur,
-                            b.STATUS,
-                            coalesce(f.STATUS,'NORMAL') as status_jaminan,
-                            f.ID as bpkb_detail_id,
+                            b.STATUS as status_credit,
+                            a.STATUS as status_jaminan,
                             a.*
                     FROM	cr_collateral a
                             inner join credit b on b.ID = a.CR_CREDIT_ID
                             inner join customer c on c.CUST_CODE = b.CUST_CODE
                             left join branch d on d.ID = a.COLLATERAL_FLAG
                             left join branch e on e.ID = a.LOCATION_BRANCH
-                            left join bpkb_detail f on f.COLLATERAL_ID = a.ID
                     WHERE	a.LOCATION_BRANCH = '$branch' ";
 
             $results = DB::select($sql);
@@ -46,9 +44,8 @@ class BpkbController extends Controller
                     'nama_debitur' => $list->debitur ?? NULL,
                     'order_number' => $list->no_kontrak ?? NULL,
                     'no_jaminan' => $list->BPKB_NUMBER ?? NULL,
-                    'status_kontrak' => $list->STATUS == 'D' ? 'inactive' : 'active',
+                    'status_kontrak' => $list->status_credit == 'D' ? 'inactive' : 'active',
                     'id' => $list->ID,
-                    'bpkb_detail_id' => $list->bpkb_detail_id,
                     'status_jaminan' => $list->status_jaminan,
                     "tipe" => $list->TYPE,
                     "merk" => $list->BRAND,
