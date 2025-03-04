@@ -233,7 +233,7 @@ class MenuRepository implements MenuRepositoryInterface
             $menuArray[$key]['menuitem']['submenu'] = array_values($menu['menuitem']['submenu']);
         }
 
-        return $menuArray;
+        return array_values($menuArray);
     }
 
     private function buildSubMenu($parentId, $menuItems)
