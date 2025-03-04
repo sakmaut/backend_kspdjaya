@@ -23,6 +23,7 @@ class CollateralController extends Controller
     public function index(Request $request)
     {
         try {
+            $no_kontrak = $request->query('no_kontrak');
             $atas_nama = $request->query('atas_nama');
             $no_polisi = $request->query('no_polisi');
             $no_bpkb = $request->query('no_bpkb');
@@ -51,7 +52,12 @@ class CollateralController extends Controller
                                     'b.INVOICE_NUMBER',
                                     'b.STNK_VALID_DATE',
                                     'b.VALUE'
+
                                 );
+
+            if (!empty($no_kontrak)) {
+                $collateral->where('a.LOAN_NUMBER', $no_kontrak);
+            }
 
             if (!empty($atas_nama)) {
                 $collateral->where('b.ON_BEHALF', 'like', '%' . $atas_nama . '%');
@@ -147,6 +153,7 @@ class CollateralController extends Controller
                 'ENGINE_NUMBER' => $request->no_mesin ?? '',
                 'BPKB_NUMBER' => $request->no_bpkb ?? '',
                 'STNK_NUMBER' => $request->no_stnk ?? '',
+                'INVOICE_NUMBER' => $request->no_faktur ?? '',
                 'MOD_DATE' => Carbon::now()->format('Y-m-d H:i:s') ?? '',
                 'MOD_BY' => $request->user()->id ?? '',
             ];
