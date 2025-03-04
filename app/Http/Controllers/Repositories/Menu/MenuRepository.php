@@ -158,12 +158,14 @@ class MenuRepository implements MenuRepositoryInterface
         foreach ($getlistMenu as $menuItem) {
             $getMenu = $menuItem['masterMenu'];
 
-            if ($getMenu && is_array($getMenu) && isset($getMenu['menu_name']) && isset($getMenu['parent'])) {
-                if ($getMenu['menu_name'] === 'home' && $getMenu['parent'] === null) {
-                    $homeParent = $getMenu;
-                    break;
-                }
-            }
+            array_push($menuArray, $getMenu);
+
+            // if ($getMenu && is_array($getMenu) && isset($getMenu['menu_name']) && isset($getMenu['parent'])) {
+            //     if ($getMenu['menu_name'] === 'home' && $getMenu['parent'] === null) {
+            //         $homeParent = $getMenu;
+            //         break;
+            //     }
+            // }
         }
 
         // if ($homeParent) {
@@ -180,7 +182,7 @@ class MenuRepository implements MenuRepositoryInterface
         //     ];
         // }
 
-        return $homeParent;
+        return $menuArray;
         
 
         // foreach ($getlistMenu as $listMenu) {
