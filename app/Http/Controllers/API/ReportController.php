@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\R_Kwitansi;
 use App\Models\M_Arrears;
 use App\Models\M_Branch;
 use App\Models\M_CrCollateral;
 use App\Models\M_CrCollateralSertification;
 use App\Models\M_Credit;
+use App\Models\M_Kwitansi;
 use App\Models\M_Payment;
 use App\Models\M_PaymentApproval;
 use App\Models\M_PaymentAttachment;
@@ -737,6 +739,45 @@ class ReportController extends Controller
             $results = DB::select($sql);
 
             return response()->json($results, 200);
+        } catch (\Exception $e) {
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+        }
+    }
+
+    public function lapPembayaran(Request $request)
+    {
+        try {
+            $getPosition = $request->user()->position;
+
+            $dari = $request->dari;
+            $cabang = $request->cabang_id;
+
+            $data = M_Kwitansi::where('STTS_PAYMENT', '=', 'PAID')->orderBy('CREATED_AT', 'DESC');
+
+            $dto = [];
+            if (strtolower($getPosition) == 'ho') {
+
+                if (empty($cabang) && (empty($dari) || $dari == 'null')) {
+                    $data->where(DB::raw('DATE_FORMAT(CREATED_AT,"%Y%m%d")'), Carbon::now()->format('Ymd'));
+                } else {
+
+                    if ($dari != 'null') {
+                        $formattedDate = Carbon::parse($dari)->format('Ymd');
+                        $data->where(DB::raw('DATE_FORMAT(CREATED_AT,"%Y%m%d")'), $formattedDate);
+                    }
+
+                    if (!empty($cabang)) {
+                        $data->where('BRANCH_CODE', $cabang);
+                    }
+                }
+
+                $results = $data->get();
+
+                $dto = R_Kwitansi::collection($results);
+            }
+
+            return response()->json($dto, 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);

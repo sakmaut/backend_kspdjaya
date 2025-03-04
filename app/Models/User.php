@@ -44,7 +44,13 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
-    public function branch(){
+    public function branch()
+    {
         return $this->hasOne(M_Branch::class, 'ID', 'branch_id');
+    }
+
+    public function accessMenus()
+    {
+        return $this->hasMany(M_MasterUserAccessMenu::class, 'users_id', 'id');
     }
 }

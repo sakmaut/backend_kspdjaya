@@ -38,6 +38,11 @@ class M_MasterUserAccessMenu extends Model
 
     public function masterMenu()
     {
-        return $this->belongsTo(M_MasterMenu::class, 'master_menu_id');
+        return $this->belongsTo(M_MasterMenu::class, 'master_menu_id', 'id');
+    }
+
+    public function users()
+    {
+        return $this->belongsTo(User::class, 'users_id', 'id');
     }
 }

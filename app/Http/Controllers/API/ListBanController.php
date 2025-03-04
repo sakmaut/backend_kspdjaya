@@ -513,9 +513,7 @@ class ListBanController extends Controller
             $dateFrom = $request->dari;
             $getBranch = $request->cabang_id;
 
-            $query = "  SET @period:='032025';
-
-                        SELECT 
+            $query = "  SELECT 
                             CONCAT(a.CODE, '-', a.CODE_NUMBER) AS KODE,
                             a.NAME AS NAMA_CABANG,
                             b.LOAN_NUMBER AS NO_KONTRAK,
@@ -539,29 +537,29 @@ class ListBanController extends Controller
                             b.INSTALLMENT_COUNT as PERIOD, 
                             replace(format(coalesce(i.OS_POKOK,b.PCPL_ORI),0),',','') AS OUTSTANDING,
                             replace(format(coalesce(i.OS_BUNGA,b.INTRST_ORI),0),',','') AS OS_BUNGA, 
-                            case when DATEDIFF(date_add(str_to_date(concat('01',@period),'%d%m%Y'),interval -1 day),i.TUNGGAKAN_PERTAMA)<0 then 0 
-                                else DATEDIFF(date_add(str_to_date(concat('01',@period),'%d%m%Y'),interval -1 day),i.TUNGGAKAN_PERTAMA) end AS OVERDUE_AWAL,
+                            case when DATEDIFF(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval -1 day),i.TUNGGAKAN_PERTAMA)<0 then 0 
+                                else DATEDIFF(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval -1 day),i.TUNGGAKAN_PERTAMA) end AS OVERDUE_AWAL,
                             replace(format(coalesce(i.TUNGGAKAN_POKOK),0),',','') as AMBC_PKK_AWAL, 
                             replace(format(coalesce(i.TUNGGAKAN_BUNGA),0),',','') as AMBC_BNG_AWAL, 
                             replace(format(coalesce(i.TUNGGAKAN_POKOK)+coalesce(i.TUNGGAKAN_BUNGA),0),',','') as AMBC_TOTAL_AWAL, 
-                            concat('C',case when date_format(b.entry_date,'%m%Y')=@period then 'N'
+                            concat('C',case when date_format(b.entry_date,'%m%Y')='$dateFrom' then 'N'
                                 when date_format(case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 
-                                                    then str_to_date(concat('01',@period),'%d%m%Y') 
-                                                    else coalesce(i.TUNGGAKAN_PERTAMA,k.F_ARR_CR_SCHEDL) end,'%m%Y')=@period 
+                                                    then str_to_date(concat('01','$dateFrom'),'%d%m%Y') 
+                                                    else coalesce(i.TUNGGAKAN_PERTAMA,k.F_ARR_CR_SCHEDL) end,'%m%Y')='$dateFrom' 
                                     then '0'
-                                when floor((DATEDIFF(str_to_date(concat('01',@period),'%d%m%Y'),case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 
-                                                    then str_to_date(concat('01',@period),'%d%m%Y') 
+                                when floor((DATEDIFF(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 
+                                                    then str_to_date(concat('01','$dateFrom'),'%d%m%Y') 
                                                     else coalesce(i.TUNGGAKAN_PERTAMA,k.F_ARR_CR_SCHEDL) end))/30)<0 
                                     then 'M' 
-                                when floor((DATEDIFF(str_to_date(concat('01',@period),'%d%m%Y'),case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 
-                                                    then str_to_date(concat('01',@period),'%d%m%Y') 
+                                when floor((DATEDIFF(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 
+                                                    then str_to_date(concat('01','$dateFrom'),'%d%m%Y') 
                                                     else coalesce(i.TUNGGAKAN_PERTAMA,k.F_ARR_CR_SCHEDL) end))/30)>=8 
                                     then 'X' 
-                                when (DATEDIFF(str_to_date(concat('01',@period),'%d%m%Y'),case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 
-                                                    then str_to_date(concat('01',@period),'%d%m%Y')
+                                when (DATEDIFF(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 
+                                                    then str_to_date(concat('01','$dateFrom'),'%d%m%Y')
                                                     else coalesce(i.TUNGGAKAN_PERTAMA,k.F_ARR_CR_SCHEDL) end)) between 211 and 240 
                                     then '8' 
-                                else floor((DATEDIFF(str_to_date(concat('01',@period),'%d%m%Y'),case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 
+                                else floor((DATEDIFF(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 
                                                     then 0 else coalesce(i.TUNGGAKAN_PERTAMA,k.F_ARR_CR_SCHEDL) end))/30) end) AS CYCLE_AWAL,
                             b.STATUS_REC,
                             b.STATUS_REC, 
@@ -574,7 +572,7 @@ class ListBanController extends Controller
                             e.INSTALLMENT_TYPE AS tipe,
                             case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 then 0 else coalesce(i.TUNGGAKAN_PERTAMA,k.F_ARR_CR_SCHEDL) end as F_ARR_CR_SCHEDL,
                             case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 then 0 else k.F_ARR_CR_SCHEDL end as curr_arr, 
-                            case when date_format(l.entry_date,'%m%Y')=@period then l.entry_date else null end as LAST_PAY, 
+                            case when date_format(l.entry_date,'%m%Y')='$dateFrom' then l.entry_date else null end as LAST_PAY, 
                             ' ' AS COLLECTOR,
                             l.payment_method as cara_bayar, 
                             replace(format(coalesce(k.AMBC_PKK_AKHIR,0),0),',','') as AMBC_PKK_AKHIR, 
@@ -583,24 +581,24 @@ class ListBanController extends Controller
                             replace(format(coalesce(m.BAYAR_POKOK,0),0),',','') AC_PKK, 
                             replace(format(coalesce(m.BAYAR_BUNGA,0),0),',','') AC_BNG_MRG, 
                             replace(format(coalesce(m.BAYAR_POKOK,0)+coalesce(m.BAYAR_BUNGA,0),0),',','') AC_TOTAL, 
-                            concat('C',case when date_format(b.entry_date,'%m%Y')=@period then 'N'
+                            concat('C',case when date_format(b.entry_date,'%m%Y')='$dateFrom' then 'N'
                                 when date_format(case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 
-                                                    then str_to_date(concat('01',@period),'%d%m%Y') 
-                                                    else coalesce(i.TUNGGAKAN_PERTAMA,k.F_ARR_CR_SCHEDL) end,'%m%Y')=@period 
+                                                    then str_to_date(concat('01','$dateFrom'),'%d%m%Y') 
+                                                    else coalesce(i.TUNGGAKAN_PERTAMA,k.F_ARR_CR_SCHEDL) end,'%m%Y')='$dateFrom' 
                                     then '0'
-                                when floor((DATEDIFF(str_to_date(concat('01',@period),'%d%m%Y'),case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 
-                                                    then str_to_date(concat('01',@period),'%d%m%Y') 
+                                when floor((DATEDIFF(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 
+                                                    then str_to_date(concat('01','$dateFrom'),'%d%m%Y') 
                                                     else coalesce(i.TUNGGAKAN_PERTAMA,k.F_ARR_CR_SCHEDL) end))/30)<0 
                                     then 'M' 
-                                when floor((DATEDIFF(str_to_date(concat('01',@period),'%d%m%Y'),case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 
-                                                    then str_to_date(concat('01',@period),'%d%m%Y') 
+                                when floor((DATEDIFF(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 
+                                                    then str_to_date(concat('01','$dateFrom'),'%d%m%Y') 
                                                     else k.F_ARR_CR_SCHEDL end))/30)>=8 
                                     then 'X' 
-                                when (DATEDIFF(str_to_date(concat('01',@period),'%d%m%Y'),case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 
-                                                    then str_to_date(concat('01',@period),'%d%m%Y')
+                                when (DATEDIFF(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 
+                                                    then str_to_date(concat('01','$dateFrom'),'%d%m%Y')
                                                     else k.F_ARR_CR_SCHEDL end)) between 211 and 240 
                                     then '8' 
-                                else floor((DATEDIFF(str_to_date(concat('01',@period),'%d%m%Y'),case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 
+                                else floor((DATEDIFF(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),case when coalesce(i.OS_POKOK,b.PCPL_ORI)=0 
                                                     then 0 else k.F_ARR_CR_SCHEDL end))/30) end) AS CYCLE_AKHIR,
                             case when (b.INSTALLMENT_COUNT/b.PERIOD)=1 then 'BULANAN' else 'MUSIMAN' end as pola_bayar_akhir, 
                             'jenis jaminan', 
@@ -610,16 +608,16 @@ class ListBanController extends Controller
                             g.CHASIS_NUMBER,
                             g.PRODUCTION_YEAR,
                             replace(format(b.PCPL_ORI-b.TOTAL_ADMIN,0),',','') as NILAI_PINJAMAN,
-                            replace(format(b.TOTAL_ADMIN,0),',',''), 
+                            replace(format(b.TOTAL_ADMIN,0),',','') as TOTAL_ADMIN,  
                             b.CUST_CODE
                         FROM  	branch AS a
                                 INNER JOIN credit b 
                                     ON b.BRANCH = a.ID 
                                     AND b.STATUS='A' 
-                                    AND b.entry_date < date_add(str_to_date(concat('01',@period),'%d%m%Y'),interval 1 month)
+                                    AND b.entry_date < date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month)
                                     OR (b.BRANCH = a.ID 
                                         AND b.STATUS in ('D','S') 
-                                        AND b.loan_number in (select loan_num from payment where date_format(entry_date,'%m%Y')=@period))
+                                        AND b.loan_number in (select loan_num from payment where date_format(entry_date,'%m%Y')='$dateFrom'))
                                 LEFT JOIN customer c ON c.CUST_CODE = b.CUST_CODE
                                 LEFT JOIN users d ON d.id = b.MCF_ID
                                 LEFT JOIN cr_application e ON e.ORDER_NUMBER = b.ORDER_NUMBER
@@ -635,7 +633,7 @@ class ListBanController extends Controller
                                                                                             GROUP 	BY CR_CREDIT_ID) g ON g.CR_CREDIT_ID = b.ID
                                 LEFT JOIN credit_2025 i 
                                     on cast(i.loan_number as char) = cast(b.LOAN_NUMBER as char)
-                                    and i.back_date = date_add(str_to_date(concat('01',@period),'%d%m%Y'),interval -1 day)
+                                    and i.back_date = date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval -1 day)
                                 LEFT JOIN first_arr j on cast(j.LOAN_NUMBER as char) = cast(b.LOAN_NUMBER as char)
                                 LEFT JOIN (	SELECT	loan_number, sum(interest)-sum(coalesce(payment_value_interest,0))-sum(discount_interest) as OS_BNG_AKHIR, 
                                                     sum(principal)-sum(coalesce(payment_value_principal,0))-sum(discount_principal) as OS_PKK_AKHIR, 
@@ -644,17 +642,17 @@ class ListBanController extends Controller
                                                     max(case when cast(paid_flag as char)='PAID' then payment_date else str_to_date('01011900','%d%m%Y') end) as LAST_PAY, 
                                                     case when count(ID)=sum(case when paid_flag='PAID' then 1 else 0 end) then ''
                                                             else min(case when cast(coalesce(paid_flag,'') as char)<>'PAID' then payment_date else str_to_date('01013000','%d%m%Y') end) end as F_ARR_CR_SCHEDL,
-                                                    sum(case when payment_date < date_add(str_to_date(concat('01',@period),'%d%m%Y'),interval 1 month) and paid_flag='PAID' then (interest-payment_value_interest-discount_interest)
+                                                    sum(case when payment_date < date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month) and paid_flag='PAID' then (interest-payment_value_interest-discount_interest)
                                                                 else 0 end) as AMBC_BNG_AKHIR, 
-                                                    sum(case when payment_date < date_add(str_to_date(concat('01',@period),'%d%m%Y'),interval 1 month) and paid_flag='PAID' then (principal-payment_value_principal-discount_principal)
+                                                    sum(case when payment_date < date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month) and paid_flag='PAID' then (principal-payment_value_principal-discount_principal)
                                                                 else 0 end) as AMBC_PKK_AKHIR
                                             FROM	credit_schedule_log_2025
-                                            WHERE	back_date = date_add(date_add(str_to_date(concat('01',@period),'%d%m%Y'),interval 1 month),interval -1 day)
+                                            WHERE	back_date = date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day)
                                                     and loan_number in (select 	loan_number 
                                                                         from 	credit_log_2025 
-                                                                        where 	back_date = date_add(date_add(str_to_date(concat('01',@period),'%d%m%Y'),interval 1 month),interval -1 day)
+                                                                        where 	back_date = date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day)
                                                                                 and status='A'
-                                                                                or (status in ('S','D') and loan_number in (select loan_num from payment where date_format(entry_date,'%m%Y')=@period)))
+                                                                                or (status in ('S','D') and loan_number in (select loan_num from payment where date_format(entry_date,'%m%Y')='$dateFrom')))
                                                                         GROUP	BY loan_number) k on k.loan_number=b.loan_number
                                 LEFT JOIN (	SELECT	loan_num, str_to_date(date_format(entry_date,'%d%m%Y'),'%d%m%Y') as entry_date, 
                                                     replace(replace(group_concat(payment_method),'AGENT EKS',''),',','') as payment_method
@@ -666,14 +664,14 @@ class ListBanController extends Controller
                                                                 on s2.PAYMENT_ID=s1.ID 
                                                                 and s2.ACC_KEYS in ('ANGSURAN_POKOK','BAYAR_POKOK','ANGSURAN_BUNGA')
                                                     group 	by s1.loan_num)
-                                                    and entry_date < date_add(str_to_date(concat('01',@period),'%d%m%Y'),interval 1 month)
+                                                    and entry_date < date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month)
                                         group by loan_num, str_to_date(date_format(entry_date,'%d%m%Y'),'%d%m%Y')) l on l.loan_num=b.loan_number
                                 LEFT JOIN (	SELECT	s1.LOAN_NUM, 
                                                     sum(case when s2.ACC_KEYS in ('ANGSURAN_POKOK','BAYAR_POKOK') then s2.ORIGINAL_AMOUNT else 0 end) as BAYAR_POKOK, 
                                                     sum(case when s2.ACC_KEYS='ANGSURAN_BUNGA' then s2.ORIGINAL_AMOUNT else 0 end) as BAYAR_BUNGA        
                                             FROM	payment s1
                                                     inner join payment_detail s2 on s2.PAYMENT_ID=s1.ID
-                                            WHERE	date_format(s1.ENTRY_DATE,'%m%Y')=@period
+                                            WHERE	date_format(s1.ENTRY_DATE,'%m%Y')='$dateFrom'
                                                     and s2.ACC_KEYS in ('ANGSURAN_POKOK','BAYAR_POKOK','ANGSURAN_BUNGA')
                                             GROUP	BY s1.LOAN_NUM) m on m.loan_num=b.loan_number
                                 WHERE 1=1";
@@ -748,7 +746,7 @@ class ListBanController extends Controller
                     "NO MESIN" =>  $result->ENGINE_NUMBER ?? '',
                     "NO RANGKA" =>  $result->CHASIS_NUMBER ?? '',
                     "TAHUN" =>  $result->PRODUCTION_YEAR ?? '',
-                    "NILAI PINJAMAN" => intval($result->TOTAL_PINJAMAN) ?? 0,
+                    "NILAI PINJAMAN" => intval($result->NILAI_PINJAMAN) ?? 0,
                     "ADMIN" =>  intval($result->TOTAL_ADMIN) ?? '',
                     "CUST_ID" =>  $result->CUST_CODE ?? ''
                 ];
