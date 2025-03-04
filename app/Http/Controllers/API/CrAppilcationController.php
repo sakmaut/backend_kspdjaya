@@ -84,7 +84,9 @@ class CrAppilcationController extends Controller
                 $data->whereRaw("DATE_FORMAT(cr_survey.visit_date, '%Y-%m-%d') = ?", [$tgl_order]);
             }
 
-            $results = $data->limit(10)->get();
+            $data->whereRaw("DATE_FORMAT(cr_survey.visit_date, '%Y-%m') = ?", [now()->format('Y-m')]);
+
+            $results = $data->get();
 
             $dto = R_CrProspect::collection($results);
 
