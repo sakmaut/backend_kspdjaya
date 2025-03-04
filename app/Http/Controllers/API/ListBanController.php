@@ -136,19 +136,20 @@ class ListBanController extends Controller
     {
         try {
             $datas = [
-                'tgl_tarik' => $request->dari ?? '',
+                'dari' => $request->dari ?? '',
+                'sampai' => $request->sampai ?? '',
                 'datas' => []
             ];
 
             if (!empty($request->dari)) {
 
-                $timestamp = intval($request->dari) / 1000;
-                $date = Carbon::createFromTimestamp($timestamp);
-                $formattedDate = $date->format('Y-m-d');
+                // $timestamp = intval($request->dari) / 1000;
+                // $date = Carbon::createFromTimestamp($timestamp);
+                // $formattedDate = $date->format('Y-m-d');
 
                 $cabangId = $request->cabang_id;
 
-                $arusKas = $this->queryArusKas($cabangId, $formattedDate);
+                $arusKas = $this->queryArusKas($cabangId, $request);
 
                 foreach ($arusKas as $item) {
 
@@ -211,7 +212,7 @@ class ListBanController extends Controller
         }
     }
 
-    private function queryArusKas($cabangId, $dateFrom)
+    private function queryArusKas($cabangId, $request)
     {
         $query = "SELECT 
                         b.JENIS,
@@ -285,7 +286,7 @@ class ListBanController extends Controller
                     INNER JOIN credit b2 ON b2.LOAN_NUMBER = b.LOAN_NUM
                     INNER JOIN customer b3 ON b3.CUST_CODE = b2.CUST_CODE
                     INNER JOIN users u ON u.id = b.user_id
-                    WHERE b.ENTRY_DATE = '$dateFrom'";
+                    WHERE b.ENTRY_DATE BETWEEN '$request->dari' AND '$request->sampai' ";
 
         if (!empty($cabangId) && $cabangId != 'SEMUA CABANG') {
             $query .= " AND b.BRANCH_ID = '" . $cabangId . "'";
