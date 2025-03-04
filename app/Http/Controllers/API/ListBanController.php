@@ -671,7 +671,7 @@ class ListBanController extends Controller
                                                     sum(case when s2.ACC_KEYS='ANGSURAN_BUNGA' then s2.ORIGINAL_AMOUNT else 0 end) as BAYAR_BUNGA        
                                             FROM	payment s1
                                                     inner join payment_detail s2 on s2.PAYMENT_ID=s1.ID
-                                            WHERE	date_format(s1.ENTRY_DATE,'%m%Y')=@period
+                                            WHERE	date_format(s1.ENTRY_DATE,'%m%Y')=$dateFrom
                                                     and s2.ACC_KEYS in ('ANGSURAN_POKOK','BAYAR_POKOK','ANGSURAN_BUNGA')
                                             GROUP	BY s1.LOAN_NUM) m on m.loan_num=b.loan_number
                                 WHERE 1=1";
