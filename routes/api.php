@@ -133,8 +133,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::resource('task', TaskController::class);
 
     //Report
-    Route::post('inquiryList', [ReportController::class,'inquiryList']);
-    Route::get('creditReport/{id}', [ReportController::class,'pinjaman']);
+    Route::post('inquiryList', [ReportController::class, 'inquiryList']);
+    Route::get('creditReport/{id}', [ReportController::class, 'pinjaman']);
     Route::get('strukturCredit/{id}', [ReportController::class, 'strukturCredit']);
     Route::get('customerReport/{id}', [ReportController::class, 'debitur']);
     Route::get('collateralReport/{id}', [ReportController::class, 'jaminan']);
@@ -147,6 +147,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('collateral_attachment', [CollateralController::class, 'uploadImage']);
     Route::post('inquiryList', [ReportController::class, 'inquiryList']);
     Route::resource('log_print', LogPrintController::class);
+
+    Route::get('listBanTest', [ListBanController::class, 'listBanTest']);
 });
 
 
