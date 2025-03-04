@@ -112,8 +112,6 @@ class MasterMenuController extends Controller
         try {
             $data =  $this->menuRepository->getListAccessMenuUser($request);
 
-            // $data = M_MasterMenu::buildMenuArray($request);
-
             return response()->json(['message' => 'OK', 'response' => $data], 200);
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
