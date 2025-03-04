@@ -298,10 +298,10 @@ class CollateralController extends Controller
 
                 M_CrCollateralDocumentRelease::create($collateral);
 
-                $checkCollateral = M_CrCollateral::where('ID',$req->uid)->first();
+                $checkCollateral = M_CrCollateral::where('ID', $req->uid)->first();
 
-                if($checkCollateral){
-                    $checkCollateral->update(['STATUS','RILIS']);
+                if ($checkCollateral) {
+                    $checkCollateral->update(['STATUS' => 'RILIS']);
                 }
 
                 DB::commit();
