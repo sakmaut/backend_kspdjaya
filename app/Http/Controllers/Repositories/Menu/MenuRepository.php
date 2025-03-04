@@ -183,25 +183,25 @@ class MenuRepository implements MenuRepositoryInterface
 
             $menuItem = $listMenu['masterMenu'];
 
-            if ($menuItem->parent === null || $menuItem->parent === 0) {
-                if (!isset($menuArray[$menuItem->id])) {
-                    $menuArray[$menuItem->id] = [
-                        'menuid' => $menuItem->id,
+            if ($menuItem['parent'] === null || $menuItem['parent'] === 0) {
+                if (!isset($menuArray[$menuItem['id']])) {
+                    $menuArray[$menuItem['id']] = [
+                        'menuid' => $menuItem['id'],
                         'menuitem' => [
-                            'labelmenu' => $menuItem->menu_name,
-                            'routename' => $menuItem->route,
-                            'leading' => explode(',', $menuItem->leading),
-                            'action' => $menuItem->action,
-                            'ability' => $menuItem->ability,
-                            'submenu' => $this->buildSubMenu($menuItem->id, $listMenu)
+                            'labelmenu' => $menuItem['menu_name'],
+                            'routename' => $menuItem['route'],
+                            'leading' => explode(',', $menuItem['leading']),
+                            'action' => $menuItem['action'],
+                            'ability' => $menuItem['ability'],
+                            'submenu' => $this->buildSubMenu($menuItem['id'], $listMenu)
                         ]
                     ];
                 }
             } else {
-                if (!isset($menuArray[$menuItem->parent])) {
-                    $parentMenuItem = $this->findActiveMenu($menuItem->parent);
+                if (!isset($menuArray[$menuItem['parent']])) {
+                    $parentMenuItem = $this->findActiveMenu($menuItem['parent']);
                     if ($parentMenuItem) {
-                        $menuArray[$menuItem->parent] = [
+                        $menuArray[$menuItem['parent']] = [
                             'menuid' => $parentMenuItem->id,
                             'menuitem' => [
                                 'labelmenu' => $parentMenuItem->menu_name,
@@ -215,25 +215,24 @@ class MenuRepository implements MenuRepositoryInterface
                     }
                 }
 
-                // Add the current item as a submenu of its parent
-                if (!$this->menuItemExists($menuArray[$menuItem->parent]['menuitem']['submenu'], $menuItem->id)) {
-                    $menuArray[$menuItem->parent]['menuitem']['submenu'][] = [
-                        'subid' => $menuItem->id,
-                        'sublabel' => $menuItem->menu_name,
-                        'subroute' => $menuItem->route,
-                        'leading' => explode(',', $menuItem->leading),
-                        'action' => $menuItem->action,
-                        'ability' => $menuItem->ability,
-                        'submenu' => $this->buildSubMenu($menuItem->id, $listMenu)
+                if (!$this->menuItemExists($menuArray[$menuItem['parent']]['menuitem']['submenu'], $menuItem['id'])) {
+                    $menuArray[$menuItem['parent']]['menuitem']['submenu'][] = [
+                        'subid' => $menuItem['id'],
+                        'sublabel' => $menuItem['menu_name'],
+                        'subroute' => $menuItem['route'],
+                        'leading' => explode(',', $menuItem['leading']),
+                        'action' => $menuItem['action'],
+                        'ability' => $menuItem['ability'],
+                        'submenu' => $this->buildSubMenu($menuItem['id'], $listMenu)
                     ];
                 }
             }
         }
 
-        // Re-index submenu arrays for each menu item
-        foreach ($menuArray as $key => $menu) {
-            $menuArray[$key]['menuitem']['submenu'] = array_values($menu['menuitem']['submenu']);
-        }
+        // // Re-index submenu arrays for each menu item
+        // foreach ($menuArray as $key => $menu) {
+        //     $menuArray[$key]['menuitem']['submenu'] = array_values($menu['menuitem']['submenu']);
+        // }
 
         return response()->json($menuArray);
         die;
@@ -327,12 +326,12 @@ class MenuRepository implements MenuRepositoryInterface
     // return array_values($menuArray);
     // }
 
-    private static function buildSubMenu($parentId, $menuItems)
+    private function buildSubMenu($parentId, $menuItems)
     {
         $submenuArray = [];
         foreach ($menuItems as $menuItem) {
-            if ($menuItem->parent === $parentId) {
-                if (!self::menuItemExists($submenuArray, $menuItem->id)) {
+            if ($menuItem['parent'] === $parentId) {
+                if (!$this->menuItemExists($submenuArray, $menuItem->id)) {
                     $submenuArray[] = [
                         'subid' => $menuItem->id,
                         'sublabel' => $menuItem->menu_name,
@@ -340,7 +339,7 @@ class MenuRepository implements MenuRepositoryInterface
                         'leading' => explode(',', $menuItem->leading),
                         'action' => $menuItem->action,
                         'ability' => $menuItem->ability,
-                        'submenu' => self::buildSubMenu($menuItem->id, $menuItems)
+                        'submenu' => $this->buildSubMenu($menuItem->id, $menuItems)
                     ];
                 }
             }
@@ -348,7 +347,7 @@ class MenuRepository implements MenuRepositoryInterface
         return $submenuArray;
     }
 
-    private static function menuItemExists($menuArray, $id)
+    private function menuItemExists($menuArray, $id)
     {
         foreach ($menuArray as $menuItem) {
             if ($menuItem['subid'] == $id) {
