@@ -642,9 +642,9 @@ class ListBanController extends Controller
                                                     max(case when cast(paid_flag as char)='PAID' then payment_date else str_to_date('01011900','%d%m%Y') end) as LAST_PAY, 
                                                     case when count(ID)=sum(case when paid_flag='PAID' then 1 else 0 end) then ''
                                                             else min(case when cast(coalesce(paid_flag,'') as char)<>'PAID' then payment_date else str_to_date('01013000','%d%m%Y') end) end as F_ARR_CR_SCHEDL,
-                                                    sum(case when payment_date < date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month) and paid_flag='PAID' then (interest-payment_value_interest-discount_interest)
+                                                    sum(case when payment_date < date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month) and paid_flag<>'PAID' then (interest-payment_value_interest-discount_interest)
                                                                 else 0 end) as AMBC_BNG_AKHIR, 
-                                                    sum(case when payment_date < date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month) and paid_flag='PAID' then (principal-payment_value_principal-discount_principal)
+                                                    sum(case when payment_date < date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month) and paid_flag<>'PAID' then (principal-payment_value_principal-discount_principal)
                                                                 else 0 end) as AMBC_PKK_AKHIR
                                             FROM	credit_schedule_log_2025
                                             WHERE	back_date = date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day)
