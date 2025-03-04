@@ -193,7 +193,7 @@ class MenuRepository implements MenuRepositoryInterface
                             'leading' => explode(',', $menuItem['leading']),
                             'action' => $menuItem['action'],
                             'ability' => $menuItem['ability'],
-                            'submenu' => $this->buildSubMenu($menuItem['id'], $listMenu)
+                            'submenu' => $this->buildSubMenu($menuItem['id'], $menuItem)
                         ]
                     ];
                 }
@@ -223,129 +223,44 @@ class MenuRepository implements MenuRepositoryInterface
                         'leading' => explode(',', $menuItem['leading']),
                         'action' => $menuItem['action'],
                         'ability' => $menuItem['ability'],
-                        'submenu' => $this->buildSubMenu($menuItem['id'], $listMenu)
+                        'submenu' => $this->buildSubMenu($menuItem['id'], $menuItem)
                     ];
                 }
             }
         }
 
-        // // Re-index submenu arrays for each menu item
-        // foreach ($menuArray as $key => $menu) {
-        //     $menuArray[$key]['menuitem']['submenu'] = array_values($menu['menuitem']['submenu']);
-        // }
+        foreach ($menuArray as $key => $menu) {
+            $menuArray[$key]['menuitem']['submenu'] = array_values($menu['menuitem']['submenu']);
+        }
 
-        return response()->json($menuArray);
-        die;
+        return $menuArray;
     }
-
-    // static function buildMenuArray($menuItems)
-    // {
-    //     $listMenu = self::queryMenu($menuItems);
-    //     $menuArray = [];
-    //     $homeParent = null;
-
-    //     // Find the 'home' parent menu item
-    //     foreach ($listMenu as $menuItem) {
-    //         if ($menuItem->menu_name === 'home' && $menuItem->parent === null) {
-    //             $homeParent = $menuItem;
-    //             break;
-    //         }
-    //     }
-
-    //     // Initialize the 'home' parent menu in the array
-    //     if ($homeParent) {
-    //         $menuArray[$homeParent->id] = [
-    //             'menuid' => $homeParent->id,
-    //             'menuitem' => [
-    //                 'labelmenu' => $homeParent->menu_name,
-    //                 'routename' => $homeParent->route,
-    //                 'leading' => explode(',', $homeParent->leading),
-    //                 'action' => $homeParent->action,
-    //                 'ability' => $homeParent->ability,
-    //                 'submenu' => []
-    //             ]
-    //         ];
-    //     }
-
-    //     // Process each menu item to build the menu hierarchy
-    // foreach ($listMenu as $menuItem) {
-    //     if ($menuItem->parent === null || $menuItem->parent === 0) {
-    //         // If the item has no parent, add it as a root item
-    //         if (!isset($menuArray[$menuItem->id])) {
-    //             $menuArray[$menuItem->id] = [
-    //                 'menuid' => $menuItem->id,
-    //                 'menuitem' => [
-    //                     'labelmenu' => $menuItem->menu_name,
-    //                     'routename' => $menuItem->route,
-    //                     'leading' => explode(',', $menuItem->leading),
-    //                     'action' => $menuItem->action,
-    //                     'ability' => $menuItem->ability,
-    //                     'submenu' => self::buildSubMenu($menuItem->id, $listMenu)
-    //                 ]
-    //             ];
-    //         }
-    //     } else {
-    //         // Initialize the parent item if not set
-    //         if (!isset($menuArray[$menuItem->parent])) {
-    //             $parentMenuItem = M_MasterMenu::find($menuItem->parent);
-    //             if ($parentMenuItem) {
-    //                 $menuArray[$menuItem->parent] = [
-    //                     'menuid' => $parentMenuItem->id,
-    //                     'menuitem' => [
-    //                         'labelmenu' => $parentMenuItem->menu_name,
-    //                         'routename' => $parentMenuItem->route,
-    //                         'leading' => explode(',', $parentMenuItem->leading),
-    //                         'action' => $parentMenuItem->action,
-    //                         'ability' => $parentMenuItem->ability,
-    //                         'submenu' => []
-    //                     ]
-    //                 ];
-    //             }
-    //         }
-
-    //         // Add the current item as a submenu of its parent
-    //         if (!self::menuItemExists($menuArray[$menuItem->parent]['menuitem']['submenu'], $menuItem->id)) {
-    //             $menuArray[$menuItem->parent]['menuitem']['submenu'][] = [
-    //                 'subid' => $menuItem->id,
-    //                 'sublabel' => $menuItem->menu_name,
-    //                 'subroute' => $menuItem->route,
-    //                 'leading' => explode(',', $menuItem->leading),
-    //                 'action' => $menuItem->action,
-    //                 'ability' => $menuItem->ability,
-    //                 'submenu' => self::buildSubMenu($menuItem->id, $listMenu)
-    //             ];
-    //         }
-    //     }
-    // }
-
-    // // Re-index submenu arrays for each menu item
-    // foreach ($menuArray as $key => $menu) {
-    //     $menuArray[$key]['menuitem']['submenu'] = array_values($menu['menuitem']['submenu']);
-    // }
-
-    // return array_values($menuArray);
-    // }
 
     private function buildSubMenu($parentId, $menuItems)
     {
         $submenuArray = [];
-        foreach ($menuItems as $menuItem) {
-            if ($menuItem['parent'] === $parentId) {
-                if (!$this->menuItemExists($submenuArray, $menuItem->id)) {
-                    $submenuArray[] = [
-                        'subid' => $menuItem->id,
-                        'sublabel' => $menuItem->menu_name,
-                        'subroute' => $menuItem->route,
-                        'leading' => explode(',', $menuItem->leading),
-                        'action' => $menuItem->action,
-                        'ability' => $menuItem->ability,
-                        'submenu' => $this->buildSubMenu($menuItem->id, $menuItems)
-                    ];
+
+        if (is_array($menuItems)) {
+            foreach ($menuItems as $menuItem) {
+                if (isset($menuItem['parent']) && $menuItem['parent'] === $parentId) {
+                    if (!$this->menuItemExists($submenuArray, $menuItem['id'])) {
+                        $submenuArray[] = [
+                            'subid' => $menuItem['id'],
+                            'sublabel' => $menuItem['menu_name'],
+                            'subroute' => $menuItem['route'],
+                            'leading' => explode(',', $menuItem['leading']),
+                            'action' => $menuItem['action'],
+                            'ability' => $menuItem['ability'],
+                            'submenu' => $this->buildSubMenu($menuItem['id'], $menuItems)
+                        ];
+                    }
                 }
             }
         }
+
         return $submenuArray;
     }
+
 
     private function menuItemExists($menuArray, $id)
     {
