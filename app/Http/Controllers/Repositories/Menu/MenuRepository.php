@@ -152,6 +152,10 @@ class MenuRepository implements MenuRepositoryInterface
     function getListAccessMenuUser($request)
     {
         $getlistMenu = $this->getListAccessMenuByUserId($request);
+
+        return response()->json($getlistMenu);
+        die;
+
         $menuArray = [];
         $homeParent = null;
 
