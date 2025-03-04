@@ -20,27 +20,34 @@ class BpkbController extends Controller
 
             $branch = $request->user()->branch_id;
 
-            $results = DB::table('cr_collateral as a')
-                            ->leftJoin('credit as b', 'b.ID', '=', 'a.CR_CREDIT_ID')
-                            ->leftJoin('customer as c', 'c.CUST_CODE', '=', 'b.CUST_CODE')
-                            ->select('b.STATUS', 'a.*', 'b.LOAN_NUMBER', 'c.NAME')
-                            ->where('a.LOCATION_BRANCH', $branch)
-                            ->get();
+            $sql = "SELECT	d.NAME as pos_pencairan, 
+                            e.NAME as posisi_berkas,
+                            b.LOAN_NUMBER as no_kontrak, 
+                            c.NAME as debitur,
+                            b.STATUS,
+                            coalesce(f.STATUS,'NORMAL') as status_jaminan,
+                            a.*
+                    FROM	cr_collateral a
+                            inner join credit b on b.ID = a.CR_CREDIT_ID
+                            inner join customer c on c.CUST_CODE = b.CUST_CODE
+                            left join branch d on d.ID = a.COLLATERAL_FLAG
+                            left join branch e on e.ID = a.LOCATION_BRANCH
+                            left join bpkb_detail f on f.COLLATERAL_ID = a.ID
+                    WHERE	a.LOCATION_BRANCH = '$branch' ";
+
+            $results = DB::select($sql);
 
             $data = [];
             foreach ($results as $list) {
 
-                $asalBranch = M_Branch::find($list->COLLATERAL_FLAG);
-                $brachName = M_Branch::find($list->LOCATION_BRANCH);
-
                 $data[] = [
                     "type" => "kendaraan",
-                    'nama_debitur' => $list->NAME ?? NULL,
-                    'order_number' => $list->LOAN_NUMBER ?? NULL,
+                    'nama_debitur' => $list->debitur ?? NULL,
+                    'order_number' => $list->no_kontrak ?? NULL,
                     'no_jaminan' => $list->BPKB_NUMBER ?? NULL,
                     'status_kontrak' => $list->STATUS == 'D' ? 'inactive' : 'active',
                     'id' => $list->ID,
-                    'status_jaminan' => '',
+                    'status_jaminan' => $list->status_jaminan,
                     "tipe" => $list->TYPE,
                     "merk" => $list->BRAND,
                     "tahun" => $list->PRODUCTION_YEAR,
@@ -53,8 +60,8 @@ class BpkbController extends Controller
                     "no_stnk" => $list->STNK_NUMBER,
                     "tgl_stnk" => $list->STNK_VALID_DATE,
                     "nilai" => (int) $list->VALUE,
-                    "asal_lokasi" => $asalBranch->NAME ?? null,
-                    "lokasi" => $brachName->NAME ?? $list->LOCATION_BRANCH,
+                    "asal_lokasi" => $list->pos_pencairan ?? '',
+                    "lokasi" => $list->posisi_berkas ?? $list->LOCATION_BRANCH,
                     "document" => $this->getCollateralDocument($list->ID, ['no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri']) ?? null,
                     "document_rilis" => $this->attachment($list->ID, "'rilis'") ?? null,
                 ];
