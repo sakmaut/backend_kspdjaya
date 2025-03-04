@@ -608,7 +608,7 @@ class ListBanController extends Controller
                             g.CHASIS_NUMBER,
                             g.PRODUCTION_YEAR,
                             replace(format(b.PCPL_ORI-b.TOTAL_ADMIN,0),',','') as NILAI_PINJAMAN,
-                            replace(format(b.TOTAL_ADMIN,0),',',''), 
+                            replace(format(b.TOTAL_ADMIN,0),',','') as TOTAL_ADMIN,  
                             b.CUST_CODE
                         FROM  	branch AS a
                                 INNER JOIN credit b 
