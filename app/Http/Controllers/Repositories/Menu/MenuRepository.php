@@ -156,7 +156,7 @@ class MenuRepository implements MenuRepositoryInterface
         $homeParent = null;
 
         foreach ($getlistMenu as $menuItem) {
-            if ($menuItem && is_array($menuItem) && isset($menuItem['masterMenu'])) {
+            if ($menuItem != null) {
                 $getMenu = $menuItem['masterMenu'];
 
                 if ($getMenu && is_array($getMenu) && isset($getMenu['menu_name']) && isset($getMenu['parent'])) {
