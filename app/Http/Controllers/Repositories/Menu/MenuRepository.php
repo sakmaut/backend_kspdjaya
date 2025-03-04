@@ -181,7 +181,7 @@ class MenuRepository implements MenuRepositoryInterface
         //     ];
         // }
 
-        return $homeParent;
+        return $getlistMenu;
         
 
         // foreach ($getlistMenu as $listMenu) {
