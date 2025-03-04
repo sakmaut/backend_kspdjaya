@@ -19,7 +19,7 @@ class R_MasterMenu extends JsonResource
             'id' => $this->id,
             'menu_name' => $this->menu_name,
             'route' => $this->route,
-            'parent' =>self::check_menu_id_existence($request,$this->id),
+            'parent' => $this->check_menu_id_existence($request, $this->id),
             'order' => $this->order,
             'leading' => $this->leading,
             'action' => $this->action,
@@ -36,7 +36,8 @@ class R_MasterMenu extends JsonResource
         return $data;
     }
 
-    function check_menu_id_existence($request) {
+    function check_menu_id_existence($request)
+    {
         $response = $request->getUri();
 
         if ($response !== false) {
@@ -44,7 +45,7 @@ class R_MasterMenu extends JsonResource
                 return M_MasterMenu::getParentMenuName($this->parent);
             }
         }
-    
-        return M_MasterMenu::getParentMenuName($this->parent,false);
+
+        return M_MasterMenu::getParentMenuName($this->parent, false);
     }
 }

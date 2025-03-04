@@ -23,7 +23,9 @@ class M_MasterMenu extends Model
         'status',
         'ability',
         'created_by',
+        'created_at',
         'updated_by',
+        'updated_at',
         'deleted_by',
         'deleted_at'
     ];
@@ -54,16 +56,17 @@ class M_MasterMenu extends Model
         }
     }
 
-     static function queryMenu($req){
+    static function queryMenu($req)
+    {
         $menuItems = self::query()
-                        ->select('master_menu.*')
-                        ->join('master_users_access_menu as t1', 'master_menu.id', '=', 't1.master_menu_id')
-                        ->where('t1.users_id', $req->user()->id)
-                        ->where('master_menu.deleted_by', null)
-                        ->whereIn('master_menu.status', ['active', 'Active'])
-                        ->get();
-        
-        return $menuItems;  
+            ->select('master_menu.*')
+            ->join('master_users_access_menu as t1', 'master_menu.id', '=', 't1.master_menu_id')
+            ->where('t1.users_id', $req->user()->id)
+            ->where('master_menu.deleted_by', null)
+            ->whereIn('master_menu.status', ['active', 'Active'])
+            ->get();
+
+        return $menuItems;
     }
     static function buildMenuArray($menuItems)
     {
@@ -183,6 +186,4 @@ class M_MasterMenu extends Model
         }
         return false;
     }
-
-
 }

@@ -65,8 +65,8 @@ class BranchRepository implements BranchRepositoryInterface
 
         $data = [
             'CODE' => $this->branchCode() ?? '',
-            'CODE_NUMBER' => strtoupper($request->CODE) ?? '',
-            'NAME' => $request->NAME ?? '',
+            'CODE_NUMBER' => strtoupper($getCode) ?? '',
+            'NAME' => $getName ?? '',
             'ADDRESS' => $request->ADDRESS ?? '',
             'RT' => $request->RT ?? '',
             'RW' => $request->RW ?? '',

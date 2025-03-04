@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers\Repositories\Menu;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-
 interface MenuRepositoryInterface
 {
-    function getActiveMenu();
+    function getListActiveMenu();
+    function findActiveMenu($id);
+    function findMenuByName($name);
+    function findMenuByRoute($route);
+    function create($request);
+    function update($request, $menuId);
+    function delete($request, $menuId);
 }
