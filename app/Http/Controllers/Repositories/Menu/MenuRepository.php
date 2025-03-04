@@ -155,15 +155,15 @@ class MenuRepository implements MenuRepositoryInterface
         $menuArray = [];
         $homeParent = null;
 
-        // foreach ($getlistMenu as $menuItem) {
+        foreach ($getlistMenu as $menuItem) {
 
-        //     $getMenu = $menuItem['masterMenu'];
+            $getMenu = $menuItem['masterMenu'];
 
-        //     if ($getMenu['menu_name'] === 'home' && $getMenu['parent'] === null) {
-        //         $homeParent = $getMenu;
-        //         break;
-        //     }
-        // }
+            if ($getMenu['menu_name'] === 'home' && $getMenu['parent'] === null) {
+                $homeParent = $getMenu;
+                break;
+            }
+        }
 
         // if ($homeParent) {
         //     $menuArray[$homeParent->id] = [
@@ -179,7 +179,7 @@ class MenuRepository implements MenuRepositoryInterface
         //     ];
         // }
 
-        return $getlistMenu;
+        return $homeParent;
         
 
         // foreach ($getlistMenu as $listMenu) {
