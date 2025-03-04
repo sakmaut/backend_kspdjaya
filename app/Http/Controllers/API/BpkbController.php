@@ -26,6 +26,7 @@ class BpkbController extends Controller
                             c.NAME as debitur,
                             b.STATUS,
                             coalesce(f.STATUS,'NORMAL') as status_jaminan,
+                            f.ID as bpkb_detail_id,
                             a.*
                     FROM	cr_collateral a
                             inner join credit b on b.ID = a.CR_CREDIT_ID
@@ -47,6 +48,7 @@ class BpkbController extends Controller
                     'no_jaminan' => $list->BPKB_NUMBER ?? NULL,
                     'status_kontrak' => $list->STATUS == 'D' ? 'inactive' : 'active',
                     'id' => $list->ID,
+                    'bpkb_detail_id' => $list->bpkb_detail_id,
                     'status_jaminan' => $list->status_jaminan,
                     "tipe" => $list->TYPE,
                     "merk" => $list->BRAND,

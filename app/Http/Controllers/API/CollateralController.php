@@ -298,7 +298,11 @@ class CollateralController extends Controller
 
                 M_CrCollateralDocumentRelease::create($collateral);
 
-                // $checkBpkbDetail = M_BpkbDetail::where()->first();
+                $checkBpkbDetail = M_BpkbDetail::where('id',$req->bpkb_detail_id)->first();
+
+                if($checkBpkbDetail){
+                    $checkBpkbDetail->update(['STATUS','RILIS']);
+                }
 
                 DB::commit();
                 return response()->json(['message' => 'Image upload successfully', 'response' => $url], 200);
