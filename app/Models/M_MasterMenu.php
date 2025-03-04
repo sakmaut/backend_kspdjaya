@@ -45,6 +45,11 @@ class M_MasterMenu extends Model
         });
     }
 
+    public function accessMenus()
+    {
+        return $this->hasMany(M_MasterUserAccessMenu::class, 'master_menu_id', 'id');
+    }
+
     static public function getParentMenuName($parentId, $arr = true)
     {
         $parentMenu = self::find($parentId);

@@ -9,6 +9,7 @@ use App\Http\Controllers\Repositories\Menu\MenuRepository;
 use App\Http\Resources\R_MasterMenu;
 use Illuminate\Http\Request;
 use App\Models\M_MasterMenu;
+use App\Models\M_MasterUserAccessMenu;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Carbon;
@@ -111,7 +112,15 @@ class MasterMenuController extends Controller
         try {
             $data = M_MasterMenu::buildMenuArray($req);
 
-            return response()->json(['message' => 'OK', "status" => 200, 'response' => $data], 200);
+            // $userId = $req->user()->id;
+
+            // $data = M_MasterUserAccessMenu::with(['masterMenu' => function ($query) {
+            //     $query->where('status', 'active');
+            // }])
+            //     ->where('users_id', $userId)
+            //     ->get();
+
+            return response()->json(['message' => 'OK', 'response' => $data], 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($req, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
