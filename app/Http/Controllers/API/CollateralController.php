@@ -269,7 +269,7 @@ class CollateralController extends Controller
             $this->validate($req, [
                 'image' => 'required|string',
                 'type' => 'required|string',
-                'collateral_id' => 'required|string'
+                'uid' => 'required|string'
             ]);
 
             if (preg_match('/^data:image\/(\w+);base64,/', $req->image, $type)) {
@@ -287,7 +287,7 @@ class CollateralController extends Controller
                 $url = URL::to('/') . '/storage/' . 'Cr_Collateral_Release/' . $fileName;
 
                 $collateral = [
-                    'COLLATERAL_ID' => $req->collateral_id,
+                    'COLLATERAL_ID' => $req->uid,
                     'TYPE' => $req->type,
                     'COUNTER_ID' => round(microtime(true) * 1000),
                     'PATH' => $url ?? '',
