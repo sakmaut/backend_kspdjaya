@@ -513,7 +513,7 @@ class ListBanController extends Controller
             $dateFrom = $request->dari;
             $getBranch = $request->cabang_id;
 
-            $query = "  SET @period:='032025';
+            $query = "  set @period:='032025';
 
                         SELECT 
                             CONCAT(a.CODE, '-', a.CODE_NUMBER) AS KODE,
