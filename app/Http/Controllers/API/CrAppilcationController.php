@@ -84,7 +84,7 @@ class CrAppilcationController extends Controller
                 $data->whereRaw("DATE_FORMAT(cr_survey.visit_date, '%Y-%m-%d') = ?", [$tgl_order]);
             }
 
-            $data->whereRaw("DATE_FORMAT(cr_survey.visit_date, '%Y-%m') = ?", [now()->format('Y-m')]);
+            $data->whereRaw("DATE_FORMAT(cr_survey.visit_date, '%Y-%m') = ?", [Carbon::now()->format('Y-m')]);
 
             $results = $data->get();
 
