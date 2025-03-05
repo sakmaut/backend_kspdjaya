@@ -612,10 +612,9 @@ class ListBanController extends Controller
                             replace(format(b.TOTAL_ADMIN,0),',','') as TOTAL_ADMIN,  
                             b.CUST_CODE
                         FROM  	branch AS a
-                                INNER JOIN credit b 
+                                INNER JOIN credit_log_2025 b 
                                     ON b.BRANCH = a.ID 
                                     AND b.STATUS='A' 
-                                    AND b.entry_date < date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month)
                                     OR (b.BRANCH = a.ID 
                                         AND b.STATUS in ('D','S') 
                                         AND b.loan_number in (select loan_num from payment where date_format(entry_date,'%m%Y')='$dateFrom'))
