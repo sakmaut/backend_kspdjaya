@@ -32,7 +32,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 //Login Authenticate
-Route::post('auth/login', [AuthController::class, 'login'])->name('login');
+Route::post('auth/login', [AuthController::class, 'login'])->middleware('time.access')->name('login');
 Route::get('auth/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 
 Route::post('welcome', [Welcome::class, 'index']);
@@ -40,7 +40,7 @@ Route::get('jobArrears', [Welcome::class, 'job']);
 Route::post('botpel', [PelunasanController2::class, 'getDetail']);
 Route::post('propel', [PelunasanController2::class, 'propel']);
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::resource('users', UsersController::class)->only(['index']);
     // Route Group Master Menu
     Route::get('fpk_kapos', [CrAppilcationController::class, 'showKapos']);

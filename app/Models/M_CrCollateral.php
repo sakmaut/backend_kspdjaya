@@ -60,4 +60,14 @@ class M_CrCollateral extends Model
     {
         return $this->belongsTo(M_Credit::class, 'CR_CREDIT_ID', 'ID');
     }
+
+    public function originBranch()
+    {
+        return $this->belongsTo(M_Branch::class, 'COLLATERAL_FLAG', 'ID');
+    }
+
+    public function currentBranch()
+    {
+        return $this->belongsTo(M_Branch::class, 'LOCATION_BRANCH', 'ID');
+    }
 }

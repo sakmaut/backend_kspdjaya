@@ -67,11 +67,13 @@ class M_Credit extends Model
         });
     }
 
-    public function collateral() {
+    public function collateral()
+    {
         return $this->hasMany(M_CrCollateral::class, 'CR_CREDIT_ID', 'ID');
     }
-    
-    public function customer() {
+
+    public function customer()
+    {
         return $this->belongsTo(M_Customer::class, 'CUST_CODE', 'CUST_CODE');
     }
 }
