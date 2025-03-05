@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Repositories\Collateral\CollateralRepository;
 use App\Models\M_BpkbDetail;
 use App\Models\M_Branch;
 use App\Models\M_CrCollateral;
 use App\Models\M_CrCollateralDocument;
 use App\Models\M_CrCollateralDocumentRelease;
-use App\Models\M_CrCollateralSertification;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Contracts\Cache\Store;
@@ -20,6 +21,16 @@ use Ramsey\Uuid\Uuid;
 
 class CollateralController extends Controller
 {
+
+    protected $collateralRepository;
+    protected $log;
+
+    public function __construct(CollateralRepository $collateralRepository, ExceptionHandling $log)
+    {
+        $this->collateralRepository = $collateralRepository;
+        $this->log = $log;
+    }
+
     public function index(Request $request)
     {
         try {
@@ -29,31 +40,31 @@ class CollateralController extends Controller
             $no_bpkb = $request->query('no_bpkb');
 
             $collateral = DB::table('credit as a')
-                                ->join('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
-                                ->where(function ($query) {
-                                    $query->whereNull('b.DELETED_AT')
-                                    ->orWhere('b.DELETED_AT', '!=', '');
-                                })
-                                ->where('a.STATUS', 'A')
-                                ->select(
-                                    'a.LOAN_NUMBER',
-                                    'b.ID',
-                                    'b.BRAND',
-                                    'b.TYPE',
-                                    'b.PRODUCTION_YEAR',
-                                    'b.COLOR',
-                                    'b.ON_BEHALF',
-                                    'b.ENGINE_NUMBER',
-                                    'b.POLICE_NUMBER',
-                                    'b.CHASIS_NUMBER',
-                                    'b.BPKB_ADDRESS',
-                                    'b.BPKB_NUMBER',
-                                    'b.STNK_NUMBER',
-                                    'b.INVOICE_NUMBER',
-                                    'b.STNK_VALID_DATE',
-                                    'b.VALUE'
+                ->join('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
+                ->where(function ($query) {
+                    $query->whereNull('b.DELETED_AT')
+                        ->orWhere('b.DELETED_AT', '!=', '');
+                })
+                ->where('a.STATUS', 'A')
+                ->select(
+                    'a.LOAN_NUMBER',
+                    'b.ID',
+                    'b.BRAND',
+                    'b.TYPE',
+                    'b.PRODUCTION_YEAR',
+                    'b.COLOR',
+                    'b.ON_BEHALF',
+                    'b.ENGINE_NUMBER',
+                    'b.POLICE_NUMBER',
+                    'b.CHASIS_NUMBER',
+                    'b.BPKB_ADDRESS',
+                    'b.BPKB_NUMBER',
+                    'b.STNK_NUMBER',
+                    'b.INVOICE_NUMBER',
+                    'b.STNK_VALID_DATE',
+                    'b.VALUE'
 
-                                );
+                );
 
             if (!empty($no_kontrak)) {
                 $collateral->where('a.LOAN_NUMBER', $no_kontrak);
@@ -105,38 +116,41 @@ class CollateralController extends Controller
                     ];
                 }
             }
-        
-            return response()->json($collateralData, 200);
-         
+
+            return response()->json($collateralResults, 200);
+
+            // $data = $this->collateralRepository->getListAllCollateral($request);
+
+            // return response()->json($data, 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
 
-    public function show(Request $req,$id)
+    public function show(Request $req, $id)
     {
         try {
-            $checkCollateral = M_CrCollateral::where('id',$id)->first();
+            $checkCollateral = M_CrCollateral::where('id', $id)->first();
 
-            if(!$checkCollateral){
-                throw new Exception('Collateral Not Found',404);
+            if (!$checkCollateral) {
+                throw new Exception('Collateral Not Found', 404);
             }
 
             $datas = $this->collateralField($checkCollateral);
-          
+
             return response()->json($datas, 200);
-        }  catch (\Exception $e) {
-            ActivityLogger::logActivity($req,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+        } catch (\Exception $e) {
+            ActivityLogger::logActivity($req, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
 
-    public function update(Request $request,$id)
+    public function update(Request $request, $id)
     {
         DB::beginTransaction();
         try {
-            $checkCollateral = M_CrCollateral::where('id',$id)->first();
+            $checkCollateral = M_CrCollateral::where('id', $id)->first();
 
             if (!$checkCollateral) {
                 throw new Exception('Collateral Not Found', 404);
@@ -161,16 +175,17 @@ class CollateralController extends Controller
             $checkCollateral->update($data);
 
             DB::commit();
-            ActivityLogger::logActivity($request,"Success",200);
+            ActivityLogger::logActivity($request, "Success", 200);
             return response()->json(['message' => 'Cabang updated successfully', "status" => 200], 200);
-        }  catch (\Exception $e) {
+        } catch (\Exception $e) {
             DB::rollback();
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
 
-    private function collateralField($list){
+    private function collateralField($list)
+    {
         return [
             'id' => $list->ID,
             "tipe" => $list->TYPE,
@@ -185,8 +200,8 @@ class CollateralController extends Controller
             "no_stnk" => $list->STNK_NUMBER,
             "tgl_stnk" => $list->STNK_VALID_DATE,
             "nilai" => (int) $list->VALUE,
-            "asal_lokasi" => M_Branch::find($list->COLLATERAL_FLAG)->NAME??null,
-            "lokasi" => M_Branch::find($list->LOCATION_BRANCH)->NAME??$list->LOCATION_BRANCH,
+            "asal_lokasi" => M_Branch::find($list->COLLATERAL_FLAG)->NAME ?? null,
+            "lokasi" => M_Branch::find($list->LOCATION_BRANCH)->NAME ?? $list->LOCATION_BRANCH,
         ];
     }
 
@@ -243,7 +258,7 @@ class CollateralController extends Controller
                 // Store the image
                 $image_path = Storage::put("public/Cr_Collateral/{$fileName}", $data);
                 $image_path = str_replace('public/', '', $image_path);
-                
+
                 $url = URL::to('/') . '/storage/' . 'Cr_Collateral/' . $fileName;
 
                 $collateral = [
