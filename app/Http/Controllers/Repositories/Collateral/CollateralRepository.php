@@ -19,4 +19,11 @@ class CollateralRepository implements CollateralInterface
     {
         return $this->collateralEntity::where('ID', $id)->first();
     }
+
+    function getListAllCollateral($request)
+    {
+        $query = $this->collateralEntity::query();
+
+        return $query;
+    }
 }
