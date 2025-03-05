@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Repositories\Survey\SurveyRepository;
 use App\Http\Resources\R_CrProspect;
+use App\Http\Resources\R_CrSurvey;
 use App\Models\M_CrGuaranteBillyet;
 use App\Models\M_CrGuaranteGold;
 use App\Models\M_CrGuaranteSertification;
@@ -28,29 +31,32 @@ class CrSurveyController extends Controller
     private $CrSurvey;
     private $uuid;
     private $timeNow;
+    private $SurveyRepository;
+    protected $log;
 
-    public function __construct(M_CrSurvey $CrSurvey)
+    public function __construct(M_CrSurvey $CrSurvey, SurveyRepository $SurveyRepository, ExceptionHandling $log)
     {
         $this->CrSurvey = $CrSurvey;
         $this->uuid = Uuid::uuid7()->toString();
         $this->timeNow = Carbon::now();
+        $this->SurveyRepository = $SurveyRepository;
+        $this->log = $log;
     }
 
-    public function index(Request $req)
+    public function index(Request $request)
     {
         try {
-            $mcf_id = $req->user()->id;
-            $data =  $this->CrSurvey->show_mcf($mcf_id);
-            $dto = R_CrProspect::collection($data);
+            // $mcf_id = $req->user()->id;
+            // $data =  $this->CrSurvey->show_mcf($mcf_id);
+            // $dto = R_CrProspect::collection($data);
 
-            ActivityLogger::logActivity($req, "Success", 200);
-            return response()->json(['message' => 'OK', "status" => 200, 'response' => $dto], 200);
-        } catch (QueryException $e) {
-            ActivityLogger::logActivity($req, $e->getMessage(), 409);
-            return response()->json(['message' => $e->getMessage(), "status" => 409], 409);
+            $getListSurveyByMcf = $this->SurveyRepository->getListSurveyByMcf($request);
+
+            $dto = R_CrSurvey::collection($getListSurveyByMcf);
+
+            return response()->json(['response' => $dto], 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($req, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
@@ -59,7 +65,7 @@ class CrSurveyController extends Controller
         try {
             $check = $this->CrSurvey->where('id', $id)->whereNull('deleted_at')->firstOrFail();
 
-            return response()->json(['message' => 'OK', "status" => 200, 'response' => $this->resourceDetail($check)], 200);
+            return response()->json(['message' => 'OK', 'response' => $this->resourceDetail($check)], 200);
         } catch (ModelNotFoundException $e) {
             ActivityLogger::logActivity($req, 'Data Not Found', 404);
             return response()->json(['message' => 'Data Not Found', "status" => 404], 404);

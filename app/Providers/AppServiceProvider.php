@@ -8,6 +8,8 @@ use App\Http\Controllers\Repositories\Collateral\CollateralInterface;
 use App\Http\Controllers\Repositories\Collateral\CollateralRepository;
 use App\Http\Controllers\Repositories\Menu\MenuRepository;
 use App\Http\Controllers\Repositories\Menu\MenuRepositoryInterface;
+use App\Http\Controllers\Repositories\Survey\SurveyInterface;
+use App\Http\Controllers\Repositories\Survey\SurveyRepository;
 use App\Http\Controllers\Repositories\Users\UserRepositories;
 use App\Http\Controllers\Repositories\Users\UsersRepositoryInterface;
 use Carbon\Carbon;
@@ -26,6 +28,7 @@ class AppServiceProvider extends ServiceProvider
             BranchRepositoryInterface::class => BranchRepository::class,
             MenuRepositoryInterface::class => MenuRepository::class,
             CollateralInterface::class => CollateralRepository::class,
+            SurveyInterface::class => SurveyRepository::class,
         ];
 
         foreach ($bindings as $interface => $implementation) {
