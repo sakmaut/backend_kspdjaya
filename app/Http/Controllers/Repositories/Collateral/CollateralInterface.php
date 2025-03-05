@@ -8,4 +8,5 @@ interface CollateralInterface
     function findCollateralById($id);
     function getListAllCollateral();
     function searchCollateralList($request);
+    function update($request, $colId);
 }
