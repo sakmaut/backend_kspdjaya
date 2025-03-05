@@ -46,10 +46,6 @@ class CrSurveyController extends Controller
     public function index(Request $request)
     {
         try {
-            // $mcf_id = $req->user()->id;
-            // $data =  $this->CrSurvey->show_mcf($mcf_id);
-            // $dto = R_CrProspect::collection($data);
-
             $getListSurveyByMcf = $this->SurveyRepository->getListSurveyByMcf($request);
 
             $dto = R_CrSurvey::collection($getListSurveyByMcf);
