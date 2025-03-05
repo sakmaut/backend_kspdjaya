@@ -93,7 +93,7 @@ class CrSurveyController extends Controller
                 'tujuan_kredit' => $data->tujuan_kredit,
                 'plafond' => (int) $data->plafond,
                 'tenor' => strval($data->tenor),
-                'kategory' => $data->category,
+                'category' => $data->category,
                 'jenis_angsuran' => $data->jenis_angsuran
             ],
             'data_nasabah' => [
@@ -464,7 +464,7 @@ M_TaskPusher::create($pushData);
                 'tujuan_kredit' => $request->order['tujuan_kredit'] ?? null,
                 'plafond' => $request->order['plafond'] ?? null,
                 'tenor' => $request->order['tenor'] ?? null,
-                'category' => $request->order['kategory'] ?? null,
+                'category' => $request->order['category'] ?? null,
                 'jenis_angsuran' => $request->order['jenis_angsuran'] ?? null,
                 'nama' => $request->data_nasabah['nama'] ?? null,
                 'tgl_lahir' => date('Y-m-d', strtotime($request->data_nasabah['tgl_lahir'])) ?? null,
