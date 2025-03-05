@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Repositories\CrCollateralMovingLog\CrCollateralMovingLogRepository;
 use App\Http\Resources\R_CreditCancelLog;
 use App\Models\M_ApplicationApproval;
 use App\Models\M_ApplicationApprovalLog;

@@ -50,7 +50,6 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::resource('user_access_menu', UserAccessMenuController::class);
 
     Route::resource('cr_application', CrAppilcationController::class)->only(['index']);
-    Route::resource('kunjungan', CrSurveyController::class)->only(['index']);
     Route::get('kunjungan_admin', [CrAppilcationController::class, 'showAdmins']);
 
     // Route Group Users
@@ -68,7 +67,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::post('cr_application_generate', [CrAppilcationController::class, 'generateUuidFPK']);
 
     // Route Group Cr Prospek (Kunjungan)
-    Route::resource('kunjungan', CrSurveyController::class)->except(['index', 'showAdmins']);
+    Route::resource('kunjungan', CrSurveyController::class);
     Route::post('image_upload_prospect', [CrSurveyController::class, 'uploadImage']);
     Route::post('image_upload_multiple', [CrSurveyController::class, 'imageMultiple']);
     Route::delete('image_deleted/{id}', [CrSurveyController::class, 'destroyImage']);
