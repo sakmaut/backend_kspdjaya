@@ -73,28 +73,6 @@ class M_CrSurvey extends Model
         return $this->hasOne(M_SurveyApproval::class, 'CR_SURVEY_ID');
     }
 
-    public static function show_mcf($mcfId)
-    {
-        $query = self::select(
-            'cr_survey.id as id',
-            'cr_survey.jenis_angsuran',
-            'cr_survey.visit_date',
-            DB::raw("COALESCE(cr_personal.NAME, cr_survey.nama) as nama_debitur"),
-            'cr_survey.alamat',
-            'cr_survey.hp',
-            DB::raw("COALESCE(cr_application.SUBMISSION_VALUE, cr_survey.plafond) as plafond")
-        )
-            ->leftJoin('survey_approval', 'survey_approval.CR_SURVEY_ID', '=', 'cr_survey.id')
-            ->leftJoin('cr_application', 'cr_application.CR_SURVEY_ID', '=', 'cr_survey.id')
-            ->leftJoin('cr_personal', 'cr_personal.APPLICATIOn_ID', '=', 'cr_application.ID')
-            ->where('cr_survey.created_by', $mcfId)
-            ->whereNull('cr_survey.deleted_at')
-            ->orderBy('cr_survey.visit_date', 'desc')
-            ->get();
-
-        return $query;
-    }
-
     public static function prospek_jaminan()
     {
         $results = DB::table('cr_prospect as t0')
