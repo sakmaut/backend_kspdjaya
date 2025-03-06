@@ -182,6 +182,12 @@ class ListBanController extends Controller
                     if ($item->JENIS != 'PENCAIRAN') {
                         if ($amount != 0) {
 
+                            if ($item->angsuran_ke == 'PEMBULATAN') {
+                                $keterangan = $item->angsuran_ke . ' (' . $item->no_invoice . ')';
+                            } else {
+                                $keterangan = 'BAYAR ' . $item->angsuran_ke . ' (' . $item->no_invoice . ')';
+                            }
+
                             $datas['datas'][] = [
                                 'type' => 'CASH_IN',
                                 'no_invoice' => $no_invoice,
@@ -192,7 +198,7 @@ class ListBanController extends Controller
                                 'position' => $position ?? '',
                                 'nama_pelanggan' => $pelanggan,
                                 'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
-                                'keterangan' => strpos($item->angsuran_ke, 'PEMBULATAN') !== false ? '' : 'BAYAR ' . $item->angsuran_ke . ' (' . $item->no_invoice . ')',
+                                'keterangan' => $keterangan,
                                 'amount' => $amount,
                             ];
                         }
