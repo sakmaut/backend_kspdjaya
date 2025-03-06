@@ -280,7 +280,7 @@ class ListBanController extends Controller
                         FROM kwitansi a
                         LEFT JOIN branch d ON d.ID = a.BRANCH_CODE
                         GROUP BY 
-                            a.BRANCH_CODE, 
+                            d.CODE_NUMBERsss, 
                             d.ID, 
                             d.NAME, 
                             DATE_FORMAT(a.TGL_TRANSAKSI, '%Y-%m-%d'), 
