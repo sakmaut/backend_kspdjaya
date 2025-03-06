@@ -159,13 +159,13 @@ class ListBanController extends Controller
                     $position = $item->position;
                     $amount = is_numeric($item->ORIGINAL_AMOUNT) ? floatval($item->ORIGINAL_AMOUNT) : 0;
 
-                    $setUniq = $cabang . $tgl . $user . $pelanggan;
+                    // $setUniq = $cabang . $tgl . $user . $pelanggan;
 
-                    if (isset($seenCombinations[$setUniq])) {
-                        continue;
-                    }
+                    // if (isset($seenCombinations[$setUniq])) {
+                    //     continue;
+                    // }
 
-                    $seenCombinations[$setUniq] = true;
+                    // $seenCombinations[$setUniq] = true;
 
                     // if ($setUniq) {
                     //     $cabang = '';
