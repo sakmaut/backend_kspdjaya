@@ -266,7 +266,7 @@ class ListBanController extends Controller
                         UNION ALL
                         SELECT 
                             'PEMBULATAN' AS JENIS, 
-                            a.BRANCH_CODE AS BRANCH, 
+                            d.CODE_NUMBER AS BRANCH, 
                             d.ID AS BRANCH_ID, 
                             d.NAME AS nama_cabang,
                             DATE_FORMAT(a.TGL_TRANSAKSI, '%Y-%m-%d') AS ENTRY_DATE, 
