@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\Repositories\Survey\SurveyRepository;
 use App\Http\Resources\R_CrProspect;
 use App\Http\Resources\R_CrSurvey;
+use App\Http\Resources\R_SurveyDetail;
 use App\Models\M_CrGuaranteBillyet;
 use App\Models\M_CrGuaranteGold;
 use App\Models\M_CrGuaranteSertification;
@@ -61,6 +62,12 @@ class CrSurveyController extends Controller
     {
         try {
             $check = $this->CrSurvey->where('id', $id)->whereNull('deleted_at')->firstOrFail();
+
+            // $getListSurveyByMcf = $this->SurveyRepository->getDetailSurvey($id);
+
+            // $dto = R_SurveyDetail::collection($getListSurveyByMcf);
+
+            // return response()->json($dto, 200);
 
             return response()->json(['message' => 'OK', 'response' => $this->resourceDetail($check)], 200);
         } catch (ModelNotFoundException $e) {

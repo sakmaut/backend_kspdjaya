@@ -526,6 +526,7 @@ class ReportController extends Controller
                             ) AS b 
                             ON b.payment_id = a.id
                             WHERE a.LOAN_NUM = '$id'
+                            AND a.STTS_RCRD = 'PAID'
                         ) as mp
                         on mp.LOAN_NUM = a.LOAN_NUMBER
                         and date_format(mp.START_DATE,'%d%m%Y') = date_format(a.PAYMENT_DATE,'%d%m%Y')
@@ -547,6 +548,8 @@ class ReportController extends Controller
             $ttlAmtBayar  = 0;
             $ttlDenda  = 0;
             $ttlBayarDenda  = 0;
+            $amtAngss = 0;
+            $sisaAngss = 0;
 
             foreach ($data as $res) {
                 $currentJtTempo = isset($res->PAYMENT_DATE) ? Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y') : '';
@@ -557,7 +560,7 @@ class ReportController extends Controller
                 if (in_array($uniqArr, $checkExist)) {
                     $currentJtTempo = '';
                     $currentAngs = '';
-                    $amtAngs = floatval($res->ORIGINAL_AMOUNT ?? 0) - floatval($res->denda ?? 0);
+                    $amtAngs = $sisaAngss;
                     $sisaAngs = max($previousSisaAngs - floatval($res->angsuran ?? 0), 0);
 
                     $setPinalty = floatval($setSisaDenda ?? 0);
@@ -567,6 +570,7 @@ class ReportController extends Controller
                     $sisaAngs = max(floatval($res->INSTALLMENT ?? 0) - floatval($res->angsuran ?? 0), 0);
                     $previousSisaAngs = $sisaAngs;
                     $amtAngs = $res->INSTALLMENT;
+                    $amtAngss = $res->INSTALLMENT;
                     $setPinalty = floatval($res->PAST_DUE_PENALTY ?? 0);
                     $setSisaDenda = floatval($res->PAST_DUE_PENALTY ?? 0) -  floatval($res->denda ?? 0);
                     array_push($checkExist, $uniqArr);
@@ -581,6 +585,7 @@ class ReportController extends Controller
 
                 $ttlAmtBayar += $amtBayar;
 
+                // Add both 'Amt Angs' and 'Sisa Angs' in the second row
                 $schedule['data_credit'][] = [
                     'Jt.Tempo' => $currentJtTempo,
                     'Angs' => $currentAngs,
@@ -590,14 +595,14 @@ class ReportController extends Controller
                     'Bank' => '',
                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
                     'Amt Bayar' => number_format($amtBayar ?? 0),
-                    'Sisa Angs' => number_format($sisaAngss),
+                    'Sisa Angs' => number_format($sisaAngss),  // This is where you display the $sisaAngss
                     'Denda' => number_format($setPinalty),
                     'Byr Dnda' => number_format($res->denda ?? 0),
                     'Sisa Tghn' => "0",
                     'Ovd' => $res->OD ?? 0
-                    // '' => $sisaTghn == '0' ? 'L' : ''
                 ];
             }
+
 
             $schedule['total'] = [
                 'ttlAmtAngs' => $ttlAmtAngs ?? '0',

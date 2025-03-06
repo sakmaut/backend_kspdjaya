@@ -142,11 +142,6 @@ class ListBanController extends Controller
             ];
 
             if (!empty($request->dari)) {
-
-                // $timestamp = intval($request->dari) / 1000;
-                // $date = Carbon::createFromTimestamp($timestamp);
-                // $formattedDate = $date->format('Y-m-d');
-
                 $cabangId = $request->cabang_id;
 
                 $arusKas = $this->queryArusKas($cabangId, $request);
@@ -164,6 +159,13 @@ class ListBanController extends Controller
 
                     if ($item->JENIS != 'PENCAIRAN') {
                         if ($amount != 0) {
+
+                            if ($item->angsuran_ke == 'PEMBULATAN') {
+                                $keterangan = $item->angsuran_ke . ' (' . $item->no_invoice . ')';
+                            } else {
+                                $keterangan = 'BAYAR ' . $item->angsuran_ke . ' (' . $item->no_invoice . ')';
+                            }
+
                             $datas['datas'][] = [
                                 'type' => 'CASH_IN',
                                 'no_invoice' => $no_invoice,
@@ -174,7 +176,7 @@ class ListBanController extends Controller
                                 'position' => $position ?? '',
                                 'nama_pelanggan' => $pelanggan,
                                 'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
-                                'keterangan' => 'BAYAR ' . $item->angsuran_ke . ' (' . $item->no_invoice . ')',
+                                'keterangan' => $keterangan,
                                 'amount' => $amount,
                             ];
                         }
@@ -265,6 +267,31 @@ class ListBanController extends Controller
                             b.USER_ID  
                         UNION ALL
                         SELECT 
+                            'PEMBULATAN' AS JENIS, 
+                            d.CODE_NUMBER AS BRANCH, 
+                            d.ID AS BRANCH_ID, 
+                            d.NAME AS nama_cabang,
+                            DATE_FORMAT(a.CREATED_AT, '%Y-%m-%d') AS ENTRY_DATE, 
+                            SUM(a.PEMBULATAN) AS ORIGINAL_AMOUNT,
+                            a.LOAN_NUMBER as LOAN_NUM,
+                            a.METODE_PEMBAYARAN,
+                            a.NO_TRANSAKSI AS no_invoice,
+                            'PEMBULATAN' AS angsuran_ke,
+                            a.CREATED_BY AS user_id,
+                            '' AS admin_fee
+                        FROM kwitansi a
+                        LEFT JOIN branch d ON d.ID = a.BRANCH_CODE
+                        GROUP BY 
+                            d.CODE_NUMBER, 
+                            d.ID, 
+                            d.NAME, 
+                            DATE_FORMAT(a.CREATED_AT, '%Y-%m-%d'), 
+                            a.LOAN_NUMBER,
+                            a.METODE_PEMBAYARAN,
+                            a.NO_TRANSAKSI, 
+                            a.CREATED_BY 
+                        UNION ALL
+                        SELECT 
                             'PENCAIRAN' AS JENIS, 
                             b.CODE_NUMBER AS BRANCH,
                             b.ID AS BRANCH_ID, 
@@ -292,7 +319,7 @@ class ListBanController extends Controller
             $query .= " AND b.BRANCH_ID = '" . $cabangId . "'";
         }
 
-        $query .= "ORDER BY b.no_invoice DESC";
+        $query .= "ORDER BY b.ENTRY_DATE,u.position,b.LOAN_NUM,b.no_invoice,b.angsuran_ke ASC";
 
         $result = DB::select($query);
 
