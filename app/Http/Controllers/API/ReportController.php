@@ -548,6 +548,7 @@ class ReportController extends Controller
             $ttlDenda  = 0;
             $ttlBayarDenda  = 0;
             $amtAngss = 0;
+            $sisaAngss = 0;
 
             foreach ($data as $res) {
                 $currentJtTempo = isset($res->PAYMENT_DATE) ? Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y') : '';
@@ -558,7 +559,7 @@ class ReportController extends Controller
                 if (in_array($uniqArr, $checkExist)) {
                     $currentJtTempo = '';
                     $currentAngs = '';
-                    $amtAngs = floatval($amtAngss ?? 0) - floatval($res->ORIGINAL_AMOUNT ?? 0) - floatval($res->denda ?? 0);
+                    $amtAngs = $sisaAngss;
                     $sisaAngs = max($previousSisaAngs - floatval($res->angsuran ?? 0), 0);
 
                     $setPinalty = floatval($setSisaDenda ?? 0);
