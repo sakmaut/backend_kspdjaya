@@ -192,7 +192,7 @@ class ListBanController extends Controller
                                 'position' => $position ?? '',
                                 'nama_pelanggan' => $pelanggan,
                                 'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
-                                'keterangan' => $item->angsuran_ke == 'PEMBULATAN' ? '' : 'BAYAR ' . $item->angsuran_ke . ' (' . $item->no_invoice . ')',
+                                'keterangan' => strpos($item->angsuran_ke, 'PEMBULATAN') !== false ? '' : 'BAYAR ' . $item->angsuran_ke . ' (' . $item->no_invoice . ')',
                                 'amount' => $amount,
                             ];
                         }
