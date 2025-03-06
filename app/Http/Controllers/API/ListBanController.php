@@ -167,12 +167,17 @@ class ListBanController extends Controller
 
                     $seenCombinations[$setUniq] = true;
 
-                    if ($setUniq) {
-                        $cabang = '';
-                        $tgl = '';
-                        $user = '';
-                        $pelanggan = '';
-                    }
+                    // if ($setUniq) {
+                    //     $cabang = '';
+                    //     $tgl = '';
+                    //     $user = '';
+                    //     $pelanggan = '';
+                    // }else{
+                    //     $cabang = '';
+                    //     $tgl = '';
+                    //     $user = '';
+                    //     $pelanggan = '';
+                    // }
 
                     if ($item->JENIS != 'PENCAIRAN') {
                         if ($amount != 0) {
