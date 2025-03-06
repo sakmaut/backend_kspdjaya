@@ -146,6 +146,8 @@ class ListBanController extends Controller
 
                 $arusKas = $this->queryArusKas($cabangId, $request);
 
+                $seenCombinations = [];
+
                 foreach ($arusKas as $item) {
 
                     $cabang = $item->nama_cabang;
@@ -156,6 +158,21 @@ class ListBanController extends Controller
                     $pelanggan = $item->PELANGGAN;
                     $position = $item->position;
                     $amount = is_numeric($item->ORIGINAL_AMOUNT) ? floatval($item->ORIGINAL_AMOUNT) : 0;
+
+                    $setUniq = $cabang . $tgl . $user . $no_invoice;
+
+                    if (isset($seenCombinations[$setUniq])) {
+                        continue;
+                    }
+
+                    $seenCombinations[$setUniq] = true;
+
+                    if ($setUniq) {
+                        $cabang = '';
+                        $tgl = '';
+                        $user = '';
+                        $no_invoice = '';
+                    }
 
                     if ($item->JENIS != 'PENCAIRAN') {
                         if ($amount != 0) {
