@@ -265,6 +265,31 @@ class ListBanController extends Controller
                             b.USER_ID  
                         UNION ALL
                         SELECT 
+                            'PEMBULATAN' AS JENIS, 
+                            a.BRANCH_CODE AS BRANCH, 
+                            d.ID AS BRANCH_ID, 
+                            d.NAME AS nama_cabang,
+                            DATE_FORMAT(a.TGL_TRANSAKSI, '%Y-%m-%d') AS ENTRY_DATE, 
+                            SUM(a.PEMBULATAN) AS ORIGINAL_AMOUNT,
+                            a.LOAN_NUMBER as LOAN_NUM,
+                            a.METODE_PEMBAYARAN,
+                            a.NO_TRANSAKSI AS no_invoice,
+                            '' AS angsuran_ke,
+                            a.CREATED_BY AS user_id,
+                            '' AS admin_fee
+                        FROM kwitansi a
+                        LEFT JOIN branch d ON d.ID = a.BRANCH_CODE
+                        GROUP BY 
+                            a.BRANCH_CODE, 
+                            d.ID, 
+                            d.NAME, 
+                            DATE_FORMAT(a.TGL_TRANSAKSI, '%Y-%m-%d'), 
+                            a.LOAN_NUMBER,
+                            a.METODE_PEMBAYARAN,
+                            a.NO_TRANSAKSI, 
+                            a.CREATED_BY 
+                        UNION ALL
+                        SELECT 
                             'PENCAIRAN' AS JENIS, 
                             b.CODE_NUMBER AS BRANCH,
                             b.ID AS BRANCH_ID, 
