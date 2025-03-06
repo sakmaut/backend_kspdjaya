@@ -157,7 +157,7 @@ class ListBanController extends Controller
                     $position = $item->position;
                     $amount = is_numeric($item->ORIGINAL_AMOUNT) ? floatval($item->ORIGINAL_AMOUNT) : 0;
 
-                    if ($item->JENIS != 'PENCAIRAN') {
+                    if ($item->JENIS != 'PENCAIRAN' ||  $item->JENIS == 'PEMBULATAN') {
                         if ($amount != 0) {
                             $datas['datas'][] = [
                                 'type' => 'CASH_IN',
