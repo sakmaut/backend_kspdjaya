@@ -142,11 +142,6 @@ class ListBanController extends Controller
             ];
 
             if (!empty($request->dari)) {
-
-                // $timestamp = intval($request->dari) / 1000;
-                // $date = Carbon::createFromTimestamp($timestamp);
-                // $formattedDate = $date->format('Y-m-d');
-
                 $cabangId = $request->cabang_id;
 
                 $arusKas = $this->queryArusKas($cabangId, $request);
@@ -274,7 +269,7 @@ class ListBanController extends Controller
                             a.LOAN_NUMBER as LOAN_NUM,
                             a.METODE_PEMBAYARAN,
                             a.NO_TRANSAKSI AS no_invoice,
-                            '' AS angsuran_ke,
+                            'PEMBULATAN' AS angsuran_ke,
                             a.CREATED_BY AS user_id,
                             '' AS admin_fee
                         FROM kwitansi a
