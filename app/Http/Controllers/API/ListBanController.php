@@ -534,7 +534,7 @@ class ListBanController extends Controller
         }
     }
 
-    public function listBanTest(Request $request)
+    public function listBanTestOLD(Request $request)
     {
         try {
 
@@ -768,6 +768,182 @@ class ListBanController extends Controller
                     "CYCLE AKHIR" => $result->CYCLE_AKHIR,
                     "POLA BYR AKHIR" => $result->pola_bayar_akhir,
                     "NAMA BRG" => 'Sepeda Motor',
+                    "TIPE BRG" =>  $result->COLLATERAL ?? '',
+                    "NO POL" =>  $result->POLICE_NUMBER ?? '',
+                    "NO MESIN" =>  $result->ENGINE_NUMBER ?? '',
+                    "NO RANGKA" =>  $result->CHASIS_NUMBER ?? '',
+                    "TAHUN" =>  $result->PRODUCTION_YEAR ?? '',
+                    "NILAI PINJAMAN" => intval($result->NILAI_PINJAMAN) ?? 0,
+                    "ADMIN" =>  intval($result->TOTAL_ADMIN) ?? '',
+                    "CUST_ID" =>  $result->CUST_CODE ?? ''
+                ];
+            }
+            return response()->json($build, 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+        }
+    }
+
+    public function listBanTest(Request $request)
+    {
+        try {
+
+            $dateFrom = $request->dari;
+            $getBranch = $request->cabang_id;
+
+            $query = "  SELECT  CONCAT(b.CODE, '-', b.CODE_NUMBER) AS KODE, 
+                                b.NAME AS NAMA_CABANG,
+                                cl.LOAN_NUMBER AS NO_KONTRAK,
+                                c.NAME AS NAMA_PELANGGAN,
+                                cl.CREATED_AT AS TGL_BOOKING,
+                                NULL AS UB,
+                                NULL AS PLATFORM,
+                                c.INS_ADDRESS AS ALAMAT_TAGIH,
+                                c.ZIP_CODE AS KODE_POST,
+                                '' AS SUB_ZIP,
+                                c.PHONE_HOUSE AS NO_TELP,
+                                c.PHONE_PERSONAL AS NO_HP,
+                                c.PHONE_PERSONAL AS NO_HP2,
+                                c.OCCUPATION AS PEKERJAAN,
+                                CONCAT(co.REF_PELANGGAN, ' ', co.REF_PELANGGAN_OTHER) AS supplier, 
+                                coalesce(u.fullname,cl.mcf_id) AS SURVEYOR,
+                                cs.survey_note AS CATT_SURVEY, 
+                                replace(format(cl.PCPL_ORI ,0),',','') AS PKK_HUTANG,
+                                cl.PERIOD AS JUMLAH_ANGSURAN, 
+                                replace(format(cl.PERIOD/cl.INSTALLMENT_COUNT,0),',','') AS JARAK_ANGSURAN, 
+                                cl.INSTALLMENT_COUNT as PERIOD, 
+                                replace(format(st.init_pcpl,0),',','') AS OUTSTANDING,
+                                replace(format(st.init_int,0),',','') AS OS_BUNGA, 
+                                case when coalesce(datediff(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval -1 day),st.first_arr),0) < 0 then 0
+                                    else coalesce(datediff(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval -1 day),st.first_arr),0) end as OVERDUE_AWAL, 
+                                replace(format(coalesce(st.arr_pcpl,0),0),',','') as AMBC_PKK_AWAL, 
+                                replace(format(coalesce(st.arr_int,0),0),',','') as AMBC_BNG_AWAL, 
+                                replace(format((coalesce(st.arr_pcpl,0)+coalesce(st.arr_int,0)),0),',','') as AMBC_TOTAL_AWAL, 
+                                concat('C',case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then 'N'
+                                                when st.first_arr > date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day) then 'M' 
+                                                when st.arr_count > 8 then 'X'
+                                                else st.arr_count end) AS CYCLE_AWAL, 
+                                cl.STATUS_REC,
+                                cl.STATUS_REC as STATUS_BEBAN, 
+                                case when (cl.PERIOD/cl.INSTALLMENT_COUNT)=1 then 'REGULER' else 'MUSIMAN' end as pola_bayar, 
+                                replace(format(coalesce(en.init_pcpl,0),0),',','') OS_PKK_AKHIR, 
+                                replace(format(coalesce(en.init_int,0),0),',','') as OS_BNG_AKHIR, 
+                                case when coalesce(datediff(date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day),en.first_arr),0) < 0 then 0
+                                    else coalesce(datediff(date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day),en.first_arr),0) end as OVERDUE_AKHIR, 
+                                cl.INSTALLMENT,
+                                en.last_inst as LAST_INST, 
+                                ca.INSTALLMENT_TYPE AS tipe,
+                                st.first_arr as F_ARR_CR_SCHEDL,
+                                en.first_arr as curr_arr, 
+                                py.last_pay  as LAST_PAY, 
+                                ' ' AS COLLECTOR,
+                                py.payment_method as cara_bayar, 
+                                replace(format(coalesce(en.arr_pcpl,0),0),',','') as AMBC_PKK_AKHIR, 
+                                replace(format(coalesce(en.arr_int ,0),0),',','') as AMBC_BNG_AKHIR, 
+                                replace(format(coalesce(en.arr_pcpl,0)+coalesce(en.arr_int,0),0),',','') as AMBC_TOTAL_AKHIR, 
+                                replace(format(coalesce(py.this_pcpl,0),0),',','') AC_PKK, 
+                                replace(format(coalesce(py.this_int,0),0),',','') AC_BNG_MRG, 
+                                replace(format(coalesce(py.this_pcpl,0)+coalesce(py.this_int,0),0),',','') AC_TOTAL, 
+                                concat('C',case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then 'N'
+                                                when en.first_arr > date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day) then 'M' 
+                                                when en.arr_count > 8 then 'X'
+                                                when cl.STATUS <> 'A' then 'L'
+                                                else en.arr_count end) AS CYCLE_AKHIR, 
+                                case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end as pola_bayar_akhir, 
+                                ' 'as jenis_jaminan, 
+                                col.COLLATERAL,
+                                col.POLICE_NUMBER,
+                                col.ENGINE_NUMBER,
+                                col.CHASIS_NUMBER,
+                                col.PRODUCTION_YEAR,
+                                replace(format(cl.PCPL_ORI-cl.TOTAL_ADMIN,0),',','') as NILAI_PINJAMAN,
+                                replace(format(cl.TOTAL_ADMIN,0),',','') as TOTAL_ADMIN,  
+                                cl.CUST_CODE
+                        FROM	credit_log_2025 cl 
+                                inner join branch b on cast(b.ID as char) = cast(cl.BRANCH as char) 
+                                left join customer c on cast(c.CUST_CODE as char) = cast(cl.CUST_CODE as char)
+                                left join users u on cast(u.ID as char) = cast(cl.MCF_ID as char)
+                                left join cr_application ca on cast(ca.ORDER_NUMBER as char) = cast(cl.ORDER_NUMBER as char) 
+                                left join cr_order co on cast(co.APPLICATION_ID as char) = cast(ca.ID as char)
+                                left join cr_survey cs on cast(cs.ID as char) = cast(ca.CR_SURVEY_ID as char) 
+                                left join temp_lis_03 col on cast(col.CR_CREDIT_ID as char) = cast(cl.ID as char) 
+                                left join temp_lis_01 st 
+                                    on cast(st.loan_number as char) = cast(cl.LOAN_NUMBER as char)
+                                    and st.type=date_format(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval -1 day),'%d%m%Y')
+                                left join temp_lis_01 en 
+                                    on cast(en.loan_number as char) = cast(cl.LOAN_NUMBER as char)
+                                    and en.type=date_format(date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day),'%d%m%Y')
+                                left join temp_lis_02 py on cast(py.loan_num as char) = cast(cl.LOAN_NUMBER as char) 
+                        WHERE	date_format(cl.BACK_DATE,'%d%m%Y')=date_format(date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day),'%d%m%Y')
+                                and cl.STATUS = 'A'
+                                or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char)from temp_lis_02 ))
+                                and replace(format(cl.INSTALLMENT_COUNT/cl.PERIOD,0),',','') =0";
+
+            if (!empty($getBranch) && $getBranch != 'SEMUA CABANG') {
+                $query .= " AND b.ID = '$getBranch'";
+            }
+
+            $query .= " ORDER BY b.NAME,cl.CREATED_AT ASC";
+
+            $results = DB::select($query);
+
+            $build = [];
+            foreach ($results as $result) {
+
+                $getUsers = User::find($result->SURVEYOR);
+
+                $build[] = [
+                    "KODE CABANG" => $result->KODE ?? '',
+                    "NAMA CABANG" => $result->NAMA_CABANG ?? '',
+                    "NO KONTRAK" =>  (string)($result->NO_KONTRAK ?? ''),
+                    "NAMA PELANGGAN" => $result->NAMA_PELANGGAN ?? '',
+                    "TGL BOOKING" => isset($result->TGL_BOOKING) && !empty($result->TGL_BOOKING) ? date("d-m-Y", strtotime($result->TGL_BOOKING)) : '',
+                    "UB" => $result->UB ?? '',
+                    "PLATFORM" => $result->PLATFORM ?? '',
+                    "ALAMAT TAGIH" => $result->ALAMAT_TAGIH ?? '',
+                    "KODE POS" => $result->KODE_POST ?? '',
+                    "SUBZIP" => '',
+                    "NO TELP" => $result->NO_TELP ?? '',
+                    "NO HP1" => $result->NO_HP ?? '',
+                    "NO HP2" => $result->NO_HP2 ?? '',
+                    "PEKERJAAN" => $result->PEKERJAAN ?? '',
+                    "SUPPLIER" => $result->supplier ?? '',
+                    "SURVEYOR" => $getUsers ? $getUsers->fullname ?? '' : $result->SURVEYOR ?? '',
+                    "CATT SURVEY" => $result->CATT_SURVEY ?? '',
+                    "PKK HUTANG" => intval($result->PKK_HUTANG) ?? 0,
+                    "JML ANGS" => $result->JUMLAH_ANGSURAN ?? '',
+                    "JRK ANGS" => $result->JARAK_ANGSURAN ?? '',
+                    "PERIOD" => $result->PERIOD ?? '',
+                    "OUT PKK AWAL" => intval($result->OUTSTANDING) ?? 0,
+                    "OUT BNG AWAL" => intval($result->OS_BUNGA) ?? 0,
+                    "OVERDUE AWAL" => $result->OVERDUE_AWAL ?? 0,
+                    "AMBC PKK AWAL" => intval($result->AMBC_PKK_AWAL),
+                    "AMBC BNG AWAL" => intval($result->AMBC_BNG_AWAL),
+                    "AMBC TOTAL AWAL" => intval($result->AMBC_TOTAL_AWAL),
+                    "CYCLE AWAL" => $result->CYCLE_AWAL ?? '',
+                    "STS KONTRAK" => $result->STATUS_REC ?? '',
+                    "STS BEBAN" => $result->STATUS_BEBAN ?? '',
+                    "POLA BYR AWAL" => $result->pola_bayar ?? '',
+                    "OUTS PKK AKHIR" => intval($result->OS_PKK_AKHIR) ?? 0,
+                    "OUTS BNG AKHIR" => intval($result->OS_BNG_AKHIR) ?? 0,
+                    "OVERDUE AKHIR" => intval($result->OVERDUE_AKHIR) ?? 0,
+                    "ANGSURAN" => intval($result->INSTALLMENT) ?? 0,
+                    "ANGS KE" => $result->LAST_INST ?? '',
+                    "TIPE ANGSURAN" => $result->tipe ?? '',
+                    "JTH TEMPO AWAL" => $result->F_ARR_CR_SCHEDL == '0' || $result->F_ARR_CR_SCHEDL == '' || $result->F_ARR_CR_SCHEDL == 'null' ? '' : date("d-m-Y", strtotime($result->F_ARR_CR_SCHEDL ?? '')),
+                    "JTH TEMPO AKHIR" => $result->curr_arr == '0' || $result->curr_arr == '' || $result->curr_arr == 'null' ? '' : date("d-m-Y", strtotime($result->curr_arr ?? '')),
+                    "TGL BAYAR" => $result->LAST_PAY == '0' || $result->LAST_PAY == '' || $result->LAST_PAY == 'null' ? '' : date("d-m-Y", strtotime($result->LAST_PAY ?? '')),
+                    "KOLEKTOR" => $result->COLLECTOR,
+                    "CARA BYR" => $result->cara_bayar,
+                    "AMBC PKK_AKHIR" => intval($result->AMBC_PKK_AKHIR) ?? 0,
+                    "AMBC BNG_AKHIR" => intval($result->AMBC_BNG_AKHIR) ?? 0,
+                    "AMBC TOTAL_AKHIR" => intval($result->AMBC_TOTAL_AKHIR) ?? 0,
+                    "AC PKK" => intval($result->AC_PKK),
+                    "AC BNG MRG" => intval($result->AC_BNG_MRG),
+                    "AC TOTAL" => intval($result->AC_TOTAL),
+                    "CYCLE AKHIR" => $result->CYCLE_AKHIR,
+                    "POLA BYR AKHIR" => $result->pola_bayar_akhir,
+                    "NAMA BRG" => $result->jenis_jaminan,
                     "TIPE BRG" =>  $result->COLLATERAL ?? '',
                     "NO POL" =>  $result->POLICE_NUMBER ?? '',
                     "NO MESIN" =>  $result->ENGINE_NUMBER ?? '',
