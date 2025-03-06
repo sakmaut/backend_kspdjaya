@@ -27,4 +27,19 @@ class SurveyRepository implements SurveyInterface
 
         return $query;
     }
+
+    function getDetailSurvey($id)
+    {
+        $query = $this->surveyEntity
+            ->with([
+                'survey_approval',
+                'cr_guarante_vehicle',
+                'cr_survey_document'
+            ])
+            ->where('id', $id)
+            ->whereNull('deleted_at')
+            ->get();
+
+        return $query;
+    }
 }

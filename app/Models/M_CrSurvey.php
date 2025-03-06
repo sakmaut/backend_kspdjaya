@@ -73,6 +73,16 @@ class M_CrSurvey extends Model
         return $this->hasOne(M_SurveyApproval::class, 'CR_SURVEY_ID');
     }
 
+    public function cr_guarante_vehicle()
+    {
+        return $this->hasMany(M_CrGuaranteVehicle::class, 'CR_SURVEY_ID');
+    }
+
+    public function cr_survey_document()
+    {
+        return $this->hasMany(M_CrSurveyDocument::class, 'CR_SURVEY_ID');
+    }
+
     public static function prospek_jaminan()
     {
         $results = DB::table('cr_prospect as t0')
