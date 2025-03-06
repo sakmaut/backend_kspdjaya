@@ -159,7 +159,7 @@ class ListBanController extends Controller
                     $position = $item->position;
                     $amount = is_numeric($item->ORIGINAL_AMOUNT) ? floatval($item->ORIGINAL_AMOUNT) : 0;
 
-                    $setUniq = $cabang . $tgl . $user . $no_invoice;
+                    $setUniq = $cabang . $tgl . $user . $pelanggan;
 
                     if (isset($seenCombinations[$setUniq])) {
                         continue;
@@ -167,12 +167,12 @@ class ListBanController extends Controller
 
                     $seenCombinations[$setUniq] = true;
 
-                    // if ($setUniq) {
-                    //     $cabang = '';
-                    //     $tgl = '';
-                    //     $user = '';
-                    //     $no_invoice = '';
-                    // }
+                    if ($setUniq) {
+                        $cabang = '';
+                        $tgl = '';
+                        $user = '';
+                        $pelanggan = '';
+                    }
 
                     if ($item->JENIS != 'PENCAIRAN') {
                         if ($amount != 0) {
