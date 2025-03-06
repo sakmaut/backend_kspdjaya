@@ -526,6 +526,7 @@ class ReportController extends Controller
                             ) AS b 
                             ON b.payment_id = a.id
                             WHERE a.LOAN_NUM = '$id'
+                            AND a.STTS_RCRD = 'PAID'
                         ) as mp
                         on mp.LOAN_NUM = a.LOAN_NUMBER
                         and date_format(mp.START_DATE,'%d%m%Y') = date_format(a.PAYMENT_DATE,'%d%m%Y')
