@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\Repositories\CollateralTransaction\CollateralTransactionRepository;
 use App\Http\Resources\R_CollateralTransaction;
 use App\Models\M_Branch;
+use App\Models\M_CollateralView;
 use App\Models\M_CrApplication;
 use App\Models\M_CrCollateral;
 use App\Models\M_CrCollateralSertification;
@@ -34,7 +35,7 @@ class BpkbController extends Controller
             $branchId = $request->user()->branch_id;
             $position = $request->user()->position;
 
-            $dto =M_CrCollateral::where('location_branch', empty($branch)?$branchId:$branch)->get();
+            $dto =M_CollateralView::where('location_branch', empty($branch)?$branchId:$branch)->get();
 
             return response()->json($dto, 200);
         } catch (\Exception $e) {
