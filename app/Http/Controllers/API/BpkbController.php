@@ -38,11 +38,7 @@ class BpkbController extends Controller
             $branch = $request->user()->branch_id;
             $position = $request->user()->position;
 
-            if(strtolower($position) === 'ho' || strtolower($position) === 'superadmin'){
-                $dto = M_CrCollateral::get();
-            }else{
-                $dto = M_CrCollateral::where('COLLATERAL_FLAG', $branch)->get();
-            }
+            $dto = DB::query("SELECT * FROM collateral_view")->get();
 
             return response()->json($dto, 200);
         } catch (\Exception $e) {
