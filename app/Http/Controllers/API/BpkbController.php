@@ -30,11 +30,13 @@ class BpkbController extends Controller
     public function index(Request $request)
     {
         try {
-            $showAllCollateralList = $this->collateralTransactionRepository->showAllCollateralListInOriginalBranch($request);
-            $dto = [
-                'data' => R_CollateralTransaction::collection($showAllCollateralList),
-                'pagination' => $this->getPaginationLinks($showAllCollateralList)
-            ];
+            // // $showAllCollateralList = $this->collateralTransactionRepository->showAllCollateralListInOriginalBranch($request);
+            // $dto = [
+            //     'data' => R_CollateralTransaction::collection($showAllCollateralList),
+            //     'pagination' => $this->getPaginationLinks($showAllCollateralList)
+            // ];
+            $branch = $request->user()->branch_id;
+            $dto = M_CrCollateral::where('location_branch', $branch)->get();
 
             return response()->json($dto, 200);
         } catch (\Exception $e) {
