@@ -16,13 +16,28 @@ class CollateralTransactionRepository implements CollateralTransactionInterface
 
     function showAllCollateralListInOriginalBranch($request)
     {
-        $search = $request->query('search');
+        $search = $request->query('type');
         $branch = $request->user()->branch_id;
+        
+        $query = [];
+        if(!empty($search)){
+            $query = $this->collateralEntity::with(['credit.customer', 'originBranch', 'currentBranch']);
 
-        $query = $this->collateralEntity::with(['credit.customer', 'originBranch', 'currentBranch'])
-            ->where('COLLATERAL_FLAG', $branch)
-            ->paginate(10);
+            switch ($search) {
+                case 'origin':
+                    $query->where('COLLATERAL_FLAG', $branch);
+                    break;
+                case 'current':
+                    $query->where('LOCATION_BRANCH', $branch);
+                    break;
+                case 'proc':
+                    $query->where('LOCATION_BRANCH', $branch);
+                    break;
+            }
 
+            $query->paginate(10);
+        }
+       
         return $query;
     }
 }
