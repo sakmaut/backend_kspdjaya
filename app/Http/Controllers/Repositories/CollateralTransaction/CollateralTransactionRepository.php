@@ -14,11 +14,12 @@ class CollateralTransactionRepository implements CollateralTransactionInterface
         $this->collateralEntity = $collateralEntity;
     }
 
-    function showAllCollateralList($request)
+    function showAllCollateralListInOriginalBranch($request)
     {
         $branch = $request->user()->branch_id;
 
         $query = $this->collateralEntity::with(['credit.customer', 'originBranch', 'currentBranch'])
+            ->where('COLLATERAL_FLAG', $branch)
             ->where('LOCATION_BRANCH', $branch)
             ->lazy(1000);
 
