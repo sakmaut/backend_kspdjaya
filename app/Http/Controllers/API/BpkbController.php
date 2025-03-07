@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Repositories\CollateralTransaction\CollateralTransactionRepository;
+use App\Http\Resources\R_CollateralTransaction;
 use App\Models\M_Branch;
 use App\Models\M_CrApplication;
 use App\Models\M_CrCollateral;
@@ -29,60 +30,12 @@ class BpkbController extends Controller
     public function index(Request $request)
     {
         try {
+            $showAllCollateralList = $this->collateralTransactionRepository->showAllCollateralList($request);
+            $dto = R_CollateralTransaction::collection($showAllCollateralList);
 
-            $branch = $request->user()->branch_id;
-
-            $sql = "SELECT	d.NAME as pos_pencairan, 
-                            e.NAME as posisi_berkas,
-                            b.LOAN_NUMBER as no_kontrak, 
-                            c.NAME as debitur,
-                            b.STATUS as status_credit,
-                            a.STATUS as status_jaminan,
-                            a.*
-                    FROM	cr_collateral a
-                            inner join credit b on b.ID = a.CR_CREDIT_ID
-                            inner join customer c on c.CUST_CODE = b.CUST_CODE
-                            left join branch d on d.ID = a.COLLATERAL_FLAG
-                            left join branch e on e.ID = a.LOCATION_BRANCH
-                    WHERE	a.LOCATION_BRANCH = '$branch' ";
-
-            $results = DB::select($sql);
-
-            $data = [];
-            foreach ($results as $list) {
-
-                $data[] = [
-                    "type" => "kendaraan",
-                    'nama_debitur' => $list->debitur ?? NULL,
-                    'order_number' => $list->no_kontrak ?? NULL,
-                    'no_jaminan' => $list->BPKB_NUMBER ?? NULL,
-                    'status_kontrak' => $list->status_credit == 'D' ? 'inactive' : 'active',
-                    'id' => $list->ID,
-                    'status_jaminan' => $list->status_jaminan,
-                    "tipe" => $list->TYPE,
-                    "merk" => $list->BRAND,
-                    "tahun" => $list->PRODUCTION_YEAR,
-                    "warna" => $list->COLOR,
-                    "atas_nama" => $list->ON_BEHALF,
-                    "no_polisi" => $list->POLICE_NUMBER,
-                    "no_rangka" => $list->CHASIS_NUMBER,
-                    "no_mesin" => $list->ENGINE_NUMBER,
-                    "no_bpkb" => $list->BPKB_NUMBER,
-                    "no_stnk" => $list->STNK_NUMBER,
-                    "tgl_stnk" => $list->STNK_VALID_DATE,
-                    "nilai" => (int) $list->VALUE,
-                    "asal_lokasi" => $list->pos_pencairan ?? '',
-                    "lokasi" => $list->posisi_berkas ?? $list->LOCATION_BRANCH,
-                    "document" => $this->getCollateralDocument($list->ID, ['no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri']) ?? null,
-                    "document_rilis" => $this->attachment($list->ID, "'doc_rilis'") ?? null,
-                ];
-            }
-
-            ActivityLogger::logActivity($request, "Success", 200);
-            return response()->json($data, 200);
+            return response()->json($dto, 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
