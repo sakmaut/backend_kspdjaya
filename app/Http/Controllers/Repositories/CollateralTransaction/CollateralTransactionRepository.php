@@ -26,7 +26,7 @@ class CollateralTransactionRepository implements CollateralTransactionInterface
         //     $query->where('COLLATERAL_FLAG', $branch);
         // }
 
-        $query->all();
+        $query->get();
         
         // $query = [];
         // if(!empty($search)){
