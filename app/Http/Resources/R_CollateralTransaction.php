@@ -15,26 +15,6 @@ class R_CollateralTransaction extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        // Check if the resource is a paginated instance
-        $pagination = null;
-        if ($this->resource instanceof \Illuminate\Pagination\LengthAwarePaginator) {
-            $pagination = [
-                'current_page' => $this->resource->currentPage(),
-                'data' => $this->resource->items(), // Paginated data (e.g., the actual list of collateral items)
-                'first_page_url' => $this->resource->url(1),
-                'from' => $this->resource->firstItem(),
-                'last_page' => $this->resource->lastPage(),
-                'last_page_url' => $this->resource->url($this->resource->lastPage()),
-                'links' => $this->getPaginationLinks(),
-                'next_page_url' => $this->resource->nextPageUrl(),
-                'path' => $this->resource->path(),
-                'per_page' => $this->resource->perPage(),
-                'prev_page_url' => $this->resource->previousPageUrl(),
-                'to' => $this->resource->lastItem(),
-                'total' => $this->resource->total(),
-            ];
-        }
-
         return [
             "type" => "kendaraan",
             'nama_debitur' => optional($this->credit)->customer->NAME ?? '',
@@ -59,7 +39,11 @@ class R_CollateralTransaction extends JsonResource
             "lokasi" => optional($this->currentBranch)->NAME ?? '',
             "document" => $this->getCollateralDocument($this->ID, ['no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri']) ?? null,
             "document_rilis" => $this->attachment($this->ID, "'doc_rilis'") ?? null,
-            'pagination' => $pagination,
+            'pagination' => [
+                "current_page" => $this->current_page,
+                "first_page_url" => $this->first_page_url,
+                "from" => $this->from,
+            ],
         ];
     }
 
