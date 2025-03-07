@@ -39,7 +39,7 @@ class BpkbController extends Controller
             $position = $request->user()->position;
 
             if(strtolower($position) === 'ho' || strtolower($position) === 'superadmin'){
-                $dto = M_CrCollateral::all();
+                $dto = M_CrCollateral::get();
             }else{
                 $dto = M_CrCollateral::where('COLLATERAL_FLAG', $branch)->get();
             }
