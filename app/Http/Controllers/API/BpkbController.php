@@ -36,7 +36,7 @@ class BpkbController extends Controller
             //     'pagination' => $this->getPaginationLinks($showAllCollateralList)
             // ];
             $branch = $request->user()->branch_id;
-            $dto = M_CrCollateral::where('location_branch', $branch)->get();
+            $dto = M_CrCollateral::where('COLLATERAL_FLAG', $branch)->get();
 
             return response()->json($dto, 200);
         } catch (\Exception $e) {
