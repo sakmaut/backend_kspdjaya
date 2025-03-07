@@ -35,10 +35,11 @@ class BpkbController extends Controller
             //     'data' => R_CollateralTransaction::collection($showAllCollateralList),
             //     'pagination' => $this->getPaginationLinks($showAllCollateralList)
             // ];
-            $branch = $request->user()->branch_id;
+            $branch = $request->query('branch');
+            $branchId = $request->user()->branch_id;
             $position = $request->user()->position;
 
-            $dto = DB::table('collateral_view')->paginate(10);
+            $dto =M_CrCollateral::where('location_branch', empty($branch)?$branchId:$branch)->get();;
 
             return response()->json($dto, 200);
         } catch (\Exception $e) {
