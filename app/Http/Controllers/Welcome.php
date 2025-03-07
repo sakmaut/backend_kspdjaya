@@ -62,11 +62,11 @@ class Welcome extends Controller
 
                 $setUrl = "https://los.kspdjaya.id";
 
-                if ($request->getBaseUrl() == $setUrl || $currentTime >= 23 || $currentTime < 3) {
+                if ($request->getSchemeAndHttpHost() == $setUrl || $currentTime >= 23 || $currentTime < 3) {
                     throw new Exception("Akses API dibatasi pada jam 11 malam hingga 3 pagi.", 503);
                 }
 
-                return response()->json("OK MASUK " . $request->getBaseUrl(), 200);
+                return response()->json("OK MASUK " . $request->getSchemeAndHttpHost(), 200);
             } catch (\Throwable $e) {
                 return response()->json($e->getMessage(), 503);
             }
