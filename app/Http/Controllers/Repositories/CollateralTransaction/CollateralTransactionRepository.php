@@ -20,7 +20,7 @@ class CollateralTransactionRepository implements CollateralTransactionInterface
 
         $query = $this->collateralEntity::with(['credit.customer', 'originBranch', 'currentBranch'])
             ->where('LOCATION_BRANCH', $branch)
-            ->lazy(100);
+            ->lazy(1000);
 
         return $query;
     }
