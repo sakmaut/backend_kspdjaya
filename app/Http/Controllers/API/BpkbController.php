@@ -31,7 +31,7 @@ class BpkbController extends Controller
     {
         try {
             $showAllCollateralList = $this->collateralTransactionRepository->showAllCollateralListInOriginalBranch($request);
-            $dto = R_CollateralTransaction::collection($showAllCollateralList);
+            $dto = new R_CollateralTransaction($showAllCollateralList);
 
             return response()->json($dto, 200);
         } catch (\Exception $e) {
