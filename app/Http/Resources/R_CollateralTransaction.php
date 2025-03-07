@@ -38,7 +38,7 @@ class R_CollateralTransaction extends JsonResource
             "asal_lokasi" => optional($this->originBranch)->NAME ?? '',
             "lokasi" => optional($this->currentBranch)->NAME ?? '',
             "document" => $this->getCollateralDocument($this->ID, ['no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri']) ?? null,
-            "document_rilis" => $this->attachment($this->ID, "'doc_rilis'") ?? null
+            "document_rilis" => $this->attachment($this->ID, "'doc_rilis'") ?? null,
         ];
     }
 
