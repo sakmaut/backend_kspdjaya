@@ -2,19 +2,26 @@
 
 namespace App\Http\Controllers\Repositories\CollateralTransaction;
 
-use App\Http\Controllers\Controller;
-use App\Http\Controllers\Repositories\Collateral\CollateralRepository;
 use App\Models\M_CrCollateral;
 use Illuminate\Http\Request;
 
 class CollateralTransactionRepository implements CollateralTransactionInterface
 {
     protected $collateralEntity;
-    protected $collateralRepository;
 
-    function __construct(M_CrCollateral $collateralEntity, CollateralRepository $collateralRepository)
+    function __construct(M_CrCollateral $collateralEntity)
     {
         $this->collateralEntity = $collateralEntity;
-        $this->collateralRepository = $collateralRepository;
+    }
+
+    function showAllCollateralList($request)
+    {
+        $branch = $request->user()->branch_id;
+
+        $query = $this->collateralEntity::with(['credit.customer', 'originBranch', 'currentBranch'])
+            ->where('LOCATION_BRANCH', $branch)
+            ->get();
+
+        return $query;
     }
 }
