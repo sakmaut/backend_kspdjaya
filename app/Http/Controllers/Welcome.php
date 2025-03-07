@@ -60,7 +60,7 @@ class Welcome extends Controller
             try {
                 $currentTime = Carbon::now()->format('H');
 
-                $setUrl = "https://los.kspdjaya.id";
+                $setUrl = "https://api.kspdjaya.id";
                 $time1= 19;
                 $time2 = 3;
 
