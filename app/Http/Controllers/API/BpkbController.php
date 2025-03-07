@@ -31,12 +31,28 @@ class BpkbController extends Controller
     {
         try {
             $showAllCollateralList = $this->collateralTransactionRepository->showAllCollateralListInOriginalBranch($request);
-            $dto = R_CollateralTransaction::collection($showAllCollateralList);
+            $dto = [
+                'data' => R_CollateralTransaction::collection($showAllCollateralList),
+                'pagination' => $this->getPaginationLinks($showAllCollateralList)
+            ];
 
             return response()->json($dto, 200);
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
         }
+    }
+
+    protected function getPaginationLinks($db)
+    {
+        $pagination = [
+            'current_page' => $db->currentPage(),
+            'next_page_url' => $db->nextPageUrl(),
+            'previous_page_url' => $db->previousPageUrl(),
+            'total' => $db->total(),
+            'per_page' => $db->perPage(),
+        ];
+
+        return $pagination;
     }
 
     public function forpostjaminan(Request $request)
