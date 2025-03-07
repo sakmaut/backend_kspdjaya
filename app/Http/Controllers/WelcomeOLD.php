@@ -44,7 +44,7 @@ use Illuminate\Support\Facades\URL;
 
 use function Symfony\Component\Mailer\Event\getMessage;
 
-class Welcome extends Controller
+class WelcomeOLD extends Controller
 {
     protected $locationStatus;
 
