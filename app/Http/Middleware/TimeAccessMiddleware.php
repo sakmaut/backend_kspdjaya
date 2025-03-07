@@ -21,7 +21,7 @@ class TimeAccessMiddleware
             $currentTime = Carbon::now()->format('H');
 
             $setUrl = "https://api.kspdjaya.id";
-            $time1 = 11;
+            $time1 = 23;
             $time2 = 3;
 
             if ($request->getSchemeAndHttpHost() == $setUrl && ($currentTime >= $time1 || $currentTime < $time2)) {
