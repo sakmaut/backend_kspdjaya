@@ -15,12 +15,14 @@ class R_CollateralTransaction extends JsonResource
      */
     public function toArray(Request $request): array
     {
+
+
         return [
             "type" => "kendaraan",
-            'nama_debitur' => optional($this->credit->customer)->NAME ?? '',
-            'order_number' => $this->credit->LOAN_NUMBER ?? '',
-            'no_jaminan' => $this->BPKB_NUMBER ?? '',
-            'status_kontrak' => ($this->credit->STATUS == 'D' || $this->credit->STATUS == '') ? 'inactive' : 'active',
+            'nama_debitur' => optional($this->credit)->customer->NAME ?? '',
+            'order_number' => optional($this->credit)->LOAN_NUMBER ?? '',
+            'no_jaminan' => optional($this)->BPKB_NUMBER ?? '',
+            'status_kontrak' => (optional($this->credit)->STATUS == 'D' || optional($this->credit)->STATUS == '') ? 'inactive' : 'active',
             'id' => $this->ID ?? '',
             'status_jaminan' => $this->STATUS ?? '',
             "tipe" => $this->TYPE ?? '',
