@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Carbon\Carbon;
 use Closure;
+use Exception;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -16,12 +17,20 @@ class TimeAccessMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $currentTime = Carbon::now()->format('H');
+        try {
+            $currentTime = Carbon::now()->format('H');
 
-        if ($currentTime >= 23 || $currentTime < 3) {
-            abort(403, 'Akses API dibatasi pada jam 11 malam hingga 3 pagi.');
+            $setUrl = "https://api.kspdjaya.id";
+            $time1 = 11;
+            $time2 = 3;
+
+            if ($request->getSchemeAndHttpHost() == $setUrl && ($currentTime >= $time1 || $currentTime < $time2)) {
+                throw new Exception("Akses API dibatasi pada jam " . $time1 . " malam hingga " . $time2 . " pagi.", 503);
+            }
+
+            return $next($request);
+        } catch (\Throwable $e) {
+            return response()->json($e->getMessage(), 503);
         }
-        
-        return $next($request);
     }
 }
