@@ -34,8 +34,7 @@ class BpkbController extends Controller
             $branchId = $request->user()->branch_id;
             $position = $request->user()->position;
 
-            $showAllCollateralList =M_CrCollateral::where('location_branch', empty($branch)?$branchId:$branch)->get();
-            $dto = R_CollateralTransaction::collection($showAllCollateralList);
+            $dto =M_CrCollateral::where('location_branch', empty($branch)?$branchId:$branch)->get();
 
             return response()->json($dto, 200);
         } catch (\Exception $e) {
