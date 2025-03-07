@@ -38,7 +38,12 @@ class R_CollateralTransaction extends JsonResource
             "asal_lokasi" => optional($this->originBranch)->NAME ?? '',
             "lokasi" => optional($this->currentBranch)->NAME ?? '',
             "document" => $this->getCollateralDocument($this->ID, ['no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri']) ?? null,
-            "document_rilis" => $this->attachment($this->ID, "'doc_rilis'") ?? null
+            "document_rilis" => $this->attachment($this->ID, "'doc_rilis'") ?? null,
+            'pagination' => [
+                "current_page" => $this->current_page,
+                "first_page_url" => $this->first_page_url,
+                "from" => $this->from,
+            ],
         ];
     }
 
@@ -47,36 +52,36 @@ class R_CollateralTransaction extends JsonResource
      *
      * @return array
      */
-    // protected function getPaginationLinks()
-    // {
-    //     $links = [];
+    protected function getPaginationLinks()
+    {
+        $links = [];
 
-    //     if ($this->resource->currentPage() > 1) {
-    //         $links[] = [
-    //             'url' => $this->resource->previousPageUrl(),
-    //             'label' => '&laquo; Previous',
-    //             'active' => false,
-    //         ];
-    //     }
+        if ($this->resource->currentPage() > 1) {
+            $links[] = [
+                'url' => $this->resource->previousPageUrl(),
+                'label' => '&laquo; Previous',
+                'active' => false,
+            ];
+        }
 
-    //     foreach ($this->resource->getUrlRange(1, $this->resource->lastPage()) as $page => $url) {
-    //         $links[] = [
-    //             'url' => $url,
-    //             'label' => (string) $page,
-    //             'active' => $page === $this->resource->currentPage(),
-    //         ];
-    //     }
+        foreach ($this->resource->getUrlRange(1, $this->resource->lastPage()) as $page => $url) {
+            $links[] = [
+                'url' => $url,
+                'label' => (string) $page,
+                'active' => $page === $this->resource->currentPage(),
+            ];
+        }
 
-    //     if ($this->resource->hasMorePages()) {
-    //         $links[] = [
-    //             'url' => $this->resource->nextPageUrl(),
-    //             'label' => 'Next &raquo;',
-    //             'active' => false,
-    //         ];
-    //     }
+        if ($this->resource->hasMorePages()) {
+            $links[] = [
+                'url' => $this->resource->nextPageUrl(),
+                'label' => 'Next &raquo;',
+                'active' => false,
+            ];
+        }
 
-    //     return $links;
-    // }
+        return $links;
+    }
 
     public function attachment($collateralId, $data)
     {
