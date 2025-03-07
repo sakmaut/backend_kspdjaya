@@ -38,8 +38,8 @@ class BpkbController extends Controller
             $branch = $request->user()->branch_id;
             $position = $request->user()->position;
 
-            if(strtolower($position) === 'ho'){
-                $dto = M_CrCollateral::get();
+            if(strtolower($position) === 'ho' || strtolower($position) === 'superadmin'){
+                $dto = M_CrCollateral::all();
             }else{
                 $dto = M_CrCollateral::where('COLLATERAL_FLAG', $branch)->get();
             }
