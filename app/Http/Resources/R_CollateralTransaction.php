@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
 class R_CollateralTransaction extends JsonResource
@@ -38,7 +39,7 @@ class R_CollateralTransaction extends JsonResource
             "asal_lokasi" => optional($this->originBranch)->NAME ?? '',
             "lokasi" => optional($this->currentBranch)->NAME ?? '',
             "document" => $this->getCollateralDocument($this->ID, ['no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri']) ?? null,
-            "document_rilis" => $this->attachment($this->ID, "'doc_rilis'") ?? null,
+            "document_rilis" => $this->attachment($this->ID, "'doc_rilis'") ?? null
         ];
     }
 
@@ -47,43 +48,6 @@ class R_CollateralTransaction extends JsonResource
      *
      * @return array
      */
-    // protected function getPaginationLinks()
-    // {
-    //     $links = [];
-
-    //     if ($this->resource->currentPage() > 1) {
-    //         $links[] = [
-    //             'url' => $this->resource->previousPageUrl(),
-    //             'label' => '&laquo; Previous',
-    //             'active' => false,
-    //         ];
-    //     }
-
-    //     foreach ($this->resource->getUrlRange(1, $this->resource->lastPage()) as $page => $url) {
-    //         $links[] = [
-    //             'url' => $url,
-    //             'label' => (string) $page,
-    //             'active' => $page === $this->resource->currentPage(),
-    //         ];
-    //     }
-
-    //     if ($this->resource->hasMorePages()) {
-    //         $links[] = [
-    //             'url' => $this->resource->nextPageUrl(),
-    //             'label' => 'Next &raquo;',
-    //             'active' => false,
-    //         ];
-    //     }
-
-    //     return $links;
-    // }
-
-    // "pagination" => [
-    //     'current_page' => $this->currentPage(),
-    //     'last_page' => $this->lastPage(),
-    //     'per_page' => $this->perPage(),
-    //     'total' => $this->total(),
-    // ]
 
     public function attachment($collateralId, $data)
     {
