@@ -35,7 +35,7 @@ class BpkbController extends Controller
             $branchId = $request->user()->branch_id;
             $position = $request->user()->position;
 
-            $dto =M_CollateralView::where('location_branch', empty($branch)?$branchId:$branch)->get();
+            $dto =M_CollateralView::where('collateral_flag', empty($branch)?$branchId:$branch)->get();
 
             return response()->json($dto, 200);
         } catch (\Exception $e) {
