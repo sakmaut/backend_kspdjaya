@@ -68,7 +68,13 @@ class Welcome extends Controller
                     throw new Exception("Akses API dibatasi pada jam" . $time1. " malam hingga ".$time2." pagi.", 503);
                 }
 
-                return response()->json("OK MASUK " . $request->getSchemeAndHttpHost(), 200);
+                if($request->getSchemeAndHttpHost() == $setUrl){
+                    $ok = "sama";
+                }else{
+                    $ok = "tdak";
+                }
+
+                return response()->json("OK MASUK " . $request->getSchemeAndHttpHost()." ".$ok, 200);
             } catch (\Throwable $e) {
                 return response()->json($e->getMessage(), 503);
             }
