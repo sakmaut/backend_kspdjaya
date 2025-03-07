@@ -135,6 +135,12 @@ class BpkbTransactionController extends Controller
                         'STATUS' => 'SENDING'
                     ];
                     $collateralIds[] = $res['id'];
+
+                    $checkCollateralId = M_CrCollateral::where('ID', $res['id'])->first();
+
+                    if($checkCollateralId){
+                        $checkCollateralId->update(['STATUS' => 'SENDING']);
+                    }
                 }
 
                 M_BpkbDetail::insert($details);
@@ -310,7 +316,11 @@ class BpkbTransactionController extends Controller
                     $collateralIds = $bpkbDetails->pluck('COLLATERAL_ID')->toArray();
 
                     if (!empty($collateralIds)) {
-                        M_CrCollateral::whereIn('ID', $collateralIds)->update(['LOCATION_BRANCH' => $request->user()->branch_id ?? '']);
+                        M_CrCollateral::whereIn('ID', $collateralIds)
+                            ->update([
+                                'LOCATION_BRANCH' => $request->user()->branch_id ?? '',
+                                'STATUS' => 'NORMAL'
+                            ]);
                     }
 
                     foreach ($request->jaminan as $list) {
