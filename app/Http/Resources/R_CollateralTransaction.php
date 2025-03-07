@@ -15,6 +15,26 @@ class R_CollateralTransaction extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        // Check if the resource is a paginated instance
+        $pagination = null;
+        if ($this->resource instanceof \Illuminate\Pagination\LengthAwarePaginator) {
+            $pagination = [
+                'current_page' => $this->resource->currentPage(),
+                'data' => $this->resource->items(), // Paginated data (e.g., the actual list of collateral items)
+                'first_page_url' => $this->resource->url(1),
+                'from' => $this->resource->firstItem(),
+                'last_page' => $this->resource->lastPage(),
+                'last_page_url' => $this->resource->url($this->resource->lastPage()),
+                'links' => $this->getPaginationLinks(),
+                'next_page_url' => $this->resource->nextPageUrl(),
+                'path' => $this->resource->path(),
+                'per_page' => $this->resource->perPage(),
+                'prev_page_url' => $this->resource->previousPageUrl(),
+                'to' => $this->resource->lastItem(),
+                'total' => $this->resource->total(),
+            ];
+        }
+
         return [
             "type" => "kendaraan",
             'nama_debitur' => optional($this->credit)->customer->NAME ?? '',
@@ -39,15 +59,44 @@ class R_CollateralTransaction extends JsonResource
             "lokasi" => optional($this->currentBranch)->NAME ?? '',
             "document" => $this->getCollateralDocument($this->ID, ['no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri']) ?? null,
             "document_rilis" => $this->attachment($this->ID, "'doc_rilis'") ?? null,
-            'pagination' => [
-                'total' => $this->resource->total(),
-                'current_page' => $this->resource->currentPage(),
-                'per_page' => $this->resource->perPage(),
-                'last_page' => $this->resource->lastPage(),
-                'from' => $this->resource->firstItem(),
-                'to' => $this->resource->lastItem(),
-            ],
+            'pagination' => $pagination,
         ];
+    }
+
+    /**
+     * Get pagination links for the response.
+     *
+     * @return array
+     */
+    protected function getPaginationLinks()
+    {
+        $links = [];
+
+        if ($this->resource->currentPage() > 1) {
+            $links[] = [
+                'url' => $this->resource->previousPageUrl(),
+                'label' => '&laquo; Previous',
+                'active' => false,
+            ];
+        }
+
+        foreach ($this->resource->getUrlRange(1, $this->resource->lastPage()) as $page => $url) {
+            $links[] = [
+                'url' => $url,
+                'label' => (string) $page,
+                'active' => $page === $this->resource->currentPage(),
+            ];
+        }
+
+        if ($this->resource->hasMorePages()) {
+            $links[] = [
+                'url' => $this->resource->nextPageUrl(),
+                'label' => 'Next &raquo;',
+                'active' => false,
+            ];
+        }
+
+        return $links;
     }
 
     public function attachment($collateralId, $data)
