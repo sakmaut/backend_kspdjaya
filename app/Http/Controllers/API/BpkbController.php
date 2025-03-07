@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Repositories\CollateralTransaction\CollateralTransactionRepository;
 use App\Models\M_Branch;
 use App\Models\M_CrApplication;
 use App\Models\M_CrCollateral;
@@ -14,6 +16,16 @@ use Illuminate\Support\Facades\DB;
 
 class BpkbController extends Controller
 {
+
+    protected $collateralTransactionRepository;
+    protected $log;
+
+    public function __construct(CollateralTransactionRepository $collateralTransactionRepository, ExceptionHandling $log)
+    {
+        $this->collateralTransactionRepository = $collateralTransactionRepository;
+        $this->log = $log;
+    }
+
     public function index(Request $request)
     {
         try {
