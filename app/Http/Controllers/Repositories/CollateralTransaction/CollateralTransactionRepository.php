@@ -22,11 +22,11 @@ class CollateralTransactionRepository implements CollateralTransactionInterface
 
         $query = $this->collateralEntity::with(['credit.customer', 'originBranch', 'currentBranch']);
         
-        if(strtolower($position) != 'ho'){
-            $query->where('COLLATERAL_FLAG', $branch);
-        }
+        // if(strtolower($position) != 'ho'){
+        //     $query->where('COLLATERAL_FLAG', $branch);
+        // }
 
-        $query->paginate(10);
+        $query->all();
         
         // $query = [];
         // if(!empty($search)){
