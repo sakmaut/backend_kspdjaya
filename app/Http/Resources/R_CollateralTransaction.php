@@ -17,10 +17,10 @@ class R_CollateralTransaction extends JsonResource
     {
         return [
             "type" => "kendaraan",
-            'nama_debitur' => $this->credit->customer->NAME ?? '',
+            'nama_debitur' => optional($this->credit->customer)->NAME ?? '',
             'order_number' => $this->credit->LOAN_NUMBER ?? '',
             'no_jaminan' => $this->BPKB_NUMBER ?? '',
-            'status_kontrak' => $this->credit->STATUS == 'D' || $this->credit->STATUS == '' ? 'inactive' : 'active',
+            'status_kontrak' => ($this->credit->STATUS == 'D' || $this->credit->STATUS == '') ? 'inactive' : 'active',
             'id' => $this->ID ?? '',
             'status_jaminan' => $this->STATUS ?? '',
             "tipe" => $this->TYPE ?? '',
@@ -34,9 +34,9 @@ class R_CollateralTransaction extends JsonResource
             "no_bpkb" => $this->BPKB_NUMBER ?? '',
             "no_stnk" => $this->STNK_NUMBER ?? '',
             "tgl_stnk" => $this->STNK_VALID_DATE ?? '',
-            "nilai" =>  intval($this->VALUE),
-            "asal_lokasi" => $this->originBranch->NAME ?? '',
-            "lokasi" => $this->currentBranch->NAME ?? '',
+            "nilai" => intval($this->VALUE),
+            "asal_lokasi" => optional($this->originBranch)->NAME ?? '',
+            "lokasi" => optional($this->currentBranch)->NAME ?? '',
             "document" => $this->getCollateralDocument($this->ID, ['no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri']) ?? null,
             "document_rilis" => $this->attachment($this->ID, "'doc_rilis'") ?? null,
         ];
