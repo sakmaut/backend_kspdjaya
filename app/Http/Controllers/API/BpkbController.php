@@ -38,7 +38,7 @@ class BpkbController extends Controller
             $branch = $request->user()->branch_id;
             $position = $request->user()->position;
 
-            $dto = DB::select("SELECT * FROM collateral_view");
+            $dto = DB::select(DB::raw("SELECT * FROM collateral_view"));
 
             return response()->json($dto, 200);
         } catch (\Exception $e) {
