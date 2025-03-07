@@ -61,12 +61,20 @@ class Welcome extends Controller
                 $currentTime = Carbon::now()->format('H');
 
                 $setUrl = "https://los.kspdjaya.id";
+                $time1= 19;
+                $time2 = 3;
 
-                if ($request->getSchemeAndHttpHost() == $setUrl && $currentTime >= 19 || $currentTime < 3) {
-                    throw new Exception("Akses API dibatasi pada jam 11 malam hingga 3 pagi.", 503);
+                if ($request->getSchemeAndHttpHost() == $setUrl && ($currentTime >= $time1 || $currentTime < $time2)) {
+                    throw new Exception("Akses API dibatasi pada jam" . $time1. " malam hingga ".$time2." pagi.", 503);
                 }
 
-                return response()->json("OK MASUK " . $request->getSchemeAndHttpHost(), 200);
+                if($request->getSchemeAndHttpHost() == $setUrl){
+                    $ok = "sama";
+                }else{
+                    $ok = "tdak";
+                }
+
+                return response()->json("OK MASUK " . $request->getSchemeAndHttpHost()." ".$ok, 200);
             } catch (\Throwable $e) {
                 return response()->json($e->getMessage(), 503);
             }
