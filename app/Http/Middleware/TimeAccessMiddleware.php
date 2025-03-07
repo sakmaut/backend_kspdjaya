@@ -22,6 +22,7 @@ class TimeAccessMiddleware
 
             $setUrl = "https://api.kspdjaya.id";
             $time1 = 8;
+            $time1 = 23;
             $time2 = 3;
 
             if ($request->getSchemeAndHttpHost() == $setUrl && ($currentTime >= $time1 || $currentTime < $time2)) {

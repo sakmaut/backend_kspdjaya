@@ -18,25 +18,27 @@ class CollateralTransactionRepository implements CollateralTransactionInterface
     {
         $search = $request->query('type');
         $branch = $request->user()->branch_id;
+
+        $query = $this->collateralEntity::with(['credit.customer', 'originBranch', 'currentBranch'])->paginate(10);
         
-        $query = [];
-        if(!empty($search)){
-            $query = $this->collateralEntity::with(['credit.customer', 'originBranch', 'currentBranch']);
+        // $query = [];
+        // if(!empty($search)){
+        //     $query = $this->collateralEntity::with(['credit.customer', 'originBranch', 'currentBranch']);
 
-            switch ($search) {
-                case 'origin':
-                    $query->where('COLLATERAL_FLAG', $branch);
-                    break;
-                case 'current':
-                    $query->where('LOCATION_BRANCH', $branch);
-                    break;
-                case 'proc':
-                    $query->where('LOCATION_BRANCH', $branch);
-                    break;
-            }
+        //     switch ($search) {
+        //         case 'origin':
+        //             $query->where('COLLATERAL_FLAG', $branch);
+        //             break;
+        //         case 'current':
+        //             $query->where('LOCATION_BRANCH', $branch);
+        //             break;
+        //         case 'process':
+        //             $query->where('LOCATION_BRANCH', 'SENDING');
+        //             break;
+        //     }
 
-            $query->paginate(10);
-        }
+        //     $query->paginate(10);
+        // }
        
         return $query;
     }
