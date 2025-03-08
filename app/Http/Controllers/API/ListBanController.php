@@ -233,105 +233,12 @@ class ListBanController extends Controller
                         b.user_id,
                         u.fullname,
                         u.position
-                    FROM (SELECT 
-                        CASE 
-                            WHEN a.ACC_KEYS LIKE '%DENDA%' THEN 'DENDA'
-                            ELSE b.TITLE 
-                        END AS JENIS, 
-                        b.BRANCH AS BRANCH, 
-                        d.ID AS BRANCH_ID, 
-                        d.NAME AS nama_cabang,
-                        DATE_FORMAT(b.ENTRY_DATE, '%Y-%m-%d') AS ENTRY_DATE, 
-                        SUM(a.ORIGINAL_AMOUNT) AS ORIGINAL_AMOUNT,
-                        b.LOAN_NUM,
-                        b.PAYMENT_METHOD,
-                        b.INVOICE AS no_invoice,
-                        CASE 
-                            WHEN a.ACC_KEYS LIKE '%DENDA%' THEN 'DENDA'
-                            ELSE b.TITLE 
-                        END AS angsuran_ke,
-                        b.USER_ID AS user_id,
-                        '' AS admin_fee
-                    FROM 
-                        payment_detail a
-                    INNER JOIN payment b ON b.ID = a.PAYMENT_ID
-                    LEFT JOIN arrears c ON c.ID = b.ARREARS_ID
-                    LEFT JOIN branch d ON d.CODE_NUMBER = b.BRANCH
-                    WHERE a.ACC_KEYS in ('ANGSURAN_POKOK','ANGSURAN_BUNGA','BAYAR PELUNASAN PINALTY','BAYAR_POKOK','BAYAR_BUNGA','BAYAR_DENDA')
-                    GROUP BY 
-                        CASE 
-                            WHEN a.ACC_KEYS LIKE '%DENDA%' THEN 'DENDA'
-                            ELSE b.TITLE 
-                        END, 
-                        b.BRANCH, 
-                        d.ID, 
-                        d.NAME, 
-                        DATE_FORMAT(b.ENTRY_DATE, '%Y-%m-%d'), 
-                        b.LOAN_NUM,
-                        b.PAYMENT_METHOD,
-                        b.INVOICE,
-                        CASE 
-                            WHEN a.ACC_KEYS LIKE '%DENDA%' THEN 'DENDA'
-                            ELSE b.TITLE 
-                        END,
-                        b.USER_ID
-                    UNION ALL
-                    SELECT 
-                        'PEMBULATAN' AS JENIS, 
-                        d.CODE_NUMBER AS BRANCH, 
-                        d.ID AS BRANCH_ID, 
-                        d.NAME AS nama_cabang,
-                        DATE_FORMAT(a.CREATED_AT, '%Y-%m-%d') AS ENTRY_DATE, 
-                        SUM(a.PEMBULATAN) AS ORIGINAL_AMOUNT,
-                        a.LOAN_NUMBER as LOAN_NUM,
-                        a.METODE_PEMBAYARAN,
-                        a.NO_TRANSAKSI AS no_invoice,
-                        'PEMBULATAN' AS angsuran_ke,
-                        a.CREATED_BY AS user_id,
-                        '' AS admin_fee
-                    FROM kwitansi a
-                    LEFT JOIN branch d ON d.ID = a.BRANCH_CODE
-                    GROUP BY 
-                        d.CODE_NUMBER, 
-                        d.ID, 
-                        d.NAME, 
-                        DATE_FORMAT(a.CREATED_AT, '%Y-%m-%d'), 
-                        a.LOAN_NUMBER,
-                        a.METODE_PEMBAYARAN,
-                        a.NO_TRANSAKSI, 
-                        a.CREATED_BY 
-                    UNION ALL
-                    SELECT 
-                        'PENCAIRAN' AS JENIS, 
-                        b.CODE_NUMBER AS BRANCH,
-                        b.ID AS BRANCH_ID, 
-                        b.NAME AS nama_cabang,
-                        DATE_FORMAT(a.CREATED_AT, '%Y-%m-%d') AS ENTRY_DATE,
-                        a.PCPL_ORI AS ORIGINAL_AMOUNT,
-                        a.LOAN_NUMBER AS LOAN_NUM,
-                        'cash' AS PAYMENT_METHOD,
-                        '' AS no_invoice,
-                        '' AS angsuran_ke,
-                        a.CREATED_BY AS user_id,
-                        a.TOTAL_ADMIN AS admin_fee
-                    FROM 
-                        credit a
-                    INNER JOIN branch b ON b.id = a.BRANCH
-                    WHERE 
-                        a.STATUS = 'A'
-                    GROUP BY 
-                        b.CODE_NUMBER, 
-                        b.ID, 
-                        b.NAME, 
-                        DATE_FORMAT(a.CREATED_AT, '%Y-%m-%d'),
-                        a.PCPL_ORI, 
-                        a.LOAN_NUMBER, 
-                        a.CREATED_BY, 
-                        a.TOTAL_ADMIN
                     FROM (
                         SELECT 
-                            case when a.ACC_KEYS like '%DENDA%' then 'DENDA'
-        	 				else b.TITLE end AS JENIS, 
+                            CASE 
+                                WHEN a.ACC_KEYS LIKE '%DENDA%' THEN 'DENDA'
+                                ELSE b.TITLE 
+                            END AS JENIS, 
                             b.BRANCH AS BRANCH, 
                             d.ID AS BRANCH_ID, 
                             d.NAME AS nama_cabang,
@@ -340,8 +247,10 @@ class ListBanController extends Controller
                             b.LOAN_NUM,
                             b.PAYMENT_METHOD,
                             b.INVOICE AS no_invoice,
-                            case when a.ACC_KEYS like '%DENDA%' then 'DENDA'
-        	 				else b.TITLE end AS angsuran_ke,
+                            CASE 
+                                WHEN a.ACC_KEYS LIKE '%DENDA%' THEN 'DENDA'
+                                ELSE b.TITLE 
+                            END AS angsuran_ke,
                             b.USER_ID AS user_id,
                             '' AS admin_fee
                         FROM 
@@ -349,10 +258,12 @@ class ListBanController extends Controller
                         INNER JOIN payment b ON b.ID = a.PAYMENT_ID
                         LEFT JOIN arrears c ON c.ID = b.ARREARS_ID
                         LEFT JOIN branch d ON d.CODE_NUMBER = b.BRANCH
-                        WHERE a.ACC_KEYS in ('ANGSURAN_POKOK','ANGSURAN_BUNGA','BAYAR PELUNASAN PINALTY','BAYAR_POKOK','BAYAR_BUNGA','BAYAR_DENDA')
+                        WHERE a.ACC_KEYS IN ('ANGSURAN_POKOK', 'ANGSURAN_BUNGA', 'BAYAR PELUNASAN PINALTY', 'BAYAR_POKOK', 'BAYAR_BUNGA', 'BAYAR_DENDA')
                         GROUP BY 
-                            case when a.ACC_KEYS like '%DENDA%' then 'DENDA'
-        	 				else b.TITLE, 
+                            CASE 
+                                WHEN a.ACC_KEYS LIKE '%DENDA%' THEN 'DENDA'
+                                ELSE b.TITLE 
+                            END, 
                             b.BRANCH, 
                             d.ID, 
                             d.NAME, 
@@ -360,9 +271,11 @@ class ListBanController extends Controller
                             b.LOAN_NUM,
                             b.PAYMENT_METHOD,
                             b.INVOICE,
-                            case when a.ACC_KEYS like '%DENDA%' then 'DENDA'
-        	 				else b.TITLE end,
-                            b.USER_ID  
+                            CASE 
+                                WHEN a.ACC_KEYS LIKE '%DENDA%' THEN 'DENDA'
+                                ELSE b.TITLE 
+                            END,
+                            b.USER_ID
                         UNION ALL
                         SELECT 
                             'PEMBULATAN' AS JENIS, 
@@ -371,7 +284,7 @@ class ListBanController extends Controller
                             d.NAME AS nama_cabang,
                             DATE_FORMAT(a.CREATED_AT, '%Y-%m-%d') AS ENTRY_DATE, 
                             SUM(a.PEMBULATAN) AS ORIGINAL_AMOUNT,
-                            a.LOAN_NUMBER as LOAN_NUM,
+                            a.LOAN_NUMBER AS LOAN_NUM,
                             a.METODE_PEMBAYARAN,
                             a.NO_TRANSAKSI AS no_invoice,
                             'PEMBULATAN' AS angsuran_ke,
@@ -407,6 +320,15 @@ class ListBanController extends Controller
                         INNER JOIN branch b ON b.id = a.BRANCH
                         WHERE 
                             a.STATUS = 'A'
+                        GROUP BY 
+                            b.CODE_NUMBER, 
+                            b.ID, 
+                            b.NAME, 
+                            DATE_FORMAT(a.CREATED_AT, '%Y-%m-%d'),
+                            a.PCPL_ORI, 
+                            a.LOAN_NUMBER, 
+                            a.CREATED_BY, 
+                            a.TOTAL_ADMIN
                     ) AS b
                     INNER JOIN credit b2 ON b2.LOAN_NUMBER = b.LOAN_NUM
                     INNER JOIN customer b3 ON b3.CUST_CODE = b2.CUST_CODE
