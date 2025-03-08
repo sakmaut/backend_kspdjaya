@@ -37,7 +37,13 @@ class BpkbController extends Controller
 
             $branchCondition = empty($branch) ? $branchId : $branch;
 
-            $allJaminan = M_CollateralView::where('COLLATERAL_FLAG', $branchCondition)->count();
+            if(strtolower($position) === 'ho' || strtolower($position) === 'superadmin'){
+                $allJaminan = M_CollateralView::count();
+            }else{
+                $allJaminan = M_CollateralView::where('COLLATERAL_FLAG', $branchCondition)->count();
+            }
+
+            
             $onDemand = M_CollateralView::where('LOCATION_BRANCH', $branchCondition)->count();
             $onGoing = M_CollateralView::where('COLLATERAL_FLAG', $branchId)
             ->where('LOCATION_BRANCH', '!=', $branchId)
