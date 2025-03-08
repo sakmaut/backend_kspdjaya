@@ -33,21 +33,37 @@ class BpkbController extends Controller
         try {
             $branch = $request->query('branch');
             $branchId = $request->user()->branch_id;
+
+            $branchCondition = empty($branch) ? $branchId : $branch;
+
+            $allJaminan = M_CollateralView::where('LOCATION_BRANCH', $branchCondition)->paginate(10);
+
+            return response()->json($allJaminan, 200);
+        } catch (\Exception $e) {
+            return $this->log->logError($e, $request);
+        }
+    }
+
+    public function countAll(Request $request)
+    {
+        try {
+            $branch = $request->query('branch');
+            $branchId = $request->user()->branch_id;
             $position = $request->user()->position;
 
             $branchCondition = empty($branch) ? $branchId : $branch;
 
-            if(strtolower($position) === 'ho' || strtolower($position) === 'superadmin'){
+            if (strtolower($position) === 'ho' || strtolower($position) === 'superadmin') {
                 $allJaminan = M_CollateralView::count();
-            }else{
+            } else {
                 $allJaminan = M_CollateralView::where('COLLATERAL_FLAG', $branchCondition)->count();
             }
 
-            
+
             $onDemand = M_CollateralView::where('LOCATION_BRANCH', $branchCondition)->count();
             $onGoing = M_CollateralView::where('COLLATERAL_FLAG', $branchId)
-            ->where('LOCATION_BRANCH', '!=', $branchId)
-            ->count();
+                ->where('LOCATION_BRANCH', '!=', $branchId)
+                ->count();
             $onProcess = M_CollateralView::where('COLLATERAL_FLAG', $branchId)
                 ->where('STATUS', 'SENDING')
                 ->count();
@@ -58,7 +74,7 @@ class BpkbController extends Controller
                 'onGoing' => $onGoing,
                 'onProcess' => $onProcess
             ];
-        
+
 
             return response()->json($build, 200);
         } catch (\Exception $e) {

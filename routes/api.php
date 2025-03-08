@@ -59,6 +59,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
 
     // Route Group Branch
     Route::resource('cabang', BranchController::class);
+    Route::get('collateral_count', [BpkbController::class, 'countAll']);
 
     // Route Group Cr Application
     Route::resource('cr_application', CrAppilcationController::class)->except(['index']);
