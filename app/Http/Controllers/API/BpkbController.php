@@ -35,10 +35,10 @@ class BpkbController extends Controller
             $branchId = $request->user()->branch_id;
             $position = $request->user()->position;
 
-            $allJaminan = M_CollateralView::where('collateral_flag', empty($branch) ? $branchId : $branch)->get();
-            $onDemand = M_CollateralView::where('location_branch', empty($branch) ? $branchId : $branch)->get();
-            $onGoing = M_CollateralView::where(['collateral_flag' => $branchId, 'location_branch != ' => $branchId ])->get();
-            $onProcess = M_CollateralView::where('status', 'SENDING')->get();
+            $allJaminan = M_CollateralView::where('COLLATERAL_FLAG', empty($branch) ? $branchId : $branch)->get();
+            $onDemand = M_CollateralView::where('LOCATION_BRANCH', empty($branch) ? $branchId : $branch)->get();
+            $onGoing = M_CollateralView::where(['COLLATERAL_FLAG' => $branchId, 'LOCATION_BRANCH != ' => $branchId ])->get();
+            $onProcess = M_CollateralView::where(['COLLATERAL_FLAG' => $branchId, 'STATUS', 'SENDING'])->get();
 
             $build = [
                 'all' => $allJaminan,
