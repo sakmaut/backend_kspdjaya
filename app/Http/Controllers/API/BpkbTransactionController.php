@@ -131,12 +131,12 @@ class BpkbTransactionController extends Controller
                     $details[] = [
                         'ID' => Uuid::uuid7()->toString(),
                         'BPKB_TRANSACTION_ID' => $transaction->ID,
-                        'COLLATERAL_ID' => $res['id'],
+                        'COLLATERAL_ID' => $res['ID'],
                         'STATUS' => 'SENDING'
                     ];
-                    $collateralIds[] = $res['id'];
+                    $collateralIds[] = $res['ID'];
 
-                    $checkCollateralId = M_CrCollateral::where('ID', $res['id'])->first();
+                    $checkCollateralId = M_CrCollateral::where('ID', $res['ID'])->first();
 
                     if($checkCollateralId){
                         $checkCollateralId->update(['STATUS' => 'SENDING']);
