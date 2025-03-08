@@ -31,12 +31,22 @@ class BpkbController extends Controller
     public function index(Request $request)
     {
         try {
+            $type = $request->type;
             $branch = $request->query('branch');
             $branchId = $request->user()->branch_id;
 
             $branchCondition = empty($branch) ? $branchId : $branch;
 
-            $allJaminan = M_CollateralView::where('LOCATION_BRANCH', $branchCondition)->paginate(10);
+            switch ($type) {
+                case 'ondemand':
+                    $allJaminan = M_CollateralView::where('LOCATION_BRANCH', $branchCondition)->paginate(10);
+                    break;
+                case 'onGoing':
+                    $allJaminan = M_CollateralView::where('COLLATERAL_FLAG', $branchId)
+                    ->where('LOCATION_BRANCH', '!=', $branchId)
+                    ->paginate(10);
+                    break;
+            }
 
             return response()->json($allJaminan, 200);
         } catch (\Exception $e) {
