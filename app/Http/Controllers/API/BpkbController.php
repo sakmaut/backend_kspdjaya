@@ -33,7 +33,7 @@ class BpkbController extends Controller
         try {
             $type = $request->type;
             $search = $request->search;
-            $page = $request->page;
+            $page = $request->page_size;
             $branch = $request->query('branch');
             $branchId = $request->user()->branch_id;
 
