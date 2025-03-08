@@ -236,9 +236,6 @@ class ListBanController extends Controller
                     FROM (SELECT 
                         CASE 
                             WHEN a.ACC_KEYS LIKE '%DENDA%' THEN 'DENDA'
-                            WHEN a.ACC_KEYS = 'BAYAR PELUNASAN PINALTY' THEN 'BAYAR PELUNASAN PINALTY'
-                            WHEN a.ACC_KEYS = 'BAYAR_POKOK' THEN 'BAYAR_POKOK'
-                            WHEN a.ACC_KEYS = 'BAYAR_BUNGA' THEN 'BAYAR_BUNGA'
                             ELSE b.TITLE 
                         END AS JENIS, 
                         b.BRANCH AS BRANCH, 
@@ -260,12 +257,10 @@ class ListBanController extends Controller
                     INNER JOIN payment b ON b.ID = a.PAYMENT_ID
                     LEFT JOIN arrears c ON c.ID = b.ARREARS_ID
                     LEFT JOIN branch d ON d.CODE_NUMBER = b.BRANCH
+                    WHERE a.ACC_KEYS in ('ANGSURAN_POKOK','ANGSURAN_BUNGA','BAYAR PELUNASAN PINALTY','BAYAR_POKOK','BAYAR_BUNGA','BAYAR_DENDA')
                     GROUP BY 
                         CASE 
                             WHEN a.ACC_KEYS LIKE '%DENDA%' THEN 'DENDA'
-                            WHEN a.ACC_KEYS = 'BAYAR PELUNASAN PINALTY' THEN 'BAYAR PELUNASAN PINALTY'
-                            WHEN a.ACC_KEYS = 'BAYAR_POKOK' THEN 'BAYAR_POKOK'
-                            WHEN a.ACC_KEYS = 'BAYAR_BUNGA' THEN 'BAYAR_BUNGA'
                             ELSE b.TITLE 
                         END, 
                         b.BRANCH, 
