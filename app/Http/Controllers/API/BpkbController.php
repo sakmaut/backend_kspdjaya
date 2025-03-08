@@ -35,9 +35,20 @@ class BpkbController extends Controller
             $branchId = $request->user()->branch_id;
             $position = $request->user()->position;
 
-            $dto =M_CollateralView::where('collateral_flag', empty($branch)?$branchId:$branch)->get();
+            $allJaminan = M_CollateralView::where('collateral_flag', empty($branch) ? $branchId : $branch)->get();
+            $onDemand = M_CollateralView::where('location_branch', empty($branch) ? $branchId : $branch)->get();
+            $onGoing = M_CollateralView::where(['collateral_flag' => $branchId, 'location_branch != ' => $branchId ])->get();
+            $onProcess = M_CollateralView::where('status', 'SENDING')->get();
 
-            return response()->json($dto, 200);
+            $build = [
+                'all' => $allJaminan,
+                'ondemand' => $onDemand,
+                'onGoing' => $onGoing,
+                'onProcess' => $onProcess
+            ];
+        
+
+            return response()->json($build, 200);
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
         }
