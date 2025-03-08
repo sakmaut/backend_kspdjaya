@@ -372,7 +372,8 @@ class BpkbTransactionController extends Controller
 
             $result = [];
             foreach ($getCollateralId as $item) {
-                $result[$item['type']][] = $item['id'];
+                $type = $item['type'] ?? 'kendaraan';
+                $result[$type][] = $item['ID'];
             }
 
             $combinedCollaterals = [];
