@@ -46,16 +46,16 @@ class BpkbController extends Controller
                         $allJaminan->where('no_kontrak', $search);
                     }
 
-                    $allJaminan->paginate(10);
+                    $allJaminan = $allJaminan->paginate(10);
                     break;
                 case 'onGoing':
                     $allJaminan = M_CollateralView::where('COLLATERAL_FLAG', $branchId)->where('LOCATION_BRANCH', '!=', $branchId);
-                    
+
                     if (!empty($search)) {
                         $allJaminan->where('no_kontrak', $search);
                     }
 
-                    $allJaminan->paginate(10);
+                    $allJaminan = $allJaminan->paginate(10);
                     break;
             }
 
