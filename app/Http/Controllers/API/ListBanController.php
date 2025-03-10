@@ -167,7 +167,7 @@ class ListBanController extends Controller
                             }
 
                             $datas['datas'][] = [
-                                'type' => 'CASH_IN',
+                                'type' => $item->JENIS == 'PELUNASAN' ? 'PELUNASAN' : 'CASH_IN',
                                 'no_invoice' => $no_invoice,
                                 'no_kontrak' => $loan_num,
                                 'tgl' => $tgl ?? '',
