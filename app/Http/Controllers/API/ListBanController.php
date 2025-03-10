@@ -258,7 +258,7 @@ class ListBanController extends Controller
                         INNER JOIN payment b ON b.ID = a.PAYMENT_ID
                         LEFT JOIN arrears c ON c.ID = b.ARREARS_ID
                         LEFT JOIN branch d ON d.CODE_NUMBER = b.BRANCH
-                        WHERE a.ACC_KEYS IN ('ANGSURAN_POKOK', 'ANGSURAN_BUNGA', 'BAYAR PELUNASAN PINALTY', 'BAYAR_POKOK', 'BAYAR_BUNGA', 'BAYAR_DENDA')
+                        WHERE b.ACC_KEY = 'angsuran'
                         GROUP BY 
                             CASE 
                                 WHEN a.ACC_KEYS LIKE '%DENDA%' THEN 'DENDA'
@@ -276,6 +276,23 @@ class ListBanController extends Controller
                                 ELSE b.TITLE 
                             END,
                             b.USER_ID
+                        UNION ALL
+                            SELECT 
+                            'PELUNASAN'AS JENIS, 
+                            b.CODE_NUMBER AS BRANCH, 
+                            b.ID AS BRANCH_ID, 
+                            b.NAME AS nama_cabang,
+                            DATE_FORMAT(a.CREATED_AT, '%Y-%m-%d') AS ENTRY_DATE, 
+                            a.JUMLAH_UANG AS ORIGINAL_AMOUNT,
+                            a.LOAN_NUMBER,
+                            a.METODE_PEMBAYARAN as PAYMENT_METHOD,
+                            a.NO_TRANSAKSI AS no_invoice,
+                            'PELUNASAN' AS angsuran_ke,
+                            a.CREATED_BY AS user_id,
+                            '' AS admin_fee
+                        FROM kwitansi a
+                        LEFT JOIN branch b on b.ID = a.BRANCH_CODE
+                        WHERE a.PAYMENT_TYPE = 'pelunasan'
                         UNION ALL
                         SELECT 
                             'PEMBULATAN' AS JENIS, 
