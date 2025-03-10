@@ -431,12 +431,6 @@ class PelunasanController extends Controller
 
         $getCreditSchedule = M_CreditSchedule::where(['LOAN_NUMBER' => $loan_number, 'PAYMENT_DATE' => $res['tgl_angsuran']])->orderBy('PAYMENT_DATE', 'ASC')->first();
 
-        if ($getCreditSchedule) {
-            $getCreditSchedule->update([
-                'PAID_FLAG' => ''
-            ]);
-        }
-
         if ($getCreditSchedule && !empty($payment)) {
 
             $valBeforePrincipal = $getCreditSchedule->PAYMENT_VALUE_PRINCIPAL;
@@ -457,6 +451,10 @@ class PelunasanController extends Controller
                 'DISCOUNT_PRINCIPAL' => $ttlDiscPrincipal,
                 'DISCOUNT_INTEREST' => $ttlDiscInterest,
                 'PAYMENT_VALUE' => $ttlPayment
+            ]);
+        } else {
+            $getCreditSchedule->update([
+                'PAID_FLAG' => ''
             ]);
         }
     }
