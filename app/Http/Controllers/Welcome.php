@@ -117,7 +117,25 @@ class Welcome extends Controller
 
             if ($check_exist) {
                 $SET_UUID = $check_exist->ID;
-                $this->generateAmortizationSchedule($data->ENTRY_DATE, $data);
+                $data_credit_schedule = $this->generateAmortizationSchedule($data->ENTRY_DATE, $data);
+
+                $no = 1;
+                foreach ($data_credit_schedule as $list) {
+                    $credit_schedule =
+                        [
+                            'ID' => Uuid::uuid7()->toString(),
+                            'LOAN_NUMBER' => $check_exist->LOAN_NUMBER,
+                            'INSTALLMENT_COUNT' => $no++,
+                            'PAYMENT_DATE' => parseDatetoYMD($list['tgl_angsuran']),
+                            'PRINCIPAL' => $list['pokok'],
+                            'INTEREST' => $list['bunga'],
+                            'INSTALLMENT' => $list['total_angsuran'],
+                            'PRINCIPAL_REMAINS' => $list['baki_debet']
+                        ];
+
+                    M_CreditSchedule::create($credit_schedule);
+                }
+
                 // $cust_code = $check_exist->CUST_CODE;
                 // $cust_code = $this->generateCustCodesss($check_exist->BRANCH, 'customer', 'CUST_CODE');
 
