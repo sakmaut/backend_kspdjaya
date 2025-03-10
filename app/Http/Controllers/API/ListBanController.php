@@ -873,7 +873,7 @@ class ListBanController extends Controller
                                 st.first_arr as F_ARR_CR_SCHEDL,
                                 en.first_arr as curr_arr, 
                                 py.last_pay  as LAST_PAY, 
-                                ' ' AS COLLECTOR,
+                                k.kolektor AS COLLECTOR,
                                 py.payment_method as cara_bayar, 
                                 replace(format(coalesce(en.arr_pcpl,0),0),',','') as AMBC_PKK_AKHIR, 
                                 replace(format(coalesce(en.arr_int ,0),0),',','') as AMBC_BNG_AKHIR, 
@@ -903,6 +903,7 @@ class ListBanController extends Controller
                                 left join cr_application ca on cast(ca.ORDER_NUMBER as char) = cast(cl.ORDER_NUMBER as char) 
                                 left join cr_order co on cast(co.APPLICATION_ID as char) = cast(ca.ID as char)
                                 left join cr_survey cs on cast(cs.ID as char) = cast(ca.CR_SURVEY_ID as char) 
+                                left join kolektor k on cast(k.loan_number as char) = cast(cl.LOAN_NUMBER as char)
                                 left join temp_lis_03 col on cast(col.CR_CREDIT_ID as char) = cast(cl.ID as char) 
                                 left join temp_lis_01 st 
                                     on cast(st.loan_number as char) = cast(cl.LOAN_NUMBER as char)
@@ -913,8 +914,7 @@ class ListBanController extends Controller
                                 left join temp_lis_02 py on cast(py.loan_num as char) = cast(cl.LOAN_NUMBER as char) 
                         WHERE	date_format(cl.BACK_DATE,'%d%m%Y')=date_format(date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day),'%d%m%Y')
                                 and cl.STATUS = 'A'
-                                or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char)from temp_lis_02 ))
-                                and replace(format(cl.INSTALLMENT_COUNT/cl.PERIOD,0),',','') =0";
+                                or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char)from temp_lis_02 ))";
 
             if (!empty($getBranch) && $getBranch != 'SEMUA CABANG') {
                 $query .= " AND b.ID = '$getBranch'";
