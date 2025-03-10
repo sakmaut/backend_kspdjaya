@@ -295,18 +295,18 @@ class PelunasanController extends Controller
                 }
             }
 
-            if (!empty($pelunasanKwitansiDetail) && !empty($payment)) {
+            if (!empty($pelunasanKwitansiDetail)) {
                 foreach ($pelunasanKwitansiDetail as $res) {
 
                     if ($res['installment'] != 0) {
-                        $this->cancelCreditSchedule($loan_number, $res);
+                        $this->cancelCreditSchedule($loan_number, $res, $payment);
                     }
 
                     if ($res['bayar_denda'] != 0 || $res['diskon_denda'] != 0) {
-                        $this->cancelArrears($loan_number, $res);
+                        $this->cancelArrears($loan_number, $res, $payment);
                     }
 
-                    $this->cancelCredit($loan_number, $res);
+                    $this->cancelCredit($loan_number, $res, $payment);
                 }
             }
         } catch (\Throwable $e) {
@@ -426,12 +426,12 @@ class PelunasanController extends Controller
         }
     }
 
-    function cancelCreditSchedule($loan_number, $res)
+    function cancelCreditSchedule($loan_number, $res, $payment)
     {
 
         $getCreditSchedule = M_CreditSchedule::where(['LOAN_NUMBER' => $loan_number, 'PAYMENT_DATE' => $res['tgl_angsuran']])->orderBy('PAYMENT_DATE', 'ASC')->first();
 
-        if ($getCreditSchedule) {
+        if ($getCreditSchedule && !empty($payment)) {
 
             $valBeforePrincipal = $getCreditSchedule->PAYMENT_VALUE_PRINCIPAL;
             $valBeforeInterest = $getCreditSchedule->PAYMENT_VALUE_INTEREST;
@@ -450,10 +450,13 @@ class PelunasanController extends Controller
                 'PAYMENT_VALUE_INTEREST' => $ttlInterest,
                 'DISCOUNT_PRINCIPAL' => $ttlDiscPrincipal,
                 'DISCOUNT_INTEREST' => $ttlDiscInterest,
-                'PAYMENT_VALUE' => $ttlPayment,
-                'PAID_FLAG' => ''
+                'PAYMENT_VALUE' => $ttlPayment
             ]);
         }
+
+        $getCreditSchedule->update([
+            'PAID_FLAG' => ''
+        ]);
     }
 
     function updateArrears($loan_number, $res)
@@ -490,14 +493,14 @@ class PelunasanController extends Controller
         }
     }
 
-    function cancelArrears($loan_number, $res)
+    function cancelArrears($loan_number, $res, $payment)
     {
         $getArrears = M_Arrears::where([
             'LOAN_NUMBER' => $loan_number,
             'START_DATE' => $res['tgl_angsuran'],
         ])->orderBy('START_DATE', 'ASC')->first();
 
-        if ($getArrears) {
+        if ($getArrears && !empty($payment)) {
             $ttlPrincipal = floatval($getArrears->PAID_PCPL) - floatval($res['bayar_pokok'] ?? 0);
             $ttlInterest = floatval($getArrears->PAID_INT) - floatval($res['bayar_bunga'] ?? 0);
             $ttlPenalty = floatval($getArrears->PAID_PENALTY) - floatval($res['bayar_denda'] ?? 0);
@@ -512,11 +515,14 @@ class PelunasanController extends Controller
                 'PAID_PENALTY' => $ttlPenalty ?? 0,
                 'WOFF_PCPL' => $ttlDiscPrincipal ?? 0,
                 'WOFF_INT' => $ttlDiscInterest ?? 0,
-                'WOFF_PENALTY' => $ttlDiscPenalty ?? 0,
-                'STATUS_REC' => 'A',
-                'UPDATED_AT' => Carbon::now(),
+                'WOFF_PENALTY' => $ttlDiscPenalty ?? 0
             ]);
         }
+
+        $getArrears->update([
+            'STATUS_REC' => 'A',
+            'UPDATED_AT' => Carbon::now(),
+        ]);
     }
 
     function updateCredit($res, $loan_number)
@@ -538,11 +544,11 @@ class PelunasanController extends Controller
         }
     }
 
-    function cancelCredit($loan_number, $res)
+    function cancelCredit($loan_number, $res, $payment)
     {
         $credit = M_Credit::where('LOAN_NUMBER', $loan_number)->first();
 
-        if ($credit) {
+        if ($credit && !empty($payment)) {
             $credit->update([
                 'PAID_PRINCIPAL' => floatval($credit->PAID_PRINCIPAL) - floatval($res['bayar_pokok']),
                 'PAID_INTEREST' => floatval($credit->PAID_INTEREST) - floatval($res['bayar_bunga']),
@@ -550,10 +556,13 @@ class PelunasanController extends Controller
                 'DISCOUNT_INTEREST' => floatval($credit->DISCOUNT_INTEREST) - floatval($res['diskon_bunga']),
                 'PAID_PENALTY' => floatval($credit->PAID_PENALTY) - floatval($res['bayar_denda']),
                 'DISCOUNT_PENALTY' => floatval($credit->DISCOUNT_PENALTY) - floatval($res['diskon_denda']),
-                'STATUS' => 'A',
                 'END_DATE' => now()
             ]);
         }
+
+        $credit->update([
+            'STATUS' => 'A'
+        ]);
     }
 
     private function saveKwitansi($request, $customer, $no_inv, $status)
