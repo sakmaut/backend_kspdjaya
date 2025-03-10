@@ -295,7 +295,7 @@ class PelunasanController extends Controller
                 }
             }
 
-            if (!empty($pelunasanKwitansiDetail)) {
+            if (!empty($pelunasanKwitansiDetail) && !empty($payment)) {
                 foreach ($pelunasanKwitansiDetail as $res) {
 
                     if ($res['installment'] != 0) {
