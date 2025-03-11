@@ -22,15 +22,9 @@ class CollateralRepository implements CollateralInterface
         return $this->collateralEntity::where('ID', $id)->first();
     }
 
-    function getListAllCollateral($branchId = null)
+    function getListAllCollateral()
     {
         $query = $this->collateralEntity::with(['credit', 'originBranch', 'currentBranch']);
-
-        if ($branchId) {
-            $query->whereHas('credit', function ($query) use ($branchId) {
-                $query->where('BRANCH', $branchId);
-            });
-        }
 
         return $query;
     }
@@ -45,12 +39,14 @@ class CollateralRepository implements CollateralInterface
         $getPosition = $request->user()->position;
         $getBranch = $request->user()->branch_id;
 
-        if (in_array($getPosition, ['ho', 'superadmin'])) {
-            $query = $this->getListAllCollateral();
-        } else {
+        $query = $this->getListAllCollateral();
 
-            $query = $this->getListAllCollateral($getBranch);
-        }
+        // if (in_array($getPosition, ['ho', 'superadmin'])) {
+        //     $query = $this->getListAllCollateral();
+        // } else {
+
+        //     $query = $this->getListAllCollateral($getBranch);
+        // }
 
         if (!empty($no_kontrak)) {
             $query->whereHas('credit', function ($query) use ($no_kontrak) {

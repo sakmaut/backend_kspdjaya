@@ -476,7 +476,7 @@ class PelunasanController2 extends Controller
 
         $this->principalCalculate($request, $loan_number, $no_inv, $creditSchedules);
         $this->interestCalculate($request, $loan_number, $no_inv, $creditSchedules);
-        $arrears = M_Arrears::where(['LOAN_NUMBER' => $loan_number, 'STATUS_REC' => 'A'])->get();
+        $arrears = M_Arrears::where(['LOAN_NUMBER' => $loan_number, 'STATUS_REC' => 'A'])->orderBy('START_DATE', 'ASC')->get();
         $this->arrearsCalculate($request, $loan_number, $no_inv, $arrears);
     }
 
@@ -572,56 +572,36 @@ class PelunasanController2 extends Controller
 
     private function arrearsCalculate($request, $loan_number, $no_inv, $arrears)
     {
-        $this->calculateArrears(
-            $request->BAYAR_DENDA,
-            $request->DISKON_DENDA,
-            $arrears,
-            'PAST_DUE_PENALTY',
-            'PAID_PENALTY',
-            'BAYAR_DENDA',
-            'DISKON_DENDA',
-            $loan_number,
-            $no_inv
-        );
-    }
+        $remainingPayment = $request->BAYAR_DENDA;
+        $remainingDiscount = $request->DISKON_DENDA;
 
-    private function calculateArrears($paymentAmount, $discountAmount, $schedule, $fieldKey, $valueKey, $paymentParam, $discountParam, $loan_number, $no_inv)
-    {
-        $remainingPayment = $paymentAmount;
-        $remainingDiscount = $discountAmount;
+        foreach ($arrears as $res) {
+            $valBefore = $res->{'PAID_PENALTY'};
+            $getAmount = $res->{'PAST_DUE_PENALTY'};
 
-        foreach ($schedule as $res) {
-            $valBefore = $res->{$valueKey};
-            $getAmount = $res->{$fieldKey};
+            $remainingToPay = $getAmount - $valBefore;
 
-            if ($valBefore < $getAmount) {
-                // Calculate the amount left to pay
-                $remainingToPay = $getAmount - $valBefore;
-
-                // If enough payment is available to cover the remaining amount
+            if ($remainingToPay > 0) {
                 if ($remainingPayment >= $remainingToPay) {
-                    $newPaymentValue = $getAmount; // Full payment
-                    $remainingPayment -= $remainingToPay; // Subtract the paid amount
+                    $newPaymentValue = $remainingToPay;
+                    $remainingPayment -= $remainingToPay;
                 } else {
-                    $newPaymentValue = $valBefore + $remainingPayment;
+                    $newPaymentValue = $remainingPayment;
                     $remainingPayment = 0;
                 }
 
-                if ($paymentAmount != 0) {
-                    $param[$paymentParam] = $newPaymentValue;
-                    $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
-                }
+                $param['BAYAR_DENDA'] = $newPaymentValue;
+                $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
 
-                // Handle the discount if applicable
                 if ($remainingDiscount > 0) {
                     $remainingToDiscount = $getAmount - ($valBefore + $newPaymentValue);
 
                     if ($remainingDiscount >= $remainingToDiscount) {
-                        $param[$discountParam] = $remainingToDiscount; // Full discount
-                        $remainingDiscount -= $remainingToDiscount; // Subtract the used discount
+                        $param['DISKON_DENDA'] = $remainingToDiscount;
+                        $remainingDiscount -= $remainingToDiscount;
                     } else {
-                        $param[$discountParam] = $remainingDiscount; // Partial discount
-                        $remainingDiscount = 0; // No discount left
+                        $param['DISKON_DENDA'] = $remainingDiscount;
+                        $remainingDiscount = 0;
                     }
 
                     $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
@@ -629,15 +609,68 @@ class PelunasanController2 extends Controller
             }
         }
 
-
         if ($remainingPayment > 0) {
-            $param[$paymentParam] = $remainingPayment;
+            $param['BAYAR_DENDA'] = $remainingPayment;
         }
 
         if ($remainingDiscount > 0) {
-            $param[$discountParam] = $remainingDiscount;
+            $param['DISKON_DENDA'] = $remainingDiscount;
         }
     }
+
+    // private function calculateArrears($paymentAmount, $discountAmount, $schedule, $fieldKey, $valueKey, $paymentParam, $discountParam, $loan_number, $no_inv)
+    // {
+    //     $remainingPayment = $paymentAmount;
+    //     $remainingDiscount = $discountAmount;
+
+    //     foreach ($schedule as $res) {
+    //         $valBefore = $res->{$valueKey};
+    //         $getAmount = $res->{$fieldKey};
+
+    //         if ($valBefore < $getAmount) {
+    //             // Calculate the amount left to pay
+    //             $remainingToPay = $getAmount - $valBefore;
+
+    //             // If enough payment is available to cover the remaining amount
+    //             if ($remainingPayment >= $remainingToPay) {
+    //                 $newPaymentValue = $getAmount; // Full payment
+    //                 $remainingPayment -= $remainingToPay; // Subtract the paid amount
+    //             } else {
+    //                 $newPaymentValue = $valBefore + $remainingPayment;
+    //                 $remainingPayment = 0;
+    //             }
+
+    //             if ($paymentAmount != 0) {
+    //                 $param[$paymentParam] = $newPaymentValue;
+    //                 $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
+    //             }
+
+    //             // Handle the discount if applicable
+    //             if ($remainingDiscount > 0) {
+    //                 $remainingToDiscount = $getAmount - ($valBefore + $newPaymentValue);
+
+    //                 if ($remainingDiscount >= $remainingToDiscount) {
+    //                     $param[$discountParam] = $remainingToDiscount; // Full discount
+    //                     $remainingDiscount -= $remainingToDiscount; // Subtract the used discount
+    //                 } else {
+    //                     $param[$discountParam] = $remainingDiscount; // Partial discount
+    //                     $remainingDiscount = 0; // No discount left
+    //                 }
+
+    //                 $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
+    //             }
+    //         }
+    //     }
+
+
+    //     if ($remainingPayment > 0) {
+    //         $param[$paymentParam] = $remainingPayment;
+    //     }
+
+    //     if ($remainingDiscount > 0) {
+    //         $param[$discountParam] = $remainingDiscount;
+    //     }
+    // }
 
     function insertKwitansiDetail($loan_number, $no_inv, $res, $param = [])
     {
