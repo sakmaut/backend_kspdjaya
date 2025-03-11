@@ -22,15 +22,9 @@ class CollateralRepository implements CollateralInterface
         return $this->collateralEntity::where('ID', $id)->first();
     }
 
-    function getListAllCollateral($branchId = null)
+    function getListAllCollateral()
     {
         $query = $this->collateralEntity::with(['credit', 'originBranch', 'currentBranch']);
-
-        if ($branchId) {
-            $query->whereHas('credit', function ($query) use ($branchId) {
-                $query->where('BRANCH', $branchId);
-            });
-        }
 
         return $query;
     }
