@@ -236,6 +236,8 @@ class CrSurveyController extends Controller
     {
         DB::beginTransaction();
         try {
+            $position = $request->user()->position;
+
             $request->validate([
                 'id' => 'required|string|unique:cr_survey',
             ]);
@@ -263,7 +265,7 @@ class CrSurveyController extends Controller
             }
 
             $this->createCrSurvey($request);
-            $this->createCrProspekApproval($request);
+            $this->createCrProspekApproval($request, $position);
 
             if (collect($request->jaminan)->isNotEmpty()) {
                 $this->insert_guarante($request);
@@ -320,12 +322,13 @@ class CrSurveyController extends Controller
         M_CrSurvey::create($data_array);
     }
 
-    private function createCrProspekApproval($request)
+    private function createCrProspekApproval($request,$position)
     {
         $data = [
             'CR_SURVEY_ID' => $request->id
         ];
 
+<<<<<<< HEAD
 <<<<<<< HEAD
         //add to task
         $pushData = [
@@ -342,6 +345,8 @@ class CrSurveyController extends Controller
 =======
         $position = $request->user()->position;
 
+=======
+>>>>>>> 6772527e13d1c0449c4ffd5d33833d6055273805
         $nextPosition = $this->userRole->getNextLevel($position);
 >>>>>>> f85ff8ff5db8197a4f5e8e889e13da3800573948
 
