@@ -671,7 +671,7 @@ class PelunasanController extends Controller
 
         $this->principalCalculate($request, $loan_number, $no_inv, $creditSchedules);
         $this->interestCalculate($request, $loan_number, $no_inv, $creditSchedules);
-        $arrears = M_Arrears::where(['LOAN_NUMBER' => $loan_number, 'STATUS_REC' => 'A'])->get();
+        $arrears = M_Arrears::where(['LOAN_NUMBER' => $loan_number, 'STATUS_REC' => 'A'])->orderBy('START_DATE', 'ASC')->get();
         $this->arrearsCalculate($request, $loan_number, $no_inv, $arrears);
     }
 
