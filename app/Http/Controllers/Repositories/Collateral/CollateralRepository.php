@@ -45,12 +45,14 @@ class CollateralRepository implements CollateralInterface
         $getPosition = $request->user()->position;
         $getBranch = $request->user()->branch_id;
 
-        if (in_array($getPosition, ['ho', 'superadmin'])) {
-            $query = $this->getListAllCollateral();
-        } else {
+        $query = $this->getListAllCollateral();
 
-            $query = $this->getListAllCollateral($getBranch);
-        }
+        // if (in_array($getPosition, ['ho', 'superadmin'])) {
+        //     $query = $this->getListAllCollateral();
+        // } else {
+
+        //     $query = $this->getListAllCollateral($getBranch);
+        // }
 
         if (!empty($no_kontrak)) {
             $query->whereHas('credit', function ($query) use ($no_kontrak) {
