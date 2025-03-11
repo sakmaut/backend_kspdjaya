@@ -224,7 +224,7 @@ class PelunasanController2 extends Controller
 
             $this->proccessKwitansiDetail($request, $loan_number, $no_inv);
 
-            // $this->proccess($request, $loan_number, $no_inv, 'PAID');
+            $this->proccess($request, $loan_number, $no_inv, 'PAID');
 
             DB::commit();
             return response()->json("MUACH MUACHH MUACHHH", 200);
@@ -475,9 +475,59 @@ class PelunasanController2 extends Controller
             ->get();
 
         $this->principalCalculate($request, $loan_number, $no_inv, $creditSchedules);
-        // $this->interestCalculate($request, $loan_number, $no_inv, $creditSchedules);
-        // $arrears = M_Arrears::where(['LOAN_NUMBER' => $loan_number, 'STATUS_REC' => 'A'])->get();
-        // $this->arrearsCalculate($request, $loan_number, $no_inv, $arrears);
+        $this->interestCalculate($request, $loan_number, $no_inv, $creditSchedules);
+        $arrears = M_Arrears::where(['LOAN_NUMBER' => $loan_number, 'STATUS_REC' => 'A'])->get();
+        $this->arrearsCalculate($request, $loan_number, $no_inv, $arrears);
+    }
+
+    private function principalCalculate($request, $loan_number, $no_inv, $creditSchedule)
+    {
+        $remainingPayment = $request->BAYAR_POKOK;
+        $remainingDiscount = $request->DISKON_POKOK;
+
+        foreach ($creditSchedule as $res) {
+            $valBefore = $res->{'PAYMENT_VALUE_PRINCIPAL'};
+            $getAmount = $res->{'PRINCIPAL'};
+
+            $remainingToPay = $getAmount - $valBefore;
+
+            if ($remainingToPay > 0) {
+                if ($remainingPayment >= $remainingToPay) {
+                    $newPaymentValue = $remainingToPay;
+                    $remainingPayment -= $remainingToPay;
+                } else {
+                    $newPaymentValue = $remainingPayment;
+                    $remainingPayment = 0;
+                }
+
+                // Apply the payment to the schedule
+                $param['BAYAR_POKOK'] = $newPaymentValue;
+                $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
+
+                // // Handle the discount if applicable
+                if ($remainingDiscount > 0) {
+                    $remainingToDiscount = $getAmount - $newPaymentValue;
+
+                    if ($remainingDiscount >= $remainingToDiscount) {
+                        $param['DISKON_POKOK'] = $remainingToDiscount; // Full discount
+                        $remainingDiscount -= $remainingToDiscount; // Subtract the used discount
+                    } else {
+                        $param['DISKON_POKOK'] = $remainingDiscount; // Partial discount
+                        $remainingDiscount = 0; // No discount left
+                    }
+
+                    $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
+                }
+            }
+        }
+
+        if ($remainingPayment > 0) {
+            $param['BAYAR_POKOK'] = $remainingPayment;
+        }
+
+        if ($remainingDiscount > 0) {
+            $param['DISKON_POKOK'] = $remainingDiscount;
+        }
     }
 
     private function interestCalculate($request, $loan_number, $no_inv, $creditSchedule)
@@ -488,38 +538,26 @@ class PelunasanController2 extends Controller
             $valBefore = $res->PAYMENT_VALUE_INTEREST;
             $getAmount = $res->INTEREST;
 
-            if ($valBefore < 0) {
-                $valBefore = 0;
-            }
-
             if ($valBefore < $getAmount) {
-
                 $remainingToPay = $getAmount - $valBefore;
 
                 if ($remainingPayment >= $remainingToPay) {
                     $newPaymentValue = $getAmount;
                     $remainingPayment -= $remainingToPay;
                 } else {
-                    $newPaymentValue = $remainingPayment;
+                    $newPaymentValue = $valBefore + $remainingPayment;
                     $remainingPayment = 0;
                 }
 
-                $valDiskon = $getAmount - $newPaymentValue;
-                $check = $valDiskon + $valBefore;
-
-                $bayarBunga = ($check == $getAmount ? 0 : $newPaymentValue - $valBefore);
-                $bayarBunga = max(0, $bayarBunga);
-
-                // Set parameters for Kwitansi detail
                 $param = [
-                    'BAYAR_BUNGA' => $bayarBunga,
+                    'BAYAR_BUNGA' => $newPaymentValue,
                     'DISKON_BUNGA' => 0,
                 ];
 
                 if ($newPaymentValue == $getAmount) {
                     $param['DISKON_BUNGA'] = 0;
                 } else {
-                    $param['DISKON_BUNGA'] = $valDiskon;
+                    $param['DISKON_BUNGA'] = $getAmount - $newPaymentValue;
                 }
 
                 $this->insertKwitansiDetail(
@@ -547,75 +585,15 @@ class PelunasanController2 extends Controller
         );
     }
 
-    private function ssprincipalCalculate($request, $loan_number, $no_inv, $creditSchedule)
-    {
-        $remainingPayment = $request->BAYAR_POKOK;
-        $remainingDiscount = $request->DISKON_POKOK;
-
-        foreach ($creditSchedule as $res) {
-
-            $valBefore = $res->{'PAYMENT_VALUE_PRINCIPAL'};
-            $getAmount = $res->{'PRINCIPAL'};
-
-            $remainingToPay = $getAmount - $valBefore;
-
-            if ($remainingToPay > 0) {
-                // If enough payment is available to cover the remaining amount
-                if ($remainingPayment >= $remainingToPay) {
-                    // Full payment for the remaining amount
-                    $newPaymentValue = $remainingToPay;
-                    $remainingPayment -= $remainingToPay; // Subtract the paid amount
-                } else {
-                    // Partial payment
-                    $newPaymentValue = $remainingPayment;
-                    $remainingPayment = 0;
-                }
-
-                // Apply the payment to the schedule
-                $param['BAYAR_POKOK'] = $newPaymentValue;
-                $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
-
-                $totalPaymentAndPrincipal = $valBefore + $newPaymentValue;
-
-                if ($totalPaymentAndPrincipal < $getAmount) {
-                    // Handle the discount if applicable
-                    if ($remainingDiscount > 0) {
-                        $remainingToDiscount = $getAmount - $newPaymentValue;
-
-                        if ($remainingDiscount >= $remainingToDiscount) {
-                            $param['DISKON_POKOK'] = $remainingToDiscount; // Full discount
-                            $remainingDiscount -= $remainingToDiscount; // Subtract the used discount
-                        } else {
-                            $param['DISKON_POKOK'] = $remainingDiscount; // Partial discount
-                            $remainingDiscount = 0; // No discount left
-                        }
-
-                        $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
-                    }
-                }
-            }
-        }
-
-        if ($remainingPayment > 0) {
-            $param['BAYAR_POKOK'] = $remainingPayment;
-        }
-
-        if ($remainingDiscount > 0) {
-            $param['DISKON_POKOK'] = $remainingDiscount;
-        }
-    }
-
     private function calculateArrears($paymentAmount, $discountAmount, $schedule, $fieldKey, $valueKey, $paymentParam, $discountParam, $loan_number, $no_inv)
     {
         $remainingPayment = $paymentAmount;
         $remainingDiscount = $discountAmount;
 
         foreach ($schedule as $res) {
-            // Get the current value of the field and payment status
             $valBefore = $res->{$valueKey};
             $getAmount = $res->{$fieldKey};
 
-            // Proceed only if there's an amount to pay
             if ($valBefore < $getAmount) {
                 // Calculate the amount left to pay
                 $remainingToPay = $getAmount - $valBefore;
