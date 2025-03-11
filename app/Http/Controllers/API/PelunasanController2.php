@@ -475,9 +475,9 @@ class PelunasanController2 extends Controller
             ->get();
 
         $this->principalCalculate($request, $loan_number, $no_inv, $creditSchedules);
-        // $this->interestCalculate($request, $loan_number, $no_inv, $creditSchedules);
-        // $arrears = M_Arrears::where(['LOAN_NUMBER' => $loan_number, 'STATUS_REC' => 'A'])->get();
-        // $this->arrearsCalculate($request, $loan_number, $no_inv, $arrears);
+        $this->interestCalculate($request, $loan_number, $no_inv, $creditSchedules);
+        $arrears = M_Arrears::where(['LOAN_NUMBER' => $loan_number, 'STATUS_REC' => 'A'])->get();
+        $this->arrearsCalculate($request, $loan_number, $no_inv, $arrears);
     }
 
     private function interestCalculate($request, $loan_number, $no_inv, $creditSchedule)
