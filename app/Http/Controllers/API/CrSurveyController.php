@@ -35,14 +35,18 @@ class CrSurveyController extends Controller
     private $timeNow;
     private $SurveyRepository;
     protected $log;
+    protected $orderStatus;
+    protected $userRole;
 
-    public function __construct(M_CrSurvey $CrSurvey, SurveyRepository $SurveyRepository, ExceptionHandling $log)
+    public function __construct(M_CrSurvey $CrSurvey, SurveyRepository $SurveyRepository, ExceptionHandling $log,OrderStatus $orderStatus,UserRole $userRole)
     {
         $this->CrSurvey = $CrSurvey;
         $this->uuid = Uuid::uuid7()->toString();
         $this->timeNow = Carbon::now();
         $this->SurveyRepository = $SurveyRepository;
         $this->log = $log;
+        $this->orderStatus = $orderStatus;
+        $this->userRole = $userRole;
     }
 
     public function index(Request $request)
@@ -322,6 +326,7 @@ class CrSurveyController extends Controller
             'CR_SURVEY_ID' => $request->id
         ];
 
+<<<<<<< HEAD
         //add to task
         $pushData = [
             'ID'=> $this->uuid,
@@ -334,13 +339,24 @@ class CrSurveyController extends Controller
             'READ_AT'=>null,
             'USER_ACCESS'=>null
         ];
+=======
+        $position = $request->user()->position;
+
+        $nextPosition = $this->userRole->getNextLevel($position);
+>>>>>>> f85ff8ff5db8197a4f5e8e889e13da3800573948
 
         if (!$request->flag) {
-            $data['CODE'] = 'DRSVY';
-            $data['APPROVAL_RESULT'] = 'draf survey';
+            $data['CODE'] = $this->orderStatus::DRSVY;
+            $data['APPROVAL_RESULT'] = $this->orderStatus::DRAFT_SURVEY;
         } else {
+<<<<<<< HEAD
             $data['CODE'] = 'WADM';
             $data['APPROVAL_RESULT'] = 'menunggu admin';
+=======
+            $data['CODE'] = $this->orderStatus::WADM;
+            $data['APPROVAL_RESULT'] = $this->orderStatus::DRAFT_SURVEY.' '. $nextPosition;
+        }
+>>>>>>> f85ff8ff5db8197a4f5e8e889e13da3800573948
 
         }
 M_TaskPusher::create($pushData);
@@ -673,16 +689,20 @@ M_TaskPusher::create($pushData);
 
             $check = M_SurveyApproval::where('CR_SURVEY_ID', $id)->first();
 
+            $position = $request->user()->position;
+
+            $nextPosition = $this->userRole->getNextLevel($position);
+
             if (!$request->flag) {
-                $data['CODE'] = 'DRSVY';
-                $data['APPROVAL_RESULT'] = 'draf survey';
+                $data['CODE'] = $this->orderStatus::DRSVY;
+                $data['APPROVAL_RESULT'] = $this->orderStatus::DRAFT_SURVEY;
 
                 if ($check) {
                     $check->update($data);
                 }
             } else {
-                $data['CODE'] = 'WADM';
-                $data['APPROVAL_RESULT'] = 'menunggu admin';
+                $data['CODE'] = $this->orderStatus::WADM;
+                $data['APPROVAL_RESULT'] = $this->orderStatus::DRAFT_SURVEY . ' ' . $nextPosition;
 
                 if ($check) {
                     $check->update($data);
