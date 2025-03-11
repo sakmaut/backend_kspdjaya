@@ -46,6 +46,9 @@ class PaymentController extends Controller
 
             if (strtolower($getPosition) == 'ho') {
                 $data->where('STTS_PAYMENT', '=', 'PENDING');
+                // $data->whereIn('STTS_PAYMENT', ['PENDING', 'PAID']);
+                // $data->where('METODE_PEMBAYARAN', '=', 'transfer');
+                // $data->whereDate('created_at', Carbon::today());
             } else {
                 $data->where('BRANCH_CODE', '=', $getBranch);
 
@@ -59,7 +62,7 @@ class PaymentController extends Controller
                 }
 
                 if (empty($notrx) && empty($nama) && empty($no_kontrak) && (empty($dari) || $dari == 'null')) {
-                    $data->where(DB::raw('DATE_FORMAT(CREATED_AT,"%Y%m%d")'), Carbon::now()->format('Ymd'));
+                    $data->where(DB::raw('DATE_FORMAT(CREATED_AT,"%Y%m")'), Carbon::now()->format('Ym'));
                 } else {
 
                     if (!empty($notrx)) {

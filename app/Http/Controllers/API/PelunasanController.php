@@ -428,7 +428,6 @@ class PelunasanController extends Controller
 
     function cancelCreditSchedule($loan_number, $res)
     {
-
         $getCreditSchedule = M_CreditSchedule::where(['LOAN_NUMBER' => $loan_number, 'PAYMENT_DATE' => $res['tgl_angsuran']])->orderBy('PAYMENT_DATE', 'ASC')->first();
 
         if ($getCreditSchedule) {
@@ -444,6 +443,12 @@ class PelunasanController extends Controller
             $ttlDiscPrincipal = floatval($valBeforeDiscPrincipal) - floatval($res['diskon_pokok'] ?? 0);
             $ttlDiscInterest = floatval($valBeforeDiscInterest) - floatval($res['diskon_bunga'] ?? 0);
             $ttlPayment = $valPaymentValue - (floatval($res['bayar_pokok'] ?? 0) + floatval($res['bayar_bunga'] ?? 0) + floatval($res['diskon_pokok'] ?? 0) + floatval($res['diskon_bunga'] ?? 0));
+
+            $ttlPrincipal = max($ttlPrincipal, 0);
+            $ttlInterest = max($ttlInterest, 0);
+            $ttlDiscPrincipal = max($ttlDiscPrincipal, 0);
+            $ttlDiscInterest = max($ttlDiscInterest, 0);
+            $ttlPayment = max($ttlPayment, 0);
 
             $getCreditSchedule->update([
                 'PAYMENT_VALUE_PRINCIPAL' => $ttlPrincipal,
@@ -505,14 +510,21 @@ class PelunasanController extends Controller
             $ttlDiscInterest = floatval($getArrears->WOFF_INT) - floatval($res['diskon_bunga'] ?? 0);
             $ttlDiscPenalty = floatval($getArrears->WOFF_PENALTY) - floatval($res['diskon_denda'] ?? 0);
 
+            $ttlPrincipal = max($ttlPrincipal, 0);
+            $ttlInterest = max($ttlInterest, 0);
+            $ttlPenalty = max($ttlPenalty, 0);
+            $ttlDiscPrincipal = max($ttlDiscPrincipal, 0);
+            $ttlDiscInterest = max($ttlDiscInterest, 0);
+            $ttlDiscPenalty = max($ttlDiscPenalty, 0);
+
             $getArrears->update([
                 'END_DATE' => Carbon::now()->format('Y-m-d'),
-                'PAID_PCPL' => $ttlPrincipal ?? 0,
-                'PAID_INT' => $ttlInterest ?? 0,
-                'PAID_PENALTY' => $ttlPenalty ?? 0,
-                'WOFF_PCPL' => $ttlDiscPrincipal ?? 0,
-                'WOFF_INT' => $ttlDiscInterest ?? 0,
-                'WOFF_PENALTY' => $ttlDiscPenalty ?? 0,
+                'PAID_PCPL' => $ttlPrincipal,
+                'PAID_INT' => $ttlInterest,
+                'PAID_PENALTY' => $ttlPenalty,
+                'WOFF_PCPL' => $ttlDiscPrincipal,
+                'WOFF_INT' => $ttlDiscInterest,
+                'WOFF_PENALTY' => $ttlDiscPenalty,
                 'STATUS_REC' => 'A',
                 'UPDATED_AT' => Carbon::now(),
             ]);
@@ -544,14 +556,14 @@ class PelunasanController extends Controller
 
         if ($credit) {
             $credit->update([
-                'PAID_PRINCIPAL' => floatval($credit->PAID_PRINCIPAL) - floatval($res['bayar_pokok']),
-                'PAID_INTEREST' => floatval($credit->PAID_INTEREST) - floatval($res['bayar_bunga']),
-                'DISCOUNT_PRINCIPAL' => floatval($credit->DISCOUNT_PRINCIPAL) - floatval($res['diskon_pokok']),
-                'DISCOUNT_INTEREST' => floatval($credit->DISCOUNT_INTEREST) - floatval($res['diskon_bunga']),
-                'PAID_PENALTY' => floatval($credit->PAID_PENALTY) - floatval($res['bayar_denda']),
-                'DISCOUNT_PENALTY' => floatval($credit->DISCOUNT_PENALTY) - floatval($res['diskon_denda']),
-                'STATUS' => 'A',
-                'END_DATE' => now()
+                'PAID_PRINCIPAL' => max(floatval($credit->PAID_PRINCIPAL) - floatval($res['bayar_pokok'] ?? 0), 0),
+                'PAID_INTEREST' => max(floatval($credit->PAID_INTEREST) - floatval($res['bayar_bunga'] ?? 0), 0),
+                'DISCOUNT_PRINCIPAL' => max(floatval($credit->DISCOUNT_PRINCIPAL) - floatval($res['diskon_pokok'] ?? 0), 0),
+                'DISCOUNT_INTEREST' => max(floatval($credit->DISCOUNT_INTEREST) - floatval($res['diskon_bunga'] ?? 0), 0),
+                'PAID_PENALTY' => max(floatval($credit->PAID_PENALTY) - floatval($res['bayar_denda'] ?? 0), 0),
+                'DISCOUNT_PENALTY' => max(floatval($credit->DISCOUNT_PENALTY) - floatval($res['diskon_denda'] ?? 0), 0),
+                'END_DATE' => now(),
+                'STATUS' => 'A'
             ]);
         }
     }
@@ -659,7 +671,7 @@ class PelunasanController extends Controller
 
         $this->principalCalculate($request, $loan_number, $no_inv, $creditSchedules);
         $this->interestCalculate($request, $loan_number, $no_inv, $creditSchedules);
-        $arrears = M_Arrears::where(['LOAN_NUMBER' => $loan_number, 'STATUS_REC' => 'A'])->get();
+        $arrears = M_Arrears::where(['LOAN_NUMBER' => $loan_number, 'STATUS_REC' => 'A'])->orderBy('START_DATE', 'ASC')->get();
         $this->arrearsCalculate($request, $loan_number, $no_inv, $arrears);
     }
 
@@ -694,7 +706,7 @@ class PelunasanController extends Controller
 
                 // Handle the discount if applicable
                 if ($remainingDiscount > 0) {
-                    $remainingToDiscount = $getAmount - $newPaymentValue;
+                    $remainingToDiscount = $getAmount - ($valBefore + $newPaymentValue);
 
                     if ($remainingDiscount >= $remainingToDiscount) {
                         $param['DISKON_POKOK'] = $remainingToDiscount; // Full discount
@@ -802,7 +814,7 @@ class PelunasanController extends Controller
 
                 // Handle the discount if applicable
                 if ($remainingDiscount > 0) {
-                    $remainingToDiscount = $getAmount - $newPaymentValue;
+                    $remainingToDiscount = $getAmount - ($valBefore + $newPaymentValue);
 
                     if ($remainingDiscount >= $remainingToDiscount) {
                         $param[$discountParam] = $remainingToDiscount; // Full discount
@@ -835,6 +847,7 @@ class PelunasanController extends Controller
         $checkDetail = M_KwitansiDetailPelunasan::where([
             'tgl_angsuran' => $tgl_angsuran,
             'loan_number' => $loan_number,
+            'no_invoice' => $no_inv,
         ])->first();
 
         // Jika data sudah ada, update field yang relevan

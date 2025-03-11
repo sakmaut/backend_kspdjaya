@@ -292,3 +292,223 @@ if ($valBeforePrincipal < $getPrincipal) { $remaining_to_principal=$getPrincipal
                             $this->creditScheculeRepayment($request, $uids, $creditSchedule);
                             $this->arrearsRepayment($request,$loan_number, $uids);
                             } 
+
+
+
+                            static function queryMenu($req)
+    {
+        $menuItems = self::query()
+            ->select('master_menu.*')
+            ->join('master_users_access_menu as t1', 'master_menu.id', '=', 't1.master_menu_id')
+            ->where('t1.users_id', $req->user()->id)
+            ->where('master_menu.deleted_by', null)
+            ->whereIn('master_menu.status', ['active', 'Active'])
+            ->get();
+
+        return $menuItems;
+    }
+    static function buildMenuArray($menuItems)
+    {
+        $listMenu = self::queryMenu($menuItems);
+        $menuArray = [];
+        $homeParent = null;
+
+        // Find the 'home' parent menu item
+        foreach ($listMenu as $menuItem) {
+            if ($menuItem->menu_name === 'home' && $menuItem->parent === null) {
+                $homeParent = $menuItem;
+                break;
+            }
+        }
+
+        // Initialize the 'home' parent menu in the array
+        if ($homeParent) {
+            $menuArray[$homeParent->id] = [
+                'menuid' => $homeParent->id,
+                'menuitem' => [
+                    'labelmenu' => $homeParent->menu_name,
+                    'routename' => $homeParent->route,
+                    'leading' => explode(',', $homeParent->leading),
+                    'action' => $homeParent->action,
+                    'ability' => $homeParent->ability,
+                    'submenu' => []
+                ]
+            ];
+        }
+
+        // Process each menu item to build the menu hierarchy
+        foreach ($listMenu as $menuItem) {
+            if ($menuItem->parent === null || $menuItem->parent === 0) {
+                // If the item has no parent, add it as a root item
+                if (!isset($menuArray[$menuItem->id])) {
+                    $menuArray[$menuItem->id] = [
+                        'menuid' => $menuItem->id,
+                        'menuitem' => [
+                            'labelmenu' => $menuItem->menu_name,
+                            'routename' => $menuItem->route,
+                            'leading' => explode(',', $menuItem->leading),
+                            'action' => $menuItem->action,
+                            'ability' => $menuItem->ability,
+                            'submenu' => self::buildSubMenu($menuItem->id, $listMenu)
+                        ]
+                    ];
+                }
+            } else {
+                // Initialize the parent item if not set
+                if (!isset($menuArray[$menuItem->parent])) {
+                    $parentMenuItem = M_MasterMenu::find($menuItem->parent);
+                    if ($parentMenuItem) {
+                        $menuArray[$menuItem->parent] = [
+                            'menuid' => $parentMenuItem->id,
+                            'menuitem' => [
+                                'labelmenu' => $parentMenuItem->menu_name,
+                                'routename' => $parentMenuItem->route,
+                                'leading' => explode(',', $parentMenuItem->leading),
+                                'action' => $parentMenuItem->action,
+                                'ability' => $parentMenuItem->ability,
+                                'submenu' => []
+                            ]
+                        ];
+                    }
+                }
+
+                // Add the current item as a submenu of its parent
+                if (!self::menuItemExists($menuArray[$menuItem->parent]['menuitem']['submenu'], $menuItem->id)) {
+                    $menuArray[$menuItem->parent]['menuitem']['submenu'][] = [
+                        'subid' => $menuItem->id,
+                        'sublabel' => $menuItem->menu_name,
+                        'subroute' => $menuItem->route,
+                        'leading' => explode(',', $menuItem->leading),
+                        'action' => $menuItem->action,
+                        'ability' => $menuItem->ability,
+                        'submenu' => self::buildSubMenu($menuItem->id, $listMenu)
+                    ];
+                }
+            }
+        }
+
+        // Re-index submenu arrays for each menu item
+        foreach ($menuArray as $key => $menu) {
+            $menuArray[$key]['menuitem']['submenu'] = array_values($menu['menuitem']['submenu']);
+        }
+
+        return array_values($menuArray);
+    }
+
+    private static function buildSubMenu($parentId, $menuItems)
+    {
+        $submenuArray = [];
+        foreach ($menuItems as $menuItem) {
+            if ($menuItem->parent === $parentId) {
+                if (!self::menuItemExists($submenuArray, $menuItem->id)) {
+                    $submenuArray[] = [
+                        'subid' => $menuItem->id,
+                        'sublabel' => $menuItem->menu_name,
+                        'subroute' => $menuItem->route,
+                        'leading' => explode(',', $menuItem->leading),
+                        'action' => $menuItem->action,
+                        'ability' => $menuItem->ability,
+                        'submenu' => self::buildSubMenu($menuItem->id, $menuItems)
+                    ];
+                }
+            }
+        }
+        return $submenuArray;
+    }
+
+    private static function menuItemExists($menuArray, $id)
+    {
+        foreach ($menuArray as $menuItem) {
+            if ($menuItem['subid'] == $id) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+
+    // $no_kontrak = $request->query('no_kontrak');
+            // $atas_nama = $request->query('atas_nama');
+            // $no_polisi = $request->query('no_polisi');
+            // $no_bpkb = $request->query('no_bpkb');
+
+            // $collateral = DB::table('credit as a')
+            //     ->join('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
+            //     ->where(function ($query) {
+            //         $query->whereNull('b.DELETED_AT')
+            //             ->orWhere('b.DELETED_AT', '!=', '');
+            //     })
+            //     ->where('a.STATUS', 'A')
+            //     ->select(
+            //         'a.LOAN_NUMBER',
+            //         'b.ID',
+            //         'b.BRAND',
+            //         'b.TYPE',
+            //         'b.PRODUCTION_YEAR',
+            //         'b.COLOR',
+            //         'b.ON_BEHALF',
+            //         'b.ENGINE_NUMBER',
+            //         'b.POLICE_NUMBER',
+            //         'b.CHASIS_NUMBER',
+            //         'b.BPKB_ADDRESS',
+            //         'b.BPKB_NUMBER',
+            //         'b.STNK_NUMBER',
+            //         'b.INVOICE_NUMBER',
+            //         'b.STNK_VALID_DATE',
+            //         'b.VALUE'
+
+            //     );
+
+            // if (!empty($no_kontrak)) {
+            //     $collateral->where('a.LOAN_NUMBER', $no_kontrak);
+            // }
+
+            // if (!empty($atas_nama)) {
+            //     $collateral->where('b.ON_BEHALF', 'like', '%' . $atas_nama . '%');
+            // }
+
+            // if (!empty($no_polisi)) {
+            //     $collateral->where('b.POLICE_NUMBER', 'like', '%' . $no_polisi . '%');
+            // }
+
+            // if (!empty($no_bpkb)) {
+            //     $collateral->where('b.BPKB_NUMBER', 'like', '%' . $no_bpkb . '%');
+            // }
+
+            // $collateral->orderBy('a.CREATED_AT', 'DESC');
+
+            // // Limit the result to 10 records
+            // $collateral->limit(10);
+
+            // $collateralData = []; // Initialize an empty array to store the results
+
+            // // Fetch the collateral data
+            // $collateralResults = $collateral->get(); // Call get() once
+
+            // // Check if data exists
+            // if ($collateralResults->isNotEmpty()) {
+            //     foreach ($collateralResults as $value) {
+            //         $collateralData[] = [  // Append each item to the array
+            //             'loan_number'       => $value->LOAN_NUMBER,
+            //             'id'                => $value->ID,
+            //             'merk'              => $value->BRAND,
+            //             'tipe'              => $value->TYPE,
+            //             'tahun'             => $value->PRODUCTION_YEAR,
+            //             'warna'             => $value->COLOR,
+            //             'atas_nama'         => $value->ON_BEHALF,
+            //             'no_polisi'         => $value->POLICE_NUMBER,
+            //             'no_mesin'          => $value->ENGINE_NUMBER,
+            //             'no_rangka'         => $value->CHASIS_NUMBER,
+            //             'BPKB_ADDRESS'      => $value->BPKB_ADDRESS,
+            //             'no_bpkb'           => $value->BPKB_NUMBER,
+            //             'no_stnk'           => $value->STNK_NUMBER,
+            //             'no_faktur'         => $value->INVOICE_NUMBER,
+            //             'tgl_stnk'          => $value->STNK_VALID_DATE,
+            //             'nilai'             => $value->VALUE,
+            //             'asal_lokasi'       => $value->VALUE
+            //         ];
+            //     }
+            // }
+
+            // return response()->json($collateralResults, 200);

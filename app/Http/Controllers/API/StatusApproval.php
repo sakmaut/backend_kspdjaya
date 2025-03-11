@@ -2,17 +2,17 @@
 
 namespace App\Http\Controllers\API;
 
-class StatusApproval
+enum StatusApproval:string
 {
-    const DRAFT_SURVEY = 'DRSVY';
-    const MENUNGGU_ADMIN = 'WADM';
-    const DRAFT_ORDER = 'DROR';
-    const MENUNGGU_KAPOS = 'WAKPS';
-    const APPROVE_KAPOS = 'APKPS';
-    const REVISI_KAPOS = 'REORKPS';
-    const CANCEL_KAPOS = 'CLKPS';
-    const MENUNGGU_HO = 'WAHO';
-    const APPROVE_HO = 'APHO';
-    const REVISI_HO = 'REORHO';
-    const CANCEL_HO = 'CLHO';
+    case DRAFT_SURVEY = 'DRSVY';
+    case MENUNGGU_ADMIN = 'WADM';
+    case DRAFT_ORDER = 'DROR';
+    case MENUNGGU_KAPOS = 'WAKPS';
+    case APPROVE_KAPOS = 'APKPS';
+    case REVISI_KAPOS = 'REORKPS';
+    case CANCEL_KAPOS = 'CLKPS';
+    case MENUNGGU_HO = 'WAHO';
+    case APPROVE_HO = 'APHO';
+    case REVISI_HO = 'REORHO';
+    case CANCEL_HO = 'CLHO';
 }

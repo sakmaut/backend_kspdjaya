@@ -131,10 +131,16 @@ class BpkbTransactionController extends Controller
                     $details[] = [
                         'ID' => Uuid::uuid7()->toString(),
                         'BPKB_TRANSACTION_ID' => $transaction->ID,
-                        'COLLATERAL_ID' => $res['id'],
+                        'COLLATERAL_ID' => $res['ID'],
                         'STATUS' => 'SENDING'
                     ];
-                    $collateralIds[] = $res['id'];
+                    $collateralIds[] = $res['ID'];
+
+                    $checkCollateralId = M_CrCollateral::where('ID', $res['ID'])->first();
+
+                    if($checkCollateralId){
+                        $checkCollateralId->update(['STATUS' => 'SENDING']);
+                    }
                 }
 
                 M_BpkbDetail::insert($details);
@@ -310,7 +316,11 @@ class BpkbTransactionController extends Controller
                     $collateralIds = $bpkbDetails->pluck('COLLATERAL_ID')->toArray();
 
                     if (!empty($collateralIds)) {
-                        M_CrCollateral::whereIn('ID', $collateralIds)->update(['LOCATION_BRANCH' => $request->user()->branch_id ?? '']);
+                        M_CrCollateral::whereIn('ID', $collateralIds)
+                            ->update([
+                                'LOCATION_BRANCH' => $request->user()->branch_id ?? '',
+                                'STATUS' => 'NORMAL'
+                            ]);
                     }
 
                     foreach ($request->jaminan as $list) {
@@ -362,7 +372,8 @@ class BpkbTransactionController extends Controller
 
             $result = [];
             foreach ($getCollateralId as $item) {
-                $result[$item['type']][] = $item['id'];
+                $type = $item['type'] ?? 'kendaraan';
+                $result[$type][] = $item['ID'];
             }
 
             $combinedCollaterals = [];

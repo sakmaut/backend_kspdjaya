@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\R_Kwitansi;
 use App\Models\M_Arrears;
 use App\Models\M_Branch;
 use App\Models\M_CrCollateral;
 use App\Models\M_CrCollateralSertification;
 use App\Models\M_Credit;
+use App\Models\M_Kwitansi;
 use App\Models\M_Payment;
 use App\Models\M_PaymentApproval;
 use App\Models\M_PaymentAttachment;
@@ -524,6 +526,7 @@ class ReportController extends Controller
                             ) AS b 
                             ON b.payment_id = a.id
                             WHERE a.LOAN_NUM = '$id'
+                            AND a.STTS_RCRD = 'PAID'
                         ) as mp
                         on mp.LOAN_NUM = a.LOAN_NUMBER
                         and date_format(mp.START_DATE,'%d%m%Y') = date_format(a.PAYMENT_DATE,'%d%m%Y')
@@ -545,6 +548,8 @@ class ReportController extends Controller
             $ttlAmtBayar  = 0;
             $ttlDenda  = 0;
             $ttlBayarDenda  = 0;
+            $amtAngss = 0;
+            $sisaAngss = 0;
 
             foreach ($data as $res) {
                 $currentJtTempo = isset($res->PAYMENT_DATE) ? Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y') : '';
@@ -555,7 +560,7 @@ class ReportController extends Controller
                 if (in_array($uniqArr, $checkExist)) {
                     $currentJtTempo = '';
                     $currentAngs = '';
-                    $amtAngs = floatval($res->ORIGINAL_AMOUNT ?? 0) - floatval($res->denda ?? 0);
+                    $amtAngs = $sisaAngss;
                     $sisaAngs = max($previousSisaAngs - floatval($res->angsuran ?? 0), 0);
 
                     $setPinalty = floatval($setSisaDenda ?? 0);
@@ -565,6 +570,7 @@ class ReportController extends Controller
                     $sisaAngs = max(floatval($res->INSTALLMENT ?? 0) - floatval($res->angsuran ?? 0), 0);
                     $previousSisaAngs = $sisaAngs;
                     $amtAngs = $res->INSTALLMENT;
+                    $amtAngss = $res->INSTALLMENT;
                     $setPinalty = floatval($res->PAST_DUE_PENALTY ?? 0);
                     $setSisaDenda = floatval($res->PAST_DUE_PENALTY ?? 0) -  floatval($res->denda ?? 0);
                     array_push($checkExist, $uniqArr);
@@ -579,6 +585,7 @@ class ReportController extends Controller
 
                 $ttlAmtBayar += $amtBayar;
 
+                // Add both 'Amt Angs' and 'Sisa Angs' in the second row
                 $schedule['data_credit'][] = [
                     'Jt.Tempo' => $currentJtTempo,
                     'Angs' => $currentAngs,
@@ -588,14 +595,14 @@ class ReportController extends Controller
                     'Bank' => '',
                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
                     'Amt Bayar' => number_format($amtBayar ?? 0),
-                    'Sisa Angs' => number_format($sisaAngss),
+                    'Sisa Angs' => number_format($sisaAngss),  // This is where you display the $sisaAngss
                     'Denda' => number_format($setPinalty),
                     'Byr Dnda' => number_format($res->denda ?? 0),
                     'Sisa Tghn' => "0",
                     'Ovd' => $res->OD ?? 0
-                    // '' => $sisaTghn == '0' ? 'L' : ''
                 ];
             }
+
 
             $schedule['total'] = [
                 'ttlAmtAngs' => $ttlAmtAngs ?? '0',
@@ -615,7 +622,7 @@ class ReportController extends Controller
                     'tgl_kontrak' => Carbon::parse($creditDetail->INSTALLMENT_DATE)->format('d-m-Y'),
                     'nama' => $creditDetail->customer->NAME ?? '',
                     'no_pel' => $creditDetail->CUST_CODE ?? '',
-                    'status' => ($creditDetail->STATUS ?? '') == 'D' ? 'Tidak Aktif' : 'Aktif'
+                    'status' => ($creditDetail->STATUS ?? '') == 'A' ? 'Aktif' : 'Tidak Aktif'
                 ];
             }
 
@@ -629,9 +636,12 @@ class ReportController extends Controller
     public function collateralAllReport(Request $request)
     {
         try {
-            $sql = "SELECT	d.NAME as pos_pencairan, e.NAME as posisi_berkas,
-                            b.LOAN_NUMBER as no_kontrak, c.NAME as debitur,
-                            a.POLICE_NUMBER, coalesce(f.STATUS,'NORMAL') as status
+            $sql = "SELECT	d.NAME as pos_pencairan, 
+                            e.NAME as posisi_berkas,
+                            b.LOAN_NUMBER as no_kontrak, 
+                            c.NAME as debitur,
+                            a.*, 
+                            coalesce(f.STATUS,'NORMAL') as status
                     FROM	cr_collateral a
                             inner join credit b on b.ID = a.CR_CREDIT_ID
                             inner join customer c on c.CUST_CODE = b.CUST_CODE
@@ -639,6 +649,7 @@ class ReportController extends Controller
                             left join branch e on e.ID = a.LOCATION_BRANCH
                             left join bpkb_detail f on f.COLLATERAL_ID = a.ID
                     WHERE	(1=1)";
+
             if ($request->pos && $request->pos != "SEMUA POS") {
                 $sql .= "and d.NAME like '%$request->pos%'";
             }
@@ -669,8 +680,21 @@ class ReportController extends Controller
                     'posisi_berkas' => $result->posisi_berkas ?? '',
                     'no_kontrak' => $result->no_kontrak ?? '',
                     'nama_debitur' => $result->debitur ?? '',
+                    "tipe" => $result->TYPE,
+                    "merk" => $result->BRAND,
+                    "tahun" => $result->PRODUCTION_YEAR,
+                    "warna" => $result->COLOR,
+                    "atas_nama" => $result->ON_BEHALF,
                     'no_polisi' => $result->POLICE_NUMBER ?? '',
+                    "no_rangka" => $result->CHASIS_NUMBER ?? '',
+                    "no_mesin" => $result->ENGINE_NUMBER ?? '',
+                    "no_bpkb" => $result->BPKB_NUMBER ?? '',
+                    "no_stnk" => $result->STNK_NUMBER ?? '',
+                    "tgl_stnk" => $result->STNK_VALID_DATE ?? '',
+                    "nilai" => (int) $result->VALUE ?? '',
                     'status' => $result->status ?? '',
+                    "document" => $this->getCollateralDocument($result->ID, ['no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri']) ?? null,
+                    "document_rilis" => $this->attachment($result->ID, "'rilis'") ?? null,
                 ];
             }
 
@@ -741,5 +765,67 @@ class ReportController extends Controller
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
+    }
+
+    public function lapPembayaran(Request $request)
+    {
+        try {
+            $dari = $request->dari;
+            $cabang = $request->cabang_id;
+
+            $data = M_Kwitansi::where('STTS_PAYMENT', '=', 'PAID')->orderBy('CREATED_AT', 'DESC');
+
+            if (empty($cabang) && (empty($dari) || $dari == 'null')) {
+                $data->where(DB::raw('DATE_FORMAT(CREATED_AT,"%Y%m%d")'), Carbon::now()->format('Ymd'));
+            } else {
+
+                if ($dari != 'null') {
+                    $formattedDate = Carbon::parse($dari)->format('Ymd');
+                    $data->where(DB::raw('DATE_FORMAT(CREATED_AT,"%Y%m%d")'), $formattedDate);
+                }
+
+                if (!empty($cabang)) {
+                    $data->where('BRANCH_CODE', $cabang);
+                }
+            }
+
+            $results = $data->get();
+
+            $dto = R_Kwitansi::collection($results);
+
+            return response()->json($dto, 200);
+        } catch (\Exception $e) {
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+        }
+    }
+
+    public function attachment($collateralId, $data)
+    {
+        $documents = DB::select(
+            "   SELECT *
+                FROM cr_collateral_document AS csd
+                WHERE (TYPE, COUNTER_ID) IN (
+                    SELECT TYPE, MAX(COUNTER_ID)
+                    FROM cr_collateral_document
+                    WHERE TYPE IN ($data)
+                        AND COLLATERAL_ID = '$collateralId'
+                    GROUP BY TYPE
+                )
+                ORDER BY COUNTER_ID DESC"
+        );
+
+        return $documents;
+    }
+
+    function getCollateralDocument($creditID, $param)
+    {
+
+        $documents = DB::table('cr_collateral_document')
+            ->whereIn('TYPE', $param)
+            ->where('COLLATERAL_ID', '=', $creditID)
+            ->get();
+
+        return $documents;
     }
 }

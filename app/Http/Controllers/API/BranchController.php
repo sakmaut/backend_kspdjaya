@@ -2,47 +2,53 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Repositories\Branch\BranchRepository;
 use App\Http\Resources\R_Branch;
 use App\Http\Resources\R_BranchDetail;
-use App\Models\M_Branch;
-use Carbon\Carbon;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Database\QueryException;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
 
 class BranchController extends Controller
 {
+    protected $branchRepository;
+    protected $log;
+
+    public function __construct(BranchRepository $branchRepository, ExceptionHandling $log)
+    {
+        $this->branchRepository = $branchRepository;
+        $this->log = $log;
+    }
+
     public function index(Request $request)
     {
         try {
-            $data =  M_Branch::whereNull('DELETED_BY')->orWhere('DELETED_BY','')->get();
-            $dto = R_Branch::collection($data);
+            $getAllBranch = $this->branchRepository->getActiveBranch();
 
-            ActivityLogger::logActivity($request,"Success",200);
-            return response()->json(['message' => 'OK',"status" => 200,'response' => $dto], 200);
+            $dto = R_Branch::collection($getAllBranch);
+
+            return response()->json(['message' => 'OK', 'response' => $dto], 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
-    public function show(Request $req,$id)
+    public function show(Request $request, $id)
     {
         try {
-            $check = M_Branch::where('id',$id)->firstOrFail();
-            $dto = new R_BranchDetail($check);
+            $branchById = $this->branchRepository->findBranchById($id);
 
-            ActivityLogger::logActivity($req,"Success",200);
-            return response()->json(['message' => 'OK',"status" => 200,'response' => $dto], 200);
-        } catch (ModelNotFoundException $e) {
-            ActivityLogger::logActivity($req,'Data Not Found',404);
-            return response()->json(['message' => 'Data Not Found',"status" => 404], 404);
+            if (!$branchById) {
+                throw new Exception("Branch Id Not Found", 404);
+            }
+
+            $dto = new R_BranchDetail($branchById);
+
+            return response()->json(['message' => 'OK', 'response' => $dto], 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($req,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
@@ -50,161 +56,51 @@ class BranchController extends Controller
     {
         DB::beginTransaction();
         try {
-
-            // $validator = Validator::make($request->all(), [
-            //     'CODE' => 'required|string',
-            //     'NAME' => 'required|string',
-            //     'ADDRESS' => 'required|string'
-            // ], [
-            //     'CODE.required' => 'Kode Wajib Diisi',
-            //     'NAME.required' => 'Nama Wajib Diisi',
-            //     'ADDRESS.required' => 'Alamat Wajib Diisi'
-            // ]);
-
-            // if ($validator->fails()) {
-            //     $errors = $validator->errors()->toArray();
-            //     $formattedErrors = [];
-                
-            //     foreach ($errors as $key => $messages) {
-            //         $formattedErrors[$key] = $messages[0];
-            //     }
-            
-            //     return response()->json([
-            //         'errors' => $formattedErrors
-            //     ]);
-            // }
-
-            $this->validate($request, [
-                'CODE' => 'required|string',
-                'NAME' => 'required|string',
-                'ADDRESS' => 'required|string'
-            ],[
-                'CODE.required' => 'Kode Wajib Diisi',
-                'NAME.required' => 'Nama Wajib Diisi',
-                'ADDRESS.required' => 'Alamat Wajib Diisi'
+            $request->validate([
+                'CODE' => 'required',
+                'NAME' => 'required'
             ]);
-            
-            $checkCode = M_Branch::where('CODE',$request->CODE)->first();
-            if ($checkCode) {
-                $this->logActivity($request, 'Kode Cabang Sudah Ada', 409);
-                return response()->json(['message' => 'Kode Cabang Sudah Ada', 'status' => 409], 409);
-            }
 
-            $checkName = M_Branch::where('NAME',$request->NAME)->first();
-            if ($checkName) {
-                $this->logActivity($request, 'Nama Cabang Sudah Ada', 409);
-                return response()->json(['message' => 'Nama Cabang Sudah Ada', 'status' => 409], 409);
-            }
+            $this->branchRepository->create($request);
 
-            $data = $request->all();
-            $data = array_change_key_case($data, CASE_UPPER);
-            
-            $data['CODE'] = strtoupper($data['CODE']);
-            $data['CODE_NUMBER'] = self::generateBranchCodeNumber();
-            $data['CREATE_DATE'] = Carbon::now()->format('Y-m-d');
-            $data['CREATE_USER'] = $request->user()->id;
-
-            M_Branch::create($data);
-    
             DB::commit();
-            ActivityLogger::logActivity($request,"Success",200);
-            return response()->json(['message' => 'Cabang created successfully',"status" => 200], 200);
-        }catch (QueryException $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($request,$e->getMessage(),409);
-            return response()->json(['message' => $e->getMessage(),"status" => 409], 409);
+            return response()->json(['message' => 'branch created successfully'], 200);
         } catch (\Exception $e) {
             DB::rollback();
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
-    private function logActivity(Request $request, string $message, int $statusCode)
-    {
-        ActivityLogger::logActivity($request,$message,$statusCode);
-    }
-
-    public function update(Request $request,$id)
+    public function update(Request $request, $id)
     {
         DB::beginTransaction();
         try {
             $request->validate([
-                'CODE' => 'unique:branch,code,'.$id,
-                'NAME' => 'unique:branch,name,'.$id,
-                'ADDRESS' => 'required|string',
-                'ZIP_CODE' => 'numeric'
+                'CODE' => 'unique:branch,code,' . $id,
+                'NAME' => 'unique:branch,name,' . $id
             ]);
 
-            $branch = M_Branch::findOrFail($id);
-
-            $request['MOD_USER'] = $request->user()->id;
-            $request['MOD_DATE'] = Carbon::now()->format('Y-m-d');
-
-            $data = array_change_key_case($request->all(), CASE_UPPER);
-
-            compareData(M_Branch::class,$id,$data,$request);
-
-            $branch->update($data);
+            $this->branchRepository->update($request, $id);
 
             DB::commit();
-            ActivityLogger::logActivity($request,"Success",200);
-            return response()->json(['message' => 'Cabang updated successfully', "status" => 200], 200);
-        } catch (ModelNotFoundException $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($request,'Data Not Found',404);
-            return response()->json(['message' => 'Data Not Found', "status" => 404], 404);
+            return response()->json(['message' => 'Cabang updated successfully'], 200);
         } catch (\Exception $e) {
             DB::rollback();
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
-    public function destroy(Request $req,$id)
-    { 
+    public function destroy(Request $request, $id)
+    {
         DB::beginTransaction();
         try {
-            
-            $users = M_Branch::findOrFail($id);
-
-            $update = [
-                'deleted_by' => $req->user()->id,
-                'deleted_at' => Carbon::now()->format('Y-m-d H:i:s')
-            ];
-
-            $data = array_change_key_case($update, CASE_UPPER);
-
-            $users->update($data);
+            $this->branchRepository->delete($request, $id);
 
             DB::commit();
-            ActivityLogger::logActivity($req,"Success",200);
-            return response()->json(['message' => 'Users deleted successfully', "status" => 200], 200);
-        } catch (ModelNotFoundException $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($req,'Data Not Found',404);
-            return response()->json(['message' => 'Data Not Found', "status" => 404], 404);
+            return response()->json(['message' => 'deleted successfully'], 200);
         } catch (\Exception $e) {
             DB::rollback();
-            ActivityLogger::logActivity($req,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+            return $this->log->logError($e, $request);
         }
-    }
-
-    function generateBranchCodeNumber()
-    {
-        $lastCode = DB::table('branch')
-                    ->orderBy('CODE_NUMBER', 'desc')
-                    ->first();
-
-        if ($lastCode) {
-            $lastCodeNumber = (int) substr($lastCode->CODE_NUMBER, 1);
-            $newCodeNumber = $lastCodeNumber + 1;
-            $newCode = str_pad($newCodeNumber, 3, '0', STR_PAD_LEFT);
-        } else {
-            $newCode = '001';
-        }
-
-        return $newCode;
     }
 }

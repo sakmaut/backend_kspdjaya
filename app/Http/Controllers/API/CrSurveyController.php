@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Repositories\Survey\SurveyRepository;
 use App\Http\Resources\R_CrProspect;
+use App\Http\Resources\R_CrSurvey;
+use App\Http\Resources\R_SurveyDetail;
 use App\Models\M_CrGuaranteBillyet;
 use App\Models\M_CrGuaranteGold;
 use App\Models\M_CrGuaranteSertification;
@@ -28,29 +32,28 @@ class CrSurveyController extends Controller
     private $CrSurvey;
     private $uuid;
     private $timeNow;
+    private $SurveyRepository;
+    protected $log;
 
-    public function __construct(M_CrSurvey $CrSurvey)
+    public function __construct(M_CrSurvey $CrSurvey, SurveyRepository $SurveyRepository, ExceptionHandling $log)
     {
         $this->CrSurvey = $CrSurvey;
         $this->uuid = Uuid::uuid7()->toString();
         $this->timeNow = Carbon::now();
+        $this->SurveyRepository = $SurveyRepository;
+        $this->log = $log;
     }
 
-    public function index(Request $req)
+    public function index(Request $request)
     {
         try {
-            $mcf_id = $req->user()->id;
-            $data =  $this->CrSurvey->show_mcf($mcf_id);
-            $dto = R_CrProspect::collection($data);
+            $getListSurveyByMcf = $this->SurveyRepository->getListSurveyByMcf($request);
 
-            ActivityLogger::logActivity($req, "Success", 200);
-            return response()->json(['message' => 'OK', "status" => 200, 'response' => $dto], 200);
-        } catch (QueryException $e) {
-            ActivityLogger::logActivity($req, $e->getMessage(), 409);
-            return response()->json(['message' => $e->getMessage(), "status" => 409], 409);
+            $dto = R_CrSurvey::collection($getListSurveyByMcf);
+
+            return response()->json(['response' => $dto], 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($req, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
@@ -59,7 +62,13 @@ class CrSurveyController extends Controller
         try {
             $check = $this->CrSurvey->where('id', $id)->whereNull('deleted_at')->firstOrFail();
 
-            return response()->json(['message' => 'OK', "status" => 200, 'response' => $this->resourceDetail($check)], 200);
+            // $getListSurveyByMcf = $this->SurveyRepository->getDetailSurvey($id);
+
+            // $dto = R_SurveyDetail::collection($getListSurveyByMcf);
+
+            // return response()->json($dto, 200);
+
+            return response()->json(['message' => 'OK', 'response' => $this->resourceDetail($check)], 200);
         } catch (ModelNotFoundException $e) {
             ActivityLogger::logActivity($req, 'Data Not Found', 404);
             return response()->json(['message' => 'Data Not Found', "status" => 404], 404);
@@ -90,7 +99,7 @@ class CrSurveyController extends Controller
                 'tujuan_kredit' => $data->tujuan_kredit,
                 'plafond' => (int) $data->plafond,
                 'tenor' => strval($data->tenor),
-                'kategory' => $data->category,
+                'category' => $data->category,
                 'jenis_angsuran' => $data->jenis_angsuran
             ],
             'data_nasabah' => [
@@ -445,7 +454,7 @@ class CrSurveyController extends Controller
                 'tujuan_kredit' => $request->order['tujuan_kredit'] ?? null,
                 'plafond' => $request->order['plafond'] ?? null,
                 'tenor' => $request->order['tenor'] ?? null,
-                'category' => $request->order['kategory'] ?? null,
+                'category' => $request->order['category'] ?? null,
                 'jenis_angsuran' => $request->order['jenis_angsuran'] ?? null,
                 'nama' => $request->data_nasabah['nama'] ?? null,
                 'tgl_lahir' => date('Y-m-d', strtotime($request->data_nasabah['tgl_lahir'])) ?? null,

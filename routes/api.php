@@ -31,7 +31,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 //Login Authenticate
-Route::post('auth/login', [AuthController::class, 'login'])->name('login');
+Route::post('auth/login', [AuthController::class, 'login'])->middleware('time.access')->name('login');
 Route::get('auth/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 
 Route::post('welcome', [Welcome::class, 'index']);
@@ -39,12 +39,8 @@ Route::get('jobArrears', [Welcome::class, 'job']);
 Route::post('botpel', [PelunasanController2::class, 'getDetail']);
 Route::post('propel', [PelunasanController2::class, 'propel']);
 
-Route::middleware(['auth:sanctum', 'check.access'])->group(function () {
+Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::resource('users', UsersController::class)->only(['index']);
-    // Route::resource('taksasi', TaksasiController::class)->only(['index']);
-});
-
-Route::middleware('auth:sanctum')->group(function () {
     // Route Group Master Menu
     Route::get('fpk_kapos', [CrAppilcationController::class, 'showKapos']);
     Route::get('fpk_ho', [CrAppilcationController::class, 'showHo']);
@@ -53,7 +49,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::resource('user_access_menu', UserAccessMenuController::class);
 
     Route::resource('cr_application', CrAppilcationController::class)->only(['index']);
-    Route::resource('kunjungan', CrSurveyController::class)->only(['index']);
     Route::get('kunjungan_admin', [CrAppilcationController::class, 'showAdmins']);
 
     // Route Group Users
@@ -63,6 +58,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Route Group Branch
     Route::resource('cabang', BranchController::class);
+    Route::get('collateral_count', [BpkbController::class, 'countAll']);
 
     // Route Group Cr Application
     Route::resource('cr_application', CrAppilcationController::class)->except(['index']);
@@ -71,7 +67,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('cr_application_generate', [CrAppilcationController::class, 'generateUuidFPK']);
 
     // Route Group Cr Prospek (Kunjungan)
-    Route::resource('kunjungan', CrSurveyController::class)->except(['index', 'showAdmins']);
+    Route::resource('kunjungan', CrSurveyController::class);
     Route::post('image_upload_prospect', [CrSurveyController::class, 'uploadImage']);
     Route::post('image_upload_multiple', [CrSurveyController::class, 'imageMultiple']);
     Route::delete('image_deleted/{id}', [CrSurveyController::class, 'destroyImage']);
@@ -137,8 +133,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::resource('task', TaskController::class);
 
     //Report
-    Route::post('inquiryList', [ReportController::class,'inquiryList']);
-    Route::get('creditReport/{id}', [ReportController::class,'pinjaman']);
+    Route::post('inquiryList', [ReportController::class, 'inquiryList']);
+    Route::get('creditReport/{id}', [ReportController::class, 'pinjaman']);
     Route::get('strukturCredit/{id}', [ReportController::class, 'strukturCredit']);
     Route::get('customerReport/{id}', [ReportController::class, 'debitur']);
     Route::get('collateralReport/{id}', [ReportController::class, 'jaminan']);
@@ -149,8 +145,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::resource('collateral', CollateralController::class);
     Route::post('collateral_attachment', [CollateralController::class, 'uploadImage']);
+    Route::post('collateral_attachment_rilis', [CollateralController::class, 'uploadImageRelease']);
     Route::post('inquiryList', [ReportController::class, 'inquiryList']);
     Route::resource('log_print', LogPrintController::class);
+
+    Route::post('listBanTest', [ListBanController::class, 'listBanTest']);
+
+    Route::post('lap_pembayaran', [ReportController::class, 'lapPembayaran']);
 });
 
 
