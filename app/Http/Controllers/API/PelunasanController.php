@@ -706,7 +706,7 @@ class PelunasanController extends Controller
 
                 // Handle the discount if applicable
                 if ($remainingDiscount > 0) {
-                    $remainingToDiscount = $getAmount - $newPaymentValue;
+                    $remainingToDiscount = $getAmount - ($valBefore + $newPaymentValue);
 
                     if ($remainingDiscount >= $remainingToDiscount) {
                         $param['DISKON_POKOK'] = $remainingToDiscount; // Full discount
@@ -814,7 +814,7 @@ class PelunasanController extends Controller
 
                 // Handle the discount if applicable
                 if ($remainingDiscount > 0) {
-                    $remainingToDiscount = $getAmount - $newPaymentValue;
+                    $remainingToDiscount = $getAmount - ($valBefore + $newPaymentValue);
 
                     if ($remainingDiscount >= $remainingToDiscount) {
                         $param[$discountParam] = $remainingToDiscount; // Full discount
