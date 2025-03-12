@@ -224,7 +224,7 @@ class PelunasanController2 extends Controller
 
             $this->proccessKwitansiDetail($request, $loan_number, $no_inv);
 
-            // $this->proccess($request, $loan_number, $no_inv, 'PAID');
+            $this->proccess($request, $loan_number, $no_inv, 'PAID');
 
             DB::commit();
             return response()->json("MUACH MUACHH MUACHHH", 200);
@@ -474,10 +474,10 @@ class PelunasanController2 extends Controller
             )
             ->get();
 
-        // $this->principalCalculate($request, $loan_number, $no_inv, $creditSchedules);
+        $this->principalCalculate($request, $loan_number, $no_inv, $creditSchedules);
         $this->interestCalculate($request, $loan_number, $no_inv, $creditSchedules);
-        // $arrears = M_Arrears::where(['LOAN_NUMBER' => $loan_number, 'STATUS_REC' => 'A'])->orderBy('START_DATE', 'ASC')->get();
-        // $this->arrearsCalculate($request, $loan_number, $no_inv, $arrears);
+        $arrears = M_Arrears::where(['LOAN_NUMBER' => $loan_number, 'STATUS_REC' => 'A'])->orderBy('START_DATE', 'ASC')->get();
+        $this->arrearsCalculate($request, $loan_number, $no_inv, $arrears);
     }
 
     private function principalCalculate($request, $loan_number, $no_inv, $creditSchedule)
