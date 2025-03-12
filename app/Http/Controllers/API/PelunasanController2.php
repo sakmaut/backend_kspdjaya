@@ -224,7 +224,7 @@ class PelunasanController2 extends Controller
 
             $this->proccessKwitansiDetail($request, $loan_number, $no_inv);
 
-            $this->proccess($request, $loan_number, $no_inv, 'PAID');
+            // $this->proccess($request, $loan_number, $no_inv, 'PAID');
 
             DB::commit();
             return response()->json("MUACH MUACHH MUACHHH", 200);
@@ -474,10 +474,10 @@ class PelunasanController2 extends Controller
             )
             ->get();
 
-        $this->principalCalculate($request, $loan_number, $no_inv, $creditSchedules);
+        // $this->principalCalculate($request, $loan_number, $no_inv, $creditSchedules);
         $this->interestCalculate($request, $loan_number, $no_inv, $creditSchedules);
-        $arrears = M_Arrears::where(['LOAN_NUMBER' => $loan_number, 'STATUS_REC' => 'A'])->orderBy('START_DATE', 'ASC')->get();
-        $this->arrearsCalculate($request, $loan_number, $no_inv, $arrears);
+        // $arrears = M_Arrears::where(['LOAN_NUMBER' => $loan_number, 'STATUS_REC' => 'A'])->orderBy('START_DATE', 'ASC')->get();
+        // $this->arrearsCalculate($request, $loan_number, $no_inv, $arrears);
     }
 
     private function principalCalculate($request, $loan_number, $no_inv, $creditSchedule)
@@ -545,7 +545,7 @@ class PelunasanController2 extends Controller
                     $newPaymentValue = $getAmount;
                     $remainingPayment -= $remainingToPay;
                 } else {
-                    $newPaymentValue = $valBefore + $remainingPayment;
+                    $newPaymentValue = $remainingPayment;
                     $remainingPayment = 0;
                 }
 
@@ -557,7 +557,7 @@ class PelunasanController2 extends Controller
                 if ($newPaymentValue == $getAmount) {
                     $param['DISKON_BUNGA'] = 0;
                 } else {
-                    $param['DISKON_BUNGA'] = $getAmount - $newPaymentValue;
+                    $param['DISKON_BUNGA'] = $getAmount - ($valBefore + $newPaymentValue);
                 }
 
                 $this->insertKwitansiDetail(
