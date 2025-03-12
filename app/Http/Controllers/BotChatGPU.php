@@ -9,7 +9,7 @@ class BotChatGPU extends Controller
 
     public function index(Request $req)
     {
-        // 11106230000105
+        11106230000105
 
         // $arrearsData = [];
         // $getCrditSchedule = "   SELECT LOAN_NUMBER,PAYMENT_DATE,PRINCIPAL,INTEREST,INSTALLMENT,PAYMENT_VALUE_PRINCIPAL,PAYMENT_VALUE_INTEREST
