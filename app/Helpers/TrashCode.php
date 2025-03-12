@@ -428,87 +428,162 @@ if ($valBeforePrincipal < $getPrincipal) { $remaining_to_principal=$getPrincipal
 
 
 
-    // $no_kontrak = $request->query('no_kontrak');
-            // $atas_nama = $request->query('atas_nama');
-            // $no_polisi = $request->query('no_polisi');
-            // $no_bpkb = $request->query('no_bpkb');
+        // $no_kontrak = $request->query('no_kontrak');
+        // $atas_nama = $request->query('atas_nama');
+        // $no_polisi = $request->query('no_polisi');
+        // $no_bpkb = $request->query('no_bpkb');
 
-            // $collateral = DB::table('credit as a')
-            //     ->join('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
-            //     ->where(function ($query) {
-            //         $query->whereNull('b.DELETED_AT')
-            //             ->orWhere('b.DELETED_AT', '!=', '');
-            //     })
-            //     ->where('a.STATUS', 'A')
-            //     ->select(
-            //         'a.LOAN_NUMBER',
-            //         'b.ID',
-            //         'b.BRAND',
-            //         'b.TYPE',
-            //         'b.PRODUCTION_YEAR',
-            //         'b.COLOR',
-            //         'b.ON_BEHALF',
-            //         'b.ENGINE_NUMBER',
-            //         'b.POLICE_NUMBER',
-            //         'b.CHASIS_NUMBER',
-            //         'b.BPKB_ADDRESS',
-            //         'b.BPKB_NUMBER',
-            //         'b.STNK_NUMBER',
-            //         'b.INVOICE_NUMBER',
-            //         'b.STNK_VALID_DATE',
-            //         'b.VALUE'
+        // $collateral = DB::table('credit as a')
+        //     ->join('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
+        //     ->where(function ($query) {
+        //         $query->whereNull('b.DELETED_AT')
+        //             ->orWhere('b.DELETED_AT', '!=', '');
+        //     })
+        //     ->where('a.STATUS', 'A')
+        //     ->select(
+        //         'a.LOAN_NUMBER',
+        //         'b.ID',
+        //         'b.BRAND',
+        //         'b.TYPE',
+        //         'b.PRODUCTION_YEAR',
+        //         'b.COLOR',
+        //         'b.ON_BEHALF',
+        //         'b.ENGINE_NUMBER',
+        //         'b.POLICE_NUMBER',
+        //         'b.CHASIS_NUMBER',
+        //         'b.BPKB_ADDRESS',
+        //         'b.BPKB_NUMBER',
+        //         'b.STNK_NUMBER',
+        //         'b.INVOICE_NUMBER',
+        //         'b.STNK_VALID_DATE',
+        //         'b.VALUE'
 
-            //     );
+        //     );
 
-            // if (!empty($no_kontrak)) {
-            //     $collateral->where('a.LOAN_NUMBER', $no_kontrak);
-            // }
+        // if (!empty($no_kontrak)) {
+        //     $collateral->where('a.LOAN_NUMBER', $no_kontrak);
+        // }
 
-            // if (!empty($atas_nama)) {
-            //     $collateral->where('b.ON_BEHALF', 'like', '%' . $atas_nama . '%');
-            // }
+        // if (!empty($atas_nama)) {
+        //     $collateral->where('b.ON_BEHALF', 'like', '%' . $atas_nama . '%');
+        // }
 
-            // if (!empty($no_polisi)) {
-            //     $collateral->where('b.POLICE_NUMBER', 'like', '%' . $no_polisi . '%');
-            // }
+        // if (!empty($no_polisi)) {
+        //     $collateral->where('b.POLICE_NUMBER', 'like', '%' . $no_polisi . '%');
+        // }
 
-            // if (!empty($no_bpkb)) {
-            //     $collateral->where('b.BPKB_NUMBER', 'like', '%' . $no_bpkb . '%');
-            // }
+        // if (!empty($no_bpkb)) {
+        //     $collateral->where('b.BPKB_NUMBER', 'like', '%' . $no_bpkb . '%');
+        // }
 
-            // $collateral->orderBy('a.CREATED_AT', 'DESC');
+        // $collateral->orderBy('a.CREATED_AT', 'DESC');
 
-            // // Limit the result to 10 records
-            // $collateral->limit(10);
+        // // Limit the result to 10 records
+        // $collateral->limit(10);
 
-            // $collateralData = []; // Initialize an empty array to store the results
+        // $collateralData = []; // Initialize an empty array to store the results
 
-            // // Fetch the collateral data
-            // $collateralResults = $collateral->get(); // Call get() once
+        // // Fetch the collateral data
+        // $collateralResults = $collateral->get(); // Call get() once
 
-            // // Check if data exists
-            // if ($collateralResults->isNotEmpty()) {
-            //     foreach ($collateralResults as $value) {
-            //         $collateralData[] = [  // Append each item to the array
-            //             'loan_number'       => $value->LOAN_NUMBER,
-            //             'id'                => $value->ID,
-            //             'merk'              => $value->BRAND,
-            //             'tipe'              => $value->TYPE,
-            //             'tahun'             => $value->PRODUCTION_YEAR,
-            //             'warna'             => $value->COLOR,
-            //             'atas_nama'         => $value->ON_BEHALF,
-            //             'no_polisi'         => $value->POLICE_NUMBER,
-            //             'no_mesin'          => $value->ENGINE_NUMBER,
-            //             'no_rangka'         => $value->CHASIS_NUMBER,
-            //             'BPKB_ADDRESS'      => $value->BPKB_ADDRESS,
-            //             'no_bpkb'           => $value->BPKB_NUMBER,
-            //             'no_stnk'           => $value->STNK_NUMBER,
-            //             'no_faktur'         => $value->INVOICE_NUMBER,
-            //             'tgl_stnk'          => $value->STNK_VALID_DATE,
-            //             'nilai'             => $value->VALUE,
-            //             'asal_lokasi'       => $value->VALUE
-            //         ];
-            //     }
-            // }
+        // // Check if data exists
+        // if ($collateralResults->isNotEmpty()) {
+        //     foreach ($collateralResults as $value) {
+        //         $collateralData[] = [  // Append each item to the array
+        //             'loan_number'       => $value->LOAN_NUMBER,
+        //             'id'                => $value->ID,
+        //             'merk'              => $value->BRAND,
+        //             'tipe'              => $value->TYPE,
+        //             'tahun'             => $value->PRODUCTION_YEAR,
+        //             'warna'             => $value->COLOR,
+        //             'atas_nama'         => $value->ON_BEHALF,
+        //             'no_polisi'         => $value->POLICE_NUMBER,
+        //             'no_mesin'          => $value->ENGINE_NUMBER,
+        //             'no_rangka'         => $value->CHASIS_NUMBER,
+        //             'BPKB_ADDRESS'      => $value->BPKB_ADDRESS,
+        //             'no_bpkb'           => $value->BPKB_NUMBER,
+        //             'no_stnk'           => $value->STNK_NUMBER,
+        //             'no_faktur'         => $value->INVOICE_NUMBER,
+        //             'tgl_stnk'          => $value->STNK_VALID_DATE,
+        //             'nilai'             => $value->VALUE,
+        //             'asal_lokasi'       => $value->VALUE
+        //         ];
+        //     }
+        // }
 
-            // return response()->json($collateralResults, 200);
+        // return response()->json($collateralResults, 200);
+
+
+
+
+        $sql = "SELECT
+                            a.INSTALLMENT_COUNT,
+                            a.PAYMENT_DATE,
+                            a.PRINCIPAL,
+                            a.INTEREST,
+                            a.INSTALLMENT,
+                            a.PAYMENT_VALUE_PRINCIPAL,
+                            a.PAYMENT_VALUE_INTEREST,
+                            a.INSUFFICIENT_PAYMENT,
+                            a.PAYMENT_VALUE,
+                            a.PAID_FLAG,
+                            c.PAST_DUE_PENALTY,
+                            c.PAID_PENALTY,
+                            c.STATUS_REC,
+                            mp.ENTRY_DATE,
+                            mp.INST_COUNT_INCREMENT,
+                            mp.ORIGINAL_AMOUNT,
+                            mp.INVOICE,
+                            mp.angsuran,
+                            mp.denda,
+                            (c.PAST_DUE_PENALTY - mp.denda) as sisa_denda,
+                           CASE
+                                WHEN DATEDIFF(
+                                    COALESCE(DATE_FORMAT(mp.ENTRY_DATE, '%Y-%m-%d'), DATE_FORMAT(NOW(), '%Y-%m-%d')),
+                                    a.PAYMENT_DATE
+                                ) < 0 THEN 0
+                                ELSE DATEDIFF(
+                                    COALESCE(DATE_FORMAT(mp.ENTRY_DATE, '%Y-%m-%d'), DATE_FORMAT(NOW(), '%Y-%m-%d')),
+                                    a.PAYMENT_DATE
+                                )
+                            END AS OD
+                        from
+                            credit_schedule as a
+                        left join
+                            arrears as c
+                            on c.LOAN_NUMBER = a.LOAN_NUMBER
+                            and c.START_DATE = a.PAYMENT_DATE
+                        left join (
+                            SELECT  
+                                a.LOAN_NUM,
+                                DATE(a.ENTRY_DATE) AS ENTRY_DATE, 
+                                DATE(a.START_DATE) AS START_DATE,
+                                ROW_NUMBER() OVER (PARTITION BY a.START_DATE ORDER BY a.ENTRY_DATE) AS INST_COUNT_INCREMENT,
+                                a.ORIGINAL_AMOUNT,
+                                a.INVOICE,
+                                b.angsuran,
+                                b.denda
+                            FROM 
+                                payment a
+                            LEFT JOIN (
+                                SELECT  
+                                    payment_id, 
+                                    SUM(CASE WHEN ACC_KEYS = 'ANGSURAN_POKOK' 
+                                                OR ACC_KEYS = 'ANGSURAN_BUNGA' 
+                                                OR ACC_KEYS = 'BAYAR_POKOK' 
+                                                OR ACC_KEYS = 'BAYAR_BUNGA'
+                                                THEN ORIGINAL_AMOUNT ELSE 0 END) AS angsuran,
+                                    SUM(CASE WHEN ACC_KEYS = 'BAYAR_DENDA' THEN ORIGINAL_AMOUNT ELSE 0 END) AS denda
+                                FROM 
+                                    payment_detail 
+                                GROUP BY payment_id
+                            ) AS b 
+                            ON b.payment_id = a.id
+                            WHERE a.LOAN_NUM = '$id'
+                            AND a.STTS_RCRD = 'PAID'
+                        ) as mp
+                        on mp.LOAN_NUM = a.LOAN_NUMBER
+                        and date_format(mp.START_DATE,'%d%m%Y') = date_format(a.PAYMENT_DATE,'%d%m%Y')
+                        where
+                            a.LOAN_NUMBER = '$id'
+                        order by a.PAYMENT_DATE,mp.ENTRY_DATE asc";
