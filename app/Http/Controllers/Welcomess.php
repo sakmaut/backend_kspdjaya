@@ -4,13 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
-class BotChatGPU extends Controller
+class Welcomess extends Controller
 {
-
     public function index(Request $req)
     {
-        11106230000105
-
         // $arrearsData = [];
         // $getCrditSchedule = "   SELECT LOAN_NUMBER,PAYMENT_DATE,PRINCIPAL,INTEREST,INSTALLMENT,PAYMENT_VALUE_PRINCIPAL,PAYMENT_VALUE_INTEREST
         //                             FROM credit_schedule 
