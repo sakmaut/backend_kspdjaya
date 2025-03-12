@@ -502,8 +502,6 @@ class ReportController extends Controller
                                 a.LOAN_NUM,
                                 DATE(a.ENTRY_DATE) AS ENTRY_DATE, 
                                 DATE(a.START_DATE) AS START_DATE,
-                                -- @row_num := IF(@prev_start_date = a.START_DATE, @row_num + 1, 1) AS INST_COUNT_INCREMENT,
-                                -- @prev_start_date := a.START_DATE,
                                 ROW_NUMBER() OVER (PARTITION BY a.START_DATE ORDER BY a.ENTRY_DATE) AS INST_COUNT_INCREMENT,
                                 a.ORIGINAL_AMOUNT,
                                 a.INVOICE,
@@ -514,12 +512,12 @@ class ReportController extends Controller
                             LEFT JOIN (
                                 SELECT  
                                     payment_id, 
-                                    SUM(CASE WHEN ACC_KEYS = 'ANGSURAN_POKOK' OR ACC_KEYS = 'ANGSURAN_BUNGA' 
+                                    SUM(CASE WHEN ACC_KEYS = 'ANGSURAN_POKOK' 
+                                                OR ACC_KEYS = 'ANGSURAN_BUNGA' 
                                                 OR ACC_KEYS = 'BAYAR_POKOK' 
                                                 OR ACC_KEYS = 'BAYAR_BUNGA'
-                                                OR ACC_KEYS = 'DISKON_POKOK'
-                                                OR ACC_KEYS = 'DISKON_BUNGA' THEN ORIGINAL_AMOUNT ELSE 0 END) AS angsuran,
-                                    SUM(CASE WHEN ACC_KEYS = 'BAYAR_DENDA' OR ACC_KEYS = 'DISKON_DENDA'  THEN ORIGINAL_AMOUNT ELSE 0 END) AS denda
+                                                THEN ORIGINAL_AMOUNT ELSE 0 END) AS angsuran,
+                                    SUM(CASE WHEN ACC_KEYS = 'BAYAR_DENDA' THEN ORIGINAL_AMOUNT ELSE 0 END) AS denda
                                 FROM 
                                     payment_detail 
                                 GROUP BY payment_id
