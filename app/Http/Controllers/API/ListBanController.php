@@ -188,7 +188,7 @@ class ListBanController extends Controller
                                 WHEN a.METODE_PEMBAYARAN = 'transfer' THEN DATE_FORMAT(b.AUTH_DATE, '%Y-%m-%d')
                                 ELSE DATE_FORMAT(a.CREATED_AT, '%Y-%m-%d') 
                             END AS ENTRY_DATE, 
-                            SUM(a.PEMBULATAN) AS ORIGINAL_AMOUNT,
+                            a.PEMBULATAN AS ORIGINAL_AMOUNT,
                             a.LOAN_NUMBER AS LOAN_NUM,
                             a.METODE_PEMBAYARAN,
                             a.NO_TRANSAKSI AS no_invoice,
@@ -206,6 +206,7 @@ class ListBanController extends Controller
                                 WHEN a.METODE_PEMBAYARAN = 'transfer' THEN DATE_FORMAT(b.AUTH_DATE, '%Y-%m-%d')
                                 ELSE DATE_FORMAT(a.CREATED_AT, '%Y-%m-%d') 
                             END, 
+                            a.PEMBULATAN,
                             a.LOAN_NUMBER,
                             a.METODE_PEMBAYARAN,
                             a.NO_TRANSAKSI, 
