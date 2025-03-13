@@ -615,6 +615,8 @@ class ReportController extends Controller
                 $statusNoActive = 'LUNAS NORMAL (CL)';
             } elseif ($creditDetail->STATUS_REC === 'PT') {
                 $statusNoActive = 'LUNAS DIMUKA (PT)';
+            } elseif ($creditDetail->STATUS_REC === 'RP') {
+                $statusNoActive = 'REPOSSED (RP)';
             }
 
             if ($creditDetail) {
