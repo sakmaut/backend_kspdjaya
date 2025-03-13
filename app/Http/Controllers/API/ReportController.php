@@ -610,13 +610,22 @@ class ReportController extends Controller
                 $query->select('CUST_CODE', 'NAME');
             }])->where('LOAN_NUMBER', $id)->first();
 
+            switch ($creditDetail->STATUS_REC) {
+                case 'CL':
+                    return 'LUNAS NORMAL (CL)';
+                    break;
+                case 'PT':
+                    return 'LUNAS DIMUKA (PT)';
+                    break;
+            }
+
             if ($creditDetail) {
                 $schedule['detail'] = [
                     'no_kontrak' => $creditDetail->LOAN_NUMBER ?? '',
                     'tgl_kontrak' => Carbon::parse($creditDetail->INSTALLMENT_DATE)->format('d-m-Y'),
                     'nama' => $creditDetail->customer->NAME ?? '',
                     'no_pel' => $creditDetail->CUST_CODE ?? '',
-                    'status' => ($creditDetail->STATUS ?? '') == 'A' ? 'Aktif' : 'Tidak Aktif'
+                    'status' => ($creditDetail->STATUS ?? '') == 'A' ? 'Aktif' : $creditDetail->STATUS_REC
                 ];
             }
 
