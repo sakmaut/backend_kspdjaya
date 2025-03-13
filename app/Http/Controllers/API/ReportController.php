@@ -610,14 +610,14 @@ class ReportController extends Controller
                 $query->select('CUST_CODE', 'NAME');
             }])->where('LOAN_NUMBER', $id)->first();
 
-            switch ($creditDetail->STATUS_REC) {
-                case 'CL':
-                    echo 'LUNAS NORMAL (CL)';
-                    break; // Prevents fall-through to the next case
-                case 'PT':
-                    echo 'LUNAS DIMUKA (PT)';
-                    break; // Prevents fall-through
-            }
+            // switch ($creditDetail->STATUS_REC) {
+            //     case 'CL':
+            //         echo 'LUNAS NORMAL (CL)';
+            //         break; // Prevents fall-through to the next case
+            //     case 'PT':
+            //         echo 'LUNAS DIMUKA (PT)';
+            //         break; // Prevents fall-through
+            // }
 
             if ($creditDetail) {
                 $schedule['detail'] = [
