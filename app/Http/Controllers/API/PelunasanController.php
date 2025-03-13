@@ -367,7 +367,7 @@ class PelunasanController extends Controller
             'ACC_KEY' => 'Bayar Pelunasan Pinalty',
             'STTS_RCRD' => $status,
             'NO_TRX' => $no_inv,
-            'PAYMENT_METHOD' => $request->METODE_PEMBAYARAN ?? '',
+            'PAYMENT_METHOD' => $kwitansi->METODE_PEMBAYARAN ?? '',
             'INVOICE' => $no_inv,
             'BRANCH' =>  $getCodeBranch->CODE_NUMBER ?? M_Branch::find($request->user()->branch_id)->CODE_NUMBER,
             'LOAN_NUM' => $loan_number ?? '',
