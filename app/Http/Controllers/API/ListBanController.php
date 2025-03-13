@@ -121,7 +121,10 @@ class ListBanController extends Controller
                             b.BRANCH AS BRANCH, 
                             d.ID AS BRANCH_ID, 
                             d.NAME AS nama_cabang,
-                            DATE_FORMAT(b.ENTRY_DATE, '%Y-%m-%d') AS ENTRY_DATE, 
+                            CASE 
+                                WHEN b.PAYMENT_METHOD = 'transfer' THEN DATE_FORMAT(b.AUTH_DATE, '%Y-%m-%d')
+                                ELSE DATE_FORMAT(b.ENTRY_DATE, '%Y-%m-%d') 
+                            END AS ENTRY_DATE, 
                             SUM(a.ORIGINAL_AMOUNT) AS ORIGINAL_AMOUNT,
                             b.LOAN_NUM,
                             b.PAYMENT_METHOD,
@@ -146,7 +149,10 @@ class ListBanController extends Controller
                             b.BRANCH, 
                             d.ID, 
                             d.NAME, 
-                            DATE_FORMAT(b.ENTRY_DATE, '%Y-%m-%d'), 
+                            CASE 
+                                WHEN b.PAYMENT_METHOD = 'transfer' THEN DATE_FORMAT(b.AUTH_DATE, '%Y-%m-%d')
+                                ELSE DATE_FORMAT(b.ENTRY_DATE, '%Y-%m-%d') 
+                            END, 
                             b.LOAN_NUM,
                             b.PAYMENT_METHOD,
                             b.INVOICE,
