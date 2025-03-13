@@ -719,7 +719,7 @@ class ListBanController extends Controller
     public function listBanTest(Request $request)
     {
         try {
-            $dateFrom = date('mY', strtotime($request->dari));
+            $dateFrom = $request->dari;
             $getBranch = $request->cabang_id;
 
 
