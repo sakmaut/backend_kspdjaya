@@ -140,7 +140,9 @@ class ListBanController extends Controller
                         INNER JOIN payment b ON b.ID = a.PAYMENT_ID
                         LEFT JOIN arrears c ON c.ID = b.ARREARS_ID
                         LEFT JOIN branch d ON d.CODE_NUMBER = b.BRANCH
-                        WHERE b.ACC_KEY in ('angsuran','angsuran_denda') AND b.STTS_RCRD = 'PAID'
+                        WHERE b.ACC_KEY in ('angsuran','angsuran_denda') 
+                              AND b.STTS_RCRD = 'PAID'  
+                              AND a.ACC_KEYS in ('BAYAR_POKOK','BAYAR_BUNGA','ANGSURAN_POKOK','ANGSURAN_BUNGA','BAYAR_DENDA')
                         GROUP BY 
                             CASE 
                                 WHEN a.ACC_KEYS LIKE '%DENDA%' THEN 'DENDA'
