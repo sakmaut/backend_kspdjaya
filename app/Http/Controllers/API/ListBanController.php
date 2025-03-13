@@ -121,7 +121,10 @@ class ListBanController extends Controller
                             b.BRANCH AS BRANCH, 
                             d.ID AS BRANCH_ID, 
                             d.NAME AS nama_cabang,
-                            DATE_FORMAT(b.ENTRY_DATE, '%Y-%m-%d') AS ENTRY_DATE, 
+                            CASE 
+                                WHEN b.PAYMENT_METHOD = 'transfer' THEN DATE_FORMAT(b.AUTH_DATE, '%Y-%m-%d')
+                                ELSE DATE_FORMAT(b.ENTRY_DATE, '%Y-%m-%d') 
+                            END AS ENTRY_DATE, 
                             SUM(a.ORIGINAL_AMOUNT) AS ORIGINAL_AMOUNT,
                             b.LOAN_NUM,
                             b.PAYMENT_METHOD,
@@ -137,7 +140,7 @@ class ListBanController extends Controller
                         INNER JOIN payment b ON b.ID = a.PAYMENT_ID
                         LEFT JOIN arrears c ON c.ID = b.ARREARS_ID
                         LEFT JOIN branch d ON d.CODE_NUMBER = b.BRANCH
-                        WHERE b.ACC_KEY = 'angsuran' AND b.STTS_RCRD = 'PAID'
+                        WHERE b.ACC_KEY in ('angsuran','angsuran_denda') AND b.STTS_RCRD = 'PAID'
                         GROUP BY 
                             CASE 
                                 WHEN a.ACC_KEYS LIKE '%DENDA%' THEN 'DENDA'
@@ -146,7 +149,10 @@ class ListBanController extends Controller
                             b.BRANCH, 
                             d.ID, 
                             d.NAME, 
-                            DATE_FORMAT(b.ENTRY_DATE, '%Y-%m-%d'), 
+                            CASE 
+                                WHEN b.PAYMENT_METHOD = 'transfer' THEN DATE_FORMAT(b.AUTH_DATE, '%Y-%m-%d')
+                                ELSE DATE_FORMAT(b.ENTRY_DATE, '%Y-%m-%d') 
+                            END, 
                             b.LOAN_NUM,
                             b.PAYMENT_METHOD,
                             b.INVOICE,
@@ -178,8 +184,11 @@ class ListBanController extends Controller
                             d.CODE_NUMBER AS BRANCH, 
                             d.ID AS BRANCH_ID, 
                             d.NAME AS nama_cabang,
-                            DATE_FORMAT(a.CREATED_AT, '%Y-%m-%d') AS ENTRY_DATE, 
-                            SUM(a.PEMBULATAN) AS ORIGINAL_AMOUNT,
+                            CASE 
+                                WHEN a.METODE_PEMBAYARAN = 'transfer' THEN DATE_FORMAT(b.AUTH_DATE, '%Y-%m-%d')
+                                ELSE DATE_FORMAT(a.CREATED_AT, '%Y-%m-%d') 
+                            END AS ENTRY_DATE, 
+                            a.PEMBULATAN AS ORIGINAL_AMOUNT,
                             a.LOAN_NUMBER AS LOAN_NUM,
                             a.METODE_PEMBAYARAN,
                             a.NO_TRANSAKSI AS no_invoice,
@@ -187,12 +196,17 @@ class ListBanController extends Controller
                             a.CREATED_BY AS user_id,
                             '' AS admin_fee
                         FROM kwitansi a
+                        LEFT JOIN payment b ON b.INVOICE = a.NO_TRANSAKSI
                         LEFT JOIN branch d ON d.ID = a.BRANCH_CODE
                         GROUP BY 
                             d.CODE_NUMBER, 
                             d.ID, 
                             d.NAME, 
-                            DATE_FORMAT(a.CREATED_AT, '%Y-%m-%d'), 
+                            CASE 
+                                WHEN a.METODE_PEMBAYARAN = 'transfer' THEN DATE_FORMAT(b.AUTH_DATE, '%Y-%m-%d')
+                                ELSE DATE_FORMAT(a.CREATED_AT, '%Y-%m-%d') 
+                            END, 
+                            a.PEMBULATAN,
                             a.LOAN_NUMBER,
                             a.METODE_PEMBAYARAN,
                             a.NO_TRANSAKSI, 
