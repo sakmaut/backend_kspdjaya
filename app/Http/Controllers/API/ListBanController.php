@@ -115,7 +115,7 @@ class ListBanController extends Controller
                     FROM (
                         SELECT 
                             CASE 
-                                WHEN a.ACC_KEYS LIKE '%BAYAR_DENDA%' THEN 'DENDA'
+                                WHEN a.ACC_KEYS LIKE '%DENDA%' THEN 'DENDA'
                                 ELSE b.TITLE 
                             END AS JENIS, 
                             b.BRANCH AS BRANCH, 
@@ -130,7 +130,7 @@ class ListBanController extends Controller
                             b.PAYMENT_METHOD,
                             b.INVOICE AS no_invoice,
                             CASE 
-                                WHEN a.ACC_KEYS LIKE '%BAYAR_DENDA%' THEN 'DENDA'
+                                WHEN a.ACC_KEYS LIKE '%DENDA%' THEN 'DENDA'
                                 ELSE b.TITLE 
                             END AS angsuran_ke,
                             b.USER_ID AS user_id,
@@ -143,7 +143,7 @@ class ListBanController extends Controller
                         WHERE b.ACC_KEY in ('angsuran','angsuran_denda') AND b.STTS_RCRD = 'PAID'
                         GROUP BY 
                             CASE 
-                                WHEN a.ACC_KEYS LIKE '%BAYAR_DENDA%' THEN 'DENDA'
+                                WHEN a.ACC_KEYS LIKE '%DENDA%' THEN 'DENDA'
                                 ELSE b.TITLE 
                             END, 
                             b.BRANCH, 
@@ -157,7 +157,7 @@ class ListBanController extends Controller
                             b.PAYMENT_METHOD,
                             b.INVOICE,
                             CASE 
-                                WHEN a.ACC_KEYS LIKE '%BAYAR_DENDA%' THEN 'DENDA'
+                                WHEN a.ACC_KEYS LIKE '%DENDA%' THEN 'DENDA'
                                 ELSE b.TITLE 
                             END,
                             b.USER_ID
@@ -719,6 +719,7 @@ class ListBanController extends Controller
         try {
             $dateFrom = date('mY', strtotime($request->dari));
             $getBranch = $request->cabang_id;
+
 
             $query1 = "  SELECT  CONCAT(b.CODE, '-', b.CODE_NUMBER) AS KODE, 
                                 b.NAME AS NAMA_CABANG,
