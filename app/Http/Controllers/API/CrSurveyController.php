@@ -16,7 +16,6 @@ use App\Models\M_CrSurvey;
 use App\Models\M_CrSurveyDocument;
 use App\Models\M_SurveyApproval;
 use App\Models\M_SurveyApprovalLog;
-use App\Models\M_TaskPusher;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -322,51 +321,14 @@ class CrSurveyController extends Controller
             'CR_SURVEY_ID' => $request->id
         ];
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-        //add to task
-        $pushData = [
-            'ID'=> $this->uuid,
-            'BRANCH'=>$request->user()->branch_id,
-            'CHANNEL'=>'ORDER',
-            'IDENTIFIER'=>$request->id,
-            'MESSAGE'=>'order '.$request->data_nasabah['nama'].' dibuat',
-            'CREATED_AT'=>now(),
-            'STATUS'=>null,
-            'READ_AT'=>null,
-            'USER_ACCESS'=>null
-        ];
-=======
-        $position = $request->user()->position;
-
-=======
->>>>>>> 6772527e13d1c0449c4ffd5d33833d6055273805
-        $nextPosition = $this->userRole->getNextLevel($position);
->>>>>>> f85ff8ff5db8197a4f5e8e889e13da3800573948
-
-=======
->>>>>>> b279d026cbb8e0e287b9ddedf25150081d344775
         if (!$request->flag) {
             $data['CODE'] = 'DRSVY';
             $data['APPROVAL_RESULT'] = 'draf survey';
         } else {
-<<<<<<< HEAD
-<<<<<<< HEAD
             $data['CODE'] = 'WADM';
             $data['APPROVAL_RESULT'] = 'menunggu admin';
-=======
-            $data['CODE'] = $this->orderStatus::WADM;
-            $data['APPROVAL_RESULT'] = $this->orderStatus::DRAFT_SURVEY.' '. $nextPosition;
-=======
-            $data['CODE'] = 'WADM';
-            $data['APPROVAL_RESULT'] = 'menunggu admin';
->>>>>>> b279d026cbb8e0e287b9ddedf25150081d344775
         }
->>>>>>> f85ff8ff5db8197a4f5e8e889e13da3800573948
 
-        }
-M_TaskPusher::create($pushData);
         $approval = M_SurveyApproval::create($data);
 
         $data_log = [
@@ -381,8 +343,6 @@ M_TaskPusher::create($pushData);
         ];
 
         M_SurveyApprovalLog::create($data_log);
-
-
     }
 
     private function insert_guarante($request)
