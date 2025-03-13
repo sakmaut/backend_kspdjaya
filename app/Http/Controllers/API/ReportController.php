@@ -573,7 +573,8 @@ class ReportController extends Controller
                     $ttlBayarDenda  += $res->denda ?? 0;
                 }
 
-                $amtBayar =  floatval($res->angsuran ?? 0) - floatval($res->denda ?? 0);
+                // $amtBayar =  floatval($res->angsuran ?? 0) - floatval($res->denda ?? 0);
+                $amtBayar =  floatval($res->angsuran ?? 0);
                 $sisaAngss = floatval($amtAngs ?? 0) - floatval($amtBayar ?? 0);
 
                 $ttlAmtBayar += $amtBayar;
