@@ -570,8 +570,9 @@ class ReportController extends Controller
 
                     $ttlAmtAngs += $res->INSTALLMENT;
                     $ttlDenda  += $res->PAST_DUE_PENALTY;
-                    $ttlBayarDenda  += $res->denda ?? 0;
                 }
+
+                $ttlBayarDenda  += $res->denda ?? 0;
 
                 // $amtBayar =  floatval($res->angsuran ?? 0) - floatval($res->denda ?? 0);
                 $amtBayar =  floatval($res->angsuran ?? 0);
