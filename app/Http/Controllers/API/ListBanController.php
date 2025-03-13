@@ -140,7 +140,9 @@ class ListBanController extends Controller
                         INNER JOIN payment b ON b.ID = a.PAYMENT_ID
                         LEFT JOIN arrears c ON c.ID = b.ARREARS_ID
                         LEFT JOIN branch d ON d.CODE_NUMBER = b.BRANCH
-                        WHERE b.ACC_KEY in ('angsuran','angsuran_denda') AND b.STTS_RCRD = 'PAID'
+                        WHERE b.ACC_KEY in ('angsuran','angsuran_denda') 
+                              AND b.STTS_RCRD = 'PAID'  
+                              AND a.ACC_KEYS in ('BAYAR_POKOK','BAYAR_BUNGA','ANGSURAN_POKOK','ANGSURAN_BUNGA','BAYAR_DENDA')
                         GROUP BY 
                             CASE 
                                 WHEN a.ACC_KEYS LIKE '%DENDA%' THEN 'DENDA'
@@ -717,11 +719,11 @@ class ListBanController extends Controller
     public function listBanTest(Request $request)
     {
         try {
-
             $dateFrom = $request->dari;
             $getBranch = $request->cabang_id;
 
-            $query = "  SELECT  CONCAT(b.CODE, '-', b.CODE_NUMBER) AS KODE, 
+
+            $query1 = "  SELECT  CONCAT(b.CODE, '-', b.CODE_NUMBER) AS KODE, 
                                 b.NAME AS NAMA_CABANG,
                                 cl.LOAN_NUMBER AS NO_KONTRAK,
                                 c.NAME AS NAMA_PELANGGAN,
@@ -808,6 +810,101 @@ class ListBanController extends Controller
                         WHERE	date_format(cl.BACK_DATE,'%d%m%Y')=date_format(date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day),'%d%m%Y')
                                 and cl.STATUS = 'A'
                                 or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char)from temp_lis_02 ))";
+
+            $query2 = "SELECT	CONCAT(b.CODE, '-', b.CODE_NUMBER) AS KODE, 
+                                b.NAME AS NAMA_CABANG,
+                                cl.LOAN_NUMBER AS NO_KONTRAK,
+                                c.NAME AS NAMA_PELANGGAN,
+                                cl.CREATED_AT AS TGL_BOOKING,
+                                NULL AS UB,
+                                NULL AS PLATFORM,
+                                c.INS_ADDRESS AS ALAMAT_TAGIH,
+                                c.ZIP_CODE AS KODE_POST,
+                                '' AS SUB_ZIP,
+                                c.PHONE_HOUSE AS NO_TELP,
+                                c.PHONE_PERSONAL AS NO_HP,
+                                c.PHONE_PERSONAL AS NO_HP2,
+                                c.OCCUPATION AS PEKERJAAN,
+                                CONCAT(co.REF_PELANGGAN, ' ', co.REF_PELANGGAN_OTHER) AS supplier, 
+                                coalesce(u.fullname,cl.mcf_id) AS SURVEYOR,
+                                cs.survey_note AS CATT_SURVEY, 
+                                replace(format(cl.PCPL_ORI ,0),',','') AS PKK_HUTANG,
+                                cl.PERIOD AS JUMLAH_ANGSURAN, 
+                                replace(format(cl.PERIOD/cl.INSTALLMENT_COUNT,0),',','') AS JARAK_ANGSURAN, 
+                                cl.INSTALLMENT_COUNT as PERIOD, 
+                                replace(format(st.init_pcpl,0),',','') AS OUTSTANDING,
+                                replace(format(st.init_int,0),',','') AS OS_BUNGA, 
+                                case when coalesce(datediff(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval -1 day),st.first_arr),0) < 0 then 0
+                                    else coalesce(datediff(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval -1 day),st.first_arr),0) end as OVERDUE_AWAL, 
+                                replace(format(coalesce(st.arr_pcpl,0),0),',','') as AMBC_PKK_AWAL, 
+                                replace(format(coalesce(st.arr_int,0),0),',','') as AMBC_BNG_AWAL, 
+                                replace(format((coalesce(st.arr_pcpl,0)+coalesce(st.arr_int,0)),0),',','') as AMBC_TOTAL_AWAL, 
+                                concat('C',case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then 'N'
+                                                when st.first_arr > date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day) then 'M' 
+                                                when st.arr_count > 8 then 'X'
+                                                else st.arr_count end) AS CYCLE_AWAL, 
+                                cl.STATUS_REC,
+                                cl.STATUS_REC as STATUS_BEBAN,
+                                case when (cl.PERIOD/cl.INSTALLMENT_COUNT)=1 then 'REGULER' else 'MUSIMAN' end as pola_bayar, 
+                                replace(format(coalesce(en.init_pcpl,0),0),',','') OS_PKK_AKHIR, 
+                                replace(format(coalesce(en.init_int,0),0),',','') as OS_BNG_AKHIR, 
+                                case when coalesce(datediff(date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day),en.first_arr),0) < 0 then 0
+                                    else coalesce(datediff(date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day),en.first_arr),0) end as OVERDUE_AKHIR, 
+                                cl.INSTALLMENT,
+                                en.last_inst as LAST_INST, 
+                                ca.INSTALLMENT_TYPE AS tipe,
+                                st.first_arr as F_ARR_CR_SCHEDL,
+                                en.first_arr as curr_arr, 
+                                py.last_pay  as LAST_PAY, 
+                                k.kolektor AS COLLECTOR,
+                                py.payment_method as cara_bayar, 
+                                replace(format(coalesce(en.arr_pcpl,0),0),',','') as AMBC_PKK_AKHIR, 
+                                replace(format(coalesce(en.arr_int ,0),0),',','') as AMBC_BNG_AKHIR, 
+                                replace(format(coalesce(en.arr_pcpl,0)+coalesce(en.arr_int,0),0),',','') as AMBC_TOTAL_AKHIR, 
+                                replace(format(coalesce(py.this_pcpl,0),0),',','') AC_PKK, 
+                                replace(format(coalesce(py.this_int,0),0),',','') AC_BNG_MRG, 
+                                replace(format(coalesce(py.this_pcpl,0)+coalesce(py.this_int,0),0),',','') AC_TOTAL, 
+                                concat('C',case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then 'N'
+                                                when en.first_arr > date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day) then 'M' 
+                                                when en.arr_count > 8 then 'X'
+                                                when cl.STATUS <> 'A' then 'L'
+                                                else en.arr_count end) AS CYCLE_AKHIR, 
+                                case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end as pola_bayar_akhir, 
+                                ' 'as jenis_jaminan, 
+                                col.COLLATERAL,
+                                col.POLICE_NUMBER,
+                                col.ENGINE_NUMBER,
+                                col.CHASIS_NUMBER,
+                                col.PRODUCTION_YEAR,
+                                replace(format(cl.PCPL_ORI-cl.TOTAL_ADMIN,0),',','') as NILAI_PINJAMAN,
+                                replace(format(cl.TOTAL_ADMIN,0),',','') as TOTAL_ADMIN,  
+                                cl.CUST_CODE
+                        FROM	credit cl 
+                                inner join branch b on cast(b.ID as char) = cast(cl.BRANCH as char) 
+                                left join customer c on cast(c.CUST_CODE as char) = cast(cl.CUST_CODE as char)
+                                left join users u on cast(u.ID as char) = cast(cl.MCF_ID as char)
+                                left join cr_application ca on cast(ca.ORDER_NUMBER as char) = cast(cl.ORDER_NUMBER as char) 
+                                left join cr_order co on cast(co.APPLICATION_ID as char) = cast(ca.ID as char)
+                                left join cr_survey cs on cast(cs.ID as char) = cast(ca.CR_SURVEY_ID as char) 
+                                left join kolektor k on cast(k.loan_number as char) = cast(cl.LOAN_NUMBER as char)
+                                left join temp_lis_03C col on cast(col.CR_CREDIT_ID as char) = cast(cl.ID as char) 
+                                left join temp_lis_01C st 
+                                    on cast(st.loan_number as char) = cast(cl.LOAN_NUMBER as char)
+                                    and st.type=date_format(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval -1 day),'%d%m%Y')
+                                left join temp_lis_01C en 
+                                    on cast(en.loan_number as char) = cast(cl.LOAN_NUMBER as char)
+                                    and en.type=date_format(now(),'%d%m%Y')
+                                left join temp_lis_02C py on cast(py.loan_num as char) = cast(cl.LOAN_NUMBER as char) 
+                        WHERE	cl.STATUS = 'A'
+                                or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char) from temp_lis_02C ))";
+
+            $getNow = date('mY', strtotime(now()));
+
+            if ($getNow == $dateFrom) {
+                $query = $query2;
+            } else {
+                $query = $query1;
+            }
 
             if (!empty($getBranch) && $getBranch != 'SEMUA CABANG') {
                 $query .= " AND b.ID = '$getBranch'";
