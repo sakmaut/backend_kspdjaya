@@ -625,7 +625,7 @@ class ReportController extends Controller
                     'tgl_kontrak' => Carbon::parse($creditDetail->INSTALLMENT_DATE)->format('d-m-Y'),
                     'nama' => $creditDetail->customer->NAME ?? '',
                     'no_pel' => $creditDetail->CUST_CODE ?? '',
-                    'status' => ($creditDetail->STATUS ?? '') == 'A' ? 'Aktif' : $creditDetail->STATUS_REC
+                    'status' => ($creditDetail->STATUS ?? '') == 'A' ? 'Aktif' : $creditDetail->STATUS_REC ?? ''
                 ];
             }
 
