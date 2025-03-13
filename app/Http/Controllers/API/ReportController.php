@@ -610,14 +610,12 @@ class ReportController extends Controller
                 $query->select('CUST_CODE', 'NAME');
             }])->where('LOAN_NUMBER', $id)->first();
 
-            // switch ($creditDetail->STATUS_REC) {
-            //     case 'CL':
-            //         echo 'LUNAS NORMAL (CL)';
-            //         break; // Prevents fall-through to the next case
-            //     case 'PT':
-            //         echo 'LUNAS DIMUKA (PT)';
-            //         break; // Prevents fall-through
-            // }
+            $statusNoActive = '';
+            if ($creditDetail->STATUS_REC === 'CL') {
+                $statusNoActive = 'LUNAS NORMAL (CL)';
+            } elseif ($creditDetail->STATUS_REC === 'PT') {
+                $statusNoActive = 'LUNAS DIMUKA (PT)';
+            }
 
             if ($creditDetail) {
                 $schedule['detail'] = [
@@ -625,7 +623,7 @@ class ReportController extends Controller
                     'tgl_kontrak' => Carbon::parse($creditDetail->INSTALLMENT_DATE)->format('d-m-Y'),
                     'nama' => $creditDetail->customer->NAME ?? '',
                     'no_pel' => $creditDetail->CUST_CODE ?? '',
-                    'status' => ($creditDetail->STATUS ?? '') == 'A' ? 'Aktif' : 'Tidak Active'
+                    'status' => ($creditDetail->STATUS ?? '') == 'A' ? 'Aktif' : $statusNoActive
                 ];
             }
 
