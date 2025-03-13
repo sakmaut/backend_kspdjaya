@@ -612,11 +612,9 @@ class ReportController extends Controller
 
             switch ($creditDetail->STATUS_REC) {
                 case 'CL':
-                    return 'LUNAS NORMAL (CL)';
-                    break;
+                    echo 'LUNAS NORMAL (CL)';
                 case 'PT':
-                    return 'LUNAS DIMUKA (PT)';
-                    break;
+                    echo 'LUNAS DIMUKA (PT)';
             }
 
             if ($creditDetail) {
