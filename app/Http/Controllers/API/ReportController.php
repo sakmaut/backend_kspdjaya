@@ -498,35 +498,28 @@ class ReportController extends Controller
                             on c.LOAN_NUMBER = a.LOAN_NUMBER
                             and c.START_DATE = a.PAYMENT_DATE
                         left join (
-                            SELECT  
-                                a.LOAN_NUM,
-                                DATE(a.ENTRY_DATE) AS ENTRY_DATE, 
-                                DATE(a.START_DATE) AS START_DATE,
-                                -- @row_num := IF(@prev_start_date = a.START_DATE, @row_num + 1, 1) AS INST_COUNT_INCREMENT,
-                                -- @prev_start_date := a.START_DATE,
-                                ROW_NUMBER() OVER (PARTITION BY a.START_DATE ORDER BY a.ENTRY_DATE) AS INST_COUNT_INCREMENT,
-                                a.ORIGINAL_AMOUNT,
-                                a.INVOICE,
-                                b.angsuran,
-                                b.denda
-                            FROM 
-                                payment a
-                            LEFT JOIN (
-                                SELECT  
-                                    payment_id, 
-                                    SUM(CASE WHEN ACC_KEYS = 'ANGSURAN_POKOK' OR ACC_KEYS = 'ANGSURAN_BUNGA' 
-                                                OR ACC_KEYS = 'BAYAR_POKOK' 
-                                                OR ACC_KEYS = 'BAYAR_BUNGA'
-                                                OR ACC_KEYS = 'DISKON_POKOK'
-                                                OR ACC_KEYS = 'DISKON_BUNGA' THEN ORIGINAL_AMOUNT ELSE 0 END) AS angsuran,
-                                    SUM(CASE WHEN ACC_KEYS = 'BAYAR_DENDA' OR ACC_KEYS = 'DISKON_DENDA'  THEN ORIGINAL_AMOUNT ELSE 0 END) AS denda
-                                FROM 
-                                    payment_detail 
-                                GROUP BY payment_id
-                            ) AS b 
-                            ON b.payment_id = a.id
-                            WHERE a.LOAN_NUM = '$id'
-                            AND a.STTS_RCRD = 'PAID'
+                                SELECT  a.LOAN_NUM,
+                                        DATE(a.ENTRY_DATE) AS ENTRY_DATE, 
+                                        DATE(a.START_DATE) AS START_DATE,
+                                        ROW_NUMBER() OVER (PARTITION BY a.START_DATE ORDER BY a.ENTRY_DATE) AS INST_COUNT_INCREMENT,
+                                        a.ORIGINAL_AMOUNT,
+                                        a.INVOICE,
+                                        SUM(CASE WHEN b.ACC_KEYS = 'ANGSURAN_POKOK' 
+                                            OR b.ACC_KEYS = 'ANGSURAN_BUNGA' 
+                                            OR b.ACC_KEYS = 'BAYAR_POKOK' 
+                                            OR b.ACC_KEYS = 'BAYAR_BUNGA'
+                                            THEN b.ORIGINAL_AMOUNT ELSE 0 END) AS angsuran,
+                                        SUM(CASE WHEN b.ACC_KEYS = 'BAYAR_DENDA' THEN b.ORIGINAL_AMOUNT ELSE 0 END) AS denda
+                                    FROM payment a
+                                        INNER JOIN payment_detail b ON b.PAYMENT_ID = a.id
+                                    WHERE a.LOAN_NUM = '$id'
+                                        AND a.STTS_RCRD = 'PAID'
+                                    GROUP BY 
+                                            a.LOAN_NUM,
+                                            a.ENTRY_DATE, 
+                                            a.START_DATE,
+                                            a.ORIGINAL_AMOUNT,
+                                            a.INVOICE
                         ) as mp
                         on mp.LOAN_NUM = a.LOAN_NUMBER
                         and date_format(mp.START_DATE,'%d%m%Y') = date_format(a.PAYMENT_DATE,'%d%m%Y')
@@ -577,10 +570,12 @@ class ReportController extends Controller
 
                     $ttlAmtAngs += $res->INSTALLMENT;
                     $ttlDenda  += $res->PAST_DUE_PENALTY;
-                    $ttlBayarDenda  += $res->denda ?? 0;
                 }
 
-                $amtBayar =  floatval($res->ORIGINAL_AMOUNT ?? 0) - floatval($res->denda ?? 0);
+                $ttlBayarDenda  += $res->denda ?? 0;
+
+                // $amtBayar =  floatval($res->angsuran ?? 0) - floatval($res->denda ?? 0);
+                $amtBayar =  floatval($res->angsuran ?? 0);
                 $sisaAngss = floatval($amtAngs ?? 0) - floatval($amtBayar ?? 0);
 
                 $ttlAmtBayar += $amtBayar;
@@ -616,13 +611,22 @@ class ReportController extends Controller
                 $query->select('CUST_CODE', 'NAME');
             }])->where('LOAN_NUMBER', $id)->first();
 
+            $statusNoActive = '';
+            if ($creditDetail->STATUS_REC === 'CL') {
+                $statusNoActive = 'LUNAS NORMAL (CL)';
+            } elseif ($creditDetail->STATUS_REC === 'PT') {
+                $statusNoActive = 'LUNAS DIMUKA (PT)';
+            } elseif ($creditDetail->STATUS_REC === 'RP') {
+                $statusNoActive = 'REPOSSED (RP)';
+            }
+
             if ($creditDetail) {
                 $schedule['detail'] = [
                     'no_kontrak' => $creditDetail->LOAN_NUMBER ?? '',
                     'tgl_kontrak' => Carbon::parse($creditDetail->INSTALLMENT_DATE)->format('d-m-Y'),
                     'nama' => $creditDetail->customer->NAME ?? '',
                     'no_pel' => $creditDetail->CUST_CODE ?? '',
-                    'status' => ($creditDetail->STATUS ?? '') == 'A' ? 'Aktif' : 'Tidak Aktif'
+                    'status' => ($creditDetail->STATUS ?? '') == 'A' ? 'AKTIF' : 'TIDAK AKTIF / ' . $statusNoActive
                 ];
             }
 
@@ -694,7 +698,7 @@ class ReportController extends Controller
                     "nilai" => (int) $result->VALUE ?? '',
                     'status' => $result->status ?? '',
                     "document" => $this->getCollateralDocument($result->ID, ['no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri']) ?? null,
-                    "document_rilis" => $this->attachment($result->ID, "'rilis'") ?? null,
+                    "document_rilis" => $this->attachmentRelease($result->ID, "'doc_rilis'") ?? null,
                 ];
             }
 
@@ -808,6 +812,24 @@ class ReportController extends Controller
                 WHERE (TYPE, COUNTER_ID) IN (
                     SELECT TYPE, MAX(COUNTER_ID)
                     FROM cr_collateral_document
+                    WHERE TYPE IN ($data)
+                        AND COLLATERAL_ID = '$collateralId'
+                    GROUP BY TYPE
+                )
+                ORDER BY COUNTER_ID DESC"
+        );
+
+        return $documents;
+    }
+
+    public function attachmentRelease($collateralId, $data)
+    {
+        $documents = DB::select(
+            "   SELECT *
+                FROM cr_collateral_document_release AS csd
+                WHERE (TYPE, COUNTER_ID) IN (
+                    SELECT TYPE, MAX(COUNTER_ID)
+                    FROM cr_collateral_document_release
                     WHERE TYPE IN ($data)
                         AND COLLATERAL_ID = '$collateralId'
                     GROUP BY TYPE

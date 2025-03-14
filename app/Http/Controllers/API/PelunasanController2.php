@@ -545,7 +545,7 @@ class PelunasanController2 extends Controller
                     $newPaymentValue = $getAmount;
                     $remainingPayment -= $remainingToPay;
                 } else {
-                    $newPaymentValue = $valBefore + $remainingPayment;
+                    $newPaymentValue = $remainingPayment;
                     $remainingPayment = 0;
                 }
 
@@ -557,7 +557,7 @@ class PelunasanController2 extends Controller
                 if ($newPaymentValue == $getAmount) {
                     $param['DISKON_BUNGA'] = 0;
                 } else {
-                    $param['DISKON_BUNGA'] = $getAmount - $newPaymentValue;
+                    $param['DISKON_BUNGA'] = $getAmount - ($valBefore + $newPaymentValue);
                 }
 
                 $this->insertKwitansiDetail(

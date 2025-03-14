@@ -533,7 +533,7 @@ class PaymentController extends Controller
             'STTS_RCRD' => 'PAID',
             'INVOICE' => $no_inv,
             'NO_TRX' => $request->uid,
-            'PAYMENT_METHOD' => $request->payment_method,
+            'PAYMENT_METHOD' => $kwitansi->METODE_PEMBAYARAN ?? $request->payment_method,
             'BRANCH' =>  $getCodeBranch->CODE_NUMBER ?? $branch->CODE_NUMBER,
             'LOAN_NUM' => $loan_number,
             'VALUE_DATE' => null,
