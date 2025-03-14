@@ -387,7 +387,7 @@ class BpkbTransactionController extends Controller
                 }
 
                 if (!empty($collateralIds)) {
-                    M_CrCollateral::whereIn('ID', $collateralIds)
+                    M_CrCollateral::whereIn('ID', $result['kendaraan'])
                         ->update([
                             'LOCATION_BRANCH' => $request->user()->branch_id ?? '',
                             'STATUS' => 'REQUEST'
