@@ -744,9 +744,9 @@ class ListBanController extends Controller
                                 cl.PERIOD AS JUMLAH_ANGSURAN, 
                                 replace(format(cl.PERIOD/cl.INSTALLMENT_COUNT,0),',','') AS JARAK_ANGSURAN, 
                                 cl.INSTALLMENT_COUNT as PERIOD, 
-		                        replace(format(case when date_format(cl.entry_date,'%m%Y')=:period then cl.PCPL_ORI
+		                        replace(format(case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then cl.PCPL_ORI
 			 			                        else st.init_pcpl end,0),',','') AS OUTSTANDING,
-		                        replace(format(case when date_format(cl.entry_date,'%m%Y')=:period then cl.INTRST_ORI
+		                        replace(format(case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then cl.INTRST_ORI
 			 			                        else st.init_int end,0),',','') AS OS_BUNGA,
                                 case when coalesce(datediff(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval -1 day),st.first_arr),0) < 0 then 0
                                     else coalesce(datediff(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval -1 day),st.first_arr),0) end as OVERDUE_AWAL, 
@@ -834,9 +834,9 @@ class ListBanController extends Controller
                                 cl.PERIOD AS JUMLAH_ANGSURAN, 
                                 replace(format(cl.PERIOD/cl.INSTALLMENT_COUNT,0),',','') AS JARAK_ANGSURAN, 
                                 cl.INSTALLMENT_COUNT as PERIOD, 
-                                replace(format(case when date_format(cl.entry_date,'%m%Y')=:period then cl.PCPL_ORI
+                                replace(format(case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then cl.PCPL_ORI
 			 			                        else st.init_pcpl end,0),',','') AS OUTSTANDING,
-		                        replace(format(case when date_format(cl.entry_date,'%m%Y')=:period then cl.INTRST_ORI
+		                        replace(format(case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then cl.INTRST_ORI
 			 			                        else st.init_int end,0),',','') AS OS_BUNGA,
                                 case when coalesce(datediff(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval -1 day),st.first_arr),0) < 0 then 0
                                     else coalesce(datediff(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval -1 day),st.first_arr),0) end as OVERDUE_AWAL, 
