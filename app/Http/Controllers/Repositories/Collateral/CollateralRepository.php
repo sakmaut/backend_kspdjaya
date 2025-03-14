@@ -7,6 +7,7 @@ use App\Models\M_CrCollateral;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CollateralRepository implements CollateralInterface
 {
