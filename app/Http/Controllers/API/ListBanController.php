@@ -170,7 +170,7 @@ class ListBanController extends Controller
                             b.ID AS BRANCH_ID, 
                             b.NAME AS nama_cabang,
                             DATE_FORMAT(a.CREATED_AT, '%Y-%m-%d') AS ENTRY_DATE, 
-                            a.JUMLAH_UANG AS ORIGINAL_AMOUNT,
+                            (a.JUMLAH_UANG - a.PEMBULATAN) AS ORIGINAL_AMOUNT,
                             a.LOAN_NUMBER,
                             a.METODE_PEMBAYARAN as PAYMENT_METHOD,
                             a.NO_TRANSAKSI AS no_invoice,
