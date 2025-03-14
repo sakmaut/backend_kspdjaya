@@ -138,7 +138,7 @@ class BpkbTransactionController extends Controller
 
                     $checkCollateralId = M_CrCollateral::where('ID', $res['ID'])->first();
 
-                    if($checkCollateralId){
+                    if ($checkCollateralId) {
                         $checkCollateralId->update(['STATUS' => 'SENDING']);
                     }
                 }
@@ -387,16 +387,6 @@ class BpkbTransactionController extends Controller
                 }
             }
 
-            if (isset($result['sertifikat'])) {
-                $collaterals = M_CrCollateralSertification::whereIn('ID', $result['sertifikat'])->get();
-
-                foreach ($collaterals as $collateral) {
-                    $collateral = $collateral->toArray();
-                    $collateral['TYPE'] = 'sertifikat';
-                    $combinedCollaterals[] = $collateral;
-                }
-            }
-
             $transactions = [];
             $approvals = [];
             $details = [];
@@ -416,8 +406,8 @@ class BpkbTransactionController extends Controller
                 $transactions[] = [
                     'ID' => $uuid,
                     'TRX_CODE' => generateCodeJaminan($request, 'bpkb_transaction', 'TRX_CODE', 'JMN'),
-                    'FROM_BRANCH' => $fromBranch,
-                    'TO_BRANCH' => $user->branch_id ?? null,
+                    'FROM_BRANCH' => $user->branch_id ?? '',
+                    'TO_BRANCH' => $fromBranch ?? '',
                     'CATEGORY' => strtolower($status),
                     'NOTE' => $request->catatan ?? '',
                     'STATUS' => $status,
