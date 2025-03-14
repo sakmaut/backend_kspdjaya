@@ -48,6 +48,10 @@ class Welcome extends Controller
 {
     public function index(Request $req)
     {
+
+        return response()->json('WELCOME DEV',200);
+        die;
+
         DB::beginTransaction();
         try {
 
