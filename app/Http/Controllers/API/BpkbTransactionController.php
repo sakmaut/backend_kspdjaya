@@ -264,7 +264,7 @@ class BpkbTransactionController extends Controller
                         $details[] = [
                             'ID' => Uuid::uuid7()->toString(),
                             'BPKB_TRANSACTION_ID' => $transaction->ID,
-                            'COLLATERAL_ID' => $res['ID'],
+                            'COLLATERAL_ID' => $res['COLLATERAL_ID'],
                             'STATUS' => 'SENDING'
                         ];
                         $collateralIds[] = $res['ID'];
