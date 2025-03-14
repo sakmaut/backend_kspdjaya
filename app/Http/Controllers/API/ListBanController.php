@@ -46,7 +46,7 @@ class ListBanController extends Controller
                             }
 
                             $datas['datas'][] = [
-                                'type' => $item->JENIS == 'PELUNASAN' ? 'PELUNASAN' : 'CASH_IN',
+                                'type' => $item->JENIS == 'PELUNASAN' || $item->JENIS == 'PEMBULATAN PELUNASAN' ? 'PELUNASAN' : 'CASH_IN',
                                 'no_invoice' => $no_invoice,
                                 'no_kontrak' => $loan_num,
                                 'tgl' => $tgl ?? '',
@@ -182,7 +182,10 @@ class ListBanController extends Controller
                         WHERE a.PAYMENT_TYPE = 'pelunasan' AND a.STTS_PAYMENT = 'PAID'
                         UNION ALL
                         SELECT 
-                            'PEMBULATAN' AS JENIS, 
+                            CASE 
+                                WHEN a.PAYMENT_TYPE = 'pelunasan' THEN 'PEMBULATAN PELUNASAN'
+                                ELSE 'PEMBULATAN' 
+                            END AS JENIS, 
                             d.CODE_NUMBER AS BRANCH, 
                             d.ID AS BRANCH_ID, 
                             d.NAME AS nama_cabang,
@@ -201,6 +204,10 @@ class ListBanController extends Controller
                         LEFT JOIN payment b ON b.INVOICE = a.NO_TRANSAKSI
                         LEFT JOIN branch d ON d.ID = a.BRANCH_CODE
                         GROUP BY 
+                            CASE 
+                                WHEN a.PAYMENT_TYPE = 'pelunasan' THEN 'PEMBULATAN PELUNASAN'
+                                ELSE 'PEMBULATAN' 
+                            END,
                             d.CODE_NUMBER, 
                             d.ID, 
                             d.NAME, 
