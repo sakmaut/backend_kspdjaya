@@ -29,6 +29,38 @@ class CollateralRepository implements CollateralInterface
         return $query;
     }
 
+    function queryCollateralList()
+    { {
+            $results = DB::table('cr_collateral as a')
+                ->select(
+                    'a.ID',
+                    'a.BRAND',
+                    'a.TYPE',
+                    'a.PRODUCTION_YEAR',
+                    'a.COLOR',
+                    'a.ON_BEHALF',
+                    'a.POLICE_NUMBER',
+                    'a.ENGINE_NUMBER',
+                    'a.CHASIS_NUMBER',
+                    'a.BPKB_ADDRESS',
+                    'a.BPKB_NUMBER',
+                    'a.STNK_NUMBER',
+                    'a.STNK_VALID_DATE',
+                    'a.INVOICE_NUMBER',
+                    'a.VALUE',
+                    'b.LOAN_NUMBER',
+                    'b.CREATED_AT',
+                    'c.NAME as originBranch',
+                    'd.NAME as currentBranch'
+                )
+                ->leftJoin('credit as b', 'b.ID', '=', 'a.CR_CREDIT_ID')
+                ->leftJoin('branch as c', 'c.ID', '=', 'a.COLLATERAL_FLAG')
+                ->leftJoin('branch as d', 'd.ID', '=', 'a.LOCATION_BRANCH');
+
+            return $results;
+        }
+    }
+
     function searchCollateralList($request)
     {
         $no_kontrak = $request->query('no_kontrak');
@@ -60,7 +92,7 @@ class CollateralRepository implements CollateralInterface
             $query->orderBy('CREATED_AT', 'DESC');
         });
 
-        $query = $query->get();
+        $query = $query->limit(10)->get();
 
         return $query;
     }

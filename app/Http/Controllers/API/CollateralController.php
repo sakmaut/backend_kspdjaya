@@ -36,6 +36,8 @@ class CollateralController extends Controller
     {
         try {
             $searchCollateralList = $this->collateralRepository->searchCollateralList($request);
+            // return response()->json($searchCollateralList, 200);
+            // die;
 
             $dto = R_CrCollateral::collection($searchCollateralList);
 
