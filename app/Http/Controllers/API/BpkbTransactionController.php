@@ -386,12 +386,10 @@ class BpkbTransactionController extends Controller
                     $combinedCollaterals[] = $collateral;
                 }
 
-                if (!empty($collateralIds)) {
-                    M_CrCollateral::whereIn('ID', $result['kendaraan'])
-                        ->update([
-                            'STATUS' => 'REQUEST'
-                        ]);
-                }
+                M_CrCollateral::whereIn('ID', $result['kendaraan'])
+                    ->update([
+                        'STATUS' => 'REQUEST'
+                    ]);
             }
 
             $transactions = [];
