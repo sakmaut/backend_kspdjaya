@@ -63,7 +63,7 @@ class DemoCron extends Command
 
             foreach ($query as $result) {
                 $daysDiff = (strtotime($today) - strtotime($result->PAYMENT_DATE)) / (60 * 60 * 24);
-                $pastDuePenalty = $result->INSTALLMENT * ($daysDiff * 0.005);
+                $pastDuePenalty = $result->INSTALLMENT * ($daysDiff * 0.003);
 
                 $arrearsData[] = [
                     'ID' => Uuid::uuid7()->toString(),
