@@ -12,7 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('cr_survey', function (Blueprint $table) {
-            $table->decimal('interest',6,2)->after('tenor')->nullable()->default(0);
+            $table->decimal('interest_month',6,2)->after('tenor')->nullable()->default(0);
+            $table->decimal('interest_year', 6, 2)->after('interest_month')->nullable()->default(0);
+            $table->decimal('installment', 25, 2)->after('interest_year')->nullable()->default(0);
+            $table->string('collateral_type')->after('installment')->nullable();
         });    
     }
 
