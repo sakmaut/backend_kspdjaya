@@ -385,6 +385,14 @@ class BpkbTransactionController extends Controller
                     $collateral['TYPE'] = 'kendaraan';
                     $combinedCollaterals[] = $collateral;
                 }
+
+                if (!empty($collateralIds)) {
+                    M_CrCollateral::whereIn('ID', $collateralIds)
+                        ->update([
+                            'LOCATION_BRANCH' => $request->user()->branch_id ?? '',
+                            'STATUS' => 'REQUEST'
+                        ]);
+                }
             }
 
             $transactions = [];
