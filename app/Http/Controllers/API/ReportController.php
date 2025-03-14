@@ -698,7 +698,7 @@ class ReportController extends Controller
                     "nilai" => (int) $result->VALUE ?? '',
                     'status' => $result->status ?? '',
                     "document" => $this->getCollateralDocument($result->ID, ['no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri']) ?? null,
-                    "document_rilis" => $this->attachment($result->ID, "'rilis'") ?? null,
+                    "document_rilis" => $this->attachmentRelease($result->ID, "'doc_rilis'") ?? null,
                 ];
             }
 
@@ -812,6 +812,24 @@ class ReportController extends Controller
                 WHERE (TYPE, COUNTER_ID) IN (
                     SELECT TYPE, MAX(COUNTER_ID)
                     FROM cr_collateral_document
+                    WHERE TYPE IN ($data)
+                        AND COLLATERAL_ID = '$collateralId'
+                    GROUP BY TYPE
+                )
+                ORDER BY COUNTER_ID DESC"
+        );
+
+        return $documents;
+    }
+
+    public function attachmentRelease($collateralId, $data)
+    {
+        $documents = DB::select(
+            "   SELECT *
+                FROM cr_collateral_document_release AS csd
+                WHERE (TYPE, COUNTER_ID) IN (
+                    SELECT TYPE, MAX(COUNTER_ID)
+                    FROM cr_collateral_document_release
                     WHERE TYPE IN ($data)
                         AND COLLATERAL_ID = '$collateralId'
                     GROUP BY TYPE
