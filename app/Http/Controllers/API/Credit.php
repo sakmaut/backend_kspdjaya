@@ -578,6 +578,7 @@ class Credit extends Controller
                     'VALUE' => $res->VALUE ?? null,
                     'LOCATION_BRANCH' => $data->BRANCH,
                     'COLLATERAL_FLAG' => $data->BRANCH,
+                    'STATUS' => 'NORMAL',
                     'VERSION' => 1,
                     'CREATE_DATE' => $this->timeNow,
                     'CREATE_BY' => $request->user()->id,
