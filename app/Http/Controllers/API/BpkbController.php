@@ -41,16 +41,23 @@ class BpkbController extends Controller
 
             switch ($type) {
                 case 'ondemand':
-                    $allJaminan = M_CollateralView::where('LOCATION_BRANCH', $branchCondition);
-                    
-                    if(!empty($search)){
+                    $allJaminan = M_CollateralView::where([
+                        'LOCATION_BRANCH' => $branchCondition,
+                        'STATUS' => 'NORMAL'
+                    ]);
+
+                    if (!empty($search)) {
                         $allJaminan->where('no_kontrak', $search);
                     }
 
                     $allJaminan = $allJaminan->paginate($page ?? 10);
                     break;
                 case 'onGoing':
-                    $allJaminan = M_CollateralView::where('COLLATERAL_FLAG', $branchId)->where('LOCATION_BRANCH', '!=', $branchId);
+                    $allJaminan = M_CollateralView::where([
+                        ['COLLATERAL_FLAG', $branchId],
+                        ['LOCATION_BRANCH', '!=', $branchId],
+                        ['STATUS', 'NORMAL']
+                    ]);
 
                     if (!empty($search)) {
                         $allJaminan->where('no_kontrak', $search);
@@ -78,14 +85,22 @@ class BpkbController extends Controller
             if (strtolower($position) === 'ho' || strtolower($position) === 'superadmin') {
                 $allJaminan = M_CollateralView::count();
             } else {
-                $allJaminan = M_CollateralView::where('COLLATERAL_FLAG', $branchCondition)->count();
+                $allJaminan = M_CollateralView::where([
+                    'COLLATERAL_FLAG' => $branchCondition,
+                    'STATUS' => 'NORMAL'
+                ])->count();
             }
 
+            $onDemand = M_CollateralView::where([
+                'LOCATION_BRANCH' => $branchCondition,
+                'STATUS' => 'NORMAL'
+            ])->count();
 
-            $onDemand = M_CollateralView::where('LOCATION_BRANCH', $branchCondition)->count();
-            $onGoing = M_CollateralView::where('COLLATERAL_FLAG', $branchId)
-                ->where('LOCATION_BRANCH', '!=', $branchId)
-                ->count();
+            $onGoing = M_CollateralView::where([
+                ['COLLATERAL_FLAG', $branchId],
+                ['LOCATION_BRANCH', '!=', $branchId],
+                ['STATUS', 'NORMAL']
+            ])->count();
             $onProcess = M_CollateralView::where('COLLATERAL_FLAG', $branchId)
                 ->where('STATUS', 'SENDING')
                 ->count();

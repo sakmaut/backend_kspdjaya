@@ -138,90 +138,13 @@ class BpkbTransactionController extends Controller
 
                     $checkCollateralId = M_CrCollateral::where('ID', $res['ID'])->first();
 
-                    if($checkCollateralId){
+                    if ($checkCollateralId) {
                         $checkCollateralId->update(['STATUS' => 'SENDING']);
                     }
                 }
 
                 M_BpkbDetail::insert($details);
             }
-
-            // if($position == 'HO'){
-            //     $id_bpkb_transaction = $request->id_surat;
-
-            //     $check = M_BpkbTransaction::where('ID',$id_bpkb_transaction)->first();
-
-            //     if(!$check){
-            //         throw new Exception('Id Surat Not Found');
-            //     }
-
-            //     $check->update([
-            //         'CATEGORY' => $request->type??null,
-            //         'NOTE' => $request->catatan,
-            //         'STATUS' => 'APPROVE_HO'
-            //     ]);
-
-            //     $data_approval = [
-            //         'BPKB_TRANSACTION_ID' => $id_bpkb_transaction,
-            //         'ONCHARGE_APPRVL' => $request->flag_approval??null,
-            //         'ONCHARGE_PERSON' => $user->id,
-            //         'ONCHARGE_TIME' => Carbon::now(),
-            //         'ONCHARGE_DESCR' => $request->catatan,
-            //         'APPROVAL_RESULT' => 'APPROVE_HO'
-            //     ];
-
-            //     M_BpkbApproval::create($data_approval);
-
-            //     if(!empty($request->bpkb) && is_array($request->bpkb)){
-
-            //         $requestCollateralIds = collect($request->bpkb)->pluck('id')->toArray();
-
-            //         $getList = M_BpkbDetail::where('BPKB_TRANSACTION_ID', $id_bpkb_transaction)->get();
-
-            //         // Create an associative array to map existing COLLATERAL_IDs to their records
-            //         $existingRecords = $getList->keyBy('COLLATERAL_ID');
-
-            //         $collateralIdsToUpdateNo = [];
-
-            //         foreach ($getList as $record) {
-            //             $collateralId = $record->COLLATERAL_ID;
-
-            //             if (in_array($collateralId, $requestCollateralIds)) {
-            //                 // Update status to 'yes' if the collateral ID exists in the request
-            //                 $record->update([
-            //                     'STATUS' => 'yes',
-            //                     'UPDATED_BY' => $user->id,
-            //                     'UPDATED_AT' => Carbon::now()
-            //                 ]);
-
-            //                 // Remove from the list of collateral IDs to be updated to 'no'
-            //                 $requestCollateralIds = array_diff($requestCollateralIds, [$collateralId]);
-            //             } else {
-            //                 // Collect IDs that need to be updated to 'no'
-            //                 $collateralIdsToUpdateNo[] = $collateralId;
-            //             }
-            //         }
-
-            //         if (!empty($collateralIdsToUpdateNo)) {
-            //             M_BpkbDetail::where('BPKB_TRANSACTION_ID', $id_bpkb_transaction)
-            //                 ->whereIn('COLLATERAL_ID', $collateralIdsToUpdateNo)
-            //                 ->update([
-            //                     'STATUS' => 'no',
-            //                     'UPDATED_BY' => $user->id,
-            //                     'UPDATED_AT' => Carbon::now()
-            //                 ]);
-            //         }
-
-            //         // if (!empty($collateralIdsToUpdateNo)) {
-            //         //     $collaterals = M_CrCollateral::whereIn('ID', $collateralIdsToUpdateNo)->get();
-            //         //     foreach ($collaterals as $collateral) {
-            //         //         $collateral->update(['LOCATION_BRANCH' => $check->FROM_BRANCH]);
-            //         //     }
-            //         // }
-            //     }
-            // }else{
-
-            // }
 
             DB::commit();
             return response()->json(['message' => 'created successfully'], 200);
@@ -284,6 +207,7 @@ class BpkbTransactionController extends Controller
     {
         try {
             $request = $this->request;
+            $user = $request->user();
 
             $request->validate([
                 'no_surat' => 'required|string',
@@ -304,52 +228,103 @@ class BpkbTransactionController extends Controller
                     'STATUS' => 'SELESAI',
                 ]);
 
-                if (!empty($request->jaminan) && is_array($request->jaminan)) {
-                    $transactionId = $check->ID;
+                if ($check->CATEGORY == 'request') {
 
-                    M_BpkbDetail::where('BPKB_TRANSACTION_ID', $transactionId)->update(['STATUS' => 'NORMAL']);
+                    $data = [
+                        'TRX_CODE' => generateCodeJaminan($request, 'bpkb_transaction', 'TRX_CODE', 'JMN'),
+                        'FROM_BRANCH' => $check->TO_BRANCH ?? '',
+                        'TO_BRANCH' => $check->FROM_BRANCH,
+                        'CATEGORY' => "send",
+                        'NOTE' => $request->catatan ?? '',
+                        'STATUS' => 'SENDING',
+                        'COURIER' => $request->kurir ?? "'",
+                        'CREATED_BY' => $user->id
+                    ];
 
-                    $bpkbDetails = M_BpkbDetail::whereIn('ID', $request->jaminan)
-                        ->select('ID', 'COLLATERAL_ID')
-                        ->get();
+                    $transaction = M_BpkbTransaction::create($data);
+                    $id = $transaction->ID;
 
-                    $collateralIds = $bpkbDetails->pluck('COLLATERAL_ID')->toArray();
+                    $data_approval = [
+                        'BPKB_TRANSACTION_ID' => $id,
+                        'ONCHARGE_APPRVL' => 'sending',
+                        'ONCHARGE_PERSON' => $user->id,
+                        'ONCHARGE_TIME' => Carbon::now(),
+                        'ONCHARGE_DESCR' => $request->catatan,
+                        'APPROVAL_RESULT' => 'SENDING'
+                    ];
 
-                    if (!empty($collateralIds)) {
-                        M_CrCollateral::whereIn('ID', $collateralIds)
-                            ->update([
-                                'LOCATION_BRANCH' => $request->user()->branch_id ?? '',
-                                'STATUS' => 'NORMAL'
-                            ]);
+                    M_BpkbApproval::create($data_approval);
+
+                    $details = [];
+                    $collateralIds = [];
+
+                    $getDetail = M_BpkbDetail::where('BPKB_TRANSACTION_ID', $check->ID)->get();
+
+                    foreach ($getDetail as $res) {
+                        $details[] = [
+                            'ID' => Uuid::uuid7()->toString(),
+                            'BPKB_TRANSACTION_ID' => $transaction->ID,
+                            'COLLATERAL_ID' => $res['COLLATERAL_ID'],
+                            'STATUS' => 'SENDING'
+                        ];
+                        $collateralIds[] = $res['ID'];
+
+                        $checkCollateralId = M_CrCollateral::where('ID', $res['ID'])->first();
+
+                        if ($checkCollateralId) {
+                            $checkCollateralId->update(['STATUS' => 'SENDING']);
+                        }
                     }
 
-                    foreach ($request->jaminan as $list) {
-                        $this->locationStatus->createLocationStatusLog($list, $request->user()->branch_id, 'SEND TO HO');
+                    M_BpkbDetail::insert($details);
+                } else {
+
+                    if (!empty($request->jaminan) && is_array($request->jaminan)) {
+                        $transactionId = $check->ID;
+
+                        M_BpkbDetail::where('BPKB_TRANSACTION_ID', $transactionId)->update(['STATUS' => 'NORMAL']);
+
+                        $bpkbDetails = M_BpkbDetail::whereIn('ID', $request->jaminan)
+                            ->select('ID', 'COLLATERAL_ID')
+                            ->get();
+
+                        $collateralIds = $bpkbDetails->pluck('COLLATERAL_ID')->toArray();
+
+                        if (!empty($collateralIds)) {
+                            M_CrCollateral::whereIn('ID', $collateralIds)
+                                ->update([
+                                    'LOCATION_BRANCH' => $request->user()->branch_id ?? '',
+                                    'STATUS' => 'NORMAL'
+                                ]);
+                        }
+
+                        foreach ($request->jaminan as $list) {
+                            $this->locationStatus->createLocationStatusLog($list, $request->user()->branch_id, 'SEND TO HO');
+                        }
                     }
+
+                    $approvalDataMap = [
+                        'yes' => ['code' => 'APHO', 'result' => 'disetujui ho'],
+                        'revisi' => ['code' => 'REORHO', 'result' => 'ada revisi ho'],
+                        'no' => ['code' => 'CLHO', 'result' => 'dibatalkan ho'],
+                    ];
+
+                    $approvalData = $approvalDataMap[$flag] ?? $approvalDataMap['no'];
+
+                    $data_log = [
+                        'ID' => Uuid::uuid7()->toString(),
+                        'BPKB_TRANSACTION_ID' => $check->ID,
+                        'ONCHARGE_APPRVL' => $approvalData['code'],
+                        'ONCHARGE_PERSON' => $request->user()->id,
+                        'ONCHARGE_TIME' => Carbon::now(),
+                        'ONCHARGE_DESCR' => $request->keterangan ?? '',
+                        'APPROVAL_RESULT' => $approvalData['result']
+                    ];
+
+                    M_BpkbApproval::create($data_log);
                 }
             }
 
-            $approvalDataMap = [
-                'yes' => ['code' => 'APHO', 'result' => 'disetujui ho'],
-                'revisi' => ['code' => 'REORHO', 'result' => 'ada revisi ho'],
-                'no' => ['code' => 'CLHO', 'result' => 'dibatalkan ho'],
-            ];
-
-            $approvalData = $approvalDataMap[$flag] ?? $approvalDataMap['no'];
-
-            $data_log = [
-                'ID' => Uuid::uuid7()->toString(),
-                'BPKB_TRANSACTION_ID' => $check->ID,
-                'ONCHARGE_APPRVL' => $approvalData['code'],
-                'ONCHARGE_PERSON' => $request->user()->id,
-                'ONCHARGE_TIME' => Carbon::now(),
-                'ONCHARGE_DESCR' => $request->keterangan ?? '',
-                'APPROVAL_RESULT' => $approvalData['result']
-            ];
-
-            M_BpkbApproval::create($data_log);
-
-            // Return success response
             return response()->json(['message' => 'Approval Successfully'], 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
@@ -385,16 +360,11 @@ class BpkbTransactionController extends Controller
                     $collateral['TYPE'] = 'kendaraan';
                     $combinedCollaterals[] = $collateral;
                 }
-            }
 
-            if (isset($result['sertifikat'])) {
-                $collaterals = M_CrCollateralSertification::whereIn('ID', $result['sertifikat'])->get();
-
-                foreach ($collaterals as $collateral) {
-                    $collateral = $collateral->toArray();
-                    $collateral['TYPE'] = 'sertifikat';
-                    $combinedCollaterals[] = $collateral;
-                }
+                M_CrCollateral::whereIn('ID', $result['kendaraan'])
+                    ->update([
+                        'STATUS' => 'REQUEST'
+                    ]);
             }
 
             $transactions = [];
@@ -416,8 +386,8 @@ class BpkbTransactionController extends Controller
                 $transactions[] = [
                     'ID' => $uuid,
                     'TRX_CODE' => generateCodeJaminan($request, 'bpkb_transaction', 'TRX_CODE', 'JMN'),
-                    'FROM_BRANCH' => $fromBranch,
-                    'TO_BRANCH' => $user->branch_id ?? null,
+                    'FROM_BRANCH' => $user->branch_id ?? '',
+                    'TO_BRANCH' => $fromBranch ?? '',
                     'CATEGORY' => strtolower($status),
                     'NOTE' => $request->catatan ?? '',
                     'STATUS' => $status,

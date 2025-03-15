@@ -9,18 +9,20 @@ use Illuminate\Support\Str;
 class M_TaskPusher extends Model
 {
     use HasFactory;
-    protected $table = 'task_pusher';
+    protected $table = 'tasks';
 
     protected $fillable = [
        'ID',
-       'TASK_ID',
-       'USER_ID',
-       'CREATED',
-       'LAST_UPDATE',
+       'BRANCH',
+       'CHANNEL',
+       'IDENTIFIER',
+       'MESSAGE',
+       'CREATED_AT',
        'STATUS',
-       'TYPE'
+       'READ_AT',
+       'USER_ACCESS'
     ];
-    
+
     protected $guarded = [];
     public $incrementing = false;
     protected $keyType = 'string';
