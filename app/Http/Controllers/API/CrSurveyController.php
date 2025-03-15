@@ -62,12 +62,6 @@ class CrSurveyController extends Controller
         try {
             $check = $this->CrSurvey->where('id', $id)->whereNull('deleted_at')->firstOrFail();
 
-            // $getListSurveyByMcf = $this->SurveyRepository->getDetailSurvey($id);
-
-            // $dto = R_SurveyDetail::collection($getListSurveyByMcf);
-
-            // return response()->json($dto, 200);
-
             return response()->json(['message' => 'OK', 'response' => $this->resourceDetail($check)], 200);
         } catch (ModelNotFoundException $e) {
             ActivityLogger::logActivity($req, 'Data Not Found', 404);
@@ -90,6 +84,12 @@ class CrSurveyController extends Controller
             $query->whereNull('DELETED_AT')
                 ->orWhere('DELETED_AT', '');
         })->get();
+
+        $guarente_billyet = M_CrGuaranteBillyet::where('CR_SURVEY_ID', $survey_id)->where(function ($query) {
+            $query->whereNull('DELETED_AT')
+            ->orWhere('DELETED_AT', '');
+        })->get();
+
         $approval_detail = M_SurveyApproval::where('CR_SURVEY_ID', $survey_id)->first();
 
         $arrayList = [
@@ -99,6 +99,9 @@ class CrSurveyController extends Controller
                 'tujuan_kredit' => $data->tujuan_kredit,
                 'plafond' => (int) $data->plafond,
                 'tenor' => strval($data->tenor),
+                'bunga' => strval($data->interest_month),
+                'bunga_tahunan' => strval($data->interest_year),
+                'angsuran' => strval($data->installment),
                 'category' => $data->category,
                 'jenis_angsuran' => $data->jenis_angsuran
             ],
@@ -183,6 +186,22 @@ class CrSurveyController extends Controller
                     "atas_nama" => $list->ATAS_NAMA,
                     "nilai" => (int) $list->NILAI,
                     "document" => M_CrSurveyDocument::attachmentSertifikat($survey_id, $list->HEADER_ID, ['sertifikat']) ?? null,
+                ]
+            ];
+        }
+
+        foreach ($guarente_billyet as $list) {
+            $arrayList['jaminan'][] = [
+                "type" => "deposito",
+                'counter_id' => $list->HEADER_ID,
+                "atr" => [
+                    'id' => $list->ID,
+                    'status_billyet' => $list->STATUS_JAMINAN ?? '',
+                    "no_billyet" => $list->NO_BILLYET ?? '',
+                    "tgl_valuta" => $list->TGL_VALUTA ?? '',
+                    "jangka_waktu" => $list->IMB ?? '',
+                    "atas_nama" => $list->ATAS_NAMA ?? '',
+                    "nilai" => intval($list->NOMINAL?? 0)
                 ]
             ];
         }
@@ -413,38 +432,26 @@ class CrSurveyController extends Controller
 
                         M_CrGuaranteSertification::create($data_array_col);
 
-                        // Handle attached documents for sertifikat
                         $this->handleDocuments($request->jaminan, $request->id, $request->user()->fullname);
 
                         break;
                     case 'deposito':
-                        $data_array_col = [
+                        $billyet = [
                             'ID' => Uuid::uuid7()->toString(),
-                            'HEADER_ID' => $result['counter_id'],
                             'CR_SURVEY_ID' => $request->id,
-                            'STATUS_JAMINAN' => $result['atr']['status_jaminan'] ?? null,
-                            'NO_SERTIFIKAT' => $result['atr']['no_sertifikat'] ?? null,
-                            'STATUS_KEPEMILIKAN' => $result['atr']['status_kepemilikan'] ?? null,
-                            'IMB' => $result['atr']['imb'] ?? null,
-                            'LUAS_TANAH' => $result['atr']['luas_tanah'] ?? null,
-                            'LUAS_BANGUNAN' => $result['atr']['luas_bangunan'] ?? null,
-                            'LOKASI' => $result['atr']['lokasi'] ?? null,
-                            'PROVINSI' => $result['atr']['provinsi'] ?? null,
-                            'KAB_KOTA' => $result['atr']['kab_kota'] ?? null,
-                            'KECAMATAN' => $result['atr']['kec'] ?? null,
-                            'DESA' => $result['atr']['desa'] ?? null,
-                            'ATAS_NAMA' => $result['atr']['atas_nama'] ?? null,
-                            'NILAI' => $result['atr']['nilai'] ?? null,
-                            'COLLATERAL_FLAG' => "",
+                            'STATUS_JAMINAN' => $result['atr']['status_billyet'] ?? '',
+                            'NO_BILLYET' => $result['atr']['no_billyet'] ?? '',
+                            'TGL_VALUTA' => $result['atr']['tgl_valuta'] ?? null,
+                            'JANGKA_WAKTU' => $result['atr']['jangka_waktu'] ?? null,
+                            'ATAS_NAMA' => $result['atr']['atas_nama'] ?? '',
+                            'NOMINAL' => $result['atr']['nilai'] ?? 0,
+                            'COLLATERAL_FLAG' => $request->user()->branch_id??'',
                             'VERSION' => 1,
                             'CREATE_DATE' => $this->timeNow,
                             'CREATE_BY' => $request->user()->id,
                         ];
 
-                        M_CrGuaranteSertification::create($data_array_col);
-
-                        // Handle attached documents for sertifikat
-                        $this->handleDocuments($request->jaminan, $request->id, $request->user()->fullname);
+                        M_CrGuaranteBillyet::create($billyet);
 
                         break;
                 }
@@ -602,6 +609,43 @@ class CrSurveyController extends Controller
                             }
 
                             break;
+                        case 'deposito':
+                            $billyet = [
+                                'STATUS_JAMINAN' => $result['atr']['status_billyet'] ?? '',
+                                'NO_BILLYET' => $result['atr']['no_billyet'] ?? '',
+                                'TGL_VALUTA' => $result['atr']['tgl_valuta'] ?? null,
+                                'JANGKA_WAKTU' => $result['atr']['jangka_waktu'] ?? null,
+                                'ATAS_NAMA' => $result['atr']['atas_nama'] ?? '',
+                                'NOMINAL' => $result['atr']['nilai'] ?? 0,
+                                'COLLATERAL_FLAG' => $request->user()->branch_id ?? ''
+                            ];
+
+                            if (!isset($result['atr']['id'])) {
+
+                                $billyet['ID'] = Uuid::uuid7()->toString();
+                                $billyet['CR_SURVEY_ID'] = $id;
+                                $billyet['CREATE_DATE'] = $this->timeNow;
+                                $billyet['CREATE_BY'] = $request->user()->id;
+
+                                M_CrGuaranteBillyet::create($billyet);
+                            } else {
+
+                                $billyet['MOD_DATE'] = $this->timeNow;
+                                $billyet['MOD_BY'] = $request->user()->id;
+
+                                $deposito = M_CrGuaranteBillyet::where([
+                                    'ID' => $result['atr']['id'],
+                                    'CR_SURVEY_ID' => $id
+                                ])->whereNull('DELETED_AT')->first();
+
+                                if (!$deposito) {
+                                    throw new Exception("Id Jaminan Deposito Not Found", 404);
+                                }
+
+                                $deposito->update($billyet);
+                            }
+
+                            break;
                     }
                 }
             }
@@ -655,6 +699,25 @@ class CrSurveyController extends Controller
                                 $doc->delete();
                             }
                         }
+                    } catch (\Exception $e) {
+                        DB::rollback();
+                        ActivityLogger::logActivity($request, $e->getMessage(), 500);
+                        return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+                    }
+                }
+            }
+
+            if (collect($request->deleted_deposito)->isNotEmpty()) {
+                foreach ($request->deleted_deposito as $res) {
+                    try {
+                        $check = M_CrGuaranteBillyet::findOrFail($res['id']);
+
+                        $data = [
+                            'DELETED_BY' => $request->user()->id,
+                            'DELETED_AT' => $this->timeNow
+                        ];
+
+                        $check->update($data);
                     } catch (\Exception $e) {
                         DB::rollback();
                         ActivityLogger::logActivity($request, $e->getMessage(), 500);
