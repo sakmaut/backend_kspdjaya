@@ -699,7 +699,7 @@ class CrAppilcationController extends Controller
     {
         if ($flag === 'yes') {
             $data_approval['code'] = 'WAKPS';
-            $data_approval['application_result'] = 'menunggu kapos';
+            $data_approval['application_result'] = 'menunggu manops';
 
             $data_application_log = [
                 'CODE' => 'WAKPS',
@@ -707,7 +707,7 @@ class CrAppilcationController extends Controller
                 'APPLICATION_APPROVAL_ID' => $applicationId,
                 'ONCHARGE_PERSON' => $request->user()->id,
                 'ONCHARGE_TIME' => Carbon::now(),
-                'APPROVAL_RESULT' => 'menunggu kapos'
+                'APPROVAL_RESULT' => 'menunggu manops'
             ];
 
             M_ApplicationApprovalLog::create($data_application_log);
@@ -719,7 +719,7 @@ class CrAppilcationController extends Controller
                     'CODE' => 'WAKPS',
                     'ONCHARGE_PERSON' => $request->user()->id,
                     'ONCHARGE_TIME' => Carbon::now(),
-                    'APPROVAL_RESULT' => 'menunggu kapos'
+                    'APPROVAL_RESULT' => 'menunggu manops'
                 ];
 
                 $survey_apprval_change->update($data_update_approval);
@@ -729,7 +729,7 @@ class CrAppilcationController extends Controller
                     'SURVEY_APPROVAL_ID' => $surveyID,
                     'ONCHARGE_PERSON' => $request->user()->id,
                     'ONCHARGE_TIME' => Carbon::now(),
-                    'APPROVAL_RESULT' =>  'menunggu kapos'
+                    'APPROVAL_RESULT' =>  'menunggu manops'
                 ];
 
                 M_SurveyApprovalLog::create($data_survey_log);
@@ -1293,9 +1293,9 @@ class CrAppilcationController extends Controller
 
             // Define mapping for flag to code and result
             $approvalDataMap = [
-                'yes' => ['code' => 'WAHO', 'result' => 'disetujui,menunggu ho'],
-                'revisi' => ['code' => 'REORKPS', 'result' => 'ada revisi kapos'],
-                'no' => ['code' => 'CLKPS', 'result' => 'dibatalkan kapos'],
+                'yes' => ['code' => 'WAHO', 'result' => 'disetujui,menunggu bm'],
+                'revisi' => ['code' => 'REORKPS', 'result' => 'ada revisi manops'],
+                'no' => ['code' => 'CLKPS', 'result' => 'dibatalkan manops'],
             ];
 
             // Get corresponding data based on flag
@@ -1312,7 +1312,7 @@ class CrAppilcationController extends Controller
             ];
 
             // Create logs and update the status
-            $this->createApplicationApprovalLog($approvalData['code'], $request->cr_application_id, $userId, $currentTime, $description, $approvalData['result'], 'KAPOS');
+            $this->createApplicationApprovalLog($approvalData['code'], $request->cr_application_id, $userId, $currentTime, $description, $approvalData['result'], 'MANOPS');
             $this->updateSurveyApproval($surveyApproval, $approvalData['code'], $userId, $currentTime, $approvalData['result']);
             $this->createSurveyApprovalLog($approvalData['code'], $checkApplication->CR_SURVEY_ID, $userId, $currentTime, $approvalData['result']);
 
@@ -1351,9 +1351,9 @@ class CrAppilcationController extends Controller
 
             // Define mapping for flag to code and result
             $approvalDataMap = [
-                'yes' => ['code' => 'APHO', 'result' => 'disetujui ho'],
-                'revisi' => ['code' => 'REORHO', 'result' => 'ada revisi ho'],
-                'no' => ['code' => 'CLHO', 'result' => 'dibatalkan ho'],
+                'yes' => ['code' => 'APHO', 'result' => 'disetujui bm'],
+                'revisi' => ['code' => 'REORHO', 'result' => 'ada revisi bm'],
+                'no' => ['code' => 'CLHO', 'result' => 'dibatalkan bm'],
             ];
 
             // Get corresponding data based on flag
@@ -1370,7 +1370,7 @@ class CrAppilcationController extends Controller
             ];
 
             // Create logs and update the status
-            $this->createApplicationApprovalLog($approvalData['code'], $request->cr_application_id, $userId, $currentTime, $description, $approvalData['result'], 'HO');
+            $this->createApplicationApprovalLog($approvalData['code'], $request->cr_application_id, $userId, $currentTime, $description, $approvalData['result'], 'BM');
             $this->updateSurveyApproval($surveyApproval, $approvalData['code'], $userId, $currentTime, $approvalData['result']);
             $this->createSurveyApprovalLog($approvalData['code'], $checkApplication->CR_SURVEY_ID, $userId, $currentTime, $approvalData['result']);
 
