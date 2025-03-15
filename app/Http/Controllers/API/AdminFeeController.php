@@ -160,7 +160,7 @@ class AdminFeeController extends Controller
         }
     }
 
-    public function fee_surveyOLD(Request $request)
+    public function fee_survey(Request $request)
     {
         try {
             $plafond = (int) $request->plafond / 1000000;
@@ -199,7 +199,7 @@ class AdminFeeController extends Controller
         }
     }
 
-    public function fee_survey(Request $request)
+    public function fee_surveyNEW(Request $request)
     {
         try {
             $plafond = intval($request->plafond);

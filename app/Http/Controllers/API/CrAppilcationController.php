@@ -11,6 +11,7 @@ use App\Models\M_CrApplicationBank;
 use App\Models\M_CrApplicationGuarantor;
 use App\Models\M_CrApplicationSpouse;
 use App\Models\M_Credit;
+use App\Models\M_CrGuaranteBillyet;
 use App\Models\M_CrGuaranteSertification;
 use App\Models\M_CrGuaranteVehicle;
 use App\Models\M_CrOrder;
@@ -316,6 +317,43 @@ class CrAppilcationController extends Controller
                             }
 
                             break;
+                        case 'deposito':
+                            $billyet = [
+                                'STATUS_JAMINAN' => $result['atr']['status_billyet'] ?? '',
+                                'NO_BILLYET' => $result['atr']['no_billyet'] ?? '',
+                                'TGL_VALUTA' => $result['atr']['tgl_valuta'] ?? null,
+                                'JANGKA_WAKTU' => $result['atr']['jangka_waktu'] ?? null,
+                                'ATAS_NAMA' => $result['atr']['atas_nama'] ?? '',
+                                'NOMINAL' => $result['atr']['nilai'] ?? 0,
+                                'COLLATERAL_FLAG' => $request->user()->branch_id ?? ''
+                            ];
+
+                            if (!isset($result['atr']['id'])) {
+
+                                $billyet['ID'] = Uuid::uuid7()->toString();
+                                $billyet['CR_SURVEY_ID'] = $id;
+                                $billyet['CREATE_DATE'] = $timenow;
+                                $billyet['CREATE_BY'] = $request->user()->id;
+
+                                M_CrGuaranteBillyet::create($billyet);
+                            } else {
+
+                                $billyet['MOD_DATE'] = $timenow;
+                                $billyet['MOD_BY'] = $request->user()->id;
+
+                                $deposito = M_CrGuaranteBillyet::where([
+                                    'ID' => $result['atr']['id'],
+                                    'CR_SURVEY_ID' => $id
+                                ])->whereNull('DELETED_AT')->first();
+
+                                if (!$deposito) {
+                                    throw new Exception("Id Jaminan Deposito Not Found", 404);
+                                }
+
+                                $deposito->update($billyet);
+                            }
+
+                            break;
                     }
                 }
             }
@@ -377,6 +415,25 @@ class CrAppilcationController extends Controller
                 }
             }
 
+            if (collect($request->deleted_deposito)->isNotEmpty()) {
+                foreach ($request->deleted_deposito as $res) {
+                    try {
+                        $check = M_CrGuaranteBillyet::findOrFail($res['id']);
+
+                        $data = [
+                            'DELETED_BY' => $request->user()->id,
+                            'DELETED_AT' => $timenow
+                        ];
+
+                        $check->update($data);
+                    } catch (\Exception $e) {
+                        DB::rollback();
+                        ActivityLogger::logActivity($request, $e->getMessage(), 500);
+                        return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+                    }
+                }
+            }
+
             if (collect($request->deleted_penjamin)->isNotEmpty()) {
                 foreach ($request->deleted_penjamin as $res) {
                     $check = M_CrApplicationGuarantor::where('ID', $res['id'])->get();
@@ -400,23 +457,7 @@ class CrAppilcationController extends Controller
 
     private function insert_cr_application($request, $applicationModel)
     {
-
-        // if(strtolower($request->ekstra['jenis_angsuran']) == 'musiman'){
-        //     $tenorLists = [
-        //         '6' => 3,
-        //         '12' => 6,
-        //         '18' => 12,
-        //         '24' => 18,
-        //     ];
-
-        //     $tenor = $tenorLists[$request->ekstra['tenor']];
-        // }else{
-        //     $tenor = $request->ekstra['tenor'];
-        // }
-
         $data_cr_application = [
-            'FORM_NUMBER' => '',
-            'CUST_CODE' => '',
             'ENTRY_DATE' => Carbon::now()->format('Y-m-d'),
             'SUBMISSION_VALUE' => $request->ekstra['nilai_yang_diterima'] ?? null,
             'CREDIT_TYPE' => $request->ekstra['tipe_angsuran'] ?? null,
