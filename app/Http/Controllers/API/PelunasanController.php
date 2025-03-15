@@ -577,9 +577,11 @@ class PelunasanController extends Controller
             throw new Exception("Kwitansi Exist", 500);
         }
 
+        $idGenerate = Uuid::uuid7()->toString();
+
         $data = [
             "PAYMENT_TYPE" => 'pelunasan',
-            "PAYMENT_ID" => $request->uid ?? $request->id,
+            "PAYMENT_ID" => $idGenerate ?? '',
             "STTS_PAYMENT" => $status,
             "NO_TRANSAKSI" => $no_inv,
             "LOAN_NUMBER" => $request->LOAN_NUMBER,
