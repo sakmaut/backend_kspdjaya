@@ -605,6 +605,10 @@ class PaymentController extends Controller
         DB::beginTransaction();
         try {
 
+            if (empty($req->uid)) {
+                throw new Exception('Payment ID (uid) is required and cannot be empty.');
+            }
+
             if (preg_match('/^data:image\/(\w+);base64,/', $req->image, $type)) {
                 $data = substr($req->image, strpos($req->image, ',') + 1);
                 $data = base64_decode($data);
