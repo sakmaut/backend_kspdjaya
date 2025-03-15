@@ -579,7 +579,7 @@ class PelunasanController extends Controller
 
         $data = [
             "PAYMENT_TYPE" => 'pelunasan',
-            "PAYMENT_ID" => $request->uid ?? $request->payment_id,
+            "PAYMENT_ID" => $request->uid ?? $request->id,
             "STTS_PAYMENT" => $status,
             "NO_TRANSAKSI" => $no_inv,
             "LOAN_NUMBER" => $request->LOAN_NUMBER,
