@@ -417,7 +417,36 @@ class CrSurveyController extends Controller
                         $this->handleDocuments($request->jaminan, $request->id, $request->user()->fullname);
 
                         break;
-                    case 'kendaraan':
+                    case 'deposito':
+                        $data_array_col = [
+                            'ID' => Uuid::uuid7()->toString(),
+                            'HEADER_ID' => $result['counter_id'],
+                            'CR_SURVEY_ID' => $request->id,
+                            'STATUS_JAMINAN' => $result['atr']['status_jaminan'] ?? null,
+                            'NO_SERTIFIKAT' => $result['atr']['no_sertifikat'] ?? null,
+                            'STATUS_KEPEMILIKAN' => $result['atr']['status_kepemilikan'] ?? null,
+                            'IMB' => $result['atr']['imb'] ?? null,
+                            'LUAS_TANAH' => $result['atr']['luas_tanah'] ?? null,
+                            'LUAS_BANGUNAN' => $result['atr']['luas_bangunan'] ?? null,
+                            'LOKASI' => $result['atr']['lokasi'] ?? null,
+                            'PROVINSI' => $result['atr']['provinsi'] ?? null,
+                            'KAB_KOTA' => $result['atr']['kab_kota'] ?? null,
+                            'KECAMATAN' => $result['atr']['kec'] ?? null,
+                            'DESA' => $result['atr']['desa'] ?? null,
+                            'ATAS_NAMA' => $result['atr']['atas_nama'] ?? null,
+                            'NILAI' => $result['atr']['nilai'] ?? null,
+                            'COLLATERAL_FLAG' => "",
+                            'VERSION' => 1,
+                            'CREATE_DATE' => $this->timeNow,
+                            'CREATE_BY' => $request->user()->id,
+                        ];
+
+                        M_CrGuaranteSertification::create($data_array_col);
+
+                        // Handle attached documents for sertifikat
+                        $this->handleDocuments($request->jaminan, $request->id, $request->user()->fullname);
+
+                        break;
                 }
                 
             }
