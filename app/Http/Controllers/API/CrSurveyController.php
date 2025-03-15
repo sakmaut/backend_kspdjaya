@@ -284,31 +284,34 @@ class CrSurveyController extends Controller
             'id' => $request->id,
             'branch_id' => $request->user()->branch_id,
             'visit_date' => isset($request->data_survey['tgl_survey']) && !empty($request->data_survey['tgl_survey']) ? $request->data_survey['tgl_survey'] : null,
-            'tujuan_kredit' => $request->order['tujuan_kredit'] ?? null,
-            'plafond' => $request->order['plafond'] ?? null,
-            'tenor' => $request->order['tenor'] ?? null,
-            'category' => $request->order['category'] ?? null,
-            'jenis_angsuran' => $request->order['jenis_angsuran'] ?? null,
-            'nama' => $request->data_nasabah['nama'] ?? null,
+            'tujuan_kredit' => $request->order['tujuan_kredit'] ?? '',
+            'plafond' => $request->order['plafond'] ?? '',
+            'tenor' => $request->order['tenor'] ?? '',
+            'interest_month' => $request->order['bunga'] ?? '',
+            'interest_year' => $request->order['bunga_tahunan'] ?? '',
+            'installment' => $request->order['angsuran'] ?? '',
+            'category' => $request->order['category'] ?? '',
+            'jenis_angsuran' => $request->order['jenis_angsuran'] ?? '',
+            'nama' => $request->data_nasabah['nama'] ?? '',
             'tgl_lahir' => $request->data_nasabah['tgl_lahir'] ?? null,
-            'ktp' => $request->data_nasabah['no_ktp'] ?? null,
-            'kk' => $request->data_nasabah['no_kk'] ?? null,
-            'hp' => $request->data_nasabah['no_hp'] ?? null,
-            'alamat' => $request->data_nasabah['alamat'] ?? null,
-            'rt' => $request->data_nasabah['rt'] ?? null,
-            'rw' => $request->data_nasabah['rw'] ?? null,
-            'province' => $request->data_nasabah['provinsi'] ?? null,
-            'city' => $request->data_nasabah['kota'] ?? null,
-            'kecamatan' => $request->data_nasabah['kecamatan'] ?? null,
-            'kelurahan' => $request->data_nasabah['kelurahan'] ?? null,
-            "work_period" => $request->data_survey['lama_bekerja'] ?? null,
-            "income_personal" => $request->data_survey['pendapatan_pribadi'] ?? null,
-            "income_spouse" =>  $request->data_survey['pendapatan_pasangan'] ?? null,
-            "income_other" =>  $request->data_survey['pendapatan_lainnya'] ?? null,
-            'usaha' => $request->data_survey['usaha'] ?? null,
-            'sector' => $request->data_survey['sektor'] ?? null,
-            "expenses" => $request->data_survey['pengeluaran'] ?? null,
-            'survey_note' => $request->data_survey['catatan_survey'] ?? null,
+            'ktp' => $request->data_nasabah['no_ktp'] ?? '',
+            'kk' => $request->data_nasabah['no_kk'] ?? '',
+            'hp' => $request->data_nasabah['no_hp'] ?? '',
+            'alamat' => $request->data_nasabah['alamat'] ?? '',
+            'rt' => $request->data_nasabah['rt'] ?? '',
+            'rw' => $request->data_nasabah['rw'] ?? '',
+            'province' => $request->data_nasabah['provinsi'] ?? '',
+            'city' => $request->data_nasabah['kota'] ?? '',
+            'kecamatan' => $request->data_nasabah['kecamatan'] ?? '',
+            'kelurahan' => $request->data_nasabah['kelurahan'] ?? '',
+            "work_period" => $request->data_survey['lama_bekerja'] ?? '',
+            "income_personal" => $request->data_survey['pendapatan_pribadi'] ?? '',
+            "income_spouse" =>  $request->data_survey['pendapatan_pasangan'] ?? '',
+            "income_other" =>  $request->data_survey['pendapatan_lainnya'] ?? '',
+            'usaha' => $request->data_survey['usaha'] ?? '',
+            'sector' => $request->data_survey['sektor'] ?? '',
+            "expenses" => $request->data_survey['pengeluaran'] ?? '',
+            'survey_note' => $request->data_survey['catatan_survey'] ?? '',
             'created_by' => $request->user()->id
         ];
 
@@ -348,7 +351,11 @@ class CrSurveyController extends Controller
     private function insert_guarante($request)
     {
         if (!empty($request->jaminan)) {
+
+            $typeCollateral = '';
+
             foreach ($request->jaminan as $result) {
+                $typeCollateral = $result['type'];
 
                 switch ($result['type']) {
                     case 'kendaraan':
@@ -356,18 +363,18 @@ class CrSurveyController extends Controller
                             'ID' => Uuid::uuid7()->toString(),
                             'CR_SURVEY_ID' => $request->id,
                             'HEADER_ID' => $result['counter_id'],
-                            'TYPE' => $result['atr']['tipe'] ?? null,
-                            'BRAND' => $result['atr']['merk'] ?? null,
-                            'PRODUCTION_YEAR' => $result['atr']['tahun'] ?? null,
-                            'COLOR' => $result['atr']['warna'] ?? null,
-                            'ON_BEHALF' => $result['atr']['atas_nama'] ?? null,
-                            'POLICE_NUMBER' => $result['atr']['no_polisi'] ?? null,
-                            'CHASIS_NUMBER' => $result['atr']['no_rangka'] ?? null,
-                            'ENGINE_NUMBER' => $result['atr']['no_mesin'] ?? null,
-                            'BPKB_NUMBER' => $result['atr']['no_bpkb'] ?? null,
-                            'STNK_NUMBER' => $result['atr']['no_stnk'] ?? null,
-                            'STNK_VALID_DATE' => $result['atr']['tgl_stnk'] ?? null,
-                            'VALUE' => $result['atr']['nilai'] ?? null,
+                            'TYPE' => $result['atr']['tipe'] ?? '',
+                            'BRAND' => $result['atr']['merk'] ?? '',
+                            'PRODUCTION_YEAR' => $result['atr']['tahun'] ?? '',
+                            'COLOR' => $result['atr']['warna'] ?? '',
+                            'ON_BEHALF' => $result['atr']['atas_nama'] ?? '',
+                            'POLICE_NUMBER' => $result['atr']['no_polisi'] ?? '',
+                            'CHASIS_NUMBER' => $result['atr']['no_rangka'] ?? '',
+                            'ENGINE_NUMBER' => $result['atr']['no_mesin'] ?? '',
+                            'BPKB_NUMBER' => $result['atr']['no_bpkb'] ?? '',
+                            'STNK_NUMBER' => $result['atr']['no_stnk'] ?? '',
+                            'STNK_VALID_DATE' => $result['atr']['tgl_stnk'] ?? '',
+                            'VALUE' => $result['atr']['nilai'] ?? '',
                             'COLLATERAL_FLAG' => "",
                             'VERSION' => 1,
                             'CREATE_DATE' => $this->timeNow,
@@ -376,25 +383,10 @@ class CrSurveyController extends Controller
 
                         M_CrGuaranteVehicle::create($data_array_col);
 
-                        foreach ($request->jaminan as $res) {
-                            if (!empty($res['atr']['document']) && isset($res['atr']['document']) && is_array($res['atr']['document'])) {
-                                foreach ($res['atr']['document'] as $datas) {
-                                    $data_array_attachment = [
-                                        'ID' => Uuid::uuid4()->toString(),
-                                        'CR_SURVEY_ID' => $request->id,
-                                        'TYPE' => $datas['TYPE'],
-                                        'COUNTER_ID' => $datas['COUNTER_ID'] ?? '',
-                                        'PATH' => $datas['PATH'],
-                                        'CREATED_BY' => $request->user()->fullname,
-                                        'TIMEMILISECOND' => round(microtime(true) * 1000)
-                                    ];
-
-                                    M_CrSurveyDocument::create($data_array_attachment);
-                                }
-                            }
-                        }
+                        $this->handleDocuments($request->jaminan, $request->id, $request->user()->fullname);
 
                         break;
+
                     case 'sertifikat':
                         $data_array_col = [
                             'ID' => Uuid::uuid7()->toString(),
@@ -421,26 +413,18 @@ class CrSurveyController extends Controller
 
                         M_CrGuaranteSertification::create($data_array_col);
 
-                        foreach ($request->jaminan as $res) {
-                            if (!empty($res['atr']['document']) && isset($res['atr']['document']) && is_array($res['atr']['document'])) {
-                                foreach ($res['atr']['document'] as $datas) {
-                                    $data_array_attachment = [
-                                        'ID' => Uuid::uuid4()->toString(),
-                                        'CR_SURVEY_ID' => $request->id,
-                                        'TYPE' => $datas['TYPE'],
-                                        'COUNTER_ID' => $datas['COUNTER_ID'] ?? '',
-                                        'PATH' => $datas['PATH'],
-                                        'CREATED_BY' => $request->user()->fullname,
-                                        'TIMEMILISECOND' => round(microtime(true) * 1000)
-                                    ];
-
-                                    M_CrSurveyDocument::create($data_array_attachment);
-                                }
-                            }
-                        }
+                        // Handle attached documents for sertifikat
+                        $this->handleDocuments($request->jaminan, $request->id, $request->user()->fullname);
 
                         break;
+                    case 'kendaraan':
                 }
+                
+            }
+
+            $update = M_CrSurvey::find($request->id);
+            if ($update) {
+                $update->update(['collateral_type' => $typeCollateral]);
             }
         }
     }
