@@ -1146,7 +1146,7 @@ class CrAppilcationController extends Controller
                 "asuransi" => $applicationDetail->INSURANCE ?? null,
                 "biaya_transfer" => $applicationDetail->TRANSFER_FEE ?? null,
                 "eff_rate" => $applicationDetail->EFF_RATE ?? null,
-                "angsuran" => intval($applicationDetail->INSTALLMENT) ?? null
+                "angsuran" => $data->installment ?? 0
             ],
             'jaminan' => [],
             "prospect_approval" => [
