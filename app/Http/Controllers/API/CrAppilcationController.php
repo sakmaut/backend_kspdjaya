@@ -1251,7 +1251,7 @@ class CrAppilcationController extends Controller
         $set_angs = $angsuran;
         $angsuran = ceil(round($set_angs, 3) / 1000) * 1000;
 
-        $flat_rate = excelRate($term, -$angsuran, $remainingBalance);
+        $flat_rate = excelRate($term, -$angsuran, $remainingBalance) * 100;
         $total_bunga = round(($remainingBalance * ($bunga / 100) / 12) * $term, 2);
 
         return [
