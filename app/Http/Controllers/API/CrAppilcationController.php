@@ -1136,6 +1136,8 @@ class CrAppilcationController extends Controller
             "ekstra" => [
                 'jenis_angsuran' => strtolower(empty($application->INSTALLMENT_TYPE) ? $cr_survey->jenis_angsuran : $application->INSTALLMENT_TYPE),
                 'tenor' => $application->TENOR,
+                'bunga' => $data->interest_month?? $applicationDetail->interest_month,
+                'bunga_tahunan' => $data->interest_year ?? $applicationDetail->interest_year,
                 "nilai_yang_diterima" => $applicationDetail->SUBMISSION_VALUE == '' ? (int) $data->plafond : (int)$applicationDetail->SUBMISSION_VALUE ?? null,
                 "total" => (int)$applicationDetail->TOTAL_ADMIN ?? null,
                 "cadangan" => $applicationDetail->CADANGAN ?? null,
@@ -1244,6 +1246,21 @@ class CrAppilcationController extends Controller
         }
 
         return $arrayList;
+    }
+
+    private function calculateFlatRate($plafond,$tenor,$angsuran,$bunga){
+        $remainingBalance = $plafond;
+        $term = $tenor;
+        $set_angs = $angsuran;
+        $angsuran = ceil(round($set_angs, 3) / 1000) * 1000;
+
+        $flat_rate = excelRate($term, -$angsuran, $remainingBalance);
+        $total_bunga = round(($remainingBalance * ($bunga / 100) / 12) * $term, 2);
+
+        return [
+            'flat_rate' => $flat_rate,
+            'ttal_bunga' => $total_bunga
+        ];
     }
 
     public function attachment($survey_id, $data)
