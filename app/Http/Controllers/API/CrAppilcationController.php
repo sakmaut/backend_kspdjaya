@@ -1135,9 +1135,9 @@ class CrAppilcationController extends Controller
             "info_bank" => [],
             "ekstra" => [
                 'jenis_angsuran' => strtolower(empty($application->INSTALLMENT_TYPE) ? $cr_survey->jenis_angsuran : $application->INSTALLMENT_TYPE),
-                'tenor' => $application->TENOR,
-                'bunga' => $data->interest_month?? $cr_survey->interest_month,
-                'bunga_tahunan' => $data->interest_year ?? $cr_survey->interest_year,
+                'tenor' => intval($application->TENOR),
+                'bunga' => intval($data->interest_month)?? intval($cr_survey->interest_month),
+                'bunga_tahunan' => intval($data->interest_year) ?? intval($cr_survey->interest_year),
                 "nilai_yang_diterima" => $applicationDetail->SUBMISSION_VALUE == '' ? (int) $data->plafond : (int)$applicationDetail->SUBMISSION_VALUE ?? null,
                 "total" => (int)$applicationDetail->TOTAL_ADMIN ?? null,
                 "cadangan" => $applicationDetail->CADANGAN ?? null,
