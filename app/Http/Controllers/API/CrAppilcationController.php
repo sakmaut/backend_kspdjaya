@@ -457,6 +457,9 @@ class CrAppilcationController extends Controller
 
     private function insert_cr_application($request, $applicationModel)
     {
+
+        $flatRate = $this->calculateFlatRate($request->ekstra['pokok_pembayaran'], $request->ekstra['tenor'], $request->ekstra['angsuran'], $request->ekstra['bunga_tahunan'])['flat_rate'] ?? 0;
+
         $data_cr_application = [
             'ENTRY_DATE' => Carbon::now()->format('Y-m-d'),
             'SUBMISSION_VALUE' => $request->ekstra['nilai_yang_diterima'] ?? null,
@@ -466,7 +469,7 @@ class CrAppilcationController extends Controller
             'INSTALLMENT' => $request->ekstra['angsuran'] ?? null,
             'OPT_PERIODE' => $request->ekstra['opt_periode'] ?? null,
             'EFF_RATE' => $request->ekstra['eff_rate'] ?? 0,
-            'FLAT_RATE' => $request->ekstra['flat_rate'] ?? 0,
+            'FLAT_RATE' => $flatRate,
             'INTEREST_RATE' => $request->ekstra['bunga'] ?? 0,
             'TOTAL_INTEREST' => $request->ekstra['bunga_tahunan'] ?? 0,
             'INSTALLMENT_TYPE' => $request->ekstra['jenis_angsuran'] ?? null,
@@ -1141,7 +1144,7 @@ class CrAppilcationController extends Controller
                 "nilai_yang_diterima" => $applicationDetail->SUBMISSION_VALUE == '' ? (int) $data->plafond : (int)$applicationDetail->SUBMISSION_VALUE ?? null,
                 "biaya_admin" => $applicationDetail->NET_ADMIN != null || $applicationDetail->NET_ADMIN != 0 || !empty($applicationDetail->NET_ADMIN) ? intval($applicationDetail->NET_ADMIN)  : 0,
                 "total_admin" => $applicationDetail->TOTAL_ADMIN != null || $applicationDetail->TOTAL_ADMIN != 0 || !empty($applicationDetail->TOTAL_ADMIN) ? intval($applicationDetail->TOTAL_ADMIN)  : 0,
-                "eff_rate" => $applicationDetail->EFF_RATE ?? null,
+                'pokok_pembayaran' => $applicationDetail->POKOK_PEMBAYARAN != null || $applicationDetail->POKOK_PEMBAYARAN != 0 || !empty($applicationDetail->POKOK_PEMBAYARAN) ? intval($applicationDetail->POKOK_PEMBAYARAN)  : intval($cr_survey->plafond),
                 "flat_rate" => $applicationDetail->FLAT_RATE != null || $applicationDetail->FLAT_RATE != 0 || !empty($applicationDetail->FLAT_RATE) ? floatval($applicationDetail->FLAT_RATE) : $this->calculateFlatRate($data->plafond,$data->tenor,$data->installment,$data->interest_year)['flat_rate']??0,
                 "angsuran" => $applicationDetail->INSTALLMENT != null || $applicationDetail->INSTALLMENT != 0 || !empty($applicationDetail->INSTALLMENT) ? intval($applicationDetail->INSTALLMENT)  : intval($data->installment??0)
             ],
