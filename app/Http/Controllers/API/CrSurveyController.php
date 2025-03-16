@@ -281,6 +281,11 @@ class CrSurveyController extends Controller
 
             if (collect($request->jaminan)->isNotEmpty()) {
                 $this->insert_guarante($request);
+            }else{
+                $update = M_CrSurvey::find($request->id);
+                if ($update) {
+                    $update->update(['collateral_type' => 'KTA']);
+                }
             }
 
             DB::commit();
