@@ -1142,7 +1142,7 @@ class CrAppilcationController extends Controller
                 "biaya_admin" => $applicationDetail->NET_ADMIN != null || $applicationDetail->NET_ADMIN != 0 || !empty($applicationDetail->NET_ADMIN) ? intval($applicationDetail->NET_ADMIN)  : 0,
                 "total_admin" => $applicationDetail->TOTAL_ADMIN != null || $applicationDetail->TOTAL_ADMIN != 0 || !empty($applicationDetail->TOTAL_ADMIN) ? intval($applicationDetail->TOTAL_ADMIN)  : 0,
                 "eff_rate" => $applicationDetail->EFF_RATE ?? null,
-                "flat_rate" => $applicationDetail->FLAT_RATE != null || $applicationDetail->FLAT_RATE != 0 || !empty($applicationDetail->FLAT_RATE) ? floatval($applicationDetail->FLAT_RATE) : $this->calculateFlatRate($data->plafond,$data->tenor,$data->unstallment,$data->interest_year),
+                "flat_rate" => $applicationDetail->FLAT_RATE != null || $applicationDetail->FLAT_RATE != 0 || !empty($applicationDetail->FLAT_RATE) ? floatval($applicationDetail->FLAT_RATE) : $this->calculateFlatRate($data->plafond,$data->tenor,$data->installment,$data->interest_year),
                 "angsuran" => $applicationDetail->INSTALLMENT != null || $applicationDetail->INSTALLMENT != 0 || !empty($applicationDetail->INSTALLMENT) ? intval($applicationDetail->INSTALLMENT)  : intval($data->installment??0)
             ],
             'jaminan' => [],
