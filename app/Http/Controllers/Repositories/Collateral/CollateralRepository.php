@@ -179,18 +179,22 @@ class CollateralRepository implements CollateralInterface
                 break;
 
             case 'JUAL UNIT':
-                M_Payment::create([
-                    'ID' => Uuid::uuid7()->toString(),
-                    'ACC_KEY' => 'JUAL UNIT',
-                    'STTS_RCRD' => 'PAID',
-                    'PAYMENT_METHOD' => 'cash',
-                    'BRANCH' => $request->user()->branch_id ?? '',
-                    'LOAN_NUM' => $credit->LOAN_NUMBER ?? '',
-                    'ENTRY_DATE' => now(),
-                    'TITLE' => 'JUAL UNIT TARIKAN',
-                    'ORIGINAL_AMOUNT' => $request->harga ?? 0,
-                    'USER_ID' => $userId,
-                ]);
+                if ($credit->STATUS_REC == 'RP') {
+                    M_Payment::create([
+                        'ID' => Uuid::uuid7()->toString(),
+                        'ACC_KEY' => 'JUAL UNIT',
+                        'STTS_RCRD' => 'PAID',
+                        'PAYMENT_METHOD' => 'cash',
+                        'BRANCH' => $request->user()->branch_id ?? '',
+                        'LOAN_NUM' => $credit->LOAN_NUMBER ?? '',
+                        'ENTRY_DATE' => now(),
+                        'TITLE' => 'JUAL UNIT TARIKAN',
+                        'ORIGINAL_AMOUNT' => $request->harga ?? 0,
+                        'USER_ID' => $userId,
+                    ]);
+                } else {
+                    throw new Exception("Jual Unit Not Available", 500);
+                }
                 break;
 
             case 'NORMAL':
