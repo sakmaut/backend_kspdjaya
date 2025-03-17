@@ -99,10 +99,10 @@ class CrSurveyController extends Controller
                 'bunga' => intval($data->interest_month),
                 'bunga_tahunan' => intval($data->interest_year),
                 'angsuran' => intval($data->installment),
-                'category' => $data->category,
                 'jenis_angsuran' => $data->jenis_angsuran
             ],
             'data_nasabah' => [
+                'category' => $data->category ?? 'baru',
                 'nama' => $data->nama,
                 'tgl_lahir' => is_null($data->tgl_lahir) ? null : date('Y-m-d', strtotime($data->tgl_lahir)),
                 'no_hp' => $data->hp,
