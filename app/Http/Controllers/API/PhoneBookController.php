@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\R_PhoneBook;
 use App\Models\M_Customer;
@@ -13,6 +14,13 @@ use Illuminate\Support\Facades\DB;
 
 class PhoneBookController extends Controller
 {
+    protected $log;
+
+    public function __construct(ExceptionHandling $log)
+    {
+        $this->log = $log;
+    }
+
     public function show(Request $request, $id)
     {
         try {
