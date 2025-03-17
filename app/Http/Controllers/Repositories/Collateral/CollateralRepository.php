@@ -4,10 +4,13 @@ namespace App\Http\Controllers\Repositories\Collateral;
 
 use App\Http\Controllers\Controller;
 use App\Models\M_CrCollateral;
+use App\Models\M_Credit;
+use App\Models\M_Payment;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Ramsey\Uuid\Uuid;
 
 class CollateralRepository implements CollateralInterface
 {
@@ -121,6 +124,63 @@ class CollateralRepository implements CollateralInterface
             'INVOICE_NUMBER' => $request->no_faktur ?? '',
             'STNK_VALID_DATE' => $request->tgl_stnk ?? null,
             'MOD_DATE' => Carbon::now() ?? '',
+            'MOD_BY' => $request->user()->id ?? '',
+        ];
+
+        return $findCollateralById->update($data);
+    }
+
+    function collateral_status($request, $colId)
+    {
+        $findCollateralById = $this->findCollateralById($colId);
+
+        if (!$findCollateralById) {
+            throw new Exception('Collateral Id Not Found', 404);
+        }
+
+        $credit = M_Credit::find($findCollateralById->CR_CREDIT_ID);
+
+        switch ($request->status) {
+            case 'titip':
+                $status = 'TITIP';
+                break;
+            case 'sita':
+                $status = 'SITA';
+                break;
+            case 'jual':
+                $status = 'JUAL UNIT';
+                break;
+            default:
+                $status = 'NORMAL';
+                break;
+        }
+
+        if ($request->status === 'titip' || $request->status === 'sita') {
+            if ($credit) {
+                $credit->update([
+                    'STATUS_REC' => 'RP',
+                    'MOD_DATE' => Carbon::now() ?? null,
+                    'MOD_USER' => $request->user()->id ?? '',
+                ]);
+            }
+        } elseif ($request->status === 'jual') {
+            M_Payment::create([
+                'ID' => Uuid::uuid7()->toString(),
+                'ACC_KEY' => 'JUAL UNIT',
+                'STTS_RCRD' => 'PAID',
+                'PAYMENT_METHOD' => 'cash',
+                'BRANCH' =>  $request->user()->branch_id ?? '',
+                'LOAN_NUM' => $credit->LOAN_NUMBER ?? '',
+                'ENTRY_DATE' => now(),
+                'TITLE' => 'JUAL UNIT TARIKAN',
+                'ORIGINAL_AMOUNT' => $request->harga ?? 0,
+                'USER_ID' => $user_id ?? $request->user()->id
+            ]);
+        }
+
+        $data = [
+            'STATUS' => $status,
+            'MOD_DATE' => Carbon::now() ?? null,
             'MOD_BY' => $request->user()->id ?? '',
         ];
 
