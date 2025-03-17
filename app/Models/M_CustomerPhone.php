@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 class M_CustomerPhone extends Model
 {
     use HasFactory;
-    protected $table = 'customer';
+    protected $table = 'customer_phone';
     protected $fillable = [
         'ID',
         'CUSTOMER_ID',
