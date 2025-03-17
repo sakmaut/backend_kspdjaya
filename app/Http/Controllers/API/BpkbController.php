@@ -43,8 +43,11 @@ class BpkbController extends Controller
                 case 'ondemand':
                     $allJaminan = M_CollateralView::where([
                         'LOCATION_BRANCH' => $branchCondition,
-                        'STATUS' => 'NORMAL'
-                    ]);
+                    ])
+                        ->whereIn(
+                            'STATUS',
+                            ['NORMAL', 'TITP', 'SITA']
+                        );
 
                     if (!empty($search)) {
                         $allJaminan->where('no_kontrak', $search);
