@@ -841,6 +841,12 @@ class CrSurveyController extends Controller
         DB::beginTransaction();
         try {
 
+            $checkId = M_CrSurvey::find($req->cr_prospect_id);
+
+            if (!$checkId) {
+                throw new Exception("Survey Id not Found", 1);
+            }
+
             $this->validate($req, [
                 'image' => 'required|string',
                 'type' => 'required|string',
