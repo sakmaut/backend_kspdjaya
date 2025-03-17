@@ -145,6 +145,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::post('credit_jtempo', [ReportController::class, 'kreditJatuhTempo']);
 
     Route::resource('collateral', CollateralController::class);
+    Route::post('collateral_status', [CollateralController::class, 'collateral_status']);
     Route::post('collateral_attachment', [CollateralController::class, 'uploadImage']);
     Route::post('collateral_attachment_rilis', [CollateralController::class, 'uploadImageRelease']);
     Route::post('inquiryList', [ReportController::class, 'inquiryList']);

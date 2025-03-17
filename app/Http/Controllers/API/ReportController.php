@@ -645,13 +645,12 @@ class ReportController extends Controller
                             b.LOAN_NUMBER as no_kontrak, 
                             c.NAME as debitur,
                             a.*, 
-                            coalesce(f.STATUS,'NORMAL') as status
+                            a.STATUS as status
                     FROM	cr_collateral a
                             inner join credit b on b.ID = a.CR_CREDIT_ID
                             inner join customer c on c.CUST_CODE = b.CUST_CODE
                             left join branch d on d.ID = a.COLLATERAL_FLAG
                             left join branch e on e.ID = a.LOCATION_BRANCH
-                            left join bpkb_detail f on f.COLLATERAL_ID = a.ID
                     WHERE	(1=1)";
 
             if ($request->pos && $request->pos != "SEMUA POS") {
@@ -667,11 +666,11 @@ class ReportController extends Controller
                 $sql .= "and a.POLICE_NUMBER like '%$request->nopol%";
             }
             if ($request->status) {
-                $sql .= "and coalesce(f.STATUS,'NORMAL') = '$request->status'";
+                $sql .= "and a.STATUS = '" . strtoupper($request->status) . "'";
             }
 
             $sql .= "ORDER	BY d.NAME, e.NAME, b.LOAN_NUMBER, c.NAME,
-                            a.POLICE_NUMBER, f.STATUS ";
+                            a.POLICE_NUMBER, a.STATUS ";
 
 
             $results = DB::select($sql);

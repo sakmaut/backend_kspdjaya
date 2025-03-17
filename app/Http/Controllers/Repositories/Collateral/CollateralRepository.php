@@ -2,20 +2,26 @@
 
 namespace App\Http\Controllers\Repositories\Collateral;
 
+use App\Http\Controllers\API\LocationStatus;
 use App\Http\Controllers\Controller;
 use App\Models\M_CrCollateral;
+use App\Models\M_Credit;
+use App\Models\M_Payment;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Ramsey\Uuid\Uuid;
 
 class CollateralRepository implements CollateralInterface
 {
     protected $collateralEntity;
+    protected $locationStatus;
 
-    function __construct(M_CrCollateral $collateralEntity)
+    function __construct(M_CrCollateral $collateralEntity, LocationStatus $locationStatus)
     {
         $this->collateralEntity = $collateralEntity;
+        $this->locationStatus = $locationStatus;
     }
 
     function findCollateralById($id)
@@ -122,6 +128,103 @@ class CollateralRepository implements CollateralInterface
             'STNK_VALID_DATE' => $request->tgl_stnk ?? null,
             'MOD_DATE' => Carbon::now() ?? '',
             'MOD_BY' => $request->user()->id ?? '',
+        ];
+
+        return $findCollateralById->update($data);
+    }
+
+    function collateral_status($request)
+    {
+        $colId = $request->collateral_id;
+        $findCollateralById = $this->findCollateralById($colId);
+
+        if (!$findCollateralById) {
+            throw new Exception('Collateral Id Not Found', 404);
+        }
+
+        $credit = M_Credit::find($findCollateralById->CR_CREDIT_ID);
+        $status = 'NORMAL';
+
+        switch (strtolower($request->status)) {
+            case 'titip':
+                $status = 'TITIP';
+                break;
+            case 'sita':
+                $status = 'SITA';
+                break;
+            case 'jual':
+                $status = 'JUAL';
+                break;
+        }
+
+        $now = Carbon::now();
+        $userId = $request->user()->id ?? '';
+
+        switch ($status) {
+            case 'TITIP':
+                if ($credit) {
+                    $credit->update([
+                        'STATUS_REC' => 'PU',
+                        'MOD_DATE' => $now,
+                        'MOD_USER' => $userId,
+                    ]);
+                }
+
+                $this->locationStatus->createLocationStatusLog($colId, $request->user()->branch_id, 'TITP');
+                break;
+            case 'SITA':
+                if ($credit) {
+                    $credit->update([
+                        'STATUS_REC' => 'RP',
+                        'STATUS' => 'D',
+                        'MOD_DATE' => $now,
+                        'MOD_USER' => $userId,
+                    ]);
+                }
+
+                $this->locationStatus->createLocationStatusLog($colId, $request->user()->branch_id, 'SITA');
+                break;
+
+            case 'JUAL':
+                if ($credit->STATUS_REC == 'RP') {
+                    M_Payment::create([
+                        'ID' => Uuid::uuid7()->toString(),
+                        'ACC_KEY' => 'JUAL UNIT',
+                        'STTS_RCRD' => 'PAID',
+                        'PAYMENT_METHOD' => 'cash',
+                        'BRANCH' => $request->user()->branch_id ?? '',
+                        'LOAN_NUM' => $credit->LOAN_NUMBER ?? '',
+                        'ENTRY_DATE' => now(),
+                        'TITLE' => 'JUAL UNIT TARIKAN',
+                        'ORIGINAL_AMOUNT' => $request->harga ?? 0,
+                        'USER_ID' => $userId,
+                    ]);
+
+                    $this->locationStatus->createLocationStatusLog($colId, $request->user()->branch_id, 'JUAL UNIT');
+                } else {
+                    throw new Exception("Jual Unit Not Available", 500);
+                }
+                break;
+
+            case 'NORMAL':
+                if ($credit && $credit->STATUS_REC != 'RP') {
+                    $credit->update([
+                        'STATUS_REC' => 'AC',
+                        'MOD_DATE' => $now,
+                        'MOD_USER' => $userId,
+                    ]);
+
+                    $this->locationStatus->createLocationStatusLog($colId, $request->user()->branch_id, 'NORMAL');
+                } else {
+                    throw new Exception("Credit Status Not Available", 500);
+                }
+                break;
+        }
+
+        $data = [
+            'STATUS' => $status,
+            'MOD_DATE' => $now,
+            'MOD_BY' => $userId,
         ];
 
         return $findCollateralById->update($data);
