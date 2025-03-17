@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Repositories\Collateral;
 
+use App\Http\Controllers\API\LocationStatus;
 use App\Http\Controllers\Controller;
 use App\Models\M_CrCollateral;
 use App\Models\M_Credit;
@@ -15,10 +16,12 @@ use Ramsey\Uuid\Uuid;
 class CollateralRepository implements CollateralInterface
 {
     protected $collateralEntity;
+    protected $locationStatus;
 
-    function __construct(M_CrCollateral $collateralEntity)
+    function __construct(M_CrCollateral $collateralEntity, LocationStatus $locationStatus)
     {
         $this->collateralEntity = $collateralEntity;
+        $this->locationStatus = $locationStatus;
     }
 
     function findCollateralById($id)
@@ -166,6 +169,8 @@ class CollateralRepository implements CollateralInterface
                         'MOD_USER' => $userId,
                     ]);
                 }
+
+                $this->locationStatus->createLocationStatusLog($colId, $request->user()->branch_id, 'TITP');
                 break;
             case 'SITA':
                 if ($credit) {
@@ -176,6 +181,8 @@ class CollateralRepository implements CollateralInterface
                         'MOD_USER' => $userId,
                     ]);
                 }
+
+                $this->locationStatus->createLocationStatusLog($colId, $request->user()->branch_id, 'SITA');
                 break;
 
             case 'JUAL UNIT':
@@ -192,6 +199,8 @@ class CollateralRepository implements CollateralInterface
                         'ORIGINAL_AMOUNT' => $request->harga ?? 0,
                         'USER_ID' => $userId,
                     ]);
+
+                    $this->locationStatus->createLocationStatusLog($colId, $request->user()->branch_id, 'JUAL UNIT');
                 } else {
                     throw new Exception("Jual Unit Not Available", 500);
                 }
@@ -204,6 +213,8 @@ class CollateralRepository implements CollateralInterface
                         'MOD_DATE' => $now,
                         'MOD_USER' => $userId,
                     ]);
+
+                    $this->locationStatus->createLocationStatusLog($colId, $request->user()->branch_id, 'NORMAL');
                 } else {
                     throw new Exception("Credit Status Not Available", 500);
                 }
