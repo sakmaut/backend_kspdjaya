@@ -18,8 +18,7 @@ class R_PhoneBook extends JsonResource
             'id' => $this->ID ?? '',
             'cust_code' => $this->CUST_CODE ?? '',
             'nama' => $this->NAME ?? '',
-            'alias' => !empty($this->phone_book) && isset($this->phone_book->ALIAS) ? $this->phone_book->ALIAS : '',
-            'no_hp' => !empty($this->phone_book) && isset($this->phone_book->PHONE_NUMBER) ? $this->phone_book->PHONE_NUMBER : ''
+            "phone" => $this->phone_book
         ];
     }
 }
