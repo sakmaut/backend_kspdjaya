@@ -183,6 +183,8 @@ class ReportController extends Controller
                 $results = [];
             } else {
                 $results = [
+                    'id' => $results->ID ?? '',
+                    'cust_code' => $results->CUST_CODE ?? '',
                     'pelanggan' => [
                         "nama" => $results->NAME ?? '',
                         "nama_panggilan" => $results->ALIAS ?? '',
