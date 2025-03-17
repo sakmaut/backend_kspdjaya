@@ -90,6 +90,6 @@ class M_Customer extends Model
 
     public function phone_book()
     {
-        return $this->hasMany(M_CustomerPhone::class, 'ID', 'CUSTOMER_ID');
+        return $this->hasMany(M_CustomerPhone::class, 'CUSTOMER_ID', 'ID');
     }
 }
