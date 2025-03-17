@@ -85,7 +85,7 @@ class CrAppilcationController extends Controller
                 $data->whereRaw("DATE_FORMAT(cr_survey.visit_date, '%Y-%m-%d') = ?", [$tgl_order]);
             }
 
-            if(empty($no_order) && empty($nama) && empty($tgl_order)){
+            if (empty($no_order) && empty($nama) && empty($tgl_order)) {
                 $data->whereRaw("DATE_FORMAT(cr_survey.visit_date, '%Y-%m') = ?", [Carbon::now()->format('Y-m')]);
             }
 
@@ -1140,13 +1140,11 @@ class CrAppilcationController extends Controller
                 'jenis_angsuran' => strtolower(empty($application->INSTALLMENT_TYPE) ? $cr_survey->jenis_angsuran : $application->INSTALLMENT_TYPE),
                 'tenor' => intval($application->TENOR),
                 'bunga' => $applicationDetail->INTEREST_RATE != null || $applicationDetail->INTEREST_RATE != 0 || !empty($applicationDetail->INTEREST_RATE) ? intval($applicationDetail->INTEREST_RATE)  : intval($cr_survey->interest_month),
-                'bunga_tahunan' => $applicationDetail->TOTAL_INTEREST != null || $applicationDetail->TOTAL_INTEREST != 0 || !empty($applicationDetail->TOTAL_INTEREST) ?  intval($applicationDetail->TOTAL_INTEREST)  : intval($cr_survey->interest_year),
                 "nilai_yang_diterima" => $applicationDetail->SUBMISSION_VALUE == '' ? (int) $data->plafond : (int)$applicationDetail->SUBMISSION_VALUE ?? null,
                 "biaya_admin" => $applicationDetail->NET_ADMIN != null || $applicationDetail->NET_ADMIN != 0 || !empty($applicationDetail->NET_ADMIN) ? intval($applicationDetail->NET_ADMIN)  : 0,
                 "total_admin" => $applicationDetail->TOTAL_ADMIN != null || $applicationDetail->TOTAL_ADMIN != 0 || !empty($applicationDetail->TOTAL_ADMIN) ? intval($applicationDetail->TOTAL_ADMIN)  : 0,
                 'pokok_pembayaran' => $applicationDetail->POKOK_PEMBAYARAN != null || $applicationDetail->POKOK_PEMBAYARAN != 0 || !empty($applicationDetail->POKOK_PEMBAYARAN) ? intval($applicationDetail->POKOK_PEMBAYARAN)  : intval($cr_survey->plafond),
-                "flat_rate" => $applicationDetail->FLAT_RATE != null || $applicationDetail->FLAT_RATE != 0 || !empty($applicationDetail->FLAT_RATE) ? floatval($applicationDetail->FLAT_RATE) : $this->calculateFlatRate($data->plafond,$data->tenor,$data->installment,$data->interest_year)['flat_rate']??0,
-                "angsuran" => $applicationDetail->INSTALLMENT != null || $applicationDetail->INSTALLMENT != 0 || !empty($applicationDetail->INSTALLMENT) ? intval($applicationDetail->INSTALLMENT)  : intval($data->installment??0)
+                "flat_rate" => $applicationDetail->FLAT_RATE != null || $applicationDetail->FLAT_RATE != 0 || !empty($applicationDetail->FLAT_RATE) ? floatval($applicationDetail->FLAT_RATE) : $this->calculateFlatRate($data->plafond, $data->tenor, $data->installment, $data->interest_year)['flat_rate'] ?? 0,
             ],
             'jaminan' => [],
             "prospect_approval" => [
@@ -1248,7 +1246,8 @@ class CrAppilcationController extends Controller
         return $arrayList;
     }
 
-    private function calculateFlatRate($plafond,$tenor,$angsuran,$bunga){
+    private function calculateFlatRate($plafond, $tenor, $angsuran, $bunga)
+    {
         $remainingBalance = $plafond;
         $term = $tenor;
         $set_angs = $angsuran;

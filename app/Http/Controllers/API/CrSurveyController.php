@@ -96,8 +96,6 @@ class CrSurveyController extends Controller
                 'plafond' => (int) $data->plafond ?? 0,
                 'tenor' => intval($data->tenor ?? 0),
                 'bunga' => intval($data->interest_month ?? 0),
-                // 'bunga_tahunan' => intval($data->interest_year ?? 0),
-                // 'angsuran' => intval($data->installment ?? 0),
                 'jenis_angsuran' => $data->jenis_angsuran ?? ''
             ],
             'data_nasabah' => [
