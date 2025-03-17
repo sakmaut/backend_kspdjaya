@@ -142,7 +142,7 @@ class CollateralRepository implements CollateralInterface
         $credit = M_Credit::find($findCollateralById->CR_CREDIT_ID);
         $status = 'NORMAL';
 
-        switch ($request->status) {
+        switch (strtolower($request->status)) {
             case 'titip':
                 $status = 'TITIP';
                 break;
