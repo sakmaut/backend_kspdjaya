@@ -755,8 +755,8 @@ class ListBanController extends Controller
 			 			                        else st.init_pcpl end,0),',','') AS OUTSTANDING,
 		                        replace(format(case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then cl.INTRST_ORI
 			 			                        else st.init_int end,0),',','') AS OS_BUNGA,
-                                case when coalesce(datediff(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval -1 day),st.first_arr),0) < 0 then 0
-                                    else coalesce(datediff(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval -1 day),st.first_arr),0) end as OVERDUE_AWAL, 
+                                case when coalesce(datediff(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),st.first_arr),0) < 0 then 0
+                                    else coalesce(datediff(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),st.first_arr),0) end as OVERDUE_AWAL, 
                                 replace(format(coalesce(st.arr_pcpl,0),0),',','') as AMBC_PKK_AWAL, 
                                 replace(format(coalesce(st.arr_int,0),0),',','') as AMBC_BNG_AWAL, 
                                 replace(format((coalesce(st.arr_pcpl,0)+coalesce(st.arr_int,0)),0),',','') as AMBC_TOTAL_AWAL, 
@@ -845,8 +845,8 @@ class ListBanController extends Controller
 			 			                        else st.init_pcpl end,0),',','') AS OUTSTANDING,
 		                        replace(format(case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then cl.INTRST_ORI
 			 			                        else st.init_int end,0),',','') AS OS_BUNGA,
-                                case when coalesce(datediff(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval -1 day),st.first_arr),0) < 0 then 0
-                                    else coalesce(datediff(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval -1 day),st.first_arr),0) end as OVERDUE_AWAL, 
+                                case when coalesce(datediff(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),st.first_arr),0) < 0 then 0
+                                    else coalesce(datediff(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),st.first_arr),0) end as OVERDUE_AWAL, 
                                 replace(format(coalesce(st.arr_pcpl,0),0),',','') as AMBC_PKK_AWAL, 
                                 replace(format(coalesce(st.arr_int,0),0),',','') as AMBC_BNG_AWAL, 
                                 replace(format((coalesce(st.arr_pcpl,0)+coalesce(st.arr_int,0)),0),',','') as AMBC_TOTAL_AWAL, 
