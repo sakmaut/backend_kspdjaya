@@ -1006,10 +1006,17 @@ class CrAppilcationController extends Controller
             $query->whereNull('DELETED_AT')
                 ->orWhere('DELETED_AT', '');
         })->get();
+
         $guarente_sertificat = M_CrGuaranteSertification::where('CR_SURVEY_ID', $surveyId)->where(function ($query) {
             $query->whereNull('DELETED_AT')
                 ->orWhere('DELETED_AT', '');
         })->get();
+
+        $guarente_billyet = M_CrGuaranteBillyet::where('CR_SURVEY_ID', $surveyId)->where(function ($query) {
+            $query->whereNull('DELETED_AT')
+                ->orWhere('DELETED_AT', '');
+        })->get();
+
         $approval_detail = M_ApplicationApproval::where('cr_application_id', $setApplicationId)->first();
         $cr_personal = M_CrPersonal::where('APPLICATION_ID', $setApplicationId)->first();
         $cr_personal_extra = M_CrPersonalExtra::where('APPLICATION_ID', $setApplicationId)->first();
@@ -1237,6 +1244,22 @@ class CrAppilcationController extends Controller
                     "atas_nama" => $list->ATAS_NAMA,
                     "nilai" => (int) $list->NILAI,
                     "document" => M_CrSurveyDocument::attachmentSertifikat($surveyId, $list->HEADER_ID, ['sertifikat']) ?? null,
+                ]
+            ];
+        }
+
+        foreach ($guarente_billyet as $list) {
+            $arrayList['jaminan'][] = [
+                "type" => "deposito",
+                'counter_id' => $list->HEADER_ID,
+                "atr" => [
+                    'id' => $list->ID,
+                    'status_billyet' => $list->STATUS_JAMINAN ?? '',
+                    "no_billyet" => $list->NO_BILLYET ?? '',
+                    "tgl_valuta" => $list->TGL_VALUTA ?? '',
+                    "jangka_waktu" => $list->IMB ?? '',
+                    "atas_nama" => $list->ATAS_NAMA ?? '',
+                    "nilai" => intval($list->NOMINAL ?? 0)
                 ]
             ];
         }
