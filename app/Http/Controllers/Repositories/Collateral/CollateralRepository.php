@@ -159,10 +159,19 @@ class CollateralRepository implements CollateralInterface
 
         switch ($status) {
             case 'TITIP':
+                if ($credit) {
+                    $credit->update([
+                        'STATUS_REC' => 'PU',
+                        'MOD_DATE' => $now,
+                        'MOD_USER' => $userId,
+                    ]);
+                }
+                break;
             case 'SITA':
                 if ($credit) {
                     $credit->update([
                         'STATUS_REC' => 'RP',
+                        'STATUS' => 'D',
                         'MOD_DATE' => $now,
                         'MOD_USER' => $userId,
                     ]);
@@ -185,12 +194,14 @@ class CollateralRepository implements CollateralInterface
                 break;
 
             case 'NORMAL':
-                if ($credit) {
+                if ($credit && $credit->STATUS_REC != 'RP') {
                     $credit->update([
                         'STATUS_REC' => 'AC',
                         'MOD_DATE' => $now,
                         'MOD_USER' => $userId,
                     ]);
+                } else {
+                    throw new Exception("Credit Status Not Available", 500);
                 }
                 break;
         }
