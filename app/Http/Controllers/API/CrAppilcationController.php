@@ -820,12 +820,15 @@ class CrAppilcationController extends Controller
             if (!$check_prospect_id) {
                 $generate_uuid = $uuid;
 
+                $flatRate = $this->calculateFlatRate($check_survey_id->plafond, $check_survey_id->tenor, $check_survey_id->installment, $check_survey_id->interest_year)['flat_rate'] ?? 0;
+
                 $data_cr_application = [
                     'ID' => $uuid,
                     'CR_SURVEY_ID' => $check_survey_id->id,
                     'ORDER_NUMBER' => $this->createAutoCode(M_CrApplication::class, 'ORDER_NUMBER', 'COR'),
                     'BRANCH' => $request->user()->branch_id,
                     'TENOR' => $check_survey_id->tenor ?? null,
+                    'FLAT_RATE' => $flatRate,
                     'INSTALLMENT_TYPE' => $check_survey_id->jenis_angsuran ?? null,
                     'VERSION' => 1,
                     'CREATE_DATE' => Carbon::now()->format('Y-m-d'),
