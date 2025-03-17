@@ -114,7 +114,7 @@ class CustomerController extends Controller
             return response()->json('Updated Success', 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+            return response()->json(['message' => $e->getMessage()], 500);
         }
     }
 
