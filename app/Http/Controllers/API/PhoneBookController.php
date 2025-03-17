@@ -32,7 +32,7 @@ class PhoneBookController extends Controller
 
             $dto = new R_PhoneBook($cus);
 
-            return response()->json(['message' => 'OK', 'response' => $dto], 200);
+            return response()->json($dto, 200);
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
         }
