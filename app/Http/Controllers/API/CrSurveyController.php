@@ -87,7 +87,7 @@ class CrSurveyController extends Controller
 
         $guarente_billyet = M_CrGuaranteBillyet::where('CR_SURVEY_ID', $survey_id)->where(function ($query) {
             $query->whereNull('DELETED_AT')
-            ->orWhere('DELETED_AT', '');
+                ->orWhere('DELETED_AT', '');
         })->get();
 
         $approval_detail = M_SurveyApproval::where('CR_SURVEY_ID', $survey_id)->first();
@@ -98,10 +98,10 @@ class CrSurveyController extends Controller
             'data_order' => [
                 'tujuan_kredit' => $data->tujuan_kredit,
                 'plafond' => (int) $data->plafond,
-                'tenor' => strval($data->tenor),
-                'bunga' => strval($data->interest_month),
-                'bunga_tahunan' => strval($data->interest_year),
-                'angsuran' => strval($data->installment),
+                'tenor' => intval($data->tenor),
+                'bunga' => intval($data->interest_month),
+                'bunga_tahunan' => intval($data->interest_year),
+                'angsuran' => intval($data->installment),
                 'category' => $data->category,
                 'jenis_angsuran' => $data->jenis_angsuran
             ],
@@ -201,7 +201,7 @@ class CrSurveyController extends Controller
                     "tgl_valuta" => $list->TGL_VALUTA ?? '',
                     "jangka_waktu" => $list->IMB ?? '',
                     "atas_nama" => $list->ATAS_NAMA ?? '',
-                    "nilai" => intval($list->NOMINAL?? 0)
+                    "nilai" => intval($list->NOMINAL ?? 0)
                 ]
             ];
         }
@@ -281,7 +281,7 @@ class CrSurveyController extends Controller
 
             if (collect($request->jaminan)->isNotEmpty()) {
                 $this->insert_guarante($request);
-            }else{
+            } else {
                 $update = M_CrSurvey::find($request->id);
                 if ($update) {
                     $update->update(['collateral_type' => 'KTA']);
@@ -450,7 +450,7 @@ class CrSurveyController extends Controller
                             'JANGKA_WAKTU' => $result['atr']['jangka_waktu'] ?? null,
                             'ATAS_NAMA' => $result['atr']['atas_nama'] ?? '',
                             'NOMINAL' => $result['atr']['nilai'] ?? 0,
-                            'COLLATERAL_FLAG' => $request->user()->branch_id??'',
+                            'COLLATERAL_FLAG' => $request->user()->branch_id ?? '',
                             'VERSION' => 1,
                             'CREATE_DATE' => $this->timeNow,
                             'CREATE_BY' => $request->user()->id,
@@ -460,7 +460,6 @@ class CrSurveyController extends Controller
 
                         break;
                 }
-                
             }
 
             $update = M_CrSurvey::find($request->id);
