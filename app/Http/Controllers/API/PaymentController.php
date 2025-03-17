@@ -605,10 +605,6 @@ class PaymentController extends Controller
         DB::beginTransaction();
         try {
 
-            if (empty($req->uid)) {
-                throw new Exception('Payment ID (uid) is required and cannot be empty.');
-            }
-
             if (preg_match('/^data:image\/(\w+);base64,/', $req->image, $type)) {
                 $data = substr($req->image, strpos($req->image, ',') + 1);
                 $data = base64_decode($data);
@@ -623,10 +619,12 @@ class PaymentController extends Controller
 
                 $url = URL::to('/') . '/storage/' . 'Payment/' . $fileName;
 
+                $uidGnerate = Uuid::uuid7()->toString();
+
                 // Prepare data for database insertion
                 $data_array_attachment = [
                     'id' => Uuid::uuid4()->toString(),
-                    'payment_id' => $req->uid,
+                    'payment_id' => $req->uid ?? $uidGnerate,
                     'file_attach' => $url ?? '',
                     'create_by' => $req->user()->id ?? '',
                     'create_position' => $req->user()->position ?? '',
