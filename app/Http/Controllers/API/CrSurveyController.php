@@ -63,12 +63,9 @@ class CrSurveyController extends Controller
             $check = $this->CrSurvey->where('id', $id)->whereNull('deleted_at')->firstOrFail();
 
             return response()->json($this->resourceDetail($check), 200);
-        } catch (ModelNotFoundException $e) {
-            ActivityLogger::logActivity($req, 'Data Not Found', 404);
-            return response()->json(['message' => 'Data Not Found', "status" => 404], 404);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($req, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+            return response()->json(['message' => $e->getMessage()], 500);
         }
     }
 
