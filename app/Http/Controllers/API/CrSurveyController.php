@@ -836,17 +836,8 @@ class CrSurveyController extends Controller
     {
         DB::beginTransaction();
         try {
-
-            $checkId = M_CrSurvey::find($req->cr_prospect_id);
-
-            if (!$checkId) {
-                throw new Exception("Survey Id not Found", 1);
-            }
-
             $this->validate($req, [
-                'image' => 'required|string',
-                'type' => 'required|string',
-                'cr_prospect_id' => 'required|string'
+                'image' => 'required|string'
             ]);
 
             // Decode the base64 string
@@ -872,7 +863,7 @@ class CrSurveyController extends Controller
                 // Prepare data for database insertion
                 $data_array_attachment = [
                     'ID' => Uuid::uuid4()->toString(),
-                    'CR_SURVEY_ID' => $req->cr_prospect_id,
+                    'CR_SURVEY_ID' => $req->cr_prospect_id ?? $req->uid,
                     'TYPE' => $req->type,
                     'COUNTER_ID' => isset($req->reff) ? $req->reff : '',
                     'PATH' => $url ?? '',
