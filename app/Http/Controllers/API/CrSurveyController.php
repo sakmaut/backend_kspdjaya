@@ -324,6 +324,7 @@ class CrSurveyController extends Controller
             'city' => $request->data_nasabah['kota'] ?? '',
             'kecamatan' => $request->data_nasabah['kecamatan'] ?? '',
             'kelurahan' => $request->data_nasabah['kelurahan'] ?? '',
+            'zip_code' => $request->data_nasabah['kode_pos'] ?? '',
             "work_period" => $request->data_survey['lama_bekerja'] ?? '',
             "income_personal" => $request->data_survey['pendapatan_pribadi'] ?? '',
             "income_spouse" =>  $request->data_survey['pendapatan_pasangan'] ?? '',
