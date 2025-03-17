@@ -667,7 +667,7 @@ class ReportController extends Controller
                 $sql .= "and a.POLICE_NUMBER like '%$request->nopol%";
             }
             if ($request->status) {
-                $sql .= "and coalesce(f.STATUS,'NORMAL') = '$request->status'";
+                $sql .= "and f.STATUS = '$request->status'";
             }
 
             $sql .= "ORDER	BY d.NAME, e.NAME, b.LOAN_NUMBER, c.NAME,
