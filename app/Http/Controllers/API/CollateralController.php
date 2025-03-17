@@ -76,11 +76,11 @@ class CollateralController extends Controller
         }
     }
 
-    public function collateral_status(Request $request, $id)
+    public function collateral_status(Request $request)
     {
         DB::beginTransaction();
         try {
-            $this->collateralRepository->collateral_status($request, $id);
+            $this->collateralRepository->collateral_status($request);
 
             DB::commit();
             return response()->json(['message' => 'updated successfully'], 200);

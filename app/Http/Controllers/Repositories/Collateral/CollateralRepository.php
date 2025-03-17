@@ -130,8 +130,9 @@ class CollateralRepository implements CollateralInterface
         return $findCollateralById->update($data);
     }
 
-    function collateral_status($request, $colId)
+    function collateral_status($request)
     {
+        $colId = $request->collateral_id;
         $findCollateralById = $this->findCollateralById($colId);
 
         if (!$findCollateralById) {
@@ -139,6 +140,7 @@ class CollateralRepository implements CollateralInterface
         }
 
         $credit = M_Credit::find($findCollateralById->CR_CREDIT_ID);
+        $status = 'NORMAL';
 
         switch ($request->status) {
             case 'titip':
@@ -150,38 +152,53 @@ class CollateralRepository implements CollateralInterface
             case 'jual':
                 $status = 'JUAL UNIT';
                 break;
-            default:
-                $status = 'NORMAL';
-                break;
         }
 
-        if ($request->status === 'titip' || $request->status === 'sita') {
-            if ($credit) {
-                $credit->update([
-                    'STATUS_REC' => 'RP',
-                    'MOD_DATE' => Carbon::now() ?? null,
-                    'MOD_USER' => $request->user()->id ?? '',
+        $now = Carbon::now();
+        $userId = $request->user()->id ?? '';
+
+        switch ($status) {
+            case 'TITIP':
+            case 'SITA':
+                if ($credit) {
+                    $credit->update([
+                        'STATUS_REC' => 'RP',
+                        'MOD_DATE' => $now,
+                        'MOD_USER' => $userId,
+                    ]);
+                }
+                break;
+
+            case 'JUAL UNIT':
+                M_Payment::create([
+                    'ID' => Uuid::uuid7()->toString(),
+                    'ACC_KEY' => 'JUAL UNIT',
+                    'STTS_RCRD' => 'PAID',
+                    'PAYMENT_METHOD' => 'cash',
+                    'BRANCH' => $request->user()->branch_id ?? '',
+                    'LOAN_NUM' => $credit->LOAN_NUMBER ?? '',
+                    'ENTRY_DATE' => now(),
+                    'TITLE' => 'JUAL UNIT TARIKAN',
+                    'ORIGINAL_AMOUNT' => $request->harga ?? 0,
+                    'USER_ID' => $userId,
                 ]);
-            }
-        } elseif ($request->status === 'jual') {
-            M_Payment::create([
-                'ID' => Uuid::uuid7()->toString(),
-                'ACC_KEY' => 'JUAL UNIT',
-                'STTS_RCRD' => 'PAID',
-                'PAYMENT_METHOD' => 'cash',
-                'BRANCH' =>  $request->user()->branch_id ?? '',
-                'LOAN_NUM' => $credit->LOAN_NUMBER ?? '',
-                'ENTRY_DATE' => now(),
-                'TITLE' => 'JUAL UNIT TARIKAN',
-                'ORIGINAL_AMOUNT' => $request->harga ?? 0,
-                'USER_ID' => $user_id ?? $request->user()->id
-            ]);
+                break;
+
+            case 'NORMAL':
+                if ($credit) {
+                    $credit->update([
+                        'STATUS_REC' => 'AC',
+                        'MOD_DATE' => $now,
+                        'MOD_USER' => $userId,
+                    ]);
+                }
+                break;
         }
 
         $data = [
             'STATUS' => $status,
-            'MOD_DATE' => Carbon::now() ?? null,
-            'MOD_BY' => $request->user()->id ?? '',
+            'MOD_DATE' => $now,
+            'MOD_BY' => $userId,
         ];
 
         return $findCollateralById->update($data);
