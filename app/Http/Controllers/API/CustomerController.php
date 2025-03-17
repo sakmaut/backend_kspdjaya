@@ -62,8 +62,8 @@ class CustomerController extends Controller
             }
 
             $data = [
-                'NAME' => $request->pelanggan['nama'],
-                'ALIAS' => $request->pelanggan['nama_panggilan'],
+                'NAME' => $request->nama,
+                'ALIAS' => $request->nama_panggilan,
                 // 'GENDER' => $request->pelanggan['jenis_kelamin'],
                 // 'BIRTHPLACE' => $request->pelanggan['tempat_lahir'],
                 // 'BIRTHDATE' => date('Y-m-d', strtotime($request->pelanggan['tgl_lahir'])),
