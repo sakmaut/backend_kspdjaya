@@ -44,7 +44,6 @@ class CustomerController extends Controller
                 return $customer;
             });
 
-            ActivityLogger::logActivity($request, "Success", 200);
             return response()->json($customers, 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
@@ -340,7 +339,6 @@ class CustomerController extends Controller
 
     public function getCollateralDocument($creditID, $param)
     {
-
         $documents = DB::table('cr_collateral_document')
             ->whereIn('TYPE', $param)
             ->where('COLLATERAL_ID', '=', $creditID)

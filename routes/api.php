@@ -23,6 +23,7 @@ use App\Http\Controllers\API\{
     LogPrintController,
     PelunasanController,
     PelunasanController2,
+    PhoneBookController,
     ReportController,
     TaskPusher,
     TaskController
@@ -154,6 +155,8 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::post('listBanTest', [ListBanController::class, 'listBanTest']);
 
     Route::post('lap_pembayaran', [ReportController::class, 'lapPembayaran']);
+
+    Route::resource('phone_book', PhoneBookController::class);
 });
 
 

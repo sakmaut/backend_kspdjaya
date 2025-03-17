@@ -78,15 +78,18 @@ class M_Customer extends Model
         });
     }
 
-    // In M_Customer model
     public function credit()
     {
         return $this->hasMany(M_Credit::class, 'CUST_CODE', 'CUST_CODE');
     }
 
-    // In M_Credit model
     public function collateral()
     {
         return $this->hasMany(M_CrCollateral::class, 'CR_CREDIT_ID', 'ID');
+    }
+
+    public function phone_book()
+    {
+        return $this->hasMany(M_CustomerPhone::class, 'CUSTOMER_ID');
     }
 }
