@@ -153,7 +153,7 @@ class CollateralRepository implements CollateralInterface
                 $status = 'SITA';
                 break;
             case 'jual':
-                $status = 'JUAL UNIT';
+                $status = 'JUAL';
                 break;
         }
 
@@ -185,7 +185,7 @@ class CollateralRepository implements CollateralInterface
                 $this->locationStatus->createLocationStatusLog($colId, $request->user()->branch_id, 'SITA');
                 break;
 
-            case 'JUAL UNIT':
+            case 'JUAL':
                 if ($credit->STATUS_REC == 'RP') {
                     M_Payment::create([
                         'ID' => Uuid::uuid7()->toString(),
