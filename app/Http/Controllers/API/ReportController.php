@@ -175,7 +175,7 @@ class ReportController extends Controller
         try {
             $results = DB::table('customer as a')
                 ->leftJoin('customer_extra as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
-                ->select('a.*', 'b.*')
+                ->select('a.ID as idCust', 'a.*', 'b.*')
                 ->where('a.ID', $id)
                 ->first();
 
@@ -183,7 +183,7 @@ class ReportController extends Controller
                 $results = [];
             } else {
                 $results = [
-                    'id' => $results->ID ?? '',
+                    'id' => $results->idCust ?? '',
                     'cust_code' => $results->CUST_CODE ?? '',
                     'pelanggan' => [
                         "nama" => $results->NAME ?? '',
