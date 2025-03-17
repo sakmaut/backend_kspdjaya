@@ -619,10 +619,12 @@ class PaymentController extends Controller
 
                 $url = URL::to('/') . '/storage/' . 'Payment/' . $fileName;
 
+                $uidGnerate = Uuid::uuid7()->toString();
+
                 // Prepare data for database insertion
                 $data_array_attachment = [
                     'id' => Uuid::uuid4()->toString(),
-                    'payment_id' => $req->uid,
+                    'payment_id' => $req->uid ?? $uidGnerate,
                     'file_attach' => $url ?? '',
                     'create_by' => $req->user()->id ?? '',
                     'create_position' => $req->user()->position ?? '',
