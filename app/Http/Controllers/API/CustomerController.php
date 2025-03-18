@@ -55,7 +55,7 @@ class CustomerController extends Controller
     {
         try {
 
-            $findCustomerById = M_Customer::find($id);
+            $findCustomerById = M_Customer::find($request->id);
 
             if (!$findCustomerById) {
                 throw new Exception("Customer Id Not Found", 404);
