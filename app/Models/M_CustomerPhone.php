@@ -32,4 +32,9 @@ class M_CustomerPhone extends Model
             }
         });
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'CREATED_BY', 'id');
+    }
 }

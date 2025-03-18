@@ -24,7 +24,7 @@ class PhoneBookController extends Controller
     public function show(Request $request, $id)
     {
         try {
-            $cus = M_Customer::with('phone_book')->find($id);
+            $cus = M_Customer::with('phone_book.user')->find($id);
 
             if (!$cus) {
                 throw new Exception("Customer Id Not Found", 404);

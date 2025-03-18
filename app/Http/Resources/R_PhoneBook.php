@@ -14,11 +14,23 @@ class R_PhoneBook extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $phones = [];
+        foreach ($this->phone_book as $list) {
+            $data = [
+                "PHONE_NUMBER" => $list->PHONE_NUMBER ?? '',
+                'ALIAS' => $list->ALIAS,
+                'CREATED_BY' => $list->user->fullname,
+                'CREATED_AT' => $list->CREATED_AT,
+            ];
+
+            $phones[] = $data;
+        }
+
         return [
             'id' => $this->ID ?? '',
             'cust_code' => $this->CUST_CODE ?? '',
             'nama' => $this->NAME ?? '',
-            "phone" => $this->phone_book
+            'phone' => $phones,
         ];
     }
 }
