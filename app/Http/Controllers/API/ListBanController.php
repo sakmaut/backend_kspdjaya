@@ -760,11 +760,11 @@ class ListBanController extends Controller
                                 replace(format(coalesce(st.arr_pcpl,0),0),',','') as AMBC_PKK_AWAL, 
                                 replace(format(coalesce(st.arr_int,0),0),',','') as AMBC_BNG_AWAL, 
                                 replace(format((coalesce(st.arr_pcpl,0)+coalesce(st.arr_int,0)),0),',','') as AMBC_TOTAL_AWAL, 
-                                concat('C',case when date_format(cl.entry_date,'%m%Y')=:period then 'N'
+                                concat('C',case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then 'N'
                                                 when case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'MUSIMAN' 
-                                                        and date_format(st.first_arr,'%m%Y')=date_format(date_add(str_to_date(concat('01',:period),'%d%m%Y'),interval 1 month),'%m%Y') then 'N' 
-                                                when st.first_arr>=date_add(str_to_date(concat('01',:period),'%d%m%Y'),interval 2 month) then 'N' 
-                                                when st.first_arr > date_add(date_add(str_to_date(concat('01',:period),'%d%m%Y'),interval 1 month),interval -1 day) 
+                                                        and date_format(st.first_arr,'%m%Y')=date_format(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),'%m%Y') then 'N' 
+                                                when st.first_arr>=date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 2 month) then 'N' 
+                                                when st.first_arr > date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day) 
                                                         and case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'REGULER'  then 'M' 
                                                 when st.arr_count > 8 then 'X'
                                                 else st.arr_count end) AS CYCLE_AWAL, 
@@ -789,11 +789,11 @@ class ListBanController extends Controller
                                 replace(format(coalesce(py.this_pcpl,0),0),',','') AC_PKK, 
                                 replace(format(coalesce(py.this_int,0),0),',','') AC_BNG_MRG, 
                                 replace(format(coalesce(py.this_pcpl,0)+coalesce(py.this_int,0),0),',','') AC_TOTAL, 
-                                concat('C',case when date_format(cl.entry_date,'%m%Y')=:period then 'N'
+                                concat('C',case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then 'N'
                                                 when case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'MUSIMAN' 
-                                                        and date_format(en.first_arr,'%m%Y')=date_format(date_add(str_to_date(concat('01',:period),'%d%m%Y'),interval 1 month),'%m%Y') then 'N' 
-                                                when en.first_arr>=date_add(str_to_date(concat('01',:period),'%d%m%Y'),interval 2 month) then 'N' 
-                                                when en.first_arr > date_add(date_add(str_to_date(concat('01',:period),'%d%m%Y'),interval 1 month),interval -1 day) 
+                                                        and date_format(en.first_arr,'%m%Y')=date_format(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),'%m%Y') then 'N' 
+                                                when en.first_arr>=date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 2 month) then 'N' 
+                                                when en.first_arr > date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day) 
                                                         and case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'REGULER'  then 'M' 
                                                 when en.arr_count > 8 then 'X'
                                                 when cl.STATUS <> 'A' then 'L'
@@ -858,11 +858,11 @@ class ListBanController extends Controller
                                 replace(format(coalesce(st.arr_pcpl,0),0),',','') as AMBC_PKK_AWAL, 
                                 replace(format(coalesce(st.arr_int,0),0),',','') as AMBC_BNG_AWAL, 
                                 replace(format((coalesce(st.arr_pcpl,0)+coalesce(st.arr_int,0)),0),',','') as AMBC_TOTAL_AWAL, 
-                                concat('C',case when date_format(cl.entry_date,'%m%Y')=:period then 'N'
+                                concat('C',case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then 'N'
                                                 when case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'MUSIMAN' 
-                                                        and date_format(st.first_arr,'%m%Y')=date_format(date_add(str_to_date(concat('01',:period),'%d%m%Y'),interval 1 month),'%m%Y') then 'N' 
-                                                when st.first_arr>=date_add(str_to_date(concat('01',:period),'%d%m%Y'),interval 2 month) then 'N' 
-                                                when st.first_arr > date_add(date_add(str_to_date(concat('01',:period),'%d%m%Y'),interval 1 month),interval -1 day) 
+                                                        and date_format(st.first_arr,'%m%Y')=date_format(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),'%m%Y') then 'N' 
+                                                when st.first_arr>=date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 2 month) then 'N' 
+                                                when st.first_arr > date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day) 
                                                         and case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'REGULER'  then 'M' 
                                                 when st.arr_count > 8 then 'X'
                                                 else st.arr_count end) AS CYCLE_AWAL, 
@@ -887,11 +887,11 @@ class ListBanController extends Controller
                                 replace(format(coalesce(py.this_pcpl,0),0),',','') AC_PKK, 
                                 replace(format(coalesce(py.this_int,0),0),',','') AC_BNG_MRG, 
                                 replace(format(coalesce(py.this_pcpl,0)+coalesce(py.this_int,0),0),',','') AC_TOTAL, 
-                                concat('C',case when date_format(cl.entry_date,'%m%Y')=:period then 'N'
+                                concat('C',case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then 'N'
                                                 when case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'MUSIMAN' 
-                                                        and date_format(en.first_arr,'%m%Y')=date_format(date_add(str_to_date(concat('01',:period),'%d%m%Y'),interval 1 month),'%m%Y') then 'N' 
-                                                when en.first_arr>=date_add(str_to_date(concat('01',:period),'%d%m%Y'),interval 2 month) then 'N' 
-                                                when en.first_arr > date_add(date_add(str_to_date(concat('01',:period),'%d%m%Y'),interval 1 month),interval -1 day) 
+                                                        and date_format(en.first_arr,'%m%Y')=date_format(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),'%m%Y') then 'N' 
+                                                when en.first_arr>=date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 2 month) then 'N' 
+                                                when en.first_arr > date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day) 
                                                         and case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'REGULER'  then 'M' 
                                                 when en.arr_count > 8 then 'X'
                                                 when cl.STATUS <> 'A' then 'L'
