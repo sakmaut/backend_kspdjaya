@@ -49,7 +49,7 @@ class Welcome extends Controller
     public function index(Request $req)
     {
         $return = $this->generateAmortizationSchedule('2025-01-02');
-        return response()->json($return,200);
+        return response()->json($return, 200);
         die;
     }
 
@@ -60,29 +60,31 @@ class Welcome extends Controller
             // $tenor = intval($request->tenor);
             // $annual_interest_rate = intval($request->bunga);
 
-            $plafond = intval(1000000);
-            $tenor = intval(6);
-            $annual_interest_rate = intval(24);
+            // $plafond = intval(1000000);
+            // $tenor = intval(6);
+            // $annual_interest_rate = intval(24);
 
-            $interest_margin = ($plafond * $annual_interest_rate / 100) * $tenor / 12;
+            // $interest_margin = ($plafond * $annual_interest_rate / 100) * $tenor / 12;
 
-            $angsuran_calc = ($plafond + $interest_margin) / $tenor;
+            // $angsuran_calc = ($plafond + $interest_margin) / $tenor;
 
-            $setAngsuran = ceil(round($angsuran_calc, 3) / 1000) * 1000;
+            // $setAngsuran = ceil(round($angsuran_calc, 3) / 1000) * 1000;
 
-            $flat_rate = ($interest_margin / $plafond) * 100;
+            // $flat_rate = ($interest_margin / $plafond) * 100;
 
-            $monthly_interest_rate = ($annual_interest_rate / 100) / 12;
-            $eff_rate = (pow(1 + $monthly_interest_rate, $tenor) - 1) * 100;
+            // $monthly_interest_rate = ($annual_interest_rate / 100) / 12;
+            // $eff_rate = (pow(1 + $monthly_interest_rate, $tenor) - 1) * 100;
 
-            $total_bunga = round($interest_margin, 2);
+            // $total_bunga = round($interest_margin, 2);
 
-            $tenorData['angsuran'] = $setAngsuran;
-            $tenorData['flat_rate'] = round($flat_rate, 2);
-            $tenorData['eff_rate'] = round($eff_rate, 2);
-            $tenorData['total_bunga'] = $total_bunga;
+            // $tenorData['angsuran'] = $setAngsuran;
+            // $tenorData['flat_rate'] = round($flat_rate, 2);
+            // $tenorData['eff_rate'] = round($eff_rate, 2);
+            // $tenorData['total_bunga'] = $total_bunga;
 
-            return response()->json($tenorData, 200);
+            $generateCredit = $this->generateAmortizationSchedule('2025-02-25');
+
+            return response()->json($generateCredit, 200);
         } catch (Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);
         }
@@ -93,10 +95,10 @@ class Welcome extends Controller
         $schedule = [];
         $totalBunga = 12;
 
-        $remainingBalance = 1000000;
-        $term = 6;
+        $remainingBalance = 800000;
+        $term = 60;
         $set_angs = 187000;
-        $angsuran=ceil(round($set_angs, 3) / 1000) * 1000;
+        $angsuran = ceil(round($set_angs, 3) / 1000) * 1000;
 
         $flat_rate = excelRate($term, -$angsuran, $remainingBalance);
         $total_bunga = round(($remainingBalance * (24 / 100) / 12) * $term, 2);
