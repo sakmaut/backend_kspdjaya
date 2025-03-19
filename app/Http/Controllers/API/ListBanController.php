@@ -793,7 +793,7 @@ class ListBanController extends Controller
                                 replace(format(coalesce(py.this_pcpl,0)+coalesce(py.this_int,0),0),',','') AC_TOTAL, 
                                 concat('C',case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then 'N'
                                                 when replace(format(case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then cl.PCPL_ORI
-			 			                                            else st.init_pcpl end,0),',','')=0 then 'L'
+			 			                                            else en.init_pcpl end,0),',','')=0 then 'L'
                                                 when case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'MUSIMAN' 
                                                         and date_format(en.first_arr,'%m%Y')=date_format(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),'%m%Y') then 'N' 
                                                 when en.first_arr>=date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 2 month) then 'N' 
@@ -895,7 +895,7 @@ class ListBanController extends Controller
                                 replace(format(coalesce(py.this_pcpl,0)+coalesce(py.this_int,0),0),',','') AC_TOTAL, 
                                 concat('C',case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then 'N'
                                                 when replace(format(case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then cl.PCPL_ORI
-			 			                                            else st.init_pcpl end,0),',','')=0 then 'L'
+			 			                                            else en.init_pcpl end,0),',','')=0 then 'L'
                                                 when case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'MUSIMAN' 
                                                         and date_format(en.first_arr,'%m%Y')=date_format(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),'%m%Y') then 'N' 
                                                 when en.first_arr>=date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 2 month) then 'N' 

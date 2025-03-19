@@ -744,7 +744,7 @@ class PelunasanController extends Controller
                 $remainingToPay = $getAmount - $valBefore;
 
                 if ($remainingPayment >= $remainingToPay) {
-                    $newPaymentValue = $getAmount;
+                    $newPaymentValue = $getAmount - $valBefore;
                     $remainingPayment -= $remainingToPay;
                 } else {
                     $newPaymentValue = $valBefore + $remainingPayment;
