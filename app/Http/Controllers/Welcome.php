@@ -95,47 +95,49 @@ class Welcome extends Controller
         $schedule = [];
         $totalBunga = 12;
 
-        $remainingBalance = 800000;
+        $remainingBalance = 1025000;
         $term = 60;
         $set_angs = 187000;
         $angsuran = ceil(round($set_angs, 3) / 1000) * 1000;
 
         $flat_rate = excelRate($term, -$angsuran, $remainingBalance);
-        $total_bunga = round(($remainingBalance * (24 / 100) / 12) * $term, 2);
+
+        $suku_bunga = (($totalBunga * ($angsuran - ($remainingBalance / $term))) / $remainingBalance) * 100;
+        $total_bunga = round(($remainingBalance * ($suku_bunga / 100) / 12) * $term, 2);
 
         $suku_bunga_konversi = $flat_rate;
         $ttal_bunga = $total_bunga;
 
         $totalInterestPaid = 0;
 
-        for ($i = 1; $i <= $term; $i++) {
-            $interest = round($remainingBalance * $suku_bunga_konversi, 2);
+        // for ($i = 1; $i <= $term; $i++) {
+        //     $interest = round($remainingBalance * $suku_bunga_konversi, 2);
 
-            if ($i < $term) {
-                $principalPayment = round($angsuran - $interest, 2);
-            } else {
-                $principalPayment = round($remainingBalance, 2);
-                $interest = round($ttal_bunga - $totalInterestPaid, 2);
-            }
+        //     if ($i < $term) {
+        //         $principalPayment = round($angsuran - $interest, 2);
+        //     } else {
+        //         $principalPayment = round($remainingBalance, 2);
+        //         $interest = round($ttal_bunga - $totalInterestPaid, 2);
+        //     }
 
-            $totalPayment = round($principalPayment + $interest, 2);
-            $remainingBalance = round($remainingBalance - $principalPayment, 2);
-            $totalInterestPaid += $interest;
-            if ($i == $term) {
-                $remainingBalance = 0.00;
-            }
+        //     $totalPayment = round($principalPayment + $interest, 2);
+        //     $remainingBalance = round($remainingBalance - $principalPayment, 2);
+        //     $totalInterestPaid += $interest;
+        //     if ($i == $term) {
+        //         $remainingBalance = 0.00;
+        //     }
 
-            $schedule[] = [
-                'angsuran_ke' => $i,
-                'tgl_angsuran' => setPaymentDate($setDate, $i),
-                'baki_debet_awal' => floatval($remainingBalance + $principalPayment),
-                'pokok' => floatval($principalPayment),
-                'bunga' => floatval($interest),
-                'total_angsuran' => floatval($totalPayment),
-                'baki_debet' => floatval($remainingBalance)
-            ];
-        }
+        //     $schedule[] = [
+        //         'angsuran_ke' => $i,
+        //         'tgl_angsuran' => setPaymentDate($setDate, $i),
+        //         'baki_debet_awal' => floatval($remainingBalance + $principalPayment),
+        //         'pokok' => floatval($principalPayment),
+        //         'bunga' => floatval($interest),
+        //         'total_angsuran' => floatval($totalPayment),
+        //         'baki_debet' => floatval($remainingBalance)
+        //     ];
+        // }
 
-        return $schedule;
+        return $suku_bunga;
     }
 }
