@@ -791,8 +791,8 @@ class ListBanController extends Controller
                                 replace(format(coalesce(py.this_pcpl,0),0),',','') AC_PKK, 
                                 replace(format(coalesce(py.this_int,0),0),',','') AC_BNG_MRG, 
                                 replace(format(coalesce(py.this_pcpl,0)+coalesce(py.this_int,0),0),',','') AC_TOTAL, 
-                                concat('C',case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then 'N'
-                                                when cl.STATUS <> 'A' then 'L'
+                                concat('C',case when cl.STATUS <> 'A' then 'L'
+                                                when date_format(cl.entry_date,'%m%Y')='$dateFrom' then 'N'
                                                 when replace(format(case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then cl.PCPL_ORI
 			 			                                            else en.init_pcpl end,0),',','')=0 then 'L'
                                                 when case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'MUSIMAN' 
@@ -893,8 +893,8 @@ class ListBanController extends Controller
                                 replace(format(coalesce(py.this_pcpl,0),0),',','') AC_PKK, 
                                 replace(format(coalesce(py.this_int,0),0),',','') AC_BNG_MRG, 
                                 replace(format(coalesce(py.this_pcpl,0)+coalesce(py.this_int,0),0),',','') AC_TOTAL, 
-                                concat('C',case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then 'N'
-                                                when cl.STATUS <> 'A' then 'L'
+                                concat('C',case when cl.STATUS <> 'A' then 'L'
+                                                when date_format(cl.entry_date,'%m%Y')='$dateFrom' then 'N'
                                                 when replace(format(case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then cl.PCPL_ORI
 			 			                                            else en.init_pcpl end,0),',','')=0 then 'L'
                                                 when case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'MUSIMAN' 
