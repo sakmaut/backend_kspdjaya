@@ -143,6 +143,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::get('paymentReport/{id}', [ReportController::class, 'pembayaran']);
     Route::get('arrearsReport/{id}', [ReportController::class, 'tunggakkan']);
     Route::get('collateral_report', [ReportController::class, 'collateralAllReport']);
+    Route::get('phonebookReport', [ReportController::class, 'phonebookReport']);
     Route::post('credit_jtempo', [ReportController::class, 'kreditJatuhTempo']);
 
     Route::resource('collateral', CollateralController::class);

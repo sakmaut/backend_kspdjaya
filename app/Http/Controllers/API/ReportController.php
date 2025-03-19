@@ -851,4 +851,75 @@ class ReportController extends Controller
 
         return $documents;
     }
+
+    public function phonebookReport(Request $request)
+    {
+        try {
+            $sql = "SELECT	d.NAME as pos_pencairan, 
+                            e.NAME as posisi_berkas,
+                            b.LOAN_NUMBER as no_kontrak, 
+                            c.NAME as debitur,
+                            a.*, 
+                            a.STATUS as status
+                    FROM	cr_collateral a
+                            inner join credit b on b.ID = a.CR_CREDIT_ID
+                            inner join customer c on c.CUST_CODE = b.CUST_CODE
+                            left join branch d on d.ID = a.COLLATERAL_FLAG
+                            left join branch e on e.ID = a.LOCATION_BRANCH
+                    WHERE	(1=1)";
+
+            if ($request->pos && $request->pos != "SEMUA POS") {
+                $sql .= "and d.NAME like '%$request->pos%'";
+            }
+            if ($request->loan_number) {
+                $sql .= "and b.LOAN_NUMBER = '$request->loan_number'";
+            }
+            if ($request->nama) {
+                $sql .= "and c.NAME like '%$request->nama%'";
+            }
+            if ($request->nopol) {
+                $sql .= "and a.POLICE_NUMBER like '%$request->nopol%";
+            }
+            if ($request->status) {
+                $sql .= "and a.STATUS = '" . strtoupper($request->status) . "'";
+            }
+
+            $sql .= "ORDER	BY d.NAME, e.NAME, b.LOAN_NUMBER, c.NAME,
+                            a.POLICE_NUMBER, a.STATUS ";
+
+
+            $results = DB::select($sql);
+
+            $allData = [];
+            foreach ($results as $result) {
+
+                $allData[] = [
+                    'pos_pencairan' => $result->pos_pencairan ?? '',
+                    'posisi_berkas' => $result->posisi_berkas ?? '',
+                    'no_kontrak' => $result->no_kontrak ?? '',
+                    'nama_debitur' => $result->debitur ?? '',
+                    "tipe" => $result->TYPE,
+                    "merk" => $result->BRAND,
+                    "tahun" => $result->PRODUCTION_YEAR,
+                    "warna" => $result->COLOR,
+                    "atas_nama" => $result->ON_BEHALF,
+                    'no_polisi' => $result->POLICE_NUMBER ?? '',
+                    "no_rangka" => $result->CHASIS_NUMBER ?? '',
+                    "no_mesin" => $result->ENGINE_NUMBER ?? '',
+                    "no_bpkb" => $result->BPKB_NUMBER ?? '',
+                    "no_stnk" => $result->STNK_NUMBER ?? '',
+                    "tgl_stnk" => $result->STNK_VALID_DATE ?? '',
+                    "nilai" => (int) $result->VALUE ?? '',
+                    'status' => $result->status ?? '',
+                    "document" => $this->getCollateralDocument($result->ID, ['no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri']) ?? null,
+                    "document_rilis" => $this->attachmentRelease($result->ID, "'doc_rilis'") ?? null,
+                ];
+            }
+
+            return response()->json($allData, 200);
+        } catch (\Exception $e) {
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+        }
+    }
 }

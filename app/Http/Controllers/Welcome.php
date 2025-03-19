@@ -52,7 +52,7 @@ class Welcome extends Controller
         try {
 
             // $inv = $req->no_invoice;
-            $inv = 'INV-JTB75-250200089';
+            $inv = 'INV-LEA111-250200156';
 
             $queryAngsuran = "  SELECT  a.NO_TRANSAKSI,
                                 a.LOAN_NUMBER,
