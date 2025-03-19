@@ -790,7 +790,7 @@ class ListBanController extends Controller
                                 replace(format(coalesce(en.arr_pcpl,0)+coalesce(en.arr_int,0),0),',','') as AMBC_TOTAL_AKHIR, 
                                 replace(format(coalesce(py.this_pcpl,0),0),',','') AC_PKK, 
                                 replace(format(coalesce(py.this_int,0),0),',','') AC_BNG_MRG, 
-                                replace(format(coalesce(py.this_pcpl,0)+coalesce(py.this_int,0),0),',','') AC_TOTAL, 
+                                replace(format(coalesce(py.this_cash,0),0),',','') AC_TOTAL, 
                                 concat('C',case when cl.STATUS <> 'A' then 'L'
                                                 when date_format(cl.entry_date,'%m%Y')='$dateFrom' then 'N'
                                                 when replace(format(case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then cl.PCPL_ORI
@@ -892,7 +892,7 @@ class ListBanController extends Controller
                                 replace(format(coalesce(en.arr_pcpl,0)+coalesce(en.arr_int,0),0),',','') as AMBC_TOTAL_AKHIR, 
                                 replace(format(coalesce(py.this_pcpl,0),0),',','') AC_PKK, 
                                 replace(format(coalesce(py.this_int,0),0),',','') AC_BNG_MRG, 
-                                replace(format(coalesce(py.this_pcpl,0)+coalesce(py.this_int,0),0),',','') AC_TOTAL, 
+                                replace(format(coalesce(py.this_cash,0),0),',','') AC_TOTAL, 
                                 concat('C',case when cl.STATUS <> 'A' then 'L'
                                                 when date_format(cl.entry_date,'%m%Y')='$dateFrom' then 'N'
                                                 when replace(format(case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then cl.PCPL_ORI
