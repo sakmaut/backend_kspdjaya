@@ -1149,7 +1149,7 @@ class CrAppilcationController extends Controller
             "ekstra" => [
                 'jenis_angsuran' => strtolower(empty($application->INSTALLMENT_TYPE) ? $cr_survey->jenis_angsuran : $application->INSTALLMENT_TYPE),
                 'tenor' => intval($application->TENOR),
-                'bunga' => $applicationDetail->INTEREST_RATE != null || $applicationDetail->INTEREST_RATE != 0 || !empty($applicationDetail->INTEREST_RATE) ? intval($applicationDetail->INTEREST_RATE)  : intval($cr_survey->interest_month),
+                'bunga' => $applicationDetail->INTEREST_RATE != null || $applicationDetail->INTEREST_RATE != 0 || !empty($applicationDetail->INTEREST_RATE) ? floatval($applicationDetail->INTEREST_RATE)  : floatval($cr_survey->interest_month),
                 "biaya_admin" => $applicationDetail->NET_ADMIN != null || $applicationDetail->NET_ADMIN != 0 || !empty($applicationDetail->NET_ADMIN) ? intval($applicationDetail->NET_ADMIN)  : 0,
                 'pokok_pembayaran' => $applicationDetail->POKOK_PEMBAYARAN != null || $applicationDetail->POKOK_PEMBAYARAN != 0 || !empty($applicationDetail->POKOK_PEMBAYARAN) ? intval($applicationDetail->POKOK_PEMBAYARAN)  : intval($cr_survey->plafond),
                 "flat_rate" => $applicationDetail->FLAT_RATE != null || $applicationDetail->FLAT_RATE != 0 || !empty($applicationDetail->FLAT_RATE) ? floatval($applicationDetail->FLAT_RATE) : $this->calculateFlatRate($data->plafond, $data->tenor, $data->installment, $data->interest_year)['flat_rate'] ?? 0,
