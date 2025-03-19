@@ -459,6 +459,7 @@ class CrAppilcationController extends Controller
     {
 
         $flatRate = $this->calculateFlatRate($request->ekstra['pokok_pembayaran'], $request->ekstra['tenor'], $request->ekstra['angsuran'], $request->ekstra['bunga_tahunan'])['flat_rate'] ?? 0;
+        $ttlBnga = $this->calculateFlatRate($request->ekstra['pokok_pembayaran'], $request->ekstra['tenor'], $request->ekstra['angsuran'], $request->ekstra['bunga_tahunan'])['ttal_bunga'] ?? 0;
 
         $data_cr_application = [
             'ENTRY_DATE' => Carbon::now()->format('Y-m-d'),
@@ -471,7 +472,7 @@ class CrAppilcationController extends Controller
             'EFF_RATE' => $request->ekstra['eff_rate'] ?? 0,
             'FLAT_RATE' => $flatRate,
             'INTEREST_RATE' => $request->ekstra['bunga'] ?? 0,
-            'TOTAL_INTEREST' => $request->ekstra['bunga_tahunan'] ?? 0,
+            'TOTAL_INTEREST' => $ttlBnga ?? 0,
             'INSTALLMENT_TYPE' => $request->ekstra['jenis_angsuran'] ?? null,
             'TENOR' => $request->ekstra['tenor'] ?? null,
             'POKOK_PEMBAYARAN' => $request->ekstra['pokok_pembayaran'] ?? null,
@@ -1278,7 +1279,9 @@ class CrAppilcationController extends Controller
         $angsuran = ceil(round($set_angs, 3) / 1000) * 1000;
 
         $flat_rate = excelRate($term, -$angsuran, $remainingBalance) * 100;
-        $total_bunga = round(($remainingBalance * ($bunga / 100) / 12) * $term, 2);
+        
+        $suku_bunga = ((12 * ($angsuran - ($remainingBalance / $term))) / $remainingBalance) * 100;
+        $total_bunga = round(($remainingBalance * ($suku_bunga / 100) / 12) * $term, 2);
 
         return [
             'flat_rate' => $flat_rate,
