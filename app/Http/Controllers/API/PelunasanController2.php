@@ -289,14 +289,14 @@ class PelunasanController2 extends Controller
             'INVOICE' => $no_inv,
             'BRANCH' => M_Branch::find($request['BRANCH_CODE'])->CODE_NUMBER ?? '',
             'LOAN_NUM' => $res['loan_number'] ?? '',
-            'ENTRY_DATE' => $request['CREATED_AT'] ?? null,
+            'ENTRY_DATE' => date('Y-m-d H:i:s', strtotime($request['CREATED_AT'])) ?? null,
             'TITLE' => 'Angsuran Ke-' . ($res['angsuran_ke'] ?? ''),
             'ORIGINAL_AMOUNT' => $originalAmount,
             'START_DATE' => $res['tgl_angsuran'] ?? '',
-            'END_DATE' => $request['CREATED_AT'] ?? null,
+            'END_DATE' => date('Y-m-d H:i:s', strtotime($request['CREATED_AT'])) ?? null,
             'USER_ID' => $request['CREATED_BY'],
             'AUTH_BY' => 'NOVA',
-            'AUTH_DATE' => $request['CREATED_AT'] ?? null
+            'AUTH_DATE' => date('Y-m-d H:i:s', strtotime($request['CREATED_AT'])) ?? null
         ]);
     }
 
@@ -313,13 +313,13 @@ class PelunasanController2 extends Controller
             'INVOICE' => $no_inv,
             'BRANCH' => M_Branch::find($request['BRANCH_CODE'])->CODE_NUMBER ?? '',
             'LOAN_NUM' => $loan_number ?? '',
-            'ENTRY_DATE' => $request['CREATED_AT'] ?? null,
+            'ENTRY_DATE' => date('Y-m-d H:i:s', strtotime($request['CREATED_AT'])) ?? null,
             'TITLE' => 'Bayar Pelunasan Pinalty',
             'ORIGINAL_AMOUNT' => $request['BAYAR_PINALTI'] ?? 0,
-            'END_DATE' => $request['CREATED_AT'] ?? null,
+            'END_DATE' => date('Y-m-d H:i:s', strtotime($request['CREATED_AT'])) ?? null,
             'USER_ID' => $request['CREATED_BY'],
             'AUTH_BY' => 'NOVA',
-            'AUTH_DATE' => $request['CREATED_AT'] ?? null
+            'AUTH_DATE' => date('Y-m-d H:i:s', strtotime($request['CREATED_AT'])) ?? null
         ]);
 
         if ($request->BAYAR_PINALTI != 0) {
@@ -542,7 +542,7 @@ class PelunasanController2 extends Controller
                 $remainingToPay = $getAmount - $valBefore;
 
                 if ($remainingPayment >= $remainingToPay) {
-                    $newPaymentValue = $getAmount;
+                    $newPaymentValue = $getAmount - $valBefore;
                     $remainingPayment -= $remainingToPay;
                 } else {
                     $newPaymentValue = $remainingPayment;
