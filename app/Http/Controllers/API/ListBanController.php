@@ -792,6 +792,7 @@ class ListBanController extends Controller
                                 replace(format(coalesce(py.this_int,0),0),',','') AC_BNG_MRG, 
                                 replace(format(coalesce(py.this_pcpl,0)+coalesce(py.this_int,0),0),',','') AC_TOTAL, 
                                 concat('C',case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then 'N'
+                                                when cl.STATUS <> 'A' then 'L'
                                                 when replace(format(case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then cl.PCPL_ORI
 			 			                                            else en.init_pcpl end,0),',','')=0 then 'L'
                                                 when case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'MUSIMAN' 
@@ -800,7 +801,6 @@ class ListBanController extends Controller
                                                 when en.first_arr > date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day) 
                                                         and case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'REGULER'  then 'M' 
                                                 when en.arr_count > 8 then 'X'
-                                                when cl.STATUS <> 'A' then 'L'
                                                 else en.arr_count end) AS CYCLE_AKHIR, 
                                 case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end as pola_bayar_akhir, 
                                 ' 'as jenis_jaminan, 
@@ -894,6 +894,7 @@ class ListBanController extends Controller
                                 replace(format(coalesce(py.this_int,0),0),',','') AC_BNG_MRG, 
                                 replace(format(coalesce(py.this_pcpl,0)+coalesce(py.this_int,0),0),',','') AC_TOTAL, 
                                 concat('C',case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then 'N'
+                                                when cl.STATUS <> 'A' then 'L'
                                                 when replace(format(case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then cl.PCPL_ORI
 			 			                                            else en.init_pcpl end,0),',','')=0 then 'L'
                                                 when case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'MUSIMAN' 
@@ -902,7 +903,6 @@ class ListBanController extends Controller
                                                 when en.first_arr > date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day) 
                                                         and case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'REGULER'  then 'M' 
                                                 when en.arr_count > 8 then 'X'
-                                                when cl.STATUS <> 'A' then 'L'
                                                 else en.arr_count end) AS CYCLE_AKHIR, 
                                 case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end as pola_bayar_akhir, 
                                 ' 'as jenis_jaminan, 
