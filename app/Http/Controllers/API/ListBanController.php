@@ -761,6 +761,8 @@ class ListBanController extends Controller
                                 replace(format(coalesce(st.arr_int,0),0),',','') as AMBC_BNG_AWAL, 
                                 replace(format((coalesce(st.arr_pcpl,0)+coalesce(st.arr_int,0)),0),',','') as AMBC_TOTAL_AWAL, 
                                 concat('C',case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then 'N'
+                                                when replace(format(case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then cl.PCPL_ORI
+			 			                                            else st.init_pcpl end,0),',','')=0 then 'L'
                                                 when case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'MUSIMAN' 
                                                         and date_format(st.first_arr,'%m%Y')=date_format(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),'%m%Y') then 'N' 
                                                 when st.first_arr>=date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 2 month) then 'N' 
@@ -778,7 +780,7 @@ class ListBanController extends Controller
                                 cl.INSTALLMENT,
                                 en.last_inst as LAST_INST, 
                                 ca.INSTALLMENT_TYPE AS tipe,
-                                st.first_arr as F_ARR_CR_SCHEDL,
+                                coalesce(st.first_arr,en.first_arr) as F_ARR_CR_SCHEDL,
                                 en.first_arr as curr_arr, 
                                 py.last_pay  as LAST_PAY, 
                                 k.kolektor AS COLLECTOR,
@@ -790,6 +792,8 @@ class ListBanController extends Controller
                                 replace(format(coalesce(py.this_int,0),0),',','') AC_BNG_MRG, 
                                 replace(format(coalesce(py.this_pcpl,0)+coalesce(py.this_int,0),0),',','') AC_TOTAL, 
                                 concat('C',case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then 'N'
+                                                when replace(format(case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then cl.PCPL_ORI
+			 			                                            else st.init_pcpl end,0),',','')=0 then 'L'
                                                 when case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'MUSIMAN' 
                                                         and date_format(en.first_arr,'%m%Y')=date_format(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),'%m%Y') then 'N' 
                                                 when en.first_arr>=date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 2 month) then 'N' 
@@ -859,6 +863,8 @@ class ListBanController extends Controller
                                 replace(format(coalesce(st.arr_int,0),0),',','') as AMBC_BNG_AWAL, 
                                 replace(format((coalesce(st.arr_pcpl,0)+coalesce(st.arr_int,0)),0),',','') as AMBC_TOTAL_AWAL, 
                                 concat('C',case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then 'N'
+                                                when replace(format(case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then cl.PCPL_ORI
+			 			                                            else st.init_pcpl end,0),',','')=0 then 'L'
                                                 when case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'MUSIMAN' 
                                                         and date_format(st.first_arr,'%m%Y')=date_format(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),'%m%Y') then 'N' 
                                                 when st.first_arr>=date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 2 month) then 'N' 
@@ -876,7 +882,7 @@ class ListBanController extends Controller
                                 cl.INSTALLMENT,
                                 en.last_inst as LAST_INST, 
                                 ca.INSTALLMENT_TYPE AS tipe,
-                                st.first_arr as F_ARR_CR_SCHEDL,
+                                coalesce(st.first_arr,en.first_arr) as F_ARR_CR_SCHEDL,
                                 en.first_arr as curr_arr, 
                                 py.last_pay  as LAST_PAY, 
                                 k.kolektor AS COLLECTOR,
@@ -888,6 +894,8 @@ class ListBanController extends Controller
                                 replace(format(coalesce(py.this_int,0),0),',','') AC_BNG_MRG, 
                                 replace(format(coalesce(py.this_pcpl,0)+coalesce(py.this_int,0),0),',','') AC_TOTAL, 
                                 concat('C',case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then 'N'
+                                                when replace(format(case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then cl.PCPL_ORI
+			 			                                            else st.init_pcpl end,0),',','')=0 then 'L'
                                                 when case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'MUSIMAN' 
                                                         and date_format(en.first_arr,'%m%Y')=date_format(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),'%m%Y') then 'N' 
                                                 when en.first_arr>=date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 2 month) then 'N' 
