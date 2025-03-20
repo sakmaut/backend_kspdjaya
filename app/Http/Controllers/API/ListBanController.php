@@ -46,7 +46,7 @@ class ListBanController extends Controller
                             }
 
                             $datas['datas'][] = [
-                                'type' => $item->JENIS == 'PELUNASAN' || $item->JENIS == 'PEMBULATAN PELUNASAN' ? 'PELUNASAN' : 'CASH_IN',
+                                'type' => $item->JENIS == 'PELUNASAN' || $item->JENIS == 'PEMBULATAN PELUNASAN' || $item->JENIS == 'DENDA PELUNASAN' ? 'PELUNASAN' : 'CASH_IN',
                                 'no_invoice' => $no_invoice,
                                 'no_kontrak' => $loan_num,
                                 'tgl' => $tgl ?? '',
@@ -166,7 +166,7 @@ class ListBanController extends Controller
                         UNION ALL
                             SELECT 
                              CASE 
-                                WHEN a.ACC_KEYS LIKE '%DENDA%' THEN 'DENDA'
+                                WHEN a.ACC_KEYS LIKE '%DENDA%' THEN 'DENDA PELUNASAN'
                                 ELSE 'PELUNASAN' 
                             END AS JENIS, 
                             b.BRANCH AS BRANCH, 
@@ -193,7 +193,7 @@ class ListBanController extends Controller
                               AND a.ACC_KEYS in ('BAYAR_POKOK','BAYAR_BUNGA','BAYAR_PINALTI','BAYAR PELUNASAN PINALTY','BAYAR_DENDA')
                         GROUP BY 
                          	CASE 
-                                WHEN a.ACC_KEYS LIKE '%DENDA%' THEN 'DENDA'
+                                WHEN a.ACC_KEYS LIKE '%DENDA%' THEN 'DENDA PELUNASAN'
                                 ELSE 'PELUNASAN' 
                             END,
                             b.BRANCH, 
