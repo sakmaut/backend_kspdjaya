@@ -25,6 +25,8 @@ class ListBanController extends Controller
 
                 $arusKas = $this->queryArusKas($cabangId, $request);
 
+
+
                 foreach ($arusKas as $item) {
 
                     $cabang = $item->nama_cabang;
@@ -180,7 +182,10 @@ class ListBanController extends Controller
                             b.LOAN_NUM,
                             b.PAYMENT_METHOD,
                             b.INVOICE AS no_invoice,
-                            'PELUNASAN' AS angsuran_ke,
+                            CASE 
+                                WHEN a.ACC_KEYS LIKE '%DENDA%' THEN 'DENDA'
+                                ELSE 'PELUNASAN'
+                            END AS angsuran_ke,
                             b.USER_ID AS user_id,
                             '' AS admin_fee
                         FROM 
@@ -206,6 +211,10 @@ class ListBanController extends Controller
                             b.LOAN_NUM,
                             b.PAYMENT_METHOD,
                             b.INVOICE,
+                             CASE 
+                                WHEN a.ACC_KEYS LIKE '%DENDA%' THEN 'DENDA'
+                                ELSE 'PELUNASAN'
+                            END,
                             b.USER_ID  
                         UNION ALL
                         SELECT 
