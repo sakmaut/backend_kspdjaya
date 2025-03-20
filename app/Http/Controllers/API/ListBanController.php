@@ -168,7 +168,7 @@ class ListBanController extends Controller
                         UNION ALL
                             SELECT 
                              CASE 
-                                WHEN a.ACC_KEYS LIKE '%DENDA%' THEN 'DENDA PELUNASAN'
+                                WHEN a.ACC_KEYS LIKE '%DENDA%' OR a.ACC_KEYS = 'BAYAR PELUNASAN PINALTY' THEN 'DENDA PELUNASAN'
                                 ELSE 'PELUNASAN' 
                             END AS JENIS, 
                             b.BRANCH AS BRANCH, 
@@ -198,7 +198,7 @@ class ListBanController extends Controller
                               AND a.ACC_KEYS in ('BAYAR_POKOK','BAYAR_BUNGA','BAYAR_PINALTI','BAYAR PELUNASAN PINALTY','BAYAR_DENDA')
                         GROUP BY 
                          	CASE 
-                                WHEN a.ACC_KEYS LIKE '%DENDA%' THEN 'DENDA PELUNASAN'
+                                WHEN a.ACC_KEYS LIKE '%DENDA%' OR a.ACC_KEYS = 'BAYAR PELUNASAN PINALTY' THEN 'DENDA PELUNASAN'
                                 ELSE 'PELUNASAN' 
                             END,
                             b.BRANCH, 
