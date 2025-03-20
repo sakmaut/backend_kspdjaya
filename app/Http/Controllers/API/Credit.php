@@ -147,6 +147,11 @@ class Credit extends Controller
                 ->orWhere('DELETED_AT', '');
         })->get();
 
+        $guarente_sertificat = M_CrGuaranteSertification::where('CR_SURVEY_ID', $data->CR_SURVEY_ID)->where(function ($query) {
+            $query->whereNull('DELETED_AT')
+                ->orWhere('DELETED_AT', '');
+        })->get();
+
         $array_build = [
             "no_perjanjian" => !$check_exist && $request->flag == 'yes' ? $loan_number ?? null : $check_exist->LOAN_NUMBER ?? null,
             "cabang" => 'CABANG ' . strtoupper($pihak1->name ?? null),
@@ -188,6 +193,7 @@ class Credit extends Controller
         if ($check_exist) {
 
             $getCollateral = M_CrCollateral::where('CR_CREDIT_ID', $check_exist->ID)->get();
+            $getSertifikat = M_CrCollateralSertification::where('CR_CREDIT_ID', $check_exist->ID)->get();
 
             foreach ($getCollateral as $list) {
                 $array_build['jaminan'][] = [
@@ -213,6 +219,29 @@ class Credit extends Controller
                     ]
                 ];
             }
+
+            foreach ($getSertifikat as $list) {
+                $arrayList['jaminan'][] = [
+                    "type" => "sertifikat",
+                    'counter_id' => $list->HEADER_ID,
+                    "atr" => [
+                        'id' => $list->ID,
+                        'status_jaminan' => null,
+                        "no_sertifikat" => $list->NO_SERTIFIKAT,
+                        "status_kepemilikan" => $list->STATUS_KEPEMILIKAN,
+                        "imb" => $list->IMB,
+                        "luas_tanah" => $list->LUAS_TANAH,
+                        "luas_bangunan" => $list->LUAS_BANGUNAN,
+                        "lokasi" => $list->LOKASI,
+                        "provinsi" => $list->PROVINSI,
+                        "kab_kota" => $list->KAB_KOTA,
+                        "kec" => $list->KECAMATAN,
+                        "desa" => $list->DESA,
+                        "atas_nama" => $list->ATAS_NAMA,
+                        "nilai" => (int) $list->NILAI
+                    ]
+                ];
+            }
         } else {
             foreach ($guarente_vehicle as $list) {
                 $array_build['jaminan'][] = [
@@ -235,6 +264,29 @@ class Credit extends Controller
                         "no_stnk" => $list->STNK_NUMBER,
                         "tgl_stnk" => $list->STNK_VALID_DATE,
                         "nilai" => (int) $list->VALUE
+                    ]
+                ];
+            }
+
+            foreach ($guarente_sertificat as $list) {
+                $arrayList['jaminan'][] = [
+                    "type" => "sertifikat",
+                    'counter_id' => $list->HEADER_ID,
+                    "atr" => [
+                        'id' => $list->ID,
+                        'status_jaminan' => null,
+                        "no_sertifikat" => $list->NO_SERTIFIKAT,
+                        "status_kepemilikan" => $list->STATUS_KEPEMILIKAN,
+                        "imb" => $list->IMB,
+                        "luas_tanah" => $list->LUAS_TANAH,
+                        "luas_bangunan" => $list->LUAS_BANGUNAN,
+                        "lokasi" => $list->LOKASI,
+                        "provinsi" => $list->PROVINSI,
+                        "kab_kota" => $list->KAB_KOTA,
+                        "kec" => $list->KECAMATAN,
+                        "desa" => $list->DESA,
+                        "atas_nama" => $list->ATAS_NAMA,
+                        "nilai" => (int) $list->NILAI
                     ]
                 ];
             }
