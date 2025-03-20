@@ -183,7 +183,7 @@ class ListBanController extends Controller
                             b.PAYMENT_METHOD,
                             b.INVOICE AS no_invoice,
                             CASE 
-                                WHEN a.ACC_KEYS LIKE '%DENDA%' THEN 'DENDA'
+                                WHEN a.ACC_KEYS LIKE '%DENDA%' OR a.ACC_KEYS = 'BAYAR PELUNASAN PINALTY' THEN 'DENDA PELUNASAN'
                                 ELSE 'PELUNASAN'
                             END AS angsuran_ke,
                             b.USER_ID AS user_id,
@@ -212,7 +212,7 @@ class ListBanController extends Controller
                             b.PAYMENT_METHOD,
                             b.INVOICE,
                              CASE 
-                                WHEN a.ACC_KEYS LIKE '%DENDA%' THEN 'DENDA'
+                                WHEN a.ACC_KEYS LIKE '%DENDA%' OR a.ACC_KEYS = 'BAYAR PELUNASAN PINALTY' THEN 'DENDA PELUNASAN'
                                 ELSE 'PELUNASAN'
                             END,
                             b.USER_ID  
