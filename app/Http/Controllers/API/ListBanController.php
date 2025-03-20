@@ -811,8 +811,8 @@ class ListBanController extends Controller
                                 case when (cl.PERIOD/cl.INSTALLMENT_COUNT)=1 then 'REGULER' else 'MUSIMAN' end as pola_bayar, 
                                 replace(format(coalesce(en.init_pcpl,0),0),',','') OS_PKK_AKHIR, 
                                 replace(format(coalesce(en.init_int,0),0),',','') as OS_BNG_AKHIR, 
-                                case when coalesce(datediff(date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day),en.first_arr),0) < 0 then 0
-                                    else coalesce(datediff(date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day),en.first_arr),0) end as OVERDUE_AKHIR, 
+                                case when coalesce(datediff(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),en.first_arr),0) < 0 then 0
+                                    else coalesce(datediff(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),en.first_arr),0) end as OVERDUE_AKHIR, 
                                 cl.INSTALLMENT,
                                 en.last_inst as LAST_INST, 
                                 ca.INSTALLMENT_TYPE AS tipe,
@@ -828,13 +828,12 @@ class ListBanController extends Controller
                                 replace(format(coalesce(py.this_int,0),0),',','') AC_BNG_MRG, 
                                 replace(format(coalesce(py.this_cash,0),0),',','') AC_TOTAL, 
                                 concat('C',case when cl.STATUS <> 'A' then 'L'
-                                                when date_format(cl.entry_date,'%m%Y')='$dateFrom' then 'N'
                                                 when replace(format(case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then cl.PCPL_ORI
 			 			                                            else en.init_pcpl end,0),',','')=0 then 'L'
                                                 when case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'MUSIMAN' 
-                                                        and date_format(en.first_arr,'%m%Y')=date_format(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),'%m%Y') then 'N' 
-                                                when en.first_arr>=date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 2 month) then 'N' 
-                                                when en.first_arr > date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day) 
+                                                        and date_format(en.first_arr,'%m%Y')=date_format(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 2 month),'%m%Y') then 'N' 
+                                                when en.first_arr>=date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 3 month) then 'N' 
+                                                when en.first_arr > date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 2 month),interval -1 day) 
                                                         and case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'REGULER'  then 'M' 
                                                 when en.arr_count > 8 then 'X'
                                                 else en.arr_count end) AS CYCLE_AKHIR, 
@@ -913,8 +912,8 @@ class ListBanController extends Controller
                                 case when (cl.PERIOD/cl.INSTALLMENT_COUNT)=1 then 'REGULER' else 'MUSIMAN' end as pola_bayar, 
                                 replace(format(coalesce(en.init_pcpl,0),0),',','') OS_PKK_AKHIR, 
                                 replace(format(coalesce(en.init_int,0),0),',','') as OS_BNG_AKHIR, 
-                                case when coalesce(datediff(date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day),en.first_arr),0) < 0 then 0
-                                    else coalesce(datediff(date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day),en.first_arr),0) end as OVERDUE_AKHIR, 
+                                case when coalesce(datediff(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),en.first_arr),0) < 0 then 0
+                                    else coalesce(datediff(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),en.first_arr),0) end as OVERDUE_AKHIR, 
                                 cl.INSTALLMENT,
                                 en.last_inst as LAST_INST, 
                                 ca.INSTALLMENT_TYPE AS tipe,
@@ -930,13 +929,12 @@ class ListBanController extends Controller
                                 replace(format(coalesce(py.this_int,0),0),',','') AC_BNG_MRG, 
                                 replace(format(coalesce(py.this_cash,0),0),',','') AC_TOTAL, 
                                 concat('C',case when cl.STATUS <> 'A' then 'L'
-                                                when date_format(cl.entry_date,'%m%Y')='$dateFrom' then 'N'
                                                 when replace(format(case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then cl.PCPL_ORI
 			 			                                            else en.init_pcpl end,0),',','')=0 then 'L'
                                                 when case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'MUSIMAN' 
-                                                        and date_format(en.first_arr,'%m%Y')=date_format(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),'%m%Y') then 'N' 
-                                                when en.first_arr>=date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 2 month) then 'N' 
-                                                when en.first_arr > date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day) 
+                                                        and date_format(en.first_arr,'%m%Y')=date_format(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 2 month),'%m%Y') then 'N' 
+                                                when en.first_arr>=date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 3 month) then 'N' 
+                                                when en.first_arr > date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 2 month),interval -1 day) 
                                                         and case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'REGULER'  then 'M' 
                                                 when en.arr_count > 8 then 'X'
                                                 else en.arr_count end) AS CYCLE_AKHIR, 
