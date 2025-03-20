@@ -165,21 +165,48 @@ class ListBanController extends Controller
                             b.USER_ID
                         UNION ALL
                             SELECT 
-                            'PELUNASAN'AS JENIS, 
-                            b.CODE_NUMBER AS BRANCH, 
-                            b.ID AS BRANCH_ID, 
-                            b.NAME AS nama_cabang,
-                            DATE_FORMAT(a.CREATED_AT, '%Y-%m-%d') AS ENTRY_DATE, 
-                            (a.JUMLAH_UANG - a.PEMBULATAN) AS ORIGINAL_AMOUNT,
-                            a.LOAN_NUMBER,
-                            a.METODE_PEMBAYARAN as PAYMENT_METHOD,
-                            a.NO_TRANSAKSI AS no_invoice,
+                             CASE 
+                                WHEN a.ACC_KEYS LIKE '%DENDA%' THEN 'DENDA'
+                                ELSE 'PELUNASAN' 
+                            END AS JENIS, 
+                            b.BRANCH AS BRANCH, 
+                            d.ID AS BRANCH_ID, 
+                            d.NAME AS nama_cabang,
+                            CASE 
+                                WHEN b.PAYMENT_METHOD = 'transfer' THEN DATE_FORMAT(b.AUTH_DATE, '%Y-%m-%d')
+                                ELSE DATE_FORMAT(b.ENTRY_DATE, '%Y-%m-%d') 
+                            END AS ENTRY_DATE, 
+                            SUM(a.ORIGINAL_AMOUNT) AS ORIGINAL_AMOUNT,
+                            b.LOAN_NUM,
+                            b.PAYMENT_METHOD,
+                            b.INVOICE AS no_invoice,
                             'PELUNASAN' AS angsuran_ke,
-                            a.CREATED_BY AS user_id,
+                            b.USER_ID AS user_id,
                             '' AS admin_fee
-                        FROM kwitansi a
-                        LEFT JOIN branch b on b.ID = a.BRANCH_CODE
-                        WHERE a.PAYMENT_TYPE = 'pelunasan' AND a.STTS_PAYMENT = 'PAID'
+                        FROM 
+                            payment_detail a
+                        INNER JOIN payment b ON b.ID = a.PAYMENT_ID
+                        LEFT JOIN arrears c ON c.ID = b.ARREARS_ID
+                        LEFT JOIN branch d ON d.CODE_NUMBER = b.BRANCH
+                        WHERE b.ACC_KEY like '%Pelunasan%' 
+                              AND b.STTS_RCRD = 'PAID'  
+                              AND a.ACC_KEYS in ('BAYAR_POKOK','BAYAR_BUNGA','BAYAR_PINALTI','BAYAR PELUNASAN PINALTY','BAYAR_DENDA')
+                        GROUP BY 
+                         	CASE 
+                                WHEN a.ACC_KEYS LIKE '%DENDA%' THEN 'DENDA'
+                                ELSE 'PELUNASAN' 
+                            END,
+                            b.BRANCH, 
+                            d.ID, 
+                            d.NAME, 
+                            CASE 
+                                WHEN b.PAYMENT_METHOD = 'transfer' THEN DATE_FORMAT(b.AUTH_DATE, '%Y-%m-%d')
+                                ELSE DATE_FORMAT(b.ENTRY_DATE, '%Y-%m-%d') 
+                            END, 
+                            b.LOAN_NUM,
+                            b.PAYMENT_METHOD,
+                            b.INVOICE,
+                            b.USER_ID  
                         UNION ALL
                         SELECT 
                             CASE 
