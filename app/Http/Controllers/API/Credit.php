@@ -221,7 +221,7 @@ class Credit extends Controller
             }
 
             foreach ($getSertifikat as $list) {
-                $arrayList['jaminan'][] = [
+                $array_build['jaminan'][] = [
                     "type" => "sertifikat",
                     'counter_id' => $list->HEADER_ID,
                     "atr" => [
@@ -269,7 +269,7 @@ class Credit extends Controller
             }
 
             foreach ($guarente_sertificat as $list) {
-                $arrayList['jaminan'][] = [
+                $array_build['jaminan'][] = [
                     "type" => "sertifikat",
                     'counter_id' => $list->HEADER_ID,
                     "atr" => [
