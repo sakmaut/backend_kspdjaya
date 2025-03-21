@@ -379,8 +379,13 @@ class PelunasanController extends Controller
                 'AUTH_DATE' => Carbon::now()
             ]);
 
-            $this->proccessPaymentDetail($uid, 'BAYAR PELUNASAN PINALTY', $kwitansi->PINALTY_PELUNASAN ?? 0);
-            $this->proccessPaymentDetail($uid, 'BAYAR PELUNASAN DISKON PINALTY', $kwitansi->DISKON_PINALTY_PELUNASAN ?? 0);
+            if($kwitansi->PINALTY_PELUNASAN != 0){
+                $this->proccessPaymentDetail($uid, 'BAYAR PELUNASAN PINALTY', $kwitansi->PINALTY_PELUNASAN ?? 0);
+            }
+
+            if ($kwitansi->DISKON_PINALTY_PELUNASAN != 0) {
+                $this->proccessPaymentDetail($uid, 'BAYAR PELUNASAN DISKON PINALTY', $kwitansi->DISKON_PINALTY_PELUNASAN ?? 0);
+            }
         }
     }
 
