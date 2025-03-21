@@ -814,7 +814,7 @@ class ListBanController extends Controller
                                 case when coalesce(datediff(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),en.first_arr),0) < 0 then 0
                                     else coalesce(datediff(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),en.first_arr),0) end as OVERDUE_AKHIR, 
                                 cl.INSTALLMENT,
-                                st.last_inst as LAST_INST, 
+                                coalesce(st.last_inst,en.last_inst) as LAST_INST, 
                                 ca.INSTALLMENT_TYPE AS tipe,
                                 case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then en.first_installment else coalesce(st.first_arr,en.first_arr) end as F_ARR_CR_SCHEDL, 
                                 en.first_arr as curr_arr, 
@@ -915,7 +915,7 @@ class ListBanController extends Controller
                                 case when coalesce(datediff(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),en.first_arr),0) < 0 then 0
                                     else coalesce(datediff(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),en.first_arr),0) end as OVERDUE_AKHIR, 
                                 cl.INSTALLMENT,
-                                st.last_inst as LAST_INST, 
+                                coalesce(st.last_inst,en.last_inst) as LAST_INST, 
                                 ca.INSTALLMENT_TYPE AS tipe,
                                 case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then en.first_installment else coalesce(st.first_arr,en.first_arr) end as F_ARR_CR_SCHEDL, 
                                 en.first_arr as curr_arr, 
