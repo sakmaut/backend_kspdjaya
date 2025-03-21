@@ -210,9 +210,7 @@ class PaymentController extends Controller
         $credit_schedule = M_CreditSchedule::where([
             'LOAN_NUMBER' => $loan_number,
             'PAYMENT_DATE' => $tgl_angsuran
-        ])
-            ->orderBy('PAYMENT_DATE', 'ASC')
-            ->first();
+        ])->first();
 
         $byr_angsuran = $res['bayar_angsuran'];
         $flag = $res['flag'];
