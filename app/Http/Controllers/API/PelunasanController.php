@@ -360,32 +360,27 @@ class PelunasanController extends Controller
         if ($kwitansi) {
             $user_id = $kwitansi->CREATED_BY;
             $getCodeBranch = M_Branch::find($kwitansi->BRANCH_CODE);
-        }
 
-        M_Payment::create([
-            'ID' => $uid,
-            'ACC_KEY' => 'Bayar Pelunasan Pinalty',
-            'STTS_RCRD' => $status,
-            'NO_TRX' => $no_inv,
-            'PAYMENT_METHOD' => $kwitansi->METODE_PEMBAYARAN ?? $request->payment_method,
-            'INVOICE' => $no_inv,
-            'BRANCH' =>  $getCodeBranch->CODE_NUMBER ?? M_Branch::find($request->user()->branch_id)->CODE_NUMBER,
-            'LOAN_NUM' => $loan_number ?? '',
-            'ENTRY_DATE' => Carbon::now(),
-            'TITLE' => 'Bayar Pelunasan Pinalty',
-            'ORIGINAL_AMOUNT' => $request->BAYAR_PINALTI ?? 0,
-            'END_DATE' => Carbon::now(),
-            'USER_ID' => $user_id ?? $request->user()->id,
-            'AUTH_BY' => $request->user()->fullname ?? '',
-            'AUTH_DATE' => Carbon::now()
-        ]);
+            M_Payment::create([
+                'ID' => $uid,
+                'ACC_KEY' => 'Bayar Pelunasan Pinalty',
+                'STTS_RCRD' => $status,
+                'NO_TRX' => $no_inv,
+                'PAYMENT_METHOD' => $kwitansi->METODE_PEMBAYARAN ?? $request->payment_method,
+                'INVOICE' => $no_inv,
+                'BRANCH' =>  $getCodeBranch->CODE_NUMBER ?? M_Branch::find($request->user()->branch_id)->CODE_NUMBER,
+                'LOAN_NUM' => $loan_number ?? '',
+                'ENTRY_DATE' => Carbon::now(),
+                'TITLE' => 'Bayar Pelunasan Pinalty',
+                'ORIGINAL_AMOUNT' => $kwitansi->PINALTY_PELUNASAN ?? 0,
+                'END_DATE' => Carbon::now(),
+                'USER_ID' => $user_id ?? $request->user()->id,
+                'AUTH_BY' => $request->user()->fullname ?? '',
+                'AUTH_DATE' => Carbon::now()
+            ]);
 
-        if ($request->BAYAR_PINALTI != 0) {
-            $this->proccessPaymentDetail($uid, 'BAYAR PELUNASAN PINALTY', $request->BAYAR_PINALTI ?? 0);
-        }
-
-        if ($request->DISKON_PINALTI != 0) {
-            $this->proccessPaymentDetail($uid, 'BAYAR PELUNASAN DISKON PINALTY', $request->DISKON_PINALTI ?? 0);
+            $this->proccessPaymentDetail($uid, 'BAYAR PELUNASAN PINALTY', $kwitansi->PINALTY_PELUNASAN ?? 0);
+            $this->proccessPaymentDetail($uid, 'BAYAR PELUNASAN DISKON PINALTY', $kwitansi->DISKON_PINALTY_PELUNASAN ?? 0);
         }
     }
 
