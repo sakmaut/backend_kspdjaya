@@ -239,6 +239,7 @@ class ListBanController extends Controller
                         FROM kwitansi a
                         LEFT JOIN payment b ON b.INVOICE = a.NO_TRANSAKSI
                         LEFT JOIN branch d ON d.ID = a.BRANCH_CODE
+                        WHERE b.STTS_PAYMENT = 'PAID'  
                         GROUP BY 
                             CASE 
                                 WHEN a.PAYMENT_TYPE = 'pelunasan' THEN 'PEMBULATAN PELUNASAN'
