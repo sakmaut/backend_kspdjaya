@@ -683,39 +683,34 @@ class PelunasanController extends Controller
         $remainingDiscount = $request->DISKON_POKOK;
 
         foreach ($creditSchedule as $res) {
-            // Get the current value of the field and payment status
             $valBefore = $res->{'PAYMENT_VALUE_PRINCIPAL'};
             $getAmount = $res->{'PRINCIPAL'};
 
             $remainingToPay = $getAmount - $valBefore;
 
-            // Proceed only if there's an amount left to pay
             if ($remainingToPay > 0) {
-                // If enough payment is available to cover the remaining amount
                 if ($remainingPayment >= $remainingToPay) {
-                    // Full payment for the remaining amount
                     $newPaymentValue = $remainingToPay;
-                    $remainingPayment -= $remainingToPay; // Subtract the paid amount
+                    $remainingPayment -= $remainingToPay;
                 } else {
-                    // Partial payment
                     $newPaymentValue = $remainingPayment;
-                    $remainingPayment = 0; // All payment used
+                    $remainingPayment = 0;
                 }
 
                 // Apply the payment to the schedule
                 $param['BAYAR_POKOK'] = $newPaymentValue;
                 $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
 
-                // Handle the discount if applicable
+                // // Handle the discount if applicable
                 if ($remainingDiscount > 0) {
                     $remainingToDiscount = $getAmount - ($valBefore + $newPaymentValue);
 
                     if ($remainingDiscount >= $remainingToDiscount) {
-                        $param['DISKON_POKOK'] = $remainingToDiscount; // Full discount
-                        $remainingDiscount -= $remainingToDiscount; // Subtract the used discount
+                        $param['DISKON_POKOK'] = $remainingToDiscount;
+                        $remainingDiscount -= $remainingToDiscount;
                     } else {
-                        $param['DISKON_POKOK'] = $remainingDiscount; // Partial discount
-                        $remainingDiscount = 0; // No discount left
+                        $param['DISKON_POKOK'] = $remainingDiscount;
+                        $remainingDiscount = 0;
                     }
 
                     $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
@@ -747,7 +742,7 @@ class PelunasanController extends Controller
                     $newPaymentValue = $getAmount - $valBefore;
                     $remainingPayment -= $remainingToPay;
                 } else {
-                    $newPaymentValue = $valBefore + $remainingPayment;
+                    $newPaymentValue = $remainingPayment;
                     $remainingPayment = 0;
                 }
 
@@ -759,7 +754,7 @@ class PelunasanController extends Controller
                 if ($newPaymentValue == $getAmount) {
                     $param['DISKON_BUNGA'] = 0;
                 } else {
-                    $param['DISKON_BUNGA'] = $getAmount - $newPaymentValue;
+                    $param['DISKON_BUNGA'] = $getAmount - ($valBefore + $newPaymentValue);
                 }
 
                 $this->insertKwitansiDetail(
