@@ -169,7 +169,7 @@ class Credit extends Controller
             "pihak_2" => [
                 "nama" => strtoupper($cr_personal->NAME ?? null),
                 "no_identitas" => strtoupper($cr_personal->ID_NUMBER ?? null),
-                "alamat" => strtoupper($cr_personal->ADDRESS ?? null)
+                "alamat" => strtoupper($cr_personal->ADDRESS.' '. $cr_personal->RT . '/' . $cr_personal->RW ?? null)
             ],
             "penjamin" => [],
             "pasangan" => [
