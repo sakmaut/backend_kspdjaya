@@ -851,6 +851,7 @@ class PaymentController extends Controller
 
                 if ($creditCheck) {
                     $creditCheck->update([
+                        'STATUS' => 'AC',
                         'STATUS' => 'A',
                         'PAID_PRINCIPAL' => floatval($creditCheck->PAID_PRINCIPAL) - floatval($setPrincipal ?? 0),
                         'PAID_INTEREST' => floatval($creditCheck->PAID_INTEREST ?? 0) - floatval($totalInterest ?? 0),
