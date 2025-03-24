@@ -51,8 +51,7 @@ class Welcome extends Controller
         DB::beginTransaction();
         try {
 
-            // $inv = $req->no_invoice;
-            $inv = 'INV-LEA111-250200156';
+            $inv = $req->no_invoice;
 
             $queryAngsuran = "  SELECT  a.NO_TRANSAKSI,
                                 a.LOAN_NUMBER,
