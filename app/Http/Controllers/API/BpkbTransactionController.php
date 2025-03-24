@@ -58,9 +58,27 @@ class BpkbTransactionController extends Controller
             $user = $request->user();
             $branch = $user->branch_id ?? null;
 
-            $data = M_BpkbTransaction::where('TO_BRANCH', $branch)->where('STATUS', '!=', 'SELESAI')->get();
+            $no_surat = $request->query('no_surat');
+            $status = $request->query('status');
+            $tgl = $request->query('tgl');
 
-            $dto = R_BpkbList::collection($data);
+            $data = M_BpkbTransaction::where('TO_BRANCH', $branch);
+
+            if ($no_surat) {
+                $data->where('TRX_CODE', '=', $no_surat);
+            }
+
+            if ($status) {
+                $data->where('STATUS', '=', strtoupper($status));
+            } else {
+                $data->where('STATUS', '!=', 'SELESAI');
+            }
+
+            if ($tgl) {
+                $data->whereDate('CREATED_AT', Carbon::parse($tgl)->toDateString());
+            }
+
+            $dto = R_BpkbList::collection($data->get());
 
             return response()->json($dto, 200);
         } catch (\Exception $e) {
