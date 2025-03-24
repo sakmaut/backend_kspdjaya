@@ -58,14 +58,14 @@ class BpkbTransactionController extends Controller
             $user = $request->user();
             $branch = $user->branch_id ?? null;
 
-            $no_surat = $request->query('no_surat');
+            $no_transaksi = $request->query('no_transaksi');
             $status = $request->query('status');
             $tgl = $request->query('tgl');
 
             $data = M_BpkbTransaction::where('TO_BRANCH', $branch);
 
-            if ($no_surat) {
-                $data->where('TRX_CODE', '=', $no_surat);
+            if ($no_transaksi) {
+                $data->where('TRX_CODE', '=', $no_transaksi);
             }
 
             if ($status) {
