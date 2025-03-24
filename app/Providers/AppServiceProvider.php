@@ -6,9 +6,8 @@ use App\Http\Controllers\Repositories\Branch\BranchRepository;
 use App\Http\Controllers\Repositories\Branch\BranchRepositoryInterface;
 use App\Http\Controllers\Repositories\Collateral\CollateralInterface;
 use App\Http\Controllers\Repositories\Collateral\CollateralRepository;
+use App\Http\Controllers\Repositories\CollateralTransaction\CollateralTransactionInterface;
 use App\Http\Controllers\Repositories\CollateralTransaction\CollateralTransactionRepository;
-use App\Http\Controllers\Repositories\Kwitansi\KwitansiRepository;
-use App\Http\Controllers\Repositories\Kwitansi\KwitansiRepositoryInterface;
 use App\Http\Controllers\Repositories\Menu\MenuRepository;
 use App\Http\Controllers\Repositories\Menu\MenuRepositoryInterface;
 use App\Http\Controllers\Repositories\Payment\PaymentInterface;
@@ -34,8 +33,7 @@ class AppServiceProvider extends ServiceProvider
             MenuRepositoryInterface::class => MenuRepository::class,
             CollateralInterface::class => CollateralRepository::class,
             SurveyInterface::class => SurveyRepository::class,
-            CollateralInterface::class => CollateralTransactionRepository::class,
-            KwitansiRepository::class => KwitansiRepositoryInterface::class,
+            CollateralTransactionInterface::class => CollateralTransactionRepository::class,
             PaymentRepository::class => PaymentInterface::class
         ];
 

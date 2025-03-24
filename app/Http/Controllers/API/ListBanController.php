@@ -971,6 +971,7 @@ class ListBanController extends Controller
             $getNow = date('mY', strtotime(now()));
 
             if ($getNow == $dateFrom) {
+                DB::select('CALL lisban_berjalan(?)', [$getNow]);
                 $query = $query2;
             } else {
                 $query = $query1;

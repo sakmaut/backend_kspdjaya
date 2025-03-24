@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\DB;
 
 class KwitansiRepository implements KwitansiRepositoryInterface
 {
-
     protected $kwitansiEntity;
 
     function __construct(M_Kwitansi $kwitansiEntity)
@@ -27,50 +26,36 @@ class KwitansiRepository implements KwitansiRepositoryInterface
         $getPosition = $request->user()->position;
         $getBranch = $request->user()->branch_id;
 
-        $data = M_Kwitansi::orderBy('CREATED_AT', 'DESC');
+        $data = $this->kwitansiEntity->orderBy('CREATED_AT', 'DESC');
 
         if (strtolower($getPosition) == 'ho') {
-            $data->where('STTS_PAYMENT', '=', 'PENDING');
-            // $data->whereIn('STTS_PAYMENT', ['PENDING', 'PAID']);
-            // $data->where('METODE_PEMBAYARAN', '=', 'transfer');
-            // $data->whereDate('created_at', Carbon::today());
-        } else {
-            $data->where('BRANCH_CODE', '=', $getBranch);
-
-            switch ($tipe) {
-                case 'pembayaran':
-                    $data->where('PAYMENT_TYPE', '!=', 'pelunasan');
-                    break;
-                case 'pelunasan':
-                    $data->where('PAYMENT_TYPE', 'pelunasan');
-                    break;
-            }
-
-            if (empty($notrx) && empty($nama) && empty($no_kontrak) && (empty($dari) || $dari == 'null')) {
-                $data->where(DB::raw('DATE_FORMAT(CREATED_AT,"%Y%m%d")'), Carbon::now()->format('Ymd'));
-            } else {
-
-                if (!empty($notrx)) {
-                    $data->where('NO_TRANSAKSI', $notrx);
-                }
-
-                if (!empty($nama)) {
-                    $data->where('NAMA', 'like', '%' . $nama . '%');
-                }
-
-                if (!empty($no_kontrak)) {
-                    $data->where('LOAN_NUMBER', $no_kontrak);
-                }
-
-                if ($dari != 'null') {
-                    $formattedDate = Carbon::parse($dari)->format('Ymd');
-                    $data->where(DB::raw('DATE_FORMAT(CREATED_AT,"%Y%m%d")'), $formattedDate);
-                }
-            }
+            return $data->where('STTS_PAYMENT', 'PENDING')->get();
         }
 
-        $results = $data->get();
+        $data->where('BRANCH_CODE', $getBranch);
 
-        return $results;
+        if ($tipe) {
+            $data->where('PAYMENT_TYPE', $tipe == 'pelunasan' ? 'pelunasan' : '!=', 'pelunasan');
+        }
+
+        if ($notrx) {
+            $data->where('NO_TRANSAKSI', $notrx);
+        }
+
+        if ($nama) {
+            $data->where('NAMA', 'like', '%' . $nama . '%');
+        }
+
+        if ($no_kontrak) {
+            $data->where('LOAN_NUMBER', $no_kontrak);
+        }
+
+        if ($dari && $dari != 'null') {
+            $data->whereDate('CREATED_AT', Carbon::parse($dari)->toDateString());
+        } elseif (empty($notrx) && empty($nama) && empty($no_kontrak)) {
+            $data->whereDate('CREATED_AT', Carbon::today()->toDateString());
+        }
+
+        return $data->get();
     }
 }

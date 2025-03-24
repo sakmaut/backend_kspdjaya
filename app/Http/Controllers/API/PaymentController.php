@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Repositories\Kwitansi\KwitansiRepository;
 use App\Http\Resources\R_Kwitansi;
 use App\Http\Resources\R_PaymentCancelLog;
 use App\Models\M_Arrears;
@@ -29,59 +31,61 @@ use Ramsey\Uuid\Uuid;
 
 class PaymentController extends Controller
 {
+
+    protected $kwitansiRepository;
+    protected $log;
+
+    public function __construct(KwitansiRepository $kwitansiRepository, ExceptionHandling $log)
+    {
+        $this->kwitansiRepository = $kwitansiRepository;
+        $this->log = $log;
+    }
+
     public function index(Request $request)
     {
         try {
-
             $notrx = $request->query('notrx');
             $nama = $request->query('nama');
             $no_kontrak = $request->query('no_kontrak');
             $tipe = $request->query('tipe');
             $dari = $request->query('dari');
 
+            // Get user details
             $getPosition = $request->user()->position;
             $getBranch = $request->user()->branch_id;
 
+            // Start building the query
             $data = M_Kwitansi::orderBy('CREATED_AT', 'DESC');
 
+            // Handle HO position
             if (strtolower($getPosition) == 'ho') {
-                $data->where('STTS_PAYMENT', '=', 'PENDING');
-                // $data->whereIn('STTS_PAYMENT', ['PENDING', 'PAID']);
-                // $data->where('METODE_PEMBAYARAN', '=', 'transfer');
-                // $data->whereDate('created_at', Carbon::today());
-            } else {
-                $data->where('BRANCH_CODE', '=', $getBranch);
+                $results = $data->where('STTS_PAYMENT', 'PENDING')->get();
+                $dto = R_Kwitansi::collection($results);
+                return response()->json($dto, 200);
+            }
 
-                switch ($tipe) {
-                    case 'pembayaran':
-                        $data->where('PAYMENT_TYPE', '!=', 'pelunasan');
-                        break;
-                    case 'pelunasan':
-                        $data->where('PAYMENT_TYPE', 'pelunasan');
-                        break;
-                }
+            $data->where('BRANCH_CODE', $getBranch);
 
-                if (empty($notrx) && empty($nama) && empty($no_kontrak) && (empty($dari) || $dari == 'null')) {
-                    $data->where(DB::raw('DATE_FORMAT(CREATED_AT,"%Y%m%d")'), Carbon::now()->format('Ymd'));
-                } else {
+            if ($tipe) {
+                $data->where('PAYMENT_TYPE', $tipe == 'pelunasan' ? 'pelunasan' : '!=', 'pelunasan');
+            }
 
-                    if (!empty($notrx)) {
-                        $data->where('NO_TRANSAKSI', $notrx);
-                    }
+            if ($notrx) {
+                $data->where('NO_TRANSAKSI', $notrx);
+            }
 
-                    if (!empty($nama)) {
-                        $data->where('NAMA', 'like', '%' . $nama . '%');
-                    }
+            if ($nama) {
+                $data->where('NAMA', 'like', '%' . $nama . '%');
+            }
 
-                    if (!empty($no_kontrak)) {
-                        $data->where('LOAN_NUMBER', $no_kontrak);
-                    }
+            if ($no_kontrak) {
+                $data->where('LOAN_NUMBER', $no_kontrak);
+            }
 
-                    if ($dari != 'null') {
-                        $formattedDate = Carbon::parse($dari)->format('Ymd');
-                        $data->where(DB::raw('DATE_FORMAT(CREATED_AT,"%Y%m%d")'), $formattedDate);
-                    }
-                }
+            if ($dari && $dari != 'null') {
+                $data->whereDate('CREATED_AT', Carbon::parse($dari)->toDateString());
+            } elseif (empty($notrx) && empty($nama) && empty($no_kontrak)) {
+                $data->whereDate('CREATED_AT', Carbon::today()->toDateString());
             }
 
             $results = $data->get();
@@ -90,8 +94,7 @@ class PaymentController extends Controller
 
             return response()->json($dto, 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
