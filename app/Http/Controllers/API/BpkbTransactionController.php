@@ -58,11 +58,10 @@ class BpkbTransactionController extends Controller
             $user = $request->user();
             $branch = $user->branch_id ?? null;
 
-            $data = M_BpkbTransaction::where('TO_BRANCH', $branch)->get();
+            $data = M_BpkbTransaction::where('TO_BRANCH', $branch)->where('STATUS', '!=', 'SELESAI')->get();
 
             $dto = R_BpkbList::collection($data);
 
-            ActivityLogger::logActivity($request, "Success", 200);
             return response()->json($dto, 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
