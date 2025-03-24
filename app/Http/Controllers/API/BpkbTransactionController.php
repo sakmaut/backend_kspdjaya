@@ -36,12 +36,30 @@ class BpkbTransactionController extends Controller
             $user = $request->user();
             $branchId = $user->branch_id ?? null;
 
+            $no_transaksi = $request->query('no_transaksi');
+            $status = $request->query('status');
+            $tgl = $request->query('tgl');
+
             $data = M_BpkbTransaction::leftJoin('users as b', 'b.id', '=', 'bpkb_transaction.CREATED_BY')
                 ->where('b.branch_id', '=', $branchId)
-                ->select('bpkb_transaction.*', 'b.branch_id')
-                ->get();
+                ->select('bpkb_transaction.*', 'b.branch_id');
 
-            $jsonData = R_BpkbList::collection($data);
+            // Apply filters based on request parameters
+            if ($no_transaksi) {
+                $data->where('bpkb_transaction.TRX_CODE', '=', $no_transaksi);
+            }
+
+            if ($status) {
+                $data->where('bpkb_transaction.STATUS', '=', strtoupper($status));
+            } else {
+                $data->where('bpkb_transaction.STATUS', '!=', 'SELESAI');
+            }
+
+            if ($tgl) {
+                $data->whereDate('bpkb_transaction.CREATED_AT', Carbon::parse($tgl)->toDateString());
+            }
+
+            $jsonData = R_BpkbList::collection($data->get());
 
             return response()->json($jsonData, 200);
         } catch (\Exception $e) {
