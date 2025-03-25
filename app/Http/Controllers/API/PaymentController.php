@@ -744,7 +744,8 @@ class PaymentController extends Controller
                                 'START_DATE' => $tgl_angsuran
                             ])->update([
                                 'STATUS_REC' => 'A',
-                                // 'PAST_DUE_PENALTY' => $pastDuePenalty ?? 0,
+                                'PAST_DUE_PENALTY' => $pastDuePenalty ?? 0,
+                                'UPDATED_AT' => Carbon::now()
                             ]);
                         }
                     }
