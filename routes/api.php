@@ -157,6 +157,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::post('listBanTest', [ListBanController::class, 'listBanTest']);
 
     Route::post('lap_pembayaran', [ReportController::class, 'lapPembayaran']);
+    Route::post('checkOrder', [CrSurveyController::class, 'checkOrder']);
 
     Route::resource('phone_book', PhoneBookController::class);
 });
