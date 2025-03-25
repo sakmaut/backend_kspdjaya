@@ -379,7 +379,7 @@ class PelunasanController extends Controller
                 'AUTH_DATE' => Carbon::now()
             ]);
 
-            if($kwitansi->PINALTY_PELUNASAN != 0){
+            if ($kwitansi->PINALTY_PELUNASAN != 0) {
                 $this->proccessPaymentDetail($uid, 'BAYAR PELUNASAN PINALTY', $kwitansi->PINALTY_PELUNASAN ?? 0);
             }
 
@@ -601,7 +601,7 @@ class PelunasanController extends Controller
             "PINALTY_PELUNASAN" => $request->BAYAR_PINALTI ?? 0,
             "DISKON_PINALTY_PELUNASAN" => $request->DISKON_PINALTI ?? 0,
             "PEMBULATAN" => $request->PEMBULATAN,
-            "DISKON" => $request->PEMBULATAN,
+            "DISKON" => $request->JUMLAH_DISKON,
             "KEMBALIAN" => $request->KEMBALIAN,
             "JUMLAH_UANG" => $request->UANG_PELANGGAN,
             "NAMA_BANK" => $request->NAMA_BANK,
