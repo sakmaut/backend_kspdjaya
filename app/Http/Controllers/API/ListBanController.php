@@ -36,7 +36,7 @@ class ListBanController extends Controller
                     $loan_num = $item->LOAN_NUM;
                     $pelanggan = $item->PELANGGAN;
                     $position = $item->position;
-                    $amount = is_numeric($item->ORIGINAL_AMOUNT) ? floatval($item->ORIGINAL_AMOUNT) : 0;
+                    $amount = is_numeric($item->ORIGINAL_AMOUNT) ? intval($item->ORIGINAL_AMOUNT) : 0;
 
                     if ($item->JENIS != 'PENCAIRAN') {
                         if ($amount != 0) {
@@ -58,7 +58,7 @@ class ListBanController extends Controller
                                 'nama_pelanggan' => $pelanggan,
                                 'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
                                 'keterangan' => $keterangan,
-                                'amount' => floatval(round($amount, 2)),
+                                'amount' => intval(round($amount, 2)),
                             ];
                         }
                     }
