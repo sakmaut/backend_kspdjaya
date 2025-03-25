@@ -765,7 +765,7 @@ class ListBanController extends Controller
         try {
             $dateFrom = $request->dari;
             $getBranch = $request->cabang_id;
-
+            $getPosition = $request->position;
 
             $query1 = "  SELECT  CONCAT(b.CODE, '-', b.CODE_NUMBER) AS KODE, 
                                 b.NAME AS NAMA_CABANG,
@@ -798,8 +798,8 @@ class ListBanController extends Controller
                                 replace(format(coalesce(st.arr_int,0),0),',','') as AMBC_BNG_AWAL, 
                                 replace(format((coalesce(st.arr_pcpl,0)+coalesce(st.arr_int,0)),0),',','') as AMBC_TOTAL_AWAL, 
                                 concat('C',case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then 'N'
-                                                when replace(format(case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then cl.PCPL_ORI
-			 			                                            else st.init_pcpl end,0),',','')=0 then 'L'
+                                                when replace(format(case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then (cl.PCPL_ORI+cl.INTRST_ORI)
+			 			                                            else (st.init_pcpl+st.init_int) end,0),',','')=0 then 'L'
                                                 when case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'MUSIMAN' 
                                                         and date_format(st.first_arr,'%m%Y')=date_format(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),'%m%Y') then 'N' 
                                                 when st.first_arr>=date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 2 month) then 'N' 
@@ -829,8 +829,8 @@ class ListBanController extends Controller
                                 replace(format(coalesce(py.this_int,0),0),',','') AC_BNG_MRG, 
                                 replace(format(coalesce(py.this_cash,0),0),',','') AC_TOTAL, 
                                 concat('C',case when cl.STATUS <> 'A' then 'L'
-                                                when replace(format(case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then cl.PCPL_ORI
-			 			                                            else en.init_pcpl end,0),',','')=0 then 'L'
+                                                when replace(format(case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then (cl.PCPL_ORI+cl.INTRST_ORI)
+			 			                                            else (en.init_pcpl+en.init_int) end,0),',','')=0 then 'L'
                                                 when case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'MUSIMAN' 
                                                         and date_format(en.first_arr,'%m%Y')=date_format(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 2 month),'%m%Y') then 'N' 
                                                 when en.first_arr>=date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 3 month) then 'N' 
@@ -865,8 +865,11 @@ class ListBanController extends Controller
                                     and en.type=date_format(date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day),'%d%m%Y')
                                 left join temp_lis_02 py on cast(py.loan_num as char) = cast(cl.LOAN_NUMBER as char) 
                         WHERE	date_format(cl.BACK_DATE,'%d%m%Y')=date_format(date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day),'%d%m%Y')
-                                and cl.STATUS = 'A'
-                                or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char)from temp_lis_02 ))";
+                                and (cl.STATUS = 'A' or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char)from temp_lis_02 )))";
+
+            if (strtolower($getPosition) != 'ho') {
+                $query1 .= " and st.arr_count <= 8";
+            }
 
             $query2 = "SELECT	CONCAT(b.CODE, '-', b.CODE_NUMBER) AS KODE, 
                                 b.NAME AS NAMA_CABANG,
@@ -899,8 +902,8 @@ class ListBanController extends Controller
                                 replace(format(coalesce(st.arr_int,0),0),',','') as AMBC_BNG_AWAL, 
                                 replace(format((coalesce(st.arr_pcpl,0)+coalesce(st.arr_int,0)),0),',','') as AMBC_TOTAL_AWAL, 
                                 concat('C',case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then 'N'
-                                                when replace(format(case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then cl.PCPL_ORI
-			 			                                            else st.init_pcpl end,0),',','')=0 then 'L'
+                                                when replace(format(case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then (cl.PCPL_ORI+cl.INTRST_ORI)
+			 			                                            else (st.init_pcpl+st.init_int) end,0),',','')=0 then 'L'
                                                 when case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'MUSIMAN' 
                                                         and date_format(st.first_arr,'%m%Y')=date_format(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),'%m%Y') then 'N' 
                                                 when st.first_arr>=date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 2 month) then 'N' 
@@ -930,8 +933,8 @@ class ListBanController extends Controller
                                 replace(format(coalesce(py.this_int,0),0),',','') AC_BNG_MRG, 
                                 replace(format(coalesce(py.this_cash,0),0),',','') AC_TOTAL, 
                                 concat('C',case when cl.STATUS <> 'A' then 'L'
-                                                when replace(format(case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then cl.PCPL_ORI
-			 			                                            else en.init_pcpl end,0),',','')=0 then 'L'
+                                                when replace(format(case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then (cl.PCPL_ORI+cl.INTRST_ORI)
+			 			                                            else (en.init_pcpl+en.init_int) end,0),',','')=0 then 'L'
                                                 when case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'MUSIMAN' 
                                                         and date_format(en.first_arr,'%m%Y')=date_format(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 2 month),'%m%Y') then 'N' 
                                                 when en.first_arr>=date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 3 month) then 'N' 
@@ -965,8 +968,11 @@ class ListBanController extends Controller
                                     on cast(en.loan_number as char) = cast(cl.LOAN_NUMBER as char)
                                     and en.type=date_format(now(),'%d%m%Y')
                                 left join temp_lis_02C py on cast(py.loan_num as char) = cast(cl.LOAN_NUMBER as char) 
-                        WHERE	cl.STATUS = 'A'
-                                or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char) from temp_lis_02C ))";
+                        WHERE	(cl.STATUS = 'A'  or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char) from temp_lis_02C )))";
+
+            if (strtolower($getPosition) != 'ho') {
+                $query1 .= " and st.arr_count <= 8";
+            }
 
             $getNow = date('mY', strtotime(now()));
 
