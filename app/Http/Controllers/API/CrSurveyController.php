@@ -886,4 +886,21 @@ class CrSurveyController extends Controller
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
+
+    public function checkOrder(Request $req)
+    {
+        DB::beginTransaction();
+        try {
+
+            return response()->json("", 200);
+        } catch (QueryException $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($req, $e->getMessage(), 409);
+            return response()->json(['message' => $e->getMessage(), "status" => 409], 409);
+        } catch (\Exception $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($req, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+        }
+    }
 }

@@ -58,7 +58,7 @@ class ListBanController extends Controller
                                 'nama_pelanggan' => $pelanggan,
                                 'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
                                 'keterangan' => $keterangan,
-                                'amount' => floatval(round($amount, 2)),
+                                'amount' => floatval($amount),
                             ];
                         }
                     }
@@ -178,7 +178,7 @@ class ListBanController extends Controller
                                 WHEN b.PAYMENT_METHOD = 'transfer' THEN DATE_FORMAT(b.AUTH_DATE, '%Y-%m-%d')
                                 ELSE DATE_FORMAT(b.ENTRY_DATE, '%Y-%m-%d') 
                             END AS ENTRY_DATE, 
-                            SUM(a.ORIGINAL_AMOUNT) AS ORIGINAL_AMOUNT,
+                            ROUND(SUM(a.ORIGINAL_AMOUNT),2) AS ORIGINAL_AMOUNT,
                             b.LOAN_NUM,
                             b.PAYMENT_METHOD,
                             b.INVOICE AS no_invoice,
@@ -229,7 +229,7 @@ class ListBanController extends Controller
                                 WHEN a.METODE_PEMBAYARAN = 'transfer' THEN DATE_FORMAT(b.AUTH_DATE, '%Y-%m-%d')
                                 ELSE DATE_FORMAT(a.CREATED_AT, '%Y-%m-%d') 
                             END AS ENTRY_DATE, 
-                            a.PEMBULATAN AS ORIGINAL_AMOUNT,
+                            ROUND(a.PEMBULATAN,2) AS ORIGINAL_AMOUNT,
                             a.LOAN_NUMBER AS LOAN_NUM,
                             a.METODE_PEMBAYARAN,
                             a.NO_TRANSAKSI AS no_invoice,
