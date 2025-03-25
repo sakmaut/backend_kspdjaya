@@ -735,6 +735,10 @@ class PaymentController extends Controller
                                 $credit_schedule->update(['PAID_FLAG' => '']);
                             }
 
+                            $today = date('Y-m-d');
+                            // $daysDiff = (strtotime($today) - strtotime($result->PAYMENT_DATE)) / (60 * 60 * 24);
+                            // $pastDuePenalty = $result->INSTALLMENT * ($daysDiff * 0.005);
+
                             M_Arrears::where([
                                 'LOAN_NUMBER' => $loan_number,
                                 'START_DATE' => $tgl_angsuran

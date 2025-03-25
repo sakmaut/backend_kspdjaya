@@ -765,7 +765,7 @@ class ListBanController extends Controller
         try {
             $dateFrom = $request->dari;
             $getBranch = $request->cabang_id;
-
+            $getPosition = $request->position;
 
             $query1 = "  SELECT  CONCAT(b.CODE, '-', b.CODE_NUMBER) AS KODE, 
                                 b.NAME AS NAMA_CABANG,
@@ -865,8 +865,11 @@ class ListBanController extends Controller
                                     and en.type=date_format(date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day),'%d%m%Y')
                                 left join temp_lis_02 py on cast(py.loan_num as char) = cast(cl.LOAN_NUMBER as char) 
                         WHERE	date_format(cl.BACK_DATE,'%d%m%Y')=date_format(date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day),'%d%m%Y')
-                                and cl.STATUS = 'A'
-                                or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char)from temp_lis_02 ))";
+                                and (cl.STATUS = 'A' or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char)from temp_lis_02 )))";
+
+            if (strtolower($getPosition) != 'ho') {
+                $query1 .= " and st.arr_count <= 8";
+            }
 
             $query2 = "SELECT	CONCAT(b.CODE, '-', b.CODE_NUMBER) AS KODE, 
                                 b.NAME AS NAMA_CABANG,
@@ -965,8 +968,11 @@ class ListBanController extends Controller
                                     on cast(en.loan_number as char) = cast(cl.LOAN_NUMBER as char)
                                     and en.type=date_format(now(),'%d%m%Y')
                                 left join temp_lis_02C py on cast(py.loan_num as char) = cast(cl.LOAN_NUMBER as char) 
-                        WHERE	cl.STATUS = 'A'
-                                or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char) from temp_lis_02C ))";
+                        WHERE	(cl.STATUS = 'A'  or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char) from temp_lis_02C )))";
+
+            if (strtolower($getPosition) != 'ho') {
+                $query1 .= " and st.arr_count <= 8";
+            }
 
             $getNow = date('mY', strtotime(now()));
 
