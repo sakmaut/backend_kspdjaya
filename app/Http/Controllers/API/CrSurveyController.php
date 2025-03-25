@@ -887,11 +887,10 @@ class CrSurveyController extends Controller
         }
     }
 
-    public function checkOrder(Request $req)
+    public function checkOrder(Request $request)
     {
         DB::beginTransaction();
         try {
-
             return response()->json("", 200);
         } catch (QueryException $e) {
             DB::rollback();
