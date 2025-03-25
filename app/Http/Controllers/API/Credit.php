@@ -260,6 +260,12 @@ class Credit extends Controller
 
         if (!$check_exist && $check_count <= 1 && $request->flag == 'yes') {
 
+            // $checkCountKK = $this->countKK($cr_personal->KK ?? null);
+
+            // if ($checkCountKK > 2) {
+            //     throw new Exception("KK greater than 2", 500);
+            // }
+
             $checkCreditMaxLoan = DB::table('credit as a')
                 ->join('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
                 ->where('a.STATUS', 'A')
@@ -302,6 +308,29 @@ class Credit extends Controller
         }
 
         return $array_build;
+    }
+
+    private function countKK($kk)
+    {
+        if ($kk === null) {
+            return 0;
+        }
+
+        $countKK = M_Customer::where('KK_NUMBER', '=', $kk)->count('id');
+
+        return $countKK;
+    }
+
+    private function cekPKBeforeCreated($kk)
+    {
+        $result = DB::table('credit as a')
+            ->join('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
+            ->select('a.STATUS', 'b.KK_NUMBER')
+            ->where('b.KK_NUMBER', '=', $kk)
+            ->where('a.STATUS', '=', 'A')
+            ->first();
+
+        return $result;
     }
 
     private function insert_credit($SET_UUID, $request, $data, $loan_number, $installment_count, $cust_code)
