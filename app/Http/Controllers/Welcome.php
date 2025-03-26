@@ -55,8 +55,8 @@ class Welcome extends Controller
             // Find the token using the provided bearer token
             $token = PersonalAccessToken::findToken($request->bearerToken());
 
-            return response()->json('Token expires at: ' . $token->expires_at . ' Current time: ' . now());
-            die;
+            // return response()->json('Token expires at: ' . $token->expires_at . ' Current time: ' . now());
+            // die;
 
             if (!$token) {
                 return response()->json([
