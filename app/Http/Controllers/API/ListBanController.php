@@ -983,7 +983,9 @@ class ListBanController extends Controller
                 $query = $query1;
             }
 
-            if (!empty($getBranch) && $getBranch != 'SEMUA CABANG') {
+            if (!empty($getBranch) && $getBranch != 'SEMUA CABANG' && strtolower($getPosition) == 'ho') {
+                $query .= " AND b.ID = '$getBranch'";
+            } else {
                 $query .= " AND b.ID = '$getBranch'";
             }
 
