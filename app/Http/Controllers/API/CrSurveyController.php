@@ -908,7 +908,7 @@ class CrSurveyController extends Controller
                     "ktp" => false,
                     "message" => "No KTP {$ktp} Masih Ada yang Aktif"
                 ];
-            }else{
+            } else {
                 $data[] = [
                     "ktp" => true
                 ];
@@ -917,21 +917,21 @@ class CrSurveyController extends Controller
             $checkKkNumber = DB::table('credit as a')
                 ->join('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
                 ->where('a.STATUS', 'A')
-                ->where('b.KK_NUMBER', $ktp)
+                ->where('b.KK_NUMBER', $kk)
                 ->count();
 
-            if ($checkKkNumber > 2) {
+            if ($checkKkNumber == 2) {
                 $data[] = [
                     "kk" => false,
                     "message" => "No KK {$kk} Aktif Lebih Dari 2"
                 ];
-            }else{
+            } else {
                 $data[] = [
                     "kk" => true
                 ];
             }
 
-            return response()->json( $data, 200);
+            return response()->json($data, 200);
         } catch (QueryException $e) {
             DB::rollback();
             ActivityLogger::logActivity($request, $e->getMessage(), 409);
