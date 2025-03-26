@@ -55,9 +55,6 @@ class Welcome extends Controller
             // Find the token using the provided bearer token
             $token = PersonalAccessToken::findToken($request->bearerToken());
 
-            // return response()->json('Token expires at: ' . $token->expires_at . ' Current time: ' . now());
-            // die;
-
             if (!$token) {
                 return response()->json([
                     'token' => false,
@@ -65,7 +62,10 @@ class Welcome extends Controller
                 ], 401);
             }
 
-            if ($token->expires_at && $token->expires_at->isBefore(now())) {
+            $dateToken =  date('Ymd', strtotime($token->expires_at));
+            $dateNow =  date('Ymd', strtotime(now()));
+
+            if ($dateToken != $dateNow) {
                 return response()->json([
                     'token' => false,
                     'message' => 'Token expired'
