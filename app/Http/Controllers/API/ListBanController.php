@@ -770,7 +770,7 @@ class ListBanController extends Controller
 
             $getBranchCode = M_Branch::find($getBranch);
 
-            return response()->json('CABANG ' . $getBranch->CODE, 200);
+            return response()->json('CABANG ' . $getBranchCode->CODE_NUMBER, 200);
 
             // if ($getPosition != 'HO') {
             //     return response()->json('YA', 200);
