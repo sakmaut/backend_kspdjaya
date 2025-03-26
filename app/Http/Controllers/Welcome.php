@@ -65,7 +65,7 @@ class Welcome extends Controller
             $dateToken =  date('Ymd', strtotime($token->expires_at));
             $dateNow =  date('Ymd', strtotime(now()));
 
-            if ($dateToken != $dateNow) {
+            if ($dateToken != $dateNow || $token->expires_at == null || !$token->expires_at || empty($token->expires_at)) {
                 return response()->json([
                     'token' => false,
                     'message' => 'Token expired'
