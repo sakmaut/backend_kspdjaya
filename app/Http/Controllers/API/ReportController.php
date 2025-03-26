@@ -934,4 +934,8 @@ class ReportController extends Controller
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
+
+    public function surveyReport(Request $request)
+    {
+    }
 }
