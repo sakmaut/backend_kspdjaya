@@ -990,14 +990,14 @@ class ListBanController extends Controller
             }
 
             if (strtolower($getPosition) != 'ho') {
-                $query .= "AND st.arr_count <= 8";
+                $query .= " AND st.arr_count <= 8";
             }
 
             if (!empty($getBranch) && $getBranch != 'SEMUA CABANG') {
-                $query .= "AND cl.BRANCH = '$getBranch'";
+                $query .= " AND cl.BRANCH = '$getBranch'";
             }
 
-            $query .= "ORDER BY b.NAME,cl.CREATED_AT ASC";
+            $query .= " ORDER BY b.NAME,cl.CREATED_AT ASC";
 
             $results = DB::select($query);
 
