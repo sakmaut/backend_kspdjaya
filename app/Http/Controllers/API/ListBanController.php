@@ -25,8 +25,6 @@ class ListBanController extends Controller
 
                 $arusKas = $this->queryArusKas($cabangId, $request);
 
-
-
                 foreach ($arusKas as $item) {
 
                     $cabang = $item->nama_cabang;
@@ -766,7 +764,7 @@ class ListBanController extends Controller
         try {
             $dateFrom = $request->dari;
             $getBranch = $request->cabang_id;
-            $getPosition = $request->position;
+            $getPosition = $request->user()->position;
 
             $getBranchIdUser = $request->user()->branch_id;
 
@@ -996,8 +994,12 @@ class ListBanController extends Controller
                 $query .= " AND st.arr_count <= 8";
             }
 
-            if (!empty($getBranch) && $getBranch != 'SEMUA CABANG') {
-                $query .= " AND cl.BRANCH = '$getBranch'";
+            if (strtolower($getPosition) != 'ho') {
+                $query .= " AND cl.BRANCH = '$getBranchIdUser'";
+            } else {
+                if (!empty($getBranch) && $getBranch != 'SEMUA CABANG') {
+                    $query .= " AND cl.BRANCH = '$getBranch'";
+                }
             }
 
             $query .= " ORDER BY b.NAME,cl.CREATED_AT ASC";
