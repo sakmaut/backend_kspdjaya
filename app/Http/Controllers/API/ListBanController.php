@@ -762,10 +762,19 @@ class ListBanController extends Controller
 
     public function listBanTest(Request $request)
     {
+
         try {
             $dateFrom = $request->dari;
             $getBranch = $request->cabang_id;
             $getPosition = $request->position;
+
+            if ($getPosition != 'HO') {
+                return response()->json('YA', 200);
+            } else {
+                return response()->json('SALAH', 200);
+            }
+
+            die;
 
             $query1 = "SELECT  CONCAT(b.CODE, '-', b.CODE_NUMBER) AS KODE,
                                 b.NAME AS NAMA_CABANG,
