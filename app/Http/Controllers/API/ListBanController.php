@@ -764,7 +764,7 @@ class ListBanController extends Controller
     {
         try {
             $dateFrom = $request->dari;
-            $getBranch = $request->branch_id;
+            $getBranch = $request->cabang_id;
             $getPosition = $request->position;
 
             $query1 = "  SELECT  CONCAT(b.CODE, '-', b.CODE_NUMBER) AS KODE,
