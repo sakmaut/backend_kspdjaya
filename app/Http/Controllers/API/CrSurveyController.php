@@ -14,6 +14,7 @@ use App\Models\M_CrGuaranteSertification;
 use App\Models\M_CrGuaranteVehicle;
 use App\Models\M_CrSurvey;
 use App\Models\M_CrSurveyDocument;
+use App\Models\M_Customer;
 use App\Models\M_SurveyApproval;
 use App\Models\M_SurveyApprovalLog;
 use Carbon\Carbon;
@@ -891,14 +892,53 @@ class CrSurveyController extends Controller
     {
         DB::beginTransaction();
         try {
-            return response()->json("", 200);
+
+            $data = [];
+            $ktp = $request->ktp;
+            $kk = $request->kk;
+
+            $checkIdNumber = DB::table('credit as a')
+                ->join('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
+                ->where('a.STATUS', 'A')
+                ->where('b.ID_NUMBER', $ktp)
+                ->count();
+
+            if ($checkIdNumber > 1) {
+                $data[] = [
+                    "ktp" => false,
+                    "message" => "No KTP {$ktp} Masih Ada yang Aktif"
+                ];
+            }else{
+                $data[] = [
+                    "ktp" => true
+                ];
+            }
+
+            $checkKkNumber = DB::table('credit as a')
+                ->join('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
+                ->where('a.STATUS', 'A')
+                ->where('b.KK_NUMBER', $ktp)
+                ->count();
+
+            if ($checkKkNumber > 2) {
+                $data[] = [
+                    "kk" => false,
+                    "message" => "No KK {$kk} Aktif Lebih Dari 2"
+                ];
+            }else{
+                $data[] = [
+                    "kk" => true
+                ];
+            }
+
+            return response()->json( $data, 200);
         } catch (QueryException $e) {
             DB::rollback();
-            ActivityLogger::logActivity($req, $e->getMessage(), 409);
+            ActivityLogger::logActivity($request, $e->getMessage(), 409);
             return response()->json(['message' => $e->getMessage(), "status" => 409], 409);
         } catch (\Exception $e) {
             DB::rollback();
-            ActivityLogger::logActivity($req, $e->getMessage(), 500);
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
