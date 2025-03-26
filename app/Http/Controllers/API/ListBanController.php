@@ -868,7 +868,7 @@ class ListBanController extends Controller
                                 and (cl.STATUS = 'A' or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char)from temp_lis_02 )))";
 
             if ($getBranch != '8593fd4e-b54e-11ef-97d5-bc24112eb731') {
-                $query1 .= " AND st.arr_count <= 8";
+                $query1 .= "AND st.arr_count <= 8";
             }
 
             $query2 = "SELECT	CONCAT(b.CODE, '-', b.CODE_NUMBER) AS KODE,
@@ -971,7 +971,7 @@ class ListBanController extends Controller
                         WHERE	(cl.STATUS = 'A'  or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char) from temp_lis_02C )))";
 
             if ($getBranch != '8593fd4e-b54e-11ef-97d5-bc24112eb731') {
-                $query2 .= " AND st.arr_count <= 8";
+                $query2 .= "AND st.arr_count <= 8";
             }
 
             $getNow = date('mY', strtotime(now()));
@@ -998,7 +998,7 @@ class ListBanController extends Controller
             }
 
             if (!empty($getBranch) && $getBranch != 'SEMUA CABANG') {
-                $query .= " AND cl.BRANCH = '$getBranch'";
+                $query .= "AND cl.BRANCH = '$getBranch'";
             }
 
             $query .= " ORDER BY b.NAME,cl.CREATED_AT ASC";
