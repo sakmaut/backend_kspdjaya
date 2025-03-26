@@ -867,10 +867,6 @@ class ListBanController extends Controller
                         WHERE	date_format(cl.BACK_DATE,'%d%m%Y')=date_format(date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day),'%d%m%Y')
                                 and (cl.STATUS = 'A' or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char)from temp_lis_02 )))";
 
-            if (strtolower($getPosition) != 'ho') {
-                $query1 .= "AND st.arr_count <= 8";
-            }
-
             $query2 = "SELECT	CONCAT(b.CODE, '-', b.CODE_NUMBER) AS KODE,
                                 b.NAME AS NAMA_CABANG,
                                 cl.LOAN_NUMBER AS NO_KONTRAK,
@@ -970,10 +966,6 @@ class ListBanController extends Controller
                                 left join temp_lis_02C py on cast(py.loan_num as char) = cast(cl.LOAN_NUMBER as char)
                         WHERE	(cl.STATUS = 'A'  or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char) from temp_lis_02C )))";
 
-            if (strtolower($getPosition) != 'ho') {
-                $query2 .= "AND st.arr_count <= 8";
-            }
-
             $getNow = date('mY', strtotime(now()));
 
             if ($getNow == $dateFrom) {
@@ -983,10 +975,14 @@ class ListBanController extends Controller
                 $query = $query1;
             }
 
+            if (strtolower($getPosition) != 'ho') {
+                $query .= "AND st.arr_count <= 8";
+            }
+
             if (!empty($getBranch) && $getBranch != 'SEMUA CABANG' && strtolower($getPosition) == 'ho') {
-                $query .= " AND b.ID = '$getBranch'";
+                $query .= " AND cl.BRANCH = '$getBranch'";
             } else {
-                $query .= " AND b.ID = '$getBranch'";
+                $query .= " AND cl.BRANCH = '$getBranch'";
             }
 
             $query .= " ORDER BY b.NAME,cl.CREATED_AT ASC";
