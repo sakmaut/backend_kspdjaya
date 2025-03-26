@@ -767,7 +767,7 @@ class ListBanController extends Controller
             $getBranch = $request->cabang_id;
             $getPosition = $request->position;
 
-            $query1 = "  SELECT  CONCAT(b.CODE, '-', b.CODE_NUMBER) AS KODE,
+            $query1 = "SELECT  CONCAT(b.CODE, '-', b.CODE_NUMBER) AS KODE,
                                 b.NAME AS NAMA_CABANG,
                                 cl.LOAN_NUMBER AS NO_KONTRAK,
                                 c.NAME AS NAMA_PELANGGAN,
