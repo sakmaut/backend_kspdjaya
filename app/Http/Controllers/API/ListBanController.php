@@ -979,9 +979,7 @@ class ListBanController extends Controller
                 $query .= "AND st.arr_count <= 8";
             }
 
-            if (!empty($getBranch) && $getBranch != 'SEMUA CABANG' && strtolower($getPosition) == 'ho') {
-                $query .= "AND cl.BRANCH = '$getBranch'";
-            } else {
+            if (!empty($getBranch) && $getBranch != 'SEMUA CABANG') {
                 $query .= "AND cl.BRANCH = '$getBranch'";
             }
 
