@@ -50,7 +50,8 @@ class Welcome extends Controller
     {
         DB::beginTransaction();
         try {
-
+            return response()->json("asdasdasd");
+            die;
             $inv = $req->no_invoice;
 
             $queryAngsuran = "  SELECT  a.NO_TRANSAKSI,
@@ -65,12 +66,12 @@ class Welcome extends Controller
                                 a.DISKON_PINALTY_PELUNASAN,
                                 b.*
                     FROM kwitansi a
-                        LEFT JOIN kwitansi_structur_detail b 
+                        LEFT JOIN kwitansi_structur_detail b
                         ON b.no_invoice = a.NO_TRANSAKSI
                     WHERE a.STTS_PAYMENT = 'PAID'
                         AND a.NO_TRANSAKSI = '$inv'
                         AND a.PAYMENT_TYPE = 'angsuran'
-                        AND (b.installment != 0 OR b.bayar_angsuran != 0 OR b.bayar_denda != 0 OR b.diskon_denda != 0)  
+                        AND (b.installment != 0 OR b.bayar_angsuran != 0 OR b.bayar_denda != 0 OR b.diskon_denda != 0)
         			ORDER BY b.tgl_angsuran ASC";
 
             $resultsAngsuran = DB::select($queryAngsuran);
@@ -129,8 +130,8 @@ class Welcome extends Controller
                         $paymntDate = date('Y-m-d', strtotime($res['tgl_angsuran']));
 
                         $getCrditSchedule = "   SELECT LOAN_NUMBER,PAYMENT_DATE,PRINCIPAL,INTEREST,INSTALLMENT,PAYMENT_VALUE_PRINCIPAL,PAYMENT_VALUE_INTEREST
-                                                    FROM credit_schedule 
-                                                    WHERE PAYMENT_DATE = '$paymntDate' 
+                                                    FROM credit_schedule
+                                                    WHERE PAYMENT_DATE = '$paymntDate'
                                                         AND LOAN_NUMBER = '{$res['loan_number']}'
                                                         AND (PAID_FLAG IS NULL OR PAID_FLAG = '')
                                                     ORDER BY PAYMENT_DATE ASC";
