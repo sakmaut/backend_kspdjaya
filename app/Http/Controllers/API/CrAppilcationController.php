@@ -62,6 +62,7 @@ class CrAppilcationController extends Controller
                 'cr_survey.hp',
                 'survey_approval.CODE',
                 'survey_approval.APPROVAL_RESULT',
+                'survey_approval.ONCHARGE_TIME',
                 DB::raw("COALESCE(cr_application.SUBMISSION_VALUE, cr_survey.plafond) as plafond")
             )
                 ->leftJoin('survey_approval', 'survey_approval.CR_SURVEY_ID', '=', 'cr_survey.id')
@@ -81,11 +82,11 @@ class CrAppilcationController extends Controller
             }
 
             if (!empty($tgl_order)) {
-                $data->whereRaw("DATE_FORMAT(cr_survey.visit_date, '%Y-%m-%d') = ?", [$tgl_order]);
+                $data->whereRaw("DATE_FORMAT(survey_approval.ONCHARGE_TIME, '%Y-%m-%d') = ?", [$tgl_order]);
             }
 
             if (empty($no_order) && empty($nama) && empty($tgl_order)) {
-                $data->whereRaw("DATE_FORMAT(cr_survey.visit_date, '%Y-%m-%d') = ?", [Carbon::now()->format('Y-m-d')]);
+                $data->whereRaw("DATE_FORMAT(survey_approval.ONCHARGE_TIME, '%Y-%m-%d') = ?", [Carbon::now()->format('Y-m-d')]);
             }
 
             $results = $data->get();
