@@ -762,25 +762,6 @@ class ListBanController extends Controller
 
     public function listBanTest(Request $request)
     {
-
-        $checkRunSp = DB::select(" SELECT 
-                                                CASE 
-                                                    WHEN (SELECT MAX(p.ENTRY_DATE) FROM payment p) > (SELECT MAX(temp_lis_02C.last_pay) FROM temp_lis_02C) 
-                                                        AND job_status = 0 THEN 'run' 
-                                                    ELSE 'skip' 
-                                                END AS execute_sp
-                                            FROM job_on_progress
-                                            WHERE job_name = 'LISBAN'
-                                        ");
-
-        if (!empty($checkRunSp) && $checkRunSp[0]->execute_sp === 'run') {
-            return response()->json("JALAN", 200);
-        } else {
-            return response()->json("TIDAK JALAN " . $checkRunSp[0]->execute_sp, 200);
-        };
-
-        die;
-
         try {
             $dateFrom = $request->dari;
             $getBranch = $request->cabang_id;
@@ -984,10 +965,6 @@ class ListBanController extends Controller
                                     and en.type=date_format(now(),'%d%m%Y')
                                 left join temp_lis_02C py on cast(py.loan_num as char) = cast(cl.LOAN_NUMBER as char)
                         WHERE	(cl.STATUS = 'A'  or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char) from temp_lis_02C )))";
-
-            // if ($getBranch != '8593fd4e-b54e-11ef-97d5-bc24112eb731') {
-            //     $query2 .= "AND st.arr_count <= 8";
-            // }
 
             $getNow = date('mY', strtotime(now()));
 
