@@ -86,7 +86,7 @@ class CrAppilcationController extends Controller
             }
 
             if (empty($no_order) && empty($nama) && empty($tgl_order)) {
-                $data->whereRaw("DATE_FORMAT(survey_approval.ONCHARGE_TIME, '%Y%m%d') = ?", [Carbon::now()->format('Ymd')]);
+                $data->whereRaw("DATE_FORMAT(cr_survey.visit_date, '%Y%m%d') = ?", [Carbon::now()->format('Ymd')]);
             }
 
             $results = $data->get();
