@@ -762,6 +762,25 @@ class ListBanController extends Controller
 
     public function listBanTest(Request $request)
     {
+
+        $checkRunSp = DB::select(" SELECT 
+                                                CASE 
+                                                    WHEN (SELECT MAX(p.ENTRY_DATE) FROM payment p) > (SELECT MAX(temp_lis_02C.last_pay) FROM temp_lis_02C) 
+                                                        AND job_status = 0 THEN 'run' 
+                                                    ELSE 'skip' 
+                                                END AS execute_sp
+                                            FROM job_on_progress
+                                            WHERE job_name = 'LISBAN'
+                                        ");
+
+        if (!empty($checkRunSp) && $checkRunSp[0]->execute_sp === 'run') {
+            return response()->json("JALAN", 200);
+        } else {
+            return response()->json("TIDAK JALAN " . $checkRunSp[0]->execute_sp, 200);
+        };
+
+        die;
+
         try {
             $dateFrom = $request->dari;
             $getBranch = $request->cabang_id;
@@ -866,10 +885,6 @@ class ListBanController extends Controller
                                 left join temp_lis_02 py on cast(py.loan_num as char) = cast(cl.LOAN_NUMBER as char)
                         WHERE	date_format(cl.BACK_DATE,'%d%m%Y')=date_format(date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day),'%d%m%Y')
                                 and (cl.STATUS = 'A' or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char)from temp_lis_02 )))";
-
-            // if ($getBranch != '8593fd4e-b54e-11ef-97d5-bc24112eb731') {
-            //     $query1 .= "AND st.arr_count <= 8";
-            // }
 
             $query2 = "SELECT	CONCAT(b.CODE, '-', b.CODE_NUMBER) AS KODE,
                                 b.NAME AS NAMA_CABANG,
@@ -978,26 +993,30 @@ class ListBanController extends Controller
 
             if ($getNow == $dateFrom) {
 
-                // $checkRunSp = DB::select(" SELECT 
-                //                                 CASE 
-                //                                     WHEN (SELECT MAX(p.ENTRY_DATE) FROM payment p) > (SELECT MAX(temp_lis_02C.last_pay) FROM temp_lis_02C) 
-                //                                         AND job_status = 0 THEN 'run' 
-                //                                     ELSE 'skip' 
-                //                                 END AS execute_sp
-                //                             FROM job_on_progress
-                //                             WHERE job_name = 'LISBAN'
-                //                         ");
+                $checkRunSp = DB::select(" SELECT 
+                                                CASE 
+                                                    WHEN (SELECT MAX(p.ENTRY_DATE) FROM payment p) > (SELECT MAX(temp_lis_02C.last_pay) FROM temp_lis_02C) 
+                                                        AND job_status = 0 THEN 'run' 
+                                                    ELSE 'skip' 
+                                                END AS execute_sp
+                                            FROM job_on_progress
+                                            WHERE job_name = 'LISBAN'
+                                        ");
 
-                // if (!empty($checkRunSp) && $checkRunSp[0]->execute_sp === 'run') {
-                //     DB::select('CALL lisban_berjalan(?)', [$getNow]);
-                // }
+                if (!empty($checkRunSp) && $checkRunSp[0]->execute_sp === 'run') {
+                    DB::select('CALL lisban_berjalan(?)', [$getNow]);
+                }
 
-                DB::select('CALL lisban_berjalan(?)', [$getNow]);
+                // DB::select('CALL lisban_berjalan(?)', [$getNow]);
 
                 $query = $query2;
             } else {
                 $query = $query1;
             }
+
+            // if ($getBranch != '8593fd4e-b54e-11ef-97d5-bc24112eb731') {
+            //     $query .= " AND st.arr_count <= 8";
+            // }
 
             if (!empty($getBranch) && $getBranch != 'SEMUA CABANG') {
                 $query .= " AND cl.BRANCH = '$getBranch'";
