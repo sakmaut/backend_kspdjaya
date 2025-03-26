@@ -990,7 +990,7 @@ class ListBanController extends Controller
             }
 
             if (strtolower($getPosition) != 'ho') {
-                $query .= " AND st.arr_count <= 8";
+                $query .= "AND st.arr_count <= 8";
             }
 
             if (!empty($getBranch) && $getBranch != 'SEMUA CABANG') {
