@@ -1000,7 +1000,7 @@ class ListBanController extends Controller
             }
 
             if (!empty($getBranch) && $getBranch != 'SEMUA CABANG') {
-                $query .= "AND cl.BRANCH = '$getBranch'";
+                $query .= " AND cl.BRANCH = '$getBranch'";
             }
 
             $query .= " ORDER BY b.NAME,cl.CREATED_AT ASC";
