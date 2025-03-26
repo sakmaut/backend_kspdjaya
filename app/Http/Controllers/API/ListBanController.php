@@ -995,9 +995,9 @@ class ListBanController extends Controller
             //     $query .= " AND st.arr_count <= 8";
             // }
 
-            if (!empty($getBranch) && $getBranch != 'SEMUA CABANG') {
-                $query .= " AND cl.BRANCH = '$getBranch'";
-            }
+            // if (!empty($getBranch) && $getBranch != 'SEMUA CABANG') {
+            //     $query .= " AND cl.BRANCH = '$getBranch'";
+            // }
 
             $query .= " ORDER BY b.NAME,cl.CREATED_AT ASC";
 
