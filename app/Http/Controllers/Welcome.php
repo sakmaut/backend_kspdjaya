@@ -41,12 +41,50 @@ use Illuminate\Support\Facades\Storage;
 use Ramsey\Uuid\Uuid;
 use Image;
 use Illuminate\Support\Facades\URL;
+use Laravel\Sanctum\PersonalAccessToken;
 
 use function Symfony\Component\Mailer\Event\getMessage;
 
 class Welcome extends Controller
 {
-    public function index(Request $req)
+
+    public function index(Request $request)
+    {
+
+        if ($request->bearerToken()) {
+            // Find the token using the provided bearer token
+            $token = PersonalAccessToken::findToken($request->bearerToken());
+
+            return response()->json('Token expires at: ' . $token->expires_at . ' Current time: ' . now());
+            die;
+
+            if (!$token) {
+                return response()->json([
+                    'token' => false,
+                    'message' => 'Token not found or invalid'
+                ], 401);
+            }
+
+            if ($token->expires_at && $token->expires_at->isBefore(now())) {
+                return response()->json([
+                    'token' => false,
+                    'message' => 'Token expired'
+                ], 401);
+            }
+
+            return response()->json([
+                'token' => true
+            ], 200);
+        }
+
+        // If no bearer token is provided
+        return response()->json([
+            'token' => false,
+            'message' => 'Authorization token missing'
+        ], 401);
+    }
+
+    public function indexs(Request $req)
     {
         DB::beginTransaction();
         try {

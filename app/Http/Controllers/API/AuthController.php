@@ -71,7 +71,10 @@ class AuthController extends Controller
     private function generateToken(User $user)
     {
         $user->tokens()->delete();
-        return $user->createToken($user->id)->plainTextToken;
+        $token = $user->createToken($user->id)->plainTextToken;
+        $tokenInstance = $user->tokens->last();
+        $tokenInstance->update(['expires_at' => now()->startOfDay()]);
+        return $token;
     }
 
     private function logLoginActivity(Request $request, string $message, int $statusCode)
