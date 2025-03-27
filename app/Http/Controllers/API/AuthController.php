@@ -33,16 +33,18 @@ class AuthController extends Controller
                 'password' => 'required|string|regex:/^[a-zA-Z0-9]*$/'
             ]);
 
+            $messageError = 'Validation failed';
+
             $credentials = $request->only('username', 'password');
 
             if (!Auth::attempt($credentials)) {
-                throw new ValidationException('Validation failed', 401);
+                return response()->json(['error' => $messageError], 401);
             }
 
             $user = $request->user();
 
             if (strtolower($user->status) !== 'active') {
-                throw new ValidationException('Validation failed', 401);
+                return response()->json(['error' => $messageError], 401);
             }
 
             $token = $this->generateToken($user);
