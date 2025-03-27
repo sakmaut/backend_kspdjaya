@@ -18,51 +18,67 @@ class AuthController extends Controller
 
     private $login = "Login";
     private $logout = "Logout";
-    protected $log;
-
-    public function __construct(ExceptionHandling $log)
-    {
-        $this->log = $log;
-    }
 
     public function login(Request $request)
     {
         try {
-            $request->validate([
-                'username' => 'required|string|regex:/^[a-zA-Z0-9]*$/',
-                'password' => 'required|string|regex:/^[a-zA-Z0-9]*$/'
+            $validator = Validator::make($request->all(), [
+                'username' => 'required|string|max:255',
+                'password' => 'required|string',
+                'device_info' => 'required|string|max:500'
+            ], [
+                'username.required' => 'Username is required',
+                'password.required' => 'Password is required',
+                'device_info.required' => 'Device information is required'
             ]);
+
+            if ($validator->fails()) {
+                throw new ValidationException($validator);
+            }
 
             $credentials = $request->only('username', 'password');
 
             if (!Auth::attempt($credentials)) {
-                return response()->json(['error' => 'Validation failed'], 401);
+                $this->logLoginActivity($request, 'Invalid Credential', 401);
+                throw new AuthenticationException('Invalid credentials');
             }
 
             $user = $request->user();
 
             if (strtolower($user->status) !== 'active') {
-                return response()->json(['error' => 'Validation failed'], 401);
+                $this->logLoginActivity($request, 'User status is not active', 401);
+                throw new AuthenticationException('Invalid credentials');
+            }
+
+            $menu = M_MasterUserAccessMenu::where(['users_id' => $user->id])->first();
+
+            if (!$menu) {
+                $this->logLoginActivity($request, 'Menu Not Found', 401);
+                throw new AuthenticationException('Invalid credentials');
             }
 
             $token = $this->generateToken($user);
 
+            $this->logLoginActivity($request, 'Success ' . $token, 200);
             return response()->json(['token' => $token], 200);
-        } catch (ValidationException $e) {
+        } catch (\Exception $e) {
+            $this->logLoginActivity($request, $e->getMessage(), 500);
             return response()->json([
-                'error' => 'Validation failed',
-                'messages' => $e->errors()
-            ], 401);
+                'message' => 'Internal server error',
+                'error' => config('app.debug') ? $e->getMessage() : 'An unexpected error occurred'
+            ], 500);
         }
     }
 
     private function generateToken(User $user)
     {
         $user->tokens()->delete();
-        $token = $user->createToken($user->id)->plainTextToken;
-        $tokenInstance = $user->tokens->last();
-        $tokenInstance->update(['expires_at' => now()->startOfDay()]);
-        return $token;
+        return $user->createToken($user->id)->plainTextToken;
+    }
+
+    private function logLoginActivity(Request $request, string $message, int $statusCode)
+    {
+        ActivityLogger::logActivityLogin($request, $this->login, $message, $statusCode);
     }
 
     public function logout(Request $request)
@@ -89,34 +105,6 @@ class AuthController extends Controller
             }
         } catch (\Exception $e) {
             ActivityLogger::logActivityLogout($request, $this->logout, $e, 500, $user->username);
-            return response()->json([
-                'message' => 'An error occurred',
-                'status' => 500
-            ], 500);
-        }
-    }
-
-    public function tokenCheckValidation(Request $request)
-    {
-        try {
-            $user = $request->user();
-
-            if ($user) {
-                $user->tokens()->delete();
-                return response()->json([
-                    'message' => 'Logout successful',
-                    'status' => 200,
-                    "response" => [
-                        "token_deleted" => $request->bearerToken()
-                    ]
-                ], 200);
-            } else {
-                return response()->json([
-                    'message' => 'Token not defined',
-                    'status' => 404
-                ], 404);
-            }
-        } catch (\Exception $e) {
             return response()->json([
                 'message' => 'An error occurred',
                 'status' => 500
