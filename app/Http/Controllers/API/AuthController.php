@@ -39,11 +39,15 @@ class AuthController extends Controller
                 throw new AuthenticationException('Invalid credentials');
             }
 
+            return response()->json("masuk");
+
             $user = $request->user();
 
             if (strtolower($user->status) !== 'active') {
                 throw new AuthenticationException('User status is not active');
             }
+
+            return response()->json("masuk_1");
 
             $token = $this->generateToken($user);
 
