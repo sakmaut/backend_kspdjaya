@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
 use App\Models\M_MasterUserAccessMenu;
 use App\Models\User;
+use Exception;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,55 +18,43 @@ class AuthController extends Controller
 
     private $login = "Login";
     private $logout = "Logout";
+    protected $log;
+
+    public function __construct(ExceptionHandling $log)
+    {
+        $this->log = $log;
+    }
 
     public function login(Request $request)
     {
         try {
-            $validator = Validator::make($request->all(), [
-                'username' => 'required|string|max:255',
-                'password' => 'required|string',
-                'device_info' => 'required|string|max:500'
-            ], [
-                'username.required' => 'Username is required',
-                'password.required' => 'Password is required',
-                'device_info.required' => 'Device information is required'
+            $request->validate([
+                'username' => 'required|string|regex:/^[a-zA-Z0-9]*$/',
+                'password' => 'required|string|regex:/^[a-zA-Z0-9]*$/'
             ]);
-
-            if ($validator->fails()) {
-                throw new ValidationException($validator);
-            }
 
             $credentials = $request->only('username', 'password');
 
             if (!Auth::attempt($credentials)) {
-                $this->logLoginActivity($request, 'Invalid Credential', 401);
-                throw new AuthenticationException('Invalid credentials');
+                throw new ValidationException('Invalid credentials');
             }
 
             $user = $request->user();
 
             if (strtolower($user->status) !== 'active') {
-                $this->logLoginActivity($request, 'User status is not active', 401);
-                throw new AuthenticationException('Invalid credentials');
-            }
-
-            $menu = M_MasterUserAccessMenu::where(['users_id' => $user->id])->first();
-
-            if (!$menu) {
-                $this->logLoginActivity($request, 'Menu Not Found', 401);
-                throw new AuthenticationException('Invalid credentials');
+                throw new ValidationException('User status is not active');
             }
 
             $token = $this->generateToken($user);
 
-            $this->logLoginActivity($request, 'Success ' . $token, 200);
             return response()->json(['token' => $token], 200);
-        } catch (\Exception $e) {
-            $this->logLoginActivity($request, $e->getMessage(), 500);
+        } catch (ValidationException $e) {
             return response()->json([
-                'message' => 'Internal server error',
-                'error' => config('app.debug') ? $e->getMessage() : 'An unexpected error occurred'
-            ], 500);
+                'error' => 'Validation failed',
+                'messages' => $e->errors()
+            ], 422);
+        } catch (Exception $e) {
+            return $this->log->logError($e, $request);
         }
     }
 
@@ -75,11 +65,6 @@ class AuthController extends Controller
         // $tokenInstance = $user->tokens->last();
         // $tokenInstance->update(['expires_at' => now()->startOfDay()]);
         return $token;
-    }
-
-    private function logLoginActivity(Request $request, string $message, int $statusCode)
-    {
-        ActivityLogger::logActivityLogin($request, $this->login, $message, $statusCode);
     }
 
     public function logout(Request $request)
