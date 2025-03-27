@@ -36,13 +36,13 @@ class AuthController extends Controller
             $credentials = $request->only('username', 'password');
 
             if (!Auth::attempt($credentials)) {
-                return response()->json(['error' => 'Validation failed'], 401);
+                throw new ValidationException('Validation failed', 401);
             }
 
             $user = $request->user();
 
             if (strtolower($user->status) !== 'active') {
-                return response()->json(['error' => 'Validation failed'], 401);
+                throw new ValidationException('Validation failed', 401);
             }
 
             $token = $this->generateToken($user);
