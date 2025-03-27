@@ -36,13 +36,13 @@ class AuthController extends Controller
             $credentials = $request->only('username', 'password');
 
             if (!Auth::attempt($credentials)) {
-                throw new ValidationException('Invalid credentials');
+                throw new AuthenticationException('Invalid credentials');
             }
 
             $user = $request->user();
 
             if (strtolower($user->status) !== 'active') {
-                throw new ValidationException('User status is not active');
+                throw new AuthenticationException('User status is not active');
             }
 
             $token = $this->generateToken($user);
