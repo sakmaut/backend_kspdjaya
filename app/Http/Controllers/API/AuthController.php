@@ -60,8 +60,8 @@ class AuthController extends Controller
     {
         $user->tokens()->delete();
         $token = $user->createToken($user->id)->plainTextToken;
-        // $tokenInstance = $user->tokens->last();
-        // $tokenInstance->update(['expires_at' => now()->startOfDay()]);
+        $tokenInstance = $user->tokens()->latest()->first();
+        $tokenInstance->update(['expires_at' => now()->addDay()]);
         return $token;
     }
 
