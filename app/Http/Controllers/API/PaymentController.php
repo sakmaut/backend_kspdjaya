@@ -85,9 +85,7 @@ class PaymentController extends Controller
             if ($dari && $dari != 'null') {
                 $data->whereDate('CREATED_AT', Carbon::parse($dari)->toDateString());
             } elseif (empty($notrx) && empty($nama) && empty($no_kontrak)) {
-                // $data->whereDate('CREATED_AT', Carbon::today()->toDateString());
-                $data->whereDate('CREATED_AT', '>=', Carbon::now()->subMonths(2)->startOfDay())
-                    ->whereDate('CREATED_AT', '<=', Carbon::now()->endOfDay());
+                $data->whereDate('CREATED_AT', Carbon::today()->toDateString());
             }
 
             $results = $data->get();
