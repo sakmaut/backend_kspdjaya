@@ -174,8 +174,8 @@ class ListBanController extends Controller
                             d.NAME AS nama_cabang,
                             CASE
                                 WHEN b.PAYMENT_METHOD = 'transfer' THEN DATE_FORMAT(b.AUTH_DATE, '%Y-%m-%d')
-                                ELSE DATE_FORMAT(b.ENTRY_DATE, '%Y-%m-%d') 
-                            END AS ENTRY_DATE, 
+                                ELSE DATE_FORMAT(b.ENTRY_DATE, '%Y-%m-%d')
+                            END AS ENTRY_DATE,
                             ROUND(SUM(a.ORIGINAL_AMOUNT),2) AS ORIGINAL_AMOUNT,
                             b.LOAN_NUM,
                             b.PAYMENT_METHOD,
@@ -225,8 +225,8 @@ class ListBanController extends Controller
                             d.NAME AS nama_cabang,
                             CASE
                                 WHEN a.METODE_PEMBAYARAN = 'transfer' THEN DATE_FORMAT(b.AUTH_DATE, '%Y-%m-%d')
-                                ELSE DATE_FORMAT(a.CREATED_AT, '%Y-%m-%d') 
-                            END AS ENTRY_DATE, 
+                                ELSE DATE_FORMAT(a.CREATED_AT, '%Y-%m-%d')
+                            END AS ENTRY_DATE,
                             a.PEMBULATAN AS ORIGINAL_AMOUNT,
                             a.LOAN_NUMBER AS LOAN_NUM,
                             a.METODE_PEMBAYARAN,
@@ -816,7 +816,9 @@ class ListBanController extends Controller
                                 case when coalesce(datediff(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),en.first_arr),0) < 0 then 0
                                     else coalesce(datediff(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),en.first_arr),0) end as OVERDUE_AKHIR,
                                 cl.INSTALLMENT,
-                                case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then 1 else coalesce(st.last_inst,en.last_inst) end as LAST_INST,
+                                case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then 1
+                                			 when coalesce(st.first_arr,en.first_arr) is null then ''
+                                			 else coalesce(st.last_inst,en.last_inst) end as LAST_INST,
                                 ca.INSTALLMENT_TYPE AS tipe,
                                 case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then en.first_installment else coalesce(st.first_arr,en.first_arr) end as F_ARR_CR_SCHEDL,
                                 en.first_arr as curr_arr,
@@ -916,7 +918,9 @@ class ListBanController extends Controller
                                 case when coalesce(datediff(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),en.first_arr),0) < 0 then 0
                                     else coalesce(datediff(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),en.first_arr),0) end as OVERDUE_AKHIR,
                                 cl.INSTALLMENT,
-                                case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then 1 else coalesce(st.last_inst,en.last_inst) end as LAST_INST,
+                                case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then 1
+                                			 when coalesce(st.first_arr,en.first_arr) is null then ''
+                                			 else coalesce(st.last_inst,en.last_inst) end as LAST_INST,
                                 ca.INSTALLMENT_TYPE AS tipe,
                                 case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then en.first_installment else coalesce(st.first_arr,en.first_arr) end as F_ARR_CR_SCHEDL,
                                 en.first_arr as curr_arr,
@@ -971,11 +975,11 @@ class ListBanController extends Controller
 
             if ($getNow == $dateFrom) {
 
-                $checkRunSp = DB::select(" SELECT 
-                                                CASE 
-                                                    WHEN (SELECT MAX(p.ENTRY_DATE) FROM payment p) > (SELECT MAX(temp_lis_02C.last_pay) FROM temp_lis_02C) 
-                                                        AND job_status = 0 THEN 'run' 
-                                                    ELSE 'skip' 
+                $checkRunSp = DB::select(" SELECT
+                                                CASE
+                                                    WHEN (SELECT MAX(p.ENTRY_DATE) FROM payment p) > (SELECT MAX(temp_lis_02C.last_pay) FROM temp_lis_02C)
+                                                        AND job_status = 0 THEN 'run'
+                                                    ELSE 'skip'
                                                 END AS execute_sp
                                             FROM job_on_progress
                                             WHERE job_name = 'LISBAN'
