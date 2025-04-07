@@ -453,7 +453,8 @@ class PelunasanController2 extends Controller
             ->where('a.LOAN_NUMBER', $loan_number)
             ->where(function ($query) {
                 $query->where('a.PAID_FLAG', '!=', 'PAID')
-                    ->orWhereNotIn('b.STATUS_REC', ['S', 'D']);
+                    ->orWhereNotIn('b.STATUS_REC', ['S', 'D'])
+                    ->orWhereNull('b.STATUS_REC');
             })
             ->orderBy('a.PAYMENT_DATE', 'ASC')
             ->select(

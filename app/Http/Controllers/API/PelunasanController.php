@@ -643,14 +643,15 @@ class PelunasanController extends Controller
     function proccessKwitansiDetail($request, $loan_number, $no_inv)
     {
         $creditSchedules =  M_CreditSchedule::from('credit_schedule AS a')
-            ->leftJoin('arrears AS b', function ($join) {
-                $join->on('b.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
-                    ->on('b.START_DATE', '=', 'a.PAYMENT_DATE');
-            })
+        ->leftJoin('arrears AS b', function ($join) {
+            $join->on('b.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
+            ->on('b.START_DATE', '=', 'a.PAYMENT_DATE');
+        })
             ->where('a.LOAN_NUMBER', $loan_number)
             ->where(function ($query) {
                 $query->where('a.PAID_FLAG', '!=', 'PAID')
-                    ->orWhereNotIn('b.STATUS_REC', ['S', 'D']);
+                    ->orWhereNotIn('b.STATUS_REC', ['S', 'D'])
+                    ->orWhereNull('b.STATUS_REC');
             })
             ->orderBy('a.PAYMENT_DATE', 'ASC')
             ->select(
