@@ -226,6 +226,7 @@ class CrAppilcationController extends Controller
                         case 'kendaraan':
 
                             $data_array_col = [
+                                'POSITION_FLAG' => $result['atr']['kondisi_jaminan'] ?? null,
                                 'TYPE' => $result['atr']['tipe'] ?? null,
                                 'BRAND' => $result['atr']['merk'] ?? null,
                                 'PRODUCTION_YEAR' => $result['atr']['tahun'] ?? null,
@@ -1142,6 +1143,7 @@ class CrAppilcationController extends Controller
                 "atr" => [
                     'id' => $list->ID,
                     'status_jaminan' => null,
+                    'kondisi_jaminan' => $list->POSITION_FLAG,
                     "tipe" => $list->TYPE,
                     "merk" => $list->BRAND,
                     "tahun" => $list->PRODUCTION_YEAR,
