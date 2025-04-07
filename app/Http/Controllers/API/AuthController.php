@@ -15,8 +15,6 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-
-    private $login = "Login";
     private $logout = "Logout";
     protected $log;
 
