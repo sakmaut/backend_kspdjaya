@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\M_Branch;
 use App\Models\User;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -766,11 +767,17 @@ class ListBanController extends Controller
             $getPosition = $request->user()->position;
 
             $getBranchIdUser = $request->user()->branch_id;
+            $getNow = date('mY', strtotime(now()));
 
-            $getQueue = DB::select("SELECT JOB_STATUS FROM job_on_progress WHERE JOB_STATUS = 0");
+            $jobName = ($getNow == $dateFrom) ? 'LISBAN' : 'LISBAN_BELOM_MOVEON';
 
-            if ($getQueue[0]->JOB_STATUS == 0) {
-                return response()->json("RUNNING JOB", 408);
+            $checkQueue = DB::table('job_on_progress')
+                ->where('JOB_STATUS', 0)
+                ->where('JOB_NAME', $jobName)
+                ->first();
+
+            if ($checkQueue->JOB_STATUS == 0) {
+                throw new Exception("RUNNING JOB", 408);
             }
 
             $query1 = "SELECT  CONCAT(b.CODE, '-', b.CODE_NUMBER) AS KODE,
@@ -977,7 +984,7 @@ class ListBanController extends Controller
                                 left join temp_lis_02C py on cast(py.loan_num as char) = cast(cl.LOAN_NUMBER as char)
                         WHERE	(cl.STATUS = 'A'  or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char) from temp_lis_02C )))";
 
-            $getNow = date('mY', strtotime(now()));
+
 
             if ($getNow == $dateFrom) {
 
@@ -1097,6 +1104,7 @@ class ListBanController extends Controller
                     "CUST_ID" =>  $result->CUST_CODE ?? ''
                 ];
             }
+
             return response()->json($build, 200);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
