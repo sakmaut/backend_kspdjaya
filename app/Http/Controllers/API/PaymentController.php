@@ -344,9 +344,9 @@ class PaymentController extends Controller
             ->select('a.ID', 'a.PAYMENT_DATE', 'a.PAID_FLAG', 'b.STATUS_REC')
             ->where('a.LOAN_NUMBER', $loan_number)
             ->where(function ($query) {
-                $query->where('a.PAID_FLAG', '')
-                    ->orWhereNull('a.PAID_FLAG')
-                    ->orWhere('b.STATUS_REC', 'A');
+                $query->whereNull('a.PAID_FLAG')
+                    ->orWhere('a.PAID_FLAG', '')
+                    ->orWhereIn('b.STATUS_REC', ['A', 'PENDING']);
             })
             ->orderBy('a.INSTALLMENT_COUNT', 'asc')
             ->get();
