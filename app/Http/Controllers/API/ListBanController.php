@@ -1018,7 +1018,7 @@ class ListBanController extends Controller
                 }
             }
 
-            $query .= " ORDER BY b.NAME,cl.CREATED_AT ASC";
+            $query .= "ORDER BY b.NAME,cl.CREATED_AT ASC";
 
             $results = DB::select($query);
 
