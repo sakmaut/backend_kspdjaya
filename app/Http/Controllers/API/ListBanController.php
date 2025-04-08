@@ -1018,11 +1018,11 @@ class ListBanController extends Controller
                 }
             }
 
-            $query .= "ORDER BY b.NAME,cl.CREATED_AT ASC";
+            $query .= " ORDER BY b.NAME,cl.CREATED_AT ASC";
 
             $results = DB::select($query);
 
-            DB::select("UPDATE job_on_progress set job_status = 0 where job_name = 'LISBAN'");
+            DB::select(" UPDATE job_on_progress set job_status = 0 where job_name = 'LISBAN'");
 
             $build = [];
             foreach ($results as $result) {
