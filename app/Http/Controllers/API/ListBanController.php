@@ -776,7 +776,7 @@ class ListBanController extends Controller
                 ->where('JOB_NAME', $jobName)
                 ->first();
 
-            if ($checkQueue->JOB_STATUS == 0) {
+            if ($checkQueue->JOB_STATUS == 1) {
                 throw new Exception("RUNNING JOB", 408);
             }
 
