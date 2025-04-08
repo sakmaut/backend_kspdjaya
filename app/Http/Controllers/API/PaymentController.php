@@ -142,7 +142,7 @@ class PaymentController extends Controller
                             'principal_remains' => $res['principal_remains'] ?? '',
                             'payment' => $res['payment'] ?? '',
                             'bayar_angsuran' => $res['bayar_angsuran'] ?? '',
-                            'bayar_denda' => strtolower($request->bayar_dengan_diskon) == 'ya'? $res['denda'] ?? '0' : $res['bayar_denda'] ?? '0',
+                            'bayar_denda' => strtolower($request->bayar_dengan_diskon) == 'ya' ? $res['denda'] ?? '0' : $res['bayar_denda'] ?? '0',
                             'total_bayar' => $res['total_bayar'] ?? '',
                             'flag' => $res['flag'] ?? '',
                             'denda' => $res['denda'] ?? '',
@@ -454,14 +454,36 @@ class PaymentController extends Controller
                 $check_arrears->update($updates);
             }
 
-            $total1 = floatval($new_payment_value_principal) + floatval($new_payment_value_interest) + floatval($new_penalty);
-            $total2 = floatval($getPrincipal) + floatval($getInterest) + floatval($getPenalty);
+            $checkFlag = $this->checkArrearsBalance($loan_number, $tgl_angsuran);
 
-            if ($total1 == $total2) {
+            if ($checkFlag != null && $checkFlag != 0) {
                 $check_arrears->update(['STATUS_REC' => 'S']);
             }
         }
     }
+
+    public function checkArrearsBalance($loan_number, $setDate)
+    {
+        $checkFlag = DB::table('arrears')
+            ->selectRaw('
+            CASE 
+                WHEN SUM(COALESCE(PAST_DUE_PCPL, 0) + COALESCE(PAST_DUE_INTRST, 0) + COALESCE(PAST_DUE_PENALTY, 0)) 
+                     = SUM(COALESCE(PAID_PCPL, 0) + COALESCE(PAID_INT, 0) + COALESCE(PAID_PENALTY, 0)) 
+                THEN 1 
+                ELSE 0 
+            END AS check_flag
+        ')
+            ->where('LOAN_NUMBER', $loan_number)
+            ->where('START_DATE', $setDate)
+            ->first();
+
+        if ($checkFlag) {
+            return $checkFlag->check_flag;
+        }
+
+        return null;
+    }
+
 
     private function saveKwitansi($request, $customer_detail, $no_inv)
     {
