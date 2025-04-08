@@ -288,33 +288,76 @@ class PaymentController extends Controller
 
     private function updateCredit($loan_number)
     {
-
         $check_credit = M_Credit::where(['LOAN_NUMBER' => $loan_number])->first();
 
-        $checkCreditSchedule = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)
-            ->where(function ($query) {
-                $query->where('PAID_FLAG', '')
-                    ->orWhereNull('PAID_FLAG');
+        // $checkCreditSchedule = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)
+        //     ->where(function ($query) {
+        //         $query->where('PAID_FLAG', '')
+        //             ->orWhereNull('PAID_FLAG');
+        //     })
+        //     ->get();
+
+        // $checkArrears = M_Arrears::where('LOAN_NUMBER', $loan_number)
+        //     ->whereIn('STATUS_REC', ['A', 'PENDING'])
+        //     ->get();
+
+        // if ($checkCreditSchedule->isEmpty() && $checkArrears->isEmpty()) {
+        //     $status = 'D';
+        //     $status_rec = 'CL';
+        // } else {
+        //     $status = 'A';
+        // }
+
+        // $cekStatusActive = $this->checkStatusCreditActive($loan_number);
+
+        // if ($cekStatusActive == 0) {
+        //     $status = 'D';
+        //     $status_rec = 'CL';
+        // } else {
+        //     $status = 'A';
+        // }
+
+        // if ($check_credit) {
+        //     $check_credit->update([
+        //         'STATUS' => $status,
+        //         'STATUS_REC' => $status_rec ?? 'AC',
+        //     ]);
+        // }
+
+        $isActive = $this->checkStatusCreditActive($loan_number);
+
+        $statusData = [
+            'STATUS' => $isActive == 0 ? 'D' : 'A',
+            'STATUS_REC' => $isActive == 0 ? 'CL' : 'AC'
+        ];
+
+        $check_credit->update($statusData);
+    }
+
+    private function checkStatusCreditActive($loan_number)
+    {
+        $results = DB::table('credit_schedule as a')
+            ->leftJoin('arrears as b', function ($join) {
+                $join->on('b.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
+                    ->on('b.START_DATE', '=', 'a.PAYMENT_DATE');
             })
+            ->select('a.ID', 'a.PAYMENT_DATE', 'a.PAID_FLAG', 'b.STATUS_REC')
+            ->where('a.LOAN_NUMBER', $loan_number)
+            ->where(function ($query) {
+                $query->where('a.PAID_FLAG', '')
+                    ->orWhereNull('a.PAID_FLAG')
+                    ->orWhere('b.STATUS_REC', 'A');
+            })
+            ->orderBy('a.INSTALLMENT_COUNT', 'asc')
             ->get();
 
-        $checkArrears = M_Arrears::where('LOAN_NUMBER', $loan_number)
-            ->whereIn('STATUS_REC', ['A', 'PENDING'])
-            ->get();
-
-        if ($checkCreditSchedule->isEmpty() && $checkArrears->isEmpty()) {
-            $status = 'D';
-            $status_rec = 'CL';
+        if ($results->isEmpty()) {
+            $resultStatus = 0;
         } else {
-            $status = 'A';
+            $resultStatus = 1;
         }
 
-        if ($check_credit) {
-            $check_credit->update([
-                'STATUS' => $status,
-                'STATUS_REC' => $status_rec ?? 'AC',
-            ]);
-        }
+        return $resultStatus;
     }
 
     private function updateDiscountArrears($loan_number, $tgl_angsuran, $res, $uid)
