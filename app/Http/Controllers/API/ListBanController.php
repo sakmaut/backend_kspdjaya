@@ -868,9 +868,8 @@ class ListBanController extends Controller
                                     and en.type=date_format(date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day),'%d%m%Y')
                                 left join temp_lis_02 py 
                                     on cast(py.loan_num as char) = cast(cl.LOAN_NUMBER as char)
-                                    and date_format(py.LAST_PAY,'%m%Y') = '$dateFrom'
                         WHERE	date_format(cl.BACK_DATE,'%d%m%Y')=date_format(date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day),'%d%m%Y')
-                                and (cl.STATUS = 'A' or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char)from temp_lis_02 where date_format(LAST_PAY,'%m%Y') = '$dateFrom' )))";
+                                and (cl.STATUS = 'A' or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char)from temp_lis_02 where )))";
             $query2 = "SELECT	CONCAT(b.CODE, '-', b.CODE_NUMBER) AS KODE,
                                 b.NAME AS NAMA_CABANG,
                                 cl.LOAN_NUMBER AS NO_KONTRAK,
@@ -984,6 +983,8 @@ class ListBanController extends Controller
                                                 END AS execute_sp
                                             FROM job_on_progress
                                             WHERE job_name = 'LISBAN'
+
+                                            -- WHERE job_name = 'LISBAN_BELOM_MOVEON'
                                         ");
 
                 if (!empty($checkRunSp) && $checkRunSp[0]->execute_sp === 'run') {
@@ -992,6 +993,21 @@ class ListBanController extends Controller
 
                 $query = $query2;
             } else {
+
+                $checkRunSp = DB::select(" SELECT
+                                                CASE
+                                                    WHEN job_status = 0 THEN 'run'
+                                                    ELSE 'skip'
+                                                END AS execute_sp
+                                            FROM job_on_progress
+                                            WHERE job_name = 'LISBAN_BELOM_MOVEON'
+
+                                        ");
+
+                if (!empty($checkRunSp) && $checkRunSp[0]->execute_sp === 'run') {
+                    DB::select('CALL lisban_masa_lalu(?)', [$getNow]);
+                }
+
                 $query = $query1;
             }
 
@@ -1010,6 +1026,8 @@ class ListBanController extends Controller
             $query .= " ORDER BY b.NAME,cl.CREATED_AT ASC";
 
             $results = DB::select($query);
+
+            DB::select("UPDATE job_on_progress set job_status = 0 where job_name = 'LISBAN'");
 
             $build = [];
             foreach ($results as $result) {
