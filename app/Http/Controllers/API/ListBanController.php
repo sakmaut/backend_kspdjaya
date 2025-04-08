@@ -767,6 +767,12 @@ class ListBanController extends Controller
 
             $getBranchIdUser = $request->user()->branch_id;
 
+            $getQueue = DB::select("SELECT JOB_STATUS FROM job_on_progress WHERE JOB_STATUS = 0");
+
+            if ($getQueue[0]->JOB_STATUS == 0) {
+                return response()->json("RUNNING JOB", 408);
+            }
+
             $query1 = "SELECT  CONCAT(b.CODE, '-', b.CODE_NUMBER) AS KODE,
                                 b.NAME AS NAMA_CABANG,
                                 cl.LOAN_NUMBER AS NO_KONTRAK,
