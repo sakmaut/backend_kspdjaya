@@ -866,10 +866,11 @@ class ListBanController extends Controller
                                 left join temp_lis_01 en
                                     on cast(en.loan_number as char) = cast(cl.LOAN_NUMBER as char)
                                     and en.type=date_format(date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day),'%d%m%Y')
-                                left join temp_lis_02 py on cast(py.loan_num as char) = cast(cl.LOAN_NUMBER as char)
+                                left join temp_lis_02 py 
+                                    on cast(py.loan_num as char) = cast(cl.LOAN_NUMBER as char)
+                                    and date_format(py.LAST_PAY,'%m%Y') = '$dateFrom'
                         WHERE	date_format(cl.BACK_DATE,'%d%m%Y')=date_format(date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day),'%d%m%Y')
-                                and (cl.STATUS = 'A' or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char)from temp_lis_02 )))";
-
+                                and (cl.STATUS = 'A' or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char)from temp_lis_02 where date_format(LAST_PAY,'%m%Y') = '$dateFrom' )))";
             $query2 = "SELECT	CONCAT(b.CODE, '-', b.CODE_NUMBER) AS KODE,
                                 b.NAME AS NAMA_CABANG,
                                 cl.LOAN_NUMBER AS NO_KONTRAK,
