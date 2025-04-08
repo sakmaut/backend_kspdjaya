@@ -484,7 +484,6 @@ class PaymentController extends Controller
         return null;
     }
 
-
     private function saveKwitansi($request, $customer_detail, $no_inv)
     {
 
