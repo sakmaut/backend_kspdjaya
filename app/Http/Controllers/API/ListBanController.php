@@ -982,10 +982,7 @@ class ListBanController extends Controller
                                                     ELSE 'skip'
                                                 END AS execute_sp
                                             FROM job_on_progress
-                                            WHERE job_name = 'LISBAN'
-
-                                            -- WHERE job_name = 'LISBAN_BELOM_MOVEON'
-                                        ");
+                                            WHERE job_name = 'LISBAN'");
 
                 if (!empty($checkRunSp) && $checkRunSp[0]->execute_sp === 'run') {
                     DB::select('CALL lisban_berjalan(?)', [$getNow]);
@@ -1000,9 +997,7 @@ class ListBanController extends Controller
                                                     ELSE 'skip'
                                                 END AS execute_sp
                                             FROM job_on_progress
-                                            WHERE job_name = 'LISBAN_BELOM_MOVEON'
-
-                                        ");
+                                            WHERE job_name = 'LISBAN_BELOM_MOVEON'");
 
                 if (!empty($checkRunSp) && $checkRunSp[0]->execute_sp === 'run') {
                     DB::select('CALL lisban_masa_lalu(?)', [$getNow]);
