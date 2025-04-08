@@ -990,9 +990,6 @@ class ListBanController extends Controller
 
                 $query = $query2;
             } else {
-
-                $getPastDate = date('mY', strtotime($dateFrom));
-
                 $checkRunSp = DB::select(" SELECT
                                                 CASE
                                                     WHEN job_status = 0 THEN 'run'
@@ -1002,7 +999,7 @@ class ListBanController extends Controller
                                             WHERE job_name = 'LISBAN_BELOM_MOVEON'");
 
                 if (!empty($checkRunSp) && $checkRunSp[0]->execute_sp === 'run') {
-                    DB::select('CALL lisban_masa_lalu(?)', [$getPastDate]);
+                    DB::select('CALL lisban_masa_lalu(?)', [$dateFrom]);
                 }
 
                 $query = $query1;
