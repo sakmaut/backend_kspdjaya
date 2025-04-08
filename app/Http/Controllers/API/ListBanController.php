@@ -1023,7 +1023,7 @@ class ListBanController extends Controller
 
             $results = DB::select($query);
 
-            DB::select(" UPDATE job_on_progress set job_status = 0 where job_name = 'LISBAN'");
+            DB::select(" UPDATE job_on_progress set job_status = 0 where job_name = 'LISBAN_BELOM_MOVEON'");
 
             $build = [];
             foreach ($results as $result) {
