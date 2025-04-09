@@ -215,7 +215,7 @@ class PaymentController extends Controller
             'PAYMENT_DATE' => $tgl_angsuran
         ])->first();
 
-        $byr_angsuran = $res['bayar_angsuran'];
+        $byr_angsuran = floatval($res['bayar_angsuran']);
         $flag = $res['flag'];
 
         if ($credit_schedule || $byr_angsuran != 0 || $flag != 'PAID') {
@@ -367,8 +367,8 @@ class PaymentController extends Controller
             'START_DATE' => $tgl_angsuran
         ])->orderBy('START_DATE', 'ASC')->first();
 
-        $byr_angsuran = $res['bayar_angsuran'];
-        $bayar_denda = $res['bayar_denda'];
+        $byr_angsuran = floatval($res['bayar_angsuran']);
+        $bayar_denda = floatval($res['bayar_denda']);
 
         if ($check_arrears) {
             $valBeforePrincipal = $check_arrears->PAID_PCPL;
@@ -438,8 +438,8 @@ class PaymentController extends Controller
             'START_DATE' => $tgl_angsuran
         ])->orderBy('START_DATE', 'ASC')->first();
 
-        $byr_angsuran = $res['bayar_angsuran'];
-        $bayar_denda = $res['bayar_denda'];
+        $byr_angsuran = floatval($res['bayar_angsuran']);
+        $bayar_denda = floatval($res['bayar_denda']);
 
         if ($check_arrears || $res['bayar_denda'] != 0) {
             $current_penalty = $check_arrears->PAID_PENALTY;
