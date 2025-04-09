@@ -1045,7 +1045,7 @@ class ListBanController extends Controller
                 $build[] = [
                     "KODE CABANG" => $result->KODE ?? '',
                     "NAMA CABANG" => $result->NAMA_CABANG ?? '',
-                    "NO KONTRAK" => ($result->NO_KONTRAK ?? '') !== '' ? intval($result->NO_KONTRAK) : '',
+                    "NO KONTRAK" => is_numeric($result->NO_KONTRAK) ? intval($result->NO_KONTRAK ?? '') : $result->NO_KONTRAK ?? '',
                     "NAMA PELANGGAN" => $result->NAMA_PELANGGAN ?? '',
                     "TGL BOOKING" => isset($result->TGL_BOOKING) && !empty($result->TGL_BOOKING) ? date("d-m-Y", strtotime($result->TGL_BOOKING)) : '',
                     "UB" => $result->UB ?? '',
@@ -1101,7 +1101,7 @@ class ListBanController extends Controller
                     "TAHUN" =>  $result->PRODUCTION_YEAR ?? '',
                     "NILAI PINJAMAN" => intval($result->NILAI_PINJAMAN) ?? 0,
                     "ADMIN" =>  intval($result->TOTAL_ADMIN) ?? '',
-                    "CUST_ID" => ($result->CUST_CODE ?? '') !== '' ? intval($result->CUST_CODE) : ''
+                    "CUST_ID" => is_numeric($result->CUST_CODE) ? intval($result->CUST_CODE ?? '') : $result->CUST_CODE ?? ''
                 ];
             }
 
