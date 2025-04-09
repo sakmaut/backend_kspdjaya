@@ -605,7 +605,7 @@ class PaymentController extends Controller
             'ENTRY_DATE' => now(),
             'SUSPENSION_PENALTY_FLAG' => $request->penangguhan_denda ?? '',
             'TITLE' => 'Angsuran Ke-' . $res['angsuran_ke'],
-            'ORIGINAL_AMOUNT' => ($res['bayar_angsuran'] + $res['bayar_denda']),
+            'ORIGINAL_AMOUNT' => (float)($res['bayar_angsuran']) + (float)($res['bayar_denda']),
             'OS_AMOUNT' => $os_amount ?? 0,
             'START_DATE' => $tgl_angsuran,
             'END_DATE' => now(),
