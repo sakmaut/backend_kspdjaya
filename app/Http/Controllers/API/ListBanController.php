@@ -1045,7 +1045,7 @@ class ListBanController extends Controller
                 $build[] = [
                     "KODE CABANG" => $result->KODE ?? '',
                     "NAMA CABANG" => $result->NAMA_CABANG ?? '',
-                    "NO KONTRAK" =>  (string)($result->NO_KONTRAK ?? ''),
+                    "NO KONTRAK" =>  intval($result->NO_KONTRAK ?? ''),
                     "NAMA PELANGGAN" => $result->NAMA_PELANGGAN ?? '',
                     "TGL BOOKING" => isset($result->TGL_BOOKING) && !empty($result->TGL_BOOKING) ? date("d-m-Y", strtotime($result->TGL_BOOKING)) : '',
                     "UB" => $result->UB ?? '',
@@ -1062,7 +1062,7 @@ class ListBanController extends Controller
                     "CATT SURVEY" => $result->CATT_SURVEY ?? '',
                     "PKK HUTANG" => intval($result->PKK_HUTANG) ?? 0,
                     "JML ANGS" => $result->JUMLAH_ANGSURAN ?? '',
-                    "JRK ANGS" => $result->JARAK_ANGSURAN ?? '',
+                    "JRK ANGS" => intval($result->JARAK_ANGSURAN ?? ''),
                     "PERIOD" => $result->PERIOD ?? '',
                     "OUT PKK AWAL" => intval($result->OUTSTANDING) ?? 0,
                     "OUT BNG AWAL" => intval($result->OS_BUNGA) ?? 0,
@@ -1078,7 +1078,7 @@ class ListBanController extends Controller
                     "OUTS BNG AKHIR" => intval($result->OS_BNG_AKHIR) ?? 0,
                     "OVERDUE AKHIR" => intval($result->OVERDUE_AKHIR) ?? 0,
                     "ANGSURAN" => intval($result->INSTALLMENT) ?? 0,
-                    "ANGS KE" => $result->LAST_INST ?? '',
+                    "ANGS KE" => intval($result->LAST_INST ?? ''),
                     "TIPE ANGSURAN" => $result->pola_bayar ?? '',
                     "JTH TEMPO AWAL" => $result->F_ARR_CR_SCHEDL == '0' || $result->F_ARR_CR_SCHEDL == '' || $result->F_ARR_CR_SCHEDL == 'null' ? '' : date("d-m-Y", strtotime($result->F_ARR_CR_SCHEDL ?? '')),
                     "JTH TEMPO AKHIR" => $result->curr_arr == '0' || $result->curr_arr == '' || $result->curr_arr == 'null' ? '' : date("d-m-Y", strtotime($result->curr_arr ?? '')),
@@ -1101,7 +1101,7 @@ class ListBanController extends Controller
                     "TAHUN" =>  $result->PRODUCTION_YEAR ?? '',
                     "NILAI PINJAMAN" => intval($result->NILAI_PINJAMAN) ?? 0,
                     "ADMIN" =>  intval($result->TOTAL_ADMIN) ?? '',
-                    "CUST_ID" =>  $result->CUST_CODE ?? ''
+                    "CUST_ID" => intval($result->CUST_CODE ?? '')
                 ];
             }
 
