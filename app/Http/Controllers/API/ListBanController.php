@@ -1092,7 +1092,7 @@ class ListBanController extends Controller
                     "AC BNG MRG" => intval($result->AC_BNG_MRG),
                     "AC TOTAL" => intval($result->AC_TOTAL),
                     "CYCLE AKHIR" => $result->CYCLE_AKHIR,
-                    "POLA BYR AKHIR" => $result->pola_bayar_akhir,
+                    "POLA BYR AKHIR" => '',
                     "NAMA BRG" => $result->jenis_jaminan,
                     "TIPE BRG" =>  $result->COLLATERAL ?? '',
                     "NO POL" =>  $result->POLICE_NUMBER ?? '',
