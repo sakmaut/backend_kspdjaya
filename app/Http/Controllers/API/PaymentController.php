@@ -736,14 +736,6 @@ class PaymentController extends Controller
                 throw new Exception("Kwitansi Not Found", 404);
             }
 
-            $getKwitansiDetail = M_KwitansiStructurDetail::where([
-                'no_invoice' => $getInvoice
-            ])->orderBy('angsuran_ke', 'asc')->get();
-
-            if ($getKwitansiDetail->isEmpty()) {
-                throw new Exception("Kwitansi Detail Not Found", 404);
-            }
-
             $getCodeBranch = M_Branch::findOrFail($request->user()->branch_id);
 
             $request->merge(['payment_method' => 'transfer']);
@@ -754,6 +746,14 @@ class PaymentController extends Controller
                     $pelunasan = new PelunasanController();
                     $pelunasan->proccess($request, $kwitansi->LOAN_NUMBER, $getInvoice, 'PAID');
                 } else {
+                    $getKwitansiDetail = M_KwitansiStructurDetail::where([
+                        'no_invoice' => $getInvoice
+                    ])->orderBy('angsuran_ke', 'asc')->get();
+
+                    if ($getKwitansiDetail->isEmpty()) {
+                        throw new Exception("Kwitansi Detail Not Found", 404);
+                    }
+
                     foreach ($getKwitansiDetail as $res) {
                         $request->merge(['approval' => 'approve', 'pembayaran' => $res['bayar_denda'] != 0 ? 'angsuran_denda' : 'angsuran']);
                         $this->processPaymentStructure($res, $request, $getCodeBranch, $getInvoice);
