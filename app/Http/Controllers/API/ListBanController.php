@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\M_Branch;
 use App\Models\User;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -760,13 +761,24 @@ class ListBanController extends Controller
 
     public function listBanTest(Request $request)
     {
-
         try {
             $dateFrom = $request->dari;
             $getBranch = $request->cabang_id;
             $getPosition = $request->user()->position;
 
             $getBranchIdUser = $request->user()->branch_id;
+            $getNow = date('mY', strtotime(now()));
+
+            $jobName = ($getNow == $dateFrom) ? 'LISBAN' : 'LISBAN_BELOM_MOVEON';
+
+            $checkQueue = DB::table('job_on_progress')
+                ->where('JOB_STATUS', 0)
+                ->where('JOB_NAME', $jobName)
+                ->first();
+
+            if ($checkQueue->JOB_STATUS == 1) {
+                throw new Exception("RUNNING JOB", 408);
+            }
 
             $query1 = "SELECT  CONCAT(b.CODE, '-', b.CODE_NUMBER) AS KODE,
                                 b.NAME AS NAMA_CABANG,
@@ -868,9 +880,9 @@ class ListBanController extends Controller
                                     and en.type=date_format(date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day),'%d%m%Y')
                                 left join temp_lis_02 py 
                                     on cast(py.loan_num as char) = cast(cl.LOAN_NUMBER as char)
-                                    and date_format(py.LAST_PAY,'%m%Y') = '$dateFrom'
                         WHERE	date_format(cl.BACK_DATE,'%d%m%Y')=date_format(date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day),'%d%m%Y')
-                                and (cl.STATUS = 'A' or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char)from temp_lis_02 where date_format(LAST_PAY,'%m%Y') = '$dateFrom' )))";
+                                and (cl.STATUS = 'A' or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char)from temp_lis_02 )))";
+
             $query2 = "SELECT	CONCAT(b.CODE, '-', b.CODE_NUMBER) AS KODE,
                                 b.NAME AS NAMA_CABANG,
                                 cl.LOAN_NUMBER AS NO_KONTRAK,
@@ -972,7 +984,7 @@ class ListBanController extends Controller
                                 left join temp_lis_02C py on cast(py.loan_num as char) = cast(cl.LOAN_NUMBER as char)
                         WHERE	(cl.STATUS = 'A'  or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char) from temp_lis_02C )))";
 
-            $getNow = date('mY', strtotime(now()));
+
 
             if ($getNow == $dateFrom) {
 
@@ -983,8 +995,7 @@ class ListBanController extends Controller
                                                     ELSE 'skip'
                                                 END AS execute_sp
                                             FROM job_on_progress
-                                            WHERE job_name = 'LISBAN'
-                                        ");
+                                            WHERE job_name = 'LISBAN'");
 
                 if (!empty($checkRunSp) && $checkRunSp[0]->execute_sp === 'run') {
                     DB::select('CALL lisban_berjalan(?)', [$getNow]);
@@ -992,6 +1003,18 @@ class ListBanController extends Controller
 
                 $query = $query2;
             } else {
+                $checkRunSp = DB::select(" SELECT
+                                                CASE
+                                                    WHEN job_status = 0 THEN 'run'
+                                                    ELSE 'skip'
+                                                END AS execute_sp
+                                            FROM job_on_progress
+                                            WHERE job_name = 'LISBAN_BELOM_MOVEON'");
+
+                if (!empty($checkRunSp) && $checkRunSp[0]->execute_sp === 'run') {
+                    DB::select('CALL lisban_masa_lalu(?)', [$dateFrom]);
+                }
+
                 $query = $query1;
             }
 
@@ -1010,6 +1033,9 @@ class ListBanController extends Controller
             $query .= " ORDER BY b.NAME,cl.CREATED_AT ASC";
 
             $results = DB::select($query);
+
+            $jobName = ($getNow == $dateFrom) ? 'LISBAN' : 'LISBAN_BELOM_MOVEON';
+            DB::select("UPDATE job_on_progress SET job_status = 0 WHERE job_name = ?", [$jobName]);
 
             $build = [];
             foreach ($results as $result) {
@@ -1078,6 +1104,7 @@ class ListBanController extends Controller
                     "CUST_ID" =>  $result->CUST_CODE ?? ''
                 ];
             }
+
             return response()->json($build, 200);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
