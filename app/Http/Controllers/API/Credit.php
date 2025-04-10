@@ -201,18 +201,18 @@ class Credit extends Controller
             ->where('b.KK_NUMBER', $kk)
             ->count();
 
-        if (!isset($arrayList["order_validation"])) {
-            $arrayList["order_validation"] = [];
+        if (!isset($array_build["order_validation"])) {
+            $array_build["order_validation"] = [];
         }
 
         // Validate KTP
         if ($checkIdNumber > 1) {
-            $arrayList["order_validation"][] = "KTP : No KTP {$ktp} Masih Ada yang Aktif";
+            $array_build["order_validation"][] = "KTP : No KTP {$ktp} Masih Ada yang Aktif";
         }
 
         // Validate KK
         if ($checkKkNumber == 2) {
-            $arrayList["order_validation"][] = "KK : No KK {$kk} Aktif Lebih Dari 2";
+            $array_build["order_validation"][] = "KK : No KK {$kk} Aktif Lebih Dari 2";
         }
 
         foreach ($guarente_vehicle as $list) {
@@ -225,7 +225,7 @@ class Credit extends Controller
                 ->count();
 
             if ($checkJaminan > 1) {
-                $arrayList["order_validation"][] = "Jaminan : Jaminan No Mesin {$list->ENGINE_NUMBER} dan No Rangka {$list->CHASIS_NUMBER} Masih Ada yang Aktif";
+                $array_build["order_validation"][] = "Jaminan : Jaminan No Mesin {$list->ENGINE_NUMBER} dan No Rangka {$list->CHASIS_NUMBER} Masih Ada yang Aktif";
             }
         }
 
