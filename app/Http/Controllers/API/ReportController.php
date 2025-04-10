@@ -27,7 +27,7 @@ class ReportController extends Controller
         try {
             $mapping = [];
 
-            if (!isset($request->nama) && !isset($request->no_kontrak)) {
+            if (!isset($request->nama) && !isset($request->no_kontrak) && !isset($request->no_polisi)) {
                 return response()->json($mapping, 200);
             } else {
                 $query = DB::table('credit as a')
@@ -55,6 +55,12 @@ class ReportController extends Controller
                 if (!empty($request->nama)) {
                     $query->when($request->nama, function ($query, $nama) {
                         return $query->where("b.NAME", 'LIKE', "%$nama%");
+                    });
+                }
+
+                if (!empty($request->no_polisi)) {
+                    $query->when($request->no_polisi, function ($query, $no_polisi) {
+                        return $query->where("c.POLICE_NUMBER", 'LIKE', "%$no_polisi%");
                     });
                 }
 
