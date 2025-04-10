@@ -31,6 +31,8 @@ use App\Models\M_KwitansiStructurDetail;
 use App\Models\M_LocationStatus;
 use App\Models\M_Payment;
 use App\Models\M_PaymentDetail;
+use App\Models\M_ScBackground;
+use App\Models\M_ScBusiness;
 use App\Models\M_Scoring;
 use App\Models\M_TelegramBotSend;
 use Carbon\Carbon;
@@ -56,9 +58,47 @@ class Welcome extends Controller
     public function store(Request $req)
     {
 
-        $execute = M_Scoring::create($req->all());
+        $datas = [
+            'EMPLOYEE_ID' => $req->employee_id,
+            'APPLICATION_ID' => $req->app_id,
+            'ENTRY_DATE' => $req->entry_date,
+            'RESULT' => $req->result,
+            'DESCR' => $req->descr
+        ];
 
-        return response()->json('aaaa');
+        $execute = M_Scoring::create($datas);
+
+        $data_bckground = [
+            'SC_SCORING_ID' => $execute->ID,
+            'attitude_during_interview' => $req->latar_belakang['sikap_debitur'],
+            'data_providing_ease' => $req->latar_belakang['kemudahan_data'],
+            'slik_reputation' => $req->latar_belakang['reputasi_slik'],
+            'residence_status' => $req->latar_belakang['rumah_tinggal'],
+            'key_business_actors' => $req->latar_belakang['aktor_penting'],
+            'residential_environment' => $req->latar_belakang['lingkungan'],
+            'description' => $req->latar_belakang['keterangan']
+        ];
+
+        M_ScBackground::create($data_bckground);
+
+        $data_bisnis = [
+            'SC_SCORING_ID' => $execute->ID,
+            'business_location'  => $req->aspek_usaha['tempat_usaha'],
+            'supplier_sources'  => $req->aspek_usaha['supplier'],
+            'business_location_condition'  => $req->aspek_usaha['kondisi_lokasi'],
+            'facilities_infrastructure'  => $req->aspek_usaha['sarana_prasarana'],
+            'number_of_employees'  => $req->aspek_usaha['jumlah_karyawan'],
+            'supplier_dependency'  => $req->aspek_usaha['ketergantungan_pada_supplier'],
+            'description' => $req->aspek_usaha['keterangan']
+        ];
+
+        M_ScBusiness::create($data_bisnis);
+
+        if ($execute) {
+            return response()->json(['message' => 'Record created successfully', 'data' => $execute], 201);
+        } else {
+            return response()->json(['message' => 'Failed to create record'], 500);
+        }
     }
 
     // public function index(Request $req)
