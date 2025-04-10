@@ -1148,18 +1148,12 @@ class CrAppilcationController extends Controller
 
         // Validate KTP
         if ($checkIdNumber > 1) {
-            $arrayList["order_validation"]["ktp"] = false;
-            $arrayList["order_validation"]["ktp_message"] = "No KTP {$ktp} Masih Ada yang Aktif";
-        } else {
-            $arrayList["order_validation"]["ktp"] = true;
-        }
+            $arrayList["order_validation"][] = "No KTP {$ktp} Masih Ada yang Aktif";
+        } 
 
         // Validate KK
         if ($checkKkNumber == 2) {
-            $arrayList["order_validation"]["kk"] = false;
-            $arrayList["order_validation"]["kk_message"] = "No KK {$kk} Aktif Lebih Dari 2";
-        } else {
-            $arrayList["order_validation"]["kk"] = true;
+            $arrayList["order_validation"][] = "No KK {$kk} Aktif Lebih Dari 2";
         }
 
         foreach ($guarente_vehicle as $list) {
@@ -1172,10 +1166,7 @@ class CrAppilcationController extends Controller
                 ->count();
 
             if ($checkJaminan > 1) {
-                $arrayList["order_validation"]["jaminan"] = false;
-                $arrayList["order_validation"]["jaminan_message"] = "Jaminan No Mesin {$list->ENGINE_NUMBER} dan No Rangka {$list->CHASIS_NUMBER} Masih Ada yang Aktif";
-            } else {
-                $arrayList["order_validation"]["jaminan"] = true;
+                $arrayList["order_validation"][] = "Jaminan No Mesin {$list->ENGINE_NUMBER} dan No Rangka {$list->CHASIS_NUMBER} Masih Ada yang Aktif";
             }
         }
 
