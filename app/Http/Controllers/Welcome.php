@@ -33,6 +33,7 @@ use App\Models\M_Payment;
 use App\Models\M_PaymentDetail;
 use App\Models\M_ScBackground;
 use App\Models\M_ScBusiness;
+use App\Models\M_ScMarketing;
 use App\Models\M_Scoring;
 use App\Models\M_TelegramBotSend;
 use Carbon\Carbon;
@@ -88,11 +89,23 @@ class Welcome extends Controller
             'business_location_condition'  => $req->aspek_usaha['kondisi_lokasi'],
             'facilities_infrastructure'  => $req->aspek_usaha['sarana_prasarana'],
             'number_of_employees'  => $req->aspek_usaha['jumlah_karyawan'],
-            'supplier_dependency'  => $req->aspek_usaha['ketergantungan_pada_supplier'],
+            'supplier_dependency'  => $req->aspek_usaha['ketergantungan_supplier'],
             'description' => $req->aspek_usaha['keterangan']
         ];
 
         M_ScBusiness::create($data_bisnis);
+
+        $data_marketing = [
+            'SC_SCORING_ID' => $execute->ID,
+            'product_type' => $req->aspek_pemasaran['jenis_barang'],
+            'marketing_area' => $req->aspek_pemasaran['daerah_pemasaran'],
+            'buyer_dependency' => $req->aspek_pemasaran['ketergantungan_buyer'],
+            'competition_level' => $req->aspek_pemasaran['tingkat_persaingan'],
+            'market_strategy' => $req->aspek_pemasaran['strategi_pasar'],
+            'description' => $req->aspek_pemasaran['keterangan']
+        ];
+
+        M_ScMarketing::create($data_marketing);
 
         if ($execute) {
             return response()->json(['message' => 'Record created successfully', 'data' => $execute], 201);

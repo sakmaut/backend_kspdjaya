@@ -6,10 +6,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
-class M_ScMarketing extends Model
+class M_ScBusinessProcess extends Model
 {
     use HasFactory;
-    protected $table = 'sc_marketing';
+    protected $table = 'sc_business_process';
     protected $fillable = [
         'ID',
         'SC_SCORING_ID',
