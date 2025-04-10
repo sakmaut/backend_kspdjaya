@@ -1025,7 +1025,7 @@ class ListBanController extends Controller
             if (strtolower($getPosition) != 'ho') {
                 $query .= " AND cl.BRANCH = '$getBranchIdUser'";
             } else {
-                if (!empty($getBranch) && ($getBranch != 'SEMUA CABANG' || $getBranch != '8593fd4e-b54e-11ef-97d5-bc24112eb731')) {
+                if (!empty($getBranch) && $getBranch != 'SEMUA CABANG' && $getBranch != '8593fd4e-b54e-11ef-97d5-bc24112eb731') {
                     $query .= " AND cl.BRANCH = '$getBranch'";
                 }
             }
