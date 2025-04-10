@@ -172,7 +172,7 @@ class CrAppilcationController extends Controller
             $this->insert_bank_account($request, $uuid);
 
             DB::commit();
-            // ActivityLogger::logActivity($request,"Success",200); 
+            // ActivityLogger::logActivity($request,"Success",200);
             return response()->json(['message' => 'Application created successfully', "status" => 200], 200);
         } catch (QueryException $e) {
             DB::rollback();
@@ -1133,32 +1133,30 @@ class CrAppilcationController extends Controller
             ->where('b.ID_NUMBER', $ktp)
             ->count();
 
-        if ($checkIdNumber > 1) {
-            $arrayList["order_validation"] = [
-                "ktp" => false,
-                "message" => "No KTP {$ktp} Masih Ada yang Aktif"
-            ];
-        } else {
-            $arrayList["order_validation"] = [
-                "ktp" => true
-            ];
-        }
-
         $checkKkNumber = DB::table('credit as a')
             ->join('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
             ->where('a.STATUS', 'A')
             ->where('b.KK_NUMBER', $kk)
             ->count();
 
-        if ($checkKkNumber == 2) {
-            $arrayList["order_validation"] = [
-                "kk" => false,
-                "message" => "No KK {$kk} Aktif Lebih Dari 2"
-            ];
+        if (!isset($arrayList["order_validation"])) {
+            $arrayList["order_validation"] = [];
+        }
+
+        // Validate KTP
+        if ($checkIdNumber > 1) {
+            $arrayList["order_validation"]["ktp"] = false;
+            $arrayList["order_validation"]["ktp_message"] = "No KTP {$ktp} Masih Ada yang Aktif";
         } else {
-            $arrayList["order_validation"] = [
-                "kk" => true
-            ];
+            $arrayList["order_validation"]["ktp"] = true;
+        }
+
+        // Validate KK
+        if ($checkKkNumber == 2) {
+            $arrayList["order_validation"]["kk"] = false;
+            $arrayList["order_validation"]["kk_message"] = "No KK {$kk} Aktif Lebih Dari 2";
+        } else {
+            $arrayList["order_validation"]["kk"] = true;
         }
 
         $arrayList['info_bank'] = M_CrApplicationBank::where('APPLICATION_ID', $application->ID)
