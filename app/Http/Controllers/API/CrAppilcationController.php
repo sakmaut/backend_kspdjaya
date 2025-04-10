@@ -1126,39 +1126,39 @@ class CrAppilcationController extends Controller
         $ktp = empty($cr_personal->ID_NUMBER) ? $data->ktp ?? null : $cr_personal->ID_NUMBER ?? null;
         $kk = empty($cr_personal->KK) ? $cr_survey->kk : $cr_personal->KK;
 
-        $checkIdNumber = DB::table('credit as a')
-            ->join('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
-            ->where('a.STATUS', 'A')
-            ->where('b.ID_NUMBER', $ktp)
-            ->count();
+        // $checkIdNumber = DB::table('credit as a')
+        //     ->join('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
+        //     ->where('a.STATUS', 'A')
+        //     ->where('b.ID_NUMBER', $ktp)
+        //     ->count();
 
-        if ($checkIdNumber > 1) {
-            $data[] = [
-                "ktp" => false,
-                "message" => "No KTP {$ktp} Masih Ada yang Aktif"
-            ];
-        } else {
-            $data[] = [
-                "ktp" => true
-            ];
-        }
+        // if ($checkIdNumber > 1) {
+        //     $data[] = [
+        //         "ktp" => false,
+        //         "message" => "No KTP {$ktp} Masih Ada yang Aktif"
+        //     ];
+        // } else {
+        //     $data[] = [
+        //         "ktp" => true
+        //     ];
+        // }
 
-        $checkKkNumber = DB::table('credit as a')
-            ->join('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
-            ->where('a.STATUS', 'A')
-            ->where('b.KK_NUMBER', $kk)
-            ->count();
+        // $checkKkNumber = DB::table('credit as a')
+        //     ->join('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
+        //     ->where('a.STATUS', 'A')
+        //     ->where('b.KK_NUMBER', $kk)
+        //     ->count();
 
-        if ($checkKkNumber == 2) {
-            $data[] = [
-                "kk" => false,
-                "message" => "No KK {$kk} Aktif Lebih Dari 2"
-            ];
-        } else {
-            $data[] = [
-                "kk" => true
-            ];
-        }
+        // if ($checkKkNumber == 2) {
+        //     $data[] = [
+        //         "kk" => false,
+        //         "message" => "No KK {$kk} Aktif Lebih Dari 2"
+        //     ];
+        // } else {
+        //     $data[] = [
+        //         "kk" => true
+        //     ];
+        // }
 
         $arrayList['info_bank'] = M_CrApplicationBank::where('APPLICATION_ID', $application->ID)
             ->get()
