@@ -1047,7 +1047,7 @@ class ListBanController extends Controller
                     "NAMA CABANG" => $result->NAMA_CABANG ?? '',
                     "NO KONTRAK" => is_numeric($result->NO_KONTRAK) ? intval($result->NO_KONTRAK ?? '') : $result->NO_KONTRAK ?? '',
                     "NAMA PELANGGAN" => $result->NAMA_PELANGGAN ?? '',
-                    "TGL BOOKING" => isset($result->TGL_BOOKING) && !empty($result->TGL_BOOKING) ?  Carbon::parse($result->TGL_BOOKING)->format('j/n/Y') : '',
+                    "TGL BOOKING" => isset($result->TGL_BOOKING) && !empty($result->TGL_BOOKING) ?  Carbon::parse($result->TGL_BOOKING)->format('d/m/Y') : '',
                     "UB" => $result->UB ?? '',
                     "PLATFORM" => $result->PLATFORM ?? '',
                     "ALAMAT TAGIH" => $result->ALAMAT_TAGIH ?? '',
