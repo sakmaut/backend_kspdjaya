@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\API\{
     AdminFeeController,
+    AnalisaController,
     AuthController,
     BpkbController,
     BpkbTransactionController,
@@ -39,6 +40,8 @@ Route::resource('welcome', Welcome::class);
 Route::get('jobArrears', [Welcome::class, 'job']);
 Route::post('botpel', [PelunasanController2::class, 'getDetail']);
 Route::post('propel', [PelunasanController2::class, 'propel']);
+
+Route::resource('analisa', AnalisaController::class);
 
 Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::resource('users', UsersController::class)->only(['index']);
