@@ -31,6 +31,7 @@ use App\Models\M_KwitansiStructurDetail;
 use App\Models\M_LocationStatus;
 use App\Models\M_Payment;
 use App\Models\M_PaymentDetail;
+use App\Models\M_Scoring;
 use App\Models\M_TelegramBotSend;
 use Carbon\Carbon;
 use DateTime;
@@ -46,202 +47,216 @@ use function Symfony\Component\Mailer\Event\getMessage;
 
 class Welcome extends Controller
 {
+
     public function index(Request $req)
     {
-        DB::beginTransaction();
-        try {
-
-            $inv = $req->no_invoice;
-
-            $queryAngsuran = "  SELECT  a.NO_TRANSAKSI,
-                                a.LOAN_NUMBER,
-                                a.PAYMENT_TYPE,
-                                a.METODE_PEMBAYARAN,
-                                a.BRANCH_CODE,
-                                a.TGL_TRANSAKSI,
-                                a.CREATED_BY,
-                                a.CREATED_AT,
-                                a.PINALTY_PELUNASAN,
-                                a.DISKON_PINALTY_PELUNASAN,
-                                b.*
-                    FROM kwitansi a
-                        LEFT JOIN kwitansi_structur_detail b 
-                        ON b.no_invoice = a.NO_TRANSAKSI
-                    WHERE a.STTS_PAYMENT = 'PAID'
-                        AND a.NO_TRANSAKSI = '$inv'
-                        AND a.PAYMENT_TYPE = 'angsuran'
-                        AND (b.installment != 0 OR b.bayar_angsuran != 0 OR b.bayar_denda != 0 OR b.diskon_denda != 0)  
-        			ORDER BY b.tgl_angsuran ASC";
-
-            $resultsAngsuran = DB::select($queryAngsuran);
-
-            if (empty($resultsAngsuran)) {
-                throw new Exception("Invoice Not Found", 404);
-            }
-
-            $structuredDataAngsuran = [];
-
-            foreach ($resultsAngsuran as $result) {
-
-                if (!isset($structuredDataAngsuran[$result->NO_TRANSAKSI])) {
-                    $structuredDataAngsuran[$result->NO_TRANSAKSI] = [
-                        'payment_type' => $result->PAYMENT_TYPE,
-                        'payment_method' => $result->METODE_PEMBAYARAN,
-                        'no_transaksi' => $result->NO_TRANSAKSI,
-                        'no_fasilitas' => $result->LOAN_NUMBER,
-                        'bayar_pinalty' => $result->PINALTY_PELUNASAN,
-                        'diskon_pinalty' => $result->DISKON_PINALTY_PELUNASAN,
-                        'cabang' =>  $result->BRANCH_CODE,
-                        'created_by' => $result->CREATED_BY,
-                        'created_at' => $result->CREATED_AT,
-                        'struktur' => [],
-                    ];
-                }
-
-                $structuredDataAngsuran[$result->NO_TRANSAKSI]['struktur'][] = [
-                    'id' => $result->id,
-                    'no_invoice' => $result->NO_TRANSAKSI,
-                    'key' => $result->key,
-                    'angsuran_ke' => $result->angsuran_ke,
-                    'loan_number' => $result->LOAN_NUMBER,
-                    'tgl_angsuran' => $result->tgl_angsuran,
-                    'principal' => $result->principal,
-                    'interest' => $result->interest,
-                    'installment' => $result->installment,
-                    'principal_remains' => $result->principal_remains,
-                    'payment' => $result->payment,
-                    'bayar_angsuran' => $result->bayar_angsuran,
-                    'bayar_denda' => $result->bayar_denda,
-                    'total_bayar' => $result->total_bayar,
-                    'flag' => $result->flag,
-                    'denda' => $result->denda,
-                    'diskon_denda' => $result->diskon_denda,
-                ];
-            }
-
-            $arrearsData = [];
-            foreach ($structuredDataAngsuran as $request) {
-                $struktur = $request['struktur'];
-
-                if (isset($struktur) && is_array($struktur)) {
-                    foreach ($struktur as $res) {
-
-                        $paymntDate = date('Y-m-d', strtotime($res['tgl_angsuran']));
-
-                        $getCrditSchedule = "   SELECT LOAN_NUMBER,PAYMENT_DATE,PRINCIPAL,INTEREST,INSTALLMENT,PAYMENT_VALUE_PRINCIPAL,PAYMENT_VALUE_INTEREST
-                                                    FROM credit_schedule 
-                                                    WHERE PAYMENT_DATE = '$paymntDate' 
-                                                        AND LOAN_NUMBER = '{$res['loan_number']}'
-                                                        AND (PAID_FLAG IS NULL OR PAID_FLAG = '')
-                                                    ORDER BY PAYMENT_DATE ASC";
-
-
-                        $updateArrears = DB::select($getCrditSchedule);
-
-                        foreach ($updateArrears as $list) {
-                            $date = date('Y-m-d', strtotime($request['created_at']));
-                            $daysDiff = (strtotime($date) - strtotime($list->PAYMENT_DATE)) / (60 * 60 * 24);
-                            $pastDuePenalty = $list->INSTALLMENT * ($daysDiff * 0.005);
-
-                            if ($pastDuePenalty <= 0) {
-                                $pastDuePenalty = 0;
-                            }
-
-                            $arrearsData[] = [
-                                'ID' => Uuid::uuid7()->toString(),
-                                'STATUS_REC' => 'A',
-                                'LOAN_NUMBER' => $list->LOAN_NUMBER,
-                                'START_DATE' => $list->PAYMENT_DATE,
-                                'END_DATE' => null,
-                                'PAST_DUE_PCPL' => $list->PRINCIPAL ?? 0,
-                                'PAST_DUE_INTRST' => $list->INTEREST ?? 0,
-                                'PAST_DUE_PENALTY' => $pastDuePenalty ?? 0,
-                                'PAID_PCPL' => $list->PAYMENT_VALUE_PRINCIPAL ?? 0,
-                                'PAID_INT' => $list->PAYMENT_VALUE_INTEREST ?? 0,
-                                'PAID_PENALTY' => 0,
-                                'KWITANSI_DATE' => $date,
-                                'CREATED_AT' => Carbon::now('Asia/Jakarta')
-                            ];
-                        }
-                    }
-                }
-            }
-
-            foreach ($arrearsData as $data) {
-                $existingArrears = M_Arrears::where([
-                    'LOAN_NUMBER' => $data['LOAN_NUMBER'],
-                    'START_DATE' => $data['START_DATE'],
-                    'STATUS_REC' => 'A'
-                ])
-                    ->orderBy('START_DATE', 'ASC')
-                    ->first();
-
-                if ($existingArrears) {
-                    $existingArrears->update([
-                        'PAST_DUE_PENALTY' => $data['PAST_DUE_PENALTY'] ?? 0,
-                        'UPDATED_AT' => Carbon::now('Asia/Jakarta')
-                    ]);
-                } else {
-                    $getNow = $data['KWITANSI_DATE'];
-
-                    if ($data['START_DATE'] < $getNow) {
-                        M_Arrears::create($data);
-                    }
-                }
-            }
-
-            foreach ($structuredDataAngsuran as $request) {
-                $no_inv = $request['no_transaksi'];
-                $getCodeBranch = M_Branch::findOrFail($request['cabang']);
-                $struktur = $request['struktur'];
-
-                if (isset($struktur) && is_array($struktur)) {
-                    foreach ($struktur as $res) {
-
-                        M_KwitansiStructurDetail::firstOrCreate([
-                            'no_invoice' => $no_inv,
-                            'key' => $res['key'] ?? '',
-                            'loan_number' => $res['loan_number'] ?? ''
-                        ], [
-                            'angsuran_ke' => $res['angsuran_ke'] ?? '',
-                            'tgl_angsuran' => $res['tgl_angsuran'] ?? '',
-                            'principal' => $res['principal'] ?? '',
-                            'interest' => $res['interest'] ?? '',
-                            'installment' => $res['installment'] ?? '',
-                            'principal_remains' => $res['principal_remains'] ?? '',
-                            'payment' => $res['payment'] ?? '',
-                            'bayar_angsuran' => $res['bayar_angsuran'] ?? '',
-                            'bayar_denda' => $res['bayar_denda'] ?? '',
-                            'total_bayar' => $res['total_bayar'] ?? '',
-                            'flag' => $res['flag'] ?? '',
-                            'denda' => $res['denda'] ?? '',
-                            'diskon_denda' => $res['diskon_denda']
-                        ]);
-
-                        if ($res['bayar_angsuran'] != 0) {
-                            $cekPaid = M_CreditSchedule::where([
-                                'LOAN_NUMBER' => $res['loan_number'],
-                                'PAYMENT_DATE' => Carbon::parse($res['tgl_angsuran'])->format('Y-m-d'),
-                                'PAID_FLAG' => 'PAID'
-                            ])->first();
-
-                            if ($cekPaid) {
-                                throw new Exception("Credit Schedule Sudah PAID", 500);
-                            }
-                        }
-
-                        $this->processPaymentStructure($res, $request, $getCodeBranch, $no_inv);
-                    }
-                }
-            }
-
-            DB::commit();
-            return response()->json("MUACHHHHHHHHHHHHHH");
-        } catch (\Throwable $e) {
-            DB::rollback();
-            return response()->json(['message' => $e->getMessage()], 500);
-        }
+        return response()->json('adasdsadasd');
     }
+
+    public function store(Request $req)
+    {
+
+        $execute = M_Scoring::create($req->all());
+
+        return response()->json('aaaa');
+    }
+
+    // public function index(Request $req)
+    // {
+    //     DB::beginTransaction();
+    //     try {
+
+    //         $inv = $req->no_invoice;
+
+    //         $queryAngsuran = "  SELECT  a.NO_TRANSAKSI,
+    //                             a.LOAN_NUMBER,
+    //                             a.PAYMENT_TYPE,
+    //                             a.METODE_PEMBAYARAN,
+    //                             a.BRANCH_CODE,
+    //                             a.TGL_TRANSAKSI,
+    //                             a.CREATED_BY,
+    //                             a.CREATED_AT,
+    //                             a.PINALTY_PELUNASAN,
+    //                             a.DISKON_PINALTY_PELUNASAN,
+    //                             b.*
+    //                 FROM kwitansi a
+    //                     LEFT JOIN kwitansi_structur_detail b 
+    //                     ON b.no_invoice = a.NO_TRANSAKSI
+    //                 WHERE a.STTS_PAYMENT = 'PAID'
+    //                     AND a.NO_TRANSAKSI = '$inv'
+    //                     AND a.PAYMENT_TYPE = 'angsuran'
+    //                     AND (b.installment != 0 OR b.bayar_angsuran != 0 OR b.bayar_denda != 0 OR b.diskon_denda != 0)  
+    //     			ORDER BY b.tgl_angsuran ASC";
+
+    //         $resultsAngsuran = DB::select($queryAngsuran);
+
+    //         if (empty($resultsAngsuran)) {
+    //             throw new Exception("Invoice Not Found", 404);
+    //         }
+
+    //         $structuredDataAngsuran = [];
+
+    //         foreach ($resultsAngsuran as $result) {
+
+    //             if (!isset($structuredDataAngsuran[$result->NO_TRANSAKSI])) {
+    //                 $structuredDataAngsuran[$result->NO_TRANSAKSI] = [
+    //                     'payment_type' => $result->PAYMENT_TYPE,
+    //                     'payment_method' => $result->METODE_PEMBAYARAN,
+    //                     'no_transaksi' => $result->NO_TRANSAKSI,
+    //                     'no_fasilitas' => $result->LOAN_NUMBER,
+    //                     'bayar_pinalty' => $result->PINALTY_PELUNASAN,
+    //                     'diskon_pinalty' => $result->DISKON_PINALTY_PELUNASAN,
+    //                     'cabang' =>  $result->BRANCH_CODE,
+    //                     'created_by' => $result->CREATED_BY,
+    //                     'created_at' => $result->CREATED_AT,
+    //                     'struktur' => [],
+    //                 ];
+    //             }
+
+    //             $structuredDataAngsuran[$result->NO_TRANSAKSI]['struktur'][] = [
+    //                 'id' => $result->id,
+    //                 'no_invoice' => $result->NO_TRANSAKSI,
+    //                 'key' => $result->key,
+    //                 'angsuran_ke' => $result->angsuran_ke,
+    //                 'loan_number' => $result->LOAN_NUMBER,
+    //                 'tgl_angsuran' => $result->tgl_angsuran,
+    //                 'principal' => $result->principal,
+    //                 'interest' => $result->interest,
+    //                 'installment' => $result->installment,
+    //                 'principal_remains' => $result->principal_remains,
+    //                 'payment' => $result->payment,
+    //                 'bayar_angsuran' => $result->bayar_angsuran,
+    //                 'bayar_denda' => $result->bayar_denda,
+    //                 'total_bayar' => $result->total_bayar,
+    //                 'flag' => $result->flag,
+    //                 'denda' => $result->denda,
+    //                 'diskon_denda' => $result->diskon_denda,
+    //             ];
+    //         }
+
+    //         $arrearsData = [];
+    //         foreach ($structuredDataAngsuran as $request) {
+    //             $struktur = $request['struktur'];
+
+    //             if (isset($struktur) && is_array($struktur)) {
+    //                 foreach ($struktur as $res) {
+
+    //                     $paymntDate = date('Y-m-d', strtotime($res['tgl_angsuran']));
+
+    //                     $getCrditSchedule = "   SELECT LOAN_NUMBER,PAYMENT_DATE,PRINCIPAL,INTEREST,INSTALLMENT,PAYMENT_VALUE_PRINCIPAL,PAYMENT_VALUE_INTEREST
+    //                                                 FROM credit_schedule 
+    //                                                 WHERE PAYMENT_DATE = '$paymntDate' 
+    //                                                     AND LOAN_NUMBER = '{$res['loan_number']}'
+    //                                                     AND (PAID_FLAG IS NULL OR PAID_FLAG = '')
+    //                                                 ORDER BY PAYMENT_DATE ASC";
+
+
+    //                     $updateArrears = DB::select($getCrditSchedule);
+
+    //                     foreach ($updateArrears as $list) {
+    //                         $date = date('Y-m-d', strtotime($request['created_at']));
+    //                         $daysDiff = (strtotime($date) - strtotime($list->PAYMENT_DATE)) / (60 * 60 * 24);
+    //                         $pastDuePenalty = $list->INSTALLMENT * ($daysDiff * 0.005);
+
+    //                         if ($pastDuePenalty <= 0) {
+    //                             $pastDuePenalty = 0;
+    //                         }
+
+    //                         $arrearsData[] = [
+    //                             'ID' => Uuid::uuid7()->toString(),
+    //                             'STATUS_REC' => 'A',
+    //                             'LOAN_NUMBER' => $list->LOAN_NUMBER,
+    //                             'START_DATE' => $list->PAYMENT_DATE,
+    //                             'END_DATE' => null,
+    //                             'PAST_DUE_PCPL' => $list->PRINCIPAL ?? 0,
+    //                             'PAST_DUE_INTRST' => $list->INTEREST ?? 0,
+    //                             'PAST_DUE_PENALTY' => $pastDuePenalty ?? 0,
+    //                             'PAID_PCPL' => $list->PAYMENT_VALUE_PRINCIPAL ?? 0,
+    //                             'PAID_INT' => $list->PAYMENT_VALUE_INTEREST ?? 0,
+    //                             'PAID_PENALTY' => 0,
+    //                             'KWITANSI_DATE' => $date,
+    //                             'CREATED_AT' => Carbon::now('Asia/Jakarta')
+    //                         ];
+    //                     }
+    //                 }
+    //             }
+    //         }
+
+    //         foreach ($arrearsData as $data) {
+    //             $existingArrears = M_Arrears::where([
+    //                 'LOAN_NUMBER' => $data['LOAN_NUMBER'],
+    //                 'START_DATE' => $data['START_DATE'],
+    //                 'STATUS_REC' => 'A'
+    //             ])
+    //                 ->orderBy('START_DATE', 'ASC')
+    //                 ->first();
+
+    //             if ($existingArrears) {
+    //                 $existingArrears->update([
+    //                     'PAST_DUE_PENALTY' => $data['PAST_DUE_PENALTY'] ?? 0,
+    //                     'UPDATED_AT' => Carbon::now('Asia/Jakarta')
+    //                 ]);
+    //             } else {
+    //                 $getNow = $data['KWITANSI_DATE'];
+
+    //                 if ($data['START_DATE'] < $getNow) {
+    //                     M_Arrears::create($data);
+    //                 }
+    //             }
+    //         }
+
+    //         foreach ($structuredDataAngsuran as $request) {
+    //             $no_inv = $request['no_transaksi'];
+    //             $getCodeBranch = M_Branch::findOrFail($request['cabang']);
+    //             $struktur = $request['struktur'];
+
+    //             if (isset($struktur) && is_array($struktur)) {
+    //                 foreach ($struktur as $res) {
+
+    //                     M_KwitansiStructurDetail::firstOrCreate([
+    //                         'no_invoice' => $no_inv,
+    //                         'key' => $res['key'] ?? '',
+    //                         'loan_number' => $res['loan_number'] ?? ''
+    //                     ], [
+    //                         'angsuran_ke' => $res['angsuran_ke'] ?? '',
+    //                         'tgl_angsuran' => $res['tgl_angsuran'] ?? '',
+    //                         'principal' => $res['principal'] ?? '',
+    //                         'interest' => $res['interest'] ?? '',
+    //                         'installment' => $res['installment'] ?? '',
+    //                         'principal_remains' => $res['principal_remains'] ?? '',
+    //                         'payment' => $res['payment'] ?? '',
+    //                         'bayar_angsuran' => $res['bayar_angsuran'] ?? '',
+    //                         'bayar_denda' => $res['bayar_denda'] ?? '',
+    //                         'total_bayar' => $res['total_bayar'] ?? '',
+    //                         'flag' => $res['flag'] ?? '',
+    //                         'denda' => $res['denda'] ?? '',
+    //                         'diskon_denda' => $res['diskon_denda']
+    //                     ]);
+
+    //                     if ($res['bayar_angsuran'] != 0) {
+    //                         $cekPaid = M_CreditSchedule::where([
+    //                             'LOAN_NUMBER' => $res['loan_number'],
+    //                             'PAYMENT_DATE' => Carbon::parse($res['tgl_angsuran'])->format('Y-m-d'),
+    //                             'PAID_FLAG' => 'PAID'
+    //                         ])->first();
+
+    //                         if ($cekPaid) {
+    //                             throw new Exception("Credit Schedule Sudah PAID", 500);
+    //                         }
+    //                     }
+
+    //                     $this->processPaymentStructure($res, $request, $getCodeBranch, $no_inv);
+    //                 }
+    //             }
+    //         }
+
+    //         DB::commit();
+    //         return response()->json("MUACHHHHHHHHHHHHHH");
+    //     } catch (\Throwable $e) {
+    //         DB::rollback();
+    //         return response()->json(['message' => $e->getMessage()], 500);
+    //     }
+    // }
 
     private function processPaymentStructure($res, $request, $getCodeBranch, $no_inv)
     {
