@@ -1144,22 +1144,22 @@ class CrAppilcationController extends Controller
             ];
         }
 
-        // $checkKkNumber = DB::table('credit as a')
-        //     ->join('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
-        //     ->where('a.STATUS', 'A')
-        //     ->where('b.KK_NUMBER', $kk)
-        //     ->count();
+        $checkKkNumber = DB::table('credit as a')
+            ->join('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
+            ->where('a.STATUS', 'A')
+            ->where('b.KK_NUMBER', $kk)
+            ->count();
 
-        // if ($checkKkNumber == 2) {
-        //     $data[] = [
-        //         "kk" => false,
-        //         "message" => "No KK {$kk} Aktif Lebih Dari 2"
-        //     ];
-        // } else {
-        //     $data[] = [
-        //         "kk" => true
-        //     ];
-        // }
+        if ($checkKkNumber == 2) {
+            $arrayList["order_validation"] = [
+                "kk" => false,
+                "message" => "No KK {$kk} Aktif Lebih Dari 2"
+            ];
+        } else {
+            $arrayList["order_validation"] = [
+                "kk" => true
+            ];
+        }
 
         $arrayList['info_bank'] = M_CrApplicationBank::where('APPLICATION_ID', $application->ID)
             ->get()
