@@ -1025,7 +1025,7 @@ class ListBanController extends Controller
             if (strtolower($getPosition) != 'ho') {
                 $query .= " AND cl.BRANCH = '$getBranchIdUser'";
             } else {
-                if (!empty($getBranch) && $getBranch != 'SEMUA CABANG') {
+                if (!empty($getBranch) && $getBranch != 'SEMUA CABANG' && $getBranch != '8593fd4e-b54e-11ef-97d5-bc24112eb731') {
                     $query .= " AND cl.BRANCH = '$getBranch'";
                 }
             }
@@ -1045,9 +1045,9 @@ class ListBanController extends Controller
                 $build[] = [
                     "KODE CABANG" => $result->KODE ?? '',
                     "NAMA CABANG" => $result->NAMA_CABANG ?? '',
-                    "NO KONTRAK" =>  (string)($result->NO_KONTRAK ?? ''),
+                    "NO KONTRAK" => is_numeric($result->NO_KONTRAK) ? intval($result->NO_KONTRAK ?? '') : $result->NO_KONTRAK ?? '',
                     "NAMA PELANGGAN" => $result->NAMA_PELANGGAN ?? '',
-                    "TGL BOOKING" => isset($result->TGL_BOOKING) && !empty($result->TGL_BOOKING) ? date("d-m-Y", strtotime($result->TGL_BOOKING)) : '',
+                    "TGL BOOKING" => isset($result->TGL_BOOKING) && !empty($result->TGL_BOOKING) ?  Carbon::parse($result->TGL_BOOKING)->format('d/m/Y') : '',
                     "UB" => $result->UB ?? '',
                     "PLATFORM" => $result->PLATFORM ?? '',
                     "ALAMAT TAGIH" => $result->ALAMAT_TAGIH ?? '',
@@ -1062,7 +1062,7 @@ class ListBanController extends Controller
                     "CATT SURVEY" => $result->CATT_SURVEY ?? '',
                     "PKK HUTANG" => intval($result->PKK_HUTANG) ?? 0,
                     "JML ANGS" => $result->JUMLAH_ANGSURAN ?? '',
-                    "JRK ANGS" => $result->JARAK_ANGSURAN ?? '',
+                    "JRK ANGS" => intval($result->JARAK_ANGSURAN ?? ''),
                     "PERIOD" => $result->PERIOD ?? '',
                     "OUT PKK AWAL" => intval($result->OUTSTANDING) ?? 0,
                     "OUT BNG AWAL" => intval($result->OS_BUNGA) ?? 0,
@@ -1073,16 +1073,16 @@ class ListBanController extends Controller
                     "CYCLE AWAL" => $result->CYCLE_AWAL ?? '',
                     "STS KONTRAK" => $result->STATUS_REC ?? '',
                     "STS BEBAN" => $result->STATUS_BEBAN ?? '',
-                    "POLA BYR AWAL" => $result->pola_bayar ?? '',
+                    "POLA BYR AWAL" => '',
                     "OUTS PKK AKHIR" => intval($result->OS_PKK_AKHIR) ?? 0,
                     "OUTS BNG AKHIR" => intval($result->OS_BNG_AKHIR) ?? 0,
                     "OVERDUE AKHIR" => intval($result->OVERDUE_AKHIR) ?? 0,
                     "ANGSURAN" => intval($result->INSTALLMENT) ?? 0,
-                    "ANGS KE" => $result->LAST_INST ?? '',
-                    "TIPE ANGSURAN" => $result->tipe ?? '',
-                    "JTH TEMPO AWAL" => $result->F_ARR_CR_SCHEDL == '0' || $result->F_ARR_CR_SCHEDL == '' || $result->F_ARR_CR_SCHEDL == 'null' ? '' : date("d-m-Y", strtotime($result->F_ARR_CR_SCHEDL ?? '')),
-                    "JTH TEMPO AKHIR" => $result->curr_arr == '0' || $result->curr_arr == '' || $result->curr_arr == 'null' ? '' : date("d-m-Y", strtotime($result->curr_arr ?? '')),
-                    "TGL BAYAR" => $result->LAST_PAY == '0' || $result->LAST_PAY == '' || $result->LAST_PAY == 'null' ? '' : date("d-m-Y", strtotime($result->LAST_PAY ?? '')),
+                    "ANGS KE" => intval($result->LAST_INST ?? ''),
+                    "TIPE ANGSURAN" => $result->pola_bayar ?? '',
+                    "JTH TEMPO AWAL" => $result->F_ARR_CR_SCHEDL == '0' || $result->F_ARR_CR_SCHEDL == '' || $result->F_ARR_CR_SCHEDL == 'null' ? '' :  Carbon::parse($result->F_ARR_CR_SCHEDL)->format('d/m/Y'),
+                    "JTH TEMPO AKHIR" => $result->curr_arr == '0' || $result->curr_arr == '' || $result->curr_arr == 'null' ? '' : Carbon::parse($result->curr_arr)->format('d/m/Y'),
+                    "TGL BAYAR" => $result->LAST_PAY == '0' || $result->LAST_PAY == '' || $result->LAST_PAY == 'null' ? '' : Carbon::parse($result->LAST_PAY)->format('d/m/Y'),
                     "KOLEKTOR" => $result->COLLECTOR,
                     "CARA BYR" => $result->cara_bayar,
                     "AMBC PKK_AKHIR" => intval($result->AMBC_PKK_AKHIR) ?? 0,
@@ -1092,7 +1092,7 @@ class ListBanController extends Controller
                     "AC BNG MRG" => intval($result->AC_BNG_MRG),
                     "AC TOTAL" => intval($result->AC_TOTAL),
                     "CYCLE AKHIR" => $result->CYCLE_AKHIR,
-                    "POLA BYR AKHIR" => $result->pola_bayar_akhir,
+                    "POLA BYR AKHIR" => '',
                     "NAMA BRG" => $result->jenis_jaminan,
                     "TIPE BRG" =>  $result->COLLATERAL ?? '',
                     "NO POL" =>  $result->POLICE_NUMBER ?? '',
@@ -1101,7 +1101,7 @@ class ListBanController extends Controller
                     "TAHUN" =>  $result->PRODUCTION_YEAR ?? '',
                     "NILAI PINJAMAN" => intval($result->NILAI_PINJAMAN) ?? 0,
                     "ADMIN" =>  intval($result->TOTAL_ADMIN) ?? '',
-                    "CUST_ID" =>  $result->CUST_CODE ?? ''
+                    "CUST_ID" => is_numeric($result->CUST_CODE) ? intval($result->CUST_CODE ?? '') : $result->CUST_CODE ?? ''
                 ];
             }
 

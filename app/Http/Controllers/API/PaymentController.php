@@ -215,7 +215,7 @@ class PaymentController extends Controller
             'PAYMENT_DATE' => $tgl_angsuran
         ])->first();
 
-        $byr_angsuran = $res['bayar_angsuran'];
+        $byr_angsuran = floatval($res['bayar_angsuran']);
         $flag = $res['flag'];
 
         if ($credit_schedule || $byr_angsuran != 0 || $flag != 'PAID') {
@@ -367,8 +367,8 @@ class PaymentController extends Controller
             'START_DATE' => $tgl_angsuran
         ])->orderBy('START_DATE', 'ASC')->first();
 
-        $byr_angsuran = $res['bayar_angsuran'];
-        $bayar_denda = $res['bayar_denda'];
+        $byr_angsuran = floatval($res['bayar_angsuran']);
+        $bayar_denda = floatval($res['bayar_denda']);
 
         if ($check_arrears) {
             $valBeforePrincipal = $check_arrears->PAID_PCPL;
@@ -438,8 +438,8 @@ class PaymentController extends Controller
             'START_DATE' => $tgl_angsuran
         ])->orderBy('START_DATE', 'ASC')->first();
 
-        $byr_angsuran = $res['bayar_angsuran'];
-        $bayar_denda = $res['bayar_denda'];
+        $byr_angsuran = floatval($res['bayar_angsuran']);
+        $bayar_denda = floatval($res['bayar_denda']);
 
         if ($check_arrears || $res['bayar_denda'] != 0) {
             $current_penalty = $check_arrears->PAID_PENALTY;
@@ -595,7 +595,7 @@ class PaymentController extends Controller
             'ENTRY_DATE' => now(),
             'SUSPENSION_PENALTY_FLAG' => $request->penangguhan_denda ?? '',
             'TITLE' => 'Angsuran Ke-' . $res['angsuran_ke'],
-            'ORIGINAL_AMOUNT' => ($res['bayar_angsuran'] + $res['bayar_denda']),
+            'ORIGINAL_AMOUNT' => (float)($res['bayar_angsuran']) + (float)($res['bayar_denda']),
             'OS_AMOUNT' => $os_amount ?? 0,
             'START_DATE' => $tgl_angsuran,
             'END_DATE' => now(),
@@ -720,7 +720,11 @@ class PaymentController extends Controller
 
             $getInvoice = $request->no_invoice;
 
-            $kwitansi = M_Kwitansi::where(['NO_TRANSAKSI' => $getInvoice, 'STTS_PAYMENT' => 'PENDING'])->firstOrFail();
+            $kwitansi = M_Kwitansi::where(['NO_TRANSAKSI' => $getInvoice, 'STTS_PAYMENT' => 'PENDING'])->first();
+
+            if (!$kwitansi) {
+                throw new Exception("Kwitansi Not Found", 404);
+            }
 
             $getCodeBranch = M_Branch::findOrFail($request->user()->branch_id);
 
@@ -732,11 +736,17 @@ class PaymentController extends Controller
                     $pelunasan = new PelunasanController();
                     $pelunasan->proccess($request, $kwitansi->LOAN_NUMBER, $getInvoice, 'PAID');
                 } else {
-                    if (isset($request->struktur) && is_array($request->struktur)) {
-                        foreach ($request->struktur as $res) {
-                            $request->merge(['approval' => 'approve', 'pembayaran' => $res['bayar_denda'] != 0 ? 'angsuran_denda' : 'angsuran']);
-                            $this->processPaymentStructure($res, $request, $getCodeBranch, $getInvoice);
-                        }
+                    $getKwitansiDetail = M_KwitansiStructurDetail::where([
+                        'no_invoice' => $getInvoice
+                    ])->orderBy('angsuran_ke', 'asc')->get();
+
+                    if ($getKwitansiDetail->isEmpty()) {
+                        throw new Exception("Kwitansi Detail Not Found", 404);
+                    }
+
+                    foreach ($getKwitansiDetail as $res) {
+                        $request->merge(['approval' => 'approve', 'pembayaran' => $res['bayar_denda'] != 0 ? 'angsuran_denda' : 'angsuran']);
+                        $this->processPaymentStructure($res, $request, $getCodeBranch, $getInvoice);
                     }
                 }
 
