@@ -155,7 +155,6 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::post('lap_pembayaran', [ReportController::class, 'lapPembayaran']);
 });
 
-
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });

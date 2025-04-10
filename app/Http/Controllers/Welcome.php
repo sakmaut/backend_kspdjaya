@@ -33,6 +33,8 @@ use App\Models\M_Payment;
 use App\Models\M_PaymentDetail;
 use App\Models\M_ScBackground;
 use App\Models\M_ScBusiness;
+use App\Models\M_ScBusinessPattern;
+use App\Models\M_ScBusinessProcess;
 use App\Models\M_ScMarketing;
 use App\Models\M_Scoring;
 use App\Models\M_TelegramBotSend;
@@ -107,8 +109,29 @@ class Welcome extends Controller
 
         M_ScMarketing::create($data_marketing);
 
+        $data_bisnis_process = [
+            'SC_SCORING_ID' => $execute->ID,
+            'product_type' => $req->aspek_bisnis['jenis_barang'],
+            'marketing_area' => $req->aspek_bisnis['daerah_pemasaran'],
+            'buyer_dependency' => $req->aspek_bisnis['ketergantungan_buyer'],
+            'competition_level' => $req->aspek_bisnis['tingkat_persaingan'],
+            'market_strategy' => $req->aspek_bisnis['strategi_pasar'],
+            'description' => $req->aspek_bisnis['keterangan']
+        ];
+
+        M_ScBusinessProcess::create($data_bisnis_process);
+
+        $data_bisnis_pattern = [
+            'SC_SCORING_ID' => $execute->ID,
+            'marketing_cycle' => $req->pola_bisnis['siklus_pemasaran'],
+            'payment_method' => $req->pola_bisnis['cara_pembayaran'],
+            'description' => $req->pola_bisnis['keterangan']
+        ];
+
+        M_ScBusinessPattern::create($data_bisnis_pattern);
+
         if ($execute) {
-            return response()->json(['message' => 'Record created successfully', 'data' => $execute], 201);
+            return response()->json(['message' => 'Record created successfully'], 200);
         } else {
             return response()->json(['message' => 'Failed to create record'], 500);
         }
