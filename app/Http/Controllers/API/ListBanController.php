@@ -1019,7 +1019,7 @@ class ListBanController extends Controller
             }
 
             if ($getBranchIdUser != '8593fd4e-b54e-11ef-97d5-bc24112eb731') {
-                $query .= " AND st.arr_count <= 8";
+                $query .= " AND coalesce(st.arr_count,0) <= 8";
             }
 
             if (strtolower($getPosition) != 'ho') {
