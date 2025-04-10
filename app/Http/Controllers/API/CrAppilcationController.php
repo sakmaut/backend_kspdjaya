@@ -1126,9 +1126,6 @@ class CrAppilcationController extends Controller
 
         $ktp = empty($cr_personal->ID_NUMBER) ? $data->ktp ?? null : $cr_personal->ID_NUMBER ?? null;
         $kk = empty($cr_personal->KK) ? $cr_survey->kk : $cr_personal->KK;
-        $no_mesin = empty($cr_personal->KK) ? $cr_survey->kk : $cr_personal->KK;
-        $no_rangka = empty($cr_personal->KK) ? $cr_survey->kk : $cr_personal->KK;
-
 
         $checkIdNumber = DB::table('credit as a')
             ->join('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
