@@ -172,7 +172,7 @@ class CrAppilcationController extends Controller
             $this->insert_bank_account($request, $uuid);
 
             DB::commit();
-            // ActivityLogger::logActivity($request,"Success",200); 
+            // ActivityLogger::logActivity($request,"Success",200);
             return response()->json(['message' => 'Application created successfully', "status" => 200], 200);
         } catch (QueryException $e) {
             DB::rollback();
@@ -226,6 +226,7 @@ class CrAppilcationController extends Controller
                         case 'kendaraan':
 
                             $data_array_col = [
+                                'POSITION_FLAG' => $result['atr']['kondisi_jaminan'] ?? null,
                                 'TYPE' => $result['atr']['tipe'] ?? null,
                                 'BRAND' => $result['atr']['merk'] ?? null,
                                 'PRODUCTION_YEAR' => $result['atr']['tahun'] ?? null,
@@ -1110,7 +1111,7 @@ class CrAppilcationController extends Controller
             "prospect_approval" => [
                 "status" => $approval_detail->application_result == null ? $approval_detail->application_result : ""
             ],
-            "dokumen_indentitas" => $this->attachment($surveyId, "'ktp', 'kk', 'ktp_pasangan'"),
+            "dokumen_indentitas" => $this->attachment($surveyId, "'ktp', 'kk', 'ktp_pasangan','selfie'"),
             "dokumen_jaminan" => $this->attachment($surveyId, "'no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri'"),
             "dokumen_pendukung" => M_CrSurveyDocument::attachmentGetAll($surveyId, ['other']) ?? null,
             "dokumen_order" => $this->attachment($surveyId, "'sp', 'pk', 'dok'"),
@@ -1132,33 +1133,39 @@ class CrAppilcationController extends Controller
             ->where('b.ID_NUMBER', $ktp)
             ->count();
 
-        if ($checkIdNumber > 1) {
-            $arrayList["order_validation"] = [
-                "ktp" => false,
-                "message" => "No KTP {$ktp} Masih Ada yang Aktif"
-            ];
-        } else {
-            $arrayList["order_validation"] = [
-                "ktp" => true
-            ];
+        $checkKkNumber = DB::table('credit as a')
+            ->join('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
+            ->where('a.STATUS', 'A')
+            ->where('b.KK_NUMBER', $kk)
+            ->count();
+
+        if (!isset($arrayList["order_validation"])) {
+            $arrayList["order_validation"] = [];
         }
 
-        // $checkKkNumber = DB::table('credit as a')
-        //     ->join('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
-        //     ->where('a.STATUS', 'A')
-        //     ->where('b.KK_NUMBER', $kk)
-        //     ->count();
+        // Validate KTP
+        if ($checkIdNumber > 1) {
+            $arrayList["order_validation"][] = "KTP : No KTP {$ktp} Masih Ada yang Aktif";
+        } 
 
-        // if ($checkKkNumber == 2) {
-        //     $data[] = [
-        //         "kk" => false,
-        //         "message" => "No KK {$kk} Aktif Lebih Dari 2"
-        //     ];
-        // } else {
-        //     $data[] = [
-        //         "kk" => true
-        //     ];
-        // }
+        // Validate KK
+        if ($checkKkNumber == 2) {
+            $arrayList["order_validation"][] = "KK : No KK {$kk} Aktif Lebih Dari 2";
+        }
+
+        foreach ($guarente_vehicle as $list) {
+
+            $checkJaminan = DB::table('credit as a')
+                ->join('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
+                ->where('a.STATUS', 'A')
+                ->where('b.CHASIS_NUMBER', $list->CHASIS_NUMBER)
+                ->where('b.ENGINE_NUMBER', $list->ENGINE_NUMBER)
+                ->count();
+
+            if ($checkJaminan > 1) {
+                $arrayList["order_validation"][] = "Jaminan : Jaminan No Mesin {$list->ENGINE_NUMBER} dan No Rangka {$list->CHASIS_NUMBER} Masih Ada yang Aktif";
+            }
+        }
 
         $arrayList['info_bank'] = M_CrApplicationBank::where('APPLICATION_ID', $application->ID)
             ->get()
@@ -1180,6 +1187,7 @@ class CrAppilcationController extends Controller
                 "atr" => [
                     'id' => $list->ID,
                     'status_jaminan' => null,
+                    'kondisi_jaminan' => $list->POSITION_FLAG,
                     "tipe" => $list->TYPE,
                     "merk" => $list->BRAND,
                     "tahun" => $list->PRODUCTION_YEAR,

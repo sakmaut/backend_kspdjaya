@@ -142,7 +142,7 @@ class PaymentController extends Controller
                             'principal_remains' => $res['principal_remains'] ?? '',
                             'payment' => $res['payment'] ?? '',
                             'bayar_angsuran' => $res['bayar_angsuran'] ?? '',
-                            'bayar_denda' => $res['bayar_denda'] ?? '',
+                            'bayar_denda' => strtolower($request->bayar_dengan_diskon) == 'ya' ? $res['denda'] ?? '0' : $res['bayar_denda'] ?? '0',
                             'total_bayar' => $res['total_bayar'] ?? '',
                             'flag' => $res['flag'] ?? '',
                             'denda' => $res['denda'] ?? '',
@@ -402,11 +402,11 @@ class PaymentController extends Controller
 
             $updates = [];
             if ($new_payment_value_principal !== $valBeforePrincipal) {
-                $updates['PAID_PCPL'] = $new_payment_value_principal;
+                $updates['WOFF_PCPL'] = $new_payment_value_principal;
             }
 
             if ($new_payment_value_interest !== $valBeforeInterest) {
-                $updates['PAID_INT'] = $new_payment_value_interest;
+                $updates['WOFF_INT'] = $new_payment_value_interest;
             }
 
             $paymentData = $this->preparePaymentData($uid, 'BAYAR_DENDA', $bayar_denda);
@@ -420,7 +420,7 @@ class PaymentController extends Controller
                 $this->addCreditPaid($loan_number, ['DISKON_DENDA' => $remainingPenalty]);
             }
 
-            $updates['PAID_PENALTY'] = $getPenalty;
+            $updates['WOFF_PENALTY'] = $getPenalty;
             $updates['END_DATE'] = now();
             $updates['UPDATED_AT'] = now();
             if (!empty($updates)) {
@@ -571,20 +571,10 @@ class PaymentController extends Controller
             ['NO_TRANSAKSI' => $no_inv],
             $save_kwitansi
         );
-
-        // if (!$cekPaymentMethod) {
-        //     M_TelegramBotSend::create([
-        //         'endpoint' => $request->url(),
-        //         'messages' => json_encode($save_kwitansi),
-        //         'status' => 'new',
-        //         "created_at" => Carbon::now()
-        //     ]);
-        // }
     }
 
     function createPaymentRecords($request, $res, $tgl_angsuran, $loan_number, $no_inv, $branch, $uid)
     {
-
         $kwitansi = M_Kwitansi::where(['NO_TRANSAKSI' => $no_inv])->first();
 
         if ($kwitansi) {

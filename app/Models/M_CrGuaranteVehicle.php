@@ -15,6 +15,7 @@ class M_CrGuaranteVehicle extends Model
        'ID',
        'CR_SURVEY_ID',
        'HEADER_ID',
+       'POSITION_FLAG',
        'BRAND',
        'TYPE',
        'COUNTER_ID',

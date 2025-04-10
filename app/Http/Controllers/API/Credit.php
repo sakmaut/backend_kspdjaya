@@ -182,8 +182,52 @@ class Credit extends Controller
             "angsuran" => bilangan($angsuran) ?? null,
             "opt_periode" => $data->OPT_PERIODE ?? null,
             "jaminan" => [],
+            "order_validation" => [],
             "struktur" => $check_exist != null && !empty($check_exist->LOAN_NUMBER) ? $schedule : $data_credit_schedule ?? null
         ];
+
+        $ktp = $cr_personal->ID_NUMBER;
+        $kk = $cr_personal->KK;
+
+        $checkIdNumber = DB::table('credit as a')
+            ->join('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
+            ->where('a.STATUS', 'A')
+            ->where('b.ID_NUMBER', $ktp)
+            ->count();
+
+        $checkKkNumber = DB::table('credit as a')
+            ->join('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
+            ->where('a.STATUS', 'A')
+            ->where('b.KK_NUMBER', $kk)
+            ->count();
+
+        if (!isset($array_build["order_validation"])) {
+            $array_build["order_validation"] = [];
+        }
+
+        // Validate KTP
+        if ($checkIdNumber > 1) {
+            $array_build["order_validation"][] = "KTP : No KTP {$ktp} Masih Ada yang Aktif";
+        }
+
+        // Validate KK
+        if ($checkKkNumber == 2) {
+            $array_build["order_validation"][] = "KK : No KK {$kk} Aktif Lebih Dari 2";
+        }
+
+        foreach ($guarente_vehicle as $list) {
+
+            $checkJaminan = DB::table('credit as a')
+                ->join('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
+                ->where('a.STATUS', 'A')
+                ->where('b.CHASIS_NUMBER', $list->CHASIS_NUMBER)
+                ->where('b.ENGINE_NUMBER', $list->ENGINE_NUMBER)
+                ->count();
+
+            if ($checkJaminan > 1) {
+                $array_build["order_validation"][] = "Jaminan : Jaminan No Mesin {$list->ENGINE_NUMBER} dan No Rangka {$list->CHASIS_NUMBER} Masih Ada yang Aktif";
+            }
+        }
 
         if ($check_exist) {
 

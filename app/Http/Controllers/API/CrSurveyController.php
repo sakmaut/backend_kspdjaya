@@ -147,6 +147,7 @@ class CrSurveyController extends Controller
                 "atr" => [
                     'id' => $list->ID,
                     'status_jaminan' => null,
+                    'kondisi_jaminan' => $list->POSITION_FLAG,
                     "tipe" => $list->TYPE,
                     "merk" => $list->BRAND,
                     "tahun" => $list->PRODUCTION_YEAR,
@@ -356,7 +357,8 @@ class CrSurveyController extends Controller
                         $data_array_col = [
                             'ID' => Uuid::uuid7()->toString(),
                             'CR_SURVEY_ID' => $request->id,
-                            'HEADER_ID' => $result['counter_id'],
+                            'HEADER_ID' => $result['counter_id'] ?? null,
+                            'POSITION_FLAG' => $result['atr']['kondisi_jaminan'] ?? null,
                             'TYPE' => $result['atr']['tipe'] ?? null,
                             'BRAND' => $result['atr']['merk'] ?? null,
                             'PRODUCTION_YEAR' => $result['atr']['tahun'] ?? null,
@@ -499,6 +501,7 @@ class CrSurveyController extends Controller
                         case 'kendaraan':
 
                             $data_array_col = [
+                                'POSITION_FLAG' => $result['atr']['kondisi_jaminan'] ?? null,
                                 'TYPE' => $result['atr']['tipe'] ?? null,
                                 'BRAND' => $result['atr']['merk'] ?? null,
                                 'PRODUCTION_YEAR' => $result['atr']['tahun'] ?? null,
