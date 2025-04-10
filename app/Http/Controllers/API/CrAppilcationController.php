@@ -1126,6 +1126,9 @@ class CrAppilcationController extends Controller
 
         $ktp = empty($cr_personal->ID_NUMBER) ? $data->ktp ?? null : $cr_personal->ID_NUMBER ?? null;
         $kk = empty($cr_personal->KK) ? $cr_survey->kk : $cr_personal->KK;
+        $no_mesin = empty($cr_personal->KK) ? $cr_survey->kk : $cr_personal->KK;
+        $no_rangka = empty($cr_personal->KK) ? $cr_survey->kk : $cr_personal->KK;
+
 
         $checkIdNumber = DB::table('credit as a')
             ->join('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
@@ -1157,6 +1160,23 @@ class CrAppilcationController extends Controller
             $arrayList["order_validation"]["kk_message"] = "No KK {$kk} Aktif Lebih Dari 2";
         } else {
             $arrayList["order_validation"]["kk"] = true;
+        }
+
+        foreach ($guarente_vehicle as $list) {
+
+            $checkJaminan = DB::table('credit as a')
+                ->join('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
+                ->where('a.STATUS', 'A')
+                ->where('b.CHASIS_NUMBER', $list->CHASIS_NUMBER)
+                ->where('b.ENGINE_NUMBER', $list->ENGINE_NUMBER)
+                ->count();
+
+            if ($checkJaminan > 1) {
+                $arrayList["order_validation"]["jaminan"] = false;
+                $arrayList["order_validation"]["jaminan_message"] = "Jaminan No Mesin {$list->ENGINE_NUMBER} dan No Rangka {$list->CHASIS_NUMBER} Masih Ada yang Aktif";
+            } else {
+                $arrayList["order_validation"]["jaminan"] = true;
+            }
         }
 
         $arrayList['info_bank'] = M_CrApplicationBank::where('APPLICATION_ID', $application->ID)
