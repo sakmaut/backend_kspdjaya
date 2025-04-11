@@ -225,7 +225,7 @@ class Credit extends Controller
                     ->where('b.ENGINE_NUMBER', $list->ENGINE_NUMBER)
                     ->count();
 
-                if ($checkJaminan == 1) {
+                if ($checkJaminan > 0) {
                     $array_build["order_validation"][] = "Jaminan : Jaminan No Mesin {$list->ENGINE_NUMBER} dan No Rangka {$list->CHASIS_NUMBER} Masih Ada yang Aktif";
                 }
             }
