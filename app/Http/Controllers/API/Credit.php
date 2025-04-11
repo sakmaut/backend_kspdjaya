@@ -217,17 +217,15 @@ class Credit extends Controller
 
         foreach ($guarente_vehicle as $list) {
 
-            if ($list->CHASIS_NUMBER != '' && $list->ENGINE_NUMBER != '') {
-                $checkJaminan = DB::table('credit as a')
-                    ->join('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
-                    ->where('a.STATUS', 'A')
-                    ->where('b.CHASIS_NUMBER', $list->CHASIS_NUMBER)
-                    ->where('b.ENGINE_NUMBER', $list->ENGINE_NUMBER)
-                    ->count();
+            $checkJaminan = DB::table('credit as a')
+                ->join('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
+                ->where('a.STATUS', 'A')
+                ->where('b.CHASIS_NUMBER', $list->CHASIS_NUMBER)
+                ->where('b.ENGINE_NUMBER', $list->ENGINE_NUMBER)
+                ->count();
 
-                if ($checkJaminan > 1) {
-                    $array_build["order_validation"][] = "Jaminan : Jaminan No Mesin {$list->ENGINE_NUMBER} dan No Rangka {$list->CHASIS_NUMBER} Masih Ada yang Aktif";
-                }
+            if ($checkJaminan > 1) {
+                $array_build["order_validation"][] = "Jaminan : Jaminan No Mesin {$list->ENGINE_NUMBER} dan No Rangka {$list->CHASIS_NUMBER} Masih Ada yang Aktif";
             }
         }
 
