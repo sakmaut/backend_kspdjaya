@@ -217,7 +217,10 @@ class Credit extends Controller
 
         foreach ($guarente_vehicle as $list) {
 
-            if ($list->CHASIS_NUMBER != '' && $list->ENGINE_NUMBER != '') {
+            if ($list->CHASIS_NUMBER == '' && $list->ENGINE_NUMBER == '') {
+                $arrayList["order_validation"][] =
+                    "Jaminan : Jaminan No Mesin dan No Rangka Tidak Boleh Kosong";
+            } else {
                 $checkJaminan = DB::table('credit as a')
                     ->join('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
                     ->where('a.STATUS', 'A')
