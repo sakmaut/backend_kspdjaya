@@ -1146,7 +1146,7 @@ class CrAppilcationController extends Controller
         // Validate KTP
         if ($checkIdNumber > 1) {
             $arrayList["order_validation"][] = "KTP : No KTP {$ktp} Masih Ada yang Aktif";
-        } 
+        }
 
         // Validate KK
         if ($checkKkNumber == 2) {
@@ -1155,15 +1155,17 @@ class CrAppilcationController extends Controller
 
         foreach ($guarente_vehicle as $list) {
 
-            $checkJaminan = DB::table('credit as a')
-                ->join('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
-                ->where('a.STATUS', 'A')
-                ->where('b.CHASIS_NUMBER', $list->CHASIS_NUMBER)
-                ->where('b.ENGINE_NUMBER', $list->ENGINE_NUMBER)
-                ->count();
+            if (!empty($list->CHASIS_NUMBER) && !empty($list->ENGINE_NUMBER)) {
+                $checkJaminan = DB::table('credit as a')
+                    ->join('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
+                    ->where('a.STATUS', 'A')
+                    ->where('b.CHASIS_NUMBER', $list->CHASIS_NUMBER)
+                    ->where('b.ENGINE_NUMBER', $list->ENGINE_NUMBER)
+                    ->count();
 
-            if ($checkJaminan > 1) {
-                $arrayList["order_validation"][] = "Jaminan : Jaminan No Mesin {$list->ENGINE_NUMBER} dan No Rangka {$list->CHASIS_NUMBER} Masih Ada yang Aktif";
+                if ($checkJaminan > 1) {
+                    $arrayList["order_validation"][] = "Jaminan : Jaminan No Mesin {$list->ENGINE_NUMBER} dan No Rangka {$list->CHASIS_NUMBER} Masih Ada yang Aktif";
+                }
             }
         }
 
