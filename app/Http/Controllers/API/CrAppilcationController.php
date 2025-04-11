@@ -1155,7 +1155,7 @@ class CrAppilcationController extends Controller
 
         foreach ($guarente_vehicle as $list) {
 
-            if (!empty($list->CHASIS_NUMBER) || !empty($list->ENGINE_NUMBER)) {
+            if ($list->CHASIS_NUMBER != '' && $list->ENGINE_NUMBER != '') {
                 $checkJaminan = DB::table('credit as a')
                     ->join('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
                     ->where('a.STATUS', 'A')
@@ -1164,7 +1164,8 @@ class CrAppilcationController extends Controller
                     ->count();
 
                 if ($checkJaminan > 1) {
-                    $arrayList["order_validation"][] = "Jaminan : Jaminan No Mesin {$list->ENGINE_NUMBER} dan No Rangka {$list->CHASIS_NUMBER} Masih Ada yang Aktif";
+                    $arrayList["order_validation"][] =
+                        "Jaminan : Jaminan No Mesin {$list->ENGINE_NUMBER} dan No Rangka {$list->CHASIS_NUMBER} Masih Ada yang Aktif";
                 }
             }
         }
