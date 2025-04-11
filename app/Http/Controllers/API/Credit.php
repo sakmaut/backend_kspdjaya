@@ -225,10 +225,15 @@ class Credit extends Controller
                     ->join('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
                     ->where('a.STATUS', 'A')
                     ->where('b.CHASIS_NUMBER', $list->CHASIS_NUMBER)
-                    ->where('b.ENGINE_NUMBER', $list->ENGINE_NUMBER)
-                    ->count();
+                    ->where('b.ENGINE_NUMBER', $list->ENGINE_NUMBER);
 
-                if ($checkJaminan > 0) {
+                if (!empty($data->ORDER_NUMBER)) {
+                    $checkJaminan->where('a.ORDER_NUMBER', '!=', $data->ORDER_NUMBER);
+                }
+
+                $count = $checkJaminan->count();
+
+                if ($count > 0) {
                     $array_build["order_validation"][] = "Jaminan : Jaminan No Mesin {$list->ENGINE_NUMBER} dan No Rangka {$list->CHASIS_NUMBER} Masih Ada yang Aktif";
                 }
             }
