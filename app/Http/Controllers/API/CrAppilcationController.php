@@ -1165,7 +1165,7 @@ class CrAppilcationController extends Controller
                     ->where('b.CHASIS_NUMBER', $list->CHASIS_NUMBER)
                     ->where('b.ENGINE_NUMBER', $list->ENGINE_NUMBER);
 
-                if (!empty($data->ORDER_NUMBER)) {
+                if (!empty($applicationDetail->ORDER_NUMBER)) {
                     $checkJaminan->where('a.ORDER_NUMBER', '!=', $data->ORDER_NUMBER);
                 }
 
