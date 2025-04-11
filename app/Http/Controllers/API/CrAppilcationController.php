@@ -1155,7 +1155,7 @@ class CrAppilcationController extends Controller
 
         foreach ($guarente_vehicle as $list) {
 
-            if (!empty($list->CHASIS_NUMBER) && !empty($list->ENGINE_NUMBER)) {
+            if (!empty($list->CHASIS_NUMBER) || !empty($list->ENGINE_NUMBER)) {
                 $checkJaminan = DB::table('credit as a')
                     ->join('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
                     ->where('a.STATUS', 'A')
