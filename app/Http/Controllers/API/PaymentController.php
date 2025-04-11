@@ -142,7 +142,7 @@ class PaymentController extends Controller
                             'principal_remains' => $res['principal_remains'] ?? '',
                             'payment' => $res['payment'] ?? '',
                             'bayar_angsuran' => $res['bayar_angsuran'] ?? '',
-                            'bayar_denda' => strtolower($request->bayar_dengan_diskon) == 'ya' ? $res['denda'] ?? '0' : $res['bayar_denda'] ?? '0',
+                            'bayar_denda' => $res['bayar_denda'] ?? '0',
                             'total_bayar' => $res['total_bayar'] ?? '',
                             'flag' => $res['flag'] ?? '',
                             'denda' => $res['denda'] ?? '',
