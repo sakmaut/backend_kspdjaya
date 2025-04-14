@@ -402,25 +402,27 @@ class PaymentController extends Controller
 
             $updates = [];
             if ($new_payment_value_principal !== $valBeforePrincipal) {
-                $updates['WOFF_PCPL'] = $new_payment_value_principal;
+                $updates['PAID_PCPL'] = $new_payment_value_principal;
             }
 
             if ($new_payment_value_interest !== $valBeforeInterest) {
-                $updates['WOFF_INT'] = $new_payment_value_interest;
+                $updates['PAID_INT'] = $new_payment_value_interest;
             }
 
             $paymentData = $this->preparePaymentData($uid, 'BAYAR_DENDA', $bayar_denda);
             M_PaymentDetail::create($paymentData);
             $this->addCreditPaid($loan_number, ['BAYAR_DENDA' => $bayar_denda]);
 
+
             $remainingPenalty = floatval($getPenalty) - floatval($bayar_denda);
             if ($remainingPenalty > 0) {
                 $discountPaymentData = $this->preparePaymentData($uid, 'DISKON_DENDA', $remainingPenalty);
                 M_PaymentDetail::create($discountPaymentData);
                 $this->addCreditPaid($loan_number, ['DISKON_DENDA' => $remainingPenalty]);
+                $updates['WOFF_PENALTY'] = $remainingPenalty;
             }
 
-            $updates['WOFF_PENALTY'] = $getPenalty;
+            $updates['PAID_PENALTY'] = $bayar_denda;
             $updates['END_DATE'] = now();
             $updates['UPDATED_AT'] = now();
             if (!empty($updates)) {
@@ -558,6 +560,7 @@ class PaymentController extends Controller
             "METODE_PEMBAYARAN" => $request->payment_method ?? null,
             "TOTAL_BAYAR" => $request->total_bayar ?? null,
             "DISKON" => $request->diskon_tunggakan ?? null,
+            "DISKON_FLAG" => $request->bayar_dengan_diskon ?? null,
             "PEMBULATAN" => $request->pembulatan ?? null,
             "KEMBALIAN" => $request->kembalian ?? null,
             "JUMLAH_UANG" => $request->jumlah_uang ?? null,
@@ -851,7 +854,6 @@ class PaymentController extends Controller
 
         DB::beginTransaction();
         try {
-            // Check if the invoice exists and is paid
             $check = M_Kwitansi::where([
                 'NO_TRANSAKSI' => $no_invoice,
                 'STTS_PAYMENT' => 'PAID'
@@ -861,7 +863,6 @@ class PaymentController extends Controller
                 throw new Exception("Kwitansi Number Not Exist", 404);
             }
 
-            // Log the cancellation request if not already logged
             $checkPaymentLog = M_PaymentCancelLog::where('INVOICE_NUMBER', $no_invoice)->first();
             if (!$checkPaymentLog) {
                 M_PaymentCancelLog::create([
@@ -874,7 +875,6 @@ class PaymentController extends Controller
                 ]);
             }
 
-            // Process HO approval if applicable
             if (strtolower($request->user()->position) == 'ho' && isset($flag) && !empty($flag)) {
                 $this->processHoApproval($request, $check);
             }
