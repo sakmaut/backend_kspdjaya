@@ -697,6 +697,12 @@ class PaymentController extends Controller
 
             $getInvoice = $request->no_invoice;
 
+            $kwitansiPaid = M_Kwitansi::where(['NO_TRANSAKSI' => $getInvoice, 'STTS_PAYMENT' => 'PAID'])->first();
+
+            if ($kwitansiPaid) {
+                throw new Exception("Kwitansi Has Been Proccess", 404);
+            }
+
             $kwitansi = M_Kwitansi::where(['NO_TRANSAKSI' => $getInvoice, 'STTS_PAYMENT' => 'PENDING'])->first();
 
             if (!$kwitansi) {
@@ -708,8 +714,6 @@ class PaymentController extends Controller
             $request->merge(['payment_method' => 'transfer']);
 
             if ($request->flag == 'yes') {
-
-                $kwitansi->update(['STTS_PAYMENT' => 'PAID']);
 
                 if ($kwitansi->PAYMENT_TYPE === 'pelunasan') {
                     $pelunasan = new PelunasanController();
@@ -728,6 +732,8 @@ class PaymentController extends Controller
                         $this->processPaymentStructure($res, $request, $getCodeBranch, $getInvoice);
                     }
                 }
+
+                $kwitansi->update(['STTS_PAYMENT' => 'PAID']);
             } else {
                 $request->merge(['approval' => 'no']);
 
