@@ -748,3 +748,40 @@ if ($valBeforePrincipal < $getPrincipal) { $remaining_to_principal=$getPrincipal
                     INNER JOIN customer b3 ON b3.CUST_CODE = b2.CUST_CODE
                     INNER JOIN users u ON u.id = b.user_id
                     WHERE b.ENTRY_DATE BETWEEN '$request->dari' AND '$request->sampai' ";
+
+
+//CreditPaymentProcess
+
+        $checkCreditSchedule = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)
+            ->where(function ($query) {
+                $query->where('PAID_FLAG', '')
+                    ->orWhereNull('PAID_FLAG');
+            })
+            ->get();
+
+        $checkArrears = M_Arrears::where('LOAN_NUMBER', $loan_number)
+            ->whereIn('STATUS_REC', ['A', 'PENDING'])
+            ->get();
+
+        if ($checkCreditSchedule->isEmpty() && $checkArrears->isEmpty()) {
+            $status = 'D';
+            $status_rec = 'CL';
+        } else {
+            $status = 'A';
+        }
+
+        $cekStatusActive = $this->checkStatusCreditActive($loan_number);
+
+        if ($cekStatusActive == 0) {
+            $status = 'D';
+            $status_rec = 'CL';
+        } else {
+            $status = 'A';
+        }
+
+        if ($check_credit) {
+            $check_credit->update([
+                'STATUS' => $status,
+                'STATUS_REC' => $status_rec ?? 'AC',
+            ]);
+        }

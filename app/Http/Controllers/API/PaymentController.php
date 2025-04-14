@@ -110,7 +110,16 @@ class PaymentController extends Controller
             $check_method_payment = strtolower($request->payment_method) === 'cash';
 
             if (isset($request->struktur) && is_array($request->struktur)) {
+
                 foreach ($request->struktur as $res) {
+
+                    $getLoanNumber  = $res['loan_number'];
+
+                    $checkCredit = M_Credit::where(['LOAN_NUMBER' => $getLoanNumber, 'STATUS' => 'D'])->first();
+
+                    if ($checkCredit) {
+                        throw new Exception("Credit Is Not Active", 404);
+                    }
 
                     if (isset($res['customer']) && !empty($res['customer'])) {
                         if (empty($detail_customer)) {
@@ -289,40 +298,6 @@ class PaymentController extends Controller
     private function updateCredit($loan_number)
     {
         $check_credit = M_Credit::where(['LOAN_NUMBER' => $loan_number])->first();
-
-        // $checkCreditSchedule = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)
-        //     ->where(function ($query) {
-        //         $query->where('PAID_FLAG', '')
-        //             ->orWhereNull('PAID_FLAG');
-        //     })
-        //     ->get();
-
-        // $checkArrears = M_Arrears::where('LOAN_NUMBER', $loan_number)
-        //     ->whereIn('STATUS_REC', ['A', 'PENDING'])
-        //     ->get();
-
-        // if ($checkCreditSchedule->isEmpty() && $checkArrears->isEmpty()) {
-        //     $status = 'D';
-        //     $status_rec = 'CL';
-        // } else {
-        //     $status = 'A';
-        // }
-
-        // $cekStatusActive = $this->checkStatusCreditActive($loan_number);
-
-        // if ($cekStatusActive == 0) {
-        //     $status = 'D';
-        //     $status_rec = 'CL';
-        // } else {
-        //     $status = 'A';
-        // }
-
-        // if ($check_credit) {
-        //     $check_credit->update([
-        //         'STATUS' => $status,
-        //         'STATUS_REC' => $status_rec ?? 'AC',
-        //     ]);
-        // }
 
         $isActive = $this->checkStatusCreditActive($loan_number);
 
@@ -531,7 +506,6 @@ class PaymentController extends Controller
 
     private function saveKwitansi($request, $customer_detail, $no_inv)
     {
-
         $cekPaymentMethod = $request->payment_method == 'cash' && strtolower($request->bayar_dengan_diskon) != 'ya';
 
         $checkKwitansiExist = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
@@ -735,6 +709,8 @@ class PaymentController extends Controller
 
             if ($request->flag == 'yes') {
 
+                $kwitansi->update(['STTS_PAYMENT' => 'PAID']);
+
                 if ($kwitansi->PAYMENT_TYPE === 'pelunasan') {
                     $pelunasan = new PelunasanController();
                     $pelunasan->proccess($request, $kwitansi->LOAN_NUMBER, $getInvoice, 'PAID');
@@ -752,8 +728,6 @@ class PaymentController extends Controller
                         $this->processPaymentStructure($res, $request, $getCodeBranch, $getInvoice);
                     }
                 }
-
-                $kwitansi->update(['STTS_PAYMENT' => 'PAID']);
             } else {
                 $request->merge(['approval' => 'no']);
 
