@@ -773,15 +773,11 @@ class CrAppilcationController extends Controller
 
             $uuid = Uuid::uuid7()->toString();
 
-            $datas = [];
-
             $check_prospect_id = M_CrApplication::where('CR_SURVEY_ID', $getSurveyId)->first();
 
             if (!$check_prospect_id) {
                 $generate_uuid = $uuid;
 
-
-                // $datas[] = 'Create Order';
                 $data_cr_application = [
                     'ID' => $uuid,
                     'CR_SURVEY_ID' => $check_survey_id->id,
@@ -798,117 +794,112 @@ class CrAppilcationController extends Controller
 
                 if (strtolower($check_survey_id->category) == 'ro') {
 
-                    $datas[] = 'Create Order RO';
-
                     $customer = M_Customer::where('ID_NUMBER', $check_survey_id->ktp)->first();
                     $customer_xtra = M_CustomerExtra::where('CUST_CODE', $customer->CUST_CODE)->first();
 
-                    // $data_cr_personal = [
-                    //     'ID' => Uuid::uuid7()->toString(),
-                    //     'APPLICATION_ID' => $uuid,
-                    //     'NAME' => $check_survey_id->nama ?? null,
-                    //     'ALIAS' => $customer->ALIAS ?? null,
-                    //     'GENDER' => $customer->GENDER ?? null,
-                    //     'BIRTHPLACE' => $customer->BIRTHPLACE ?? null,
-                    //     'BIRTHDATE' => $check_survey_id->tgl_lahir ?? null,
-                    //     'BLOOD_TYPE' => $customer->BLOOD_TYPE ?? null,
-                    //     'MARTIAL_STATUS' => $customer->MARTIAL_STATUS ?? null,
-                    //     'MARTIAL_DATE' => $customer->MARTIAL_DATE ?? null,
-                    //     'ID_TYPE' => $customer->ID_TYPE ?? null,
-                    //     'ID_NUMBER' => $check_survey_id->ktp ?? null,
-                    //     'ID_ISSUE_DATE' => $customer->ID_ISSUE_DATE ?? null,
-                    //     'ID_VALID_DATE' => $customer->ID_VALID_DATE ?? null,
-                    //     'KK' => $check_survey_id->kk ?? null,
-                    //     'CITIZEN' => $customer->CITIZEN ?? null,
+                    $data_cr_personal = [
+                        'ID' => Uuid::uuid7()->toString(),
+                        'APPLICATION_ID' => $uuid,
+                        'NAME' => $check_survey_id->nama ?? null,
+                        'ALIAS' => $customer->ALIAS ?? null,
+                        'GENDER' => $customer->GENDER ?? null,
+                        'BIRTHPLACE' => $customer->BIRTHPLACE ?? null,
+                        'BIRTHDATE' => $check_survey_id->tgl_lahir ?? null,
+                        'BLOOD_TYPE' => $customer->BLOOD_TYPE ?? null,
+                        'MARTIAL_STATUS' => $customer->MARTIAL_STATUS ?? null,
+                        'MARTIAL_DATE' => $customer->MARTIAL_DATE ?? null,
+                        'ID_TYPE' => $customer->ID_TYPE ?? null,
+                        'ID_NUMBER' => $check_survey_id->ktp ?? null,
+                        'ID_ISSUE_DATE' => $customer->ID_ISSUE_DATE ?? null,
+                        'ID_VALID_DATE' => $customer->ID_VALID_DATE ?? null,
+                        'KK' => $check_survey_id->kk ?? null,
+                        'CITIZEN' => $customer->CITIZEN ?? null,
 
-                    //     'ADDRESS' => $check_survey_id->alamat ?? null,
-                    //     'RT' => $check_survey_id->rt ?? null,
-                    //     'RW' => $check_survey_id->rw ?? null,
-                    //     'PROVINCE' => $customer->PROVINCE ?? null,
-                    //     'CITY' => $customer->CITY ?? null,
-                    //     'KELURAHAN' => $customer->KELURAHAN ?? null,
-                    //     'KECAMATAN' => $customer->KECAMATAN ?? null,
-                    //     'ZIP_CODE' => $customer->ZIP_CODE ?? null,
+                        'ADDRESS' => $check_survey_id->alamat ?? null,
+                        'RT' => $check_survey_id->rt ?? null,
+                        'RW' => $check_survey_id->rw ?? null,
+                        'PROVINCE' => $customer->PROVINCE ?? null,
+                        'CITY' => $customer->CITY ?? null,
+                        'KELURAHAN' => $customer->KELURAHAN ?? null,
+                        'KECAMATAN' => $customer->KECAMATAN ?? null,
+                        'ZIP_CODE' => $customer->ZIP_CODE ?? null,
 
-                    //     'INS_ADDRESS' => $customer->INS_ADDRESS ?? null,
-                    //     'INS_RT' => $customer->INS_RT ?? null,
-                    //     'INS_RW' => $customer->INS_RW ?? null,
-                    //     'INS_PROVINCE' => $customer->INS_PROVINCE ?? null,
-                    //     'INS_CITY' => $customer->INS_CITY ?? null,
-                    //     'INS_KELURAHAN' => $customer->INS_KELURAHAN ?? null,
-                    //     'INS_KECAMATAN' => $customer->INS_KECAMATAN ?? null,
-                    //     'INS_ZIP_CODE' => $customer->INS_ZIP_CODE ?? null,
+                        'INS_ADDRESS' => $customer->INS_ADDRESS ?? null,
+                        'INS_RT' => $customer->INS_RT ?? null,
+                        'INS_RW' => $customer->INS_RW ?? null,
+                        'INS_PROVINCE' => $customer->INS_PROVINCE ?? null,
+                        'INS_CITY' => $customer->INS_CITY ?? null,
+                        'INS_KELURAHAN' => $customer->INS_KELURAHAN ?? null,
+                        'INS_KECAMATAN' => $customer->INS_KECAMATAN ?? null,
+                        'INS_ZIP_CODE' => $customer->INS_ZIP_CODE ?? null,
 
-                    //     'OCCUPATION' => $customer->OCCUPATION ?? null,
-                    //     'OCCUPATION_ON_ID' => $customer->OCCUPATION_ON_ID ?? null,
-                    //     'RELIGION' => $customer->RELIGION ?? null,
-                    //     'EDUCATION' => $customer->EDUCATION ?? null,
-                    //     'PROPERTY_STATUS' => $customer->PROPERTY_STATUS ?? null,
-                    //     'PHONE_HOUSE' => $customer->PHONE_HOUSE ?? null,
-                    //     'PHONE_PERSONAL' => $customer->PHONE_PERSONAL ?? null,
-                    //     'PHONE_OFFICE' => $customer->PHONE_OFFICE ?? null,
-                    //     'EXT_1' => $customer->EXT_1 ?? null,
-                    //     'EXT_2' => $customer->EXT_2 ?? null,
-                    //     'VERSION' => 1,
-                    //     'CREATE_DATE' => Carbon::now()->format('Y-m-d'),
-                    //     'CREATE_USER' => $request->user()->id,
-                    // ];
+                        'OCCUPATION' => $customer->OCCUPATION ?? null,
+                        'OCCUPATION_ON_ID' => $customer->OCCUPATION_ON_ID ?? null,
+                        'RELIGION' => $customer->RELIGION ?? null,
+                        'EDUCATION' => $customer->EDUCATION ?? null,
+                        'PROPERTY_STATUS' => $customer->PROPERTY_STATUS ?? null,
+                        'PHONE_HOUSE' => $customer->PHONE_HOUSE ?? null,
+                        'PHONE_PERSONAL' => $customer->PHONE_PERSONAL ?? null,
+                        'PHONE_OFFICE' => $customer->PHONE_OFFICE ?? null,
+                        'EXT_1' => $customer->EXT_1 ?? null,
+                        'EXT_2' => $customer->EXT_2 ?? null,
+                        'VERSION' => 1,
+                        'CREATE_DATE' => Carbon::now()->format('Y-m-d'),
+                        'CREATE_USER' => $request->user()->id,
+                    ];
 
-                    // $data_cr_order = [
-                    //     'ID' => Uuid::uuid7()->toString(),
-                    //     'APPLICATION_ID' => $uuid,
-                    //     'NO_NPWP' => $customer->NPWP ?? null,
-                    //     'MOTHER_NAME' => $customer->MOTHER_NAME ?? null,
-                    //     'WORK_PERIOD'  => $check_survey_id->work_period ?? null,
-                    //     'INCOME_PERSONAL'  => $check_survey_id->income_personal ?? null,
-                    //     'INCOME_SPOUSE'  => $check_survey_id->income_spouse ?? null,
-                    //     'INCOME_OTHER'  => $check_survey_id->income_other ?? null,
-                    //     'UNIT_BISNIS' => $check_survey_id->usaha ?? null,
-                    //     'EXPENSES'  =>  $check_survey_id->expenses ?? null,
-                    // ];
+                    $data_cr_order = [
+                        'ID' => Uuid::uuid7()->toString(),
+                        'APPLICATION_ID' => $uuid,
+                        'NO_NPWP' => $customer->NPWP ?? null,
+                        'MOTHER_NAME' => $customer->MOTHER_NAME ?? null,
+                        'WORK_PERIOD'  => $check_survey_id->work_period ?? null,
+                        'INCOME_PERSONAL'  => $check_survey_id->income_personal ?? null,
+                        'INCOME_SPOUSE'  => $check_survey_id->income_spouse ?? null,
+                        'INCOME_OTHER'  => $check_survey_id->income_other ?? null,
+                        'UNIT_BISNIS' => $check_survey_id->usaha ?? null,
+                        'EXPENSES'  =>  $check_survey_id->expenses ?? null,
+                    ];
 
-                    // $data_cr_application_spouse = [
-                    //     'ID' => Uuid::uuid7()->toString(),
-                    //     'APPLICATION_ID' => $uuid,
-                    //     'NAME' => $customer_xtra->SPOUSE_NAME ?? null,
-                    //     'BIRTHPLACE' => $customer_xtra->SPOUSE_BIRTHPLACE ?? null,
-                    //     'BIRTHDATE' => $customer_xtra->SPOUSE_BIRTHDATE ?? null,
-                    //     'ADDRESS' => $customer_xtra->SPOUSE_ADDRESS ?? null,
-                    //     'OCCUPATION' => $customer_xtra->SPOUSE_OCCUPATION ?? null
-                    // ];
+                    $data_cr_application_spouse = [
+                        'ID' => Uuid::uuid7()->toString(),
+                        'APPLICATION_ID' => $uuid,
+                        'NAME' => $customer_xtra->SPOUSE_NAME ?? null,
+                        'BIRTHPLACE' => $customer_xtra->SPOUSE_BIRTHPLACE ?? null,
+                        'BIRTHDATE' => $customer_xtra->SPOUSE_BIRTHDATE ?? null,
+                        'ADDRESS' => $customer_xtra->SPOUSE_ADDRESS ?? null,
+                        'OCCUPATION' => $customer_xtra->SPOUSE_OCCUPATION ?? null
+                    ];
 
-                    // $data_cr_personal_extra = [
-                    //     'ID' => Uuid::uuid7()->toString(),
-                    //     'APPLICATION_ID' => $uuid,
-                    //     'EMERGENCY_NAME' => $customer_xtra->EMERGENCY_NAME ?? null,
-                    //     'EMERGENCY_ADDRESS' => $customer_xtra->EMERGENCY_ADDRESS ?? null,
-                    //     'EMERGENCY_RT' => $customer_xtra->EMERGENCY_RT ?? null,
-                    //     'EMERGENCY_RW' => $customer_xtra->EMERGENCY_RW ?? null,
-                    //     'EMERGENCY_PROVINCE' => $customer_xtra->EMERGENCY_PROVINCE ?? null,
-                    //     'EMERGENCY_CITY' => $customer_xtra->EMERGENCYL_CITY ?? null,
-                    //     'EMERGENCY_KELURAHAN' => $customer_xtra->EMERGENCY_KELURAHAN ?? null,
-                    //     'EMERGENCY_KECAMATAN' => $customer_xtra->EMERGENCYL_KECAMATAN ?? null,
-                    //     'EMERGENCY_ZIP_CODE' => $customer_xtra->EMERGENCY_ZIP_CODE ?? null,
-                    //     'EMERGENCY_PHONE_HOUSE' => $customer_xtra->EMERGENCY_PHONE_HOUSE ?? null,
-                    //     'EMERGENCY_PHONE_PERSONAL' => $customer_xtra->EMERGENCY_PHONE_PERSONAL ?? null
-                    // ];
+                    $data_cr_personal_extra = [
+                        'ID' => Uuid::uuid7()->toString(),
+                        'APPLICATION_ID' => $uuid,
+                        'EMERGENCY_NAME' => $customer_xtra->EMERGENCY_NAME ?? null,
+                        'EMERGENCY_ADDRESS' => $customer_xtra->EMERGENCY_ADDRESS ?? null,
+                        'EMERGENCY_RT' => $customer_xtra->EMERGENCY_RT ?? null,
+                        'EMERGENCY_RW' => $customer_xtra->EMERGENCY_RW ?? null,
+                        'EMERGENCY_PROVINCE' => $customer_xtra->EMERGENCY_PROVINCE ?? null,
+                        'EMERGENCY_CITY' => $customer_xtra->EMERGENCYL_CITY ?? null,
+                        'EMERGENCY_KELURAHAN' => $customer_xtra->EMERGENCY_KELURAHAN ?? null,
+                        'EMERGENCY_KECAMATAN' => $customer_xtra->EMERGENCYL_KECAMATAN ?? null,
+                        'EMERGENCY_ZIP_CODE' => $customer_xtra->EMERGENCY_ZIP_CODE ?? null,
+                        'EMERGENCY_PHONE_HOUSE' => $customer_xtra->EMERGENCY_PHONE_HOUSE ?? null,
+                        'EMERGENCY_PHONE_PERSONAL' => $customer_xtra->EMERGENCY_PHONE_PERSONAL ?? null
+                    ];
 
-                    // M_CrPersonal::create($data_cr_personal);
-                    // M_CrPersonalExtra::create($data_cr_personal_extra);
-                    // M_CrOrder::create($data_cr_order);
-                    // M_CrApplicationSpouse::create($data_cr_application_spouse);
+                    M_CrPersonal::create($data_cr_personal);
+                    M_CrPersonalExtra::create($data_cr_personal_extra);
+                    M_CrOrder::create($data_cr_order);
+                    M_CrApplicationSpouse::create($data_cr_application_spouse);
                 }
 
-                // $this->createApplicationApproval($request, $getSurveyId, $generate_uuid);
+                $this->createApplicationApproval($request, $getSurveyId, $generate_uuid);
             } else {
                 $generate_uuid = $check_prospect_id->ID;
-
-                $datas[] = 'Update Order';
             }
 
             DB::commit();
-            return response()->json($datas, 200);
-            // return response()->json(['message' => 'OK', "status" => 200, 'response' => ['uuid' => $generate_uuid]], 200);
+            return response()->json(['message' => 'OK', "status" => 200, 'response' => ['uuid' => $generate_uuid]], 200);
         } catch (\Exception $e) {
             DB::rollback();
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
