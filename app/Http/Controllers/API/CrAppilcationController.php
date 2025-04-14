@@ -781,20 +781,20 @@ class CrAppilcationController extends Controller
                 $generate_uuid = $uuid;
 
 
-                $datas[] = 'Create Order';
-                // $data_cr_application = [
-                //     'ID' => $uuid,
-                //     'CR_SURVEY_ID' => $check_survey_id->id,
-                //     'ORDER_NUMBER' => $this->createAutoCode(M_CrApplication::class, 'ORDER_NUMBER', 'COR'),
-                //     'BRANCH' => $request->user()->branch_id,
-                //     'TENOR' => $check_survey_id->tenor ?? null,
-                //     'INSTALLMENT_TYPE' => $check_survey_id->jenis_angsuran ?? null,
-                //     'VERSION' => 1,
-                //     'CREATE_DATE' => Carbon::now()->format('Y-m-d'),
-                //     'CREATE_BY' => $request->user()->id,
-                // ];
+                // $datas[] = 'Create Order';
+                $data_cr_application = [
+                    'ID' => $uuid,
+                    'CR_SURVEY_ID' => $check_survey_id->id,
+                    'ORDER_NUMBER' => $this->createAutoCode(M_CrApplication::class, 'ORDER_NUMBER', 'COR'),
+                    'BRANCH' => $request->user()->branch_id,
+                    'TENOR' => $check_survey_id->tenor ?? null,
+                    'INSTALLMENT_TYPE' => $check_survey_id->jenis_angsuran ?? null,
+                    'VERSION' => 1,
+                    'CREATE_DATE' => Carbon::now()->format('Y-m-d'),
+                    'CREATE_BY' => $request->user()->id,
+                ];
 
-                // M_CrApplication::create($data_cr_application);
+                M_CrApplication::create($data_cr_application);
 
                 if (strtolower($check_survey_id->category) == 'ro') {
 
