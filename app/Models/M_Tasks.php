@@ -22,7 +22,9 @@ class M_Tasks extends Model
         'created_by',
         'created_branch',
         'created_position',
-        'created_at'
+        'created_at',
+        'updated_by',
+        'updated_at'
     ];
 
     protected $guarded = [];

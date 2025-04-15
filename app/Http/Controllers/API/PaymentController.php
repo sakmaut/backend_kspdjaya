@@ -104,11 +104,6 @@ class PaymentController extends Controller
 
     public function store(Request $request)
     {
-
-        // $execute  =  $this->taskslogging->create($request, 'payment', '87sehksdf798dfdhsdf7', '1235', 'PENDING', 'transfer');
-        // return response()->json($execute, 200);
-        // die;
-
         DB::beginTransaction();
         try {
             $no_inv = generateCodeKwitansi($request, 'kwitansi', 'NO_TRANSAKSI', 'INV');
