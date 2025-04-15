@@ -9,15 +9,17 @@ use Illuminate\Support\Str;
 class M_TasksLogging extends Model
 {
     use HasFactory;
-    protected $table = 'tasks_logging';
+    protected $table = 'tasks_log';
 
     protected $fillable = [
         'id',
+        'tasks_id',
         'type',
         'type_id',
-        'code',
         'status',
         'descr',
+        'recipient_id',
+        'created_id',
         'created_by',
         'created_branch',
         'created_position',
@@ -27,7 +29,7 @@ class M_TasksLogging extends Model
     protected $guarded = [];
     public $incrementing = false;
     protected $keyType = 'string';
-    protected $primaryKey = 'ID';
+    protected $primaryKey = 'id';
     public $timestamps = false;
     protected static function boot()
     {

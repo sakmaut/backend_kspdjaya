@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Repositories\Kwitansi\KwitansiRepository;
+use App\Http\Controllers\Repositories\TasksLogging\TasksRepository;
 use App\Http\Resources\R_Kwitansi;
 use App\Http\Resources\R_PaymentCancelLog;
 use App\Models\M_Arrears;
@@ -18,6 +19,7 @@ use App\Models\M_PaymentApproval;
 use App\Models\M_PaymentAttachment;
 use App\Models\M_PaymentCancelLog;
 use App\Models\M_PaymentDetail;
+use App\Models\M_TasksLogging;
 use App\Models\M_TelegramBotSend;
 use Carbon\Carbon;
 use Exception;
@@ -34,11 +36,13 @@ class PaymentController extends Controller
 
     protected $kwitansiRepository;
     protected $log;
+    protected $taskslogging;
 
-    public function __construct(KwitansiRepository $kwitansiRepository, ExceptionHandling $log)
+    public function __construct(KwitansiRepository $kwitansiRepository, ExceptionHandling $log, TasksRepository $taskslogging)
     {
         $this->kwitansiRepository = $kwitansiRepository;
         $this->log = $log;
+        $this->taskslogging = $taskslogging;
     }
 
     public function index(Request $request)
@@ -100,6 +104,11 @@ class PaymentController extends Controller
 
     public function store(Request $request)
     {
+
+        // $execute  =  $this->taskslogging->create($request, 'payment', '87sehksdf798dfdhsdf7', '1235', 'PENDING', 'transfer');
+        // return response()->json($execute, 200);
+        // die;
+
         DB::beginTransaction();
         try {
             $no_inv = generateCodeKwitansi($request, 'kwitansi', 'NO_TRANSAKSI', 'INV');
@@ -108,6 +117,10 @@ class PaymentController extends Controller
 
             $customer_data = null;
             $check_method_payment = strtolower($request->payment_method) === 'cash';
+            $getPosition = $request->user()->position;
+
+            $setPosition  = ['mcf', 'kolektor'];
+            $checkposition = in_array(strtolower($getPosition), $setPosition);
 
             if (isset($request->struktur) && is_array($request->struktur)) {
 

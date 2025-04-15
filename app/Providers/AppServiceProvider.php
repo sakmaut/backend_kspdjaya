@@ -14,6 +14,8 @@ use App\Http\Controllers\Repositories\Payment\PaymentInterface;
 use App\Http\Controllers\Repositories\Payment\PaymentRepository;
 use App\Http\Controllers\Repositories\Survey\SurveyInterface;
 use App\Http\Controllers\Repositories\Survey\SurveyRepository;
+use App\Http\Controllers\Repositories\TasksLogging\TasksInterface;
+use App\Http\Controllers\Repositories\TasksLogging\TasksRepository;
 use App\Http\Controllers\Repositories\Users\UserRepositories;
 use App\Http\Controllers\Repositories\Users\UsersRepositoryInterface;
 use Carbon\Carbon;

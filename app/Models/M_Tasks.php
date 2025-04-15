@@ -12,22 +12,23 @@ class M_Tasks extends Model
     protected $table = 'tasks';
 
     protected $fillable = [
-        'ID',
-        'BRANCH',
-        'CHANNEL',
-        'IDENTIFIER',
-        'MESSAGE',
-        'CREATED_AT',
-        'STATUS',
-        'READ_AT',
-        'USER_ACCESS',
-        'CREATED_BY'
+        'id',
+        'type',
+        'type_id',
+        'status',
+        'descr',
+        'recipient_id',
+        'created_id',
+        'created_by',
+        'created_branch',
+        'created_position',
+        'created_at'
     ];
 
     protected $guarded = [];
     public $incrementing = false;
     protected $keyType = 'string';
-    protected $primaryKey = 'ID';
+    protected $primaryKey = 'id';
     public $timestamps = false;
     protected static function boot()
     {
