@@ -91,6 +91,23 @@ class Credit extends Controller
         return $result;
     }
 
+    private function setDate()
+    {
+        $currentDate = now();
+        $date = Carbon::parse($currentDate);
+
+        $day = $date->day;
+
+        if ($day >= 26 && $day <= 31) {
+            $newDay = $day - 24;
+            $date->addMonthsNoOverflow(2)->day = $newDay;
+        } else {
+            $date->addMonth();
+        }
+
+        return $date->format('Y-m-d');
+    }
+
     private function buildData($request, $data)
     {
         $cr_personal = M_CrPersonal::where('APPLICATION_ID', $data->ID)->first();
@@ -98,7 +115,7 @@ class Credit extends Controller
         $cr_spouse = M_CrApplicationSpouse::where('APPLICATION_ID', $data->ID)->first();
         $pihak1 = $this->queryKapos($data->BRANCH);
 
-        $set_tgl_awal = $request->tgl_awal;
+        $set_tgl_awal = $this->setDate();
         $principal = $data->POKOK_PEMBAYARAN;
         $angsuran = $data->INSTALLMENT;
         $loanTerm = $data->TENOR;
@@ -392,7 +409,7 @@ class Credit extends Controller
 
         $survey = M_CrSurvey::find($data->CR_SURVEY_ID);
 
-        $setDate = parseDatetoYMD($request->tgl_awal);
+        $setDate = $this->setDate();
 
         $cr_personal = M_CrPersonal::where('APPLICATION_ID', $data->ID)->first();
         $check_customer_ktp = M_Customer::where('ID_NUMBER', $cr_personal->ID_NUMBER)->first();
