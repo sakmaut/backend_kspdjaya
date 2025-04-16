@@ -18,16 +18,26 @@ class TasksRepository
         $this->tasksLogModel = $tasksLogModel;
     }
 
-    function create($request, $type, $type_id, $code, $status, $descr)
+    function create($request, $type, $type_id, $status, $descr, $to = '')
     {
         $user = $request->user();
         $timestamp = now();
+
+        $getCurrentPosition = $user->position;
+        $setPositionAvailable  = ['mcf', 'kolektor'];
+        $checkposition = in_array(strtolower($getCurrentPosition), $setPositionAvailable);
+
+        if ($checkposition) {
+            $setTo = 'ADMIN';
+        } else {
+            $setTo = 'HO';
+        }
 
         $data = [
             'type' => $type,
             'status' => $status,
             'descr' => $descr,
-            'recipient_id' => $code,
+            'recipient_id' => $to != '' ? $to : $setTo,
         ];
 
         $check = $this->tasksModel->where('type_id', $type_id)->first();

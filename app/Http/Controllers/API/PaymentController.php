@@ -104,6 +104,21 @@ class PaymentController extends Controller
 
     public function store(Request $request)
     {
+        // $getCurrentPosition = $request->user()->position;
+
+        // $setPositionAvailable  = ['mcf', 'kolektor'];
+        // $checkposition = in_array(strtolower($getCurrentPosition), $setPositionAvailable);
+        // $check_method_payment = strtolower($request->payment_method) === 'cash';
+
+        // if ($check_method_payment && strtolower($request->bayar_dengan_diskon) != 'ya' && !$checkposition) {
+        //     return response()->json('RUN PROCESS');
+        // } else {
+        //     $log = $this->taskslogging->create($request, 'payment', 'a851177e-26e7-4ed7-ae9b-3553a2486311', 'PENDING', 'transfer');
+        //     return response()->json($log);
+        // }
+
+        // die;
+
         DB::beginTransaction();
         try {
             $no_inv = generateCodeKwitansi($request, 'kwitansi', 'NO_TRANSAKSI', 'INV');
@@ -112,10 +127,10 @@ class PaymentController extends Controller
 
             $customer_data = null;
             $check_method_payment = strtolower($request->payment_method) === 'cash';
-            $getPosition = $request->user()->position;
+            $getCurrentPosition = $request->user()->position;
 
-            $setPosition  = ['mcf', 'kolektor'];
-            $checkposition = in_array(strtolower($getPosition), $setPosition);
+            $setPositionAvailable  = ['mcf', 'kolektor'];
+            $checkposition = in_array(strtolower($getCurrentPosition), $setPositionAvailable);
 
             if (isset($request->struktur) && is_array($request->struktur)) {
 
@@ -188,6 +203,14 @@ class PaymentController extends Controller
                         }
                     }
                 }
+            }
+
+            if (!$check_method_payment) {
+                $this->taskslogging->create($request, 'payment', $no_inv, 'PENDING', 'transfer');
+            } elseif (strtolower($request->bayar_dengan_diskon) == 'ya') {
+                $this->taskslogging->create($request, 'payment', $no_inv, 'PENDING', 'request_discount');
+            } elseif ($checkposition) {
+                $this->taskslogging->create($request, 'payment', $no_inv, 'PENDING', 'request_payment');
             }
 
             $this->saveKwitansi($request, $customer_data, $no_inv);
@@ -704,6 +727,7 @@ class PaymentController extends Controller
         try {
 
             $getInvoice = $request->no_invoice;
+            $getFlag = $request->flag == 'yes' ? 'PAID' : 'CANCEL';
 
             $kwitansi = M_Kwitansi::where(['NO_TRANSAKSI' => $getInvoice, 'STTS_PAYMENT' => 'PENDING'])->first();
 
@@ -802,6 +826,8 @@ class PaymentController extends Controller
                     $kwitansi->update(['STTS_PAYMENT' => 'CANCEL']);
                 }
             }
+
+            $this->taskslogging->create($request, 'payment', $getInvoice, $getFlag, $kwitansi->PAYMENT_TYPE . ' ' . $request->keterangan);
 
             $data_approval = [
                 'PAYMENT_ID' => $request->no_invoice,
