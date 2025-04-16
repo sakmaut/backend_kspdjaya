@@ -104,20 +104,19 @@ class PaymentController extends Controller
 
     public function store(Request $request)
     {
-        // $getCurrentPosition = $request->user()->position;
+        $getCurrentPosition = $request->user()->position;
 
-        // $setPositionAvailable  = ['mcf', 'kolektor'];
-        // $checkposition = in_array(strtolower($getCurrentPosition), $setPositionAvailable);
-        // $check_method_payment = strtolower($request->payment_method) === 'cash';
+        $setPositionAvailable  = ['mcf', 'kolektor'];
+        $checkposition = in_array(strtolower($getCurrentPosition), $setPositionAvailable);
+        $check_method_payment = strtolower($request->payment_method) === 'cash';
 
-        // if ($check_method_payment && strtolower($request->bayar_dengan_diskon) != 'ya' && !$checkposition) {
-        //     return response()->json('RUN PROCESS');
-        // } else {
-        //     $log = $this->taskslogging->create($request, 'payment', 'a851177e-26e7-4ed7-ae9b-3553a2486311', 'PENDING', 'transfer');
-        //     return response()->json($log);
-        // }
+        if ($check_method_payment && strtolower($request->bayar_dengan_diskon) != 'ya' && !$checkposition) {
+            return response()->json('RUN PROCESS');
+        } else {
+            return response()->json('PENDING PROCESS');
+        }
 
-        // die;
+        die;
 
         DB::beginTransaction();
         try {
