@@ -51,6 +51,22 @@ class Welcome extends Controller
     public function index(Request $request)
     {
 
+        // $currentDate = '2025-03-28';
+        $currentDate = now();
+        $date = Carbon::parse($currentDate);
+
+        $day = $date->day;
+
+        if ($day >= 26 && $day <= 31) {
+            $newDay = $day - 24;
+            $date->addMonthsNoOverflow(2)->day = $newDay;
+        } else {
+            $date->addMonth();
+        }
+
+        return response()->json($date->format('Y-m-d'));
+        die;
+
         if ($request->bearerToken()) {
             // Find the token using the provided bearer token
             $token = PersonalAccessToken::findToken($request->bearerToken());
