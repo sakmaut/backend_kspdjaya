@@ -208,9 +208,9 @@ class PaymentController extends Controller
             if (!$check_method_payment) {
                 $this->taskslogging->create($request, 'payment', $no_inv, 'PENDING', 'transfer');
             } elseif (strtolower($request->bayar_dengan_diskon) == 'ya') {
-                $this->taskslogging->create($request, 'payment', $no_inv, 'PENDING', 'request_discount');
+                $this->taskslogging->create($request, 'request_discount', $no_inv, 'PENDING', 'request_discount');
             } elseif ($checkposition) {
-                $this->taskslogging->create($request, 'payment', $no_inv, 'PENDING', 'request_payment');
+                $this->taskslogging->create($request, 'request_payment', $no_inv, 'PENDING', 'request_payment');
             }
 
             $this->saveKwitansi($request, $customer_data, $no_inv);
