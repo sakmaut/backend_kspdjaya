@@ -102,21 +102,30 @@ class PaymentController extends Controller
         }
     }
 
-    public function store(Request $request)
-    {
+    private function checkPosition($request){
         $getCurrentPosition = $request->user()->position;
 
         $setPositionAvailable  = ['mcf', 'kolektor'];
         $checkposition = in_array(strtolower($getCurrentPosition), $setPositionAvailable);
-        $check_method_payment = strtolower($request->payment_method) === 'cash';
 
-        if ($check_method_payment && strtolower($request->bayar_dengan_diskon) != 'ya' && !$checkposition) {
-            return response()->json('RUN PROCESS');
-        } else {
-            return response()->json('PENDING PROCESS');
-        }
+        return $checkposition;
+    }
 
-        die;
+    public function store(Request $request)
+    {
+        // $getCurrentPosition = $request->user()->position;
+
+        // $setPositionAvailable  = ['mcf', 'kolektor'];
+        // $checkposition = in_array(strtolower($getCurrentPosition), $setPositionAvailable);
+        // $check_method_payment = strtolower($request->payment_method) === 'cash';
+
+        // if ($check_method_payment && strtolower($request->bayar_dengan_diskon) != 'ya' && !$checkposition) {
+        //     return response()->json('RUN PROCESS');
+        // } else {
+        //     return response()->json('PENDING PROCESS');
+        // }
+
+        // die;
 
         DB::beginTransaction();
         try {
@@ -565,7 +574,7 @@ class PaymentController extends Controller
         $save_kwitansi = [
             "PAYMENT_TYPE" => 'angsuran',
             "PAYMENT_ID" => $request->uid,
-            "STTS_PAYMENT" => $cekPaymentMethod ? "PAID" : "PENDING",
+            "STTS_PAYMENT" => $cekPaymentMethod && !$this->checkPosition($request) ? "PAID" : "PENDING",
             "NO_TRANSAKSI" => $no_inv,
             "LOAN_NUMBER" => $request->no_facility ?? null,
             "TGL_TRANSAKSI" => Carbon::now()->format('d-m-Y'),
