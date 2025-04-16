@@ -23,10 +23,17 @@ class TaskPusher extends Controller
             $getCurrentBranch = $request->user()->branch_id;
             $getCurrentPosition = $request->user()->position;
 
-            $data = M_Tasks::where([
-                'created_branch' => $getCurrentBranch,
-                'recipient_id' =>  $getCurrentPosition
-            ])->get();
+            if($getCurrentPosition != 'HO'){
+                $data = M_Tasks::where([
+                    'created_branch' => $getCurrentBranch,
+                    'recipient_id' =>  $getCurrentPosition
+                ])->get();
+            }else {
+                $data = M_Tasks::where([
+                    'recipient_id' =>  $getCurrentPosition
+                ])->get();
+            }
+            
 
             return response()->json($data, 200);
         } catch (\Exception $e) {
