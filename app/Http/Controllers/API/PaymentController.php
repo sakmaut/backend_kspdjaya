@@ -182,7 +182,7 @@ class PaymentController extends Controller
                         ]);
                     }
 
-                    if ($check_method_payment && strtolower($request->bayar_dengan_diskon) != 'ya') {
+                    if ($check_method_payment && strtolower($request->bayar_dengan_diskon) != 'ya' && !$checkposition) {
                         $this->processPaymentStructure($res, $request, $getCodeBranch, $no_inv);
                     } else {
                         $tgl_angsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
