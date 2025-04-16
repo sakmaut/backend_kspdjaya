@@ -26,11 +26,13 @@ class TaskPusher extends Controller
             if($getCurrentPosition != 'HO'){
                 $data = M_Tasks::where([
                     'created_branch' => $getCurrentBranch,
-                    'recipient_id' =>  $getCurrentPosition
+                    'recipient_id' =>  $getCurrentPosition,
+                    'status' => 'PENDING'
                 ])->get();
             }else {
                 $data = M_Tasks::where([
-                    'recipient_id' =>  $getCurrentPosition
+                    'recipient_id' =>  $getCurrentPosition,
+                    'status' => 'PENDING'
                 ])->get();
             }
             
