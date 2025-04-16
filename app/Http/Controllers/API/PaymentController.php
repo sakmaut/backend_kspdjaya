@@ -227,6 +227,24 @@ class PaymentController extends Controller
         }
     }
 
+    public function show(Request $request, $id)
+    {
+        try {
+
+            $checkKwitansi = M_Kwitansi::where('NO_TRANSAKSI', $id)->first();
+
+            if (!$checkKwitansi) {
+                throw new Exception("Kwitansi Not Found", 404);
+            }
+
+            $dto = new R_Kwitansi($checkKwitansi);
+
+            return response()->json($dto, 200);
+        } catch (\Exception $e) {
+            return $this->log->logError($e, $request);
+        }
+    }
+
     private function processPaymentStructure($res, $request, $getCodeBranch, $no_inv)
     {
         $loan_number = $res['loan_number'];
