@@ -39,7 +39,7 @@ class TaskPusher extends Controller
                 ])->whereIn('type', ['payment', 'request_discount'])->get();
             }
 
-            $dto =  new R_TasksPushers($data);
+            $dto =  R_TasksPushers::collection($data);
 
             return response()->json($dto, 200);
         } catch (\Exception $e) {
