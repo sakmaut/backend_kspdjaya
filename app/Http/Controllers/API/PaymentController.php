@@ -787,8 +787,7 @@ class PaymentController extends Controller
             $getInvoice = $request->no_invoice;
             $getFlag = $request->flag == 'yes' ? 'PAID' : 'CANCEL';
 
-            // $kwitansi = M_Kwitansi::where(['NO_TRANSAKSI' => $getInvoice, 'STTS_PAYMENT' => 'PENDING'])->lockForUpdate()->first();
-            $kwitansi = M_Kwitansi::where(['NO_TRANSAKSI' => $getInvoice, 'STTS_PAYMENT' => 'PENDING'])->first();
+            $kwitansi = M_Kwitansi::where(['NO_TRANSAKSI' => $getInvoice, 'STTS_PAYMENT' => 'PENDING'])->lockForUpdate()->first();
 
             if ($kwitansi) {
                 $getCodeBranch = M_Branch::findOrFail($request->user()->branch_id);
