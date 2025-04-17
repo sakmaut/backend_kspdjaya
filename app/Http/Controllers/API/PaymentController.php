@@ -851,9 +851,9 @@ class PaymentController extends Controller
                 }
 
                 if($request->flag == 'yes'){
-                    $title = $type + " Disetujui";
+                    $title = $type." Disetujui";
                 }else{
-                    $title = $type + " Ditolak";
+                    $title = $type." Ditolak";
                 }
 
                 $this->taskslogging->create($request,$title ,'payment', $getInvoice, $getFlag, $request->keterangan);
