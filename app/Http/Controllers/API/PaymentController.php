@@ -275,18 +275,18 @@ class PaymentController extends Controller
 
         if ($credit_schedule || $byr_angsuran != 0 || $flag != 'PAID') {
 
-            $payment_value = $byr_angsuran + $credit_schedule->PAYMENT_VALUE;
+            $payment_value = floatval($byr_angsuran) + floatval($credit_schedule->PAYMENT_VALUE);
 
-            $valBeforePrincipal = $credit_schedule->PAYMENT_VALUE_PRINCIPAL;
-            $valBeforeInterest = $credit_schedule->PAYMENT_VALUE_INTEREST;
-            $getPrincipal = $credit_schedule->PRINCIPAL;
-            $getInterest = $credit_schedule->INTEREST;
+            $valBeforePrincipal = floatval($credit_schedule->PAYMENT_VALUE_PRINCIPAL);
+            $valBeforeInterest = floatval($credit_schedule->PAYMENT_VALUE_INTEREST);
+            $getPrincipal = floatval($credit_schedule->PRINCIPAL);
+            $getInterest = floatval($credit_schedule->INTEREST);
 
-            $new_payment_value_principal = $valBeforePrincipal;
-            $new_payment_value_interest = $valBeforeInterest;
+            $new_payment_value_principal = floatval($valBeforePrincipal);
+            $new_payment_value_interest = floatval($valBeforeInterest);
 
             if ($valBeforePrincipal < $getPrincipal) {
-                $remaining_to_principal = $getPrincipal - $valBeforePrincipal;
+                $remaining_to_principal = floatval($getPrincipal) - floatval($valBeforePrincipal);
 
                 if ($byr_angsuran >= $remaining_to_principal) {
                     $new_payment_value_principal = $getPrincipal;
@@ -301,7 +301,7 @@ class PaymentController extends Controller
 
             if ($new_payment_value_principal == $getPrincipal) {
                 if ($valBeforeInterest < $getInterest) {
-                    $new_payment_value_interest = min($valBeforeInterest + $remaining_payment, $getInterest);
+                    $new_payment_value_interest = min($valBeforeInterest + floatval($remaining_payment), $getInterest);
                 }
             }
 
@@ -324,7 +324,7 @@ class PaymentController extends Controller
                 $this->addCreditPaid($loan_number, ['ANGSURAN_BUNGA' => $valInterest]);
             }
 
-            $total_paid = $new_payment_value_principal + $new_payment_value_interest;
+            $total_paid = floatval($new_payment_value_principal) + floatval($new_payment_value_interest);
 
             $insufficient_payment = ($getPrincipal > $new_payment_value_principal || $getInterest > $new_payment_value_interest)
                 ? ($total_paid - $credit_schedule->INSTALLMENT)
@@ -392,14 +392,14 @@ class PaymentController extends Controller
         $bayar_denda = floatval($res['bayar_denda']);
 
         if ($check_arrears) {
-            $valBeforePrincipal = $check_arrears->PAID_PCPL;
-            $valBeforeInterest = $check_arrears->PAID_INT;
-            $getPrincipal = $check_arrears->PAST_DUE_PCPL;
-            $getInterest = $check_arrears->PAST_DUE_INTRST;
-            $getPenalty = $check_arrears->PAST_DUE_PENALTY;
+            $valBeforePrincipal = floatval($check_arrears->PAID_PCPL);
+            $valBeforeInterest = floatval($check_arrears->PAID_INT);
+            $getPrincipal = floatval($check_arrears->PAST_DUE_PCPL);
+            $getInterest = floatval($check_arrears->PAST_DUE_INTRST);
+            $getPenalty = floatval($check_arrears->PAST_DUE_PENALTY);
 
-            $new_payment_value_principal = $valBeforePrincipal;
-            $new_payment_value_interest = $valBeforeInterest;
+            $new_payment_value_principal = floatval($valBeforePrincipal);
+            $new_payment_value_interest = floatval($valBeforeInterest);
 
             if ($valBeforePrincipal < $getPrincipal) {
                 $remaining_to_principal = $getPrincipal - $valBeforePrincipal;
@@ -417,7 +417,7 @@ class PaymentController extends Controller
 
             if ($new_payment_value_principal == $getPrincipal) {
                 if ($valBeforeInterest < $getInterest) {
-                    $new_payment_value_interest = min($valBeforeInterest + $remaining_payment, $getInterest);
+                    $new_payment_value_interest = min($valBeforeInterest + floatval($remaining_payment), $getInterest);
                 }
             }
 
@@ -467,16 +467,15 @@ class PaymentController extends Controller
         if ($check_arrears || $res['bayar_denda'] != 0) {
             $current_penalty = $check_arrears->PAID_PENALTY;
 
-            $new_penalty = $current_penalty + $bayar_denda;
+            $new_penalty = floatval($current_penalty) + floatval($bayar_denda);
 
-            $valBeforePrincipal = $check_arrears->PAID_PCPL;
-            $valBeforeInterest = $check_arrears->PAID_INT;
-            $getPrincipal = $check_arrears->PAST_DUE_PCPL;
-            $getInterest = $check_arrears->PAST_DUE_INTRST;
-            $getPenalty = $check_arrears->PAST_DUE_PENALTY;
+            $valBeforePrincipal = floatval($check_arrears->PAID_PCP);
+            $valBeforeInterest = floatval($check_arrears->PAID_INT);
+            $getPrincipal = floatval($check_arrears->PAST_DUE_PCPL);
+            $getInterest = floatval($check_arrears->PAST_DUE_INTRST);
 
-            $new_payment_value_principal = $valBeforePrincipal;
-            $new_payment_value_interest = $valBeforeInterest;
+            $new_payment_value_principal = floatval($valBeforePrincipal);
+            $new_payment_value_interest = floatval($valBeforeInterest);
 
             if ($valBeforePrincipal < $getPrincipal) {
                 $remaining_to_principal = $getPrincipal - $valBeforePrincipal;
@@ -494,7 +493,7 @@ class PaymentController extends Controller
 
             if ($new_payment_value_principal == $getPrincipal) {
                 if ($valBeforeInterest < $getInterest) {
-                    $new_payment_value_interest = min($valBeforeInterest + $remaining_payment, $getInterest);
+                    $new_payment_value_interest = min($valBeforeInterest + floatval($remaining_payment), $getInterest);
                 }
             }
 
@@ -634,31 +633,6 @@ class PaymentController extends Controller
             $paymentData['BANK_NAME'] = round(microtime(true) * 1000);
             M_Payment::create($paymentData);
         }
-
-
-        // M_Payment::create([
-        //     'ID' => $uid,
-        //     'ACC_KEY' => $res['flag'] == 'PAID' ? 'angsuran_denda' : $request->pembayaran ?? '',
-        //     'STTS_RCRD' => 'PAID',
-        //     'INVOICE' => $no_inv,
-        //     'NO_TRX' => $request->uid,
-        //     'PAYMENT_METHOD' => $kwitansi->METODE_PEMBAYARAN ?? $request->payment_method,
-        //     'BRANCH' =>  $getCodeBranch->CODE_NUMBER ?? $branch->CODE_NUMBER,
-        //     'LOAN_NUM' => $loan_number,
-        //     'VALUE_DATE' => null,
-        //     'ENTRY_DATE' => now(),
-        //     'SUSPENSION_PENALTY_FLAG' => $request->penangguhan_denda ?? '',
-        //     'TITLE' => 'Angsuran Ke-' . $res['angsuran_ke'],
-        //     'ORIGINAL_AMOUNT' => (float)($res['bayar_angsuran']) + (float)($res['bayar_denda']),
-        //     'OS_AMOUNT' => $os_amount ?? 0,
-        //     'START_DATE' => $tgl_angsuran,
-        //     'END_DATE' => now(),
-        //     'USER_ID' => $user_id ?? $request->user()->id,
-        //     'AUTH_BY' => $request->user()->fullname ?? '',
-        //     'AUTH_DATE' => now(),
-        //     'ARREARS_ID' => $res['id_arrear'] ?? '',
-        //     'BANK_NAME' => round(microtime(true) * 1000)
-        // ]);
     }
 
     function preparePaymentData($payment_id, $acc_key, $amount)
