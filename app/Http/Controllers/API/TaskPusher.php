@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\R_TasksPushers;
 use App\Models\M_TaskPusher;
 use App\Models\M_Tasks;
 use Illuminate\Http\Request;
@@ -37,9 +38,10 @@ class TaskPusher extends Controller
                     'status' => 'PENDING'
                 ])->whereIn('type', ['payment', 'request_discount'])->get();
             }
-            
 
-            return response()->json($data, 200);
+            $dto =  new R_TasksPushers($data);
+
+            return response()->json($dto, 200);
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
         }
