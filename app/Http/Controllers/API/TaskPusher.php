@@ -23,17 +23,19 @@ class TaskPusher extends Controller
             $getCurrentBranch = $request->user()->branch_id;
             $getCurrentPosition = $request->user()->position;
 
-            if($getCurrentPosition != 'HO'){
+            $setPositionAvailable = ['ADMIN','KAPOS'];
+
+            if(in_array($setPositionAvailable,$getCurrentPosition)){
                 $data = M_Tasks::where([
                     'created_branch' => $getCurrentBranch,
                     'recipient_id' =>  $getCurrentPosition,
                     'status' => 'PENDING'
-                ])->get();
-            }else {
+                ])->whereIn('type', ['request_payment'])->get();
+            }elseif($getCurrentPosition == 'HO') {
                 $data = M_Tasks::where([
                     'recipient_id' =>  $getCurrentPosition,
                     'status' => 'PENDING'
-                ])->get();
+                ])->whereIn('type', ['payment', 'request_discount'])->get();
             }
             
 
