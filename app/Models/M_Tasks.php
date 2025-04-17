@@ -13,6 +13,7 @@ class M_Tasks extends Model
 
     protected $fillable = [
         'id',
+        'title',
         'type',
         'type_id',
         'status',

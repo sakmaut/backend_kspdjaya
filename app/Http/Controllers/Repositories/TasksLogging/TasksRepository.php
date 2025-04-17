@@ -18,7 +18,7 @@ class TasksRepository
         $this->tasksLogModel = $tasksLogModel;
     }
 
-    function create($request, $type, $type_id, $status, $descr, $to = '')
+    function create($request,$title, $type, $type_id, $status, $descr, $to = '')
     {
         $user = $request->user();
         $timestamp = now();
@@ -49,6 +49,7 @@ class TasksRepository
             $taskId = $check->id;
         } else {
             $data = array_merge($data, [
+                'title' => $title,
                 'type_id' => $type_id,
                 'created_id' => $user->id,
                 'created_by' => $user->fullname,
