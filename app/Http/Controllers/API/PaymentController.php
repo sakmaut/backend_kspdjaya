@@ -203,14 +203,14 @@ class PaymentController extends Controller
 
             $data = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
 
-            $message = "A/n " + $data->NAMA + " Nominal " + number_format($data->JUMLAH_UANG);
+            $message = "A/n ".$data->NAMA." Nominal ".number_format($data->JUMLAH_UANG);
 
             if (!$check_method_payment) {
-                $this->taskslogging->create($request,'Transfer', 'payment', $no_inv, 'PENDING', "Transfer " + $message);
+                $this->taskslogging->create($request,'Transfer', 'payment', $no_inv, 'PENDING', "Transfer ".$message);
             } elseif (strtolower($request->bayar_dengan_diskon) == 'ya') {
-                $this->taskslogging->create($request,'Permintaan Diskon', 'request_discount', $no_inv, 'PENDING', "Permintaan Diskon " + $message);
+                $this->taskslogging->create($request,'Permintaan Diskon', 'request_discount', $no_inv, 'PENDING', "Permintaan Diskon ".$message);
             } elseif ($checkposition) {
-                $this->taskslogging->create($request,'Pembayaran Cash (Mcf/Kolektor)', 'request_payment', $no_inv, 'PENDING', "Pembayaran Cash (Mcf/Kolektor) " + $message);
+                $this->taskslogging->create($request,'Pembayaran Cash (Mcf/Kolektor)', 'request_payment', $no_inv, 'PENDING', "Pembayaran Cash (Mcf/Kolektor) ".$message);
             }
 
             $dto = new R_Kwitansi($data);
