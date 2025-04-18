@@ -925,7 +925,7 @@ class PaymentController extends Controller
                     $status ="REJECTED";
                 }
 
-                $this->taskslogging->create($request, $title, 'payment_cancel', $no_invoice, $status, $title." " . $message." ". $request->descr_ho ?? '');
+                $this->taskslogging->create($request, $title, 'payment_cancel', $no_invoice, $status, $title." " . $message." ". $request->keterangan ?? '');
 
                 $this->processHoApproval($request, $check);
             }
@@ -1029,7 +1029,7 @@ class PaymentController extends Controller
         $checkCreditCancel = M_PaymentCancelLog::where('INVOICE_NUMBER', $request->no_invoice)->first();
         if ($checkCreditCancel) {
             $checkCreditCancel->update([
-                'ONCHARGE_DESCR' => $request->descr_ho ?? '',
+                'ONCHARGE_DESCR' => $request->keterangan ?? '',
                 'ONCHARGE_PERSON' => $request->user()->id,
                 'ONCHARGE_TIME' => Carbon::now(),
                 'ONCHARGE_FLAG' => $request->flag ?? '',
