@@ -925,7 +925,7 @@ class PaymentController extends Controller
                     $status ="REJECTED";
                 }
 
-                $this->taskslogging->create($request, $title, 'payment_cancel', $no_invoice, $status, $title." " . $message);
+                $this->taskslogging->create($request, $title, 'payment_cancel', $no_invoice, $status, $title." " . $message." ". $request->descr_ho ?? '');
 
                 $this->processHoApproval($request, $check);
             }
