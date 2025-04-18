@@ -35,7 +35,7 @@ class TaskPusher extends Controller
                 $data = M_Tasks::where([
                     'recipient_id' => $getCurrentPosition,
                 ])
-                    ->whereIn('type', ['payment', 'request_discount'])
+                    ->whereIn('type', ['payment', 'request_discount', 'payment_cancel'])
                     ->whereIn('status', ['WAITING CANCEL', 'PENDING'])
                     ->get();
             }
