@@ -37,12 +37,14 @@ class PaymentController extends Controller
     protected $kwitansiRepository;
     protected $log;
     protected $taskslogging;
+    protected $pelunasan;
 
-    public function __construct(KwitansiRepository $kwitansiRepository, ExceptionHandling $log, TasksRepository $taskslogging)
+    public function __construct(KwitansiRepository $kwitansiRepository, ExceptionHandling $log, TasksRepository $taskslogging,PelunasanController $pelunasan)
     {
         $this->kwitansiRepository = $kwitansiRepository;
         $this->log = $log;
         $this->taskslogging = $taskslogging;
+        $this->pelunasan = $pelunasan;
     }
 
     public function index(Request $request)
@@ -756,8 +758,7 @@ class PaymentController extends Controller
                 if ($request->flag == 'yes') {
 
                     if ($kwitansi->PAYMENT_TYPE === 'pelunasan') {
-                        $pelunasan = new PelunasanController();
-                        $pelunasan->proccess($request, $kwitansi->LOAN_NUMBER, $getInvoice, 'PAID');
+                        $this->pelunasan->proccess($request, $kwitansi->LOAN_NUMBER, $getInvoice, 'PAID');
                     } else {
                         $getKwitansiDetail = M_KwitansiStructurDetail::where([
                             'no_invoice' => $getInvoice
@@ -778,8 +779,7 @@ class PaymentController extends Controller
                     $request->merge(['approval' => 'no']);
 
                     if ($kwitansi->PAYMENT_TYPE === 'pelunasan') {
-                        $pelunasan = new PelunasanController();
-                        $pelunasan->proccessCancel($kwitansi->LOAN_NUMBER, $getInvoice, 'CANCEL');
+                        $this->pelunasan->proccessCancel($kwitansi->LOAN_NUMBER, $getInvoice, 'CANCEL');
                     } else {
 
                         if (isset($request->struktur) && is_array($request->struktur)) {
@@ -917,6 +917,12 @@ class PaymentController extends Controller
 
             if (strtolower($request->user()->position) == 'ho' && isset($flag) && !empty($flag)) {
 
+                if ($check->PAYMENT_TYPE === 'pelunasan') {
+                    $type = "repayment_cancel";
+                } else {
+                    $type = "payment_cancel";
+                }
+
                 if ($flag == 'yes') {
                     $title = $setTitle . " Disetujui";
                     $status = "APPROVE";
@@ -925,7 +931,7 @@ class PaymentController extends Controller
                     $status ="REJECTED";
                 }
 
-                $this->taskslogging->create($request, $title, 'payment_cancel', $no_invoice, $status, $title." " . $message." ". $request->keterangan ?? '');
+                $this->taskslogging->create($request, $title, $type, $no_invoice, $status, $title." " . $message." ". $request->keterangan ?? '');
 
                 $this->processHoApproval($request, $check);
             }
@@ -940,12 +946,10 @@ class PaymentController extends Controller
 
     private function processHoApproval(Request $request, $check)
     {
-
         if (strtolower($request->flag) === 'yes') {
 
             if ($check->PAYMENT_TYPE === 'pelunasan') {
-                $pelunasan = new PelunasanController();
-                $pelunasan->proccessCancel($check->LOAN_NUMBER, $request->no_invoice, 'CANCEL');
+                $this->pelunasan->proccessCancel($check->LOAN_NUMBER, $request->no_invoice, 'CANCEL');
             } else {
                 $check->update([
                     'STTS_PAYMENT' => 'CANCEL'
