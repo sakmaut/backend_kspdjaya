@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Repositories\TasksLogging\TasksRepository;
 use App\Http\Resources\R_KwitansiPelunasan;
 use App\Http\Resources\R_Pelunasan;
 use App\Models\M_Arrears;
@@ -185,14 +186,6 @@ class PelunasanController extends Controller
 
             $status = "PENDING";
 
-            // $discounts = $request->only(['DISKON_POKOK', 'DISKON_PINALTI', 'DISKON_BUNGA', 'DISKON_DENDA']);
-
-            // $status = "PAID";
-
-            // if (array_sum($discounts) > 0 || strtolower($request->METODE_PEMBAYARAN) === 'transfer') {
-            //     $status = "PENDING";
-            // }
-
             if (!M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->exists()) {
                 $this->saveKwitansi($request, $detail_customer, $no_inv, $status);
                 $this->proccessKwitansiDetail($request, $loan_number, $no_inv);
@@ -219,6 +212,10 @@ class PelunasanController extends Controller
             }
 
             $data = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
+
+            // $message = "A/n " . $data->NAMA . " Nominal " . number_format($data->JUMLAH_UANG);
+
+            // TasksRepository::create($request, 'Pelunasan', 'payment', $no_inv, 'PENDING', "Transfer " . $message);
 
             $dto = new R_KwitansiPelunasan($data);
 

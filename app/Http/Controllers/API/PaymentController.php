@@ -119,10 +119,8 @@ class PaymentController extends Controller
 
             $customer_data = null;
             $check_method_payment = strtolower($request->payment_method) === 'cash';
-            $getCurrentPosition = $request->user()->position;
 
-            $setPositionAvailable  = ['mcf', 'kolektor'];
-            $checkposition = in_array(strtolower($getCurrentPosition), $setPositionAvailable);
+            $checkposition = $this->checkPosition($request);
 
             if (isset($request->struktur) && is_array($request->struktur)) {
 
@@ -880,26 +878,31 @@ class PaymentController extends Controller
 
     public function cancel(Request $request)
     {
-        $request->validate([
-            'no_invoice' => 'required|string',
-            'flag' => 'in:yes,no',
-        ]);
-
-        $no_invoice = $request->no_invoice;
-        $flag = $request->flag;
-
         DB::beginTransaction();
         try {
+            $request->validate([
+                'no_invoice' => 'required|string',
+                'flag' => 'in:yes,no',
+            ]);
+
+            $no_invoice = $request->no_invoice;
+            $flag = $request->flag;
+
             $check = M_Kwitansi::where([
                 'NO_TRANSAKSI' => $no_invoice,
                 'STTS_PAYMENT' => 'PAID'
-            ])->first();
+            ])->lockForUpdate()->first();
 
             if (!$check) {
                 throw new Exception("Kwitansi Number Not Exist", 404);
             }
 
+            $setTitle = "Pembatalan Pembayaran";
+            $message = "A/n " . $check->NAMA . " Nominal " . number_format($check->JUMLAH_UANG);
+            $this->taskslogging->create($request, $setTitle, 'payment_cancel', $no_invoice, 'WAITING', "Menunggu ". $setTitle.' '. $message);
+
             $checkPaymentLog = M_PaymentCancelLog::where('INVOICE_NUMBER', $no_invoice)->first();
+
             if (!$checkPaymentLog) {
                 M_PaymentCancelLog::create([
                     'INVOICE_NUMBER' => $no_invoice ?? '',
@@ -912,15 +915,25 @@ class PaymentController extends Controller
             }
 
             if (strtolower($request->user()->position) == 'ho' && isset($flag) && !empty($flag)) {
+
+                if ($flag == 'yes') {
+                    $title = $setTitle . " Disetujui";
+                    $status = "APPROVE";
+                } else {
+                    $title = $setTitle . " Ditolak";
+                    $status ="REJECTED";
+                }
+
+                $this->taskslogging->create($request, $title, 'payment_cancel', $no_invoice, $status, $title." " . $message);
+
                 $this->processHoApproval($request, $check);
             }
 
             DB::commit();
             return response()->json(['message' => "Invoice Number {$no_invoice} Cancel Success"], 200);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollback();
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
