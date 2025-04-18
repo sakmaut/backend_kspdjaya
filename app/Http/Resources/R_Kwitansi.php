@@ -111,6 +111,7 @@ class R_Kwitansi extends JsonResource
             'bayar_angsuran' => $details->sum(fn ($item) => (float) $item->bayar_angsuran) ?: 0,
             'bayar_denda' => $details->sum(fn ($item) => (float) $item->bayar_denda) ?: 0,
             "pembulatan" => intval($this->PEMBULATAN ?? 0),
+            "pinalti" => intval($this->PINALTY_PELUNASAN ?? 0),
             "kembalian" => intval($this->KEMBALIAN ?? 0),
             "total_bayar" => intval($this->TOTAL_BAYAR ?? 0),
             "jumlah_uang" => intval($this->JUMLAH_UANG ?? 0),
