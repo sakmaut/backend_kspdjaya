@@ -34,8 +34,8 @@ class TaskPusher extends Controller
             }elseif($getCurrentPosition == 'HO') {
                 $data = M_Tasks::where([
                     'recipient_id' =>  $getCurrentPosition,
-                    'status' => 'PENDING'
-                ])->whereIn('type', ['payment', 'request_discount'])->get();
+                ])->whereIn('type', ['payment', 'request_discount'])
+                    ->whereIn('status',['WAITING CANCEL','PENDING'])->get();
             }
 
             $dto = R_TaskPusher::collection($data);
