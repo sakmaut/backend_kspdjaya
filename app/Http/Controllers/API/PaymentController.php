@@ -215,10 +215,9 @@ class PaymentController extends Controller
 
             DB::commit();
             return response()->json($dto, 200);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollback();
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage()], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
