@@ -897,9 +897,11 @@ class PaymentController extends Controller
                 throw new Exception("Kwitansi Number Not Exist", 404);
             }
 
+            $check->update(['STTS_PAYMENT' => 'WAITING CANCEL']);
+
             $setTitle = "Pembatalan Pembayaran";
             $message = "A/n " . $check->NAMA . " Nominal " . number_format($check->JUMLAH_UANG);
-            $this->taskslogging->create($request, $setTitle, 'payment_cancel', $no_invoice, 'WAITING', "Menunggu ". $setTitle.' '. $message);
+            $this->taskslogging->create($request, $setTitle, 'payment_cancel', $no_invoice, 'WAITING CANCEL', "Menunggu ". $setTitle.' '. $message);
 
             $checkPaymentLog = M_PaymentCancelLog::where('INVOICE_NUMBER', $no_invoice)->first();
 
