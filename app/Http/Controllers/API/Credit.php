@@ -108,6 +108,23 @@ class Credit extends Controller
         return $date->format('Y-m-d');
     }
 
+    private function setDateGenerate()
+    {
+        $currentDate = now();
+        $date = Carbon::parse($currentDate);
+
+        $day = $date->day;
+
+        if ($day >= 26 && $day <= 31) {
+            $newDay = $day - 24;
+            $date->addMonthsNoOverflow(1)->day = $newDay;
+        }
+
+        $setDate = $date->format('Y-m-d');
+
+        return $setDate;
+    }
+
     private function buildData($request, $data)
     {
         $cr_personal = M_CrPersonal::where('APPLICATION_ID', $data->ID)->first();
@@ -116,18 +133,18 @@ class Credit extends Controller
         $pihak1 = $this->queryKapos($data->BRANCH);
 
         $set_tgl_awal = $this->setDate();
+        $setDategenerate = $this->setDateGenerate();
         $principal = $data->POKOK_PEMBAYARAN;
         $angsuran = $data->INSTALLMENT;
-        $loanTerm = $data->TENOR;
 
         $type = $data->INSTALLMENT_TYPE;
 
         if (strtolower($type) == 'bulanan') {
-            $data_credit_schedule = $this->generateAmortizationSchedule($set_tgl_awal, $data);
+            $data_credit_schedule = $this->generateAmortizationSchedule($setDategenerate, $data);
 
             $installment_count = count($data_credit_schedule);
         } else {
-            $data_credit_schedule = $this->generateAmortizationScheduleMusiman($set_tgl_awal, $data);
+            $data_credit_schedule = $this->generateAmortizationScheduleMusiman($setDategenerate, $data);
 
             $installment_count = count($data_credit_schedule);
         }
