@@ -17,8 +17,19 @@ class R_TaskPusher extends JsonResource
     {
         $branch = M_Branch::where('ID', $this->created_branch)->first();
 
+        $gettype = $this->type;
+        $setType = ['payment', 'request_payment', 'request_discount', 'repayment'];
+        $cekType = in_array($gettype, $setType);
+
+        if($cekType){
+            $setRoute = 'payment_approval';
+        }else{
+            $setRoute = 'payment_cancel';
+        }
+
         return [
             'title' => $this->title,
+            'route' => $setRoute,
             'type' => $this->type,
             'type_id' => $this->type_id,
             'status' => $this->status,
