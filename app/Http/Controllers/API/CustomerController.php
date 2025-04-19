@@ -259,11 +259,7 @@ class CustomerController extends Controller
 
 
             $j = 0;
-            $schedule = [
-                'customer' => $getCustomer,
-                'list_struktur' =>[]
-            ];
-
+            $schedule = ['list_struktur' =>[], 'customer' => ];
             foreach ($data as $res) {
 
                 $installment = floatval($res->INSTALLMENT) - floatval($res->PAYMENT_VALUE);
@@ -278,7 +274,7 @@ class CustomerController extends Controller
                     $cekStatus = 'PAID';
                 }
 
-                $schedule['list_struktur'][] = [
+                $schedule[] = [
                     'key' => $j++,
                     'angsuran_ke' => $res->INSTALLMENT_COUNT,
                     'loan_number' => $res->LOAN_NUMBER,
@@ -296,6 +292,8 @@ class CustomerController extends Controller
                     'denda' => floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->PAID_PENALTY ?? 0)
                 ];
             }
+
+            $schedule['customer'] = $getCustomer;
 
             return response()->json($schedule, 200);
         } catch (Exception $e) {
