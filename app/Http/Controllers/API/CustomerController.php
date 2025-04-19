@@ -30,6 +30,7 @@ class CustomerController extends Controller
     public function index(Request $request)
     {
         try {
+
             $search = $request->get('search');
 
             if (isset($search)) {
@@ -288,15 +289,15 @@ class CustomerController extends Controller
                     'total_bayar' => floatval($res->INSTALLMENT + ($res->PAST_DUE_PENALTY ?? 0)),
                     'id_arrear' => $res->id_arrear ?? '',
                     'flag' => $cekStatus ?? '',
-                    'denda' => floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->PAID_PENALTY ?? 0)
+                    'denda' => floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->PAID_PENALTY ?? 0),
+                    'customer' => $getCustomer
                 ];
             }
 
-            $schedule['customer'] = $getCustomer;
-
             return response()->json($schedule, 200);
-        } catch (Exception $e) {
-            return $this->log->logError($e, $request);
+        } catch (\Exception $e) {
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage()], 500);
         }
     }
 
