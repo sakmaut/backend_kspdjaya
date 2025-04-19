@@ -259,7 +259,6 @@ class CustomerController extends Controller
 
 
             $j = 0;
-            $schedule = ['list_struktur' =>[], 'customer' => ];
             foreach ($data as $res) {
 
                 $installment = floatval($res->INSTALLMENT) - floatval($res->PAYMENT_VALUE);
