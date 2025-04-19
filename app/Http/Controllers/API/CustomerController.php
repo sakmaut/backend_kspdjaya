@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\R_CreditList;
 use App\Http\Resources\R_CustomerSearch;
@@ -19,10 +20,16 @@ use Illuminate\Support\Facades\DB;
 
 class CustomerController extends Controller
 {
+    protected $log;
+   
+    public function __construct(ExceptionHandling $log)
+    {
+        $this->log = $log;
+    }
+
     public function index(Request $request)
     {
         try {
-
             $search = $request->get('search');
 
             if (isset($search)) {
@@ -45,9 +52,8 @@ class CustomerController extends Controller
             });
 
             return response()->json($customers, 200);
-        } catch (\Exception $e) {
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+        } catch (Exception $e) {
+            return $this->log->logError($e, $request);
         }
     }
 
@@ -253,6 +259,11 @@ class CustomerController extends Controller
 
 
             $j = 0;
+            $schedule = [
+                'customer' => $getCustomer,
+                'list_struktur' =>[]
+            ];
+
             foreach ($data as $res) {
 
                 $installment = floatval($res->INSTALLMENT) - floatval($res->PAYMENT_VALUE);
@@ -267,7 +278,7 @@ class CustomerController extends Controller
                     $cekStatus = 'PAID';
                 }
 
-                $schedule[] = [
+                $schedule['list_struktur'][] = [
                     'key' => $j++,
                     'angsuran_ke' => $res->INSTALLMENT_COUNT,
                     'loan_number' => $res->LOAN_NUMBER,
@@ -282,15 +293,13 @@ class CustomerController extends Controller
                     'total_bayar' => floatval($res->INSTALLMENT + ($res->PAST_DUE_PENALTY ?? 0)),
                     'id_arrear' => $res->id_arrear ?? '',
                     'flag' => $cekStatus ?? '',
-                    'denda' => floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->PAID_PENALTY ?? 0),
-                    'customer' => $getCustomer
+                    'denda' => floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->PAID_PENALTY ?? 0)
                 ];
             }
 
             return response()->json($schedule, 200);
-        } catch (\Exception $e) {
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage()], 500);
+        } catch (Exception $e) {
+            return $this->log->logError($e, $request);
         }
     }
 

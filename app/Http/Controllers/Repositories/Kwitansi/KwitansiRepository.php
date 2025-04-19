@@ -6,7 +6,7 @@ use App\Models\M_Kwitansi;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
-class KwitansiRepository implements KwitansiRepositoryInterface
+class KwitansiRepository
 {
     protected $kwitansiEntity;
 
@@ -57,5 +57,50 @@ class KwitansiRepository implements KwitansiRepositoryInterface
         }
 
         return $data->get();
+    }
+
+    function create($request,$noInvoice){
+        $cekPaymentMethod = $request->payment_method == 'cash' && strtolower($request->bayar_dengan_diskon) != 'ya';
+
+        $checkKwitansiExist = M_Kwitansi::where('NO_TRANSAKSI', $noInvoice)->first();
+
+        //  "STTS_PAYMENT" => $cekPaymentMethod && !$this->checkPosition($request) ? "PAID" : "PENDING",
+
+        if (!$checkKwitansiExist) {
+            $save_kwitansi = [
+                "PAYMENT_TYPE" => 'angsuran',
+                "PAYMENT_ID" => $request->uid,
+                "STTS_PAYMENT" => $cekPaymentMethod ? "PAID" : "PENDING",
+                "NO_TRANSAKSI" => $noInvoice,
+                "LOAN_NUMBER" => $request->no_facility ?? null,
+                "TGL_TRANSAKSI" => Carbon::now()->format('d-m-Y'),
+                'BRANCH_CODE' => $request->user()->branch_id,
+                'CUST_CODE' => $customer_detail['cust_code'] ?? '',
+                'NAMA' => $customer_detail['nama'] ?? '',
+                'ALAMAT' => $customer_detail['alamat'] ?? '',
+                'RT' => $customer_detail['rt'] ?? '',
+                'RW' => $customer_detail['rw'] ?? '',
+                'PROVINSI' => $customer_detail['provinsi'] ?? '',
+                'KOTA' => $customer_detail['kota'] ?? '',
+                'KELURAHAN' => $customer_detail['kelurahan'] ?? '',
+                'KECAMATAN' => $customer_detail['kecamatan'] ?? '',
+                "METODE_PEMBAYARAN" => $request->payment_method ?? null,
+                "TOTAL_BAYAR" => $request->total_bayar ?? null,
+                "DISKON" => $request->diskon_tunggakan ?? null,
+                "DISKON_FLAG" => $request->bayar_dengan_diskon ?? null,
+                "PEMBULATAN" => $request->pembulatan ?? null,
+                "KEMBALIAN" => $request->kembalian ?? null,
+                "JUMLAH_UANG" => $request->jumlah_uang ?? null,
+                "NAMA_BANK" => $request->nama_bank ?? null,
+                "NO_REKENING" => $request->no_rekening ?? null,
+                "CREATED_BY" => $request->user()->id,
+                "CREATED_AT" => Carbon::now()
+            ];
+
+            M_Kwitansi::firstOrCreate(
+                ['NO_TRANSAKSI' => $noInvoice],
+                $save_kwitansi
+            );
+        }
     }
 }
