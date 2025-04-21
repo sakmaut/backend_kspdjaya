@@ -982,7 +982,7 @@ class PaymentController extends Controller
                     ])->first();
 
                     if ($creditScheduleCheck) {
-                        if ($resList['bayar_angsuran'] == $creditScheduleCheck['INSTALLMENT'] && $resList['bayar_angsuran'] != 0) {
+                        if (floatval($resList['bayar_angsuran']) == $creditScheduleCheck['INSTALLMENT'] && floatval($resList['bayar_angsuran']) != 0) {
                             $creditScheduleCheck->update([
                                 'PAYMENT_VALUE_PRINCIPAL' => floatval($creditScheduleCheck->PAYMENT_VALUE_PRINCIPAL ?? 0) - floatval($resList['principal'] ?? 0),
                                 'PAYMENT_VALUE_INTEREST' =>  floatval($creditScheduleCheck->PAYMENT_VALUE_INTEREST ?? 0) - floatval($resList['interest'] ?? 0),
