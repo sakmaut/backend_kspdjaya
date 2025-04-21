@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\DB;
 class CustomerController extends Controller
 {
     protected $log;
-   
+
     public function __construct(ExceptionHandling $log)
     {
         $this->log = $log;
@@ -288,7 +288,7 @@ class CustomerController extends Controller
                     'bayar_denda' => $installment == 0 ? 0 : floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->PAID_PENALTY ?? 0),
                     'total_bayar' => floatval($res->INSTALLMENT + ($res->PAST_DUE_PENALTY ?? 0)),
                     'id_arrear' => $res->id_arrear ?? '',
-                    'flag' => $cekStatus ?? '',
+                    'flag' => $res->PAID_FLAG ?? '',
                     'denda' => floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->PAID_PENALTY ?? 0)
                 ];
             }
