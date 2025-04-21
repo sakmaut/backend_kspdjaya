@@ -225,6 +225,7 @@ class CustomerController extends Controller
                     'a.INTEREST',
                     'a.INSTALLMENT',
                     'a.PRINCIPAL_REMAINS',
+                    'a.INSUFFICIENT_PAYMENT',
                     'a.PAYMENT_VALUE_PRINCIPAL',
                     'a.PAYMENT_VALUE_INTEREST',
                     'a.PAYMENT_VALUE',
