@@ -801,17 +801,17 @@ class ListBanController extends Controller
                                 cl.PERIOD AS JUMLAH_ANGSURAN,
                                 replace(format(cl.PERIOD/cl.INSTALLMENT_COUNT,0),',','') AS JARAK_ANGSURAN,
                                 cl.INSTALLMENT_COUNT as PERIOD,
-		                        replace(format(case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then cl.PCPL_ORI
+		                        replace(format(case when date_format(cl.created_at,'%m%Y')='$dateFrom' then cl.PCPL_ORI
 			 			                        else st.init_pcpl end,0),',','') AS OUTSTANDING,
-		                        replace(format(case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then cl.INTRST_ORI
+		                        replace(format(case when date_format(cl.created_at,'%m%Y')='$dateFrom' then cl.INTRST_ORI
 			 			                        else st.init_int end,0),',','') AS OS_BUNGA,
-                                case when coalesce(datediff(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then en.first_installment else coalesce(st.first_arr,en.first_arr) end),0) < 0 then 0
-                                    else coalesce(datediff(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then en.first_installment else coalesce(st.first_arr,en.first_arr) end),0) end as OVERDUE_AWAL,
+                                case when coalesce(datediff(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),case when date_format(cl.created_at,'%m%Y')='$dateFrom' then en.first_installment else coalesce(st.first_arr,en.first_arr) end),0) < 0 then 0
+                                    else coalesce(datediff(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),case when date_format(cl.created_at,'%m%Y')='$dateFrom' then en.first_installment else coalesce(st.first_arr,en.first_arr) end),0) end as OVERDUE_AWAL,
                                 replace(format(coalesce(st.arr_pcpl,0),0),',','') as AMBC_PKK_AWAL,
                                 replace(format(coalesce(st.arr_int,0),0),',','') as AMBC_BNG_AWAL,
                                 replace(format((coalesce(st.arr_pcpl,0)+coalesce(st.arr_int,0)),0),',','') as AMBC_TOTAL_AWAL,
-                                concat('C',case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then 'N'
-                                                when replace(format(case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then (cl.PCPL_ORI+cl.INTRST_ORI)
+                                concat('C',case when date_format(cl.created_at,'%m%Y')='$dateFrom' then 'N'
+                                                when replace(format(case when date_format(cl.created_at,'%m%Y')='$dateFrom' then (cl.PCPL_ORI+cl.INTRST_ORI)
 			 			                                            else (st.init_pcpl+st.init_int) end,0),',','')=0 then 'L'
                                                 when case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'MUSIMAN'
                                                         and date_format(st.first_arr,'%m%Y')=date_format(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),'%m%Y') then 'N'
@@ -828,11 +828,11 @@ class ListBanController extends Controller
                                 case when coalesce(datediff(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),en.first_arr),0) < 0 then 0
                                     else coalesce(datediff(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),en.first_arr),0) end as OVERDUE_AKHIR,
                                 cl.INSTALLMENT,
-                                case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then 1
+                                case when date_format(cl.created_at,'%m%Y')='$dateFrom' then 1
                                 			 when coalesce(st.first_arr,en.first_arr) is null then ''
                                 			 else coalesce(st.last_inst,en.last_inst) end as LAST_INST,
                                 ca.INSTALLMENT_TYPE AS tipe,
-                                case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then en.first_installment else coalesce(st.first_arr,en.first_arr) end as F_ARR_CR_SCHEDL,
+                                case when date_format(cl.created_at,'%m%Y')='$dateFrom' then en.first_installment else coalesce(st.first_arr,en.first_arr) end as F_ARR_CR_SCHEDL,
                                 en.first_arr as curr_arr,
                                 py.last_pay  as LAST_PAY,
                                 k.kolektor AS COLLECTOR,
@@ -844,7 +844,7 @@ class ListBanController extends Controller
                                 replace(format(coalesce(py.this_int,0),0),',','') AC_BNG_MRG,
                                 replace(format(coalesce(py.this_cash,0),0),',','') AC_TOTAL,
                                 concat('C',case when cl.STATUS <> 'A' then 'L'
-                                                when replace(format(case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then (cl.PCPL_ORI+cl.INTRST_ORI)
+                                                when replace(format(case when date_format(cl.created_at,'%m%Y')='$dateFrom' then (cl.PCPL_ORI+cl.INTRST_ORI)
 			 			                                            else (en.init_pcpl+en.init_int) end,0),',','')=0 then 'L'
                                                 when case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'MUSIMAN'
                                                         and date_format(en.first_arr,'%m%Y')=date_format(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 2 month),'%m%Y') then 'N'
@@ -904,17 +904,17 @@ class ListBanController extends Controller
                                 cl.PERIOD AS JUMLAH_ANGSURAN,
                                 replace(format(cl.PERIOD/cl.INSTALLMENT_COUNT,0),',','') AS JARAK_ANGSURAN,
                                 cl.INSTALLMENT_COUNT as PERIOD,
-                                replace(format(case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then cl.PCPL_ORI
+                                replace(format(case when date_format(cl.created_at,'%m%Y')='$dateFrom' then cl.PCPL_ORI
 			 			                        else st.init_pcpl end,0),',','') AS OUTSTANDING,
-		                        replace(format(case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then cl.INTRST_ORI
+		                        replace(format(case when date_format(cl.created_at,'%m%Y')='$dateFrom' then cl.INTRST_ORI
 			 			                        else st.init_int end,0),',','') AS OS_BUNGA,
-                                case when coalesce(datediff(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then en.first_installment else coalesce(st.first_arr,en.first_arr) end),0) < 0 then 0
-                                    else coalesce(datediff(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then en.first_installment else coalesce(st.first_arr,en.first_arr) end),0) end as OVERDUE_AWAL,
+                                case when coalesce(datediff(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),case when date_format(cl.created_at,'%m%Y')='$dateFrom' then en.first_installment else coalesce(st.first_arr,en.first_arr) end),0) < 0 then 0
+                                    else coalesce(datediff(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),case when date_format(cl.created_at,'%m%Y')='$dateFrom' then en.first_installment else coalesce(st.first_arr,en.first_arr) end),0) end as OVERDUE_AWAL,
                                 replace(format(coalesce(st.arr_pcpl,0),0),',','') as AMBC_PKK_AWAL,
                                 replace(format(coalesce(st.arr_int,0),0),',','') as AMBC_BNG_AWAL,
                                 replace(format((coalesce(st.arr_pcpl,0)+coalesce(st.arr_int,0)),0),',','') as AMBC_TOTAL_AWAL,
-                                concat('C',case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then 'N'
-                                                when replace(format(case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then (cl.PCPL_ORI+cl.INTRST_ORI)
+                                concat('C',case when date_format(cl.created_at,'%m%Y')='$dateFrom' then 'N'
+                                                when replace(format(case when date_format(cl.created_at,'%m%Y')='$dateFrom' then (cl.PCPL_ORI+cl.INTRST_ORI)
 			 			                                            else (st.init_pcpl+st.init_int) end,0),',','')=0 then 'L'
                                                 when case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'MUSIMAN'
                                                         and date_format(st.first_arr,'%m%Y')=date_format(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),'%m%Y') then 'N'
@@ -931,11 +931,11 @@ class ListBanController extends Controller
                                 case when coalesce(datediff(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),en.first_arr),0) < 0 then 0
                                     else coalesce(datediff(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),en.first_arr),0) end as OVERDUE_AKHIR,
                                 cl.INSTALLMENT,
-                                case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then 1
+                                case when date_format(cl.created_at,'%m%Y')='$dateFrom' then 1
                                 			 when coalesce(st.first_arr,en.first_arr) is null then ''
                                 			 else coalesce(st.last_inst,en.last_inst) end as LAST_INST,
                                 ca.INSTALLMENT_TYPE AS tipe,
-                                case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then en.first_installment else coalesce(st.first_arr,en.first_arr) end as F_ARR_CR_SCHEDL,
+                                case when date_format(cl.created_at,'%m%Y')='$dateFrom' then en.first_installment else coalesce(st.first_arr,en.first_arr) end as F_ARR_CR_SCHEDL,
                                 en.first_arr as curr_arr,
                                 py.last_pay  as LAST_PAY,
                                 k.kolektor AS COLLECTOR,
@@ -947,7 +947,7 @@ class ListBanController extends Controller
                                 replace(format(coalesce(py.this_int,0),0),',','') AC_BNG_MRG,
                                 replace(format(coalesce(py.this_cash,0),0),',','') AC_TOTAL,
                                 concat('C',case when cl.STATUS <> 'A' then 'L'
-                                                when replace(format(case when date_format(cl.entry_date,'%m%Y')='$dateFrom' then (cl.PCPL_ORI+cl.INTRST_ORI)
+                                                when replace(format(case when date_format(cl.created_at,'%m%Y')='$dateFrom' then (cl.PCPL_ORI+cl.INTRST_ORI)
 			 			                                            else (en.init_pcpl+en.init_int) end,0),',','')=0 then 'L'
                                                 when case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'MUSIMAN'
                                                         and date_format(en.first_arr,'%m%Y')=date_format(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 2 month),'%m%Y') then 'N'
