@@ -242,38 +242,21 @@ class CustomerController extends Controller
                 return $schedule;
             }
 
-            $getCustomer = M_Credit::where('LOAN_NUMBER', $loanNumber)
-                ->with(['customer' => function ($query) {
-                    $query->select(
-                        'CUST_CODE',
-                        'NAME',
-                        'ADDRESS',
-                        'RT',
-                        'RW',
-                        'PROVINCE',
-                        'CITY',
-                        'KELURAHAN',
-                        'KECAMATAN'
-                    );
-                }])
-                ->first()
-                ->customer;
-
 
             $j = 0;
             foreach ($data as $res) {
 
                 $installment = floatval($res->INSTALLMENT) - floatval($res->PAYMENT_VALUE);
 
-                if (!empty($res->STATUS_REC) && $res->STATUS_REC == 'PENDING') {
-                    $cekStatus = $res->STATUS_REC;
-                } else {
-                    $cekStatus = $res->PAID_FLAG;
-                }
+                // if (!empty($res->STATUS_REC) && $res->STATUS_REC == 'PENDING') {
+                //     $cekStatus = $res->STATUS_REC;
+                // } else {
+                //     $cekStatus = $res->PAID_FLAG;
+                // }
 
-                if ($res->PAID_FLAG == 'PAID' && ($res->STATUS_REC == 'D' || $res->STATUS_REC == 'S')) {
-                    $cekStatus = 'PAID';
-                }
+                // if ($res->PAID_FLAG == 'PAID' && ($res->STATUS_REC == 'D' || $res->STATUS_REC == 'S')) {
+                //     $cekStatus = 'PAID';
+                // }
 
                 $schedule[] = [
                     'key' => $j++,
