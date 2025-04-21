@@ -4,8 +4,6 @@ namespace App\Http\Controllers\Repositories\TasksLogging;
 
 use App\Models\M_Tasks;
 use App\Models\M_TasksLogging;
-use Illuminate\Http\Request;
-use Ramsey\Uuid\Uuid;
 
 class TasksRepository
 {
@@ -18,7 +16,7 @@ class TasksRepository
         $this->tasksLogModel = $tasksLogModel;
     }
 
-    function create($request,$title, $type, $type_id, $status, $descr, $to = '')
+    function create($request, $title, $type, $type_id, $status, $descr, $to = '')
     {
         $user = $request->user();
         $timestamp = now();
@@ -36,7 +34,7 @@ class TasksRepository
         $data = [
             'type' => $type,
             'status' => $status,
-            'descr' => $descr,
+            'descr' => $descr ?? '',
             'recipient_id' => $to != '' ? $to : $setTo,
         ];
 
@@ -61,7 +59,6 @@ class TasksRepository
             $taskId = $execute->id;
         }
 
-        // Log the task
         $logData = array_merge($data, [
             'tasks_id' => $taskId,
             'type_id' => $type_id,
