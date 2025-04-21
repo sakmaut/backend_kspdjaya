@@ -35,7 +35,7 @@ class PaymentController extends Controller
     protected $taskslogging;
     protected $pelunasan;
 
-    public function __construct(ExceptionHandling $log, TasksRepository $taskslogging,PelunasanController $pelunasan)
+    public function __construct(ExceptionHandling $log, TasksRepository $taskslogging, PelunasanController $pelunasan)
     {
         $this->log = $log;
         $this->taskslogging = $taskslogging;
@@ -173,12 +173,12 @@ class PaymentController extends Controller
 
             $data = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
 
-            $message = "A/n ".$data->NAMA." Nominal ".number_format($data->JUMLAH_UANG);
+            $message = "A/n " . $data->NAMA . " Nominal " . number_format($data->JUMLAH_UANG);
 
             if (!$check_method_payment) {
-                $this->taskslogging->create($request,'Pembayaran Transfer', 'payment', $no_inv, 'PENDING', "Transfer ".$message);
+                $this->taskslogging->create($request, 'Pembayaran Transfer', 'payment', $no_inv, 'PENDING', "Transfer " . $message);
             } elseif (strtolower($request->bayar_dengan_diskon) == 'ya') {
-                $this->taskslogging->create($request,'Permintaan Diskon', 'request_discount', $no_inv, 'PENDING', "Permintaan Diskon ".$message);
+                $this->taskslogging->create($request, 'Permintaan Diskon', 'request_discount', $no_inv, 'PENDING', "Permintaan Diskon " . $message);
             }
             // } elseif ($checkposition) {
             //     $this->taskslogging->create($request,'Pembayaran Cash (Mcf/Kolektor)', 'request_payment', $no_inv, 'PENDING', "Pembayaran Cash (Mcf/Kolektor) ".$message);
@@ -522,7 +522,7 @@ class PaymentController extends Controller
     {
         $getCustomer = M_Credit::with('customer')->where('LOAN_NUMBER', $request->no_facility)->first();
 
-        if(!$getCustomer){
+        if (!$getCustomer) {
             throw new Exception("Customer Not Found", 404);
         }
 
@@ -813,19 +813,19 @@ class PaymentController extends Controller
                     }
                 }
 
-                if($kwitansi->PAYMENT_TYPE === 'pelunasan'){
-                    $type= "Pelunasan";
-                }else{
+                if ($kwitansi->PAYMENT_TYPE === 'pelunasan') {
+                    $type = "Pelunasan";
+                } else {
                     $type = "Angsuran";
                 }
 
-                if($request->flag == 'yes'){
-                    $title = $type." Disetujui";
-                }else{
-                    $title = $type." Ditolak";
+                if ($request->flag == 'yes') {
+                    $title = $type . " Disetujui";
+                } else {
+                    $title = $type . " Ditolak";
                 }
 
-                $this->taskslogging->create($request,$title ,'payment', $getInvoice, $getFlag, $request->keterangan);
+                $this->taskslogging->create($request, $title, 'payment', $getInvoice, $getFlag, $request->keterangan);
 
                 $data_approval = [
                     'PAYMENT_ID' => $request->no_invoice,
@@ -871,8 +871,8 @@ class PaymentController extends Controller
             $check->update(['STTS_PAYMENT' => 'WAITING CANCEL']);
 
             $setTitle = "Pembatalan Pembayaran";
-            $message = "A/n " . $check->NAMA . " Nominal " . number_format($check->JUMLAH_UANG);
-            $this->taskslogging->create($request, $setTitle, 'payment_cancel', $no_invoice, 'WAITING CANCEL', "Menunggu ". $setTitle.' '. $message);
+            $message = "A/n " . $check->NAMA . " Nominal : " . number_format($check->JUMLAH_UANG) . "Keterangan Cancel (" . $request->descr . ")";
+            $this->taskslogging->create($request, $setTitle, 'payment_cancel', $no_invoice, 'WAITING CANCEL', "Menunggu " . $setTitle . ' ' . $message);
 
             $checkPaymentLog = M_PaymentCancelLog::where('INVOICE_NUMBER', $no_invoice)->first();
 
@@ -900,10 +900,10 @@ class PaymentController extends Controller
                     $status = "APPROVE";
                 } else {
                     $title = $setTitle . " Ditolak";
-                    $status ="REJECTED";
+                    $status = "REJECTED";
                 }
 
-                $this->taskslogging->create($request, $title, $type, $no_invoice, $status, $title." " . $message." ". $request->keterangan ?? '');
+                $this->taskslogging->create($request, $title, $type, $no_invoice, $status, $title . " " . $message . " " . $request->keterangan ?? '');
 
                 $this->processHoApproval($request, $check);
             }
