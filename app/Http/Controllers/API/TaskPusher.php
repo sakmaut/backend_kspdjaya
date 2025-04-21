@@ -23,21 +23,23 @@ class TaskPusher extends Controller
             $getCurrentBranch = $request->user()->branch_id;
             $getCurrentPosition = $request->user()->position;
 
-            $setPositionAvailable = ['ADMIN','KAPOS'];
+            $setPositionAvailable = ['ADMIN', 'KAPOS'];
 
-            if(in_array($getCurrentPosition,$setPositionAvailable)){
+            if (in_array($getCurrentPosition, $setPositionAvailable)) {
                 $data = M_Tasks::where([
                     'created_branch' => $getCurrentBranch,
                     'recipient_id' =>  $getCurrentPosition,
                     'status' => 'PENDING'
                 ])->whereIn('type', ['request_payment'])->get();
-            }elseif($getCurrentPosition == 'HO') {
+            } elseif ($getCurrentPosition == 'HO') {
                 $data = M_Tasks::where([
                     'recipient_id' => $getCurrentPosition,
                 ])
-                    ->whereIn('type', ['payment', 'request_discount', 'payment_cancel', 'repayment_cancel','repayment'])
+                    ->whereIn('type', ['payment', 'request_discount', 'payment_cancel', 'repayment_cancel', 'repayment'])
                     ->whereIn('status', ['WAITING CANCEL', 'PENDING'])
                     ->get();
+            } else {
+                $data = [];
             }
 
             $dto = R_TaskPusher::collection($data);
