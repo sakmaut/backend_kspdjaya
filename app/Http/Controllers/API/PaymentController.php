@@ -972,8 +972,8 @@ class PaymentController extends Controller
                                 'PAID_FLAG' => $resList['flag'] ?? ''
                             ]);
 
-                            $ttlBayarPrincipal += floatval($resList['principal_prev']);
-                            $ttlBayarInterest += floatval($resList['interest_prev']);
+                            $ttlBayarPrincipal += $resList['principal_prev'] != 0 ? floatval($resList['principal_prev']) : floatval($resList['principal']);
+                            $ttlBayarInterest += $resList['interest_prev'] != 0 ? floatval($resList['interest_prev']) : floatval($resList['interest']);
                         }
                     }
 
