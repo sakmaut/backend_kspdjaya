@@ -212,7 +212,7 @@ class Credit extends Controller
             "tenor" => bilangan($data->TENOR, false) ?? null,
             "credit_id" => !empty($check_exist) ? $check_exist->ID : null,
             "tgl_awal_pk" => !empty($check_exist) ? Carbon::parse($check_exist->ENTRY_DATE)->format('Y-m-d') : parseDatetoYMD($set_tgl_awal),
-            "tgl_akhir_pk" => !empty($check_exist) ? Carbon::parse($check_exist->ENTRY_DATE)->addMonths(intval($check_exist->PERIOD))->format('Y-m-d') : Carbon::parse($set_tgl_awal)->addMonths(intval($data->TENOR))->format('Y-m-d') ?? null,
+            "tgl_akhir_pk" => !empty($check_exist) ? Carbon::parse($check_exist->CREATED_AT)->addMonths(intval($check_exist->PERIOD))->format('Y-m-d') : Carbon::parse($setDategenerate)->addMonths(intval($data->TENOR))->format('Y-m-d') ?? null,
             "angsuran" => bilangan($angsuran) ?? null,
             "opt_periode" => $data->OPT_PERIODE ?? null,
             "jaminan" => [],
@@ -426,6 +426,7 @@ class Credit extends Controller
         $survey = M_CrSurvey::find($data->CR_SURVEY_ID);
 
         $setDate = $this->setDate();
+        $setDategenerate = $this->setDateGenerate();
 
         $cr_personal = M_CrPersonal::where('APPLICATION_ID', $data->ID)->first();
         $check_customer_ktp = M_Customer::where('ID_NUMBER', $cr_personal->ID_NUMBER)->first();
@@ -439,7 +440,7 @@ class Credit extends Controller
             'STATUS'  => 'A',
             'MCF_ID'  => $survey->created_by ?? null,
             'ENTRY_DATE'  => $setDate ?? null,
-            'END_DATE'  => Carbon::parse($setDate)->addMonths(intval($data->TENOR))->format('Y-m-d') ?? null,
+            'END_DATE'  => Carbon::parse($setDategenerate)->addMonths(intval($data->TENOR))->format('Y-m-d') ?? null,
             'FIRST_ARR_DATE'  => null,
             'INSTALLMENT_DATE'  => $setDate ?? null,
             'PCPL_ORI'  => $data->SUBMISSION_VALUE + ($data->TOTAL_ADMIN ?? 0) ?? null,
