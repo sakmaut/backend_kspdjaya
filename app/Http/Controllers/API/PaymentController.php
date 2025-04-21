@@ -950,6 +950,10 @@ class PaymentController extends Controller
                     ->orderBy('angsuran_ke', 'asc')
                     ->get();
 
+                $ttlBayarPrincipal = 0;
+                $ttlBayarInterest = 0;
+                $ttlBayarDenda = 0;
+
                 foreach ($getKwitansiDetail as $resList) {
 
                     $creditScheduleCheck = M_CreditSchedule::where([
@@ -967,6 +971,9 @@ class PaymentController extends Controller
                                 'PAYMENT_VALUE' =>  floatval($resList['payment'] ?? 0),
                                 'PAID_FLAG' => $resList['flag'] ?? ''
                             ]);
+
+                            $ttlBayarPrincipal += floatval($resList['principal_prev']);
+                            $ttlBayarInterest += floatval($resList['interest_prev']);
                         }
                     }
 
@@ -983,25 +990,27 @@ class PaymentController extends Controller
                                 'PAID_PENALTY' => floatval($arrearsCheck->PAST_DUE_PENALTY ?? 0) - floatval($resList['denda'] ?? 0),
                                 'STATUS_REC' => 'A',
                             ]);
+
+                            $ttlBayarDenda += floatval($resList['bayar_denda']);
                         }
                     }
                 }
 
-                // $creditCheck = M_Credit::where('LOAN_NUMBER', $getLoanNumber)
-                //     ->whereIn('STATUS', ['A', 'D'])
-                //     ->first();
+                $creditCheck = M_Credit::where('LOAN_NUMBER', $getLoanNumber)
+                    ->whereIn('STATUS', ['A', 'D'])
+                    ->first();
 
-                // if ($creditCheck) {
-                //     $creditCheck->update([
-                //         'STATUS_REC' => 'AC',
-                //         'STATUS' => 'A',
-                //         'PAID_PRINCIPAL' => floatval($creditCheck->PAID_PRINCIPAL) - floatval($resList['principal'] ?? 0),
-                //         'PAID_INTEREST' => floatval($creditCheck->PAID_INTEREST ?? 0) - floatval($resList['interest'] ?? 0),
-                //         'PAID_PENALTY' => floatval($creditCheck->PAID_PENALTY ?? 0) - floatval($resList['bayar_denda'] ?? 0),
-                //         'MOD_USER' => $request->user()->id,
-                //         'MOD_DATE' => Carbon::now(),
-                //     ]);
-                // }
+                if ($creditCheck) {
+                    $creditCheck->update([
+                        'STATUS_REC' => 'AC',
+                        'STATUS' => 'A',
+                        'PAID_PRINCIPAL' => floatval($creditCheck->PAID_PRINCIPAL) - floatval($ttlBayarPrincipal),
+                        'PAID_INTEREST' => floatval($creditCheck->PAID_INTEREST) - floatval($ttlBayarInterest),
+                        'PAID_PENALTY' => floatval($creditCheck->PAID_PENALTY) - floatval($ttlBayarDenda),
+                        'MOD_USER' => $request->user()->id,
+                        'MOD_DATE' => Carbon::now(),
+                    ]);
+                }
             }
         }
     }
