@@ -860,9 +860,11 @@ class PaymentController extends Controller
             $flag = $request->flag;
 
             $check = M_Kwitansi::where([
-                'NO_TRANSAKSI' => $no_invoice,
-                'STTS_PAYMENT' => 'PAID'
-            ])->lockForUpdate()->first();
+                'NO_TRANSAKSI' => $no_invoice
+            ])
+                ->whereIn('STTS_PAYMENT', ['PAID', 'WAITING CANCEL'])
+                ->lockForUpdate()
+                ->first();
 
             if (!$check) {
                 throw new Exception("Kwitansi Number Not Exist", 404);
