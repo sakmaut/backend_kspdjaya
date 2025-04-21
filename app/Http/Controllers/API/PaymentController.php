@@ -873,7 +873,7 @@ class PaymentController extends Controller
             $check->update(['STTS_PAYMENT' => 'WAITING CANCEL']);
 
             $setTitle = "Pembatalan Pembayaran";
-            $message = "A/n " . $check->NAMA . " Nominal : " . number_format($check->JUMLAH_UANG) . "Keterangan Cancel (" . $request->descr . ")";
+            $message = "A/n " . $check->NAMA . " Nominal : " . number_format($check->JUMLAH_UANG) . " Keterangan Cancel (" . $request->descr . ")";
             $this->taskslogging->create($request, $setTitle, 'payment_cancel', $no_invoice, 'WAITING CANCEL', "Menunggu " . $setTitle . ' ' . $message);
 
             $checkPaymentLog = M_PaymentCancelLog::where('INVOICE_NUMBER', $no_invoice)->first();
