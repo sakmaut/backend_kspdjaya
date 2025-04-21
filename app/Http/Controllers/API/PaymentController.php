@@ -19,8 +19,6 @@ use App\Models\M_PaymentApproval;
 use App\Models\M_PaymentAttachment;
 use App\Models\M_PaymentCancelLog;
 use App\Models\M_PaymentDetail;
-use App\Models\M_TasksLogging;
-use App\Models\M_TelegramBotSend;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -33,16 +31,15 @@ use Ramsey\Uuid\Uuid;
 
 class PaymentController extends Controller
 {
-
-    protected $kwitansiRepository;
     protected $log;
     protected $taskslogging;
+    protected $pelunasan;
 
-    public function __construct(KwitansiRepository $kwitansiRepository, ExceptionHandling $log, TasksRepository $taskslogging)
+    public function __construct(ExceptionHandling $log, TasksRepository $taskslogging,PelunasanController $pelunasan)
     {
-        $this->kwitansiRepository = $kwitansiRepository;
         $this->log = $log;
         $this->taskslogging = $taskslogging;
+        $this->pelunasan = $pelunasan;
     }
 
     public function index(Request $request)
@@ -117,40 +114,13 @@ class PaymentController extends Controller
 
             $getCodeBranch = M_Branch::findOrFail($request->user()->branch_id);
 
-            $customer_data = null;
             $check_method_payment = strtolower($request->payment_method) === 'cash';
-            $getCurrentPosition = $request->user()->position;
 
-            $setPositionAvailable  = ['mcf', 'kolektor'];
-            $checkposition = in_array(strtolower($getCurrentPosition), $setPositionAvailable);
+            $checkposition = $this->checkPosition($request);
 
             if (isset($request->struktur) && is_array($request->struktur)) {
 
                 foreach ($request->struktur as $res) {
-
-                    $getLoanNumber  = $res['loan_number'];
-
-                    $checkCredit = M_Credit::where(['LOAN_NUMBER' => $getLoanNumber, 'STATUS' => 'D'])->first();
-
-                    if ($checkCredit) {
-                        throw new Exception("Credit Is Not Active", 404);
-                    }
-
-                    if (isset($res['customer']) && !empty($res['customer'])) {
-                        if (empty($detail_customer)) {
-                            $customer_data = [
-                                'cust_code' => $res['customer']['CUST_CODE'],
-                                'nama' => $res['customer']['NAME'],
-                                'alamat' => $res['customer']['ADDRESS'],
-                                'rt' => $res['customer']['RT'],
-                                'rw' => $res['customer']['RW'],
-                                'provinsi' => $res['customer']['PROVINCE'],
-                                'kota' => $res['customer']['CITY'],
-                                'kelurahan' => $res['customer']['KELURAHAN'],
-                                'kecamatan' => $res['customer']['KECAMATAN'],
-                            ];
-                        }
-                    }
 
                     if ($res['bayar_angsuran'] != 0 || $res['bayar_denda'] != 0 || strtolower($request->bayar_dengan_diskon) == 'ya') {
                         M_KwitansiStructurDetail::firstOrCreate([
@@ -199,35 +169,34 @@ class PaymentController extends Controller
                 }
             }
 
-            $this->saveKwitansi($request, $customer_data, $no_inv);
+            $this->saveKwitansi($request, $no_inv);
 
             $data = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
 
             $message = "A/n ".$data->NAMA." Nominal ".number_format($data->JUMLAH_UANG);
 
             if (!$check_method_payment) {
-                $this->taskslogging->create($request,'Transfer', 'payment', $no_inv, 'PENDING', "Transfer ".$message);
+                $this->taskslogging->create($request,'Pembayaran Transfer', 'payment', $no_inv, 'PENDING', "Transfer ".$message);
             } elseif (strtolower($request->bayar_dengan_diskon) == 'ya') {
                 $this->taskslogging->create($request,'Permintaan Diskon', 'request_discount', $no_inv, 'PENDING', "Permintaan Diskon ".$message);
-            } elseif ($checkposition) {
-                $this->taskslogging->create($request,'Pembayaran Cash (Mcf/Kolektor)', 'request_payment', $no_inv, 'PENDING', "Pembayaran Cash (Mcf/Kolektor) ".$message);
             }
+            // } elseif ($checkposition) {
+            //     $this->taskslogging->create($request,'Pembayaran Cash (Mcf/Kolektor)', 'request_payment', $no_inv, 'PENDING', "Pembayaran Cash (Mcf/Kolektor) ".$message);
+            // }
 
             $dto = new R_Kwitansi($data);
 
             DB::commit();
             return response()->json($dto, 200);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollback();
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage()], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
     public function show(Request $request, $id)
     {
         try {
-
             $checkKwitansi = M_Kwitansi::where('NO_TRANSAKSI', $id)->first();
 
             if (!$checkKwitansi) {
@@ -549,50 +518,52 @@ class PaymentController extends Controller
         return null;
     }
 
-    private function saveKwitansi($request, $customer_detail, $no_inv)
+    private function saveKwitansi($request, $no_inv)
     {
-        $cekPaymentMethod = $request->payment_method == 'cash' && strtolower($request->bayar_dengan_diskon) != 'ya';
+        $getCustomer = M_Credit::with('customer')->where('LOAN_NUMBER', $request->no_facility)->first();
 
-        $checkKwitansiExist = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
+        if(!$getCustomer){
+            throw new Exception("Customer Not Found", 404);
+        }
+
+        $cekPaymentMethod = $request->payment_method == 'cash' && strtolower($request->bayar_dengan_diskon) != 'ya';
 
         //  "STTS_PAYMENT" => $cekPaymentMethod && !$this->checkPosition($request) ? "PAID" : "PENDING",
 
-        if (!$checkKwitansiExist) {
-            $save_kwitansi = [
-                "PAYMENT_TYPE" => 'angsuran',
-                "PAYMENT_ID" => $request->uid,
-                "STTS_PAYMENT" => $cekPaymentMethod ? "PAID" : "PENDING",
-                "NO_TRANSAKSI" => $no_inv,
-                "LOAN_NUMBER" => $request->no_facility ?? null,
-                "TGL_TRANSAKSI" => Carbon::now()->format('d-m-Y'),
-                'BRANCH_CODE' => $request->user()->branch_id,
-                'CUST_CODE' => $customer_detail['cust_code'] ?? '',
-                'NAMA' => $customer_detail['nama'] ?? '',
-                'ALAMAT' => $customer_detail['alamat'] ?? '',
-                'RT' => $customer_detail['rt'] ?? '',
-                'RW' => $customer_detail['rw'] ?? '',
-                'PROVINSI' => $customer_detail['provinsi'] ?? '',
-                'KOTA' => $customer_detail['kota'] ?? '',
-                'KELURAHAN' => $customer_detail['kelurahan'] ?? '',
-                'KECAMATAN' => $customer_detail['kecamatan'] ?? '',
-                "METODE_PEMBAYARAN" => $request->payment_method ?? null,
-                "TOTAL_BAYAR" => $request->total_bayar ?? null,
-                "DISKON" => $request->diskon_tunggakan ?? null,
-                "DISKON_FLAG" => $request->bayar_dengan_diskon ?? null,
-                "PEMBULATAN" => $request->pembulatan ?? null,
-                "KEMBALIAN" => $request->kembalian ?? null,
-                "JUMLAH_UANG" => $request->jumlah_uang ?? null,
-                "NAMA_BANK" => $request->nama_bank ?? null,
-                "NO_REKENING" => $request->no_rekening ?? null,
-                "CREATED_BY" => $request->user()->id,
-                "CREATED_AT" => Carbon::now()
-            ];
+        $save_kwitansi = [
+            "PAYMENT_TYPE" => 'angsuran',
+            "PAYMENT_ID" => $request->uid,
+            "STTS_PAYMENT" => $cekPaymentMethod ? "PAID" : "PENDING",
+            "NO_TRANSAKSI" => $no_inv,
+            "LOAN_NUMBER" => $request->no_facility ?? null,
+            "TGL_TRANSAKSI" => Carbon::now()->format('d-m-Y'),
+            'BRANCH_CODE' => $request->user()->branch_id,
+            'CUST_CODE' => $getCustomer->customer['CUST_CODE'] ?? '',
+            'NAMA' => $getCustomer->customer['NAME'] ?? '',
+            'ALAMAT ' => $getCustomer->customer['ADDRESS'] ?? '',
+            'RT' => $getCustomer->customer['RT'] ?? '',
+            'RW ' => $getCustomer->customer['RW'] ?? '',
+            'PROVINSI' => $getCustomer->customer['PROVINCE'] ?? '',
+            'KOTA ' => $getCustomer->customer['CITY'] ?? '',
+            'KELURAHAN' => $getCustomer->customer['KELURAHAN'] ?? '',
+            'KECAMATAN ' => $getCustomer->customer['KECAMATAN'] ?? '',
+            "METODE_PEMBAYARAN" => $request->payment_method ?? null,
+            "TOTAL_BAYAR" => $request->total_bayar ?? null,
+            "DISKON" => $request->diskon_tunggakan ?? null,
+            "DISKON_FLAG" => $request->bayar_dengan_diskon ?? null,
+            "PEMBULATAN" => $request->pembulatan ?? null,
+            "KEMBALIAN" => $request->kembalian ?? null,
+            "JUMLAH_UANG" => $request->jumlah_uang ?? null,
+            "NAMA_BANK" => $request->nama_bank ?? null,
+            "NO_REKENING" => $request->no_rekening ?? null,
+            "CREATED_BY" => $request->user()->id,
+            "CREATED_AT" => Carbon::now()
+        ];
 
-            M_Kwitansi::firstOrCreate(
-                ['NO_TRANSAKSI' => $no_inv],
-                $save_kwitansi
-            );
-        }
+        M_Kwitansi::firstOrCreate(
+            ['NO_TRANSAKSI' => $no_inv],
+            $save_kwitansi
+        );
     }
 
     function createPaymentRecords($request, $res, $tgl_angsuran, $loan_number, $no_inv, $branch, $uid)
@@ -759,8 +730,7 @@ class PaymentController extends Controller
                 if ($request->flag == 'yes') {
 
                     if ($kwitansi->PAYMENT_TYPE === 'pelunasan') {
-                        $pelunasan = new PelunasanController();
-                        $pelunasan->proccess($request, $kwitansi->LOAN_NUMBER, $getInvoice, 'PAID');
+                        $this->pelunasan->proccess($request, $kwitansi->LOAN_NUMBER, $getInvoice, 'PAID');
                     } else {
                         $getKwitansiDetail = M_KwitansiStructurDetail::where([
                             'no_invoice' => $getInvoice
@@ -781,8 +751,7 @@ class PaymentController extends Controller
                     $request->merge(['approval' => 'no']);
 
                     if ($kwitansi->PAYMENT_TYPE === 'pelunasan') {
-                        $pelunasan = new PelunasanController();
-                        $pelunasan->proccessCancel($kwitansi->LOAN_NUMBER, $getInvoice, 'CANCEL');
+                        $this->pelunasan->proccessCancel($kwitansi->LOAN_NUMBER, $getInvoice, 'CANCEL');
                     } else {
 
                         if (isset($request->struktur) && is_array($request->struktur)) {
@@ -880,26 +849,33 @@ class PaymentController extends Controller
 
     public function cancel(Request $request)
     {
-        $request->validate([
-            'no_invoice' => 'required|string',
-            'flag' => 'in:yes,no',
-        ]);
-
-        $no_invoice = $request->no_invoice;
-        $flag = $request->flag;
-
         DB::beginTransaction();
         try {
+            $request->validate([
+                'no_invoice' => 'required|string',
+                'flag' => 'in:yes,no',
+            ]);
+
+            $no_invoice = $request->no_invoice;
+            $flag = $request->flag;
+
             $check = M_Kwitansi::where([
                 'NO_TRANSAKSI' => $no_invoice,
                 'STTS_PAYMENT' => 'PAID'
-            ])->first();
+            ])->lockForUpdate()->first();
 
             if (!$check) {
                 throw new Exception("Kwitansi Number Not Exist", 404);
             }
 
+            $check->update(['STTS_PAYMENT' => 'WAITING CANCEL']);
+
+            $setTitle = "Pembatalan Pembayaran";
+            $message = "A/n " . $check->NAMA . " Nominal " . number_format($check->JUMLAH_UANG);
+            $this->taskslogging->create($request, $setTitle, 'payment_cancel', $no_invoice, 'WAITING CANCEL', "Menunggu ". $setTitle.' '. $message);
+
             $checkPaymentLog = M_PaymentCancelLog::where('INVOICE_NUMBER', $no_invoice)->first();
+
             if (!$checkPaymentLog) {
                 M_PaymentCancelLog::create([
                     'INVOICE_NUMBER' => $no_invoice ?? '',
@@ -912,26 +888,40 @@ class PaymentController extends Controller
             }
 
             if (strtolower($request->user()->position) == 'ho' && isset($flag) && !empty($flag)) {
+
+                if ($check->PAYMENT_TYPE === 'pelunasan') {
+                    $type = "repayment_cancel";
+                } else {
+                    $type = "payment_cancel";
+                }
+
+                if ($flag == 'yes') {
+                    $title = $setTitle . " Disetujui";
+                    $status = "APPROVE";
+                } else {
+                    $title = $setTitle . " Ditolak";
+                    $status ="REJECTED";
+                }
+
+                $this->taskslogging->create($request, $title, $type, $no_invoice, $status, $title." " . $message." ". $request->keterangan ?? '');
+
                 $this->processHoApproval($request, $check);
             }
 
             DB::commit();
             return response()->json(['message' => "Invoice Number {$no_invoice} Cancel Success"], 200);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollback();
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
     private function processHoApproval(Request $request, $check)
     {
-
         if (strtolower($request->flag) === 'yes') {
 
             if ($check->PAYMENT_TYPE === 'pelunasan') {
-                $pelunasan = new PelunasanController();
-                $pelunasan->proccessCancel($check->LOAN_NUMBER, $request->no_invoice, 'CANCEL');
+                $this->pelunasan->proccessCancel($check->LOAN_NUMBER, $request->no_invoice, 'CANCEL');
             } else {
                 $check->update([
                     'STTS_PAYMENT' => 'CANCEL'
@@ -1015,7 +1005,7 @@ class PaymentController extends Controller
         $checkCreditCancel = M_PaymentCancelLog::where('INVOICE_NUMBER', $request->no_invoice)->first();
         if ($checkCreditCancel) {
             $checkCreditCancel->update([
-                'ONCHARGE_DESCR' => $request->descr_ho ?? '',
+                'ONCHARGE_DESCR' => $request->keterangan ?? '',
                 'ONCHARGE_PERSON' => $request->user()->id,
                 'ONCHARGE_TIME' => Carbon::now(),
                 'ONCHARGE_FLAG' => $request->flag ?? '',

@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Repositories\TasksLogging\TasksRepository;
 use App\Http\Resources\R_KwitansiPelunasan;
 use App\Http\Resources\R_Pelunasan;
 use App\Models\M_Arrears;
@@ -22,6 +24,16 @@ use Ramsey\Uuid\Uuid;
 
 class PelunasanController extends Controller
 {
+
+    protected $log;
+    protected $taskslogging;
+
+    public function __construct(ExceptionHandling $log, TasksRepository $taskslogging)
+    {
+        $this->log = $log;
+        $this->taskslogging = $taskslogging;
+    }
+
     public function index(Request $request)
     {
         try {
@@ -49,9 +61,8 @@ class PelunasanController extends Controller
             $dto = R_Pelunasan::collection($results);
 
             return response()->json($dto, 200);
-        } catch (\Exception $e) {
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+        } catch (Exception $e) {
+            return $this->log->logError($e, $request);
         }
     }
 
@@ -185,14 +196,6 @@ class PelunasanController extends Controller
 
             $status = "PENDING";
 
-            // $discounts = $request->only(['DISKON_POKOK', 'DISKON_PINALTI', 'DISKON_BUNGA', 'DISKON_DENDA']);
-
-            // $status = "PAID";
-
-            // if (array_sum($discounts) > 0 || strtolower($request->METODE_PEMBAYARAN) === 'transfer') {
-            //     $status = "PENDING";
-            // }
-
             if (!M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->exists()) {
                 $this->saveKwitansi($request, $detail_customer, $no_inv, $status);
                 $this->proccessKwitansiDetail($request, $loan_number, $no_inv);
@@ -220,14 +223,17 @@ class PelunasanController extends Controller
 
             $data = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
 
+            $message = "A/n " . $data->NAMA . " Nominal " . number_format($data->JUMLAH_UANG);
+
+            $this->taskslogging->create($request, 'Pelunasan', 'repayment', $no_inv, 'PENDING', "Pelunasan " . $message);
+
             $dto = new R_KwitansiPelunasan($data);
 
             DB::commit();
             return response()->json($dto, 200);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollback();
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage()], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
