@@ -985,12 +985,13 @@ class PaymentController extends Controller
                     ])->first();
 
                     if ($creditScheduleCheck) {
-                        if (floatval($resList['bayar_angsuran']) == $creditScheduleCheck['INSTALLMENT'] && floatval($resList['bayar_angsuran']) != 0) {
+                        if (floatval($resList['payment']) == $creditScheduleCheck['INSTALLMENT'] && floatval($resList['payment']) != 0) {
                             $creditScheduleCheck->update([
-                                'PAYMENT_VALUE_PRINCIPAL' => floatval($creditScheduleCheck->PAYMENT_VALUE_PRINCIPAL ?? 0) - floatval($resList['principal'] ?? 0),
-                                'PAYMENT_VALUE_INTEREST' =>  floatval($creditScheduleCheck->PAYMENT_VALUE_INTEREST ?? 0) - floatval($resList['interest'] ?? 0),
-                                'PAYMENT_VALUE' =>  floatval($creditScheduleCheck->PAYMENT_VALUE ?? 0) - floatval($resList['bayar_angsuran'] ?? 0),
-                                'PAID_FLAG' => ''
+                                'PAYMENT_VALUE_PRINCIPAL' => floatval($resList['principal_prev'] ?? 0),
+                                'PAYMENT_VALUE_INTEREST' => floatval($resList['interest_prev'] ?? 0),
+                                'INSUFFICIENT_PAYMENT' =>  floatval($resList['insuficient_payment_prev'] ?? 0),
+                                'PAYMENT_VALUE' =>  floatval($resList['payment'] ?? 0),
+                                'PAID_FLAG' => $resList['flag'] ?? ''
                             ]);
                         }
 
