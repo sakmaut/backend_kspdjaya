@@ -212,7 +212,7 @@ class Credit extends Controller
             "tenor" => bilangan($data->TENOR, false) ?? null,
             "credit_id" => !empty($check_exist) ? $check_exist->ID : null,
             "tgl_awal_pk" => !empty($check_exist) ? Carbon::parse($check_exist->ENTRY_DATE)->format('Y-m-d') : parseDatetoYMD($set_tgl_awal),
-            "tgl_akhir_pk" => !empty($check_exist) ? Carbon::parse($check_exist->ENTRY_DATE)->addMonths(intval($check_exist->PERIOD))->format('Y-m-d') : '',
+            "tgl_akhir_pk" => !empty($check_exist) ? Carbon::parse($check_exist->ENTRY_DATE)->addMonths(intval($check_exist->PERIOD))->format('Y-m-d') : Carbon::parse($set_tgl_awal)->addMonths(intval($data->TENOR))->format('Y-m-d') ?? null,
             "angsuran" => bilangan($angsuran) ?? null,
             "opt_periode" => $data->OPT_PERIODE ?? null,
             "jaminan" => [],
@@ -423,7 +423,6 @@ class Credit extends Controller
 
     private function insert_credit($SET_UUID, $request, $data, $loan_number, $installment_count, $cust_code)
     {
-
         $survey = M_CrSurvey::find($data->CR_SURVEY_ID);
 
         $setDate = $this->setDate();
@@ -440,9 +439,9 @@ class Credit extends Controller
             'STATUS'  => 'A',
             'MCF_ID'  => $survey->created_by ?? null,
             'ENTRY_DATE'  => $setDate ?? null,
+            'END_DATE'  => Carbon::parse($setDate)->addMonths(intval($data->TENOR))->format('Y-m-d') ?? null,
             'FIRST_ARR_DATE'  => null,
             'INSTALLMENT_DATE'  => $setDate ?? null,
-            'END_DATE'  => add_months($setDate, $data->PERIOD) ?? null,
             'PCPL_ORI'  => $data->SUBMISSION_VALUE + ($data->TOTAL_ADMIN ?? 0) ?? null,
             'INTRST_ORI' => $data->TOTAL_INTEREST ?? 0,
             'PAID_PRINCIPAL'  => 0,

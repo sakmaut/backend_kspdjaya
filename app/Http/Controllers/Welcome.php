@@ -63,7 +63,7 @@ class Welcome extends Controller
         }
 
         $setDate = $date->format('Y-m-d');
-        $endDate = add_months($setDate, 6);
+        $endDate = Carbon::parse($setDate)->addMonths(intval(6))->format('Y-m-d');
 
         return response()->json($endDate);
         die;
