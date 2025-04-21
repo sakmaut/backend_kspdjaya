@@ -952,14 +952,6 @@ class PaymentController extends Controller
                     ->get();
 
 
-                // $totalPrincipal = $request->value['totalPrincipal'];
-                // $totalInterest = $request->value['totalInterest'];
-                // $totalPaidPenalty = $request->value['totalPaidPenalty'];
-                // $creditSchedule = $request->value['creditSchedule'];
-
-                // $setPrincipal = round($totalPrincipal, 2);
-
-
                 foreach ($getKwitansiDetail as $resList) {
 
                     $creditCheck = M_Credit::where('LOAN_NUMBER', $getLoanNumber)
