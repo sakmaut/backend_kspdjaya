@@ -949,30 +949,32 @@ class PaymentController extends Controller
                     ->get();
 
 
-                $totalPrincipal = $request->value['totalPrincipal'];
-                $totalInterest = $request->value['totalInterest'];
-                $totalPaidPenalty = $request->value['totalPaidPenalty'];
-                $creditSchedule = $request->value['creditSchedule'];
+                // $totalPrincipal = $request->value['totalPrincipal'];
+                // $totalInterest = $request->value['totalInterest'];
+                // $totalPaidPenalty = $request->value['totalPaidPenalty'];
+                // $creditSchedule = $request->value['creditSchedule'];
 
-                $setPrincipal = round($totalPrincipal, 2);
+                // $setPrincipal = round($totalPrincipal, 2);
 
-                $creditCheck = M_Credit::where('LOAN_NUMBER', $getLoanNumber)
-                    ->whereIn('STATUS', ['A', 'D'])
-                    ->first();
-
-                if ($creditCheck) {
-                    $creditCheck->update([
-                        'STATUS_REC' => 'AC',
-                        'STATUS' => 'A',
-                        'PAID_PRINCIPAL' => floatval($creditCheck->PAID_PRINCIPAL) - floatval($setPrincipal ?? 0),
-                        'PAID_INTEREST' => floatval($creditCheck->PAID_INTEREST ?? 0) - floatval($totalInterest ?? 0),
-                        'PAID_PENALTY' => floatval($creditCheck->PAID_PENALTY ?? 0) - floatval($totalPaidPenalty ?? 0),
-                        'MOD_USER' => $request->user()->id,
-                        'MOD_DATE' => Carbon::now(),
-                    ]);
-                }
 
                 foreach ($getKwitansiDetail as $resList) {
+
+                    $creditCheck = M_Credit::where('LOAN_NUMBER', $getLoanNumber)
+                        ->whereIn('STATUS', ['A', 'D'])
+                        ->first();
+
+                    if ($creditCheck) {
+                        $creditCheck->update([
+                            'STATUS_REC' => 'AC',
+                            'STATUS' => 'A',
+                            'PAID_PRINCIPAL' => floatval($creditCheck->PAID_PRINCIPAL) - floatval($resList['principal'] ?? 0),
+                            'PAID_INTEREST' => floatval($creditCheck->PAID_INTEREST ?? 0) - floatval($resList['interest'] ?? 0),
+                            'PAID_PENALTY' => floatval($creditCheck->PAID_PENALTY ?? 0) - floatval($resList['bayar_denda'] ?? 0),
+                            'MOD_USER' => $request->user()->id,
+                            'MOD_DATE' => Carbon::now(),
+                        ]);
+                    }
+
                     $creditScheduleCheck = M_CreditSchedule::where([
                         'LOAN_NUMBER' => $getLoanNumber,
                         'PAYMENT_DATE' => Carbon::parse($resList['tgl_angsuran'])->format('Y-m-d'),
