@@ -25,7 +25,7 @@ class TasksRepository
         $setPositionAvailable  = ['mcf', 'kolektor'];
         $checkposition = in_array(strtolower($getCurrentPosition), $setPositionAvailable);
 
-        if ($checkposition) {
+        if ($checkposition && $type == 'request_payment') {
             $setTo = 'ADMIN';
         } else {
             $setTo = 'HO';
