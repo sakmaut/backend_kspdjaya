@@ -523,7 +523,8 @@ class PaymentController extends Controller
         }
 
         $cekPaymentMethod = $request->payment_method == 'cash' && strtolower($request->bayar_dengan_diskon) != 'ya';
-        $sttsPayment = $cekPaymentMethod && !$this->checkPosition($request) ? "PAID" : "PENDING";
+        // $sttsPayment = $cekPaymentMethod && !$this->checkPosition($request) ? "PAID" : "PENDING";
+        $sttsPayment = $cekPaymentMethod ? "PAID" : "PENDING";
 
         $save_kwitansi = [
             "PAYMENT_TYPE" => 'angsuran',
