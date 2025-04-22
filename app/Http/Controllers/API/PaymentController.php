@@ -4,7 +4,6 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
-use App\Http\Controllers\Repositories\Kwitansi\KwitansiRepository;
 use App\Http\Controllers\Repositories\TasksLogging\TasksRepository;
 use App\Http\Resources\R_Kwitansi;
 use App\Http\Resources\R_PaymentCancelLog;
@@ -15,9 +14,7 @@ use App\Models\M_CreditSchedule;
 use App\Models\M_Kwitansi;
 use App\Models\M_KwitansiStructurDetail;
 use App\Models\M_Payment;
-use App\Models\M_PaymentApproval;
 use App\Models\M_PaymentAttachment;
-use App\Models\M_PaymentCancelLog;
 use App\Models\M_PaymentDetail;
 use Carbon\Carbon;
 use Exception;
@@ -714,7 +711,6 @@ class PaymentController extends Controller
     {
         DB::beginTransaction();
         try {
-
             $getInvoice = $request->no_invoice;
             $getFlag = $request->flag == 'yes' ? 'PAID' : 'CANCEL';
             $getCurrentPosition = strtolower($request->user()->position);
@@ -761,6 +757,8 @@ class PaymentController extends Controller
                         $setTitle = "Pembatalan Pembayaran";
                         $message = "A/n " . $kwitansi->NAMA . " Nominal : " . number_format($kwitansi->JUMLAH_UANG) . " Keterangan Cancel (" . $request->descr . ")";
                         $this->taskslogging->create($request, $setTitle, 'payment_cancel', $getInvoice, 'WAITING CANCEL', "Menunggu " . $setTitle . ' ' . $message);
+
+                        $kwitansi->update(['STTS_PAYMENT' => 'WAITING CANCEL']);
                     } else {
                         if ($kwitansi->PAYMENT_TYPE === 'pelunasan') {
                             $this->pelunasan->proccessCancel($kwitansi->LOAN_NUMBER, $getInvoice, 'CANCEL');
