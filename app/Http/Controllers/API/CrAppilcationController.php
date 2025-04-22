@@ -1149,7 +1149,7 @@ class CrAppilcationController extends Controller
         }
 
         // Validate KK
-        if ($checkKkNumber == 2) {
+        if ($checkKkNumber > 2) {
             $arrayList["order_validation"][] = "KK : No KK {$kk} Aktif Lebih Dari 2";
         }
 
