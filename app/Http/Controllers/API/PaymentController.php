@@ -147,9 +147,8 @@ class PaymentController extends Controller
                         ]);
                     }
 
-                    // if ($check_method_payment && strtolower($request->bayar_dengan_diskon) != 'ya' && !$checkposition) {
-
-                    if ($check_method_payment && strtolower($request->bayar_dengan_diskon) != 'ya') {
+                    if ($check_method_payment && strtolower($request->bayar_dengan_diskon) != 'ya' && !$checkposition) {
+                        // if ($check_method_payment && strtolower($request->bayar_dengan_diskon) != 'ya') {
                         $this->processPaymentStructure($res, $request, $getCodeBranch, $no_inv);
                     } else {
                         $tgl_angsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
@@ -182,10 +181,9 @@ class PaymentController extends Controller
                 $this->taskslogging->create($request, 'Pembayaran Transfer', 'payment', $no_inv, 'PENDING', "Transfer " . $message);
             } elseif (strtolower($request->bayar_dengan_diskon) == 'ya') {
                 $this->taskslogging->create($request, 'Permintaan Diskon', 'request_discount', $no_inv, 'PENDING', "Permintaan Diskon " . $message);
+            } elseif ($checkposition) {
+                $this->taskslogging->create($request, 'Pembayaran Cash (Mcf/Kolektor)', 'request_payment', $no_inv, 'PENDING', "Pembayaran Cash " . $message);
             }
-            // } elseif ($checkposition) {
-            //     $this->taskslogging->create($request,'Pembayaran Cash (Mcf/Kolektor)', 'request_payment', $no_inv, 'PENDING', "Pembayaran Cash (Mcf/Kolektor) ".$message);
-            // }
 
             $dto = new R_Kwitansi($data);
 
@@ -529,13 +527,13 @@ class PaymentController extends Controller
         }
 
         $cekPaymentMethod = $request->payment_method == 'cash' && strtolower($request->bayar_dengan_diskon) != 'ya';
-
-        //  "STTS_PAYMENT" => $cekPaymentMethod && !$this->checkPosition($request) ? "PAID" : "PENDING",
+        // $sttsPayment = $cekPaymentMethod ? "PAID" : "PENDING";
+        $sttsPayment = $cekPaymentMethod && !$this->checkPosition($request) ? "PAID" : "PENDING";
 
         $save_kwitansi = [
             "PAYMENT_TYPE" => 'angsuran',
             "PAYMENT_ID" => $request->uid,
-            "STTS_PAYMENT" => $cekPaymentMethod ? "PAID" : "PENDING",
+            "STTS_PAYMENT" => $sttsPayment,
             "NO_TRANSAKSI" => $no_inv,
             "LOAN_NUMBER" => $request->no_facility ?? null,
             "TGL_TRANSAKSI" => Carbon::now()->format('d-m-Y'),
