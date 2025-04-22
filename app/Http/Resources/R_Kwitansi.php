@@ -91,7 +91,7 @@ class R_Kwitansi extends JsonResource
 
         $setMtdePembayaran = $this->METODE_PEMBAYARAN;
 
-        $setSttsPayment = $checkposition && ($setMtdePembayaran === 'cash') ? 'PAID' : $this->STATUS_PAYMENT;
+        $setSttsPayment = $checkposition && ($setMtdePembayaran === 'cash') ? 'PAID' : $this->STTS_PAYMENT;
 
         return [
             "id" => $this->ID,
