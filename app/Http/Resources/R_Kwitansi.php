@@ -85,7 +85,7 @@ class R_Kwitansi extends JsonResource
 
         $getUser = User::find($this->CREATED_BY);
 
-        $getCurrentPosition = $getUser->position;
+        $getCurrentPosition = $request->user()->position;
         $setPositionAvailable  = ['mcf', 'kolektor'];
         $checkposition = in_array(strtolower($getCurrentPosition), $setPositionAvailable);
 
