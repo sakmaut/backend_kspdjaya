@@ -504,8 +504,7 @@ class PaymentController extends Controller
         $checkFlag = DB::table('arrears')
             ->selectRaw('
             CASE 
-                WHEN SUM(COALESCE(PAST_DUE_PCPL, 0) + COALESCE(PAST_DUE_INTRST, 0) + COALESCE(PAST_DUE_PENALTY, 0)) 
-                     = SUM(COALESCE(PAID_PCPL, 0) + COALESCE(PAID_INT, 0) + COALESCE(PAID_PENALTY, 0)) 
+                WHEN COALESCE(PAST_DUE_PENALTY, 0) = COALESCE(PAID_PENALTY, 0)
                 THEN 1 
                 ELSE 0 
             END AS check_flag
