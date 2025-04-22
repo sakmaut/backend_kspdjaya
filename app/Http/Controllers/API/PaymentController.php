@@ -148,7 +148,6 @@ class PaymentController extends Controller
                     }
 
                     if ($check_method_payment && strtolower($request->bayar_dengan_diskon) != 'ya' && !$checkposition) {
-                        // if ($check_method_payment && strtolower($request->bayar_dengan_diskon) != 'ya') {
                         $this->processPaymentStructure($res, $request, $getCodeBranch, $no_inv);
                     } else {
                         $tgl_angsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
@@ -527,7 +526,6 @@ class PaymentController extends Controller
         }
 
         $cekPaymentMethod = $request->payment_method == 'cash' && strtolower($request->bayar_dengan_diskon) != 'ya';
-        // $sttsPayment = $cekPaymentMethod ? "PAID" : "PENDING";
         $sttsPayment = $cekPaymentMethod && !$this->checkPosition($request) ? "PAID" : "PENDING";
 
         $save_kwitansi = [
@@ -719,6 +717,7 @@ class PaymentController extends Controller
 
             $getInvoice = $request->no_invoice;
             $getFlag = $request->flag == 'yes' ? 'PAID' : 'CANCEL';
+            $getCurrentPosition = strtolower($request->user()->position);
 
             $kwitansi = M_Kwitansi::where(['NO_TRANSAKSI' => $getInvoice, 'STTS_PAYMENT' => 'PENDING'])->lockForUpdate()->first();
 
@@ -726,6 +725,12 @@ class PaymentController extends Controller
                 $getCodeBranch = M_Branch::findOrFail($request->user()->branch_id);
 
                 $request->merge(['payment_method' => 'transfer']);
+
+                if ($kwitansi->PAYMENT_TYPE === 'pelunasan') {
+                    $type = "Pelunasan";
+                } else {
+                    $type = "Angsuran";
+                }
 
                 if ($request->flag == 'yes') {
 
@@ -747,96 +752,92 @@ class PaymentController extends Controller
                     }
 
                     $kwitansi->update(['STTS_PAYMENT' => 'PAID']);
+
+                    $this->taskslogging->create($request, $type . " Disetujui", 'payment', $getInvoice, $getFlag, $request->keterangan);
                 } else {
                     $request->merge(['approval' => 'no']);
 
-                    if ($kwitansi->PAYMENT_TYPE === 'pelunasan') {
-                        $this->pelunasan->proccessCancel($kwitansi->LOAN_NUMBER, $getInvoice, 'CANCEL');
+                    if ($getCurrentPosition === 'admin') {
+                        $setTitle = "Pembatalan Pembayaran";
+                        $message = "A/n " . $kwitansi->NAMA . " Nominal : " . number_format($kwitansi->JUMLAH_UANG) . " Keterangan Cancel (" . $request->descr . ")";
+                        $this->taskslogging->create($request, $setTitle, 'payment_cancel', $getInvoice, 'WAITING CANCEL', "Menunggu " . $setTitle . ' ' . $message);
                     } else {
+                        if ($kwitansi->PAYMENT_TYPE === 'pelunasan') {
+                            $this->pelunasan->proccessCancel($kwitansi->LOAN_NUMBER, $getInvoice, 'CANCEL');
+                        } else {
 
-                        if (isset($request->struktur) && is_array($request->struktur)) {
-                            foreach ($request->struktur as $res) {
-                                $loan_number = $res['loan_number'];
-                                $tgl_angsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
-                                $uid = Uuid::uuid7()->toString();
+                            if (isset($request->struktur) && is_array($request->struktur)) {
+                                foreach ($request->struktur as $res) {
+                                    $loan_number = $res['loan_number'];
+                                    $tgl_angsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
+                                    $uid = Uuid::uuid7()->toString();
 
-                                M_Payment::create([
-                                    'ID' => $uid,
-                                    'ACC_KEY' =>  $res['bayar_denda'] != 0 ? 'angsuran_denda' : 'angsuran',
-                                    'STTS_RCRD' => 'CANCEL',
-                                    'INVOICE' => $getInvoice ?? '',
-                                    'NO_TRX' => $getInvoice ?? '',
-                                    'PAYMENT_METHOD' => 'transfer',
-                                    'BRANCH' => $getCodeBranch->CODE_NUMBER ?? '',
-                                    'LOAN_NUM' => $loan_number ?? '',
-                                    'ENTRY_DATE' => now(),
-                                    'TITLE' => 'Angsuran Ke-' . $res['angsuran_ke'],
-                                    'ORIGINAL_AMOUNT' => ($res['bayar_angsuran'] + $res['bayar_denda']),
-                                    'OS_AMOUNT' => $os_amount ?? 0,
-                                    'START_DATE' => $tgl_angsuran ?? '',
-                                    'END_DATE' => now(),
-                                    'USER_ID' => $request->user()->id ?? '',
-                                    'AUTH_BY' => $request->user()->fullname ?? '',
-                                    'AUTH_DATE' => now(),
-                                    'ARREARS_ID' => $res['id_arrear'] ?? '',
-                                    'BANK_NAME' => round(microtime(true) * 1000)
-                                ]);
+                                    M_Payment::create([
+                                        'ID' => $uid,
+                                        'ACC_KEY' =>  $res['bayar_denda'] != 0 ? 'angsuran_denda' : 'angsuran',
+                                        'STTS_RCRD' => 'CANCEL',
+                                        'INVOICE' => $getInvoice ?? '',
+                                        'NO_TRX' => $getInvoice ?? '',
+                                        'PAYMENT_METHOD' => 'transfer',
+                                        'BRANCH' => $getCodeBranch->CODE_NUMBER ?? '',
+                                        'LOAN_NUM' => $loan_number ?? '',
+                                        'ENTRY_DATE' => now(),
+                                        'TITLE' => 'Angsuran Ke-' . $res['angsuran_ke'],
+                                        'ORIGINAL_AMOUNT' => ($res['bayar_angsuran'] + $res['bayar_denda']),
+                                        'OS_AMOUNT' => $os_amount ?? 0,
+                                        'START_DATE' => $tgl_angsuran ?? '',
+                                        'END_DATE' => now(),
+                                        'USER_ID' => $request->user()->id ?? '',
+                                        'AUTH_BY' => $request->user()->fullname ?? '',
+                                        'AUTH_DATE' => now(),
+                                        'ARREARS_ID' => $res['id_arrear'] ?? '',
+                                        'BANK_NAME' => round(microtime(true) * 1000)
+                                    ]);
 
-                                if (($res['installment'] != 0)) {
-                                    $credit_schedule = M_CreditSchedule::where([
+                                    if (($res['installment'] != 0)) {
+                                        $credit_schedule = M_CreditSchedule::where([
+                                            'LOAN_NUMBER' => $loan_number,
+                                            'PAYMENT_DATE' => $tgl_angsuran
+                                        ])->where(function ($query) {
+                                            $query->where('PAID_FLAG', '!=', 'PAID')
+                                                ->orWhereNull('PAID_FLAG');
+                                        })->first();
+
+                                        $credit_schedule->update(['PAID_FLAG' => '']);
+                                    }
+
+                                    $today = date('Y-m-d');
+                                    $daysDiff = (strtotime($today) - strtotime($tgl_angsuran)) / (60 * 60 * 24);
+                                    $pastDuePenalty = $res['installment'] ?? 0 * ($daysDiff * 0.005);
+
+                                    M_Arrears::where([
                                         'LOAN_NUMBER' => $loan_number,
-                                        'PAYMENT_DATE' => $tgl_angsuran
-                                    ])->where(function ($query) {
-                                        $query->where('PAID_FLAG', '!=', 'PAID')
-                                            ->orWhereNull('PAID_FLAG');
-                                    })->first();
-
-                                    $credit_schedule->update(['PAID_FLAG' => '']);
+                                        'START_DATE' => $tgl_angsuran
+                                    ])->update([
+                                        'STATUS_REC' => 'A',
+                                        'PAST_DUE_PENALTY' => $pastDuePenalty ?? 0,
+                                        'UPDATED_AT' => Carbon::now()
+                                    ]);
                                 }
-
-                                $today = date('Y-m-d');
-                                $daysDiff = (strtotime($today) - strtotime($tgl_angsuran)) / (60 * 60 * 24);
-                                $pastDuePenalty = $res['installment'] ?? 0 * ($daysDiff * 0.005);
-
-                                M_Arrears::where([
-                                    'LOAN_NUMBER' => $loan_number,
-                                    'START_DATE' => $tgl_angsuran
-                                ])->update([
-                                    'STATUS_REC' => 'A',
-                                    'PAST_DUE_PENALTY' => $pastDuePenalty ?? 0,
-                                    'UPDATED_AT' => Carbon::now()
-                                ]);
                             }
+
+                            $kwitansi->update(['STTS_PAYMENT' => 'CANCEL']);
                         }
 
-                        $kwitansi->update(['STTS_PAYMENT' => 'CANCEL']);
+                        $this->taskslogging->create($request, $type . " Ditolak", 'payment', $getInvoice, $getFlag, $request->keterangan);
                     }
                 }
 
-                if ($kwitansi->PAYMENT_TYPE === 'pelunasan') {
-                    $type = "Pelunasan";
-                } else {
-                    $type = "Angsuran";
-                }
+                // $data_approval = [
+                //     'PAYMENT_ID' => $request->no_invoice,
+                //     'ONCHARGE_APPRVL' => $request->flag,
+                //     'ONCHARGE_PERSON' => $request->user()->id,
+                //     'ONCHARGE_TIME' => Carbon::now(),
+                //     'ONCHARGE_DESCR' => $request->keterangan,
+                //     'APPROVAL_RESULT' => $request->flag == 'yes' ? 'PAID' : 'CANCEL'
+                // ];
 
-                if ($request->flag == 'yes') {
-                    $title = $type . " Disetujui";
-                } else {
-                    $title = $type . " Ditolak";
-                }
-
-                $this->taskslogging->create($request, $title, 'payment', $getInvoice, $getFlag, $request->keterangan);
-
-                $data_approval = [
-                    'PAYMENT_ID' => $request->no_invoice,
-                    'ONCHARGE_APPRVL' => $request->flag,
-                    'ONCHARGE_PERSON' => $request->user()->id,
-                    'ONCHARGE_TIME' => Carbon::now(),
-                    'ONCHARGE_DESCR' => $request->keterangan,
-                    'APPROVAL_RESULT' => $request->flag == 'yes' ? 'PAID' : 'CANCEL'
-                ];
-
-                M_PaymentApproval::create($data_approval);
+                // M_PaymentApproval::create($data_approval);
             }
 
             DB::commit();
@@ -876,7 +877,7 @@ class PaymentController extends Controller
             $message = "A/n " . $check->NAMA . " Nominal : " . number_format($check->JUMLAH_UANG) . " Keterangan Cancel (" . $request->descr . ")";
             $this->taskslogging->create($request, $setTitle, 'payment_cancel', $no_invoice, 'WAITING CANCEL', "Menunggu " . $setTitle . ' ' . $message);
 
-            $checkPaymentLog = M_PaymentCancelLog::where('INVOICE_NUMBER', $no_invoice)->first();
+            // $checkPaymentLog = M_PaymentCancelLog::where('INVOICE_NUMBER', $no_invoice)->first();
 
             // if (!$checkPaymentLog) {
             //     M_PaymentCancelLog::create([

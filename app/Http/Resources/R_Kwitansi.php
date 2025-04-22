@@ -72,7 +72,6 @@ class R_Kwitansi extends JsonResource
                 ->get();
         }
 
-
         $branch = M_Branch::where('ID', $this->BRANCH_CODE)->first();
 
         $attachment = M_PaymentAttachment::where('payment_id', $this->PAYMENT_ID)
@@ -85,6 +84,14 @@ class R_Kwitansi extends JsonResource
         $logPrint = M_LogPrint::where('ID', $this->NO_TRANSAKSI)->first();
 
         $getUser = User::find($this->CREATED_BY);
+
+        $getCurrentPosition = $getUser->position;
+        $setPositionAvailable  = ['mcf', 'kolektor'];
+        $checkposition = in_array(strtolower($getCurrentPosition), $setPositionAvailable);
+
+        $setMtdePembayaran = $this->METODE_PEMBAYARAN;
+
+        $setSttsPayment = $checkposition && ($setMtdePembayaran === 'cash') ? 'PAID' : $this->STATUS_PAYMENT;
 
         return [
             "id" => $this->ID,
@@ -103,7 +110,7 @@ class R_Kwitansi extends JsonResource
             "kelurahan" => $this->KELURAHAN,
             "kecamatan" => $this->KECAMATAN,
             "tgl_transaksi" => Carbon::parse($this->CREATED_AT)->setTimezone('Asia/Jakarta')->format('d-m-Y H:i:s'),
-            "payment_method" => $this->METODE_PEMBAYARAN,
+            "payment_method" => $setMtdePembayaran,
             "nama_bank" => $this->NAMA_BANK,
             "no_rekening" => $this->NO_REKENING,
             "bukti_transfer" => $this->BUKTI_TRANSFER,
@@ -118,7 +125,7 @@ class R_Kwitansi extends JsonResource
             "terbilang" => bilangan($this->TOTAL_BAYAR) ?? null,
             'attachment' => $attachment,
             'struktur' => $details ?? [],
-            "STATUS" => $this->STTS_PAYMENT ?? null,
+            "STATUS" => $setSttsPayment ?? null,
             "created_by" => $getUser ? $getUser->fullname ?? $getUser->username : $this->CREATED_BY ?? '',
             "position" =>  $getUser->position ?? '',
             "print_ke" =>  intval($logPrint->COUNT ?? 0),
