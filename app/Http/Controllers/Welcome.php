@@ -51,7 +51,7 @@ class Welcome extends Controller
     public function index(Request $request)
     {
 
-        $currentDate = '2025-04-21';
+        $currentDate = '2025-04-26';
         // $currentDate = now();
         $date = Carbon::parse($currentDate);
 
@@ -63,9 +63,9 @@ class Welcome extends Controller
         }
 
         $setDate = $date->format('Y-m-d');
-        $endDate = Carbon::parse($setDate)->addMonths(intval(6))->format('Y-m-d');
+        // $endDate = Carbon::parse($setDate)->addMonths(intval(6))->format('Y-m-d');
 
-        return response()->json($endDate);
+        return response()->json($setDate);
         die;
 
         if ($request->bearerToken()) {
