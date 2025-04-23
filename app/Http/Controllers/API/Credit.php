@@ -125,6 +125,22 @@ class Credit extends Controller
         return $setDate;
     }
 
+    private function setCreatedAt($date)
+    {
+        $date = Carbon::parse($date);
+
+        $day = $date->day;
+
+        if ($day >= 26 && $day <= 31) {
+            $newDay = $day - 24;
+            $date->addMonthsNoOverflow(1)->day = $newDay;
+        }
+
+        $setDate = $date->format('Y-m-d');
+
+        return $setDate;
+    }
+
     private function buildData($request, $data)
     {
         $cr_personal = M_CrPersonal::where('APPLICATION_ID', $data->ID)->first();
@@ -211,7 +227,7 @@ class Credit extends Controller
             "pokok_margin" => bilangan($principal) ?? null,
             "tenor" => bilangan($data->TENOR, false) ?? null,
             "credit_id" => !empty($check_exist) ? $check_exist->ID : null,
-            "tgl_awal_pk" => !empty($check_exist) ? Carbon::parse($check_exist->ENTRY_DATE)->format('Y-m-d') : parseDatetoYMD($setDategenerate),
+            "tgl_awal_pk" => !empty($check_exist) ? $this->setCreatedAt($check_exist->CREATED_AT) : parseDatetoYMD($setDategenerate),
             "tgl_akhir_pk" => !empty($check_exist) ? Carbon::parse($check_exist->CREATED_AT)->addMonths(intval($check_exist->PERIOD))->format('Y-m-d') : Carbon::parse($setDategenerate)->addMonths(intval($data->TENOR))->format('Y-m-d') ?? null,
             "angsuran" => bilangan($angsuran) ?? null,
             "opt_periode" => $data->OPT_PERIODE ?? null,
