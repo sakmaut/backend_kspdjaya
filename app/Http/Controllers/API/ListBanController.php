@@ -165,6 +165,50 @@ class ListBanController extends Controller
                             END,
                             b.USER_ID
                         UNION ALL
+                        SELECT
+                             CASE
+                                WHEN a.ACC_KEYS LIKE '%BAYAR PELUNASAN PINALTY%' THEN 'BAYAR PELUNASAN PINALTY'
+                                ELSE ''
+                            END AS JENIS,
+                            b.BRANCH AS BRANCH,
+                            d.ID AS BRANCH_ID,
+                            d.NAME AS nama_cabang,
+                            CASE
+                                WHEN b.PAYMENT_METHOD = 'transfer' THEN DATE_FORMAT(b.AUTH_DATE, '%Y-%m-%d')
+                                ELSE DATE_FORMAT(b.ENTRY_DATE, '%Y-%m-%d')
+                            END AS ENTRY_DATE,
+                            ROUND(SUM(a.ORIGINAL_AMOUNT),2) AS ORIGINAL_AMOUNT,
+                            b.LOAN_NUM,
+                            b.PAYMENT_METHOD,
+                            b.INVOICE AS no_invoice,
+                            '' AS angsuran_ke,
+                            b.USER_ID AS user_id,
+                            '' AS admin_fee
+                        FROM
+                            payment_detail a
+                        INNER JOIN payment b ON b.ID = a.PAYMENT_ID
+                        LEFT JOIN arrears c ON c.ID = b.ARREARS_ID
+                        LEFT JOIN branch d ON d.CODE_NUMBER = b.BRANCH
+                        WHERE b.ACC_KEY = 'BAYAR PELUNASAN PINALTY'
+							  AND b.INVOICE = 'INV-KDG48-250300489'
+                              AND b.STTS_RCRD = 'PAID'
+                        GROUP BY
+                         	CASE
+                                WHEN a.ACC_KEYS LIKE '%BAYAR PELUNASAN PINALTY%' THEN 'BAYAR PELUNASAN PINALTY'
+                                ELSE ''
+                            END,
+                            b.BRANCH,
+                            d.ID,
+                            d.NAME,
+                            CASE
+                                WHEN b.PAYMENT_METHOD = 'transfer' THEN DATE_FORMAT(b.AUTH_DATE, '%Y-%m-%d')
+                                ELSE DATE_FORMAT(b.ENTRY_DATE, '%Y-%m-%d')
+                            END,
+                            b.LOAN_NUM,
+                            b.PAYMENT_METHOD,
+                            b.INVOICE,
+                            b.USER_ID
+                        UNION ALL
                             SELECT
                              CASE
                                 WHEN a.ACC_KEYS LIKE '%DENDA%' OR a.ACC_KEYS = 'BAYAR PELUNASAN PINALTY' THEN 'DENDA PELUNASAN'
