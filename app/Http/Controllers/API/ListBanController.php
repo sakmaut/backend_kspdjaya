@@ -193,7 +193,6 @@ class ListBanController extends Controller
                         LEFT JOIN arrears c ON c.ID = b.ARREARS_ID
                         LEFT JOIN branch d ON d.CODE_NUMBER = b.BRANCH
                         WHERE b.ACC_KEY = 'BAYAR PELUNASAN PINALTY'
-							  AND b.INVOICE = 'INV-KDG48-250300489'
                               AND b.STTS_RCRD = 'PAID'
                         GROUP BY
                          	CASE
