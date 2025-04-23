@@ -212,7 +212,7 @@ class ListBanController extends Controller
                              CASE
                                 WHEN a.ACC_KEYS LIKE '%BAYAR PELUNASAN PINALTY%' THEN 'PELUNASAN PINALTY'
                                 ELSE 'PELUNASAN'
-                            END
+                            END,
                             b.USER_ID
                         UNION ALL
                             SELECT
