@@ -244,7 +244,7 @@ class ListBanController extends Controller
                         LEFT JOIN branch d ON d.CODE_NUMBER = b.BRANCH
                         WHERE b.ACC_KEY like '%Pelunasan%'
                               AND b.STTS_RCRD = 'PAID'
-                              AND a.ACC_KEYS in ('BAYAR_POKOK','BAYAR_BUNGA','BAYAR_PINALTI','BAYAR PELUNASAN PINALTY','BAYAR_DENDA')
+                              AND a.ACC_KEYS in ('BAYAR_POKOK','BAYAR_BUNGA','BAYAR_DENDA')
                         GROUP BY
                          	CASE
                                 WHEN a.ACC_KEYS LIKE '%DENDA%' THEN 'DENDA PELUNASAN'
