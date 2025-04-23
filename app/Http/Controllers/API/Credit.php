@@ -211,7 +211,7 @@ class Credit extends Controller
             "pokok_margin" => bilangan($principal) ?? null,
             "tenor" => bilangan($data->TENOR, false) ?? null,
             "credit_id" => !empty($check_exist) ? $check_exist->ID : null,
-            "tgl_awal_pk" => !empty($check_exist) ? Carbon::parse($check_exist->ENTRY_DATE)->format('Y-m-d') : parseDatetoYMD($set_tgl_awal),
+            "tgl_awal_pk" => !empty($check_exist) ? Carbon::parse($check_exist->ENTRY_DATE)->format('Y-m-d') : parseDatetoYMD($setDategenerate),
             "tgl_akhir_pk" => !empty($check_exist) ? Carbon::parse($check_exist->CREATED_AT)->addMonths(intval($check_exist->PERIOD))->format('Y-m-d') : Carbon::parse($setDategenerate)->addMonths(intval($data->TENOR))->format('Y-m-d') ?? null,
             "angsuran" => bilangan($angsuran) ?? null,
             "opt_periode" => $data->OPT_PERIODE ?? null,
@@ -398,29 +398,6 @@ class Credit extends Controller
         return $array_build;
     }
 
-    private function countKK($kk)
-    {
-        if ($kk === null) {
-            return 0;
-        }
-
-        $countKK = M_Customer::where('KK_NUMBER', '=', $kk)->count('id');
-
-        return $countKK;
-    }
-
-    private function cekPKBeforeCreated($kk)
-    {
-        $result = DB::table('credit as a')
-            ->join('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
-            ->select('a.STATUS', 'b.KK_NUMBER')
-            ->where('b.KK_NUMBER', '=', $kk)
-            ->where('a.STATUS', '=', 'A')
-            ->first();
-
-        return $result;
-    }
-
     private function insert_credit($SET_UUID, $request, $data, $loan_number, $installment_count, $cust_code)
     {
         $survey = M_CrSurvey::find($data->CR_SURVEY_ID);
@@ -439,7 +416,7 @@ class Credit extends Controller
             'ORDER_NUMBER' => $data->ORDER_NUMBER,
             'STATUS'  => 'A',
             'MCF_ID'  => $survey->created_by ?? null,
-            'ENTRY_DATE'  => $setDate ?? null,
+            'ENTRY_DATE'  => $setDategenerate ?? null,
             'END_DATE'  => Carbon::parse($setDategenerate)->addMonths(intval($data->TENOR))->format('Y-m-d') ?? null,
             'FIRST_ARR_DATE'  => null,
             'INSTALLMENT_DATE'  => $setDate ?? null,
