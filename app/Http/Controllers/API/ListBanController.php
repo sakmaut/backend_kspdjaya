@@ -37,7 +37,7 @@ class ListBanController extends Controller
                     $position = $item->position;
                     $amount = is_numeric($item->ORIGINAL_AMOUNT) ? floatval($item->ORIGINAL_AMOUNT) : 0;
 
-                    if ($item->JENIS != 'PENCAIRAN') {
+                    if ($item->JENIS != 'PENCAIRAN' && $item->JENIS != '') {
                         if ($amount != 0) {
 
                             if ($item->angsuran_ke == 'PEMBULATAN') {
@@ -46,8 +46,10 @@ class ListBanController extends Controller
                                 $keterangan = 'BAYAR ' . $item->angsuran_ke . ' (' . $item->no_invoice . ')';
                             }
 
+                            $setType = $item->JENIS == 'PELUNASAN' || $item->JENIS == 'PELUNASAN PINALTY' || $item->JENIS == 'PEMBULATAN PELUNASAN' || $item->JENIS == 'DENDA PELUNASAN' ? 'PELUNASAN' : 'CASH_IN';
+
                             $datas['datas'][] = [
-                                'type' => $item->JENIS == 'PELUNASAN' || $item->JENIS == 'PELUNASAN PINALTY' || $item->JENIS == 'PEMBULATAN PELUNASAN' || $item->JENIS == 'DENDA PELUNASAN' ? 'PELUNASAN' : 'CASH_IN',
+                                'type' => $setType,
                                 'no_invoice' => $no_invoice,
                                 'no_kontrak' => $loan_num,
                                 'tgl' => $tgl ?? '',
@@ -167,7 +169,7 @@ class ListBanController extends Controller
                         UNION ALL
                         SELECT
                              CASE
-                                WHEN a.ACC_KEYS LIKE '%BAYAR PELUNASAN PINALTY%' THEN 'PELUNASAN PINALTY'
+                                WHEN a.ACC_KEYS = 'BAYAR PELUNASAN PINALTY' THEN 'PELUNASAN PINALTY'
                                 ELSE ''
                             END AS JENIS,
                             b.BRANCH AS BRANCH,
@@ -182,7 +184,7 @@ class ListBanController extends Controller
                             b.PAYMENT_METHOD,
                             b.INVOICE AS no_invoice,
                             CASE
-                                WHEN a.ACC_KEYS LIKE '%BAYAR PELUNASAN PINALTY%' THEN 'PELUNASAN PINALTY'
+                                WHEN a.ACC_KEYS = 'BAYAR PELUNASAN PINALTY' THEN 'PELUNASAN PINALTY'
                                 ELSE 'PELUNASAN'
                             END AS angsuran_ke,
                             b.USER_ID AS user_id,
@@ -196,7 +198,7 @@ class ListBanController extends Controller
                               AND b.STTS_RCRD = 'PAID'
                         GROUP BY
                          	CASE
-                                WHEN a.ACC_KEYS LIKE '%BAYAR PELUNASAN PINALTY%' THEN 'PELUNASAN PINALTY'
+                                WHEN a.ACC_KEYS = 'BAYAR PELUNASAN PINALTY' THEN 'PELUNASAN PINALTY'
                                 ELSE ''
                             END,
                             b.BRANCH,
@@ -210,7 +212,7 @@ class ListBanController extends Controller
                             b.PAYMENT_METHOD,
                             b.INVOICE,
                              CASE
-                                WHEN a.ACC_KEYS LIKE '%BAYAR PELUNASAN PINALTY%' THEN 'PELUNASAN PINALTY'
+                                WHEN a.ACC_KEYS = 'BAYAR PELUNASAN PINALTY' THEN 'PELUNASAN PINALTY'
                                 ELSE 'PELUNASAN'
                             END,
                             b.USER_ID
