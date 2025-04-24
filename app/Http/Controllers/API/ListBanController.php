@@ -817,6 +817,7 @@ class ListBanController extends Controller
             $dateFrom = $request->dari;
             $getBranch = $request->cabang_id;
             $getPosition = $request->user()->position;
+            $getUserName = $request->user()->fullname;
 
             $getBranchIdUser = $request->user()->branch_id;
             $getNow = date('mY', strtotime(now()));
@@ -1050,7 +1051,8 @@ class ListBanController extends Controller
                                             WHERE job_name = 'LISBAN'");
 
                 if (!empty($checkRunSp) && $checkRunSp[0]->execute_sp === 'run') {
-                    DB::select('CALL lisban_berjalan(?)', [$getNow]);
+                    DB::select('CALL lisban_berjalan(?,?)', [$getNow, $getUserName]);
+                    ActivityLogger::logActivity($request, 'lisban_berjalan executed', 200);
                 }
 
                 $query = $query2;
@@ -1064,7 +1066,7 @@ class ListBanController extends Controller
                                             WHERE job_name = 'LISBAN_BELOM_MOVEON'");
 
                 if (!empty($checkRunSp) && $checkRunSp[0]->execute_sp === 'run') {
-                    DB::select('CALL lisban_masa_lalu(?)', [$dateFrom]);
+                    DB::select('CALL lisban_masa_lalu(?,?)', [$dateFrom, $getUserName]);
                 }
 
                 $query = $query1;
@@ -1087,7 +1089,7 @@ class ListBanController extends Controller
             $results = DB::select($query);
 
             $jobName = ($getNow == $dateFrom) ? 'LISBAN' : 'LISBAN_BELOM_MOVEON';
-            DB::select("UPDATE job_on_progress SET job_status = 0 WHERE job_name = ?", [$jobName]);
+            DB::select("UPDATE job_on_progress SET job_status = 0, last_user='' WHERE job_name = ?", [$jobName]);
 
             $build = [];
             foreach ($results as $result) {
