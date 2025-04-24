@@ -8,6 +8,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class ListBanController extends Controller
@@ -99,17 +100,22 @@ class ListBanController extends Controller
 
     private function queryArusKas($cabangId, $request)
     {
-        $query = "SELECT * FROM lkbh_report_view WHERE ENTRY_DATE BETWEEN '$request->dari' AND '$request->sampai' ";
+        $dari = $request->dari;
+        $sampai = $request->sampai;
 
-        if (!empty($cabangId) && $cabangId != 'SEMUA CABANG') {
-            $query .= " AND BRANCH_ID = '" . $cabangId . "'";
-        }
+        $cacheKey = "arus_kas_{$dari}_{$sampai}_" . ($cabangId ?? 'ALL');
 
-        $query .= "ORDER BY ENTRY_DATE,position,LOAN_NUM,no_invoice,angsuran_ke ASC";
+        return Cache::remember($cacheKey, 180, function () use ($dari, $sampai, $cabangId) {
 
-        $result = DB::select($query);
+            $query = DB::table('lkbh_report_view')->whereBetween('ENTRY_DATE', [$dari, $sampai]);
 
-        return $result;
+            if (!empty($cabangId) && $cabangId !== 'SEMUA CABANG') {
+                $query->where('BRANCH_ID', $cabangId);
+            }
+
+            return $query->orderByRaw('ENTRY_DATE, position, LOAN_NUM, no_invoice, angsuran_ke')
+                ->get();
+        });
     }
 
     public function listBanTest(Request $request)
