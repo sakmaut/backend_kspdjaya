@@ -37,7 +37,7 @@ class ListBanController extends Controller
                     $position = $item->position;
                     $amount = is_numeric($item->ORIGINAL_AMOUNT) ? floatval($item->ORIGINAL_AMOUNT) : 0;
 
-                    if ($item->JENIS != 'PENCAIRAN') {
+                    if ($item->JENIS != 'PENCAIRAN' && $item->JENIS != '') {
                         if ($amount != 0) {
 
                             if ($item->angsuran_ke == 'PEMBULATAN') {
@@ -46,8 +46,10 @@ class ListBanController extends Controller
                                 $keterangan = 'BAYAR ' . $item->angsuran_ke . ' (' . $item->no_invoice . ')';
                             }
 
+                            $setType = $item->JENIS == 'PELUNASAN' || $item->JENIS == 'PELUNASAN PINALTY' || $item->JENIS == 'PEMBULATAN PELUNASAN' || $item->JENIS == 'DENDA PELUNASAN' ? 'PELUNASAN' : 'CASH_IN';
+
                             $datas['datas'][] = [
-                                'type' => $item->JENIS == 'PELUNASAN' || $item->JENIS == 'PELUNASAN PINALTY' || $item->JENIS == 'PEMBULATAN PELUNASAN' || $item->JENIS == 'DENDA PELUNASAN' ? 'PELUNASAN' : 'CASH_IN',
+                                'type' => $setType,
                                 'no_invoice' => $no_invoice,
                                 'no_kontrak' => $loan_num,
                                 'tgl' => $tgl ?? '',
