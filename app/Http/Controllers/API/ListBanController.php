@@ -299,7 +299,7 @@ class ListBanController extends Controller
         $query = "SELECT * FROM lkbh_report WHERE ENTRY_DATE BETWEEN '$request->dari' AND '$request->sampai' ";
 
         if (!empty($cabangId) && $cabangId != 'SEMUA CABANG') {
-            $query .= " AND b.BRANCH_ID = '" . $cabangId . "'";
+            $query .= " AND BRANCH_ID = '" . $cabangId . "'";
         }
 
         $query .= "ORDER BY b.ENTRY_DATE,u.position,b.LOAN_NUM,b.no_invoice,b.angsuran_ke ASC";
