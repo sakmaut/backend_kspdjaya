@@ -78,6 +78,11 @@ class M_CrSurvey extends Model
         return $this->hasMany(M_CrGuaranteVehicle::class, 'CR_SURVEY_ID');
     }
 
+    public function cr_guarante_sertification()
+    {
+        return $this->hasMany(M_CrGuaranteSertification::class, 'CR_SURVEY_ID');
+    }
+
     public function cr_survey_document()
     {
         return $this->hasMany(M_CrSurveyDocument::class, 'CR_SURVEY_ID');

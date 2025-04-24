@@ -472,3 +472,41 @@ if (!function_exists('setPaymentDate')) {
         return date('Y-m-d', $newDate);
     }
 }
+
+if (!function_exists('getAttachments')) {
+    function getAttachments($survey_id, $data = [], $header_id = null)
+    {
+        if (empty($data)) {
+            return collect();
+        }
+
+        $query = DB::table('cr_survey_document AS csd')
+            ->select('*')
+            ->whereIn('TYPE', $data)
+            ->where('CR_SURVEY_ID', $survey_id);
+
+        if ($header_id !== null) {
+            $query->where('COUNTER_ID', $header_id);
+        }
+
+        $documents = $query->whereIn(
+            ['TYPE', 'TIMEMILISECOND'],
+            function ($subquery) use ($survey_id, $data, $header_id) {
+                $subquery->select('TYPE', DB::raw('MAX(TIMEMILISECOND)'))
+                    ->from('cr_survey_document')
+                    ->whereIn('TYPE', $data)
+                    ->where('CR_SURVEY_ID', $survey_id);
+
+                if ($header_id !== null) {
+                    $subquery->where('COUNTER_ID', $header_id);
+                }
+
+                $subquery->groupBy('TYPE');
+            }
+        )
+            ->orderBy('TIMEMILISECOND', 'DESC')
+            ->get();
+
+        return $documents;
+    }
+}

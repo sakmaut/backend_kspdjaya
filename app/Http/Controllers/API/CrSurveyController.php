@@ -6,6 +6,7 @@ use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Repositories\Survey\SurveyRepository;
 use App\Http\Resources\R_CrSurvey;
+use App\Http\Resources\R_CrSurveyDetail;
 use App\Models\M_CrGuaranteSertification;
 use App\Models\M_CrGuaranteVehicle;
 use App\Models\M_CrSurvey;
@@ -56,11 +57,19 @@ class CrSurveyController extends Controller
     public function show(Request $request, $id)
     {
         try {
-            $checkSurveyExist = $this->CrSurvey->where('id', $id)->whereNull('deleted_at')->first();
+            $checkSurveyExist = $this->CrSurvey
+                // ->with(['cr_guarante_vehicle', 'cr_guarante_sertification', 'survey_approval'])
+                ->where('id', $id)
+                ->whereNull('deleted_at')->first();
 
             if (!$checkSurveyExist) {
                 throw new Exception("Survey Id Is Exist", 409);
             }
+
+            // $dto = new R_CrSurveyDetail($checkSurveyExist);
+
+            // return response()->json($dto, 200);
+            // die;
 
             return response()->json(['message' => 'OK', 'response' => $this->resourceDetail($checkSurveyExist)], 200);
         } catch (Exception $e) {
