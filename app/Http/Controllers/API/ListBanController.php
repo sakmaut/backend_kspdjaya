@@ -105,7 +105,7 @@ class ListBanController extends Controller
 
         $cacheKey = "arus_kas_{$dari}_{$sampai}_" . ($cabangId ?? 'ALL');
 
-        return Cache::remember($cacheKey, 180, function () use ($dari, $sampai, $cabangId) {
+        $cache =  Cache::remember($cacheKey, 180, function () use ($dari, $sampai, $cabangId) {
 
             $query = DB::table('lkbh_report_view')->whereBetween('ENTRY_DATE', [$dari, $sampai]);
 
@@ -113,9 +113,12 @@ class ListBanController extends Controller
                 $query->where('BRANCH_ID', $cabangId);
             }
 
-            return $query->orderByRaw('ENTRY_DATE, position, LOAN_NUM, no_invoice, angsuran_ke')
-                ->get();
+            $results = $query->orderByRaw('ENTRY_DATE, position, LOAN_NUM, no_invoice, angsuran_ke')->get();
+
+            return $results;
         });
+
+        return $cache;
     }
 
     public function listBanTest(Request $request)
