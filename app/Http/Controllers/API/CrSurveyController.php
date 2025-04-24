@@ -48,29 +48,23 @@ class CrSurveyController extends Controller
             $dto = R_CrSurvey::collection($getListSurveyByMcf);
 
             return response()->json(['response' => $dto], 200);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->log->logError($e, $request);
         }
     }
 
-    public function show(Request $req, $id)
+    public function show(Request $request, $id)
     {
         try {
-            $check = $this->CrSurvey->where('id', $id)->whereNull('deleted_at')->firstOrFail();
+            $checkSurveyExist = $this->CrSurvey->where('id', $id)->whereNull('deleted_at')->first();
 
-            // $getListSurveyByMcf = $this->SurveyRepository->getDetailSurvey($id);
+            if (!$checkSurveyExist) {
+                throw new Exception("Survey Id Is Exist", 409);
+            }
 
-            // $dto = R_SurveyDetail::collection($getListSurveyByMcf);
-
-            // return response()->json($dto, 200);
-
-            return response()->json(['message' => 'OK', 'response' => $this->resourceDetail($check)], 200);
-        } catch (ModelNotFoundException $e) {
-            ActivityLogger::logActivity($req, 'Data Not Found', 404);
-            return response()->json(['message' => 'Data Not Found', "status" => 404], 404);
-        } catch (\Exception $e) {
-            ActivityLogger::logActivity($req, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+            return response()->json(['message' => 'OK', 'response' => $this->resourceDetail($checkSurveyExist)], 200);
+        } catch (Exception $e) {
+            return $this->log->logError($e, $request);
         }
     }
 
@@ -86,6 +80,7 @@ class CrSurveyController extends Controller
             $query->whereNull('DELETED_AT')
                 ->orWhere('DELETED_AT', '');
         })->get();
+
         $approval_detail = M_SurveyApproval::where('CR_SURVEY_ID', $survey_id)->first();
 
         $arrayList = [
