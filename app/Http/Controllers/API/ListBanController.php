@@ -167,59 +167,10 @@ class ListBanController extends Controller
                             END,
                             b.USER_ID
                         UNION ALL
-                        SELECT
-                             CASE
-                                WHEN a.ACC_KEYS = 'BAYAR PELUNASAN PINALTY' THEN 'PELUNASAN PINALTY'
-                                ELSE ''
-                            END AS JENIS,
-                            b.BRANCH AS BRANCH,
-                            d.ID AS BRANCH_ID,
-                            d.NAME AS nama_cabang,
-                            CASE
-                                WHEN b.PAYMENT_METHOD = 'transfer' THEN DATE_FORMAT(b.AUTH_DATE, '%Y-%m-%d')
-                                ELSE DATE_FORMAT(b.ENTRY_DATE, '%Y-%m-%d')
-                            END AS ENTRY_DATE,
-                            ROUND(SUM(a.ORIGINAL_AMOUNT),2) AS ORIGINAL_AMOUNT,
-                            b.LOAN_NUM,
-                            b.PAYMENT_METHOD,
-                            b.INVOICE AS no_invoice,
-                            CASE
-                                WHEN a.ACC_KEYS = 'BAYAR PELUNASAN PINALTY' THEN 'PELUNASAN PINALTY'
-                                ELSE 'PELUNASAN'
-                            END AS angsuran_ke,
-                            b.USER_ID AS user_id,
-                            '' AS admin_fee
-                        FROM
-                            payment_detail a
-                        INNER JOIN payment b ON b.ID = a.PAYMENT_ID
-                        LEFT JOIN arrears c ON c.ID = b.ARREARS_ID
-                        LEFT JOIN branch d ON d.CODE_NUMBER = b.BRANCH
-                        WHERE b.ACC_KEY = 'BAYAR PELUNASAN PINALTY'
-                              AND b.STTS_RCRD = 'PAID'
-                        GROUP BY
-                         	CASE
-                                WHEN a.ACC_KEYS = 'BAYAR PELUNASAN PINALTY' THEN 'PELUNASAN PINALTY'
-                                ELSE ''
-                            END,
-                            b.BRANCH,
-                            d.ID,
-                            d.NAME,
-                            CASE
-                                WHEN b.PAYMENT_METHOD = 'transfer' THEN DATE_FORMAT(b.AUTH_DATE, '%Y-%m-%d')
-                                ELSE DATE_FORMAT(b.ENTRY_DATE, '%Y-%m-%d')
-                            END,
-                            b.LOAN_NUM,
-                            b.PAYMENT_METHOD,
-                            b.INVOICE,
-                             CASE
-                                WHEN a.ACC_KEYS = 'BAYAR PELUNASAN PINALTY' THEN 'PELUNASAN PINALTY'
-                                ELSE 'PELUNASAN'
-                            END,
-                            b.USER_ID
-                        UNION ALL
                             SELECT
-                             CASE
+                            CASE
                                 WHEN a.ACC_KEYS LIKE '%DENDA%' THEN 'DENDA PELUNASAN'
+								WHEN a.ACC_KEYS = 'BAYAR PELUNASAN PINALTY' THEN 'PELUNASAN PINALTY'
                                 ELSE 'PELUNASAN'
                             END AS JENIS,
                             b.BRANCH AS BRANCH,
@@ -233,8 +184,9 @@ class ListBanController extends Controller
                             b.LOAN_NUM,
                             b.PAYMENT_METHOD,
                             b.INVOICE AS no_invoice,
-                            CASE
+                           CASE
                                 WHEN a.ACC_KEYS LIKE '%DENDA%' THEN 'DENDA PELUNASAN'
+								WHEN a.ACC_KEYS = 'BAYAR PELUNASAN PINALTY' THEN 'PELUNASAN PINALTY'
                                 ELSE 'PELUNASAN'
                             END AS angsuran_ke,
                             b.USER_ID AS user_id,
@@ -246,10 +198,11 @@ class ListBanController extends Controller
                         LEFT JOIN branch d ON d.CODE_NUMBER = b.BRANCH
                         WHERE b.ACC_KEY like '%Pelunasan%'
                               AND b.STTS_RCRD = 'PAID'
-                              AND a.ACC_KEYS in ('BAYAR_POKOK','BAYAR_BUNGA','BAYAR_DENDA')
+                              AND a.ACC_KEYS in ('BAYAR_POKOK','BAYAR_BUNGA','BAYAR_DENDA','BAYAR PELUNASAN PINALTY')
                         GROUP BY
                          	CASE
                                 WHEN a.ACC_KEYS LIKE '%DENDA%' THEN 'DENDA PELUNASAN'
+								WHEN a.ACC_KEYS = 'BAYAR PELUNASAN PINALTY' THEN 'PELUNASAN PINALTY'
                                 ELSE 'PELUNASAN'
                             END,
                             b.BRANCH,
@@ -262,8 +215,9 @@ class ListBanController extends Controller
                             b.LOAN_NUM,
                             b.PAYMENT_METHOD,
                             b.INVOICE,
-                             CASE
+                            CASE
                                 WHEN a.ACC_KEYS LIKE '%DENDA%' THEN 'DENDA PELUNASAN'
+                                 WHEN a.ACC_KEYS = 'BAYAR PELUNASAN PINALTY' THEN 'PELUNASAN PINALTY'
                                 ELSE 'PELUNASAN'
                             END,
                             b.USER_ID
