@@ -1441,3 +1441,154 @@ if ($valBeforePrincipal < $getPrincipal) { $remaining_to_principal=$getPrincipal
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
+
+     private function resourceDetail($data)
+    {
+        $survey_id = $data->id;
+        $guarente_vehicle = M_CrGuaranteVehicle::where('CR_SURVEY_ID', $survey_id)->where(function ($query) {
+            $query->whereNull('DELETED_AT')
+                ->orWhere('DELETED_AT', '');
+        })->get();
+
+        $guarente_sertificat = M_CrGuaranteSertification::where('CR_SURVEY_ID', $survey_id)->where(function ($query) {
+            $query->whereNull('DELETED_AT')
+                ->orWhere('DELETED_AT', '');
+        })->get();
+
+        $approval_detail = M_SurveyApproval::where('CR_SURVEY_ID', $survey_id)->first();
+
+        $arrayList = [
+            'id' => $survey_id,
+            'jenis_angsuran' => $data->jenis_angsuran ?? '',
+            'data_order' => [
+                'tujuan_kredit' => $data->tujuan_kredit,
+                'plafond' => (int) $data->plafond,
+                'tenor' => strval($data->tenor),
+                'category' => $data->category,
+                'jenis_angsuran' => $data->jenis_angsuran
+            ],
+            'data_nasabah' => [
+                'nama' => $data->nama,
+                'tgl_lahir' => is_null($data->tgl_lahir) ? null : date('Y-m-d', strtotime($data->tgl_lahir)),
+                'no_hp' => $data->hp,
+                'no_ktp' => $data->ktp,
+                'no_kk' => $data->kk,
+                'alamat' => $data->alamat,
+                'rt' => $data->rt,
+                'rw' => $data->rw,
+                'provinsi' => $data->province,
+                'kota' => $data->city,
+                'kelurahan' => $data->kelurahan,
+                'kecamatan' => $data->kecamatan,
+                'kode_pos' => $data->zip_code
+            ],
+            'data_survey' => [
+                'usaha' => $data->usaha,
+                'sektor' => $data->sector,
+                'lama_bekerja' => $data->work_period,
+                'pengeluaran' => (int) $data->expenses,
+                'pendapatan_pribadi' => (int) $data->income_personal,
+                'pendapatan_pasangan' => (int) $data->income_spouse,
+                'pendapatan_lainnya' => (int) $data->income_other,
+                'tgl_survey' => is_null($data->visit_date) ? null : date('Y-m-d', strtotime($data->visit_date)),
+                'catatan_survey' => $data->survey_note,
+            ],
+            'jaminan' => [],
+            'prospect_approval' => [
+                'flag_approval' => $approval_detail->ONCHARGE_APPRVL,
+                'keterangan' => $approval_detail->ONCHARGE_DESCR,
+                'status' => $approval_detail->APPROVAL_RESULT,
+                'status_code' => $approval_detail->CODE
+            ],
+            "dokumen_indentitas" => $this->attachment($survey_id, "'ktp', 'kk', 'ktp_pasangan'"),
+            "dokumen_pendukung" => M_CrSurveyDocument::attachmentGetAll($survey_id, ['other']) ?? null,
+        ];
+
+        foreach ($guarente_vehicle as $list) {
+            $arrayList['jaminan'][] = [
+                "type" => "kendaraan",
+                'counter_id' => $list->HEADER_ID,
+                "atr" => [
+                    'id' => $list->ID,
+                    'status_jaminan' => null,
+                    'kondisi_jaminan' => $list->POSITION_FLAG,
+                    "tipe" => $list->TYPE,
+                    "merk" => $list->BRAND,
+                    "tahun" => $list->PRODUCTION_YEAR,
+                    "warna" => $list->COLOR,
+                    "atas_nama" => $list->ON_BEHALF,
+                    "no_polisi" => $list->POLICE_NUMBER,
+                    "no_rangka" => $list->CHASIS_NUMBER,
+                    "no_mesin" => $list->ENGINE_NUMBER,
+                    "no_bpkb" => $list->BPKB_NUMBER,
+                    "no_stnk" => $list->STNK_NUMBER,
+                    "tgl_stnk" => $list->STNK_VALID_DATE,
+                    "nilai" => (int) $list->VALUE,
+                    "document" => $this->attachment_guarante($survey_id, $list->HEADER_ID, "'no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri'")
+                ]
+            ];
+        }
+
+        foreach ($guarente_sertificat as $list) {
+            $arrayList['jaminan'][] = [
+                "type" => "sertifikat",
+                'counter_id' => $list->HEADER_ID,
+                "atr" => [
+                    'id' => $list->ID,
+                    'status_jaminan' => null,
+                    "no_sertifikat" => $list->NO_SERTIFIKAT,
+                    "status_kepemilikan" => $list->STATUS_KEPEMILIKAN,
+                    "imb" => $list->IMB,
+                    "luas_tanah" => $list->LUAS_TANAH,
+                    "luas_bangunan" => $list->LUAS_BANGUNAN,
+                    "lokasi" => $list->LOKASI,
+                    "provinsi" => $list->PROVINSI,
+                    "kab_kota" => $list->KAB_KOTA,
+                    "kec" => $list->KECAMATAN,
+                    "desa" => $list->DESA,
+                    "atas_nama" => $list->ATAS_NAMA,
+                    "nilai" => (int) $list->NILAI,
+                    "document" => M_CrSurveyDocument::attachmentSertifikat($survey_id, $list->HEADER_ID, ['sertifikat']) ?? null,
+                ]
+            ];
+        }
+
+        return $arrayList;
+    }
+
+    public function attachment($survey_id, $data)
+    {
+        $documents = DB::select(
+            "   SELECT *
+                FROM cr_survey_document AS csd
+                WHERE (TYPE, TIMEMILISECOND) IN (
+                    SELECT TYPE, MAX(TIMEMILISECOND)
+                    FROM cr_survey_document
+                    WHERE TYPE IN ($data)
+                        AND CR_SURVEY_ID = '$survey_id'
+                    GROUP BY TYPE
+                )
+                ORDER BY TIMEMILISECOND DESC"
+        );
+
+        return $documents;
+    }
+
+    public function attachment_guarante($survey_id, $header_id, $data)
+    {
+        $documents = DB::select(
+            "   SELECT *
+                FROM cr_survey_document AS csd
+                WHERE (TYPE, TIMEMILISECOND) IN (
+                    SELECT TYPE, MAX(TIMEMILISECOND)
+                    FROM cr_survey_document
+                    WHERE TYPE IN ($data)
+                        AND CR_SURVEY_ID = '$survey_id'
+                        AND COUNTER_ID = '$header_id'
+                    GROUP BY TYPE
+                )
+                ORDER BY TIMEMILISECOND DESC"
+        );
+
+        return $documents;
+    }
