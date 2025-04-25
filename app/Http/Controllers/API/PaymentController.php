@@ -144,7 +144,9 @@ class PaymentController extends Controller
                         ]);
                     }
 
-                    if ($check_method_payment && strtolower($request->bayar_dengan_diskon) != 'ya' && !$checkposition) {
+                    // if ($check_method_payment && strtolower($request->bayar_dengan_diskon) != 'ya' && !$checkposition) {
+
+                    if ($check_method_payment && strtolower($request->bayar_dengan_diskon) != 'ya') {
                         $this->processPaymentStructure($res, $request, $getCodeBranch, $no_inv);
                     } else {
                         $tgl_angsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
@@ -177,9 +179,10 @@ class PaymentController extends Controller
                 $this->taskslogging->create($request, 'Pembayaran Transfer', 'payment', $no_inv, 'PENDING', "Transfer " . $message);
             } elseif (strtolower($request->bayar_dengan_diskon) == 'ya') {
                 $this->taskslogging->create($request, 'Permintaan Diskon', 'request_discount', $no_inv, 'PENDING', "Permintaan Diskon " . $message);
-            } elseif ($checkposition) {
-                $this->taskslogging->create($request, 'Pembayaran Cash (Mcf/Kolektor)', 'request_payment', $no_inv, 'PENDING', "Pembayaran Cash " . $message);
             }
+            // } elseif ($checkposition) {
+            //     $this->taskslogging->create($request, 'Pembayaran Cash (Mcf/Kolektor)', 'request_payment', $no_inv, 'PENDING', "Pembayaran Cash " . $message);
+            // }
 
             $dto = new R_Kwitansi($data);
 
@@ -425,7 +428,7 @@ class PaymentController extends Controller
         $check_arrears = M_Arrears::where([
             'LOAN_NUMBER' => $loan_number,
             'START_DATE' => $tgl_angsuran
-        ])->orderBy('START_DATE', 'ASC')->first();
+        ])->first();
 
         $byr_angsuran = floatval($res['bayar_angsuran']);
         $bayar_denda = floatval($res['bayar_denda']);
@@ -876,19 +879,6 @@ class PaymentController extends Controller
             $message = "A/n " . $check->NAMA . " Nominal : " . number_format($check->JUMLAH_UANG) . " Keterangan Cancel (" . $request->descr . ")";
             $this->taskslogging->create($request, $setTitle, 'payment_cancel', $no_invoice, 'WAITING CANCEL', "Menunggu " . $setTitle . ' ' . $message);
 
-            // $checkPaymentLog = M_PaymentCancelLog::where('INVOICE_NUMBER', $no_invoice)->first();
-
-            // if (!$checkPaymentLog) {
-            //     M_PaymentCancelLog::create([
-            //         'INVOICE_NUMBER' => $no_invoice ?? '',
-            //         'REQUEST_BY' => $request->user()->id ?? '',
-            //         'REQUEST_BRANCH' => $request->user()->branch_id ?? '',
-            //         'REQUEST_POSITION' => $request->user()->position ?? '',
-            //         'REQUEST_DESCR' => $request->descr ?? '',
-            //         'REQUEST_DATE' => Carbon::now()
-            //     ]);
-            // }
-
             if (strtolower($request->user()->position) == 'ho' && isset($flag) && !empty($flag)) {
 
                 if ($check->PAYMENT_TYPE === 'pelunasan') {
@@ -1009,6 +999,8 @@ class PaymentController extends Controller
                     ]);
                 }
             }
+        } else {
+            $check->update(['STTS_PAYMENT' => 'PAID']);
         }
     }
 
