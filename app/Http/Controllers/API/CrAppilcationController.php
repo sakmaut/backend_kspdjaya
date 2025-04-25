@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\R_CrProspect;
 use App\Models\M_ApplicationApproval;
@@ -32,24 +33,30 @@ use Ramsey\Uuid\Uuid;
 
 class CrAppilcationController extends Controller
 {
+    protected $log;
+
+    public function __construct(ExceptionHandling $log)
+    {
+        $this->log = $log;
+    }
+
     public function index(Request $request)
     {
         try {
             $data = M_CrApplication::fpkListData($request);
-            return response()->json(['message' => true, "status" => 200, 'response' => $data], 200);
-        } catch (\Exception $e) {
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+            return response()->json(['response' => $data], 200);
+        } catch (Exception $e) {
+            return $this->log->logError($e, $request);
         }
     }
 
-    public function showAdmins(Request $req)
+    public function showAdmins(Request $request)
     {
         try {
-            $branchId = $req->user()->branch_id;
-            $no_order = $req->query('no_order');
-            $nama = $req->query('nama');
-            $tgl_order = $req->query('tgl_order');
+            $branchId = $request->user()->branch_id;
+            $no_order = $request->query('no_order');
+            $nama = $request->query('nama');
+            $tgl_order = $request->query('tgl_order');
 
             $data = M_CrSurvey::select(
                 'cr_survey.id as id',
@@ -93,14 +100,9 @@ class CrAppilcationController extends Controller
 
             $dto = R_CrProspect::collection($results);
 
-            ActivityLogger::logActivity($req, "Success", 200);
             return response()->json(['message' => true, "status" => 200, 'response' => $dto], 200);
-        } catch (QueryException $e) {
-            ActivityLogger::logActivity($req, $e->getMessage(), 409);
-            return response()->json(['message' => $e->getMessage(), "status" => 409], 409);
-        } catch (\Exception $e) {
-            ActivityLogger::logActivity($req, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+        } catch (Exception $e) {
+            return $this->log->logError($e, $request);
         }
     }
 
@@ -145,7 +147,7 @@ class CrAppilcationController extends Controller
 
             $detail_prospect = M_CrSurvey::where('id', $surveyID)->first();
 
-            return response()->json(['message' => 'OK', "status" => 200, 'response' =>  $this->resourceDetail($detail_prospect, $check_application_id)], 200);
+            return response()->json(['response' =>  $this->resourceDetail($detail_prospect, $check_application_id)], 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
@@ -946,6 +948,16 @@ class CrAppilcationController extends Controller
         $surveyId = $data->id;
         $setApplicationId = $application->ID;
 
+        $cr_survey = M_CrSurvey::where('id', $surveyId)->first();
+        $applicationDetail = M_CrApplication::where('ID', $setApplicationId)->first();
+        $cr_personal = M_CrPersonal::where('APPLICATION_ID', $setApplicationId)->first();
+        $cr_personal_extra = M_CrPersonalExtra::where('APPLICATION_ID', $setApplicationId)->first();
+        $cr_oder = M_CrOrder::where('APPLICATION_ID', $setApplicationId)->first();
+        $cr_guarantor = M_CrApplicationGuarantor::where('APPLICATION_ID', $setApplicationId)->get();
+        $cr_spouse = M_CrApplicationSpouse::where('APPLICATION_ID', $setApplicationId)->first();
+        $approval = M_ApplicationApproval::where('cr_application_id', $setApplicationId)->first();
+        $check_exist = M_Credit::where('ORDER_NUMBER', $application->ORDER_NUMBER)->first();
+
         $guarente_vehicle = M_CrGuaranteVehicle::where('CR_SURVEY_ID', $surveyId)->where(function ($query) {
             $query->whereNull('DELETED_AT')
                 ->orWhere('DELETED_AT', '');
@@ -955,17 +967,6 @@ class CrAppilcationController extends Controller
             $query->whereNull('DELETED_AT')
                 ->orWhere('DELETED_AT', '');
         })->get();
-
-        $approval_detail = M_ApplicationApproval::where('cr_application_id', $setApplicationId)->first();
-        $cr_personal = M_CrPersonal::where('APPLICATION_ID', $setApplicationId)->first();
-        $cr_personal_extra = M_CrPersonalExtra::where('APPLICATION_ID', $setApplicationId)->first();
-        $cr_oder = M_CrOrder::where('APPLICATION_ID', $setApplicationId)->first();
-        $applicationDetail = M_CrApplication::where('ID', $setApplicationId)->first();
-        $cr_survey = M_CrSurvey::where('id', $surveyId)->first();
-        $check_exist = M_Credit::where('ORDER_NUMBER', $application->ORDER_NUMBER)->first();
-        $cr_guarantor = M_CrApplicationGuarantor::where('APPLICATION_ID', $setApplicationId)->get();
-        $cr_spouse = M_CrApplicationSpouse::where('APPLICATION_ID', $setApplicationId)->first();
-        $approval = M_ApplicationApproval::where('cr_application_id', $setApplicationId)->first();
 
         $arrayList = [
             'id_application' => $setApplicationId,
@@ -1097,7 +1098,7 @@ class CrAppilcationController extends Controller
             ],
             'jaminan' => [],
             "prospect_approval" => [
-                "status" => $approval_detail->application_result == null ? $approval_detail->application_result : ""
+                "status" => $approval->application_result == null ? $approval->application_result : ""
             ],
             "dokumen_indentitas" => $this->attachment($surveyId, "'ktp', 'kk', 'ktp_pasangan','selfie'"),
             "dokumen_jaminan" => $this->attachment($surveyId, "'no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri'"),
