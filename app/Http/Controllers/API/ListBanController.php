@@ -390,7 +390,7 @@ class ListBanController extends Controller
 
             $query .= " ORDER BY b.NAME,cl.CREATED_AT ASC";
 
-            $results = DB::select($query1);
+            $results = DB::select($query);
 
             $jobName = $checkConditionDate ? 'LISBAN' : 'LISBAN_BELOM_MOVEON';
             DB::select("UPDATE job_on_progress SET job_status = 0, last_user='' WHERE job_name = ?", [$jobName]);
