@@ -345,7 +345,7 @@ class ListBanController extends Controller
 
             if ($checkConditionDate) {
 
-                print_r("sama");
+                $print = "sama";
 
                 // $checkRunSp = DB::select(" SELECT
                 //                                 CASE
@@ -363,7 +363,7 @@ class ListBanController extends Controller
                 // $query = $query2;
             } else {
 
-                print_r("tidak sama");
+                $print = "tidak";
 
                 // $checkRunSp = DB::select(" SELECT
                 //                                 CASE
@@ -379,7 +379,6 @@ class ListBanController extends Controller
 
                 // $query = $query1;
             }
-            die;
 
             // if ($getBranchIdUser != '8593fd4e-b54e-11ef-97d5-bc24112eb731') {
             //     $query .= " AND coalesce(st.arr_count,0) <= 8";
@@ -395,80 +394,81 @@ class ListBanController extends Controller
 
             // $query .= " ORDER BY b.NAME,cl.CREATED_AT ASC";
 
-            $results = DB::select($query1);
+            // $results = DB::select($query1);
 
-            $jobName = $checkConditionDate ? 'LISBAN' : 'LISBAN_BELOM_MOVEON';
-            DB::select("UPDATE job_on_progress SET job_status = 0, last_user='' WHERE job_name = ?", [$jobName]);
+            // $jobName = $checkConditionDate ? 'LISBAN' : 'LISBAN_BELOM_MOVEON';
+            // DB::select("UPDATE job_on_progress SET job_status = 0, last_user='' WHERE job_name = ?", [$jobName]);
 
-            $build = [];
-            foreach ($results as $result) {
+            // $build = [];
+            // foreach ($results as $result) {
 
-                $getUsers = User::find($result->SURVEYOR);
+            //     $getUsers = User::find($result->SURVEYOR);
 
-                $build[] = [
-                    "KODE CABANG" => $result->KODE ?? '',
-                    "NAMA CABANG" => $result->NAMA_CABANG ?? '',
-                    "NO KONTRAK" => is_numeric($result->NO_KONTRAK) ? intval($result->NO_KONTRAK ?? '') : $result->NO_KONTRAK ?? '',
-                    "NAMA PELANGGAN" => $result->NAMA_PELANGGAN ?? '',
-                    "TGL BOOKING" => isset($result->TGL_BOOKING) && !empty($result->TGL_BOOKING) ?  Carbon::parse($result->TGL_BOOKING)->format('d/n/Y') : '',
-                    "UB" => $result->UB ?? '',
-                    "PLATFORM" => $result->PLATFORM ?? '',
-                    "ALAMAT TAGIH" => $result->ALAMAT_TAGIH ?? '',
-                    "KECAMATAN" => $result->KODE_POST ?? '',
-                    "KELURAHAN" => $result->SUB_ZIP ?? '',
-                    "NO TELP" => $result->NO_TELP ?? '',
-                    "NO HP1" => $result->NO_HP ?? '',
-                    "NO HP2" => $result->NO_HP2 ?? '',
-                    "PEKERJAAN" => $result->PEKERJAAN ?? '',
-                    "SUPPLIER" => $result->supplier ?? '',
-                    "SURVEYOR" => $getUsers ? $getUsers->fullname ?? '' : $result->SURVEYOR ?? '',
-                    "CATT SURVEY" => $result->CATT_SURVEY ?? '',
-                    "PKK HUTANG" => intval($result->PKK_HUTANG) ?? 0,
-                    "JML ANGS" => $result->JUMLAH_ANGSURAN ?? '',
-                    "JRK ANGS" => intval($result->JARAK_ANGSURAN ?? ''),
-                    "PERIOD" => $result->PERIOD ?? '',
-                    "OUT PKK AWAL" => intval($result->OUTSTANDING) ?? 0,
-                    "OUT BNG AWAL" => intval($result->OS_BUNGA) ?? 0,
-                    "OVERDUE AWAL" => $result->OVERDUE_AWAL ?? 0,
-                    "AMBC PKK AWAL" => intval($result->AMBC_PKK_AWAL),
-                    "AMBC BNG AWAL" => intval($result->AMBC_BNG_AWAL),
-                    "AMBC TOTAL AWAL" => intval($result->AMBC_TOTAL_AWAL),
-                    "CYCLE AWAL" => $result->CYCLE_AWAL ?? '',
-                    "STS KONTRAK" => $result->STATUS_REC ?? '',
-                    "STS BEBAN" => $result->STATUS_BEBAN ?? '',
-                    "POLA BYR AWAL" => '',
-                    "OUTS PKK AKHIR" => intval($result->OS_PKK_AKHIR) ?? 0,
-                    "OUTS BNG AKHIR" => intval($result->OS_BNG_AKHIR) ?? 0,
-                    "OVERDUE AKHIR" => intval($result->OVERDUE_AKHIR) ?? 0,
-                    "ANGSURAN" => intval($result->INSTALLMENT) ?? 0,
-                    "ANGS KE" => intval($result->LAST_INST ?? ''),
-                    "TIPE ANGSURAN" => $result->pola_bayar ?? '',
-                    "JTH TEMPO AWAL" => $result->F_ARR_CR_SCHEDL == '0' || $result->F_ARR_CR_SCHEDL == '' || $result->F_ARR_CR_SCHEDL == 'null' ? '' :  Carbon::parse($result->F_ARR_CR_SCHEDL)->format('d/n/Y'),
-                    "JTH TEMPO AKHIR" => $result->curr_arr == '0' || $result->curr_arr == '' || $result->curr_arr == 'null' ? '' : Carbon::parse($result->curr_arr)->format('d/n/Y'),
-                    "TGL BAYAR" => $result->LAST_PAY == '0' || $result->LAST_PAY == '' || $result->LAST_PAY == 'null' ? '' : Carbon::parse($result->LAST_PAY)->format('d/n/Y'),
-                    "KOLEKTOR" => $result->COLLECTOR,
-                    "CARA BYR" => $result->cara_bayar,
-                    "AMBC PKK_AKHIR" => intval($result->AMBC_PKK_AKHIR) ?? 0,
-                    "AMBC BNG_AKHIR" => intval($result->AMBC_BNG_AKHIR) ?? 0,
-                    "AMBC TOTAL_AKHIR" => intval($result->AMBC_TOTAL_AKHIR) ?? 0,
-                    "AC PKK" => intval($result->AC_PKK),
-                    "AC BNG MRG" => intval($result->AC_BNG_MRG),
-                    "AC TOTAL" => intval($result->AC_TOTAL),
-                    "CYCLE AKHIR" => $result->CYCLE_AKHIR,
-                    "POLA BYR AKHIR" => '',
-                    "NAMA BRG" => $result->jenis_jaminan,
-                    "TIPE BRG" =>  $result->COLLATERAL ?? '',
-                    "NO POL" =>  $result->POLICE_NUMBER ?? '',
-                    "NO MESIN" =>  $result->ENGINE_NUMBER ?? '',
-                    "NO RANGKA" =>  $result->CHASIS_NUMBER ?? '',
-                    "TAHUN" =>  $result->PRODUCTION_YEAR ?? '',
-                    "NILAI PINJAMAN" => intval($result->NILAI_PINJAMAN) ?? 0,
-                    "ADMIN" =>  intval($result->TOTAL_ADMIN) ?? '',
-                    "CUST_ID" => is_numeric($result->CUST_CODE) ? intval($result->CUST_CODE ?? '') : $result->CUST_CODE ?? ''
-                ];
-            }
+            //     $build[] = [
+            //         "KODE CABANG" => $result->KODE ?? '',
+            //         "NAMA CABANG" => $result->NAMA_CABANG ?? '',
+            //         "NO KONTRAK" => is_numeric($result->NO_KONTRAK) ? intval($result->NO_KONTRAK ?? '') : $result->NO_KONTRAK ?? '',
+            //         "NAMA PELANGGAN" => $result->NAMA_PELANGGAN ?? '',
+            //         "TGL BOOKING" => isset($result->TGL_BOOKING) && !empty($result->TGL_BOOKING) ?  Carbon::parse($result->TGL_BOOKING)->format('d/n/Y') : '',
+            //         "UB" => $result->UB ?? '',
+            //         "PLATFORM" => $result->PLATFORM ?? '',
+            //         "ALAMAT TAGIH" => $result->ALAMAT_TAGIH ?? '',
+            //         "KECAMATAN" => $result->KODE_POST ?? '',
+            //         "KELURAHAN" => $result->SUB_ZIP ?? '',
+            //         "NO TELP" => $result->NO_TELP ?? '',
+            //         "NO HP1" => $result->NO_HP ?? '',
+            //         "NO HP2" => $result->NO_HP2 ?? '',
+            //         "PEKERJAAN" => $result->PEKERJAAN ?? '',
+            //         "SUPPLIER" => $result->supplier ?? '',
+            //         "SURVEYOR" => $getUsers ? $getUsers->fullname ?? '' : $result->SURVEYOR ?? '',
+            //         "CATT SURVEY" => $result->CATT_SURVEY ?? '',
+            //         "PKK HUTANG" => intval($result->PKK_HUTANG) ?? 0,
+            //         "JML ANGS" => $result->JUMLAH_ANGSURAN ?? '',
+            //         "JRK ANGS" => intval($result->JARAK_ANGSURAN ?? ''),
+            //         "PERIOD" => $result->PERIOD ?? '',
+            //         "OUT PKK AWAL" => intval($result->OUTSTANDING) ?? 0,
+            //         "OUT BNG AWAL" => intval($result->OS_BUNGA) ?? 0,
+            //         "OVERDUE AWAL" => $result->OVERDUE_AWAL ?? 0,
+            //         "AMBC PKK AWAL" => intval($result->AMBC_PKK_AWAL),
+            //         "AMBC BNG AWAL" => intval($result->AMBC_BNG_AWAL),
+            //         "AMBC TOTAL AWAL" => intval($result->AMBC_TOTAL_AWAL),
+            //         "CYCLE AWAL" => $result->CYCLE_AWAL ?? '',
+            //         "STS KONTRAK" => $result->STATUS_REC ?? '',
+            //         "STS BEBAN" => $result->STATUS_BEBAN ?? '',
+            //         "POLA BYR AWAL" => '',
+            //         "OUTS PKK AKHIR" => intval($result->OS_PKK_AKHIR) ?? 0,
+            //         "OUTS BNG AKHIR" => intval($result->OS_BNG_AKHIR) ?? 0,
+            //         "OVERDUE AKHIR" => intval($result->OVERDUE_AKHIR) ?? 0,
+            //         "ANGSURAN" => intval($result->INSTALLMENT) ?? 0,
+            //         "ANGS KE" => intval($result->LAST_INST ?? ''),
+            //         "TIPE ANGSURAN" => $result->pola_bayar ?? '',
+            //         "JTH TEMPO AWAL" => $result->F_ARR_CR_SCHEDL == '0' || $result->F_ARR_CR_SCHEDL == '' || $result->F_ARR_CR_SCHEDL == 'null' ? '' :  Carbon::parse($result->F_ARR_CR_SCHEDL)->format('d/n/Y'),
+            //         "JTH TEMPO AKHIR" => $result->curr_arr == '0' || $result->curr_arr == '' || $result->curr_arr == 'null' ? '' : Carbon::parse($result->curr_arr)->format('d/n/Y'),
+            //         "TGL BAYAR" => $result->LAST_PAY == '0' || $result->LAST_PAY == '' || $result->LAST_PAY == 'null' ? '' : Carbon::parse($result->LAST_PAY)->format('d/n/Y'),
+            //         "KOLEKTOR" => $result->COLLECTOR,
+            //         "CARA BYR" => $result->cara_bayar,
+            //         "AMBC PKK_AKHIR" => intval($result->AMBC_PKK_AKHIR) ?? 0,
+            //         "AMBC BNG_AKHIR" => intval($result->AMBC_BNG_AKHIR) ?? 0,
+            //         "AMBC TOTAL_AKHIR" => intval($result->AMBC_TOTAL_AKHIR) ?? 0,
+            //         "AC PKK" => intval($result->AC_PKK),
+            //         "AC BNG MRG" => intval($result->AC_BNG_MRG),
+            //         "AC TOTAL" => intval($result->AC_TOTAL),
+            //         "CYCLE AKHIR" => $result->CYCLE_AKHIR,
+            //         "POLA BYR AKHIR" => '',
+            //         "NAMA BRG" => $result->jenis_jaminan,
+            //         "TIPE BRG" =>  $result->COLLATERAL ?? '',
+            //         "NO POL" =>  $result->POLICE_NUMBER ?? '',
+            //         "NO MESIN" =>  $result->ENGINE_NUMBER ?? '',
+            //         "NO RANGKA" =>  $result->CHASIS_NUMBER ?? '',
+            //         "TAHUN" =>  $result->PRODUCTION_YEAR ?? '',
+            //         "NILAI PINJAMAN" => intval($result->NILAI_PINJAMAN) ?? 0,
+            //         "ADMIN" =>  intval($result->TOTAL_ADMIN) ?? '',
+            //         "CUST_ID" => is_numeric($result->CUST_CODE) ? intval($result->CUST_CODE ?? '') : $result->CUST_CODE ?? ''
+            //     ];
+            // }
 
-            return response()->json($build, 200);
+            // return response()->json($build, 200);
+            return response()->json($print, 200);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
