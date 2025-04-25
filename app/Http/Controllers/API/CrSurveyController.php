@@ -25,7 +25,6 @@ use Ramsey\Uuid\Uuid;
 
 class CrSurveyController extends Controller
 {
-
     private $CrSurvey;
     private $uuid;
     private $timeNow;
@@ -58,7 +57,7 @@ class CrSurveyController extends Controller
     {
         try {
             $checkSurveyExist = $this->CrSurvey
-                // ->with(['cr_guarante_vehicle', 'cr_guarante_sertification', 'survey_approval'])
+                ->with(['cr_guarante_vehicle', 'cr_guarante_sertification', 'survey_approval'])
                 ->where('id', $id)
                 ->whereNull('deleted_at')->first();
 
@@ -66,12 +65,9 @@ class CrSurveyController extends Controller
                 throw new Exception("Survey Id Is Exist", 409);
             }
 
-            // $dto = new R_CrSurveyDetail($checkSurveyExist);
+            $dto = new R_CrSurveyDetail($checkSurveyExist);
 
-            // return response()->json($dto, 200);
-            // die;
-
-            return response()->json(['message' => 'OK', 'response' => $this->resourceDetail($checkSurveyExist)], 200);
+            return response()->json(['response' => $dto], 200);
         } catch (Exception $e) {
             return $this->log->logError($e, $request);
         }
@@ -239,7 +235,7 @@ class CrSurveyController extends Controller
             $check_id_approval =  M_SurveyApproval::where('CR_SURVEY_ID', $request->id)->get();
 
             if ($check_id_approval->isNotEmpty()) {
-                throw new Exception("Id Approval Is Exist", 409);
+                throw new Exception("Id Approval Is Exist", 404);
             }
 
             if (!empty($request->data_nasabah['dokumen_indentitas'])) {
@@ -266,16 +262,9 @@ class CrSurveyController extends Controller
             }
 
             DB::commit();
-            ActivityLogger::logActivity($request, "Success", 200);
             return response()->json(['message' => 'created successfully'], 200);
-        } catch (QueryException $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($request, $e->getMessage(), 409);
-            return response()->json(['message' => $e->getMessage(), "status" => 409], 409);
-        } catch (\Exception $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+        } catch (Exception $e) {
+            return $this->log->logError($e, $request);
         }
     }
 
@@ -886,61 +875,6 @@ class CrSurveyController extends Controller
         } catch (\Exception $e) {
             DB::rollback();
             ActivityLogger::logActivity($req, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
-        }
-    }
-
-    public function checkOrder(Request $request)
-    {
-        DB::beginTransaction();
-        try {
-
-            $data = [];
-            $ktp = $request->ktp;
-            $kk = $request->kk;
-
-            $checkIdNumber = DB::table('credit as a')
-                ->join('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
-                ->where('a.STATUS', 'A')
-                ->where('b.ID_NUMBER', $ktp)
-                ->count();
-
-            if ($checkIdNumber > 1) {
-                $data[] = [
-                    "ktp" => false,
-                    "message" => "No KTP {$ktp} Masih Ada yang Aktif"
-                ];
-            } else {
-                $data[] = [
-                    "ktp" => true
-                ];
-            }
-
-            $checkKkNumber = DB::table('credit as a')
-                ->join('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
-                ->where('a.STATUS', 'A')
-                ->where('b.KK_NUMBER', $kk)
-                ->count();
-
-            if ($checkKkNumber == 2) {
-                $data[] = [
-                    "kk" => false,
-                    "message" => "No KK {$kk} Aktif Lebih Dari 2"
-                ];
-            } else {
-                $data[] = [
-                    "kk" => true
-                ];
-            }
-
-            return response()->json($data, 200);
-        } catch (QueryException $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($request, $e->getMessage(), 409);
-            return response()->json(['message' => $e->getMessage(), "status" => 409], 409);
-        } catch (\Exception $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }

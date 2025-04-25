@@ -402,20 +402,6 @@ class CrAppilcationController extends Controller
 
     private function insert_cr_application($request, $applicationModel)
     {
-
-        // if(strtolower($request->ekstra['jenis_angsuran']) == 'musiman'){
-        //     $tenorLists = [
-        //         '6' => 3,
-        //         '12' => 6,
-        //         '18' => 12,
-        //         '24' => 18,
-        //     ];
-
-        //     $tenor = $tenorLists[$request->ekstra['tenor']];
-        // }else{
-        //     $tenor = $request->ekstra['tenor'];
-        // }
-
         $data_cr_application = [
             'FORM_NUMBER' => '',
             'CUST_CODE' => '',
@@ -964,10 +950,12 @@ class CrAppilcationController extends Controller
             $query->whereNull('DELETED_AT')
                 ->orWhere('DELETED_AT', '');
         })->get();
+
         $guarente_sertificat = M_CrGuaranteSertification::where('CR_SURVEY_ID', $surveyId)->where(function ($query) {
             $query->whereNull('DELETED_AT')
                 ->orWhere('DELETED_AT', '');
         })->get();
+
         $approval_detail = M_ApplicationApproval::where('cr_application_id', $setApplicationId)->first();
         $cr_personal = M_CrPersonal::where('APPLICATION_ID', $setApplicationId)->first();
         $cr_personal_extra = M_CrPersonalExtra::where('APPLICATION_ID', $setApplicationId)->first();

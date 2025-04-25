@@ -60,7 +60,7 @@ class R_CrSurveyDetail extends JsonResource
                 'status' => $this->survey_approval->APPROVAL_RESULT,
                 'status_code' => $this->survey_approval->CODE
             ],
-            "dokumen_indentitas" => getAttachments($setSurveyId, ['ktp', 'kk', 'ktp_pasangan']),
+            "dokumen_indentitas" => getLastAttachment($setSurveyId, ['ktp', 'kk', 'ktp_pasangan']),
             "dokumen_pendukung" => M_CrSurveyDocument::attachmentGetAll($setSurveyId, ['other']) ?? null,
         ];
 
@@ -84,7 +84,7 @@ class R_CrSurveyDetail extends JsonResource
                     "no_stnk" => $list->STNK_NUMBER,
                     "tgl_stnk" => $list->STNK_VALID_DATE,
                     "nilai" => intval($list->VALUE),
-                    // "document" => getAttachments($setSurveyId, "'no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri'", $list->HEADER_ID)
+                    "document" => getLastAttachment($setSurveyId, ['no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri'], $list->HEADER_ID)
                 ]
             ];
         }
@@ -112,7 +112,6 @@ class R_CrSurveyDetail extends JsonResource
                 ]
             ];
         }
-
 
         return $data;
     }

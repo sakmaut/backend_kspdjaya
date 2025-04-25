@@ -473,26 +473,12 @@ if (!function_exists('setPaymentDate')) {
     }
 }
 
-if (!function_exists('getAttachments')) {
-    function getAttachments($survey_id, $data = [], $header_id = null)
+if (!function_exists('getLastAttachment')) {
+    function getLastAttachment($survey_id, $data, $header_id = null)
     {
-        if (empty($data)) {
-            return collect();
-        }
-
-        $query = DB::table('cr_survey_document AS csd')
-            ->select('*')
-            ->whereIn('TYPE', $data)
-            ->where('CR_SURVEY_ID', $survey_id);
-
-        if ($header_id !== null) {
-            $query->where('COUNTER_ID', $header_id);
-        }
-
-        $documents = $query->whereIn(
-            ['TYPE', 'TIMEMILISECOND'],
-            function ($subquery) use ($survey_id, $data, $header_id) {
-                $subquery->select('TYPE', DB::raw('MAX(TIMEMILISECOND)'))
+        $query = DB::table('cr_survey_document as csd')
+            ->whereIn(DB::raw('(TYPE, TIMEMILISECOND)'), function ($subquery) use ($survey_id, $data, $header_id) {
+                $subquery->select(DB::raw('TYPE, MAX(TIMEMILISECOND)'))
                     ->from('cr_survey_document')
                     ->whereIn('TYPE', $data)
                     ->where('CR_SURVEY_ID', $survey_id);
@@ -502,11 +488,9 @@ if (!function_exists('getAttachments')) {
                 }
 
                 $subquery->groupBy('TYPE');
-            }
-        )
-            ->orderBy('TIMEMILISECOND', 'DESC')
-            ->get();
+            })
+            ->orderBy('TIMEMILISECOND', 'DESC');
 
-        return $documents;
+        return $query->get();
     }
 }
