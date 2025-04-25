@@ -50,6 +50,11 @@ class Welcome extends Controller
 
     public function index(Request $request)
     {
+        $getPenalty = 35200.01;
+        $new_penalty = 35200.00;
+        $setArrears = bccomp($getPenalty, $new_penalty, 2) === 0 ? 'S' : 'A';
+        return response()->json($setArrears);
+        die;
 
         $currentDate = '2025-04-26';
         // $currentDate = now();
