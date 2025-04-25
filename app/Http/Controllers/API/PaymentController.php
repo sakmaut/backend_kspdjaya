@@ -310,52 +310,12 @@ class PaymentController extends Controller
         }
     }
 
-    private function updateCredit($loan_number)
-    {
-        $check_credit = M_Credit::where(['LOAN_NUMBER' => $loan_number])->first();
-
-        $isActive = $this->checkStatusCreditActive($loan_number);
-
-        $statusData = [
-            'STATUS' => $isActive == 0 ? 'D' : 'A',
-            'STATUS_REC' => $isActive == 0 ? 'CL' : 'AC'
-        ];
-
-        $check_credit->update($statusData);
-    }
-
-    private function checkStatusCreditActive($loan_number)
-    {
-        $results = DB::table('credit_schedule as a')
-            ->leftJoin('arrears as b', function ($join) {
-                $join->on('b.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
-                    ->on('b.START_DATE', '=', 'a.PAYMENT_DATE');
-            })
-            ->select('a.ID', 'a.PAYMENT_DATE', 'a.PAID_FLAG', 'b.STATUS_REC')
-            ->where('a.LOAN_NUMBER', $loan_number)
-            ->where(function ($query) {
-                $query->whereNull('a.PAID_FLAG')
-                    ->orWhere('a.PAID_FLAG', '')
-                    ->orWhereIn('b.STATUS_REC', ['A', 'PENDING']);
-            })
-            ->orderBy('a.INSTALLMENT_COUNT', 'asc')
-            ->get();
-
-        if ($results->isEmpty()) {
-            $resultStatus = 0;
-        } else {
-            $resultStatus = 1;
-        }
-
-        return $resultStatus;
-    }
-
     private function updateDiscountArrears($loan_number, $tgl_angsuran, $res, $uid)
     {
         $check_arrears = M_Arrears::where([
             'LOAN_NUMBER' => $loan_number,
             'START_DATE' => $tgl_angsuran
-        ])->orderBy('START_DATE', 'ASC')->first();
+        ])->first();
 
         $byr_angsuran = floatval($res['bayar_angsuran']);
         $bayar_denda = floatval($res['bayar_denda']);
@@ -399,22 +359,23 @@ class PaymentController extends Controller
                 $updates['PAID_INT'] = $new_payment_value_interest;
             }
 
-            $paymentData = $this->preparePaymentData($uid, 'BAYAR_DENDA', $bayar_denda);
-            M_PaymentDetail::create($paymentData);
-            $this->addCreditPaid($loan_number, ['BAYAR_DENDA' => $bayar_denda]);
-
-
             $remainingPenalty = floatval($getPenalty) - floatval($bayar_denda);
+
             if ($remainingPenalty > 0) {
                 $discountPaymentData = $this->preparePaymentData($uid, 'DISKON_DENDA', $remainingPenalty);
                 M_PaymentDetail::create($discountPaymentData);
                 $this->addCreditPaid($loan_number, ['DISKON_DENDA' => $remainingPenalty]);
                 $updates['WOFF_PENALTY'] = $remainingPenalty;
+            } else {
+                $paymentData = $this->preparePaymentData($uid, 'BAYAR_DENDA', $bayar_denda);
+                M_PaymentDetail::create($paymentData);
+                $this->addCreditPaid($loan_number, ['BAYAR_DENDA' => $bayar_denda]);
+                $updates['PAID_PENALTY'] = $bayar_denda;
             }
 
-            $updates['PAID_PENALTY'] = $bayar_denda;
             $updates['END_DATE'] = now();
             $updates['UPDATED_AT'] = now();
+
             if (!empty($updates)) {
                 $check_arrears->update($updates);
             }
@@ -442,6 +403,7 @@ class PaymentController extends Controller
             $valBeforeInterest = floatval($check_arrears->PAID_INT);
             $getPrincipal = floatval($check_arrears->PAST_DUE_PCPL);
             $getInterest = floatval($check_arrears->PAST_DUE_INTRST);
+            $getPenalty = floatval($check_arrears->PAST_DUE_PENALTY);
 
             $new_payment_value_principal = floatval($valBeforePrincipal);
             $new_payment_value_interest = floatval($valBeforeInterest);
@@ -480,20 +442,60 @@ class PaymentController extends Controller
             $this->addCreditPaid($loan_number, ['BAYAR_DENDA' => $bayar_denda]);
 
             $updates['PAID_PENALTY'] = $new_penalty;
+            $updates['STATUS_REC'] = bccomp($getPenalty, $new_penalty, 2) === 0 ? 'S' : 'A';
             $updates['END_DATE'] = now();
             $updates['UPDATED_AT'] = now();
-            $updates['STATUS_REC'] = 'A';
 
             if (!empty($updates)) {
                 $check_arrears->update($updates);
             }
 
-            $checkFlag = $this->checkArrearsBalance($loan_number, $tgl_angsuran);
+            // $checkFlag = $this->checkArrearsBalance($loan_number, $tgl_angsuran);
 
-            if ($checkFlag != null && $checkFlag != 0) {
-                $check_arrears->update(['STATUS_REC' => 'S']);
-            }
+            // $check_arrears->update([
+            //     'STATUS_REC' => $checkFlag != null && $checkFlag != 0 ? 'S' : 'A'
+            // ]);
         }
+    }
+
+    private function updateCredit($loan_number)
+    {
+        $check_credit = M_Credit::where(['LOAN_NUMBER' => $loan_number])->first();
+
+        $isActive = $this->checkStatusCreditActive($loan_number);
+
+        $statusData = [
+            'STATUS' => $isActive == 0 ? 'D' : 'A',
+            'STATUS_REC' => $isActive == 0 ? 'CL' : 'AC'
+        ];
+
+        $check_credit->update($statusData);
+    }
+
+    private function checkStatusCreditActive($loan_number)
+    {
+        $results = DB::table('credit_schedule as a')
+            ->leftJoin('arrears as b', function ($join) {
+                $join->on('b.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
+                    ->on('b.START_DATE', '=', 'a.PAYMENT_DATE');
+            })
+            ->select('a.ID', 'a.PAYMENT_DATE', 'a.PAID_FLAG', 'b.STATUS_REC')
+            ->where('a.LOAN_NUMBER', $loan_number)
+            ->where(function ($query) {
+                $query->whereNull('a.PAID_FLAG')
+                    ->orWhere('a.PAID_FLAG', '')
+                    ->orWhereIn('b.STATUS_REC', ['A', 'PENDING']);
+            })
+            ->orderBy('a.INSTALLMENT_COUNT', 'asc')
+            ->get();
+
+        if ($results->isEmpty()) {
+            $resultStatus = 0;
+        } else {
+            $resultStatus = 1;
+        }
+
+        return $resultStatus;
     }
 
     public function checkArrearsBalance($loan_number, $setDate)
