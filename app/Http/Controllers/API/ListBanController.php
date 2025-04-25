@@ -345,39 +345,35 @@ class ListBanController extends Controller
 
             if ($checkConditionDate) {
 
-                $print = "sama";
+                $checkRunSp = DB::select(" SELECT
+                                                CASE
+                                                    WHEN (SELECT MAX(p.ENTRY_DATE) FROM payment p) > (SELECT MAX(temp_lis_02C.last_pay) FROM temp_lis_02C)
+                                                        AND job_status = 0 THEN 'run'
+                                                    ELSE 'skip'
+                                                END AS execute_sp
+                                            FROM job_on_progress
+                                            WHERE job_name = 'LISBAN'");
 
-                // $checkRunSp = DB::select(" SELECT
-                //                                 CASE
-                //                                     WHEN (SELECT MAX(p.ENTRY_DATE) FROM payment p) > (SELECT MAX(temp_lis_02C.last_pay) FROM temp_lis_02C)
-                //                                         AND job_status = 0 THEN 'run'
-                //                                     ELSE 'skip'
-                //                                 END AS execute_sp
-                //                             FROM job_on_progress
-                //                             WHERE job_name = 'LISBAN'");
+                if (!empty($checkRunSp) && $checkRunSp[0]->execute_sp === 'run') {
+                    DB::select('CALL lisban_berjalan(?,?)', [$getNow, $getUserName]);
+                }
 
-                // if (!empty($checkRunSp) && $checkRunSp[0]->execute_sp === 'run') {
-                //     DB::select('CALL lisban_berjalan(?,?)', [$getNow, $getUserName]);
-                // }
-
-                // $query = $query2;
+                $query = $query2;
             } else {
 
-                $print = "tidak";
+                $checkRunSp = DB::select(" SELECT
+                                                CASE
+                                                    WHEN job_status = 0 THEN 'run'
+                                                    ELSE 'skip'
+                                                END AS execute_sp
+                                            FROM job_on_progress
+                                            WHERE job_name = 'LISBAN_BELOM_MOVEON'");
 
-                // $checkRunSp = DB::select(" SELECT
-                //                                 CASE
-                //                                     WHEN job_status = 0 THEN 'run'
-                //                                     ELSE 'skip'
-                //                                 END AS execute_sp
-                //                             FROM job_on_progress
-                //                             WHERE job_name = 'LISBAN_BELOM_MOVEON'");
+                if (!empty($checkRunSp) && $checkRunSp[0]->execute_sp === 'run') {
+                    DB::select('CALL lisban_masa_lalu(?,?)', [$dateFrom, $getUserName]);
+                }
 
-                // if (!empty($checkRunSp) && $checkRunSp[0]->execute_sp === 'run') {
-                //     DB::select('CALL lisban_masa_lalu(?,?)', [$dateFrom, $getUserName]);
-                // }
-
-                // $query = $query1;
+                $query = $query1;
             }
 
             // if ($getBranchIdUser != '8593fd4e-b54e-11ef-97d5-bc24112eb731') {
@@ -468,7 +464,7 @@ class ListBanController extends Controller
             // }
 
             // return response()->json($build, 200);
-            return response()->json($print, 200);
+            return response()->json('OK', 200);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
