@@ -124,8 +124,9 @@ class ListBanController extends Controller
 
             $getBranchIdUser = $request->user()->branch_id;
             $getNow = date('mY', strtotime(now()));
+            $checkConditionDate = $getNow == $dateFrom;
 
-            $jobName = ($getNow == $dateFrom) ? 'LISBAN' : 'LISBAN_BELOM_MOVEON';
+            $jobName = $checkConditionDate ? 'LISBAN' : 'LISBAN_BELOM_MOVEON';
 
             $checkQueue = DB::table('job_on_progress')
                 ->where('JOB_STATUS', 0)
@@ -342,55 +343,61 @@ class ListBanController extends Controller
 
 
 
-            if ($getNow == $dateFrom) {
+            if ($checkConditionDate) {
 
-                $checkRunSp = DB::select(" SELECT
-                                                CASE
-                                                    WHEN (SELECT MAX(p.ENTRY_DATE) FROM payment p) > (SELECT MAX(temp_lis_02C.last_pay) FROM temp_lis_02C)
-                                                        AND job_status = 0 THEN 'run'
-                                                    ELSE 'skip'
-                                                END AS execute_sp
-                                            FROM job_on_progress
-                                            WHERE job_name = 'LISBAN'");
+                print_r("sama");
 
-                if (!empty($checkRunSp) && $checkRunSp[0]->execute_sp === 'run') {
-                    DB::select('CALL lisban_berjalan(?,?)', [$getNow, $getUserName]);
-                }
+                // $checkRunSp = DB::select(" SELECT
+                //                                 CASE
+                //                                     WHEN (SELECT MAX(p.ENTRY_DATE) FROM payment p) > (SELECT MAX(temp_lis_02C.last_pay) FROM temp_lis_02C)
+                //                                         AND job_status = 0 THEN 'run'
+                //                                     ELSE 'skip'
+                //                                 END AS execute_sp
+                //                             FROM job_on_progress
+                //                             WHERE job_name = 'LISBAN'");
 
-                $query = $query2;
+                // if (!empty($checkRunSp) && $checkRunSp[0]->execute_sp === 'run') {
+                //     DB::select('CALL lisban_berjalan(?,?)', [$getNow, $getUserName]);
+                // }
+
+                // $query = $query2;
             } else {
-                $checkRunSp = DB::select(" SELECT
-                                                CASE
-                                                    WHEN job_status = 0 THEN 'run'
-                                                    ELSE 'skip'
-                                                END AS execute_sp
-                                            FROM job_on_progress
-                                            WHERE job_name = 'LISBAN_BELOM_MOVEON'");
 
-                if (!empty($checkRunSp) && $checkRunSp[0]->execute_sp === 'run') {
-                    DB::select('CALL lisban_masa_lalu(?,?)', [$dateFrom, $getUserName]);
-                }
+                print_r("tidak sama");
 
-                $query = $query1;
+                // $checkRunSp = DB::select(" SELECT
+                //                                 CASE
+                //                                     WHEN job_status = 0 THEN 'run'
+                //                                     ELSE 'skip'
+                //                                 END AS execute_sp
+                //                             FROM job_on_progress
+                //                             WHERE job_name = 'LISBAN_BELOM_MOVEON'");
+
+                // if (!empty($checkRunSp) && $checkRunSp[0]->execute_sp === 'run') {
+                //     DB::select('CALL lisban_masa_lalu(?,?)', [$dateFrom, $getUserName]);
+                // }
+
+                // $query = $query1;
             }
+            die;
 
-            if ($getBranchIdUser != '8593fd4e-b54e-11ef-97d5-bc24112eb731') {
-                $query .= " AND coalesce(st.arr_count,0) <= 8";
-            }
+            // if ($getBranchIdUser != '8593fd4e-b54e-11ef-97d5-bc24112eb731') {
+            //     $query .= " AND coalesce(st.arr_count,0) <= 8";
+            // }
 
-            if (strtolower($getPosition) != 'ho') {
-                $query .= " AND cl.BRANCH = '$getBranchIdUser'";
-            } else {
-                if (!empty($getBranch) && $getBranch != 'SEMUA CABANG' && $getBranch != '8593fd4e-b54e-11ef-97d5-bc24112eb731') {
-                    $query .= " AND cl.BRANCH = '$getBranch'";
-                }
-            }
+            // if (strtolower($getPosition) != 'ho') {
+            //     $query .= " AND cl.BRANCH = '$getBranchIdUser'";
+            // } else {
+            //     if (!empty($getBranch) && $getBranch != 'SEMUA CABANG' && $getBranch != '8593fd4e-b54e-11ef-97d5-bc24112eb731') {
+            //         $query .= " AND cl.BRANCH = '$getBranch'";
+            //     }
+            // }
 
-            $query .= " ORDER BY b.NAME,cl.CREATED_AT ASC";
+            // $query .= " ORDER BY b.NAME,cl.CREATED_AT ASC";
 
-            $results = DB::select($query);
+            $results = DB::select($query1);
 
-            $jobName = ($getNow == $dateFrom) ? 'LISBAN' : 'LISBAN_BELOM_MOVEON';
+            $jobName = $checkConditionDate ? 'LISBAN' : 'LISBAN_BELOM_MOVEON';
             DB::select("UPDATE job_on_progress SET job_status = 0, last_user='' WHERE job_name = ?", [$jobName]);
 
             $build = [];
