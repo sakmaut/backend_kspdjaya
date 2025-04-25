@@ -58,6 +58,7 @@ class M_CrApplication extends Model
     protected $keyType = 'string';
     protected $primaryKey = 'ID';
     public $timestamps = false;
+
     protected static function boot()
     {
         parent::boot();
@@ -71,6 +72,31 @@ class M_CrApplication extends Model
     public function cr_personal()
     {
         return $this->hasOne(M_CrPersonal::class, 'APPLICATION_ID');
+    }
+
+    public function cr_personal_extra()
+    {
+        return $this->hasOne(M_CrPersonalExtra::class, 'APPLICATION_ID');
+    }
+
+    public function cr_oder()
+    {
+        return $this->hasOne(M_CrOrder::class, 'APPLICATION_ID');
+    }
+
+    public function cr_guarantor()
+    {
+        return $this->hasOne(M_CrApplicationGuarantor::class, 'APPLICATION_ID');
+    }
+
+    public function cr_spouse()
+    {
+        return $this->hasOne(M_CrApplicationSpouse::class, 'APPLICATION_ID');
+    }
+
+    public function approval()
+    {
+        return $this->hasOne(M_ApplicationApproval::class, 'cr_application_id');
     }
 
     public function credit()

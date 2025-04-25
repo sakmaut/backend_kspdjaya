@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\R_CrApplicationDetail;
 use App\Http\Resources\R_CrProspect;
 use App\Models\M_ApplicationApproval;
 use App\Models\M_ApplicationApprovalLog;
@@ -146,6 +147,24 @@ class CrAppilcationController extends Controller
             }
 
             $detail_prospect = M_CrSurvey::where('id', $surveyID)->first();
+
+            // $getSurvey = M_CrSurvey::with([
+            //     'cr_application',
+            //     'cr_application.cr_personal',
+            //     'cr_application.cr_personal_extra',
+            //     'cr_application.cr_oder',
+            //     'cr_application.cr_guarantor',
+            //     'cr_application.cr_spouse',
+            //     'cr_application.approval',
+            //     'cr_application.credit',
+            //     'cr_guarante_vehicle',
+            //     'cr_guarante_sertification',
+            // ])->where('id', $surveyID)->first();
+
+            // $dto = new R_CrApplicationDetail($getSurvey);
+
+            // return response()->json($getSurvey, 200);
+            // die;
 
             return response()->json(['response' =>  $this->resourceDetail($detail_prospect, $check_application_id)], 200);
         } catch (\Exception $e) {
