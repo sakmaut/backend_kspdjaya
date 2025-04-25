@@ -55,10 +55,10 @@ class R_CrSurveyDetail extends JsonResource
             ],
             'jaminan' => [],
             'prospect_approval' => [
-                'flag_approval' => $this->survey_approval->ONCHARGE_APPRVL,
-                'keterangan' => $this->survey_approval->ONCHARGE_DESCR,
-                'status' => $this->survey_approval->APPROVAL_RESULT,
-                'status_code' => $this->survey_approval->CODE
+                'flag_approval' => $this->survey_approval->ONCHARGE_APPRVL ?? '',
+                'keterangan' => $this->survey_approval->ONCHARGE_DESCR ?? '',
+                'status' => $this->survey_approval->APPROVAL_RESULT ?? '',
+                'status_code' => $this->survey_approval->CODE ?? ''
             ],
             "dokumen_indentitas" => getLastAttachment($setSurveyId, ['ktp', 'kk', 'ktp_pasangan']),
             "dokumen_pendukung" => M_CrSurveyDocument::attachmentGetAll($setSurveyId, ['other']) ?? null,
