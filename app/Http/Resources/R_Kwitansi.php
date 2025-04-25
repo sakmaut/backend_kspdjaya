@@ -110,7 +110,7 @@ class R_Kwitansi extends JsonResource
             "kota" => $this->KOTA,
             "kelurahan" => $this->KELURAHAN,
             "kecamatan" => $this->KECAMATAN,
-            "tgl_transaksi" => Carbon::parse($this->CREATED_AT)->format('d-m-Y H:i:s'),
+            "tgl_transaksi" => Carbon::parse($this->CREATED_AT)->timezone('Asia/Jakarta')->format('d-m-Y H:i:s'),
             "payment_method" => $setMtdePembayaran,
             "nama_bank" => $this->NAMA_BANK,
             "no_rekening" => $this->NO_REKENING,
