@@ -355,7 +355,6 @@ class ListBanController extends Controller
 
                 if (!empty($checkRunSp) && $checkRunSp[0]->execute_sp === 'run') {
                     DB::select('CALL lisban_berjalan(?,?)', [$getNow, $getUserName]);
-                    ActivityLogger::logActivity($request, 'lisban_berjalan executed', 200);
                 }
 
                 $query = $query2;
