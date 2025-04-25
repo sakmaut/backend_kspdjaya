@@ -51,7 +51,7 @@ class PaymentController extends Controller
             $getPosition = $request->user()->position;
             $getBranch = $request->user()->branch_id;
 
-            $data = M_Kwitansi::orderBy(DB::raw("CONVERT_TZ(CREATED_AT, '+00:00', '+07:00')"), 'DESC');
+            $data = M_Kwitansi::orderBy('CREATED_AT', 'DESC');
 
             if (strtolower($getPosition) == 'ho') {
                 $results = $data->where('STTS_PAYMENT', 'PENDING')->get();
