@@ -220,7 +220,7 @@ class PaymentController extends Controller
 
         $this->updateCreditSchedule($loan_number, $tgl_angsuran, $res, $uid);
 
-        if ((strtolower($request->bayar_dengan_diskon) == 'ya' && isset($request->bayar_dengan_diskon) && $request->bayar_dengan_diskon != '') || isset($res['diskon_denda']) && $res['diskon_denda'] == 1) {
+        if ((strtolower($request->bayar_dengan_diskon) == 'ya' && isset($request->bayar_dengan_diskon) && $request->bayar_dengan_diskon != '')) {
             $this->updateDiscountArrears($loan_number, $tgl_angsuran, $res, $uid);
         } else {
             $this->updateArrears($loan_number, $tgl_angsuran, $res, $uid);
@@ -593,7 +593,7 @@ class PaymentController extends Controller
             'ENTRY_DATE' => now(),
             'SUSPENSION_PENALTY_FLAG' => $request->penangguhan_denda ?? '',
             'TITLE' => 'Angsuran Ke-' . $res['angsuran_ke'],
-            'ORIGINAL_AMOUNT' => (float)($res['bayar_angsuran']) + (float)($res['bayar_denda']),
+            'ORIGINAL_AMOUNT' => floatval($res['bayar_angsuran']) + floatval($res['bayar_denda']),
             'OS_AMOUNT' => $os_amount ?? 0,
             'START_DATE' => $tgl_angsuran,
             'END_DATE' => now(),
