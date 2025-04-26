@@ -1630,3 +1630,58 @@ if ($valBeforePrincipal < $getPrincipal) { $remaining_to_principal=$getPrincipal
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
+
+        if (isset($request->struktur) && is_array($request->struktur)) {
+            foreach ($request->struktur as $res) {
+                $loan_number = $res['loan_number'];
+                $tgl_angsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
+                $uid = Uuid::uuid7()->toString();
+
+                M_Payment::create([
+                    'ID' => $uid,
+                    'ACC_KEY' =>  $res['bayar_denda'] != 0 ? 'angsuran_denda' : 'angsuran',
+                    'STTS_RCRD' => 'CANCEL',
+                    'INVOICE' => $getInvoice ?? '',
+                    'NO_TRX' => $getInvoice ?? '',
+                    'PAYMENT_METHOD' => 'transfer',
+                    'BRANCH' => $getCodeBranch->CODE_NUMBER ?? '',
+                    'LOAN_NUM' => $loan_number ?? '',
+                    'ENTRY_DATE' => now(),
+                    'TITLE' => 'Angsuran Ke-' . $res['angsuran_ke'],
+                    'ORIGINAL_AMOUNT' => ($res['bayar_angsuran'] + $res['bayar_denda']),
+                    'OS_AMOUNT' => $os_amount ?? 0,
+                    'START_DATE' => $tgl_angsuran ?? '',
+                    'END_DATE' => now(),
+                    'USER_ID' => $request->user()->id ?? '',
+                    'AUTH_BY' => $request->user()->fullname ?? '',
+                    'AUTH_DATE' => now(),
+                    'ARREARS_ID' => $res['id_arrear'] ?? '',
+                    'BANK_NAME' => round(microtime(true) * 1000)
+                ]);
+
+                if (($res['installment'] != 0)) {
+                    $credit_schedule = M_CreditSchedule::where([
+                        'LOAN_NUMBER' => $loan_number,
+                        'PAYMENT_DATE' => $tgl_angsuran
+                    ])->where(function ($query) {
+                        $query->where('PAID_FLAG', '!=', 'PAID')
+                            ->orWhereNull('PAID_FLAG');
+                    })->first();
+
+                    $credit_schedule->update(['PAID_FLAG' => '']);
+                }
+
+                $today = date('Y-m-d');
+                $daysDiff = (strtotime($today) - strtotime($tgl_angsuran)) / (60 * 60 * 24);
+                $pastDuePenalty = $res['installment'] ?? 0 * ($daysDiff * 0.005);
+
+                M_Arrears::where([
+                    'LOAN_NUMBER' => $loan_number,
+                    'START_DATE' => $tgl_angsuran
+                ])->update([
+                    'STATUS_REC' => 'A',
+                    'PAST_DUE_PENALTY' => $pastDuePenalty ?? 0,
+                    'UPDATED_AT' => Carbon::now()
+                ]);
+            }
+        }

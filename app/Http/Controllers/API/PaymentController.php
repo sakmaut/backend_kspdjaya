@@ -721,11 +721,12 @@ class PaymentController extends Controller
     {
         DB::beginTransaction();
         try {
-            $getInvoice = $request->no_invoice;
-            $getFlag = $request->flag == 'yes' ? 'PAID' : 'CANCEL';
+            $getNoInvoice = $request->no_invoice;
+            $getFlag = $request->flag == 'yes' ? 'PAID' : 'REJECTED';
             $getCurrentPosition = strtolower($request->user()->position);
 
-            $kwitansi = M_Kwitansi::where(['NO_TRANSAKSI' => $getInvoice, 'STTS_PAYMENT' => 'PENDING'])->lockForUpdate()->first();
+            $kwitansi = M_Kwitansi::where(['NO_TRANSAKSI' => $getNoInvoice, 'STTS_PAYMENT' => 'PENDING'])->lockForUpdate()->first();
+            $getLoanNumber = $kwitansi->LOAN_NUMBER;
 
             if ($kwitansi) {
                 $getCodeBranch = M_Branch::findOrFail($request->user()->branch_id);
@@ -741,10 +742,10 @@ class PaymentController extends Controller
                 if ($request->flag == 'yes') {
 
                     if ($kwitansi->PAYMENT_TYPE === 'pelunasan') {
-                        $this->pelunasan->proccess($request, $kwitansi->LOAN_NUMBER, $getInvoice, 'PAID');
+                        $this->pelunasan->proccess($request, $kwitansi->LOAN_NUMBER, $getNoInvoice, 'PAID');
                     } else {
                         $getKwitansiDetail = M_KwitansiStructurDetail::where([
-                            'no_invoice' => $getInvoice
+                            'no_invoice' => $getNoInvoice
                         ])->orderBy('angsuran_ke', 'asc')->get();
 
                         if ($getKwitansiDetail->isEmpty()) {
@@ -753,86 +754,64 @@ class PaymentController extends Controller
 
                         foreach ($getKwitansiDetail as $res) {
                             $request->merge(['approval' => 'approve', 'pembayaran' => $res['bayar_denda'] != 0 ? 'angsuran_denda' : 'angsuran',"diskon_flag" => $kwitansi->DISKON_FLAG]);
-                            $this->processPaymentStructure($res, $request, $getCodeBranch, $getInvoice);
+                            $this->processPaymentStructure($res, $request, $getCodeBranch, $getNoInvoice);
                         }
                     }
 
                     $kwitansi->update(['STTS_PAYMENT' => 'PAID']);
 
-                    $this->taskslogging->create($request, $type . " Disetujui", 'payment', $getInvoice, $getFlag, $request->keterangan);
+                    $this->taskslogging->create($request, $type . " Disetujui", 'payment', $getNoInvoice, $getFlag, $request->keterangan);
                 } else {
-                    $request->merge(['approval' => 'no']);
-
                     // if ($getCurrentPosition === 'admin') {
                     //     $setTitle = "Pembatalan Pembayaran";
                     //     $message = "A/n " . $kwitansi->NAMA . " Nominal : " . number_format($kwitansi->JUMLAH_UANG) . " Keterangan Cancel (" . $request->descr . ")";
-                    //     $this->taskslogging->create($request, $setTitle, 'payment_cancel', $getInvoice, 'WAITING CANCEL', "Menunggu " . $setTitle . ' ' . $message);
+                    //     $this->taskslogging->create($request, $setTitle, 'payment_cancel', $getNoInvoice, 'WAITING CANCEL', "Menunggu " . $setTitle . ' ' . $message);
 
                     //     $kwitansi->update(['STTS_PAYMENT' => 'WAITING CANCEL']);
                     // } else {
-                        if ($kwitansi->PAYMENT_TYPE === 'pelunasan') {
-                            $this->pelunasan->proccessCancel($kwitansi->LOAN_NUMBER, $getInvoice, 'CANCEL');
-                        } else {
+                    if ($kwitansi->PAYMENT_TYPE === 'pelunasan') {
+                        
+                    } else {
+                        $getKwitansiDetail = M_KwitansiStructurDetail::where([
+                            'no_invoice'   => $getNoInvoice,
+                            'loan_number'  => $getLoanNumber
+                        ])
+                            ->orderBy('angsuran_ke', 'asc')
+                            ->get();
 
-                            if (isset($request->struktur) && is_array($request->struktur)) {
-                                foreach ($request->struktur as $res) {
-                                    $loan_number = $res['loan_number'];
-                                    $tgl_angsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
-                                    $uid = Uuid::uuid7()->toString();
-
-                                    M_Payment::create([
-                                        'ID' => $uid,
-                                        'ACC_KEY' =>  $res['bayar_denda'] != 0 ? 'angsuran_denda' : 'angsuran',
-                                        'STTS_RCRD' => 'CANCEL',
-                                        'INVOICE' => $getInvoice ?? '',
-                                        'NO_TRX' => $getInvoice ?? '',
-                                        'PAYMENT_METHOD' => 'transfer',
-                                        'BRANCH' => $getCodeBranch->CODE_NUMBER ?? '',
-                                        'LOAN_NUM' => $loan_number ?? '',
-                                        'ENTRY_DATE' => now(),
-                                        'TITLE' => 'Angsuran Ke-' . $res['angsuran_ke'],
-                                        'ORIGINAL_AMOUNT' => ($res['bayar_angsuran'] + $res['bayar_denda']),
-                                        'OS_AMOUNT' => $os_amount ?? 0,
-                                        'START_DATE' => $tgl_angsuran ?? '',
-                                        'END_DATE' => now(),
-                                        'USER_ID' => $request->user()->id ?? '',
-                                        'AUTH_BY' => $request->user()->fullname ?? '',
-                                        'AUTH_DATE' => now(),
-                                        'ARREARS_ID' => $res['id_arrear'] ?? '',
-                                        'BANK_NAME' => round(microtime(true) * 1000)
-                                    ]);
-
-                                    if (($res['installment'] != 0)) {
-                                        $credit_schedule = M_CreditSchedule::where([
-                                            'LOAN_NUMBER' => $loan_number,
-                                            'PAYMENT_DATE' => $tgl_angsuran
-                                        ])->where(function ($query) {
-                                            $query->where('PAID_FLAG', '!=', 'PAID')
-                                                ->orWhereNull('PAID_FLAG');
-                                        })->first();
-
-                                        $credit_schedule->update(['PAID_FLAG' => '']);
-                                    }
-
-                                    $today = date('Y-m-d');
-                                    $daysDiff = (strtotime($today) - strtotime($tgl_angsuran)) / (60 * 60 * 24);
-                                    $pastDuePenalty = $res['installment'] ?? 0 * ($daysDiff * 0.005);
-
-                                    M_Arrears::where([
-                                        'LOAN_NUMBER' => $loan_number,
-                                        'START_DATE' => $tgl_angsuran
-                                    ])->update([
-                                        'STATUS_REC' => 'A',
-                                        'PAST_DUE_PENALTY' => $pastDuePenalty ?? 0,
-                                        'UPDATED_AT' => Carbon::now()
-                                    ]);
-                                }
-                            }
-
-                            $kwitansi->update(['STTS_PAYMENT' => 'CANCEL']);
+                        if ($getKwitansiDetail->isEmpty()) {
+                            throw new Exception("Kwitansi Detail Not Found", 404);
                         }
 
-                        $this->taskslogging->create($request, $type . " Ditolak", 'payment', $getInvoice, $getFlag, $request->keterangan);
+                        foreach ($getKwitansiDetail as $res) {
+                            $loan_number = $res['loan_number'];
+                            $tgl_angsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
+
+                            M_CreditSchedule::where([
+                                'LOAN_NUMBER'   => $loan_number,
+                                'PAYMENT_DATE'  => $tgl_angsuran,
+                                'PAID_FLAG'     => 'PENDING'
+                            ])->first()?->update(['PAID_FLAG' => '']);
+
+                            $today = date('Y-m-d');
+                            $daysDiff = (strtotime($today) - strtotime($tgl_angsuran)) / (60 * 60 * 24);
+                            $pastDuePenalty = floatval($res['installment']) ?? 0 * ($daysDiff * 0.005);
+
+                            M_Arrears::where([
+                                'LOAN_NUMBER' => $loan_number,
+                                'START_DATE' => $tgl_angsuran,
+                                'STATUS_REC' => 'PENDING'
+                            ])->update([
+                                'STATUS_REC' => 'A',
+                                'PAST_DUE_PENALTY' => $pastDuePenalty ?? 0,
+                                'UPDATED_AT' => Carbon::now()
+                            ]);
+                        }
+                    }
+
+                    $kwitansi->update(['STTS_PAYMENT' => $getFlag]);
+
+                    $this->taskslogging->create($request, $type . " Ditolak", 'payment', $getNoInvoice, $getFlag, $request->keterangan);
                     // }
                 }
             }
@@ -931,6 +910,10 @@ class PaymentController extends Controller
                 ])
                     ->orderBy('angsuran_ke', 'asc')
                     ->get();
+
+                if ($getKwitansiDetail->isEmpty()) {
+                    throw new Exception("Kwitansi Detail Not Found", 404);
+                }
 
                 $ttlBayarPrincipal = 0;
                 $ttlBayarInterest = 0;
