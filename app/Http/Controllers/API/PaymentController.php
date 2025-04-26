@@ -140,7 +140,8 @@ class PaymentController extends Controller
                             'total_bayar' => $res['total_bayar'] ?? '',
                             'flag' => $res['flag'] ?? '',
                             'denda' => $res['denda'] ?? '',
-                            'diskon_denda' => strtolower($request->bayar_dengan_diskon) == 'ya' ? 1 : 0
+                            // 'diskon_denda' => strtolower($request->bayar_dengan_diskon) == 'ya' ? 1 : 0
+                            'diskon_denda' => strtolower($request->bayar_dengan_diskon) == 'ya' ? floatval($res['denda']) - floatval($res['bayar_denda']) : 0
                         ]);
                     }
 
