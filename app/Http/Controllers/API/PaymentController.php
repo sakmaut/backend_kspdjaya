@@ -799,7 +799,7 @@ class PaymentController extends Controller
                         $daysDiff      = (strtotime($today) - strtotime($tgl_angsuran)) / (60 * 60 * 24);
 
                         if ($checkType) {
-                            $pastDuePenalty = $installment !== 0 ? $installment * ($daysDiff * 0.005) : floatval($res['bayar_denda'] ?? 0);
+                            $pastDuePenalty = $installment != 0 ? $installment * ($daysDiff * 0.005) : floatval($res['bayar_denda']);
                         } else {
                             $pastDuePenalty = $res['flag'] === 'PAID' ? floatval($res['denda'] ?? 0) : $installment * ($daysDiff * 0.005);
                         }
