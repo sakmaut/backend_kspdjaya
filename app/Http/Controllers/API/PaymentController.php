@@ -794,7 +794,7 @@ class PaymentController extends Controller
                             'PAID_FLAG'    => 'PENDING'
                         ])->first()?->update(['PAID_FLAG' => '']);
 
-                        $installment   = floatval($res['installment'] ?? 0);
+                        $installment   = floatval($res['installment']);
                         $today         = date('Y-m-d');
                         $daysDiff      = (strtotime($today) - strtotime($tgl_angsuran)) / (60 * 60 * 24);
 
