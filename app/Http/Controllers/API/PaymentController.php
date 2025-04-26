@@ -12,6 +12,7 @@ use App\Models\M_Branch;
 use App\Models\M_Credit;
 use App\Models\M_CreditSchedule;
 use App\Models\M_Kwitansi;
+use App\Models\M_KwitansiDetailPelunasan;
 use App\Models\M_KwitansiStructurDetail;
 use App\Models\M_Payment;
 use App\Models\M_PaymentAttachment;
@@ -769,44 +770,49 @@ class PaymentController extends Controller
 
                     //     $kwitansi->update(['STTS_PAYMENT' => 'WAITING CANCEL']);
                     // } else {
-                    if ($kwitansi->PAYMENT_TYPE === 'pelunasan') {
-                        
-                    } else {
-                        $getKwitansiDetail = M_KwitansiStructurDetail::where([
-                            'no_invoice'   => $getNoInvoice,
-                            'loan_number'  => $getLoanNumber
-                        ])
-                            ->orderBy('angsuran_ke', 'asc')
-                            ->get();
 
-                        if ($getKwitansiDetail->isEmpty()) {
-                            throw new Exception("Kwitansi Detail Not Found", 404);
+                    $checkType = $kwitansi->PAYMENT_TYPE === 'pelunasan';
+
+                    $detailModel = $checkType ? M_KwitansiDetailPelunasan::class : M_KwitansiStructurDetail::class;
+
+                    $getKwitansiDetail = $detailModel::where([
+                        'no_invoice'  => $getNoInvoice,
+                        'loan_number' => $getLoanNumber
+                    ])->orderBy('angsuran_ke', 'asc')->get();
+
+                    if ($getKwitansiDetail->isEmpty()) {
+                        throw new Exception("Kwitansi Detail Not Found", 404);
+                    }
+
+                    foreach ($getKwitansiDetail as $res) {
+                        $loan_number   = $res['loan_number'];
+                        $tgl_angsuran  = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
+
+                        M_CreditSchedule::where([
+                            'LOAN_NUMBER'  => $loan_number,
+                            'PAYMENT_DATE' => $tgl_angsuran,
+                            'PAID_FLAG'    => 'PENDING'
+                        ])->first()?->update(['PAID_FLAG' => '']);
+
+                        $installment   = floatval($res['installment'] ?? 0);
+                        $today         = date('Y-m-d');
+                        $daysDiff      = (strtotime($today) - strtotime($tgl_angsuran)) / (60 * 60 * 24);
+
+                        if ($checkType) {
+                            $pastDuePenalty = $installment !== 0 ? $installment * ($daysDiff * 0.005) : floatval($res['bayar_denda'] ?? 0);
+                        } else {
+                            $pastDuePenalty = $res['flag'] === 'PAID' ? floatval($res['denda'] ?? 0) : $installment * ($daysDiff * 0.005);
                         }
 
-                        foreach ($getKwitansiDetail as $res) {
-                            $loan_number = $res['loan_number'];
-                            $tgl_angsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
-
-                            M_CreditSchedule::where([
-                                'LOAN_NUMBER'   => $loan_number,
-                                'PAYMENT_DATE'  => $tgl_angsuran,
-                                'PAID_FLAG'     => 'PENDING'
-                            ])->first()?->update(['PAID_FLAG' => '']);
-
-                            $today = date('Y-m-d');
-                            $daysDiff = (strtotime($today) - strtotime($tgl_angsuran)) / (60 * 60 * 24);
-                            $pastDuePenalty = floatval($res['installment']) * ($daysDiff * 0.005);
-
-                            M_Arrears::where([
-                                'LOAN_NUMBER' => $loan_number,
-                                'START_DATE' => $tgl_angsuran,
-                                'STATUS_REC' => 'PENDING'
-                            ])->update([
-                                'STATUS_REC' => 'A',
-                                'PAST_DUE_PENALTY' => $res['flag'] == 'PAID' ? floatval($res['denda'] ?? 0)  : $pastDuePenalty,
-                                'UPDATED_AT' => Carbon::now()
-                            ]);
-                        }
+                        M_Arrears::where([
+                            'LOAN_NUMBER' => $loan_number,
+                            'START_DATE'  => $tgl_angsuran,
+                            'STATUS_REC'  => 'PENDING'
+                        ])->update([
+                            'STATUS_REC'       => 'A',
+                            'PAST_DUE_PENALTY' => $pastDuePenalty,
+                            'UPDATED_AT'       => Carbon::now()
+                        ]);
                     }
 
                     $kwitansi->update(['STTS_PAYMENT' => $getFlag]);
