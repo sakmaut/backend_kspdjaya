@@ -803,7 +803,7 @@ class PaymentController extends Controller
                                 'STATUS_REC' => 'PENDING'
                             ])->update([
                                 'STATUS_REC' => 'A',
-                                'PAST_DUE_PENALTY' => $pastDuePenalty ?? 0,
+                                'PAST_DUE_PENALTY' => $res['flag'] != 'PAID' ? $res['denda'] : $pastDuePenalty,
                                 'UPDATED_AT' => Carbon::now()
                             ]);
                         }
