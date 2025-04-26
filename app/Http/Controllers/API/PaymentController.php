@@ -981,6 +981,7 @@ class PaymentController extends Controller
                                 'PAID_PCPL' => floatval($resList['principal_prev'] ?? 0),
                                 'PAID_INT' =>  floatval($resList['interest_prev'] ?? 0),
                                 'PAID_PENALTY' => floatval($arrearsCheck->PAST_DUE_PENALTY ?? 0) - floatval($resList['denda'] ?? 0),
+                                'WOFF_PENALTY' => floatval($arrearsCheck->WOFF_PENALTY ?? 0) - floatval($resList['diskon_denda'] ?? 0),
                                 'STATUS_REC' => 'A',
                             ]);
 
