@@ -763,13 +763,13 @@ class PaymentController extends Controller
                 } else {
                     $request->merge(['approval' => 'no']);
 
-                    if ($getCurrentPosition === 'admin') {
-                        $setTitle = "Pembatalan Pembayaran";
-                        $message = "A/n " . $kwitansi->NAMA . " Nominal : " . number_format($kwitansi->JUMLAH_UANG) . " Keterangan Cancel (" . $request->descr . ")";
-                        $this->taskslogging->create($request, $setTitle, 'payment_cancel', $getInvoice, 'WAITING CANCEL', "Menunggu " . $setTitle . ' ' . $message);
+                    // if ($getCurrentPosition === 'admin') {
+                    //     $setTitle = "Pembatalan Pembayaran";
+                    //     $message = "A/n " . $kwitansi->NAMA . " Nominal : " . number_format($kwitansi->JUMLAH_UANG) . " Keterangan Cancel (" . $request->descr . ")";
+                    //     $this->taskslogging->create($request, $setTitle, 'payment_cancel', $getInvoice, 'WAITING CANCEL', "Menunggu " . $setTitle . ' ' . $message);
 
-                        $kwitansi->update(['STTS_PAYMENT' => 'WAITING CANCEL']);
-                    } else {
+                    //     $kwitansi->update(['STTS_PAYMENT' => 'WAITING CANCEL']);
+                    // } else {
                         if ($kwitansi->PAYMENT_TYPE === 'pelunasan') {
                             $this->pelunasan->proccessCancel($kwitansi->LOAN_NUMBER, $getInvoice, 'CANCEL');
                         } else {
@@ -833,19 +833,8 @@ class PaymentController extends Controller
                         }
 
                         $this->taskslogging->create($request, $type . " Ditolak", 'payment', $getInvoice, $getFlag, $request->keterangan);
-                    }
+                    // }
                 }
-
-                // $data_approval = [
-                //     'PAYMENT_ID' => $request->no_invoice,
-                //     'ONCHARGE_APPRVL' => $request->flag,
-                //     'ONCHARGE_PERSON' => $request->user()->id,
-                //     'ONCHARGE_TIME' => Carbon::now(),
-                //     'ONCHARGE_DESCR' => $request->keterangan,
-                //     'APPROVAL_RESULT' => $request->flag == 'yes' ? 'PAID' : 'CANCEL'
-                // ];
-
-                // M_PaymentApproval::create($data_approval);
             }
 
             DB::commit();
@@ -1008,44 +997,6 @@ class PaymentController extends Controller
             }
         } else {
             $check->update(['STTS_PAYMENT' => 'PAID']);
-        }
-    }
-
-    public function cancelList(Request $request)
-    {
-        try {
-            $data = DB::table('payment_cancel_log as a')
-                ->select(
-                    'a.ID',
-                    'a.INVOICE_NUMBER',
-                    'a.REQUEST_BY',
-                    'a.REQUEST_BRANCH',
-                    'a.REQUEST_POSITION',
-                    'a.REQUEST_DATE',
-                    'a.ONCHARGE_PERSON',
-                    'a.ONCHARGE_TIME',
-                    'a.ONCHARGE_DESCR',
-                    'a.ONCHARGE_FLAG',
-                    'b.LOAN_NUMBER',
-                    'b.TGL_TRANSAKSI'
-                )
-                ->leftJoin('kwitansi as b', 'b.NO_TRANSAKSI', '=', 'a.INVOICE_NUMBER')
-                ->where(function ($query) {
-                    $query->whereNull('a.ONCHARGE_PERSON')
-                        ->orWhere('a.ONCHARGE_PERSON', '');
-                })
-                ->where(function ($query) {
-                    $query->whereNull('a.ONCHARGE_TIME')
-                        ->orWhere('a.ONCHARGE_TIME', '');
-                })
-                ->get();
-
-            $dto = R_PaymentCancelLog::collection($data);
-
-            return response()->json($dto, 200);
-        } catch (\Exception $e) {
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
 }

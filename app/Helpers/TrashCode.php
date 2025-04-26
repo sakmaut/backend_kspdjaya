@@ -1592,3 +1592,41 @@ if ($valBeforePrincipal < $getPrincipal) { $remaining_to_principal=$getPrincipal
 
         return $documents;
     }
+
+    public function cancelList(Request $request)
+    {
+        try {
+            $data = DB::table('payment_cancel_log as a')
+                ->select(
+                    'a.ID',
+                    'a.INVOICE_NUMBER',
+                    'a.REQUEST_BY',
+                    'a.REQUEST_BRANCH',
+                    'a.REQUEST_POSITION',
+                    'a.REQUEST_DATE',
+                    'a.ONCHARGE_PERSON',
+                    'a.ONCHARGE_TIME',
+                    'a.ONCHARGE_DESCR',
+                    'a.ONCHARGE_FLAG',
+                    'b.LOAN_NUMBER',
+                    'b.TGL_TRANSAKSI'
+                )
+                ->leftJoin('kwitansi as b', 'b.NO_TRANSAKSI', '=', 'a.INVOICE_NUMBER')
+                ->where(function ($query) {
+                    $query->whereNull('a.ONCHARGE_PERSON')
+                        ->orWhere('a.ONCHARGE_PERSON', '');
+                })
+                ->where(function ($query) {
+                    $query->whereNull('a.ONCHARGE_TIME')
+                        ->orWhere('a.ONCHARGE_TIME', '');
+                })
+                ->get();
+
+            $dto = R_PaymentCancelLog::collection($data);
+
+            return response()->json($dto, 200);
+        } catch (\Exception $e) {
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+        }
+    }
