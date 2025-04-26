@@ -795,7 +795,7 @@ class PaymentController extends Controller
 
                             $today = date('Y-m-d');
                             $daysDiff = (strtotime($today) - strtotime($tgl_angsuran)) / (60 * 60 * 24);
-                            $pastDuePenalty = floatval($res['installment']) ?? 0 * ($daysDiff * 0.005);
+                            $pastDuePenalty = floatval($res['installment']) * ($daysDiff * 0.005);
 
                             M_Arrears::where([
                                 'LOAN_NUMBER' => $loan_number,
