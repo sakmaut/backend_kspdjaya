@@ -220,7 +220,7 @@ class PaymentController extends Controller
 
         $this->updateCreditSchedule($loan_number, $tgl_angsuran, $res, $uid);
 
-        if ((strtolower($request->bayar_dengan_diskon) == 'ya' && isset($request->bayar_dengan_diskon) && $request->bayar_dengan_diskon != '')) {
+        if ((strtolower($request->diskon_flag) == 'ya' && isset($request->diskon_flag) && $request->diskon_flag != '')) {
             $this->updateDiscountArrears($loan_number, $tgl_angsuran, $res, $uid);
         } else {
             $this->updateArrears($loan_number, $tgl_angsuran, $res, $uid);
@@ -752,7 +752,7 @@ class PaymentController extends Controller
                         }
 
                         foreach ($getKwitansiDetail as $res) {
-                            $request->merge(['approval' => 'approve', 'pembayaran' => $res['bayar_denda'] != 0 ? 'angsuran_denda' : 'angsuran']);
+                            $request->merge(['approval' => 'approve', 'pembayaran' => $res['bayar_denda'] != 0 ? 'angsuran_denda' : 'angsuran',"diskon_flag" => $kwitansi->DISKON_FLAG]);
                             $this->processPaymentStructure($res, $request, $getCodeBranch, $getInvoice);
                         }
                     }
