@@ -6,7 +6,6 @@ use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Repositories\TasksLogging\TasksRepository;
 use App\Http\Resources\R_Kwitansi;
-use App\Http\Resources\R_PaymentCancelLog;
 use App\Models\M_Arrears;
 use App\Models\M_Branch;
 use App\Models\M_Credit;
@@ -141,7 +140,6 @@ class PaymentController extends Controller
                             'total_bayar' => $res['total_bayar'] ?? '',
                             'flag' => $res['flag'] ?? '',
                             'denda' => $res['denda'] ?? '',
-                            // 'diskon_denda' => strtolower($request->bayar_dengan_diskon) == 'ya' ? 1 : 0
                             'diskon_denda' => strtolower($request->bayar_dengan_diskon) == 'ya' ? floatval($res['denda']) - floatval($res['bayar_denda']) : 0
                         ]);
                     }
@@ -160,7 +158,7 @@ class PaymentController extends Controller
                             ])->update(['PAID_FLAG' => 'PENDING']);
                         }
 
-                        if ($res['bayar_denda'] != 0 || (isset($res['diskon_denda']) && $res['diskon_denda'] == 1) || strtolower($request->bayar_dengan_diskon) == 'ya') {
+                        if ($res['bayar_denda'] != 0 || strtolower($request->bayar_dengan_diskon) == 'ya') {
                             M_Arrears::where([
                                 'LOAN_NUMBER' => $res['loan_number'],
                                 'START_DATE' => $tgl_angsuran,
@@ -367,8 +365,6 @@ class PaymentController extends Controller
             $this->addCreditPaid($loan_number, ['BAYAR_DENDA' => $bayar_denda]);
             $updates['PAID_PENALTY'] = $bayar_denda;
 
-            // $remainingPenalty = floatval($getPenalty) - floatval($bayar_denda);
-
             $checkDiskonDenda = $diskon_denda > 0;
 
             if ($checkDiskonDenda) {
@@ -454,12 +450,6 @@ class PaymentController extends Controller
             if (!empty($updates)) {
                 $check_arrears->update($updates);
             }
-
-            // $checkFlag = $this->checkArrearsBalance($loan_number, $tgl_angsuran);
-
-            // $check_arrears->update([
-            //     'STATUS_REC' => $checkFlag != null && $checkFlag != 0 ? 'S' : 'A'
-            // ]);
         }
     }
 
@@ -501,27 +491,6 @@ class PaymentController extends Controller
         }
 
         return $resultStatus;
-    }
-
-    public function checkArrearsBalance($loan_number, $setDate)
-    {
-        $checkFlag = DB::table('arrears')
-            ->selectRaw('
-            CASE 
-                WHEN COALESCE(PAST_DUE_PENALTY, 0) = COALESCE(PAID_PENALTY, 0)
-                THEN 1 
-                ELSE 0 
-            END AS check_flag
-        ')
-            ->where('LOAN_NUMBER', $loan_number)
-            ->where('START_DATE', $setDate)
-            ->first();
-
-        if ($checkFlag) {
-            return $checkFlag->check_flag;
-        }
-
-        return null;
     }
 
     private function saveKwitansi($request, $no_inv)
@@ -924,6 +893,7 @@ class PaymentController extends Controller
                 $ttlBayarPrincipal = 0;
                 $ttlBayarInterest = 0;
                 $ttlBayarDenda = 0;
+                $ttlDendaDiskon = 0;
 
                 foreach ($getKwitansiDetail as $resList) {
 
@@ -956,10 +926,10 @@ class PaymentController extends Controller
                     if ($arrearsCheck) {
                         if ($resList['bayar_denda'] != 0 || $check->DISKON_FLAG == 'ya') {
                             $arrearsCheck->update([
-                                'PAID_PCPL' => floatval($resList['principal_prev'] ?? 0),
-                                'PAID_INT' =>  floatval($resList['interest_prev'] ?? 0),
-                                'PAID_PENALTY' => floatval($arrearsCheck->PAST_DUE_PENALTY ?? 0) - floatval($resList['denda'] ?? 0),
-                                'WOFF_PENALTY' => floatval($arrearsCheck->WOFF_PENALTY ?? 0) - floatval($resList['diskon_denda'] ?? 0),
+                                'PAID_PCPL' => floatval($resList['principal_prev']),
+                                'PAID_INT' =>  floatval($resList['interest_prev']),
+                                'PAID_PENALTY' => floatval($arrearsCheck->PAST_DUE_PENALTY) - floatval($resList['denda']),
+                                'WOFF_PENALTY' => floatval($arrearsCheck->WOFF_PENALTY) - floatval($resList['diskon_denda']),
                                 'STATUS_REC' => 'A',
                             ]);
 

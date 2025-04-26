@@ -1685,3 +1685,30 @@ if ($valBeforePrincipal < $getPrincipal) { $remaining_to_principal=$getPrincipal
                 ]);
             }
         }
+
+         // $checkFlag = $this->checkArrearsBalance($loan_number, $tgl_angsuran);
+
+            // $check_arrears->update([
+            //     'STATUS_REC' => $checkFlag != null && $checkFlag != 0 ? 'S' : 'A'
+            // ]);
+
+             public function checkArrearsBalance($loan_number, $setDate)
+    {
+        $checkFlag = DB::table('arrears')
+            ->selectRaw('
+            CASE 
+                WHEN COALESCE(PAST_DUE_PENALTY, 0) = COALESCE(PAID_PENALTY, 0)
+                THEN 1 
+                ELSE 0 
+            END AS check_flag
+        ')
+            ->where('LOAN_NUMBER', $loan_number)
+            ->where('START_DATE', $setDate)
+            ->first();
+
+        if ($checkFlag) {
+            return $checkFlag->check_flag;
+        }
+
+        return null;
+    }
