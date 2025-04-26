@@ -976,7 +976,7 @@ class PaymentController extends Controller
                     ])->first();
 
                     if ($arrearsCheck) {
-                        if ($resList['bayar_denda'] != 0) {
+                        if ($resList['bayar_denda'] != 0 || $check->DISKON_FLAG == 'ya') {
                             $arrearsCheck->update([
                                 'PAID_PCPL' => floatval($resList['principal_prev'] ?? 0),
                                 'PAID_INT' =>  floatval($resList['interest_prev'] ?? 0),
