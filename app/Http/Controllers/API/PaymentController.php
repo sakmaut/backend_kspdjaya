@@ -359,6 +359,11 @@ class PaymentController extends Controller
                 $updates['PAID_INT'] = $new_payment_value_interest;
             }
 
+            $paymentData = $this->preparePaymentData($uid, 'BAYAR_DENDA', $bayar_denda);
+            M_PaymentDetail::create($paymentData);
+            $this->addCreditPaid($loan_number, ['BAYAR_DENDA' => $bayar_denda]);
+            $updates['PAID_PENALTY'] = $bayar_denda;
+
             $remainingPenalty = floatval($getPenalty) - floatval($bayar_denda);
 
             if ($remainingPenalty > 0) {
@@ -366,11 +371,6 @@ class PaymentController extends Controller
                 M_PaymentDetail::create($discountPaymentData);
                 $this->addCreditPaid($loan_number, ['DISKON_DENDA' => $remainingPenalty]);
                 $updates['WOFF_PENALTY'] = $remainingPenalty;
-            } else {
-                $paymentData = $this->preparePaymentData($uid, 'BAYAR_DENDA', $bayar_denda);
-                M_PaymentDetail::create($paymentData);
-                $this->addCreditPaid($loan_number, ['BAYAR_DENDA' => $bayar_denda]);
-                $updates['PAID_PENALTY'] = $bayar_denda;
             }
 
             $updates['END_DATE'] = now();
