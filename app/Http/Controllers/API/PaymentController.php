@@ -320,6 +320,7 @@ class PaymentController extends Controller
 
         $byr_angsuran = floatval($res['bayar_angsuran']);
         $bayar_denda = floatval($res['bayar_denda']);
+        $diskon_denda = floatval($res['diskon_denda']);
 
         if ($check_arrears) {
             $valBeforePrincipal = floatval($check_arrears->PAID_PCPL);
@@ -365,13 +366,15 @@ class PaymentController extends Controller
             $this->addCreditPaid($loan_number, ['BAYAR_DENDA' => $bayar_denda]);
             $updates['PAID_PENALTY'] = $bayar_denda;
 
-            $remainingPenalty = floatval($getPenalty) - floatval($bayar_denda);
+            // $remainingPenalty = floatval($getPenalty) - floatval($bayar_denda);
 
-            if ($remainingPenalty > 0) {
-                $discountPaymentData = $this->preparePaymentData($uid, 'DISKON_DENDA', $remainingPenalty);
+            $checkDiskonDenda = $diskon_denda > 0;
+
+            if ($checkDiskonDenda) {
+                $discountPaymentData = $this->preparePaymentData($uid, 'DISKON_DENDA', $diskon_denda);
                 M_PaymentDetail::create($discountPaymentData);
-                $this->addCreditPaid($loan_number, ['DISKON_DENDA' => $remainingPenalty]);
-                $updates['WOFF_PENALTY'] = $remainingPenalty;
+                $this->addCreditPaid($loan_number, ['DISKON_DENDA' => $diskon_denda]);
+                $updates['WOFF_PENALTY'] = $diskon_denda;
             }
 
             $updates['END_DATE'] = now();
@@ -381,7 +384,7 @@ class PaymentController extends Controller
                 $check_arrears->update($updates);
             }
 
-            $check_arrears->update(['STATUS_REC' => $remainingPenalty > 0 ? 'D' : 'S']);
+            $check_arrears->update(['STATUS_REC' => $checkDiskonDenda ? 'D' : 'S']);
         }
     }
 
