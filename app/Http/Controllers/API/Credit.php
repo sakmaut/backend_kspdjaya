@@ -228,7 +228,7 @@ class Credit extends Controller
             "tenor" => bilangan($data->TENOR, false) ?? null,
             "credit_id" => !empty($check_exist) ? $check_exist->ID : null,
             "tgl_awal_pk" => !empty($check_exist) ? $this->setCreatedAt($check_exist->CREATED_AT) : parseDatetoYMD($setDategenerate),
-            "tgl_akhir_pk" => !empty($check_exist) ? Carbon::parse($check_exist->CREATED_AT)->addMonths(intval($check_exist->PERIOD))->format('Y-m-d') : Carbon::parse($setDategenerate)->addMonths(intval($data->TENOR))->format('Y-m-d') ?? null,
+            "tgl_akhir_pk" => !empty($check_exist) ? Carbon::parse($check_exist->END_DATE)->format('Y-m-d') : Carbon::parse($setDategenerate)->addMonths(intval($data->TENOR))->format('Y-m-d') ?? null,
             "angsuran" => bilangan($angsuran) ?? null,
             "opt_periode" => $data->OPT_PERIODE ?? null,
             "jaminan" => [],
