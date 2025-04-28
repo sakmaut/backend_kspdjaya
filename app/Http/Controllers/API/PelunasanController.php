@@ -683,7 +683,8 @@ class PelunasanController extends Controller
                 'a.DISCOUNT_INTEREST',
                 'a.INSUFFICIENT_PAYMENT',
                 'a.PAYMENT_VALUE',
-                'a.PAID_FLAG'
+                'a.PAID_FLAG',
+                'b.PAST_DUE_PENALTY'
             )
             ->get();
 
@@ -701,12 +702,7 @@ class PelunasanController extends Controller
                 ])->first();
 
                 if ($checkDetail) {
-                    $setArrears = M_Arrears::where([
-                        'LOAN_NUMBER' => $res['LOAN_NUMBER'],
-                        'START_DATE' => $res['PAYMENT_DATE']
-                    ])->first();
-
-                    $checkDetail->update(['denda' => floatval($setArrears->PAST_DUE_PENALTY ?? 0)]);
+                    $checkDetail->update(['denda' => floatval($res['PAST_DUE_PENALTY'] ?? 0)]);
                 }
             }
         }
