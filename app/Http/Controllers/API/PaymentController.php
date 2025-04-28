@@ -773,8 +773,7 @@ class PaymentController extends Controller
                         $setArrearsCalculate = calculateArrears($getInstallment, $tgl_angsuran);
 
                         if ($checkType) {
-                            $getDenda = floatval($res['bayar_denda']) != 0 ? floatval($res['bayar_denda']) : floatval($res['diskon_denda']);
-                            $pastDuePenalty = $getInstallment != 0 ? $setArrearsCalculate : $getDenda;
+                            $pastDuePenalty = $getInstallment != 0 ? $setArrearsCalculate : $getArrears;
                         } else {
                             $pastDuePenalty = $res['flag'] === 'PAID' ? $getArrears : $setArrearsCalculate;
                         }

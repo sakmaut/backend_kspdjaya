@@ -505,13 +505,12 @@ class PelunasanController extends Controller
     {
         $getInstallment = floatval($res['installment']);
         $getTglAngsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d') ?? null;
-        $getDenda = floatval($res['bayar_denda']) != 0 ? floatval($res['bayar_denda']) : floatval($res['diskon_denda']);
+        $getDenda = floatval($res['denda']);
 
         $getArrears = M_Arrears::where([
             'LOAN_NUMBER' => $loan_number,
             'START_DATE' => $getTglAngsuran,
         ])->first();
-
 
         $setArrearsCalculate = calculateArrears($getInstallment, $getTglAngsuran);
 
