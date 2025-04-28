@@ -701,7 +701,7 @@ class PelunasanController extends Controller
                 ])->first();
 
                 if ($checkDetail) {
-                    $checkDetail->update(['denda' => $res['PAST_DUE_PENALTY']]);
+                    $checkDetail->update(['denda' => floatval($res['PAST_DUE_PENALTY'])]);
                 }
             }
         }
@@ -866,7 +866,6 @@ class PelunasanController extends Controller
                 }
             }
         } else {
-            // Jika data belum ada, buat baris baru
             $credit = M_CreditSchedule::where([
                 'LOAN_NUMBER' => $loan_number,
                 'PAYMENT_DATE' => $tgl_angsuran,
