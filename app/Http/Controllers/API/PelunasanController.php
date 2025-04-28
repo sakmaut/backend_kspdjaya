@@ -701,7 +701,7 @@ class PelunasanController extends Controller
                 ])->first();
 
                 if ($checkDetail) {
-                    $setArrears = M_Arrears::where(['LOAN_NUMBER' => $checkDetail->loan_number, 'START_DATE' => $checkDetail->tgl_angsuran])->first();
+                    $setArrears = M_Arrears::where(['LOAN_NUMBER' => $checkDetail->loan_number, 'START_DATE' => Carbon::parse($checkDetail->tgl_angsuran)->format('Y-m-d')])->first();
 
                     $checkDetail->update(['denda' => $setArrears ?? floatval($setArrears->PAST_DUE_PENALTY ?? 0) ?? 0]);
                 }
