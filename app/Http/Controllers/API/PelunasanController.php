@@ -26,12 +26,10 @@ class PelunasanController extends Controller
 {
 
     protected $log;
-    protected $taskslogging;
 
-    public function __construct(ExceptionHandling $log, TasksRepository $taskslogging)
+    public function __construct(ExceptionHandling $log)
     {
         $this->log = $log;
-        $this->taskslogging = $taskslogging;
     }
 
     public function index(Request $request)
@@ -222,10 +220,6 @@ class PelunasanController extends Controller
             }
 
             $data = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
-
-            $message = "A/n " . $data->NAMA . " Nominal " . number_format($data->JUMLAH_UANG);
-
-            $this->taskslogging->create($request, 'Pelunasan', 'repayment', $no_inv, 'PENDING', "Pelunasan " . $message);
 
             $dto = new R_KwitansiPelunasan($data);
 
