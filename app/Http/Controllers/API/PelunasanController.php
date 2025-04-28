@@ -691,6 +691,20 @@ class PelunasanController extends Controller
         $this->interestCalculate($request, $loan_number, $no_inv, $creditSchedules);
         $arrears = M_Arrears::where(['LOAN_NUMBER' => $loan_number, 'STATUS_REC' => 'A'])->orderBy('START_DATE', 'ASC')->get();
         $this->arrearsCalculate($request, $loan_number, $no_inv, $arrears);
+
+        if (!empty($arrears)) {
+            foreach ($arrears as $res) {
+                $checkDetail = M_KwitansiDetailPelunasan::where([
+                    'tgl_angsuran' => $res['START_DATE'],
+                    'loan_number' => $res['LOAN_NUMBER'],
+                    'no_invoice' => $no_inv,
+                ])->first();
+
+                if ($checkDetail) {
+                    $checkDetail->update(['denda' => $res['PAST_DUE_PENALTY']]);
+                }
+            }
+        }
     }
 
     private function principalCalculate($request, $loan_number, $no_inv, $creditSchedule)
@@ -804,7 +818,7 @@ class PelunasanController extends Controller
                 }
 
                 $param['BAYAR_DENDA'] = $newPaymentValue;
-                $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param, $getAmount);
+                $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
 
                 if ($remainingDiscount > 0) {
                     $remainingToDiscount = $getAmount - ($valBefore + $newPaymentValue);
@@ -817,7 +831,7 @@ class PelunasanController extends Controller
                         $remainingDiscount = 0;
                     }
 
-                    $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param, $getAmount);
+                    $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
                 }
             }
         }
@@ -831,7 +845,7 @@ class PelunasanController extends Controller
         }
     }
 
-    function insertKwitansiDetail($loan_number, $no_inv, $res, $param = [], $denda = 0)
+    function insertKwitansiDetail($loan_number, $no_inv, $res, $param = [])
     {
         $tgl_angsuran = $res['PAYMENT_DATE'] ?? $res['START_DATE'] ?? null;
 
@@ -864,7 +878,6 @@ class PelunasanController extends Controller
                 'angsuran_ke' => $res['INSTALLMENT_COUNT'] ?? $credit->INSTALLMENT_COUNT ?? 0,
                 'tgl_angsuran' => $tgl_angsuran,
                 'installment' => $res['INSTALLMENT'] ?? 0,
-                'denda' => $denda != 0 ? $denda : 0,
                 'bayar_pokok' => $param['BAYAR_POKOK'] ?? 0,
                 'bayar_bunga' => $param['BAYAR_BUNGA'] ?? 0,
                 'bayar_denda' => $param['BAYAR_DENDA'] ?? 0,
