@@ -692,21 +692,21 @@ class PelunasanController extends Controller
         $arrears = M_Arrears::where(['LOAN_NUMBER' => $loan_number, 'STATUS_REC' => 'A'])->orderBy('START_DATE', 'ASC')->get();
         $this->arrearsCalculate($request, $loan_number, $no_inv, $arrears);
 
-        if (!empty($creditSchedules)) {
-            foreach ($creditSchedules as $res) {
-                $checkDetail = M_KwitansiDetailPelunasan::where([
-                    'tgl_angsuran' => $res['PAYMENT_DATE'],
-                    'loan_number' => $res['LOAN_NUMBER'],
-                    'no_invoice' => $no_inv,
-                ])->first();
+        // if (!empty($creditSchedules)) {
+        //     foreach ($creditSchedules as $res) {
+        //         $checkDetail = M_KwitansiDetailPelunasan::where([
+        //             'tgl_angsuran' => $res['PAYMENT_DATE'],
+        //             'loan_number' => $res['LOAN_NUMBER'],
+        //             'no_invoice' => $no_inv,
+        //         ])->first();
 
-                if ($checkDetail) {
-                    $setArrears = M_Arrears::where(['LOAN_NUMBER' => $checkDetail->loan_number, 'START_DATE' => Carbon::parse($checkDetail->tgl_angsuran)->format('Y-m-d')])->first();
+        //         if ($checkDetail) {
+        //             $setArrears = M_Arrears::where(['LOAN_NUMBER' => $checkDetail->loan_number, 'START_DATE' => Carbon::parse($checkDetail->tgl_angsuran)->format('Y-m-d')])->first();
 
-                    $checkDetail->update(['denda' => $setArrears ?? floatval($setArrears->PAST_DUE_PENALTY ?? 0) ?? 0]);
-                }
-            }
-        }
+        //             $checkDetail->update(['denda' => $setArrears ?? floatval($setArrears->PAST_DUE_PENALTY ?? 0) ?? 0]);
+        //         }
+        //     }
+        // }
     }
 
     private function principalCalculate($request, $loan_number, $no_inv, $creditSchedule)
@@ -873,12 +873,18 @@ class PelunasanController extends Controller
                 'PAYMENT_DATE' => $tgl_angsuran,
             ])->first();
 
+            $setArrears = M_Arrears::where([
+                'LOAN_NUMBER' => $loan_number,
+                'START_DATE' => $tgl_angsuran
+            ])->first();
+
             M_KwitansiDetailPelunasan::create([
                 'no_invoice' => $no_inv ?? '',
                 'loan_number' => $loan_number ?? '',
                 'angsuran_ke' => $res['INSTALLMENT_COUNT'] ?? $credit->INSTALLMENT_COUNT ?? 0,
                 'tgl_angsuran' => $tgl_angsuran,
                 'installment' => $res['INSTALLMENT'] ?? 0,
+                'denda' => floatval($setArrears->PAST_DUE_PENALTY ?? 0),
                 'bayar_pokok' => $param['BAYAR_POKOK'] ?? 0,
                 'bayar_bunga' => $param['BAYAR_BUNGA'] ?? 0,
                 'bayar_denda' => $param['BAYAR_DENDA'] ?? 0,
