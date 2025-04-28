@@ -723,7 +723,7 @@ class PaymentController extends Controller
                         }
 
                         foreach ($getKwitansiDetail as $res) {
-                            $request->merge(['approval' => 'approve', 'pembayaran' => $res['bayar_denda'] != 0 ? 'angsuran_denda' : 'angsuran',"diskon_flag" => $kwitansi->DISKON_FLAG]);
+                            $request->merge(['approval' => 'approve', 'pembayaran' => $res['bayar_denda'] != 0 ? 'angsuran_denda' : 'angsuran', "diskon_flag" => $kwitansi->DISKON_FLAG]);
                             $this->processPaymentStructure($res, $request, $getCodeBranch, $getNoInvoice);
                         }
                     }
@@ -757,20 +757,26 @@ class PaymentController extends Controller
                         $loan_number   = $res['loan_number'];
                         $tgl_angsuran  = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
 
-                        M_CreditSchedule::where([
+                        $record = M_CreditSchedule::where([
                             'LOAN_NUMBER'  => $loan_number,
                             'PAYMENT_DATE' => $tgl_angsuran,
                             'PAID_FLAG'    => 'PENDING'
-                        ])->first()?->update(['PAID_FLAG' => '']);
+                        ])->first();
 
-                        $installment   = floatval($res['installment']);
-                        $today         = date('Y-m-d');
-                        $daysDiff      = (strtotime($today) - strtotime($tgl_angsuran)) / (60 * 60 * 24);
+                        if ($record) {
+                            $record->update(['PAID_FLAG' => '']);
+                        }
+
+                        $getInstallment  = floatval($res['installment']);
+                        $getArrears = floatval($res['denda'] ?? 0);
+
+                        $setArrearsCalculate = calculateArrears($getInstallment, $tgl_angsuran);
 
                         if ($checkType) {
-                            $pastDuePenalty = $installment != 0 ? $installment * ($daysDiff * 0.005) : floatval($res['bayar_denda']);
+                            $getDenda = floatval($res['bayar_denda']) != 0 ? floatval($res['bayar_denda']) : floatval($res['diskon_denda']);
+                            $pastDuePenalty = $getInstallment != 0 ? $setArrearsCalculate : $getDenda;
                         } else {
-                            $pastDuePenalty = $res['flag'] === 'PAID' ? floatval($res['denda'] ?? 0) : $installment * ($daysDiff * 0.005);
+                            $pastDuePenalty = $res['flag'] === 'PAID' ? $getArrears : $setArrearsCalculate;
                         }
 
                         M_Arrears::where([
@@ -893,47 +899,66 @@ class PaymentController extends Controller
                 $ttlBayarPrincipal = 0;
                 $ttlBayarInterest = 0;
                 $ttlBayarDenda = 0;
-                $ttlDendaDiskon = 0;
 
                 foreach ($getKwitansiDetail as $resList) {
 
+                    $getInstallment = floatval($resList['installment'] ?? 0);
+                    $getPrincipal = floatval($resList['principal'] ?? 0);
+                    $getInterest = floatval($resList['interest'] ?? 0);
+                    $getPrincipalPrev = floatval($resList['principal_prev'] ?? 0);
+                    $getInterestPrev = floatval($resList['interest_prev'] ?? 0);
+                    $getInsuficientPaymentPrev = floatval($resList['insuficient_payment_prev'] ?? 0);
+                    $getPaymentValue = floatval($resList['payment'] ?? 0);
+                    $getPaidFlag = $resList['flag'] ?? "";
+                    $getBayarAngsuran = floatval($resList['bayar_angsuran']);
+                    $getBayarDenda = floatval($resList['bayar_denda']);
+                    $getTglAngsuran = Carbon::parse($resList['tgl_angsuran'])->format('Y-m-d') ?? null;
+                    $getAngsuranKe = floatval($resList['angsuran_ke'] ?? 0);
+                    $getArrears = floatval($res['denda'] ?? 0);
+                    $getDiskonArrears = floatval($resList['diskon_denda']);
+
                     $creditScheduleCheck = M_CreditSchedule::where([
                         'LOAN_NUMBER' => $getLoanNumber,
-                        'PAYMENT_DATE' => Carbon::parse($resList['tgl_angsuran'])->format('Y-m-d'),
-                        'INSTALLMENT_COUNT' => $resList['angsuran_ke'],
+                        'PAYMENT_DATE' => $getTglAngsuran,
+                        'INSTALLMENT_COUNT' => $getAngsuranKe,
                     ])->first();
 
                     if ($creditScheduleCheck) {
-                        if ($resList['bayar_angsuran'] != 0) {
+                        if ($getBayarAngsuran != 0) {
                             $creditScheduleCheck->update([
-                                'PAYMENT_VALUE_PRINCIPAL' => floatval($resList['principal_prev'] ?? 0),
-                                'PAYMENT_VALUE_INTEREST' => floatval($resList['interest_prev'] ?? 0),
-                                'INSUFFICIENT_PAYMENT' =>  floatval($resList['insuficient_payment_prev'] ?? 0),
-                                'PAYMENT_VALUE' =>  floatval($resList['payment'] ?? 0),
-                                'PAID_FLAG' => $resList['flag'] ?? ''
+                                'PAYMENT_VALUE_PRINCIPAL' => $getPrincipalPrev,
+                                'PAYMENT_VALUE_INTEREST' => $getInterestPrev,
+                                'INSUFFICIENT_PAYMENT' => $getInsuficientPaymentPrev,
+                                'PAYMENT_VALUE' => $getPaymentValue,
+                                'PAID_FLAG' => $getPaidFlag
                             ]);
 
-                            $ttlBayarPrincipal += $resList['principal_prev'] != 0 ? floatval($resList['principal_prev']) : floatval($resList['principal']);
-                            $ttlBayarInterest += $resList['interest_prev'] != 0 ? floatval($resList['interest_prev']) : floatval($resList['interest']);
+                            $ttlBayarPrincipal += $getPrincipalPrev != 0 ? $getPrincipalPrev : $getPrincipal;
+                            $ttlBayarInterest += $getInterestPrev != 0 ? $getInterestPrev : $getInterest;
                         }
                     }
 
                     $arrearsCheck = M_Arrears::where([
                         'LOAN_NUMBER' => $getLoanNumber,
-                        'START_DATE' => Carbon::parse($resList['tgl_angsuran'])->format('Y-m-d')
+                        'START_DATE' => $getTglAngsuran
                     ])->first();
 
                     if ($arrearsCheck) {
-                        if ($resList['bayar_denda'] != 0 || $check->DISKON_FLAG == 'ya') {
+                        $setArrearsCalculate = calculateArrears($getInstallment, $getTglAngsuran);
+
+                        $pastDuePenalty = $getPaidFlag === 'PAID' ? $getArrears : $setArrearsCalculate;
+
+                        if ($getBayarDenda != 0 || $check->DISKON_FLAG == 'ya') {
                             $arrearsCheck->update([
-                                'PAID_PCPL' => floatval($resList['principal_prev']),
-                                'PAID_INT' =>  floatval($resList['interest_prev']),
-                                'PAID_PENALTY' => floatval($arrearsCheck->PAST_DUE_PENALTY) - floatval($resList['denda']),
-                                'WOFF_PENALTY' => floatval($arrearsCheck->WOFF_PENALTY) - floatval($resList['diskon_denda']),
+                                'PAST_DUE_PENALTY' => $pastDuePenalty,
+                                'PAID_PCPL' => $getPrincipalPrev,
+                                'PAID_INT' =>  $getInterestPrev,
+                                'PAID_PENALTY' => floatval($arrearsCheck->PAST_DUE_PENALTY) - $getArrears,
+                                'WOFF_PENALTY' => floatval($arrearsCheck->WOFF_PENALTY) - $getDiskonArrears,
                                 'STATUS_REC' => 'A',
                             ]);
 
-                            $ttlBayarDenda += floatval($resList['bayar_denda']);
+                            $ttlBayarDenda += $getBayarDenda;
                         }
                     }
                 }

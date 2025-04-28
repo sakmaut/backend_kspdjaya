@@ -494,3 +494,17 @@ if (!function_exists('getLastAttachment')) {
         return $query->get();
     }
 }
+
+if (!function_exists('calculateArrears')) {
+    function calculateArrears($installment, $date)
+    {
+        $getInstallment   = floatval($installment);
+        $setArrearsPercentage = 0.005;
+        $currentDate = date('Y-m-d');
+        $daysDiff = (strtotime($currentDate) - strtotime($date)) / (60 * 60 * 24);
+
+        $resValue = $getInstallment * ($daysDiff * $setArrearsPercentage);
+
+        return $resValue;
+    }
+}

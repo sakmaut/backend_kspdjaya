@@ -503,10 +503,19 @@ class PelunasanController extends Controller
 
     function cancelArrears($loan_number, $res)
     {
+        $getInstallment = floatval($res['installment']);
+        $getTglAngsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d') ?? null;
+        $getDenda = floatval($res['bayar_denda']) != 0 ? floatval($res['bayar_denda']) : floatval($res['diskon_denda']);
+
         $getArrears = M_Arrears::where([
             'LOAN_NUMBER' => $loan_number,
-            'START_DATE' => $res['tgl_angsuran'],
-        ])->orderBy('START_DATE', 'ASC')->first();
+            'START_DATE' => $getTglAngsuran,
+        ])->first();
+
+
+        $setArrearsCalculate = calculateArrears($getInstallment, $getTglAngsuran);
+
+        $pastDuePenalty = $getInstallment != 0 ? $setArrearsCalculate : $getDenda;
 
         if ($getArrears) {
             $ttlPrincipal = floatval($getArrears->PAID_PCPL) - floatval($res['bayar_pokok'] ?? 0);
@@ -524,6 +533,7 @@ class PelunasanController extends Controller
             $ttlDiscPenalty = max($ttlDiscPenalty, 0);
 
             $getArrears->update([
+                'PAST_DUE_PENALTY' => $pastDuePenalty,
                 'END_DATE' => Carbon::now()->format('Y-m-d'),
                 'PAID_PCPL' => $ttlPrincipal,
                 'PAID_INT' => $ttlInterest,
@@ -649,10 +659,10 @@ class PelunasanController extends Controller
     function proccessKwitansiDetail($request, $loan_number, $no_inv)
     {
         $creditSchedules =  M_CreditSchedule::from('credit_schedule AS a')
-        ->leftJoin('arrears AS b', function ($join) {
-            $join->on('b.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
-            ->on('b.START_DATE', '=', 'a.PAYMENT_DATE');
-        })
+            ->leftJoin('arrears AS b', function ($join) {
+                $join->on('b.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
+                    ->on('b.START_DATE', '=', 'a.PAYMENT_DATE');
+            })
             ->where('a.LOAN_NUMBER', $loan_number)
             ->where(function ($query) {
                 $query->where('a.PAID_FLAG', '!=', 'PAID')
