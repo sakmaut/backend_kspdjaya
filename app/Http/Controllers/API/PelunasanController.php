@@ -694,8 +694,6 @@ class PelunasanController extends Controller
 
         if (!empty($creditSchedules)) {
             foreach ($creditSchedules as $res) {
-                $setArrears = M_Arrears::where(['LOAN_NUMBER' => $res['LOAN_NUMBER'], 'START_DATE' => $res['PAYMENT_DATE']])->first();
-
                 $checkDetail = M_KwitansiDetailPelunasan::where([
                     'tgl_angsuran' => $res['PAYMENT_DATE'],
                     'loan_number' => $res['LOAN_NUMBER'],
@@ -703,6 +701,7 @@ class PelunasanController extends Controller
                 ])->first();
 
                 if ($checkDetail) {
+                    $setArrears = M_Arrears::where(['LOAN_NUMBER' => $res['LOAN_NUMBER'], 'START_DATE' => $res['PAYMENT_DATE']])->first();
                     $checkDetail->update(['denda' => floatval($setArrears->PAST_DUE_PENALTY ?? 0)]);
                 }
             }
