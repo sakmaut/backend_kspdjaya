@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Repositories\TasksLogging\TasksRepository;
 use App\Http\Resources\R_KwitansiPelunasan;
 use App\Http\Resources\R_Pelunasan;
 use App\Models\M_Arrears;
@@ -22,6 +24,16 @@ use Ramsey\Uuid\Uuid;
 
 class PelunasanController extends Controller
 {
+
+    protected $log;
+    protected $taskslogging;
+
+    public function __construct(ExceptionHandling $log, TasksRepository $taskslogging)
+    {
+        $this->log = $log;
+        $this->taskslogging = $taskslogging;
+    }
+
     public function index(Request $request)
     {
         try {
@@ -49,9 +61,8 @@ class PelunasanController extends Controller
             $dto = R_Pelunasan::collection($results);
 
             return response()->json($dto, 200);
-        } catch (\Exception $e) {
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+        } catch (Exception $e) {
+            return $this->log->logError($e, $request);
         }
     }
 
@@ -60,14 +71,13 @@ class PelunasanController extends Controller
         try {
 
             $loan_number = $request->loan_number;
-            $pelunasan = 5;
 
-            $allQuery = "SELECT ss
+            $allQuery = "SELECT 
                             (a.PCPL_ORI - COALESCE(a.PAID_PRINCIPAL, 0)) AS SISA_POKOK,
                             b.INT_ARR AS TUNGGAKAN_BUNGA,
                             e.TUNGGAKAN_DENDA AS TUNGGAKAN_DENDA,
                             e.DENDA_TOTAL AS DENDA,
-                            (COALESCE(a.PENALTY_RATE, $pelunasan) / 100) * (a.PCPL_ORI - COALESCE(a.PAID_PRINCIPAL, 0)) AS PINALTI,
+                            (COALESCE(a.PENALTY_RATE, 7.5) / 100) * (a.PCPL_ORI - COALESCE(a.PAID_PRINCIPAL, 0)) AS PINALTI,
                             d.DISC_BUNGA
                         FROM 
                             credit a
@@ -186,14 +196,6 @@ class PelunasanController extends Controller
 
             $status = "PENDING";
 
-            // $discounts = $request->only(['DISKON_POKOK', 'DISKON_PINALTI', 'DISKON_BUNGA', 'DISKON_DENDA']);
-
-            // $status = "PAID";
-
-            // if (array_sum($discounts) > 0 || strtolower($request->METODE_PEMBAYARAN) === 'transfer') {
-            //     $status = "PENDING";
-            // }
-
             if (!M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->exists()) {
                 $this->saveKwitansi($request, $detail_customer, $no_inv, $status);
                 $this->proccessKwitansiDetail($request, $loan_number, $no_inv);
@@ -221,14 +223,17 @@ class PelunasanController extends Controller
 
             $data = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
 
+            $message = "A/n " . $data->NAMA . " Nominal " . number_format($data->JUMLAH_UANG);
+
+            $this->taskslogging->create($request, 'Pelunasan', 'repayment', $no_inv, 'PENDING', "Pelunasan " . $message);
+
             $dto = new R_KwitansiPelunasan($data);
 
             DB::commit();
             return response()->json($dto, 200);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollback();
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage()], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
@@ -361,32 +366,32 @@ class PelunasanController extends Controller
         if ($kwitansi) {
             $user_id = $kwitansi->CREATED_BY;
             $getCodeBranch = M_Branch::find($kwitansi->BRANCH_CODE);
-        }
 
-        M_Payment::create([
-            'ID' => $uid,
-            'ACC_KEY' => 'Bayar Pelunasan Pinalty',
-            'STTS_RCRD' => $status,
-            'NO_TRX' => $no_inv,
-            'PAYMENT_METHOD' => $kwitansi->METODE_PEMBAYARAN ?? $request->payment_method,
-            'INVOICE' => $no_inv,
-            'BRANCH' =>  $getCodeBranch->CODE_NUMBER ?? M_Branch::find($request->user()->branch_id)->CODE_NUMBER,
-            'LOAN_NUM' => $loan_number ?? '',
-            'ENTRY_DATE' => Carbon::now(),
-            'TITLE' => 'Bayar Pelunasan Pinalty',
-            'ORIGINAL_AMOUNT' => $request->BAYAR_PINALTI ?? 0,
-            'END_DATE' => Carbon::now(),
-            'USER_ID' => $user_id ?? $request->user()->id,
-            'AUTH_BY' => $request->user()->fullname ?? '',
-            'AUTH_DATE' => Carbon::now()
-        ]);
+            M_Payment::create([
+                'ID' => $uid,
+                'ACC_KEY' => 'Bayar Pelunasan Pinalty',
+                'STTS_RCRD' => $status,
+                'NO_TRX' => $no_inv,
+                'PAYMENT_METHOD' => $kwitansi->METODE_PEMBAYARAN ?? $request->payment_method,
+                'INVOICE' => $no_inv,
+                'BRANCH' =>  $getCodeBranch->CODE_NUMBER ?? M_Branch::find($request->user()->branch_id)->CODE_NUMBER,
+                'LOAN_NUM' => $loan_number ?? '',
+                'ENTRY_DATE' => Carbon::now(),
+                'TITLE' => 'Bayar Pelunasan Pinalty',
+                'ORIGINAL_AMOUNT' => $kwitansi->PINALTY_PELUNASAN ?? 0,
+                'END_DATE' => Carbon::now(),
+                'USER_ID' => $user_id ?? $request->user()->id,
+                'AUTH_BY' => $request->user()->fullname ?? '',
+                'AUTH_DATE' => Carbon::now()
+            ]);
 
-        if ($request->BAYAR_PINALTI != 0) {
-            $this->proccessPaymentDetail($uid, 'BAYAR PELUNASAN PINALTY', $request->BAYAR_PINALTI ?? 0);
-        }
+            if ($kwitansi->PINALTY_PELUNASAN != 0) {
+                $this->proccessPaymentDetail($uid, 'BAYAR PELUNASAN PINALTY', $kwitansi->PINALTY_PELUNASAN ?? 0);
+            }
 
-        if ($request->DISKON_PINALTI != 0) {
-            $this->proccessPaymentDetail($uid, 'BAYAR PELUNASAN DISKON PINALTY', $request->DISKON_PINALTI ?? 0);
+            if ($kwitansi->DISKON_PINALTY_PELUNASAN != 0) {
+                $this->proccessPaymentDetail($uid, 'BAYAR PELUNASAN DISKON PINALTY', $kwitansi->DISKON_PINALTY_PELUNASAN ?? 0);
+            }
         }
     }
 
@@ -578,9 +583,11 @@ class PelunasanController extends Controller
             throw new Exception("Kwitansi Exist", 500);
         }
 
+        $idGenerate = Uuid::uuid7()->toString();
+
         $data = [
             "PAYMENT_TYPE" => 'pelunasan',
-            "PAYMENT_ID" => $request->payment_id,
+            "PAYMENT_ID" => $idGenerate ?? '',
             "STTS_PAYMENT" => $status,
             "NO_TRANSAKSI" => $no_inv,
             "LOAN_NUMBER" => $request->LOAN_NUMBER,
@@ -600,7 +607,7 @@ class PelunasanController extends Controller
             "PINALTY_PELUNASAN" => $request->BAYAR_PINALTI ?? 0,
             "DISKON_PINALTY_PELUNASAN" => $request->DISKON_PINALTI ?? 0,
             "PEMBULATAN" => $request->PEMBULATAN,
-            "DISKON" => $request->PEMBULATAN,
+            "DISKON" => $request->JUMLAH_DISKON,
             "KEMBALIAN" => $request->KEMBALIAN,
             "JUMLAH_UANG" => $request->UANG_PELANGGAN,
             "NAMA_BANK" => $request->NAMA_BANK,
@@ -649,7 +656,8 @@ class PelunasanController extends Controller
             ->where('a.LOAN_NUMBER', $loan_number)
             ->where(function ($query) {
                 $query->where('a.PAID_FLAG', '!=', 'PAID')
-                    ->orWhereNotIn('b.STATUS_REC', ['S', 'D']);
+                    ->orWhereNotIn('b.STATUS_REC', ['S', 'D'])
+                    ->orWhereNull('b.STATUS_REC');
             })
             ->orderBy('a.PAYMENT_DATE', 'ASC')
             ->select(
@@ -682,39 +690,34 @@ class PelunasanController extends Controller
         $remainingDiscount = $request->DISKON_POKOK;
 
         foreach ($creditSchedule as $res) {
-            // Get the current value of the field and payment status
             $valBefore = $res->{'PAYMENT_VALUE_PRINCIPAL'};
             $getAmount = $res->{'PRINCIPAL'};
 
             $remainingToPay = $getAmount - $valBefore;
 
-            // Proceed only if there's an amount left to pay
             if ($remainingToPay > 0) {
-                // If enough payment is available to cover the remaining amount
                 if ($remainingPayment >= $remainingToPay) {
-                    // Full payment for the remaining amount
                     $newPaymentValue = $remainingToPay;
-                    $remainingPayment -= $remainingToPay; // Subtract the paid amount
+                    $remainingPayment -= $remainingToPay;
                 } else {
-                    // Partial payment
                     $newPaymentValue = $remainingPayment;
-                    $remainingPayment = 0; // All payment used
+                    $remainingPayment = 0;
                 }
 
                 // Apply the payment to the schedule
                 $param['BAYAR_POKOK'] = $newPaymentValue;
                 $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
 
-                // Handle the discount if applicable
+                // // Handle the discount if applicable
                 if ($remainingDiscount > 0) {
                     $remainingToDiscount = $getAmount - ($valBefore + $newPaymentValue);
 
                     if ($remainingDiscount >= $remainingToDiscount) {
-                        $param['DISKON_POKOK'] = $remainingToDiscount; // Full discount
-                        $remainingDiscount -= $remainingToDiscount; // Subtract the used discount
+                        $param['DISKON_POKOK'] = $remainingToDiscount;
+                        $remainingDiscount -= $remainingToDiscount;
                     } else {
-                        $param['DISKON_POKOK'] = $remainingDiscount; // Partial discount
-                        $remainingDiscount = 0; // No discount left
+                        $param['DISKON_POKOK'] = $remainingDiscount;
+                        $remainingDiscount = 0;
                     }
 
                     $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
@@ -743,10 +746,10 @@ class PelunasanController extends Controller
                 $remainingToPay = $getAmount - $valBefore;
 
                 if ($remainingPayment >= $remainingToPay) {
-                    $newPaymentValue = $getAmount;
+                    $newPaymentValue = $getAmount - $valBefore;
                     $remainingPayment -= $remainingToPay;
                 } else {
-                    $newPaymentValue = $valBefore + $remainingPayment;
+                    $newPaymentValue = $remainingPayment;
                     $remainingPayment = 0;
                 }
 
@@ -758,7 +761,7 @@ class PelunasanController extends Controller
                 if ($newPaymentValue == $getAmount) {
                     $param['DISKON_BUNGA'] = 0;
                 } else {
-                    $param['DISKON_BUNGA'] = $getAmount - $newPaymentValue;
+                    $param['DISKON_BUNGA'] = $getAmount - ($valBefore + $newPaymentValue);
                 }
 
                 $this->insertKwitansiDetail(
@@ -773,56 +776,36 @@ class PelunasanController extends Controller
 
     private function arrearsCalculate($request, $loan_number, $no_inv, $arrears)
     {
-        $this->calculateArrears(
-            $request->BAYAR_DENDA,
-            $request->DISKON_DENDA,
-            $arrears,
-            'PAST_DUE_PENALTY',
-            'PAID_PENALTY',
-            'BAYAR_DENDA',
-            'DISKON_DENDA',
-            $loan_number,
-            $no_inv
-        );
-    }
+        $remainingPayment = $request->BAYAR_DENDA;
+        $remainingDiscount = $request->DISKON_DENDA;
 
-    private function calculateArrears($paymentAmount, $discountAmount, $schedule, $fieldKey, $valueKey, $paymentParam, $discountParam, $loan_number, $no_inv)
-    {
-        $remainingPayment = $paymentAmount;
-        $remainingDiscount = $discountAmount;
+        foreach ($arrears as $res) {
+            $valBefore = $res->{'PAID_PENALTY'};
+            $getAmount = $res->{'PAST_DUE_PENALTY'};
 
-        foreach ($schedule as $res) {
-            $valBefore = $res->{$valueKey};
-            $getAmount = $res->{$fieldKey};
+            $remainingToPay = $getAmount - $valBefore;
 
-            if ($valBefore < $getAmount) {
-                // Calculate the amount left to pay
-                $remainingToPay = $getAmount - $valBefore;
-
-                // If enough payment is available to cover the remaining amount
+            if ($remainingToPay > 0) {
                 if ($remainingPayment >= $remainingToPay) {
-                    $newPaymentValue = $getAmount; // Full payment
-                    $remainingPayment -= $remainingToPay; // Subtract the paid amount
+                    $newPaymentValue = $remainingToPay;
+                    $remainingPayment -= $remainingToPay;
                 } else {
-                    $newPaymentValue = $valBefore + $remainingPayment;
+                    $newPaymentValue = $remainingPayment;
                     $remainingPayment = 0;
                 }
 
-                if ($paymentAmount != 0) {
-                    $param[$paymentParam] = $newPaymentValue;
-                    $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
-                }
+                $param['BAYAR_DENDA'] = $newPaymentValue;
+                $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
 
-                // Handle the discount if applicable
                 if ($remainingDiscount > 0) {
                     $remainingToDiscount = $getAmount - ($valBefore + $newPaymentValue);
 
                     if ($remainingDiscount >= $remainingToDiscount) {
-                        $param[$discountParam] = $remainingToDiscount; // Full discount
-                        $remainingDiscount -= $remainingToDiscount; // Subtract the used discount
+                        $param['DISKON_DENDA'] = $remainingToDiscount;
+                        $remainingDiscount -= $remainingToDiscount;
                     } else {
-                        $param[$discountParam] = $remainingDiscount; // Partial discount
-                        $remainingDiscount = 0; // No discount left
+                        $param['DISKON_DENDA'] = $remainingDiscount;
+                        $remainingDiscount = 0;
                     }
 
                     $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
@@ -830,13 +813,12 @@ class PelunasanController extends Controller
             }
         }
 
-
         if ($remainingPayment > 0) {
-            $param[$paymentParam] = $remainingPayment;
+            $param['BAYAR_DENDA'] = $remainingPayment;
         }
 
         if ($remainingDiscount > 0) {
-            $param[$discountParam] = $remainingDiscount;
+            $param['DISKON_DENDA'] = $remainingDiscount;
         }
     }
 
