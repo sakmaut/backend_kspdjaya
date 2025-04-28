@@ -694,8 +694,8 @@ class PelunasanController extends Controller
 
         foreach ($creditSchedules as $res) {
             $checkDetail = M_KwitansiDetailPelunasan::where([
-                'tgl_angsuran' => $res->PAYMENT_DATE,
-                'loan_number ' => $res->LOAN_NUMBER,
+                'tgl_angsuran' => $res['PAYMENT_DATE'],
+                'loan_number' => $res['LOAN_NUMBER'],
                 'no_invoice' => $no_inv,
             ])->first();
 
