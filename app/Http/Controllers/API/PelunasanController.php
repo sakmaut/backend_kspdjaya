@@ -694,7 +694,7 @@ class PelunasanController extends Controller
 
         if (!empty($arrears)) {
             foreach ($creditSchedules as $res) {
-                $setArrears = M_Arrears::where(['LOAN_NUMBER' => $res['LOAN_NUMBER'], 'START_DATE' => $res['START_DATE']])->first();
+                $setArrears = M_Arrears::where(['LOAN_NUMBER' => $res['LOAN_NUMBER'], 'START_DATE' => $res['PAYMENT_DATE']])->first();
 
                 $checkDetail = M_KwitansiDetailPelunasan::where([
                     'tgl_angsuran' => $res['START_DATE'],
