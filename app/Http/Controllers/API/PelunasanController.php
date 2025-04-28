@@ -703,7 +703,7 @@ class PelunasanController extends Controller
                 ])->first();
 
                 if ($checkDetail) {
-                    $checkDetail->update(['denda' => floatval($setArrears->PAST_DUE_PENALTY)]);
+                    $checkDetail->update(['denda' => floatval($setArrears->PAST_DUE_PENALTY ?? 0)]);
                 }
             }
         }
