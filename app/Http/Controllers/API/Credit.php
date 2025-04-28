@@ -169,7 +169,7 @@ class Credit extends Controller
             "pihak_2" => [
                 "nama" => strtoupper($cr_personal->NAME ?? null),
                 "no_identitas" => strtoupper($cr_personal->ID_NUMBER ?? null),
-                "alamat" => strtoupper($cr_personal->ADDRESS.' '. $cr_personal->RT . '/' . $cr_personal->RW . ' ' . $cr_personal->KELURAHAN . ' ' . $cr_personal->KECAMATAN . ' ' . $cr_personal->CITY . ',' . $cr_personal->PROVINCE ?? null)
+                "alamat" => strtoupper($cr_personal->ADDRESS . ' ' . $cr_personal->RT . '/' . $cr_personal->RW . ' ' . $cr_personal->KELURAHAN . ' ' . $cr_personal->KECAMATAN . ' ' . $cr_personal->CITY . ',' . $cr_personal->PROVINCE ?? null)
             ],
             "penjamin" => [],
             "pasangan" => [
@@ -378,7 +378,7 @@ class Credit extends Controller
             'FIRST_ARR_DATE'  => null,
             'INSTALLMENT_DATE'  => $setDate ?? null,
             'END_DATE'  => add_months($setDate, $data->PERIOD) ?? null,
-            'PCPL_ORI'  => $data->SUBMISSION_VALUE + ($data->TOTAL_ADMIN ?? 0) ?? null,
+            'PCPL_ORI'  => $data->POKOK_PEMBAYARAN ?? 0,
             'INTRST_ORI' => $data->TOTAL_INTEREST ?? 0,
             'PAID_PRINCIPAL'  => 0,
             'PAID_INTEREST'  => 0,
