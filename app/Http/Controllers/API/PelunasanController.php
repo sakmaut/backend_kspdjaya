@@ -692,26 +692,16 @@ class PelunasanController extends Controller
         $arrears = M_Arrears::where(['LOAN_NUMBER' => $loan_number, 'STATUS_REC' => 'A'])->orderBy('START_DATE', 'ASC')->get();
         $this->arrearsCalculate($request, $loan_number, $no_inv, $arrears);
 
-        if (!empty($creditSchedules)) {
-            foreach ($creditSchedules as $res) {
+        if (!empty($arrears)) {
+            foreach ($arrears as $res) {
+                $checkDetail = M_KwitansiDetailPelunasan::where([
+                    'tgl_angsuran' => $res['START_DATE'],
+                    'loan_number' => $res['LOAN_NUMBER'],
+                    'no_invoice' => $no_inv,
+                ])->first();
 
-                $setArrears = M_Arrears::where([
-                    'LOAN_NUMBER' => $loan_number,
-                    'START_DATE' => $res['PAYMENT_DATE']
-                ])->get();
-
-                if (!empty($setArrears)) {
-                    foreach ($setArrears as $res2) {
-                        $checkDetail = M_KwitansiDetailPelunasan::where([
-                            'tgl_angsuran' => $res2['START_DATE'],
-                            'loan_number' => $res2['LOAN_NUMBER'],
-                            'no_invoice' => $no_inv,
-                        ])->first();
-
-                        if ($checkDetail) {
-                            $checkDetail->update(['denda' => floatval($res2['PAST_DUE_PENALTY'] ?? 0)]);
-                        }
-                    }
+                if ($checkDetail) {
+                    $checkDetail->update(['denda' => floatval($res['PAST_DUE_PENALTY'] ?? 0)]);
                 }
             }
         }
