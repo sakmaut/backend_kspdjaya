@@ -498,7 +498,7 @@ if (!function_exists('getLastAttachment')) {
 if (!function_exists('calculateArrears')) {
     function calculateArrears($installment, $date)
     {
-        $getInstallment   = floatval($installment);
+        $getInstallment  = floatval($installment);
         $setArrearsPercentage = 0.005;
         $currentDate = date('Y-m-d');
         $daysDiff = (strtotime($currentDate) - strtotime($date)) / (60 * 60 * 24);
