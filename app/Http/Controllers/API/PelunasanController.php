@@ -805,7 +805,7 @@ class PelunasanController extends Controller
                 }
 
                 $param['BAYAR_DENDA'] = $newPaymentValue;
-                $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
+                $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param, $getAmount);
 
                 if ($remainingDiscount > 0) {
                     $remainingToDiscount = $getAmount - ($valBefore + $newPaymentValue);
@@ -818,7 +818,7 @@ class PelunasanController extends Controller
                         $remainingDiscount = 0;
                     }
 
-                    $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param);
+                    $this->insertKwitansiDetail($loan_number, $no_inv, $res, $param, $getAmount);
                 }
             }
         }
@@ -832,24 +832,21 @@ class PelunasanController extends Controller
         }
     }
 
-    function insertKwitansiDetail($loan_number, $no_inv, $res, $param = [])
+    function insertKwitansiDetail($loan_number, $no_inv, $res, $param = [], $denda = 0)
     {
         $tgl_angsuran = $res['PAYMENT_DATE'] ?? $res['START_DATE'] ?? null;
 
-        // Cek apakah data sudah ada berdasarkan no_invoice, tgl_angsuran, dan loan_number
         $checkDetail = M_KwitansiDetailPelunasan::where([
             'tgl_angsuran' => $tgl_angsuran,
             'loan_number' => $loan_number,
             'no_invoice' => $no_inv,
         ])->first();
 
-        // Jika data sudah ada, update field yang relevan
         if ($checkDetail) {
             $fields = ['BAYAR_POKOK', 'DISKON_POKOK', 'BAYAR_BUNGA', 'DISKON_BUNGA', 'BAYAR_DENDA', 'DISKON_DENDA'];
 
             foreach ($fields as $field) {
                 if (isset($param[$field])) {
-                    // Update hanya jika nilai baru tidak sama dengan nilai yang sudah ada
                     if ($checkDetail->{strtolower($field)} != $param[$field]) {
                         $checkDetail->update([strtolower($field) => $param[$field]]);
                     }
@@ -868,6 +865,7 @@ class PelunasanController extends Controller
                 'angsuran_ke' => $res['INSTALLMENT_COUNT'] ?? $credit->INSTALLMENT_COUNT ?? 0,
                 'tgl_angsuran' => $tgl_angsuran,
                 'installment' => $res['INSTALLMENT'] ?? 0,
+                'denda' => $denda != 0 ? $denda : 0,
                 'bayar_pokok' => $param['BAYAR_POKOK'] ?? 0,
                 'bayar_bunga' => $param['BAYAR_BUNGA'] ?? 0,
                 'bayar_denda' => $param['BAYAR_DENDA'] ?? 0,

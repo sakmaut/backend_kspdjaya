@@ -17,6 +17,7 @@ class M_KwitansiDetailPelunasan extends Model
         'angsuran_ke',
         'tgl_angsuran',
         'installment',
+        'denda',
         'bayar_pokok',
         'bayar_bunga',
         'bayar_denda',
