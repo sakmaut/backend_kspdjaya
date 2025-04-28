@@ -692,7 +692,7 @@ class PelunasanController extends Controller
         $arrears = M_Arrears::where(['LOAN_NUMBER' => $loan_number, 'STATUS_REC' => 'A'])->orderBy('START_DATE', 'ASC')->get();
         $this->arrearsCalculate($request, $loan_number, $no_inv, $arrears);
 
-        if (!empty($arrears)) {
+        if (!empty($creditSchedules)) {
             foreach ($creditSchedules as $res) {
                 $setArrears = M_Arrears::where(['LOAN_NUMBER' => $res['LOAN_NUMBER'], 'START_DATE' => $res['PAYMENT_DATE']])->first();
 
