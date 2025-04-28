@@ -208,20 +208,28 @@ if (!function_exists('generateCodeKwitansi')) {
 if (!function_exists('generateCustCode')) {
     function generateCustCode($request, $table, $column)
     {
+        // Ambil data cabang berdasarkan ID cabang dari user yang sedang login
         $branch = M_Branch::find($request->user()->branch_id);
 
         if (!$branch) {
-            throw new Exception("Cabang tidak ditemukan.");
+            throw new Exception("Cabang tidak ditemukan untuk user ID: " . $request->user()->id);
         }
 
         $branchCodeNumber = $branch->CODE_NUMBER;
+
+        // Ambil record terakhir berdasarkan urutan angka 5 digit di akhir kode
         $latestRecord = DB::table($table)
-            ->where($column, 'like', $branchCodeNumber . '%')
-            ->orderByRaw("CAST(SUBSTRING($column, LENGTH(?) + 1) AS UNSIGNED) DESC", [$branchCodeNumber])
+            ->select($column)
+            ->where($column, 'like', '%' . $branchCodeNumber . '%')
+            ->orderByRaw("CAST(RIGHT($column, 5) AS UNSIGNED) DESC")
             ->first();
 
-        $lastSequence = ($latestRecord ? (int) substr($latestRecord->$column, strlen($branchCodeNumber) + 3, 5) : 0) + 1;
+        // Tentukan angka urutan berikutnya
+        $lastSequence = $latestRecord
+            ? ((int) substr($latestRecord->$column, -5)) + 1
+            : 1;
 
+        // Gabungkan kode cabang dengan nomor urut baru, 5 digit
         return sprintf("%s%05d", $branchCodeNumber, $lastSequence);
     }
 }
