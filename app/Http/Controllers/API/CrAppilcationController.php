@@ -1139,12 +1139,14 @@ class CrAppilcationController extends Controller
             ->join('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
             ->where('a.STATUS', 'A')
             ->where('b.ID_NUMBER', $ktp)
+            ->where('a.ORDER_NUMBER', '!=', $application->ORDER_NUMBER)
             ->count();
 
         $checkKkNumber = DB::table('credit as a')
             ->join('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
             ->where('a.STATUS', 'A')
             ->where('b.KK_NUMBER', $kk)
+            ->where('a.ORDER_NUMBER', '!=', $application->ORDER_NUMBER)
             ->count();
 
         if (!isset($arrayList["order_validation"])) {
@@ -1152,13 +1154,13 @@ class CrAppilcationController extends Controller
         }
 
         // Validate KTP
-        // if ($checkIdNumber > 1) {
-        //     $arrayList["order_validation"][] = "KTP : No KTP {$ktp} Masih Ada yang Aktif";
-        // }
+        if ($checkIdNumber > 2) {
+            $array_build["order_validation"][] = "KTP : No KTP {$ktp} Masih Ada yang Aktif";
+        }
 
         // Validate KK
         if ($checkKkNumber > 2) {
-            $arrayList["order_validation"][] = "KK : No KK {$kk} Aktif Lebih Dari 2";
+            $array_build["order_validation"][] = "KK : No KK {$kk} Aktif Lebih Dari 2";
         }
 
         foreach ($guarente_vehicle as $list) {
