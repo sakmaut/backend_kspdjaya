@@ -59,16 +59,16 @@ class TasksRepository
             $taskId = $execute->id;
         }
 
-        $logData = array_merge($data, [
-            'tasks_id' => $taskId,
-            'type_id' => $type_id,
-            'created_id' => $user->id,
-            'created_by' => $user->fullname,
-            'created_branch' => $user->branch_id,
-            'created_position' => $user->position,
-            'created_at' => $timestamp,
-        ]);
+        // $logData = array_merge($data, [
+        //     'tasks_id' => $taskId,
+        //     'type_id' => $type_id,
+        //     'created_id' => $user->id,
+        //     'created_by' => $user->fullname,
+        //     'created_branch' => $user->branch_id,
+        //     'created_position' => $user->position,
+        //     'created_at' => $timestamp,
+        // ]);
 
-        $this->tasksLogModel::create($logData);
+        // $this->tasksLogModel::create($logData);
     }
 }
