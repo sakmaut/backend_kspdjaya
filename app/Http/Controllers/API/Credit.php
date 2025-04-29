@@ -271,15 +271,19 @@ class Credit extends Controller
                 $arrayList["order_validation"][] =
                     "Jaminan : Jaminan No Mesin dan No Rangka Tidak Boleh Kosong";
             } else {
-                // $result = DB::table('cr_collateral')
-                //     ->where('STATUS', '!=', 'RILIS')
-                //     ->where('CHASIS_NUMBER', $list->CHASIS_NUMBER)
-                //     ->where('ENGINE_NUMBER', $list->ENGINE_NUMBER)
-                //     ->get(['STATUS']);
+                $result = DB::table('cr_collateral as a')
+                    ->leftJoin('credit as b', 'b.ID', '=', 'a.CR_CREDIT_ID')
+                    ->leftJoin('cr_application as c', 'c.ORDER_NUMBER', '=', 'b.ORDER_NUMBER')
+                    ->select('c.ORDER_NUMBER', 'a.STATUS', 'b.CREATED_AT')
+                    ->where('a.STATUS', '!=', 'RILIS')
+                    ->where('a.CHASIS_NUMBER', $list->CHASIS_NUMBER)
+                    ->where('a.ENGINE_NUMBER', $list->CHASIS_NUMBER)
+                    ->where('c.ORDER_NUMBER', '!=', $request->order_number)
+                    ->get();
 
-                // if ($result->isNotEmpty()) {
-                //     $array_build["order_validation"][] = "Jaminan : Jaminan No Mesin {$list->ENGINE_NUMBER} dan No Rangka {$list->CHASIS_NUMBER} Masih Belum DiRilis";
-                // }
+                if ($result->isNotEmpty()) {
+                    $array_build["order_validation"][] = "Jaminan : Jaminan No Mesin {$list->ENGINE_NUMBER} dan No Rangka {$list->CHASIS_NUMBER} Masih Belum DiRilis";
+                }
             }
         }
 
