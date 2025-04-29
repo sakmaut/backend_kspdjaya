@@ -1168,15 +1168,15 @@ class CrAppilcationController extends Controller
                     "Jaminan : Jaminan No Mesin dan No Rangka Tidak Boleh Kosong";
             } else {
 
-                $result = DB::table('cr_collateral')
-                    ->where('STATUS', '!=', 'RILIS')
-                    ->where('CHASIS_NUMBER', $list->CHASIS_NUMBER)
-                    ->where('ENGINE_NUMBER', $list->ENGINE_NUMBER)
-                    ->get(['STATUS']);
+                // $result = DB::table('cr_collateral')
+                //     ->where('STATUS', '!=', 'RILIS')
+                //     ->where('CHASIS_NUMBER', $list->CHASIS_NUMBER)
+                //     ->where('ENGINE_NUMBER', $list->ENGINE_NUMBER)
+                //     ->get(['STATUS']);
 
-                if ($result->isNotEmpty()) {
-                    $array_build["order_validation"][] = "Jaminan : Jaminan No Mesin {$list->ENGINE_NUMBER} dan No Rangka {$list->CHASIS_NUMBER} Masih Belum DiRilis";
-                }
+                // if ($result->isNotEmpty()) {
+                //     $array_build["order_validation"][] = "Jaminan : Jaminan No Mesin {$list->ENGINE_NUMBER} dan No Rangka {$list->CHASIS_NUMBER} Masih Belum DiRilis";
+                // }
             }
         }
 
