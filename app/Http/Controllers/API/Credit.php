@@ -273,12 +273,11 @@ class Credit extends Controller
             } else {
                 $result = DB::table('cr_collateral as a')
                     ->leftJoin('credit as b', 'b.ID', '=', 'a.CR_CREDIT_ID')
-                    ->leftJoin('cr_application as c', 'c.ORDER_NUMBER', '=', 'b.ORDER_NUMBER')
-                    ->select('c.ORDER_NUMBER', 'a.STATUS', 'b.CREATED_AT')
+                    ->select('b.ORDER_NUMBER', 'a.STATUS', 'b.CREATED_AT')
                     ->where('a.STATUS', '!=', 'RILIS')
                     ->where('a.CHASIS_NUMBER', $list->CHASIS_NUMBER)
                     ->where('a.ENGINE_NUMBER', $list->CHASIS_NUMBER)
-                    ->where('c.ORDER_NUMBER', '!=', $request->order_number)
+                    ->where('b.ORDER_NUMBER', '!=', $request->order_number)
                     ->get();
 
                 if ($result->isNotEmpty()) {
