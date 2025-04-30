@@ -793,20 +793,35 @@ class ReportController extends Controller
         try {
             $dari = $request->dari;
             $cabang = $request->cabang_id;
+            $getPosition = strtolower($request->user()->position);
 
-            $data = M_Kwitansi::where('STTS_PAYMENT', '=', 'PAID')->orderBy('CREATED_AT', 'DESC');
+            if ($getPosition === 'ho') {
+                $data = M_Kwitansi::orderBy('CREATED_AT', 'DESC');
 
-            if (empty($cabang) && (empty($dari) || $dari == 'null')) {
-                $data->where(DB::raw('DATE_FORMAT(CREATED_AT,"%Y%m%d")'), Carbon::now()->format('Ymd'));
-            } else {
+                if (empty($cabang) && (empty($dari) || $dari == 'null')) {
+                    $data->where(DB::raw('DATE_FORMAT(CREATED_AT,"%Y%m%d")'), Carbon::now()->format('Ymd'));
+                } else {
 
-                if ($dari != 'null') {
-                    $formattedDate = Carbon::parse($dari)->format('Ymd');
-                    $data->where(DB::raw('DATE_FORMAT(CREATED_AT,"%Y%m%d")'), $formattedDate);
+                    if ($dari != 'null') {
+                        $formattedDate = Carbon::parse($dari)->format('Ymd');
+                        $data->where(DB::raw('DATE_FORMAT(CREATED_AT,"%Y%m%d")'), $formattedDate);
+                    }
                 }
+            } else {
+                $data = M_Kwitansi::where('STTS_PAYMENT', '=', 'PAID')->orderBy('CREATED_AT', 'DESC');
 
-                if (!empty($cabang)) {
-                    $data->where('BRANCH_CODE', $cabang);
+                if (empty($cabang) && (empty($dari) || $dari == 'null')) {
+                    $data->where(DB::raw('DATE_FORMAT(CREATED_AT,"%Y%m%d")'), Carbon::now()->format('Ymd'));
+                } else {
+
+                    if ($dari != 'null') {
+                        $formattedDate = Carbon::parse($dari)->format('Ymd');
+                        $data->where(DB::raw('DATE_FORMAT(CREATED_AT,"%Y%m%d")'), $formattedDate);
+                    }
+
+                    if (!empty($cabang)) {
+                        $data->where('BRANCH_CODE', $cabang);
+                    }
                 }
             }
 
