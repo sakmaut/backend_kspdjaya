@@ -795,38 +795,26 @@ class ReportController extends Controller
             $cabang = $request->cabang_id;
             $getPosition = strtolower($request->user()->position);
 
+            $data = M_Kwitansi::query();
+
             if ($getPosition === 'ho') {
-                $data = M_Kwitansi::orderBy('CREATED_AT', 'DESC');
-
-                if (empty($cabang) && (empty($dari) || $dari == 'null')) {
-                    $data->where(DB::raw('DATE_FORMAT(CREATED_AT,"%Y%m%d")'), Carbon::now()->format('Ymd'));
-                } else {
-
-                    if ($dari != 'null') {
-                        $formattedDate = Carbon::parse($dari)->format('Ymd');
-                        $data->where(DB::raw('DATE_FORMAT(CREATED_AT,"%Y%m%d")'), $formattedDate);
-                    }
-                }
+                $data->orderBy('CREATED_AT', 'DESC');
             } else {
-                $data = M_Kwitansi::where('STTS_PAYMENT', '=', 'PAID')->orderBy('CREATED_AT', 'DESC');
+                $data->where('STTS_PAYMENT', 'PAID')->orderBy('CREATED_AT', 'DESC');
+            }
 
-                if (empty($cabang) && (empty($dari) || $dari == 'null')) {
-                    $data->where(DB::raw('DATE_FORMAT(CREATED_AT,"%Y%m%d")'), Carbon::now()->format('Ymd'));
-                } else {
+            if (empty($dari) || $dari === 'null') {
+                $date = Carbon::now()->format('Ymd');
+            } else {
+                $date = Carbon::parse($dari)->format('Ymd');
+            }
+            $data->where(DB::raw('DATE_FORMAT(CREATED_AT,"%Y%m%d")'), $date);
 
-                    if ($dari != 'null') {
-                        $formattedDate = Carbon::parse($dari)->format('Ymd');
-                        $data->where(DB::raw('DATE_FORMAT(CREATED_AT,"%Y%m%d")'), $formattedDate);
-                    }
-
-                    if (!empty($cabang)) {
-                        $data->where('BRANCH_CODE', $cabang);
-                    }
-                }
+            if ($getPosition !== 'ho' && !empty($cabang)) {
+                $data->where('BRANCH_CODE', $cabang);
             }
 
             $results = $data->get();
-
             $dto = R_Kwitansi::collection($results);
 
             return response()->json($dto, 200);
