@@ -739,6 +739,7 @@ class ReportController extends Controller
                     "document" => $this->getCollateralDocument($result->ID, ['no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri']) ?? null,
                     "document_rilis" => $this->attachmentRelease($result->ID, "'doc_rilis'") ?? null,
                     "kapos" => $dataDetail->fullname ?? null,
+                    "nama_cabang" => $dataDetail->name ?? null,
                     "alamat_cabang" => $dataDetail->address ?? null,
                 ];
             }
