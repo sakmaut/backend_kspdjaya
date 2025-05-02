@@ -655,6 +655,27 @@ class ReportController extends Controller
         }
     }
 
+    function queryKapos($branchID)
+    {
+        $result = DB::table('users as a')
+            ->select(
+                'a.fullname',
+                'a.position',
+                'a.no_ktp',
+                'a.alamat',
+                'b.address',
+                'b.name',
+                'b.city'
+            )
+            ->leftJoin('branch as b', 'b.id', '=', 'a.branch_id')
+            ->where('a.position', 'KAPOS')
+            ->where('a.status', 'active')
+            ->where('b.id', $branchID)
+            ->first();
+
+        return $result;
+    }
+
     public function collateralAllReport(Request $request)
     {
         try {
@@ -691,6 +712,8 @@ class ReportController extends Controller
 
             $results = DB::select($sql);
 
+            $pihak1 = $this->queryKapos($request->user()->branch_id);
+
             $allData = [];
             foreach ($results as $result) {
 
@@ -714,6 +737,7 @@ class ReportController extends Controller
                     'status' => $result->status ?? '',
                     "document" => $this->getCollateralDocument($result->ID, ['no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri']) ?? null,
                     "document_rilis" => $this->attachmentRelease($result->ID, "'doc_rilis'") ?? null,
+                    "kapos" => $pihak1->fullname ?? null,
                 ];
             }
 
