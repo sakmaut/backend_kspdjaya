@@ -712,7 +712,7 @@ class ReportController extends Controller
 
             $results = DB::select($sql);
 
-            $pihak1 = $this->queryKapos($request->user()->branch_id);
+            $dataDetail = $this->queryKapos($request->user()->branch_id);
 
             $allData = [];
             foreach ($results as $result) {
@@ -731,13 +731,15 @@ class ReportController extends Controller
                     "no_rangka" => $result->CHASIS_NUMBER ?? '',
                     "no_mesin" => $result->ENGINE_NUMBER ?? '',
                     "no_bpkb" => $result->BPKB_NUMBER ?? '',
+                    "alamat_bpkb" => $result->BPKB_ADDRESS ?? '',
                     "no_stnk" => $result->STNK_NUMBER ?? '',
                     "tgl_stnk" => $result->STNK_VALID_DATE ?? '',
                     "nilai" => (int) $result->VALUE ?? '',
                     'status' => $result->status ?? '',
                     "document" => $this->getCollateralDocument($result->ID, ['no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri']) ?? null,
                     "document_rilis" => $this->attachmentRelease($result->ID, "'doc_rilis'") ?? null,
-                    "kapos" => $pihak1->fullname ?? null,
+                    "kapos" => $dataDetail->fullname ?? null,
+                    "alamat_cabang" => $dataDetail->address ?? null,
                 ];
             }
 
