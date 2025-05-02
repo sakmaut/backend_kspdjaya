@@ -681,15 +681,13 @@ class ReportController extends Controller
                 $sql .= "and c.NAME like '%$request->nama%'";
             }
             if ($request->nopol) {
-                $sql .= "and a.POLICE_NUMBER like '%$request->nopol%";
+                $sql .= "and a.POLICE_NUMBER like '%$request->nopol%'";
             }
             if ($request->status) {
                 $sql .= "and a.STATUS = '" . strtoupper($request->status) . "'";
             }
 
-            $sql .= "ORDER	BY d.NAME, e.NAME, b.LOAN_NUMBER, c.NAME,
-                            a.POLICE_NUMBER, a.STATUS ";
-
+            $sql .= "ORDER	BY d.NAME, e.NAME, b.LOAN_NUMBER, c.NAME, a.POLICE_NUMBER, a.STATUS ";
 
             $results = DB::select($sql);
 
