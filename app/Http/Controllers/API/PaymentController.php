@@ -144,9 +144,9 @@ class PaymentController extends Controller
                         ]);
                     }
 
-                    // if ($check_method_payment && strtolower($request->bayar_dengan_diskon) != 'ya' && !$checkposition) {
+                    // if ($check_method_payment && strtolower($request->bayar_dengan_diskon) != 'ya') {
 
-                    if ($check_method_payment && strtolower($request->bayar_dengan_diskon) != 'ya') {
+                    if ($check_method_payment && strtolower($request->bayar_dengan_diskon) != 'ya' && !$checkposition) {
                         $this->processPaymentStructure($res, $request, $getCodeBranch, $no_inv);
                     } else {
                         $tgl_angsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
@@ -179,10 +179,9 @@ class PaymentController extends Controller
                 $this->taskslogging->create($request, 'Pembayaran Transfer', 'payment', $no_inv, 'PENDING', "Transfer " . $message);
             } elseif (strtolower($request->bayar_dengan_diskon) == 'ya') {
                 $this->taskslogging->create($request, 'Permintaan Diskon', 'request_discount', $no_inv, 'PENDING', "Permintaan Diskon " . $message);
+            } elseif ($checkposition) {
+                $this->taskslogging->create($request, 'Pembayaran Cash (Mcf/Kolektor)', 'request_payment', $no_inv, 'PENDING', "Pembayaran Cash " . $message);
             }
-            // } elseif ($checkposition) {
-            //     $this->taskslogging->create($request, 'Pembayaran Cash (Mcf/Kolektor)', 'request_payment', $no_inv, 'PENDING', "Pembayaran Cash " . $message);
-            // }
 
             $dto = new R_Kwitansi($data);
 
@@ -502,8 +501,8 @@ class PaymentController extends Controller
         }
 
         $cekPaymentMethod = $request->payment_method == 'cash' && strtolower($request->bayar_dengan_diskon) != 'ya';
-        // $sttsPayment = $cekPaymentMethod && !$this->checkPosition($request) ? "PAID" : "PENDING";
-        $sttsPayment = $cekPaymentMethod ? "PAID" : "PENDING";
+        $sttsPayment = $cekPaymentMethod && !$this->checkPosition($request) ? "PAID" : "PENDING";
+        // $sttsPayment = $cekPaymentMethod ? "PAID" : "PENDING";
 
         $save_kwitansi = [
             "PAYMENT_TYPE" => 'angsuran',
@@ -732,67 +731,67 @@ class PaymentController extends Controller
 
                     $this->taskslogging->create($request, $type . " Disetujui", 'payment', $getNoInvoice, $getFlag, $request->keterangan);
                 } else {
-                    // if ($getCurrentPosition === 'admin') {
-                    //     $setTitle = "Pembatalan Pembayaran";
-                    //     $message = "A/n " . $kwitansi->NAMA . " Nominal : " . number_format($kwitansi->JUMLAH_UANG) . " Keterangan Cancel (" . $request->descr . ")";
-                    //     $this->taskslogging->create($request, $setTitle, 'payment_cancel', $getNoInvoice, 'WAITING CANCEL', "Menunggu " . $setTitle . ' ' . $message);
+                    if ($getCurrentPosition === 'admin') {
+                        $setTitle = "Pembatalan Pembayaran";
+                        $message = "A/n " . $kwitansi->NAMA . " Nominal : " . number_format($kwitansi->JUMLAH_UANG) . " Keterangan Cancel (" . $request->descr . ")";
+                        $this->taskslogging->create($request, $setTitle, 'payment_cancel', $getNoInvoice, 'WAITING CANCEL', "Menunggu " . $setTitle . ' ' . $message);
 
-                    //     $kwitansi->update(['STTS_PAYMENT' => 'WAITING CANCEL']);
-                    // } else {
+                        $kwitansi->update(['STTS_PAYMENT' => 'WAITING CANCEL']);
+                    } else {
 
-                    $checkType = $kwitansi->PAYMENT_TYPE === 'pelunasan';
+                        $checkType = $kwitansi->PAYMENT_TYPE === 'pelunasan';
 
-                    $detailModel = $checkType ? M_KwitansiDetailPelunasan::class : M_KwitansiStructurDetail::class;
+                        $detailModel = $checkType ? M_KwitansiDetailPelunasan::class : M_KwitansiStructurDetail::class;
 
-                    $getKwitansiDetail = $detailModel::where([
-                        'no_invoice'  => $getNoInvoice,
-                        'loan_number' => $getLoanNumber
-                    ])->orderBy('angsuran_ke', 'asc')->get();
+                        $getKwitansiDetail = $detailModel::where([
+                            'no_invoice'  => $getNoInvoice,
+                            'loan_number' => $getLoanNumber
+                        ])->orderBy('angsuran_ke', 'asc')->get();
 
-                    if ($getKwitansiDetail->isEmpty()) {
-                        throw new Exception("Kwitansi Detail Not Found", 404);
-                    }
-
-                    foreach ($getKwitansiDetail as $res) {
-                        $loan_number   = $res['loan_number'];
-                        $tgl_angsuran  = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
-
-                        $record = M_CreditSchedule::where([
-                            'LOAN_NUMBER'  => $loan_number,
-                            'PAYMENT_DATE' => $tgl_angsuran,
-                            'PAID_FLAG'    => 'PENDING'
-                        ])->first();
-
-                        if ($record) {
-                            $record->update(['PAID_FLAG' => '']);
+                        if ($getKwitansiDetail->isEmpty()) {
+                            throw new Exception("Kwitansi Detail Not Found", 404);
                         }
 
-                        $getInstallment  = floatval($res['installment']);
-                        $getArrears = floatval($res['denda'] ?? 0);
+                        foreach ($getKwitansiDetail as $res) {
+                            $loan_number   = $res['loan_number'];
+                            $tgl_angsuran  = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
 
-                        $setArrearsCalculate = calculateArrears($getInstallment, $tgl_angsuran);
+                            $record = M_CreditSchedule::where([
+                                'LOAN_NUMBER'  => $loan_number,
+                                'PAYMENT_DATE' => $tgl_angsuran,
+                                'PAID_FLAG'    => 'PENDING'
+                            ])->first();
 
-                        if ($checkType) {
-                            $pastDuePenalty = $getInstallment != 0 ? $setArrearsCalculate : $getArrears;
-                        } else {
-                            $pastDuePenalty = $res['flag'] === 'PAID' ? $getArrears : $setArrearsCalculate;
+                            if ($record) {
+                                $record->update(['PAID_FLAG' => '']);
+                            }
+
+                            $getInstallment  = floatval($res['installment']);
+                            $getArrears = floatval($res['denda'] ?? 0);
+
+                            $setArrearsCalculate = calculateArrears($getInstallment, $tgl_angsuran);
+
+                            if ($checkType) {
+                                $pastDuePenalty = $getInstallment != 0 ? $setArrearsCalculate : $getArrears;
+                            } else {
+                                $pastDuePenalty = $res['flag'] === 'PAID' ? $getArrears : $setArrearsCalculate;
+                            }
+
+                            M_Arrears::where([
+                                'LOAN_NUMBER' => $loan_number,
+                                'START_DATE'  => $tgl_angsuran,
+                                'STATUS_REC'  => 'PENDING'
+                            ])->update([
+                                'STATUS_REC'       => 'A',
+                                'PAST_DUE_PENALTY' => $pastDuePenalty,
+                                'UPDATED_AT'       => Carbon::now()
+                            ]);
                         }
 
-                        M_Arrears::where([
-                            'LOAN_NUMBER' => $loan_number,
-                            'START_DATE'  => $tgl_angsuran,
-                            'STATUS_REC'  => 'PENDING'
-                        ])->update([
-                            'STATUS_REC'       => 'A',
-                            'PAST_DUE_PENALTY' => $pastDuePenalty,
-                            'UPDATED_AT'       => Carbon::now()
-                        ]);
+                        $kwitansi->update(['STTS_PAYMENT' => $getFlag]);
+
+                        $this->taskslogging->create($request, $type . " Ditolak", 'payment', $getNoInvoice, $getFlag, $request->keterangan);
                     }
-
-                    $kwitansi->update(['STTS_PAYMENT' => $getFlag]);
-
-                    $this->taskslogging->create($request, $type . " Ditolak", 'payment', $getNoInvoice, $getFlag, $request->keterangan);
-                    // }
                 }
             }
 
