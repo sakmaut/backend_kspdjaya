@@ -57,4 +57,9 @@ class M_Kwitansi extends Model
             }
         });
     }
+
+    public function users()
+    {
+        return $this->belongsTo(User::class, 'CREATED_BY', 'id');
+    }
 }

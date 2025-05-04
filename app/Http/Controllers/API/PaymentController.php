@@ -171,7 +171,7 @@ class PaymentController extends Controller
 
             $this->saveKwitansi($request, $no_inv);
 
-            $data = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
+            $data = M_Kwitansi::with('users')->where('NO_TRANSAKSI', $no_inv)->first();
 
             $message = "A/n " . $data->NAMA . " Nominal " . number_format($data->JUMLAH_UANG);
 
@@ -180,7 +180,7 @@ class PaymentController extends Controller
             } elseif (strtolower($request->bayar_dengan_diskon) == 'ya') {
                 $this->taskslogging->create($request, 'Permintaan Diskon', 'request_discount', $no_inv, 'PENDING', "Permintaan Diskon " . $message);
             } elseif ($checkposition) {
-                $this->taskslogging->create($request, 'Pembayaran Cash (Mcf/Kolektor)', 'request_payment', $no_inv, 'PENDING', "Pembayaran Cash " . $message);
+                $this->taskslogging->create($request, 'Pembayaran Cash ('. $data->users->fullname ?? ''.')', 'request_payment', $no_inv, 'PENDING', "Pembayaran Cash " . $message);
             }
 
             $dto = new R_Kwitansi($data);
