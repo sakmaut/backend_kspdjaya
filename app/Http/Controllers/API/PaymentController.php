@@ -180,7 +180,7 @@ class PaymentController extends Controller
             } elseif (strtolower($request->bayar_dengan_diskon) == 'ya') {
                 $this->taskslogging->create($request, 'Permintaan Diskon', 'request_discount', $no_inv, 'PENDING', "Permintaan Diskon " . $message);
             } elseif ($checkposition) {
-                $this->taskslogging->create($request, 'Pembayaran Cash ('. $data->users->fullname ?? ''.')', 'request_payment', $no_inv, 'PENDING', "Pembayaran Cash " . $message);
+                $this->taskslogging->create($request, 'Pembayaran Cash '. $data->users->fullname ?? '', 'request_payment', $no_inv, 'PENDING', "Pembayaran Cash " . $message);
             }
 
             $dto = new R_Kwitansi($data);
