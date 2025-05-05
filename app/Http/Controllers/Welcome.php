@@ -50,6 +50,10 @@ class Welcome extends Controller
 
     public function index(Request $request)
     {
+
+        return response()->json("FUCK");
+        die;
+
         $getPenalty = 35200.01;
         $new_penalty = 35200.00;
         $setArrears = bccomp($getPenalty, $new_penalty, 2) === 0 ? 'S' : 'A';
