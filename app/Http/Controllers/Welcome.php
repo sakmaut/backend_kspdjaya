@@ -2,33 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\API\LocationStatus;
-use App\Http\Controllers\API\PaymentController;
-use App\Http\Controllers\API\PelunasanController;
-use App\Http\Controllers\API\StatusApproval;
-use App\Http\Controllers\API\TelegramBotConfig;
 use App\Models\M_Arrears;
 use App\Models\M_Branch;
-use App\Models\M_CrApplication;
-use App\Models\M_CrApplicationSpouse;
-use App\Models\M_CrCollateral;
-use App\Models\M_CrCollateralDocument;
 use App\Models\M_Credit;
 use App\Models\M_CreditSchedule;
-use App\Models\M_CrGuaranteVehicle;
-use App\Models\M_CrOrder;
-use App\Models\M_CrPersonal;
-use App\Models\M_CrPersonalExtra;
-use App\Models\M_CrProspect;
-use App\Models\M_Customer;
-use App\Models\M_CustomerDocument;
-use App\Models\M_CustomerExtra;
-use App\Models\M_DeuteronomyTransactionLog;
-use App\Models\M_FirstArr;
-use App\Models\M_Kwitansi;
 use App\Models\M_KwitansiDetailPelunasan;
 use App\Models\M_KwitansiStructurDetail;
-use App\Models\M_LocationStatus;
 use App\Models\M_Payment;
 use App\Models\M_PaymentDetail;
 use App\Models\M_TelegramBotSend;
