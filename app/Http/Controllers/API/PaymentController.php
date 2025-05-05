@@ -54,7 +54,7 @@ class PaymentController extends Controller
             $data = M_Kwitansi::orderBy('CREATED_AT', 'DESC');
 
             if (strtolower($getPosition) == 'ho') {
-                $results = $data->where(['STTS_PAYMENT' => 'PENDING', 'METODE_PEMBAYARAN', '!=', 'cash'])->get();
+                $results = $data->where('STTS_PAYMENT', 'PENDING')->where('METODE_PEMBAYARAN', '!=', 'cash')->get();
                 $dto = R_Kwitansi::collection($results);
                 return response()->json($dto, 200);
             }
