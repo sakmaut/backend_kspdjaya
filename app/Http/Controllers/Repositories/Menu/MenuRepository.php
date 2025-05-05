@@ -40,10 +40,6 @@ class MenuRepository implements MenuRepositoryInterface
             ->where('status', 'active')
             ->first();
 
-        // if (!$checkActiveMenu) {
-        //     throw new Exception("Menu Id Not Found", 404);
-        // }
-
         return $checkActiveMenu;
     }
 
@@ -61,10 +57,11 @@ class MenuRepository implements MenuRepositoryInterface
     {
         $userId = $request->user()->id;
 
-        $query = M_MasterUserAccessMenu::with(['masterMenu' => function ($query) {
-            $query->where('status', 'active');
-        }])
-            ->where('users_id', $userId)
+        $query = M_MasterUserAccessMenu::where('users_id', $userId)
+            ->whereHas('masterMenu', function ($query) {
+                $query->where('status', 'active');
+            })
+            ->with('masterMenu')
             ->get();
 
         return $query;
@@ -185,7 +182,7 @@ class MenuRepository implements MenuRepositoryInterface
             $menuItem = $listMenu['masterMenu'];
 
             if ($menuItem !== null) {
-                if ($menuItem['parent'] === null || $menuItem['parent'] === 0) {
+                if ($menuItem['parent'] == null || $menuItem['parent'] == '0') {
                     if (!isset($menuArray[$menuItem['id']])) {
                         $menuArray[$menuItem['id']] = [
                             'menuid' => $menuItem['id'],
