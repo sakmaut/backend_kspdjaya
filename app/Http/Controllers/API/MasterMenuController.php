@@ -2,17 +2,11 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\API\ActivityLogger;
 use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Repositories\Menu\MenuRepository;
 use App\Http\Resources\R_MasterMenu;
 use Illuminate\Http\Request;
-use App\Models\M_MasterMenu;
-use App\Models\M_MasterUserAccessMenu;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Database\QueryException;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class MasterMenuController extends Controller
@@ -112,7 +106,7 @@ class MasterMenuController extends Controller
         try {
             $data =  $this->menuRepository->getListAccessMenuUser($request);
 
-            return response()->json(['message' => 'OK', 'response' => $data], 200);
+            return response()->json(['response' => $data], 200);
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
         }

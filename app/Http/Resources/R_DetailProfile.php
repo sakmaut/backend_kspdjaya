@@ -17,17 +17,6 @@ class R_DetailProfile extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $branch = M_Branch::find($request->user()->branch_id);
-
-        $menuItems = M_MasterMenu::query()
-            ->select('master_menu.menu_name')
-            ->join('master_users_access_menu as t1', 'master_menu.id', '=', 't1.master_menu_id')
-            ->where('t1.users_id', $request->user()->id)
-            ->where('master_menu.deleted_by', null)
-            ->whereIn('master_menu.status', ['active', 'Active'])
-            ->pluck('master_menu.menu_name');
-
-
         return [
             'id' => $request->user()->id,
             'username' => $request->user()->username,
