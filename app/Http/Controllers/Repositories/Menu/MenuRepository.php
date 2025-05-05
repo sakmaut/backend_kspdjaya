@@ -40,9 +40,9 @@ class MenuRepository implements MenuRepositoryInterface
             ->where('status', 'active')
             ->first();
 
-        if (!$checkActiveMenu) {
-            throw new Exception("Menu Id Not Found", 404);
-        }
+        // if (!$checkActiveMenu) {
+        //     throw new Exception("Menu Id Not Found", 404);
+        // }
 
         return $checkActiveMenu;
     }
