@@ -961,7 +961,7 @@ class PaymentController extends Controller
 
                         $pastDuePenalty = $getPaidFlag == 'PAID' ? $getArrears : $setArrearsCalculate;
 
-                        if ($getBayarDenda != 0 || $check->DISKON_FLAG == 'ya') {
+                        if ($getBayarDenda != 0 || $getDiskonArrears != 0 || $check->DISKON_FLAG == 'ya') {
                             $arrearsCheck->update([
                                 'PAST_DUE_PENALTY' => $pastDuePenalty,
                                 'PAID_PCPL' => $getPrincipalPrev,
