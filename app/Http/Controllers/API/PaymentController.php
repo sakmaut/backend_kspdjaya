@@ -959,7 +959,7 @@ class PaymentController extends Controller
                     if ($arrearsCheck) {
                         $setArrearsCalculate = calculateArrears($getInstallment, $getTglAngsuran);
 
-                        $pastDuePenalty = $getPaidFlag === 'PAID' ? $getArrears : $setArrearsCalculate;
+                        $pastDuePenalty = $getPaidFlag == 'PAID' ? $getArrears : $setArrearsCalculate;
 
                         if ($getBayarDenda != 0 || $check->DISKON_FLAG == 'ya') {
                             $arrearsCheck->update([
