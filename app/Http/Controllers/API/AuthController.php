@@ -4,13 +4,9 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
-use App\Models\M_MasterUserAccessMenu;
 use App\Models\User;
-use Exception;
-use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -49,10 +45,7 @@ class AuthController extends Controller
 
             return response()->json(['token' => $token], 200);
         } catch (ValidationException $e) {
-            return response()->json([
-                'error' => 'Validation failed',
-                'messages' => $e->errors()
-            ], 401);
+            return $this->log->logError($e, $request);
         }
     }
 
@@ -88,11 +81,7 @@ class AuthController extends Controller
                 ], 404);
             }
         } catch (\Exception $e) {
-            ActivityLogger::logActivityLogout($request, $this->logout, $e, 500, $user->username);
-            return response()->json([
-                'message' => 'An error occurred',
-                'status' => 500
-            ], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
