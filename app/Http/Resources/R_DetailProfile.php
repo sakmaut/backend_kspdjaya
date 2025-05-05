@@ -42,7 +42,7 @@ class R_DetailProfile extends JsonResource
             // 'no_hp' => $request->user()->mobile_number,
             // 'status' => $request->user()->status,
             // 'photo_personal' => M_HrEmployeeDocument::attachment($request->user()->id, 'personal'),
-            'accessMenu' => $menuItems
+            // 'accessMenu' => $menuItems
         ];
     }
 }
