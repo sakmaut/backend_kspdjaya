@@ -54,7 +54,7 @@ class PaymentController extends Controller
             $data = M_Kwitansi::orderBy('CREATED_AT', 'DESC');
 
             if (strtolower($getPosition) == 'ho') {
-                $results = $data->where('STTS_PAYMENT', 'PENDING')->get();
+                $results = $data->where(['STTS_PAYMENT' => 'PENDING', 'METODE_PEMBAYARAN', '!=', 'cash'])->get();
                 $dto = R_Kwitansi::collection($results);
                 return response()->json($dto, 200);
             }
@@ -180,7 +180,7 @@ class PaymentController extends Controller
             } elseif (strtolower($request->bayar_dengan_diskon) == 'ya') {
                 $this->taskslogging->create($request, 'Permintaan Diskon', 'request_discount', $no_inv, 'PENDING', "Permintaan Diskon " . $message);
             } elseif ($checkposition) {
-                $this->taskslogging->create($request, 'Pembayaran Cash '. $data->users->fullname ?? '', 'request_payment', $no_inv, 'PENDING', "Pembayaran Cash " . $message);
+                $this->taskslogging->create($request, 'Pembayaran Cash ' . $data->users->fullname ?? '', 'request_payment', $no_inv, 'PENDING', "Pembayaran Cash " . $message);
             }
 
             $dto = new R_Kwitansi($data);
