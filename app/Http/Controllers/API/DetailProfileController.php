@@ -67,16 +67,9 @@ class DetailProfileController extends Controller
             M_HrEmployeeDocument::create($data_array_attachment);
 
             DB::commit();
-            ActivityLogger::logActivity($request, "Success", 200);
-            return response()->json(['message' => 'Image upload successfully', "status" => 200], 200);
-        } catch (QueryException $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($request, $e->getMessage(), 409);
-            return response()->json(['message' => $e->getMessage(), "status" => 409], 409);
+            return response()->json(['message' => 'Image upload successfully'], 200);
         } catch (\Exception $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+            return $this->log->logError($e, $request);
         }
     }
 }

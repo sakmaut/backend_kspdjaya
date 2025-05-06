@@ -516,3 +516,15 @@ if (!function_exists('calculateArrears')) {
         return $resValue;
     }
 }
+
+if (!function_exists('uploadImage')) {
+    function uploadImage($installment, $date)
+    {
+
+        try {
+            //code...
+        } catch (\Exception $e) {
+            //throw $th;
+        }
+    }
+}
