@@ -18,17 +18,17 @@ class R_DetailProfile extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => $request->user()->id,
-            'username' => $request->user()->username,
-            // 'nama' => $request->user()->fullname,
-            // 'email' => $request->user()->email,
+            'nama' => $this->NAMA ?? '',
+            'cabang_nama' => $this->hr_rolling->KANTOR ?? '',
+            'gender' => $this->GENDER,
+            'no_hp' => $this->HP,
             // 'cabang_id' => $branch->ID ?? null,
-            // 'cabang_nama' => $branch->NAME ?? null,
+            // 
             // 'jabatan' =>$request->user()->position,
             // 'no_ktp' => $request->user()->no_ktp,
             // 'alamat' =>$request->user()->alamat,
-            // 'gender' => $request->user()->gender,
-            // 'no_hp' => $request->user()->mobile_number,
+            // 
+            // 
             // 'status' => $request->user()->status,
             // 'photo_personal' => M_HrEmployeeDocument::attachment($request->user()->id, 'personal'),
             // 'accessMenu' => $menuItems

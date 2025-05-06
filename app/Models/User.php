@@ -13,21 +13,21 @@ class User extends Authenticatable
     use HasApiTokens, HasFactory, Notifiable;
 
     protected $fillable = [
-        'username',
+        'id',
         'employee_id',
+        'username',
         'email',
-        'status',
+        'email_verified_at',
         'password',
-        'fullname',
-        'branch_id',
-        'position',
-        'no_ktp',
-        'alamat',
-        'gender',
-        'status',
-        'mobile_number',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
+        'two_factor_confirmed_at',
+        'remember_token',
+        'current_team_id',
         'profile_photo_path',
+        'status',
         'created_by',
+        'created_at',
         'updated_by',
         'updated_at',
         'deleted_by',
@@ -52,5 +52,10 @@ class User extends Authenticatable
     public function accessMenus()
     {
         return $this->hasMany(M_MasterUserAccessMenu::class, 'users_id', 'id');
+    }
+
+    public function hr_employee()
+    {
+        return $this->hasMany(M_HrEmployee::class, 'employee_id', 'id');
     }
 }

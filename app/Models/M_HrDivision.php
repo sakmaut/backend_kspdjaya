@@ -6,10 +6,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
-class M_HrPosition extends Model
+class M_HrDivision extends Model
 {
     use HasFactory;
-    protected $table = 'hr_position';
+    protected $table = 'hr_division';
     protected $fillable = [
         'ID',
         'MASTER_NAME',

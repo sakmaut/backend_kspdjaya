@@ -11,12 +11,18 @@ class M_HrRolling extends Model
     use HasFactory;
     protected $table = 'hr_rolling';
     protected $fillable = [
-        'id',
-        'users_id',
-        'position',
-        'branch',
-        'created_by',
-        'created_at'    
+        'ID',
+        'NIK',
+        'TANGGAL_MULAI',
+        'BAGIAN',
+        'JABATAN',
+        'KANTOR',
+        'STATUS',
+        'GRADE',
+        'TGL_SPK',
+        'NO_SPK',
+        'SPV',
+        'USE_FLAG'
     ];
     protected $guarded = [];
     public $incrementing = false;

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\R_DetailProfile;
 use App\Models\M_HrEmployee;
@@ -17,21 +18,28 @@ use Ramsey\Uuid\Uuid;
 
 class DetailProfileController extends Controller
 {
-    public function index(Request $request,User $user)
+    protected $log;
+
+    public function __construct(ExceptionHandling $log)
+    {
+        $this->log = $log;
+    }
+
+    public function index(Request $request, User $user)
     {
         try {
+            $getEmployeeId = $request->user()->employee_id;
 
-            if (strtolower($request->user()->status) !== 'active') {
-                $user->tokens()->delete();
-                return response()->json(['message' => 'Profile Not Found', 'status' => 404], 404);
-            }
+            $results = M_HrEmployee::with(['hr_rolling' => function ($query) {
+                $query->where('USE_FLAG', 'Active');
+            }])->where('ID', $getEmployeeId)->first();
 
-            $dto = new R_DetailProfile($request);
+            $dto = new R_DetailProfile($results);
 
-            return response()->json(['message' => 'OK', "status" => 200, 'response' => $dto], 200);
+            return response()->json(['response' => $dto], 200);
         } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
-        } 
+            return $this->log->logError($e, $request);
+        }
     }
 
     public function uploadImage(Request $request)
