@@ -38,4 +38,14 @@ class M_HrRolling extends Model
             }
         });
     }
+
+    public function hr_division()
+    {
+        return $this->hasOne(M_HrDivision::class, 'ID', 'BAGIAN');
+    }
+
+    public function hr_position()
+    {
+        return $this->hasOne(M_HrPosition::class, 'ID', 'JABATAN');
+    }
 }

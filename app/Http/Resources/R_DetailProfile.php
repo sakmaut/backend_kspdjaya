@@ -10,26 +10,18 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class R_DetailProfile extends JsonResource
 {
-    /**
-     * Transform the resource into an array.
-     *
-     * @return array<string, mixed>
-     */
     public function toArray(Request $request): array
     {
         return [
             'nama' => $this->NAMA ?? '',
             'cabang_nama' => $this->hr_rolling->KANTOR ?? '',
-            'gender' => $this->GENDER,
-            'no_hp' => $this->HP,
-            // 'cabang_id' => $branch->ID ?? null,
-            // 
-            // 'jabatan' =>$request->user()->position,
-            // 'no_ktp' => $request->user()->no_ktp,
-            // 'alamat' =>$request->user()->alamat,
-            // 
-            // 
-            // 'status' => $request->user()->status,
+            'gender' => $this->GENDER ?? '',
+            'email' => $this->EMAIL ?? '',
+            'no_hp' => $this->HP ?? '',
+            'no_ktp' => $this->NO_KTP ?? '',
+            'alamat' => $this->ALAMAT_KTP ?? '',
+            'status' => $this->STATUS_MST ?? '',
+            'jabatan' => $this->hr_rolling->hr_position->MASTER_NAME ?? '',
             // 'photo_personal' => M_HrEmployeeDocument::attachment($request->user()->id, 'personal'),
             // 'accessMenu' => $menuItems
         ];

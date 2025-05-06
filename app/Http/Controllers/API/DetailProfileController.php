@@ -25,14 +25,14 @@ class DetailProfileController extends Controller
         $this->log = $log;
     }
 
-    public function index(Request $request, User $user)
+    public function index(Request $request)
     {
         try {
             $getEmployeeId = $request->user()->employee_id;
 
             $results = M_HrEmployee::with(['hr_rolling' => function ($query) {
                 $query->where('USE_FLAG', 'Active');
-            }])->where('ID', $getEmployeeId)->first();
+            }, 'hr_rolling.hr_position'])->where('ID', $getEmployeeId)->first();
 
             $dto = new R_DetailProfile($results);
 
