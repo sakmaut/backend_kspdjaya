@@ -57,14 +57,4 @@ class M_CrProspect extends Model
             }
         });
     }
-
-    public function cr_application()
-    {
-        return $this->hasOne(M_CrApplication::class, 'CR_SURVEY_ID');
-    }
-
-    public function survey_approval()
-    {
-        return $this->hasOne(M_SurveyApproval::class, 'CR_SURVEY_ID');
-    }
 }

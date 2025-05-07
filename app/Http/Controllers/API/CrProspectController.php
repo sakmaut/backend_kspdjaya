@@ -43,9 +43,9 @@ class CrProspectController extends Controller
         try {
             $getListSurveyByMcf = $this->SurveyRepository->getListSurveyByMcf($request);
 
-            $dto = R_CrSurvey::collection($getListSurveyByMcf);
+            // $dto = R_CrSurvey::collection($getListSurveyByMcf);
 
-            return response()->json(['response' => $dto], 200);
+            return response()->json(['response' => []], 200);
         } catch (Exception $e) {
             return $this->log->logError($e, $request);
         }
