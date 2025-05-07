@@ -4,25 +4,16 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
-use App\Http\Controllers\Repositories\Survey\SurveyRepository;
+use App\Http\Controllers\Repositories\Prospect\ProspectRepository;
 use App\Http\Resources\R_CrProspect;
-use App\Http\Resources\R_CrSurvey;
-use App\Http\Resources\R_CrSurveyDetail;
 use App\Models\M_CrGuaranteSertification;
 use App\Models\M_CrGuaranteVehicle;
 use App\Models\M_CrProspect;
-use App\Models\M_CrSurvey;
 use App\Models\M_CrSurveyDocument;
-use App\Models\M_SurveyApproval;
-use App\Models\M_SurveyApprovalLog;
 use Carbon\Carbon;
 use Exception;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
-use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\URL;
 use Ramsey\Uuid\Uuid;
 
 class CrProspectController extends Controller
@@ -30,22 +21,24 @@ class CrProspectController extends Controller
     private $uuid;
     private $timeNow;
     protected $log;
+    protected $prospectRepository;
 
-    public function __construct(ExceptionHandling $log)
+    public function __construct(ExceptionHandling $log, ProspectRepository $prospectRepository)
     {
         $this->uuid = Uuid::uuid7()->toString();
         $this->timeNow = Carbon::now();
         $this->log = $log;
+        $this->prospectRepository = $prospectRepository;
     }
 
     public function index(Request $request)
     {
         try {
-            $getListSurveyByMcf = $this->SurveyRepository->getListSurveyByMcf($request);
+            $getListSurveyByMcf = $this->prospectRepository->getAllProspect();
 
-            // $dto = R_CrSurvey::collection($getListSurveyByMcf);
+            $dto = R_CrProspect::collection($getListSurveyByMcf);
 
-            return response()->json(['response' => []], 200);
+            return response()->json(['response' => $dto], 200);
         } catch (Exception $e) {
             return $this->log->logError($e, $request);
         }
@@ -54,16 +47,13 @@ class CrProspectController extends Controller
     public function show(Request $request, $id)
     {
         try {
-            $checkSurveyExist = $this->CrSurvey
-                // ->with(['cr_guarante_vehicle', 'cr_guarante_sertification', 'survey_approval'])
-                ->where('id', $id)
-                ->first();
+            $checkProspoctExist = $this->prospectRepository->getDetailProspect($id);
 
-            if (!$checkSurveyExist) {
+            if (!$checkProspoctExist) {
                 throw new Exception("Prospect Id Is Not Exist", 409);
             }
 
-            $dto = new R_CrProspect($checkSurveyExist);
+            $dto = new R_CrProspect($checkProspoctExist);
 
             return response()->json(['response' => $dto], 200);
         } catch (Exception $e) {
