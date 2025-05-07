@@ -4,7 +4,8 @@ use App\Http\Controllers\API\{
     AuthController,
     MasterMenuController,
     UserAccessMenuController,
-    CrProspectController
+    CrProspectController,
+    DetailProfileController
 };
 use App\Http\Controllers\Welcome;
 use Illuminate\Support\Facades\Route;
