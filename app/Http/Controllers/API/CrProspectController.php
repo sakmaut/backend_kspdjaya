@@ -89,7 +89,7 @@ class CrProspectController extends Controller
         $data_array = [
             'id' => $request->id,
             'ao_id' => $getUserId,
-            'visit_date' => $request->tgl_kunjungan ?? null,
+            'visit_date' => Carbon::parse($request->tgl_kunjungan)->format('Y-m-d') ?? null,
             'tujuan_kredit' => $request->tujuan_kredit ?? '',
             'jenis_produk' => $request->jenis_produk ?? '',
             'plafond' => $request->plafond ?? 0,
