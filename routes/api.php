@@ -1,33 +1,10 @@
 <?php
 
 use App\Http\Controllers\API\{
-    AdminFeeController,
     AuthController,
-    BpkbController,
-    BpkbTransactionController,
-    BranchController,
-    CollateralController,
-    CrAppilcationController,
-    Credit,
-    CrSurveyController,
-    CustomerController,
-    DetailProfileController,
     MasterMenuController,
-    PaymentController,
-    TaksasiController,
     UserAccessMenuController,
-    UsersController,
-    CrBlacklistController,
-    CrProspectController,
-    HrPositionController,
-    ListBanController,
-    LogPrintController,
-    PelunasanController,
-    PelunasanController2,
-    PhoneBookController,
-    ReportController,
-    TaskPusher,
-    TaskController
+    CrProspectController
 };
 use App\Http\Controllers\Welcome;
 use Illuminate\Http\Request;
@@ -48,7 +25,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // Route Group Cr Prospek (Kunjungan)
     Route::resource('cr_prospect', CrProspectController::class);
-    Route::post('image_upload_prospect', [CrSurveyController::class, 'uploadImage']);
+    // Route::post('image_upload_prospect', [CrSurveyController::class, 'uploadImage']);
     // Route Group Cr Prospek (Kunjungan)
 
 
@@ -165,6 +142,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
 });
 
 
-// Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-//     return $request->user();
-// });
+Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+    return $request->user();
+});
