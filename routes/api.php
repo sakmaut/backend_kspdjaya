@@ -22,6 +22,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::resource('user_access_menu', UserAccessMenuController::class);
     //End Group Menu
 
+    //Profile
+    Route::get('me', [DetailProfileController::class, 'index']);
+    //End
+
     // Route Group Cr Prospek (Kunjungan)
     Route::resource('cr_prospect', CrProspectController::class);
     // Route::post('image_upload_prospect', [CrSurveyController::class, 'uploadImage']);
@@ -53,7 +57,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Route::post('cr_application_generate', [CrAppilcationController::class, 'generateUuidFPK']);
 
     // // Detail Profile
-    // Route::get('me', [DetailProfileController::class, 'index']);
     // Route::post('image_upload_personal', [DetailProfileController::class, 'multipleUpload+']);
 
     // // Credit
