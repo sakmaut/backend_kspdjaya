@@ -28,38 +28,32 @@ class R_CrProspect extends JsonResource
 
         $data = [
             'id' => $this->id,
-            "flag" => !$check_exist ? 0 : 1,
-            "credit_id" => !$check_exist ? null : $check_exist->ID ?? null,
-            "jenis_angsuran" =>  empty($this->INSTALLMENT_TYPE) ? $this->jenis_angsuran ?? '' : $this->INSTALLMENT_TYPE ?? '',
-            'order_number' => $this->order_number,
-            'visit_date' => $this->visit_date  == null ? null : date('d-m-Y', strtotime($this->visit_date)),
-            'nama_debitur' => $this->nama_debitur,
-            'alamat' => $this->alamat,
-            'hp' => $this->hp,
+            'ao_id' => $this->ao_id,
+            'visit_date' => $this->visit_date,
+            'tujuan_kredit' => $this->tujuan_kredit,
+            'jenis_produk' => $this->jenis_produk,
             'plafond' => $this->plafond,
-            'status' => $getApproval ? $getApproval->APPROVAL_RESULT : '',
-            'status_code' => $getApproval ? $getApproval->CODE : '',
-            'attachment' => $this->attachment($this->id, "'sp', 'pk', 'dok'")
+            'tenor' => $this->tenor,
+            'nama' => $this->nama,
+            'ktp' => $this->ktp,
+            'kk' => $this->kk,
+            'tgl_lahir' => $this->tgl_lahir,
+            'alamat' => $this->alamat,
+            'rt' => $this->rt,
+            'rw' => $this->rw,
+            'provinsi' => $this->province,
+            'kota' => $this->city,
+            'kelurahan' => $this->kelurahan,
+            'kecamatan' => $this->kecamatan,
+            'kode_pos' => $this->zip_code,
+            'hp' => $this->hp,
+            'usaha' => $this->usaha,
+            'sector' => $this->sector,
+            'coordinate' => $this->coordinate,
+            'accurate' => $this->accurate,
+            'slik' => $this->slik_flag,
         ];
 
         return $data;
-    }
-
-    public function attachment($survey_id, $data)
-    {
-        $documents = DB::select(
-            "   SELECT *
-                FROM cr_survey_document AS csd
-                WHERE (TYPE, TIMEMILISECOND) IN (
-                    SELECT TYPE, MAX(TIMEMILISECOND)
-                    FROM cr_survey_document
-                    WHERE TYPE IN ($data)
-                        AND CR_SURVEY_ID = '$survey_id'
-                    GROUP BY TYPE
-                )
-                ORDER BY TIMEMILISECOND DESC"
-        );
-
-        return $documents;
     }
 }

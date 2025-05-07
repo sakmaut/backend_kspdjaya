@@ -18,6 +18,7 @@ use App\Http\Controllers\API\{
     UserAccessMenuController,
     UsersController,
     CrBlacklistController,
+    CrProspectController,
     HrPositionController,
     ListBanController,
     LogPrintController,
@@ -46,7 +47,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     //End Group Menu
 
     // Route Group Cr Prospek (Kunjungan)
-    Route::resource('cr_prospect', CrP::class);
+    Route::resource('cr_prospect', CrProspectController::class);
     Route::post('image_upload_prospect', [CrSurveyController::class, 'uploadImage']);
     // Route Group Cr Prospek (Kunjungan)
 

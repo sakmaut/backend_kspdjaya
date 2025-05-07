@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Repositories\Survey\SurveyRepository;
+use App\Http\Resources\R_CrProspect;
 use App\Http\Resources\R_CrSurvey;
 use App\Http\Resources\R_CrSurveyDetail;
 use App\Models\M_CrGuaranteSertification;
@@ -54,15 +55,15 @@ class CrProspectController extends Controller
     {
         try {
             $checkSurveyExist = $this->CrSurvey
-                ->with(['cr_guarante_vehicle', 'cr_guarante_sertification', 'survey_approval'])
+                // ->with(['cr_guarante_vehicle', 'cr_guarante_sertification', 'survey_approval'])
                 ->where('id', $id)
-                ->whereNull('deleted_at')->first();
+                ->first();
 
             if (!$checkSurveyExist) {
-                throw new Exception("Survey Id Is Exist", 409);
+                throw new Exception("Prospect Id Is Not Exist", 409);
             }
 
-            $dto = new R_CrSurveyDetail($checkSurveyExist);
+            $dto = new R_CrProspect($checkSurveyExist);
 
             return response()->json(['response' => $dto], 200);
         } catch (Exception $e) {
@@ -75,14 +76,14 @@ class CrProspectController extends Controller
         DB::beginTransaction();
         try {
             $request->validate([
-                'id' => 'required|string|unique:cr_survey',
+                'id' => 'required|string|unique:cr_prospect',
             ]);
 
             $this->insertCrProspect($request);
 
-            if (collect($request->jaminan)->isNotEmpty()) {
-                $this->insert_guarante($request);
-            }
+            // if (collect($request->jaminan)->isNotEmpty()) {
+            //     $this->insert_guarante($request);
+            // }
 
             DB::commit();
             return response()->json(['message' => 'success'], 200);
