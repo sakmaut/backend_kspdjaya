@@ -231,6 +231,7 @@ class ReportController extends Controller
                         'NO RANGKA' => $item['CHASIS_NUMBER'],
                         'NO MESIN' => $item['ENGINE_NUMBER'],
                         'NO BPKB' => $item['BPKB_NUMBER'],
+                        'ALAMAT BPKB' => $item['BPKB_ADDRESS'],
                         'NO STNK' => $item['STNK_NUMBER'],
                         'HARGA JAMINAN' => number_format(floatval($item['VALUE'])),
                         'LOKASI' => M_Branch::find($item['LOCATION_BRANCH'])->NAME ?? '',
