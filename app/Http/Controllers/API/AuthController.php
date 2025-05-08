@@ -48,11 +48,8 @@ class AuthController extends Controller
             $token = $this->generateToken($user);
 
             return response()->json(['token' => $token], 200);
-        } catch (ValidationException $e) {
-            return response()->json([
-                'error' => 'Validation failed',
-                'messages' => $e->errors()
-            ], 401);
+        } catch (Exception $e) {
+            return $this->log->logError($e, $request);
         }
     }
 

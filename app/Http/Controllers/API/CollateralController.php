@@ -69,7 +69,7 @@ class CollateralController extends Controller
             $this->collateralRepository->update($request, $id);
 
             DB::commit();
-            return response()->json(['message' => 'updated successfully'], 200);
+            return response()->json(['message' => 'success'], 200);
         } catch (\Exception $e) {
             DB::rollback();
             return $this->log->logError($e, $request);
