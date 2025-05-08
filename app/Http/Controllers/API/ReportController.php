@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\R_DebiturReportAR;
 use App\Http\Resources\R_Kwitansi;
 use App\Models\M_Arrears;
 use App\Models\M_Branch;
 use App\Models\M_CrCollateral;
 use App\Models\M_CrCollateralSertification;
 use App\Models\M_Credit;
+use App\Models\M_Customer;
 use App\Models\M_Kwitansi;
 use App\Models\M_Payment;
 use App\Models\M_PaymentApproval;
@@ -21,6 +24,13 @@ use Illuminate\Support\Facades\DB;
 
 class ReportController extends Controller
 {
+
+    protected $log;
+
+    public function __construct(ExceptionHandling $log)
+    {
+        $this->log = $log;
+    }
 
     public function inquiryList(Request $request)
     {
@@ -191,88 +201,13 @@ class ReportController extends Controller
     public function debitur(Request $request, $id)
     {
         try {
-            $results = DB::table('customer as a')
-                ->leftJoin('customer_extra as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
-                ->select('a.ID as idCust', 'a.*', 'b.*')
-                ->where('a.ID', $id)
-                ->first();
+            $customer = M_Customer::with('customer_extra')->find($id);
 
-            if (!$results) {
-                $results = [];
-            } else {
-                $results = [
-                    'id' => $results->idCust ?? '',
-                    'cust_code' => $results->CUST_CODE ?? '',
-                    'pelanggan' => [
-                        "nama" => $results->NAME ?? '',
-                        "nama_panggilan" => $results->ALIAS ?? '',
-                        "jenis_kelamin" => $results->GENDER ?? '',
-                        "tempat_lahir" => $results->BIRTHPLACE ?? '',
-                        "tgl_lahir" => date('Y-m-d', strtotime($results->BIRTHDATE)),
-                        "gol_darah" => $results->BLOOD_TYPE ?? '',
-                        "ibu_kandung" => $results->MOTHER_NAME ?? '',
-                        "status_kawin" => $results->MARTIAL_STATUS ?? '',
-                        "tgl_kawin" => $results->MARTIAL_DATE ?? '',
-                        "tipe_identitas" => $results->ID_TYPE ?? '',
-                        "no_identitas" => $results->ID_NUMBER ?? '',
-                        "no_kk" => $results->KK_NUMBER ?? '',
-                        "tgl_terbit_identitas" => date('Y-m-d', strtotime($results->ID_ISSUE_DATE)) ?? '',
-                        "masa_berlaku_identitas" => date('Y-m-d', strtotime($results->ID_VALID_DATE)) ?? '',
-                        "no_kk" => $results->KK_NUMBER ?? '',
-                        "warganegara" => $results->CITIZEN ?? ''
-                    ],
-                    'alamat_identitas' => [
-                        "alamat" => $results->ADDRESS ?? '',
-                        "rt" => $results->RT ?? '',
-                        "rw" => $results->RW ?? '',
-                        "provinsi" => $results->PROVINCE ?? '',
-                        "kota" => $results->CITY ?? '',
-                        "kelurahan" => $results->KELURAHAN ?? '',
-                        "kecamatan" => $results->KECAMATAN ?? '',
-                        "kode_pos" => $results->ZIP_CODE ?? ''
-                    ],
-                    'alamat_tagih' => [
-                        "alamat" => $results->INS_ADDRESS ?? '',
-                        "rt" => $results->INS_RT ?? '',
-                        "rw" => $results->INS_RW ?? '',
-                        "provinsi" => $results->INS_PROVINCE ?? '',
-                        "kota" => $results->INS_CITY ?? '',
-                        "kelurahan" => $results->INS_KELURAHAN ?? '',
-                        "kecamatan" => $results->INS_KECAMATAN ?? '',
-                        "kode_pos" => $results->INS_ZIP_CODE ?? ''
-                    ],
-                    'pekerjaan' => [
-                        "pekerjaan" => $results->OCCUPATION ?? '',
-                        "pekerjaan_id" => $results->OCCUPATION_ON_ID ?? '',
-                        "agama" => $results->RELIGION ?? '',
-                        "pendidikan" => $results->EDUCATION ?? '',
-                        "status_rumah" => $results->PROPERTY_STATUS ?? '',
-                        "telepon_rumah" => $results->PHONE_HOUSE ?? '',
-                        "telepon_selular" =>  $results->PHONE_PERSONAL ?? '',
-                        "telepon_kantor" => $results->PHONE_OFFICE ?? '',
-                        "ekstra1" => $results->EXT_1 ?? '',
-                        "ekstra2" => $results->EXT_2 ?? ''
-                    ],
-                    'kerabat_darurat' => [
-                        "nama"  => $results->EMERGENCY_NAME ?? '',
-                        "alamat"  => $results->EMERGENCY_ADDRESS ?? '',
-                        "rt"  => $results->EMERGENCY_RT ?? '',
-                        "rw"  => $results->EMERGENCY_RW ?? '',
-                        "provinsi" => $results->EMERGENCY_PROVINCE ?? '',
-                        "kota" => $results->EMERGENCY_CITY ?? '',
-                        "kelurahan" => $results->EMERGENCY_KELURAHAN ?? '',
-                        "kecamatan" => $results->EMERGENCY_KECAMATAN ?? '',
-                        "kode_pos" => $results->EMERGENCY_ZIP_CODE ?? '',
-                        "no_telp" => $results->EMERGENCY_PHONE_HOUSE ?? '',
-                        "no_hp" => $results->EMERGENCY_PHONE_PERSONAL ?? '',
-                    ]
-                ];
-            }
+            $result = $customer ? new R_DebiturReportAR($customer) : [];
 
-            return response()->json($results, 200);
+            return response()->json($result, 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
