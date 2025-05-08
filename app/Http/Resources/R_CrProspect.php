@@ -12,6 +12,7 @@ use App\Models\M_HrEmployee;
 use App\Models\M_ProspectApproval;
 use App\Models\M_SurveyApproval;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class R_CrProspect extends JsonResource
@@ -26,7 +27,7 @@ class R_CrProspect extends JsonResource
         $data = [
             'id' => $this->id,
             'ao_id' => $this->ao_id,
-            'tgl_kunjungan' => $this->visit_date,
+            'tgl_kunjungan' => Carbon::parse($this->visit_date)->format('Y-m-d'),
             'tujuan_kredit' => $this->tujuan_kredit,
             'jenis_produk' => $this->jenis_produk,
             'plafond' => $this->plafond,
