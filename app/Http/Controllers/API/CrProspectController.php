@@ -140,21 +140,35 @@ class CrProspectController extends Controller
 
                 $url = URL::to('/') . '/storage/' . 'Cr_Prospect/' . $fileName;
 
-                $checkAttachExist = M_CrProspectAttachment::where('cr_prospect_id', $request->cr_prospect_id)->where('type', $request->type)->first();
+                $getType = $request->type;
+                $setType = ['ktp', 'kk', 'ktp_pasangan', 'buku_nikah'];
 
                 $dataRequest = [
                     'attachment_path' => $url ?? '',
                 ];
 
-                if (!$checkAttachExist) {
-                    $dataRequest['id'] =  Uuid::uuid7()->toString();
+                if (in_array($getType, $setType)) {
+                    $checkAttachExist = M_CrProspectAttachment::where('cr_prospect_id', $request->cr_prospect_id)
+                        ->where('type', $getType)
+                        ->first();
+
+                    if (!$checkAttachExist) {
+                        $dataRequest['id'] = Uuid::uuid7()->toString();
+                        $dataRequest['cr_prospect_id'] = $request->cr_prospect_id;
+                        $dataRequest['type'] = $getType;
+                        $dataRequest['created_at'] = $this->timeNow;
+                        M_CrProspectAttachment::create($dataRequest);
+                    } else {
+                        $checkAttachExist->update($dataRequest);
+                    }
+                } else {
+                    $dataRequest['id'] = Uuid::uuid7()->toString();
                     $dataRequest['cr_prospect_id'] = $request->cr_prospect_id;
-                    $dataRequest['type'] = $request->type;
+                    $dataRequest['type'] = $getType;
                     $dataRequest['created_at'] = $this->timeNow;
                     M_CrProspectAttachment::create($dataRequest);
-                } else {
-                    $checkAttachExist->update($dataRequest);
                 }
+
 
                 DB::commit();
                 return response()->json(['message' => 'success', 'response' => $url], 200);
