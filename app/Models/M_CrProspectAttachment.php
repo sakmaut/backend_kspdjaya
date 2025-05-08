@@ -21,7 +21,7 @@ class M_CrProspectAttachment extends Model
     protected $guarded = [];
     public $incrementing = false;
     protected $keyType = 'string';
-    protected $primaryKey = 'ID';
+    protected $primaryKey = 'id';
     public $timestamps = false;
     protected static function boot()
     {
