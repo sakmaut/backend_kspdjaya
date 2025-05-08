@@ -6,14 +6,14 @@ use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Repositories\Prospect\ProspectRepository;
 use App\Http\Resources\R_CrProspect;
-use App\Models\M_CrGuaranteSertification;
-use App\Models\M_CrGuaranteVehicle;
 use App\Models\M_CrProspect;
-use App\Models\M_CrSurveyDocument;
+use App\Models\M_CrProspectAttachment;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Ramsey\Uuid\Uuid;
 
 class CrProspectController extends Controller
@@ -71,10 +71,6 @@ class CrProspectController extends Controller
 
             $this->insertCrProspect($request);
 
-            // if (collect($request->jaminan)->isNotEmpty()) {
-            //     $this->insert_guarante($request);
-            // }
-
             DB::commit();
             return response()->json(['message' => 'success'], 200);
         } catch (Exception $e) {
@@ -118,106 +114,160 @@ class CrProspectController extends Controller
         M_CrProspect::create($data_array);
     }
 
-    private function insert_guarante($request)
+    public function uploadImage(Request $request)
     {
-        if (!empty($request->jaminan)) {
-            foreach ($request->jaminan as $result) {
+        DB::beginTransaction();
+        try {
+            $this->validate($request, [
+                'image' => 'required|string',
+                'type' => 'required|string',
+                'cr_prospect_id' => 'required|string'
+            ]);
 
-                switch ($result['type']) {
-                    case 'kendaraan':
-                        $data_array_col = [
-                            'ID' => Uuid::uuid7()->toString(),
-                            'CR_SURVEY_ID' => $request->id,
-                            'HEADER_ID' => $result['counter_id'] ?? null,
-                            'POSITION_FLAG' => $result['atr']['kondisi_jaminan'] ?? null,
-                            'TYPE' => $result['atr']['tipe'] ?? null,
-                            'BRAND' => $result['atr']['merk'] ?? null,
-                            'PRODUCTION_YEAR' => $result['atr']['tahun'] ?? null,
-                            'COLOR' => $result['atr']['warna'] ?? null,
-                            'ON_BEHALF' => $result['atr']['atas_nama'] ?? null,
-                            'POLICE_NUMBER' => $result['atr']['no_polisi'] ?? null,
-                            'CHASIS_NUMBER' => $result['atr']['no_rangka'] ?? null,
-                            'ENGINE_NUMBER' => $result['atr']['no_mesin'] ?? null,
-                            'BPKB_NUMBER' => $result['atr']['no_bpkb'] ?? null,
-                            'STNK_NUMBER' => $result['atr']['no_stnk'] ?? null,
-                            'STNK_VALID_DATE' => $result['atr']['tgl_stnk'] ?? null,
-                            'VALUE' => $result['atr']['nilai'] ?? null,
-                            'COLLATERAL_FLAG' => "",
-                            'VERSION' => 1,
-                            'CREATE_DATE' => $this->timeNow,
-                            'CREATE_BY' => $request->user()->id,
-                        ];
+            if (preg_match('/^data:image\/(\w+);base64,/', $request->image, $type)) {
+                $data = substr($request->image, strpos($request->image, ',') + 1);
+                $data = base64_decode($data);
 
-                        M_CrGuaranteVehicle::create($data_array_col);
+                $extension = strtolower($type[1]);
+                $fileName = Uuid::uuid4()->toString() . '.' . $extension;
 
-                        foreach ($request->jaminan as $res) {
-                            if (!empty($res['atr']['document']) && isset($res['atr']['document']) && is_array($res['atr']['document'])) {
-                                foreach ($res['atr']['document'] as $datas) {
-                                    $data_array_attachment = [
-                                        'ID' => Uuid::uuid4()->toString(),
-                                        'CR_SURVEY_ID' => $request->id,
-                                        'TYPE' => $datas['TYPE'],
-                                        'COUNTER_ID' => $datas['COUNTER_ID'] ?? '',
-                                        'PATH' => $datas['PATH'],
-                                        'CREATED_BY' => $request->user()->fullname,
-                                        'TIMEMILISECOND' => round(microtime(true) * 1000)
-                                    ];
 
-                                    M_CrSurveyDocument::create($data_array_attachment);
-                                }
-                            }
-                        }
+                $image_path = Storage::put("public/Cr_Prospect/{$fileName}", $data);
+                $image_path = str_replace('public/', '', $image_path);
 
-                        break;
-                    case 'sertifikat':
-                        $data_array_col = [
-                            'ID' => Uuid::uuid7()->toString(),
-                            'HEADER_ID' => $result['counter_id'],
-                            'CR_SURVEY_ID' => $request->id,
-                            'STATUS_JAMINAN' => $result['atr']['status_jaminan'] ?? null,
-                            'NO_SERTIFIKAT' => $result['atr']['no_sertifikat'] ?? null,
-                            'STATUS_KEPEMILIKAN' => $result['atr']['status_kepemilikan'] ?? null,
-                            'IMB' => $result['atr']['imb'] ?? null,
-                            'LUAS_TANAH' => $result['atr']['luas_tanah'] ?? null,
-                            'LUAS_BANGUNAN' => $result['atr']['luas_bangunan'] ?? null,
-                            'LOKASI' => $result['atr']['lokasi'] ?? null,
-                            'PROVINSI' => $result['atr']['provinsi'] ?? null,
-                            'KAB_KOTA' => $result['atr']['kab_kota'] ?? null,
-                            'KECAMATAN' => $result['atr']['kec'] ?? null,
-                            'DESA' => $result['atr']['desa'] ?? null,
-                            'ATAS_NAMA' => $result['atr']['atas_nama'] ?? null,
-                            'NILAI' => $result['atr']['nilai'] ?? null,
-                            'COLLATERAL_FLAG' => "",
-                            'VERSION' => 1,
-                            'CREATE_DATE' => $this->timeNow,
-                            'CREATE_BY' => $request->user()->id,
-                        ];
+                // $fileSize = strlen($data);
+                // $fileSizeInKB = floor($fileSize / 1024);
 
-                        M_CrGuaranteSertification::create($data_array_col);
+                $url = URL::to('/') . '/storage/' . 'Cr_Prospect/' . $fileName;
 
-                        foreach ($request->jaminan as $res) {
-                            if (!empty($res['atr']['document']) && isset($res['atr']['document']) && is_array($res['atr']['document'])) {
-                                foreach ($res['atr']['document'] as $datas) {
-                                    $data_array_attachment = [
-                                        'ID' => Uuid::uuid4()->toString(),
-                                        'CR_SURVEY_ID' => $request->id,
-                                        'TYPE' => $datas['TYPE'],
-                                        'COUNTER_ID' => $datas['COUNTER_ID'] ?? '',
-                                        'PATH' => $datas['PATH'],
-                                        'CREATED_BY' => $request->user()->fullname,
-                                        'TIMEMILISECOND' => round(microtime(true) * 1000)
-                                    ];
+                $checkAttachExist = M_CrProspectAttachment::where('cr_prospect_id', $request->cr_prospect_id)->where('type', $request->type)->first();
 
-                                    M_CrSurveyDocument::create($data_array_attachment);
-                                }
-                            }
-                        }
+                $dataRequest = [
+                    'attachment_path' => $url ?? '',
+                ];
 
-                        break;
+                if (!$checkAttachExist) {
+                    $dataRequest['id'] =  Uuid::uuid7()->toString();
+                    $dataRequest['cr_prospect_id'] = $request->cr_prospect_id;
+                    $dataRequest['type'] = $request->type;
+                    $dataRequest['created_at'] = $this->timeNow;
+                    M_CrProspectAttachment::create($dataRequest);
+                } else {
+                    $checkAttachExist->update($dataRequest);
                 }
+
+                DB::commit();
+                return response()->json(['message' => 'success', 'response' => $url], 200);
+            } else {
+                DB::rollback();
+                return response()->json(['message' => 'No image file provided'], 400);
             }
+        } catch (Exception $e) {
+            DB::rollback();
+            return $this->log->logError($e, $request);
         }
     }
+
+    // private function insert_guarante($request)
+    // {
+    //     if (!empty($request->jaminan)) {
+    //         foreach ($request->jaminan as $result) {
+
+    //             switch ($result['type']) {
+    //                 case 'kendaraan':
+    //                     $data_array_col = [
+    //                         'ID' => Uuid::uuid7()->toString(),
+    //                         'CR_SURVEY_ID' => $request->id,
+    //                         'HEADER_ID' => $result['counter_id'] ?? null,
+    //                         'POSITION_FLAG' => $result['atr']['kondisi_jaminan'] ?? null,
+    //                         'TYPE' => $result['atr']['tipe'] ?? null,
+    //                         'BRAND' => $result['atr']['merk'] ?? null,
+    //                         'PRODUCTION_YEAR' => $result['atr']['tahun'] ?? null,
+    //                         'COLOR' => $result['atr']['warna'] ?? null,
+    //                         'ON_BEHALF' => $result['atr']['atas_nama'] ?? null,
+    //                         'POLICE_NUMBER' => $result['atr']['no_polisi'] ?? null,
+    //                         'CHASIS_NUMBER' => $result['atr']['no_rangka'] ?? null,
+    //                         'ENGINE_NUMBER' => $result['atr']['no_mesin'] ?? null,
+    //                         'BPKB_NUMBER' => $result['atr']['no_bpkb'] ?? null,
+    //                         'STNK_NUMBER' => $result['atr']['no_stnk'] ?? null,
+    //                         'STNK_VALID_DATE' => $result['atr']['tgl_stnk'] ?? null,
+    //                         'VALUE' => $result['atr']['nilai'] ?? null,
+    //                         'COLLATERAL_FLAG' => "",
+    //                         'VERSION' => 1,
+    //                         'CREATE_DATE' => $this->timeNow,
+    //                         'CREATE_BY' => $request->user()->id,
+    //                     ];
+
+    //                     M_CrGuaranteVehicle::create($data_array_col);
+
+    //                     foreach ($request->jaminan as $res) {
+    //                         if (!empty($res['atr']['document']) && isset($res['atr']['document']) && is_array($res['atr']['document'])) {
+    //                             foreach ($res['atr']['document'] as $datas) {
+    //                                 $data_array_attachment = [
+    //                                     'ID' => Uuid::uuid4()->toString(),
+    //                                     'CR_SURVEY_ID' => $request->id,
+    //                                     'TYPE' => $datas['TYPE'],
+    //                                     'COUNTER_ID' => $datas['COUNTER_ID'] ?? '',
+    //                                     'PATH' => $datas['PATH'],
+    //                                     'CREATED_BY' => $request->user()->fullname,
+    //                                     'TIMEMILISECOND' => round(microtime(true) * 1000)
+    //                                 ];
+
+    //                                 M_CrSurveyDocument::create($data_array_attachment);
+    //                             }
+    //                         }
+    //                     }
+
+    //                     break;
+    //                 case 'sertifikat':
+    //                     $data_array_col = [
+    //                         'ID' => Uuid::uuid7()->toString(),
+    //                         'HEADER_ID' => $result['counter_id'],
+    //                         'CR_SURVEY_ID' => $request->id,
+    //                         'STATUS_JAMINAN' => $result['atr']['status_jaminan'] ?? null,
+    //                         'NO_SERTIFIKAT' => $result['atr']['no_sertifikat'] ?? null,
+    //                         'STATUS_KEPEMILIKAN' => $result['atr']['status_kepemilikan'] ?? null,
+    //                         'IMB' => $result['atr']['imb'] ?? null,
+    //                         'LUAS_TANAH' => $result['atr']['luas_tanah'] ?? null,
+    //                         'LUAS_BANGUNAN' => $result['atr']['luas_bangunan'] ?? null,
+    //                         'LOKASI' => $result['atr']['lokasi'] ?? null,
+    //                         'PROVINSI' => $result['atr']['provinsi'] ?? null,
+    //                         'KAB_KOTA' => $result['atr']['kab_kota'] ?? null,
+    //                         'KECAMATAN' => $result['atr']['kec'] ?? null,
+    //                         'DESA' => $result['atr']['desa'] ?? null,
+    //                         'ATAS_NAMA' => $result['atr']['atas_nama'] ?? null,
+    //                         'NILAI' => $result['atr']['nilai'] ?? null,
+    //                         'COLLATERAL_FLAG' => "",
+    //                         'VERSION' => 1,
+    //                         'CREATE_DATE' => $this->timeNow,
+    //                         'CREATE_BY' => $request->user()->id,
+    //                     ];
+
+    //                     M_CrGuaranteSertification::create($data_array_col);
+
+    //                     foreach ($request->jaminan as $res) {
+    //                         if (!empty($res['atr']['document']) && isset($res['atr']['document']) && is_array($res['atr']['document'])) {
+    //                             foreach ($res['atr']['document'] as $datas) {
+    //                                 $data_array_attachment = [
+    //                                     'ID' => Uuid::uuid4()->toString(),
+    //                                     'CR_SURVEY_ID' => $request->id,
+    //                                     'TYPE' => $datas['TYPE'],
+    //                                     'COUNTER_ID' => $datas['COUNTER_ID'] ?? '',
+    //                                     'PATH' => $datas['PATH'],
+    //                                     'CREATED_BY' => $request->user()->fullname,
+    //                                     'TIMEMILISECOND' => round(microtime(true) * 1000)
+    //                                 ];
+
+    //                                 M_CrSurveyDocument::create($data_array_attachment);
+    //                             }
+    //                         }
+    //                     }
+
+    //                     break;
+    //             }
+    //         }
+    //     }
+    // }
 
     // private function createCrProspekApproval($request)
     // {
@@ -554,70 +604,6 @@ class CrProspectController extends Controller
     //         DB::rollback();
     //         ActivityLogger::logActivity($req, 'Document Id Not Found', 404);
     //         return response()->json(['message' => 'Document Id Not Found', "status" => 404], 404);
-    //     } catch (\Exception $e) {
-    //         DB::rollback();
-    //         ActivityLogger::logActivity($req, $e->getMessage(), 500);
-    //         return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
-    //     }
-    // }
-
-    // public function uploadImage(Request $req)
-    // {
-    //     DB::beginTransaction();
-    //     try {
-
-    //         $this->validate($req, [
-    //             'image' => 'required|string',
-    //             'type' => 'required|string',
-    //             'cr_prospect_id' => 'required|string'
-    //         ]);
-
-    //         // Decode the base64 string
-    //         if (preg_match('/^data:image\/(\w+);base64,/', $req->image, $type)) {
-    //             $data = substr($req->image, strpos($req->image, ',') + 1);
-    //             $data = base64_decode($data);
-
-    //             // Generate a unique filename
-    //             $extension = strtolower($type[1]); // Get the image extension
-    //             $fileName = Uuid::uuid4()->toString() . '.' . $extension;
-
-    //             // Store the image
-    //             $image_path = Storage::put("public/Cr_Survey/{$fileName}", $data);
-    //             $image_path = str_replace('public/', '', $image_path);
-
-    //             $fileSize = strlen($data);
-    //             $fileSizeInKB = floor($fileSize / 1024);
-    //             // Adjust path
-
-    //             // Create the URL for the stored image
-    //             $url = URL::to('/') . '/storage/' . 'Cr_Survey/' . $fileName;
-
-    //             // Prepare data for database insertion
-    //             $data_array_attachment = [
-    //                 'ID' => Uuid::uuid4()->toString(),
-    //                 'CR_SURVEY_ID' => $req->cr_prospect_id,
-    //                 'TYPE' => $req->type,
-    //                 'COUNTER_ID' => isset($req->reff) ? $req->reff : '',
-    //                 'PATH' => $url ?? '',
-    //                 'SIZE' => $fileSizeInKB . ' kb',
-    //                 'CREATED_BY' => $req->user()->fullname,
-    //                 'TIMEMILISECOND' => round(microtime(true) * 1000)
-    //             ];
-
-    //             // Insert the record into the database
-    //             M_CrSurveyDocument::create($data_array_attachment);
-
-    //             DB::commit();
-    //             return response()->json(['message' => 'Image upload successfully', "status" => 200, 'response' => $url], 200);
-    //         } else {
-    //             DB::rollback();
-    //             ActivityLogger::logActivity($req, 'No image file provided', 400);
-    //             return response()->json(['message' => 'No image file provided', "status" => 400], 400);
-    //         }
-    //     } catch (QueryException $e) {
-    //         DB::rollback();
-    //         ActivityLogger::logActivity($req, $e->getMessage(), 409);
-    //         return response()->json(['message' => $e->getMessage(), "status" => 409], 409);
     //     } catch (\Exception $e) {
     //         DB::rollback();
     //         ActivityLogger::logActivity($req, $e->getMessage(), 500);

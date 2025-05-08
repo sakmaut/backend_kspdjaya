@@ -29,7 +29,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // Route Group Cr Prospek (Kunjungan)
     Route::resource('cr_prospect', CrProspectController::class);
-    // Route::post('image_upload_prospect', [CrSurveyController::class, 'uploadImage']);
+    Route::post('image_upload_prospect', [CrProspectController::class, 'uploadImage']);
     // Route Group Cr Prospek (Kunjungan)
 
 
