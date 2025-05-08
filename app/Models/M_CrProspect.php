@@ -37,6 +37,7 @@ class M_CrProspect extends Model
         'coordinate',
         'accurate',
         'slik',
+        'keterangan',
         'created_at',
         'updated_by',
         'updated_at',
