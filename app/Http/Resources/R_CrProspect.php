@@ -49,7 +49,7 @@ class R_CrProspect extends JsonResource
             'sector' => $this->sector,
             'coordinate' => $this->coordinate,
             'accurate' => $this->accurate,
-            'slik_request' => slikProgress($this->slik_flag),
+            'slik_request' =>  slikProgress($this->slik),
         ];
 
         return $data;
