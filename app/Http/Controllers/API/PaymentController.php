@@ -966,7 +966,7 @@ class PaymentController extends Controller
                                 'PAST_DUE_PENALTY' => $pastDuePenalty,
                                 'PAID_PCPL' => $getPrincipalPrev,
                                 'PAID_INT' =>  $getInterestPrev,
-                                'PAID_PENALTY' => floatval($arrearsCheck->PAST_DUE_PENALTY) - $getArrears,
+                                'PAID_PENALTY' => floatval($arrearsCheck->PAID_PENALTY) - $getArrears,
                                 'WOFF_PENALTY' => floatval($arrearsCheck->WOFF_PENALTY) - $getDiskonArrears,
                                 'STATUS_REC' => 'A',
                             ]);
