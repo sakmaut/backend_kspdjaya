@@ -521,10 +521,10 @@ if (!function_exists('slikProgress')) {
     function slikProgress($slik)
     {
         switch ($slik) {
-            case '1':
+            case 1:
                 $result = "slik di proses";
                 break;
-            case '2':
+            case 2:
                 $result = "slik";
                 break;
             default:
