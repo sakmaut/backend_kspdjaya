@@ -517,14 +517,21 @@ if (!function_exists('calculateArrears')) {
     }
 }
 
-if (!function_exists('uploadImage')) {
-    function uploadImage($installment, $date)
+if (!function_exists('slikProgress')) {
+    function slikProgress($slik)
     {
-
-        try {
-            //code...
-        } catch (\Exception $e) {
-            //throw $th;
+        switch ($slik) {
+            case '1':
+                $result = "slik di proses";
+                break;
+            case '2':
+                $result = "slik";
+                break;
+            default:
+                $result = "tidak slik";
+                break;
         }
+
+        return $result;
     }
 }
