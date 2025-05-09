@@ -211,7 +211,7 @@ class CollateralController extends Controller
 
     public function collateralApproval(Request $request)
     {
-        DB::transaction();
+        DB::beginTransaction();
         try {
             $request->validate([
                 'request_id' => 'required|string',
