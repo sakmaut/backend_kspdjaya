@@ -132,7 +132,7 @@ class CollateralRepository implements CollateralInterface
             'REQUEST_AT' => Carbon::now() ?? '',
         ];
 
-        return $this->usercollateralRequestEntityEntity::create($data);
+        return $this->collateralRequestEntity::create($data);
     }
 
     function collateral_status($request)
