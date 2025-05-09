@@ -22,6 +22,7 @@ class M_CrCollateralRequest extends Model
         'STNK_NUMBER',
         'INVOICE_NUMBER',
         'STNK_VALID_DATE',
+        'DESCRIPTION',
         'STATUS',
         'APPROVED_BY',
         'APPROVED_POSITION',
@@ -44,5 +45,15 @@ class M_CrCollateralRequest extends Model
                 $model->setAttribute($model->getKeyName(), Str::uuid()->toString());
             }
         });
+    }
+
+    public function user()
+    {
+        return $this->hasOne(User::class, 'id', 'REQUEST_BY');
+    }
+
+    public function branch()
+    {
+        return $this->hasOne(M_Branch::class, 'ID', 'REQUEST_BRANCH');
     }
 }

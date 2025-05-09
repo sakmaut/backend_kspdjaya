@@ -148,6 +148,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::get('surveyReport', [ReportController::class, 'surveyReport']);
 
     Route::resource('collateral', CollateralController::class);
+    Route::get('collateral_approval_list', [CollateralController::class, 'collateralApprovalList']);
     Route::post('collateral_status', [CollateralController::class, 'collateral_status']);
     Route::post('collateral_attachment', [CollateralController::class, 'uploadImage']);
     Route::post('collateral_attachment_rilis', [CollateralController::class, 'uploadImageRelease']);

@@ -32,6 +32,11 @@ class CollateralRepository implements CollateralInterface
         return $this->collateralEntity::where('ID', $id)->first();
     }
 
+    function getAllCollateralApprovalList()
+    {
+        return $this->collateralRequestEntity::with(['user'])->where('STATUS', 0)->get();
+    }
+
     function getListAllCollateral()
     {
         $query = $this->collateralEntity::with(['credit', 'originBranch', 'currentBranch']);
@@ -126,6 +131,7 @@ class CollateralRepository implements CollateralInterface
             'STNK_NUMBER' => $request->no_stnk ?? '',
             'INVOICE_NUMBER' => $request->no_faktur ?? '',
             'STNK_VALID_DATE' => $request->tgl_stnk ?? null,
+            'DESCRIPTION' => $request->keterangan ?? "",
             'REQUEST_BY' => $request->user()->id ?? '',
             'REQUEST_BRANCH' => $request->user()->branch_id ?? '',
             'REQUEST_POSITION' => $request->user()->position ?? '',

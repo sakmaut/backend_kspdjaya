@@ -6,6 +6,7 @@ use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Repositories\Collateral\CollateralRepository;
 use App\Http\Resources\R_CrCollateral;
+use App\Http\Resources\R_CrCollateralApprovalList;
 use App\Models\M_BpkbDetail;
 use App\Models\M_Branch;
 use App\Models\M_CrCollateral;
@@ -192,6 +193,19 @@ class CollateralController extends Controller
             DB::rollback();
             ActivityLogger::logActivity($req, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function collateralApprovalList(Request $request)
+    {
+        try {
+            $getListData = $this->collateralRepository->getAllCollateralApprovalList();
+
+            $dto = R_CrCollateralApprovalList::collection($getListData);
+
+            return response()->json($dto, 200);
+        } catch (\Exception $e) {
+            return $this->log->logError($e, $request);
         }
     }
 }
