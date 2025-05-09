@@ -16,17 +16,15 @@ class R_CrCollateralApprovalList extends JsonResource
     {
         return [
             'id' => $this->ID,
-            "before" => [
-                "atas_nama" => $this->cr_collateral->ON_BEHALF,
-                "no_polisi" => $this->cr_collateral->POLICE_NUMBER,
-                "no_mesin" => $this->cr_collateral->ENGINE_NUMBER,
-                "no_rangka" => $this->cr_collateral->CHASIS_NUMBER,
-                'alamat_bpkb' => $this->cr_collateral->BPKB_ADDRESS,
-                "no_bpkb" => $this->cr_collateral->BPKB_NUMBER,
-                "no_stnk" => $this->cr_collateral->STNK_NUMBER,
-                'no_faktur' => $this->cr_collateral->INVOICE_NUMBER,
-                "tgl_stnk" => $this->cr_collateral->STNK_VALID_DATE,
-            ],
+            "atas_nama" => $this->cr_collateral->ON_BEHALF,
+            "no_polisi" => $this->cr_collateral->POLICE_NUMBER,
+            "no_mesin" => $this->cr_collateral->ENGINE_NUMBER,
+            "no_rangka" => $this->cr_collateral->CHASIS_NUMBER,
+            'alamat_bpkb' => $this->cr_collateral->BPKB_ADDRESS,
+            "no_bpkb" => $this->cr_collateral->BPKB_NUMBER,
+            "no_stnk" => $this->cr_collateral->STNK_NUMBER,
+            'no_faktur' => $this->cr_collateral->INVOICE_NUMBER,
+            "tgl_stnk" => $this->cr_collateral->STNK_VALID_DATE,
             "after" => [
                 "atas_nama" => $this->ON_BEHALF,
                 "no_polisi" => $this->POLICE_NUMBER,
