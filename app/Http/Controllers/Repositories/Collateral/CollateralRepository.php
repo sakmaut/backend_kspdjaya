@@ -34,7 +34,7 @@ class CollateralRepository implements CollateralInterface
 
     function getAllCollateralApprovalList()
     {
-        return $this->collateralRequestEntity::with(['user', 'branch'])->where('STATUS', 0)->get();
+        return $this->collateralRequestEntity::with(['user', 'branch', 'cr_collateral'])->where('STATUS', 0)->get();
     }
 
     function getListAllCollateral()

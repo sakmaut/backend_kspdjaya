@@ -47,6 +47,11 @@ class M_CrCollateralRequest extends Model
         });
     }
 
+    public function cr_collateral()
+    {
+        return $this->hasOne(M_CrCollateral::class, 'ID', 'COLLATERAL_ID');
+    }
+
     public function user()
     {
         return $this->hasOne(User::class, 'id', 'REQUEST_BY');
