@@ -32,6 +32,11 @@ class CollateralRepository implements CollateralInterface
         return $this->collateralEntity::where('ID', $id)->first();
     }
 
+    function findCollateralRequestById($id)
+    {
+        return $this->collateralRequestEntity::where('ID', $id)->first();
+    }
+
     function getAllCollateralApprovalList()
     {
         return $this->collateralRequestEntity::with(['user', 'branch', 'cr_collateral'])->where('STATUS', 0)->get();
@@ -139,6 +144,24 @@ class CollateralRepository implements CollateralInterface
         ];
 
         return $this->collateralRequestEntity::create($data);
+    }
+
+    function collateralApproval($request)
+    {
+        $getCollateralId = $request->request_id;
+        $findCollateralById = $this->findCollateralRequestById($getCollateralId);
+
+        if (!$findCollateralById) {
+            throw new Exception('Request Id Not Found', 404);
+        }
+
+        if ($request->flag_approval == "yes") {
+            $data = ["STATUS" => 1];
+        } else {
+            $data = ["STATUS" => 2];
+        }
+
+        return $findCollateralById->update($data);
     }
 
     function collateral_status($request)

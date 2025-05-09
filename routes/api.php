@@ -149,6 +149,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
 
     Route::resource('collateral', CollateralController::class);
     Route::get('collateral_approval_list', [CollateralController::class, 'collateralApprovalList']);
+    Route::get('collateral_approval', [CollateralController::class, 'collateralApproval']);
     Route::post('collateral_status', [CollateralController::class, 'collateral_status']);
     Route::post('collateral_attachment', [CollateralController::class, 'uploadImage']);
     Route::post('collateral_attachment_rilis', [CollateralController::class, 'uploadImageRelease']);

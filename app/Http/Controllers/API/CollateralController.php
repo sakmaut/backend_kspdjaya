@@ -208,4 +208,23 @@ class CollateralController extends Controller
             return $this->log->logError($e, $request);
         }
     }
+
+    public function collateralApproval(Request $request)
+    {
+        DB::transaction();
+        try {
+            $request->validate([
+                'request_id' => 'required|string',
+                'flag_approval' => 'required|string'
+            ]);
+
+            $this->collateralRepository->collateralApproval($request);
+
+            DB::commit();
+            return response()->json(["message" => "success"], 200);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return $this->log->logError($e, $request);
+        }
+    }
 }
