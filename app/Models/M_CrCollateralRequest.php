@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 class M_CrCollateralRequest extends Model
 {
     use HasFactory;
-    protected $table = 'branch';
+    protected $table = 'cr_collateral_request';
     protected $fillable = [
         'ID',
         'COLLATERAL_ID',
