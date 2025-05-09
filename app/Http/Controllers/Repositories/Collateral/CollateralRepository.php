@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Repositories\Collateral;
 use App\Http\Controllers\API\LocationStatus;
 use App\Http\Controllers\Controller;
 use App\Models\M_CrCollateral;
+use App\Models\M_CrCollateralRequest;
 use App\Models\M_Credit;
 use App\Models\M_Payment;
 use Carbon\Carbon;
@@ -17,11 +18,13 @@ class CollateralRepository implements CollateralInterface
 {
     protected $collateralEntity;
     protected $locationStatus;
+    protected $collateralRequestEntity;
 
-    function __construct(M_CrCollateral $collateralEntity, LocationStatus $locationStatus)
+    function __construct(M_CrCollateral $collateralEntity, M_CrCollateralRequest $collateralRequestEntity, LocationStatus $locationStatus)
     {
         $this->collateralEntity = $collateralEntity;
         $this->locationStatus = $locationStatus;
+        $this->collateralRequestEntity = $collateralRequestEntity;
     }
 
     function findCollateralById($id)
@@ -104,19 +107,16 @@ class CollateralRepository implements CollateralInterface
         return $query;
     }
 
-    function update($request, $colId)
+    function update($request, $collateralId)
     {
-        $findCollateralById = $this->findCollateralById($colId);
+        $findCollateralById = $this->findCollateralById($collateralId);
 
         if (!$findCollateralById) {
             throw new Exception('Collateral Id Not Found', 404);
         }
 
         $data = [
-            'BRAND' => $request->merk ?? '',
-            'TYPE' => $request->tipe ?? '',
-            'PRODUCTION_YEAR' => $request->tahun ?? '',
-            'COLOR' => $request->warna ?? '',
+            'COLLATERAL_ID' => $collateralId,
             'ON_BEHALF' => $request->atas_nama ?? '',
             'POLICE_NUMBER' => $request->no_polisi ?? '',
             'ENGINE_NUMBER' => $request->no_mesin ?? '',
@@ -126,11 +126,13 @@ class CollateralRepository implements CollateralInterface
             'STNK_NUMBER' => $request->no_stnk ?? '',
             'INVOICE_NUMBER' => $request->no_faktur ?? '',
             'STNK_VALID_DATE' => $request->tgl_stnk ?? null,
-            'MOD_DATE' => Carbon::now() ?? '',
-            'MOD_BY' => $request->user()->id ?? '',
+            'REQUEST_BY' => $request->user()->id ?? '',
+            'REQUEST_BRANCH' => $request->user()->branch_id ?? '',
+            'REQUEST_POSITION' => $request->user()->position ?? '',
+            'REQUEST_AT' => Carbon::now() ?? '',
         ];
 
-        return $findCollateralById->update($data);
+        return $this->usercollateralRequestEntityEntity::create($data);
     }
 
     function collateral_status($request)
