@@ -153,7 +153,8 @@ class ListBanController extends Controller
                                 c.OCCUPATION AS PEKERJAAN,
                                 CONCAT(co.REF_PELANGGAN, ' ', co.REF_PELANGGAN_OTHER) AS supplier,
                                 coalesce(u.fullname,cl.mcf_id) AS SURVEYOR,
-                                cs.survey_note AS CATT_SURVEY,
+                                -- cs.survey_note AS CATT_SURVEY,
+                                coalesce(cs.survey_note,osn.SURVEY_NOTE) AS CATT_SURVEY,
                                 replace(format(cl.PCPL_ORI ,0),',','') AS PKK_HUTANG,
                                 cl.PERIOD AS JUMLAH_ANGSURAN,
                                 replace(format(cl.PERIOD/cl.INSTALLMENT_COUNT,0),',','') AS JARAK_ANGSURAN,
@@ -235,8 +236,8 @@ class ListBanController extends Controller
                                 left join temp_lis_01 en
                                     on cast(en.loan_number as char) = cast(cl.LOAN_NUMBER as char)
                                     and en.type=date_format(date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day),'%d%m%Y')
-                                left join temp_lis_02 py 
-                                    on cast(py.loan_num as char) = cast(cl.LOAN_NUMBER as char)
+                                left join temp_lis_02 py on cast(py.loan_num as char) = cast(cl.LOAN_NUMBER as char)
+                                left join old_survey_note osn on cast(osn.loan_number as char) = cast(cl.LOAN_NUMBER as char)
                         WHERE	date_format(cl.BACK_DATE,'%d%m%Y')=date_format(date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day),'%d%m%Y')
                                 and (cl.STATUS = 'A' or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char)from temp_lis_02 )))";
 
@@ -256,7 +257,8 @@ class ListBanController extends Controller
                                 c.OCCUPATION AS PEKERJAAN,
                                 CONCAT(co.REF_PELANGGAN, ' ', co.REF_PELANGGAN_OTHER) AS supplier,
                                 coalesce(u.fullname,cl.mcf_id) AS SURVEYOR,
-                                cs.survey_note AS CATT_SURVEY,
+                                -- cs.survey_note AS CATT_SURVEY,
+                                coalesce(cs.survey_note,osn.SURVEY_NOTE) AS CATT_SURVEY,
                                 replace(format(cl.PCPL_ORI ,0),',','') AS PKK_HUTANG,
                                 cl.PERIOD AS JUMLAH_ANGSURAN,
                                 replace(format(cl.PERIOD/cl.INSTALLMENT_COUNT,0),',','') AS JARAK_ANGSURAN,
@@ -339,6 +341,7 @@ class ListBanController extends Controller
                                     on cast(en.loan_number as char) = cast(cl.LOAN_NUMBER as char)
                                     and en.type=date_format(now(),'%d%m%Y')
                                 left join temp_lis_02C py on cast(py.loan_num as char) = cast(cl.LOAN_NUMBER as char)
+                                left join old_survey_note osn on cast(osn.loan_number as char) = cast(cl.LOAN_NUMBER as char)
                         WHERE	(cl.STATUS = 'A'  or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char) from temp_lis_02C )))";
 
 
