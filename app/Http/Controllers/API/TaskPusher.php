@@ -25,7 +25,7 @@ class TaskPusher extends Controller
 
             $setPositionAvailable = ['ADMIN', 'KAPOS'];
 
-            if (in_array($getCurrentPosition, $setPositionAvailable)) {
+            if (in_array($setPositionAvailable,$getCurrentPosition)) {
                 $data = M_Tasks::where([
                     'created_branch' => $getCurrentBranch,
                     'recipient_id' =>  $getCurrentPosition,
