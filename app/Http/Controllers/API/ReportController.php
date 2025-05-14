@@ -453,28 +453,64 @@ class ReportController extends Controller
                             on c.LOAN_NUMBER = a.LOAN_NUMBER
                             and c.START_DATE = a.PAYMENT_DATE
                         left join (
-                                SELECT  a.LOAN_NUM,
-                                        DATE(a.ENTRY_DATE) AS ENTRY_DATE, 
-                                        DATE(a.START_DATE) AS START_DATE,
-                                        ROW_NUMBER() OVER (PARTITION BY a.START_DATE ORDER BY a.ENTRY_DATE) AS INST_COUNT_INCREMENT,
-                                        a.ORIGINAL_AMOUNT,
-                                        a.INVOICE,
-                                        SUM(CASE WHEN b.ACC_KEYS = 'ANGSURAN_POKOK' 
-                                            OR b.ACC_KEYS = 'ANGSURAN_BUNGA' 
-                                            OR b.ACC_KEYS = 'BAYAR_POKOK' 
-                                            OR b.ACC_KEYS = 'BAYAR_BUNGA'
-                                            THEN b.ORIGINAL_AMOUNT ELSE 0 END) AS angsuran,
-                                        SUM(CASE WHEN b.ACC_KEYS = 'BAYAR_DENDA' THEN b.ORIGINAL_AMOUNT ELSE 0 END) AS denda
-                                    FROM payment a
-                                        INNER JOIN payment_detail b ON b.PAYMENT_ID = a.id
-                                    WHERE a.LOAN_NUM = '$id'
-                                        AND a.STTS_RCRD = 'PAID'
-                                    GROUP BY 
-                                            a.LOAN_NUM,
-                                            a.ENTRY_DATE, 
-                                            a.START_DATE,
-                                            a.ORIGINAL_AMOUNT,
-                                            a.INVOICE
+                                -- SELECT  a.LOAN_NUM,
+                                --         DATE(a.ENTRY_DATE) AS ENTRY_DATE, 
+                                --         DATE(a.START_DATE) AS START_DATE,
+                                --         ROW_NUMBER() OVER (PARTITION BY a.START_DATE ORDER BY a.ENTRY_DATE) AS INST_COUNT_INCREMENT,
+                                --         a.ORIGINAL_AMOUNT,
+                                --         a.INVOICE,
+                                --         SUM(CASE WHEN b.ACC_KEYS = 'ANGSURAN_POKOK' 
+                                --             OR b.ACC_KEYS = 'ANGSURAN_BUNGA' 
+                                --             OR b.ACC_KEYS = 'BAYAR_POKOK' 
+                                --             OR b.ACC_KEYS = 'BAYAR_BUNGA'
+                                --             THEN b.ORIGINAL_AMOUNT ELSE 0 END) AS angsuran,
+                                --         SUM(CASE WHEN b.ACC_KEYS = 'BAYAR_DENDA' THEN b.ORIGINAL_AMOUNT ELSE 0 END) AS denda
+                                --     FROM payment a
+                                --         INNER JOIN payment_detail b ON b.PAYMENT_ID = a.id
+                                --     WHERE a.LOAN_NUM = '$id'
+                                --         AND a.STTS_RCRD = 'PAID'
+                                --     GROUP BY 
+                                --             a.LOAN_NUM,
+                                --             a.ENTRY_DATE, 
+                                --             a.START_DATE,
+                                --             a.ORIGINAL_AMOUNT,
+                                --             a.INVOICE
+
+                                SELECT  
+									a.LOAN_NUM,
+									DATE(c.CREATED_AT) AS ENTRY_DATE, 
+									DATE(a.START_DATE) AS START_DATE,
+									ROW_NUMBER() OVER (
+										PARTITION BY a.START_DATE 
+										ORDER BY DATE(c.CREATED_AT)
+									) AS INST_COUNT_INCREMENT,
+									a.ORIGINAL_AMOUNT,
+									a.INVOICE,
+									SUM(
+										CASE 
+											WHEN b.ACC_KEYS IN ('ANGSURAN_POKOK', 'ANGSURAN_BUNGA', 'BAYAR_POKOK', 'BAYAR_BUNGA') 
+											THEN b.ORIGINAL_AMOUNT 
+											ELSE 0 
+										END
+									) AS angsuran,
+									SUM(
+										CASE 
+											WHEN b.ACC_KEYS = 'BAYAR_DENDA' 
+											THEN b.ORIGINAL_AMOUNT 
+											ELSE 0 
+										END
+									) AS denda
+								FROM payment a
+								INNER JOIN payment_detail b ON b.PAYMENT_ID = a.id
+								INNER JOIN kwitansi c ON c.NO_TRANSAKSI = a.INVOICE
+								WHERE a.LOAN_NUM = 'LEA250300026'
+								  AND a.STTS_RCRD = 'PAID'
+								GROUP BY 
+									a.LOAN_NUM,
+									c.CREATED_AT, 
+									a.START_DATE,
+									a.ORIGINAL_AMOUNT,
+									a.INVOICE
                         ) as mp
                         on mp.LOAN_NUM = a.LOAN_NUMBER
                         and date_format(mp.START_DATE,'%d%m%Y') = date_format(a.PAYMENT_DATE,'%d%m%Y')
