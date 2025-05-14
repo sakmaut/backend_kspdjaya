@@ -503,7 +503,7 @@ class ReportController extends Controller
 								FROM payment a
 								INNER JOIN payment_detail b ON b.PAYMENT_ID = a.id
 								INNER JOIN kwitansi c ON c.NO_TRANSAKSI = a.INVOICE
-								WHERE a.LOAN_NUM = 'LEA250300026'
+								WHERE a.LOAN_NUM = '$id'
 								  AND a.STTS_RCRD = 'PAID'
 								GROUP BY 
 									a.LOAN_NUM,
