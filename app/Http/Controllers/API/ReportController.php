@@ -502,7 +502,7 @@ class ReportController extends Controller
 									) AS denda
 								FROM payment a
 								INNER JOIN payment_detail b ON b.PAYMENT_ID = a.id
-								LEFT JOIN kwitansi c ON c.NO_TRANSAKSI = a.INVOICE
+								LEFT JOIN kwitansi c ON c.NO_TRANSAKSI = a.INVOICE AND c.STTS_PAYMENT = 'PAID'
 								WHERE a.LOAN_NUM = '$id'
 								  AND a.STTS_RCRD = 'PAID'
 								GROUP BY 
