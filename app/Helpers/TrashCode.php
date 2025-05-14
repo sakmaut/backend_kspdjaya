@@ -1712,3 +1712,27 @@ if ($valBeforePrincipal < $getPrincipal) { $remaining_to_principal=$getPrincipal
 
         return null;
     }
+
+    //LKBH 
+    -- SELECT  a.LOAN_NUM,
+    --         DATE(a.ENTRY_DATE) AS ENTRY_DATE, 
+    --         DATE(a.START_DATE) AS START_DATE,
+    --         ROW_NUMBER() OVER (PARTITION BY a.START_DATE ORDER BY a.ENTRY_DATE) AS INST_COUNT_INCREMENT,
+    --         a.ORIGINAL_AMOUNT,
+    --         a.INVOICE,
+    --         SUM(CASE WHEN b.ACC_KEYS = 'ANGSURAN_POKOK' 
+    --             OR b.ACC_KEYS = 'ANGSURAN_BUNGA' 
+    --             OR b.ACC_KEYS = 'BAYAR_POKOK' 
+    --             OR b.ACC_KEYS = 'BAYAR_BUNGA'
+    --             THEN b.ORIGINAL_AMOUNT ELSE 0 END) AS angsuran,
+    --         SUM(CASE WHEN b.ACC_KEYS = 'BAYAR_DENDA' THEN b.ORIGINAL_AMOUNT ELSE 0 END) AS denda
+    --     FROM payment a
+    --         INNER JOIN payment_detail b ON b.PAYMENT_ID = a.id
+    --     WHERE a.LOAN_NUM = '$id'
+    --         AND a.STTS_RCRD = 'PAID'
+    --     GROUP BY 
+    --             a.LOAN_NUM,
+    --             a.ENTRY_DATE, 
+    --             a.START_DATE,
+    --             a.ORIGINAL_AMOUNT,
+    --             a.INVOICE
