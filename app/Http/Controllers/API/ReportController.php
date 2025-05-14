@@ -478,7 +478,7 @@ class ReportController extends Controller
 
                                 SELECT  
 									a.LOAN_NUM,
-									DATE(c.CREATED_AT) AS ENTRY_DATE, 
+									coalesce(c.CREATED_AT,a.ENTRY_DATE) AS ENTRY_DATE, 
 									DATE(a.START_DATE) AS START_DATE,
 									ROW_NUMBER() OVER (
 										PARTITION BY a.START_DATE 
@@ -508,6 +508,7 @@ class ReportController extends Controller
 								GROUP BY 
 									a.LOAN_NUM,
 									c.CREATED_AT, 
+                                    a.ENTRY_DATE,
 									a.START_DATE,
 									a.ORIGINAL_AMOUNT,
 									a.INVOICE
