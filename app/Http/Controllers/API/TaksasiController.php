@@ -31,10 +31,10 @@ class TaksasiController extends Controller
             $data = M_Taksasi::all();
             $dto = R_Taksasi::collection($data);
 
-            ActivityLogger::logActivity($request,"Success",200);
+            ActivityLogger::logActivity($request, "Success", 200);
             return response()->json($dto, 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage()], 500);
         }
     }
@@ -43,17 +43,17 @@ class TaksasiController extends Controller
     {
         try {
             $data = M_Taksasi::distinct()
-                    ->select('brand')
-                    ->get()
-                    ->pluck('brand')
-                    ->toArray();
+                ->select('brand')
+                ->get()
+                ->pluck('brand')
+                ->toArray();
 
             $result = ['brand' => $data];
 
-            ActivityLogger::logActivity($request,"Success",200);
+            ActivityLogger::logActivity($request, "Success", 200);
             return response()->json($result, 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage()], 500);
         }
     }
@@ -68,10 +68,10 @@ class TaksasiController extends Controller
             ]);
 
             $data = M_Taksasi::select('id', 'code', DB::raw("CONCAT(model, ' - ', descr) AS model"))
-                        ->where('brand', $request->merk)
-                        ->distinct()
-                        ->get()
-                        ->toArray();
+                ->where('brand', $request->merk)
+                ->distinct()
+                ->get()
+                ->toArray();
 
 
             // $year = M_TaksasiPrice::distinct()
@@ -84,12 +84,12 @@ class TaksasiController extends Controller
             // foreach ($data as &$item) {
             //     $item['tahun'] = $year;
             // }
-            
 
-            ActivityLogger::logActivity($request,"Success",200);
+
+            ActivityLogger::logActivity($request, "Success", 200);
             return response()->json($data, 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage()], 500);
         }
     }
@@ -107,28 +107,35 @@ class TaksasiController extends Controller
 
             $tipe_array = explode(' - ', $request->tipe);
 
+            // $data = M_Taksasi::distinct()
+            //         ->select('id')
+            //         ->where('brand', '=', $request->merk)
+            //         ->where('code', '=', $tipe_array[0])
+            //         ->where('model', '=', $tipe_array[1])
+            //         ->get();
+
             $data = M_Taksasi::distinct()
-                    ->select('id')
-                    ->where('brand', '=', $request->merk)
-                    ->where('code', '=', $tipe_array[0])
-                    ->where('model', '=', $tipe_array[1])
-                    ->get();
-           
+                ->select('id')
+                ->where('brand', 'LIKE', '%' . $request->merk . '%')
+                ->where('code', 'LIKE', '%' . $tipe_array[0] . '%')
+                ->where('model', 'LIKE', '%' . $tipe_array[1] . '%')
+                ->get();
+
 
             $year = M_TaksasiPrice::distinct()
-                    ->select('year')
-                    ->where('taksasi_id', '=',$data->first()->id)
-                    ->orderBy('year','asc')
-                    ->get()
-                    ->toArray();
+                ->select('year')
+                ->where('taksasi_id', '=', $data->first()->id)
+                ->orderBy('year', 'asc')
+                ->get()
+                ->toArray();
 
             $years = array_column($year, 'year');
-            
 
-            ActivityLogger::logActivity($request,"Success",200);
+
+            ActivityLogger::logActivity($request, "Success", 200);
             return response()->json($years, 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage()], 500);
         }
     }
@@ -146,37 +153,40 @@ class TaksasiController extends Controller
 
             $tipe_array = explode(' - ', $request->code);
 
-            $data = M_Taksasi::select('taksasi.code', 'taksasi_price.year', 
-                            DB::raw('CAST(taksasi_price.price AS UNSIGNED) AS price'))
-                    ->join('taksasi_price', 'taksasi_price.taksasi_id', '=', 'taksasi.id')
-                    ->where('taksasi.code', '=', $tipe_array[0])
-                    ->where('taksasi.model', '=', $tipe_array[1])
-                    ->where('taksasi_price.year', '=',  $request->tahun)
-                    ->get();
+            $data = M_Taksasi::select(
+                'taksasi.code',
+                'taksasi_price.year',
+                DB::raw('CAST(taksasi_price.price AS UNSIGNED) AS price')
+            )
+                ->join('taksasi_price', 'taksasi_price.taksasi_id', '=', 'taksasi.id')
+                ->where('taksasi.code', '=', $tipe_array[0])
+                ->where('taksasi.model', '=', $tipe_array[1])
+                ->where('taksasi_price.year', '=',  $request->tahun)
+                ->get();
 
-            ActivityLogger::logActivity($request,"Success",200);
+            ActivityLogger::logActivity($request, "Success", 200);
             return response()->json($data, 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage()], 500);
         }
     }
 
-    public function show(Request $req,$id)
+    public function show(Request $req, $id)
     {
         try {
-            $data = M_Taksasi::where('id',$id)->first();
+            $data = M_Taksasi::where('id', $id)->first();
 
-            if(!$data){
+            if (!$data) {
                 throw new Exception("Data Not Found", 1);
             }
 
             $dto = new R_Taksasi($data);
 
-            ActivityLogger::logActivity($req,"Success",200);
+            ActivityLogger::logActivity($req, "Success", 200);
             return response()->json($dto, 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($req,$e->getMessage(),500);
+            ActivityLogger::logActivity($req, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage()], 500);
         }
     }
@@ -186,96 +196,96 @@ class TaksasiController extends Controller
         DB::beginTransaction();
         try {
 
-            $data_taksasi =[
-                'brand'=> strtoupper($request->brand),
-                'code'=> strtoupper($request->code),
-                'model'=> strtoupper($request->model),
-                'descr'=> strtoupper($request->descr),
-                'create_by'=>$request->user()->id,
-                'create_at'=>$this->timeNow
+            $data_taksasi = [
+                'brand' => strtoupper($request->brand),
+                'code' => strtoupper($request->code),
+                'model' => strtoupper($request->model),
+                'descr' => strtoupper($request->descr),
+                'create_by' => $request->user()->id,
+                'create_at' => $this->timeNow
             ];
 
             $taksasi_id = M_Taksasi::create($data_taksasi);
 
-            if(isset($request->price) && is_array($request->price)){
+            if (isset($request->price) && is_array($request->price)) {
                 foreach ($request->price as $res) {
-                    $taksasi_price =[
-                        'taksasi_id'=> $taksasi_id->id,
-                        'year'=> $res['name'],
-                        'price'=> $res['harga']
+                    $taksasi_price = [
+                        'taksasi_id' => $taksasi_id->id,
+                        'year' => $res['name'],
+                        'price' => $res['harga']
                     ];
-        
+
                     M_TaksasiPrice::create($taksasi_price);
                 }
             }
-    
+
             DB::commit();
-            ActivityLogger::logActivity($request,"Success",200);
+            ActivityLogger::logActivity($request, "Success", 200);
             return response()->json(['message' => 'created successfully'], 200);
-        }catch (QueryException $e) {
+        } catch (QueryException $e) {
             DB::rollback();
-            ActivityLogger::logActivity($request,$e->getMessage(),409);
-            return response()->json(['message' => $e->getMessage(),"status" => 409], 409);
+            ActivityLogger::logActivity($request, $e->getMessage(), 409);
+            return response()->json(['message' => $e->getMessage(), "status" => 409], 409);
         } catch (\Exception $e) {
             DB::rollback();
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
 
-    public function update(Request $request,$id)
+    public function update(Request $request, $id)
     {
         DB::beginTransaction();
         try {
-            $taksasi = M_Taksasi::where('id',$id)->first();
+            $taksasi = M_Taksasi::where('id', $id)->first();
 
-            if(!$taksasi){
+            if (!$taksasi) {
                 throw new Exception("Data Not Found", 1);
             }
 
-            $data_taksasi =[
-                'brand'=> $request->brand,
-                'code'=> $request->code,
-                'model'=> $request->model,
-                'descr'=> $request->descr,
-                'updated_by'=>$request->user()->id,
-                'updated_at'=>$this->timeNow
+            $data_taksasi = [
+                'brand' => $request->brand,
+                'code' => $request->code,
+                'model' => $request->model,
+                'descr' => $request->descr,
+                'updated_by' => $request->user()->id,
+                'updated_at' => $this->timeNow
             ];
-           
+
             $taksasi->update($data_taksasi);
 
-            $taksasi_price = M_TaksasiPrice::where('taksasi_id',$id)->delete();
-        
-            if(isset($request->price) && is_array($request->price)){
+            $taksasi_price = M_TaksasiPrice::where('taksasi_id', $id)->delete();
+
+            if (isset($request->price) && is_array($request->price)) {
                 foreach ($request->price as $res) {
-                    $taksasi_price =[
-                        'taksasi_id'=> $id,
-                        'year'=> $res['name'],
-                        'price'=> $res['harga']
+                    $taksasi_price = [
+                        'taksasi_id' => $id,
+                        'year' => $res['name'],
+                        'price' => $res['harga']
                     ];
-        
+
                     M_TaksasiPrice::create($taksasi_price);
                 }
             }
 
             DB::commit();
-            ActivityLogger::logActivity($request,"Success",200);
+            ActivityLogger::logActivity($request, "Success", 200);
             return response()->json(['message' => 'updated successfully'], 200);
         } catch (\Exception $e) {
             DB::rollback();
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage()], 500);
         }
     }
 
-    public function destroy(Request $req,$id)
-    { 
+    public function destroy(Request $req, $id)
+    {
         DB::beginTransaction();
         try {
-            
-            $taksasi = M_Taksasi::where('id',$id)->first();
 
-            if(!$taksasi){
+            $taksasi = M_Taksasi::where('id', $id)->first();
+
+            if (!$taksasi) {
                 throw new Exception("Data Not Found", 1);
             }
 
@@ -287,15 +297,15 @@ class TaksasiController extends Controller
             $taksasi->update($update);
 
             DB::commit();
-            ActivityLogger::logActivity($req,"Success",200);
+            ActivityLogger::logActivity($req, "Success", 200);
             return response()->json(['message' => 'deleted successfully'], 200);
         } catch (ModelNotFoundException $e) {
             DB::rollback();
-            ActivityLogger::logActivity($req,'Data Not Found',404);
+            ActivityLogger::logActivity($req, 'Data Not Found', 404);
             return response()->json(['message' => 'Data Not Found'], 404);
         } catch (\Exception $e) {
             DB::rollback();
-            ActivityLogger::logActivity($req,$e->getMessage(),500);
+            ActivityLogger::logActivity($req, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage()], 500);
         }
     }
@@ -305,58 +315,58 @@ class TaksasiController extends Controller
         DB::beginTransaction();
         try {
 
-            $vehicles = collect($request->json()->all()); 
+            $vehicles = collect($request->json()->all());
 
             if ($vehicles->isEmpty()) {
                 return response()->json(['error' => 'No taksasi data provided'], 400);
             }
 
             $result = DB::table('taksasi as a')
-                        ->leftJoin('taksasi_price as b', 'b.taksasi_id', '=', 'a.id')
-                        ->select('a.brand', 'a.code', 'a.model', 'a.descr', 'b.year', 'b.price')
-                        ->orderBy('a.brand')
-                        ->orderBy('a.code')
-                        ->orderBy('b.year', 'asc')
-                        ->get();
+                ->leftJoin('taksasi_price as b', 'b.taksasi_id', '=', 'a.id')
+                ->select('a.brand', 'a.code', 'a.model', 'a.descr', 'b.year', 'b.price')
+                ->orderBy('a.brand')
+                ->orderBy('a.code')
+                ->orderBy('b.year', 'asc')
+                ->get();
 
             if ($result->isNotEmpty()) {
 
                 $max = DB::table('taksasi_bak')
-                            ->select(DB::raw('max(coalesce(count, 0)) as htung'))
-                            ->first();
+                    ->select(DB::raw('max(coalesce(count, 0)) as htung'))
+                    ->first();
 
-               $result->map(function($list) use ($request,$max){
-                    $log =[
-                        'count'=> intval($max->htung??0) + 1,
-                        'brand'=> $list->brand,
-                        'code'=> $list->code,
-                        'model'=> $list->model,
-                        'descr'=> $list->descr,
-                        'year'=> $list->year,
-                        'price'=> $list->price,
-                        'created_by'=>$request->user()->id,
-                        'created_at'=>$this->timeNow
+                $result->map(function ($list) use ($request, $max) {
+                    $log = [
+                        'count' => intval($max->htung ?? 0) + 1,
+                        'brand' => $list->brand,
+                        'code' => $list->code,
+                        'model' => $list->model,
+                        'descr' => $list->descr,
+                        'year' => $list->year,
+                        'price' => $list->price,
+                        'created_by' => $request->user()->id,
+                        'created_at' => $this->timeNow
                     ];
-    
+
                     M_TaksasiBak::create($log);
-                });  
-                
-                M_Taksasi::query()->delete(); 
-                M_TaksasiPrice::query()->delete(); 
+                });
+
+                M_Taksasi::query()->delete();
+                M_TaksasiPrice::query()->delete();
             }
 
             $insertData = [];
             $dataExist = [];
-            
+
             foreach ($vehicles as $vehicle) {
                 $uuid = Uuid::uuid7()->toString();
-                
+
                 // Create a unique key using all relevant fields
                 $uniqueKey = $vehicle['brand'] . '-' . $vehicle['vehicle'] . '-' . $vehicle['type'] . '-' . $vehicle['model'];
-                
+
                 // Format the price consistently
                 $formattedPrice = number_format(floatval(str_replace(',', '', $vehicle['price'] ?? '0')), 0, '.', '');
-                
+
                 if (!isset($dataExist[$uniqueKey])) {
                     // First occurrence of this vehicle combination
                     $insertData[] = [
@@ -374,13 +384,13 @@ class TaksasiController extends Controller
                         'create_by' => $request->user()->id,
                         'create_at' => now(),
                     ];
-                    
+
                     // Store the index of this entry
                     $dataExist[$uniqueKey] = count($insertData) - 1;
                 } else {
                     // Vehicle combination already exists, add new year and price
                     $existingIndex = $dataExist[$uniqueKey];
-                    
+
                     // Check if this year entry already exists
                     $yearExists = false;
                     foreach ($insertData[$existingIndex]['year'] as $yearEntry) {
@@ -389,7 +399,7 @@ class TaksasiController extends Controller
                             break;
                         }
                     }
-                    
+
                     // Only add if this year doesn't exist yet
                     if (!$yearExists) {
                         $insertData[$existingIndex]['year'][] = [
@@ -399,7 +409,7 @@ class TaksasiController extends Controller
                     }
                 }
             }
-            
+
             if (count($insertData) > 0) {
                 foreach ($insertData as $data) {
                     M_Taksasi::insert([
@@ -411,24 +421,24 @@ class TaksasiController extends Controller
                         'create_by' => $data['create_by'],
                         'create_at' => $data['create_at'],
                     ]);
-            
+
                     foreach ($data['year'] as $yearData) {
                         M_TaksasiPrice::insert([
                             'id' => Uuid::uuid7()->toString(),
                             'taksasi_id' => $data['id'],
-                            'year' => $yearData['year']??'',
-                            'price' => $yearData['price']??0
+                            'year' => $yearData['year'] ?? '',
+                            'price' => $yearData['price'] ?? 0
                         ]);
                     }
                 }
             }
 
             DB::commit();
-            ActivityLogger::logActivity($request,"Success",200);
+            ActivityLogger::logActivity($request, "Success", 200);
             return response()->json(['message' => 'updated successfully'], 200);
         } catch (\Exception $e) {
             DB::rollback();
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage()], 500);
         }
     }
@@ -439,12 +449,12 @@ class TaksasiController extends Controller
         try {
 
             $result = DB::table('taksasi as a')
-                            ->leftJoin('taksasi_price as b', 'b.taksasi_id', '=', 'a.id')
-                            ->select('a.brand', 'a.code', 'a.model', 'a.descr', 'b.year', DB::raw('CAST(b.price AS UNSIGNED) AS price'))
-                            ->orderBy('a.brand')
-                            ->orderBy('a.code')
-                            ->orderBy('b.year', 'asc')
-                            ->get();
+                ->leftJoin('taksasi_price as b', 'b.taksasi_id', '=', 'a.id')
+                ->select('a.brand', 'a.code', 'a.model', 'a.descr', 'b.year', DB::raw('CAST(b.price AS UNSIGNED) AS price'))
+                ->orderBy('a.brand')
+                ->orderBy('a.code')
+                ->orderBy('b.year', 'asc')
+                ->get();
 
             DB::commit();
             ActivityLogger::logActivity($request, "Success", 200);
