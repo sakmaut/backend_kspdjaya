@@ -496,140 +496,140 @@ class ReportController extends Controller
             //                 a.LOAN_NUMBER = '$id'
             //             order by a.PAYMENT_DATE,mp.ENTRY_DATE asc";
 
-            $sql = "SELECT 
-                        a.INSTALLMENT_COUNT,
-                        a.PAYMENT_DATE,
-                        a.PRINCIPAL,
-                        a.INTEREST,
-                        a.INSTALLMENT,
-                        a.PAYMENT_VALUE_PRINCIPAL,
-                        a.PAYMENT_VALUE_INTEREST,
-                        a.INSUFFICIENT_PAYMENT,
-                        a.PAYMENT_VALUE,
-                        a.PAID_FLAG,
-                        c.PAST_DUE_PENALTY,
-                        c.PAID_PENALTY,
-                        c.STATUS_REC,
-                        mp.ENTRY_DATE,
-                        mp.INST_COUNT_INCREMENT,
-                        mp.ORIGINAL_AMOUNT,
-                        mp.INVOICE,
-                        mp.angsuran,
-                        mp.denda,
-                        (c.PAST_DUE_PENALTY - mp.denda) as sisa_denda,
-                        ml.MIN_OD AS OD
-                    from
-                        credit_schedule as a
-                    left join
-                        arrears as c
-                        on c.LOAN_NUMBER = a.LOAN_NUMBER
-                        and c.START_DATE = a.PAYMENT_DATE
-                    left join (
-                            SELECT  
-                                a.LOAN_NUM,
-                                coalesce(c.CREATED_AT,a.ENTRY_DATE) AS ENTRY_DATE, 
-                                DATE(a.START_DATE) AS START_DATE,
-                                ROW_NUMBER() OVER (
-                                    PARTITION BY a.START_DATE 
-                                    ORDER BY DATE(c.CREATED_AT)
-                                ) AS INST_COUNT_INCREMENT,
-                                a.ORIGINAL_AMOUNT,
-                                a.INVOICE,
-                                SUM(
-                                    CASE 
-                                        WHEN b.ACC_KEYS IN ('ANGSURAN_POKOK', 'ANGSURAN_BUNGA', 'BAYAR_POKOK', 'BAYAR_BUNGA') 
-                                        THEN b.ORIGINAL_AMOUNT 
-                                        ELSE 0 
-                                    END
-                                ) AS angsuran,
-                                SUM(
-                                    CASE 
-                                        WHEN b.ACC_KEYS = 'BAYAR_DENDA' 
-                                        THEN b.ORIGINAL_AMOUNT 
-                                        ELSE 0 
-                                    END
-                                ) AS denda
-                            FROM payment a
-                            INNER JOIN payment_detail b ON b.PAYMENT_ID = a.id
-                            LEFT JOIN kwitansi c ON c.NO_TRANSAKSI = a.INVOICE AND c.STTS_PAYMENT = 'PAID'
-                            WHERE a.LOAN_NUM = '$id'
-                            AND a.STTS_RCRD = 'PAID'
-                            GROUP BY 
-                                a.LOAN_NUM,
-                                c.CREATED_AT, 
-                                a.ENTRY_DATE,
-                                a.START_DATE,
-                                a.ORIGINAL_AMOUNT,
-                                a.INVOICE
-                    ) as mp
-                    on mp.LOAN_NUM = a.LOAN_NUMBER
-                    and date_format(mp.START_DATE,'%d%m%Y') = date_format(a.PAYMENT_DATE,'%d%m%Y')
-                    left join (
-                    SELECT	a.INSTALLMENT_COUNT,
-                            a.PAYMENT_DATE,
-                            min(mp.angsuran),
-                            min(CASE WHEN DATEDIFF(
-                                    COALESCE(DATE_FORMAT(mp.ENTRY_DATE, '%Y-%m-%d'), DATE_FORMAT(NOW(), '%Y-%m-%d')),
-                                    a.PAYMENT_DATE
-                                ) < 0 THEN 0
-                                ELSE DATEDIFF(
-                                    COALESCE(DATE_FORMAT(mp.ENTRY_DATE, '%Y-%m-%d'), DATE_FORMAT(NOW(), '%Y-%m-%d')),
-                                    a.PAYMENT_DATE
-                                )
-                            END) AS MIN_OD
-                    from	credit_schedule as a
-                            left join
-                                arrears as c
-                                on c.LOAN_NUMBER = a.LOAN_NUMBER
-                                and c.START_DATE = a.PAYMENT_DATE
-                            left join (
-                                    SELECT  
-                                a.LOAN_NUM,
-                                coalesce(c.CREATED_AT,a.ENTRY_DATE) AS ENTRY_DATE, 
-                                DATE(a.START_DATE) AS START_DATE,
-                                ROW_NUMBER() OVER (
-                                    PARTITION BY a.START_DATE 
-                                    ORDER BY DATE(c.CREATED_AT)
-                                ) AS INST_COUNT_INCREMENT,
-                                a.ORIGINAL_AMOUNT,
-                                a.INVOICE,
-                                SUM(
-                                    CASE 
-                                        WHEN b.ACC_KEYS IN ('ANGSURAN_POKOK', 'ANGSURAN_BUNGA', 'BAYAR_POKOK', 'BAYAR_BUNGA') 
-                                        THEN b.ORIGINAL_AMOUNT 
-                                        ELSE 0 
-                                    END
-                                ) AS angsuran,
-                                SUM(
-                                    CASE 
-                                        WHEN b.ACC_KEYS = 'BAYAR_DENDA' 
-                                        THEN b.ORIGINAL_AMOUNT 
-                                        ELSE 0 
-                                    END
-                                ) AS denda
-                            FROM payment a
-                            INNER JOIN payment_detail b ON b.PAYMENT_ID = a.id
-                            LEFT JOIN kwitansi c ON c.NO_TRANSAKSI = a.INVOICE AND c.STTS_PAYMENT = 'PAID'
-                            WHERE a.LOAN_NUM = '$id'
-                            AND a.STTS_RCRD = 'PAID'
-                            GROUP BY 
-                                a.LOAN_NUM,
-                                c.CREATED_AT, 
-                                a.ENTRY_DATE,
-                                a.START_DATE,
-                                a.ORIGINAL_AMOUNT,
-                                a.INVOICE
-                            ) as mp
-                                on mp.LOAN_NUM = a.LOAN_NUMBER
-                                and date_format(mp.START_DATE,'%d%m%Y') = date_format(a.PAYMENT_DATE,'%d%m%Y')
-                    where	a.LOAN_NUMBER = '$id'
-                    group	by a.INSTALLMENT_COUNT,a.PAYMENT_DATE
-                    ) as ml on date_format(ml.PAYMENT_DATE,'%d%m%Y') = date_format(a.PAYMENT_DATE,'%d%m%Y')
-                    where a.LOAN_NUMBER = '$id'
-                    order by a.PAYMENT_DATE,mp.ENTRY_DATE asc";
+            // $sql = "SELECT 
+            //             a.INSTALLMENT_COUNT,
+            //             a.PAYMENT_DATE,
+            //             a.PRINCIPAL,
+            //             a.INTEREST,
+            //             a.INSTALLMENT,
+            //             a.PAYMENT_VALUE_PRINCIPAL,
+            //             a.PAYMENT_VALUE_INTEREST,
+            //             a.INSUFFICIENT_PAYMENT,
+            //             a.PAYMENT_VALUE,
+            //             a.PAID_FLAG,
+            //             c.PAST_DUE_PENALTY,
+            //             c.PAID_PENALTY,
+            //             c.STATUS_REC,
+            //             mp.ENTRY_DATE,
+            //             mp.INST_COUNT_INCREMENT,
+            //             mp.ORIGINAL_AMOUNT,
+            //             mp.INVOICE,
+            //             mp.angsuran,
+            //             mp.denda,
+            //             (c.PAST_DUE_PENALTY - mp.denda) as sisa_denda,
+            //             ml.MIN_OD AS OD
+            //         from
+            //             credit_schedule as a
+            //         left join
+            //             arrears as c
+            //             on c.LOAN_NUMBER = a.LOAN_NUMBER
+            //             and c.START_DATE = a.PAYMENT_DATE
+            //         left join (
+            //                 SELECT  
+            //                     a.LOAN_NUM,
+            //                     coalesce(c.CREATED_AT,a.ENTRY_DATE) AS ENTRY_DATE, 
+            //                     DATE(a.START_DATE) AS START_DATE,
+            //                     ROW_NUMBER() OVER (
+            //                         PARTITION BY a.START_DATE 
+            //                         ORDER BY DATE(c.CREATED_AT)
+            //                     ) AS INST_COUNT_INCREMENT,
+            //                     a.ORIGINAL_AMOUNT,
+            //                     a.INVOICE,
+            //                     SUM(
+            //                         CASE 
+            //                             WHEN b.ACC_KEYS IN ('ANGSURAN_POKOK', 'ANGSURAN_BUNGA', 'BAYAR_POKOK', 'BAYAR_BUNGA') 
+            //                             THEN b.ORIGINAL_AMOUNT 
+            //                             ELSE 0 
+            //                         END
+            //                     ) AS angsuran,
+            //                     SUM(
+            //                         CASE 
+            //                             WHEN b.ACC_KEYS = 'BAYAR_DENDA' 
+            //                             THEN b.ORIGINAL_AMOUNT 
+            //                             ELSE 0 
+            //                         END
+            //                     ) AS denda
+            //                 FROM payment a
+            //                 INNER JOIN payment_detail b ON b.PAYMENT_ID = a.id
+            //                 LEFT JOIN kwitansi c ON c.NO_TRANSAKSI = a.INVOICE AND c.STTS_PAYMENT = 'PAID'
+            //                 WHERE a.LOAN_NUM = '$id'
+            //                 AND a.STTS_RCRD = 'PAID'
+            //                 GROUP BY 
+            //                     a.LOAN_NUM,
+            //                     c.CREATED_AT, 
+            //                     a.ENTRY_DATE,
+            //                     a.START_DATE,
+            //                     a.ORIGINAL_AMOUNT,
+            //                     a.INVOICE
+            //         ) as mp
+            //         on mp.LOAN_NUM = a.LOAN_NUMBER
+            //         and date_format(mp.START_DATE,'%d%m%Y') = date_format(a.PAYMENT_DATE,'%d%m%Y')
+            //         left join (
+            //         SELECT	a.INSTALLMENT_COUNT,
+            //                 a.PAYMENT_DATE,
+            //                 min(mp.angsuran),
+            //                 min(CASE WHEN DATEDIFF(
+            //                         COALESCE(DATE_FORMAT(mp.ENTRY_DATE, '%Y-%m-%d'), DATE_FORMAT(NOW(), '%Y-%m-%d')),
+            //                         a.PAYMENT_DATE
+            //                     ) < 0 THEN 0
+            //                     ELSE DATEDIFF(
+            //                         COALESCE(DATE_FORMAT(mp.ENTRY_DATE, '%Y-%m-%d'), DATE_FORMAT(NOW(), '%Y-%m-%d')),
+            //                         a.PAYMENT_DATE
+            //                     )
+            //                 END) AS MIN_OD
+            //         from	credit_schedule as a
+            //                 left join
+            //                     arrears as c
+            //                     on c.LOAN_NUMBER = a.LOAN_NUMBER
+            //                     and c.START_DATE = a.PAYMENT_DATE
+            //                 left join (
+            //                         SELECT  
+            //                     a.LOAN_NUM,
+            //                     coalesce(c.CREATED_AT,a.ENTRY_DATE) AS ENTRY_DATE, 
+            //                     DATE(a.START_DATE) AS START_DATE,
+            //                     ROW_NUMBER() OVER (
+            //                         PARTITION BY a.START_DATE 
+            //                         ORDER BY DATE(c.CREATED_AT)
+            //                     ) AS INST_COUNT_INCREMENT,
+            //                     a.ORIGINAL_AMOUNT,
+            //                     a.INVOICE,
+            //                     SUM(
+            //                         CASE 
+            //                             WHEN b.ACC_KEYS IN ('ANGSURAN_POKOK', 'ANGSURAN_BUNGA', 'BAYAR_POKOK', 'BAYAR_BUNGA') 
+            //                             THEN b.ORIGINAL_AMOUNT 
+            //                             ELSE 0 
+            //                         END
+            //                     ) AS angsuran,
+            //                     SUM(
+            //                         CASE 
+            //                             WHEN b.ACC_KEYS = 'BAYAR_DENDA' 
+            //                             THEN b.ORIGINAL_AMOUNT 
+            //                             ELSE 0 
+            //                         END
+            //                     ) AS denda
+            //                 FROM payment a
+            //                 INNER JOIN payment_detail b ON b.PAYMENT_ID = a.id
+            //                 LEFT JOIN kwitansi c ON c.NO_TRANSAKSI = a.INVOICE AND c.STTS_PAYMENT = 'PAID'
+            //                 WHERE a.LOAN_NUM = '$id'
+            //                 AND a.STTS_RCRD = 'PAID'
+            //                 GROUP BY 
+            //                     a.LOAN_NUM,
+            //                     c.CREATED_AT, 
+            //                     a.ENTRY_DATE,
+            //                     a.START_DATE,
+            //                     a.ORIGINAL_AMOUNT,
+            //                     a.INVOICE
+            //                 ) as mp
+            //                     on mp.LOAN_NUM = a.LOAN_NUMBER
+            //                     and date_format(mp.START_DATE,'%d%m%Y') = date_format(a.PAYMENT_DATE,'%d%m%Y')
+            //         where	a.LOAN_NUMBER = '$id'
+            //         group	by a.INSTALLMENT_COUNT,a.PAYMENT_DATE
+            //         ) as ml on date_format(ml.PAYMENT_DATE,'%d%m%Y') = date_format(a.PAYMENT_DATE,'%d%m%Y')
+            //         where a.LOAN_NUMBER = '$id'
+            //         order by a.PAYMENT_DATE,mp.ENTRY_DATE asc";
 
-            //    $data = DB::select("CALL GetLoanInstallments(?)", [$id]);
-            $data = DB::select($sql);
+            $data = DB::select("CALL inquiry_details(?)", [$id]);
+            // $data = DB::select($sql);
 
             if (empty($data)) {
                 return $schedule;
