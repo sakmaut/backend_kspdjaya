@@ -503,7 +503,7 @@ class ReportController extends Controller
             if ($creditDetail) {
                 $schedule['detail'] = [
                     'no_kontrak' => $creditDetail->LOAN_NUMBER ?? '',
-                    'tgl_kontrak' => Carbon::parse($creditDetail->ENTRY_DATE)->format('d-m-Y'),
+                    'tgl_kontrak' => Carbon::parse($creditDetail->CREATED_AT)->format('d-m-Y'),
                     'nama' => $creditDetail->customer->NAME ?? '',
                     'no_pel' => $creditDetail->CUST_CODE ?? '',
                     'status' => ($creditDetail->STATUS ?? '') == 'A' ? 'AKTIF' : 'TIDAK AKTIF / ' . $statusNoActive
