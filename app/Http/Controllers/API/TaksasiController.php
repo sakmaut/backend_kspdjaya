@@ -107,20 +107,12 @@ class TaksasiController extends Controller
 
             $tipe_array = explode(' - ', $request->tipe);
 
-            // $data = M_Taksasi::distinct()
-            //         ->select('id')
-            //         ->where('brand', '=', $request->merk)
-            //         ->where('code', '=', $tipe_array[0])
-            //         ->where('model', '=', $tipe_array[1])
-            //         ->get();
-
             $data = M_Taksasi::distinct()
                 ->select('id')
-                ->where('brand', 'LIKE', '%' . $request->merk . '%')
-                ->where('code', 'LIKE', '%' . $tipe_array[0] . '%')
-                ->where('model', 'LIKE', '%' . $tipe_array[1] . '%')
+                ->where('brand', '=', $request->merk)
+                ->where('code', '=', $tipe_array[0])
+                ->where('model', '=', $tipe_array[1])
                 ->get();
-
 
             $year = M_TaksasiPrice::distinct()
                 ->select('year')
