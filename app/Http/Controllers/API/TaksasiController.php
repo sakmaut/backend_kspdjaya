@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\R_Taksasi;
 use App\Models\M_Taksasi;
@@ -18,11 +19,13 @@ use Ramsey\Uuid\Uuid;
 class TaksasiController extends Controller
 {
 
+    protected $log;
     private $timeNow;
 
-    public function __construct()
+    public function __construct(ExceptionHandling $log)
     {
         $this->timeNow = Carbon::now();
+        $this->log = $log;
     }
 
     public function index(Request $request)
@@ -31,11 +34,9 @@ class TaksasiController extends Controller
             $data = M_Taksasi::all();
             $dto = R_Taksasi::collection($data);
 
-            ActivityLogger::logActivity($request, "Success", 200);
             return response()->json($dto, 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage()], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
@@ -50,11 +51,9 @@ class TaksasiController extends Controller
 
             $result = ['brand' => $data];
 
-            ActivityLogger::logActivity($request, "Success", 200);
             return response()->json($result, 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage()], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
@@ -85,12 +84,9 @@ class TaksasiController extends Controller
             //     $item['tahun'] = $year;
             // }
 
-
-            ActivityLogger::logActivity($request, "Success", 200);
             return response()->json($data, 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage()], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
@@ -128,12 +124,9 @@ class TaksasiController extends Controller
 
             $years = array_column($year, 'year');
 
-
-            ActivityLogger::logActivity($request, "Success", 200);
             return response()->json($years, 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage()], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
@@ -160,16 +153,13 @@ class TaksasiController extends Controller
                 ->where('taksasi.model', '=', $tipe_array[1])
                 ->where('taksasi_price.year', '=',  $request->tahun)
                 ->get();
-
-            ActivityLogger::logActivity($request, "Success", 200);
             return response()->json($data, 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage()], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
-    public function show(Request $req, $id)
+    public function show(Request $request, $id)
     {
         try {
             $data = M_Taksasi::where('id', $id)->first();
@@ -180,11 +170,9 @@ class TaksasiController extends Controller
 
             $dto = new R_Taksasi($data);
 
-            ActivityLogger::logActivity($req, "Success", 200);
             return response()->json($dto, 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($req, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage()], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
@@ -194,6 +182,7 @@ class TaksasiController extends Controller
         try {
 
             $data_taksasi = [
+                'vehicle_type' => strtoupper($request->jenis_kendaraan),
                 'brand' => strtoupper($request->brand),
                 'code' => strtoupper($request->code),
                 'model' => strtoupper($request->model),
@@ -217,16 +206,9 @@ class TaksasiController extends Controller
             }
 
             DB::commit();
-            ActivityLogger::logActivity($request, "Success", 200);
-            return response()->json(['message' => 'created successfully'], 200);
-        } catch (QueryException $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($request, $e->getMessage(), 409);
-            return response()->json(['message' => $e->getMessage(), "status" => 409], 409);
+            return response()->json(['message' => 'success'], 200);
         } catch (\Exception $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
@@ -266,12 +248,9 @@ class TaksasiController extends Controller
             }
 
             DB::commit();
-            ActivityLogger::logActivity($request, "Success", 200);
-            return response()->json(['message' => 'updated successfully'], 200);
+            return response()->json(['message' => 'success'], 200);
         } catch (\Exception $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage()], 500);
+            return $this->log->logError($e, $request);
         }
     }
 

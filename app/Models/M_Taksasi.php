@@ -13,6 +13,7 @@ class M_Taksasi extends Model
 
     protected $fillable = [
         'id',
+        'vehicle_type',
         'brand',
         'code',
         'model',
@@ -44,6 +45,6 @@ class M_Taksasi extends Model
 
     public function taksasi_price()
     {
-        return $this->hasMany(M_TaksasiPrice::class,'taksasi_id');
+        return $this->hasMany(M_TaksasiPrice::class, 'taksasi_id');
     }
 }

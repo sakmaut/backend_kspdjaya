@@ -18,24 +18,24 @@ class R_Taksasi extends JsonResource
     {
 
         $taksasi_price = M_TaksasiPrice::where('taksasi_id', $this->id)
-                                        ->select('year as name', 'price as harga')
-                                        ->get()
-                                        ->map(function ($item) {
-                                            $item->name = (int) $item->name;
-                                            $item->harga = (int) $item->harga;
-                                            return $item;
-                                        });
+            ->select('year as name', 'price as harga')
+            ->get()
+            ->map(function ($item) {
+                $item->name = (int) $item->name;
+                $item->harga = (int) $item->harga;
+                return $item;
+            });
 
         $min_max_year = DB::table('taksasi_price')
-                            ->where('taksasi_id', $this->id)
-                            ->selectRaw('MIN(year) as min_year, MAX(year) as max_year')
-                            ->first();
-                                    
+            ->where('taksasi_id', $this->id)
+            ->selectRaw('MIN(year) as min_year, MAX(year) as max_year')
+            ->first();
+
         $min_year = $min_max_year->min_year;
-        $max_year = $min_max_year->max_year;              
+        $max_year = $min_max_year->max_year;
 
         return [
-           'id' => $this->id,
+            'id' => $this->id,
             "brand" => $this->brand,
             "code" => $this->code,
             "model" => $this->model,
