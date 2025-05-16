@@ -36,12 +36,13 @@ class R_Taksasi extends JsonResource
 
         return [
             'id' => $this->id,
+            "jenis_kendaraan" => $this->vehicle_type,
             "brand" => $this->brand,
             "code" => $this->code,
             "model" => $this->model,
             "descr" => $this->descr,
-            "dari" => (int)$min_year,
-            "sampai" => (int)$max_year,
+            "dari" => intval($min_year),
+            "sampai" => intval($max_year),
             'price' => $taksasi_price
         ];
     }

@@ -223,6 +223,7 @@ class TaksasiController extends Controller
             }
 
             $data_taksasi = [
+                'vehicle_type' => $request->jenis_kendaraan,
                 'brand' => $request->brand,
                 'code' => $request->code,
                 'model' => $request->model,
@@ -254,7 +255,7 @@ class TaksasiController extends Controller
         }
     }
 
-    public function destroy(Request $req, $id)
+    public function destroy(Request $request, $id)
     {
         DB::beginTransaction();
         try {
@@ -266,23 +267,16 @@ class TaksasiController extends Controller
             }
 
             $update = [
-                'deleted_by' => $req->user()->id,
+                'deleted_by' => $request->user()->id,
                 'deleted_at' => Carbon::now()->format('Y-m-d H:i:s')
             ];
 
             $taksasi->update($update);
 
             DB::commit();
-            ActivityLogger::logActivity($req, "Success", 200);
             return response()->json(['message' => 'deleted successfully'], 200);
-        } catch (ModelNotFoundException $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($req, 'Data Not Found', 404);
-            return response()->json(['message' => 'Data Not Found'], 404);
         } catch (\Exception $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($req, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage()], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
@@ -410,12 +404,9 @@ class TaksasiController extends Controller
             }
 
             DB::commit();
-            ActivityLogger::logActivity($request, "Success", 200);
             return response()->json(['message' => 'updated successfully'], 200);
         } catch (\Exception $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage()], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
@@ -433,12 +424,9 @@ class TaksasiController extends Controller
                 ->get();
 
             DB::commit();
-            ActivityLogger::logActivity($request, "Success", 200);
             return response()->json($result, 200);
         } catch (\Exception $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage()], 500);
+            return $this->log->logError($e, $request);
         }
     }
 }
