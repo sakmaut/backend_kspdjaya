@@ -182,7 +182,7 @@ class TaksasiController extends Controller
         try {
 
             $data_taksasi = [
-                'vehicle_type' => strtoupper($request->jenis_kendaraan),
+                'vehicle_type' => strtoupper($request->jenis_kendaraan ?? ''),
                 'brand' => strtoupper($request->brand),
                 'code' => strtoupper($request->code),
                 'model' => strtoupper($request->model),
@@ -223,7 +223,7 @@ class TaksasiController extends Controller
             }
 
             $data_taksasi = [
-                'vehicle_type' => $request->jenis_kendaraan,
+                'vehicle_type' => $request->jenis_kendaraan ?? '',
                 'brand' => $request->brand,
                 'code' => $request->code,
                 'model' => $request->model,
