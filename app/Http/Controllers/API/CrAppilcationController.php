@@ -1155,12 +1155,12 @@ class CrAppilcationController extends Controller
 
         // Validate KTP
         if ($checkIdNumber > 2) {
-            $array_build["order_validation"][] = "KTP : No KTP {$ktp} Masih Ada yang Aktif";
+            $arrayList["order_validation"][] = "KTP : No KTP {$ktp} Masih Ada yang Aktif";
         }
 
         // Validate KK
         if ($checkKkNumber > 2) {
-            $array_build["order_validation"][] = "KK : No KK {$kk} Aktif Lebih Dari 2";
+            $arrayList["order_validation"][] = "KK : No KK {$kk} Aktif Lebih Dari 2";
         }
 
         foreach ($guarente_vehicle as $list) {

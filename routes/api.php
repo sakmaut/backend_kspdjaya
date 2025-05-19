@@ -50,7 +50,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::get('menu-sub-list', [MasterMenuController::class, 'menuSubList']);
     Route::resource('user_access_menu', UserAccessMenuController::class);
 
-    Route::resource('cr_application', CrAppilcationController::class)->only(['index']);
+    // Route::resource('cr_application', CrAppilcationController::class)->only(['index']);
     Route::get('kunjungan_admin', [CrAppilcationController::class, 'showAdmins']);
 
     // Route Group Users
@@ -63,7 +63,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::get('collateral_count', [BpkbController::class, 'countAll']);
 
     // Route Group Cr Application
-    Route::resource('cr_application', CrAppilcationController::class)->except(['index']);
+    Route::resource('cr_application', CrAppilcationController::class);
     Route::post('application_approval_kapos', [CrAppilcationController::class, 'approvalKapos']);
     Route::post('application_approval_ho', [CrAppilcationController::class, 'approvalHo']);
     Route::post('cr_application_generate', [CrAppilcationController::class, 'generateUuidFPK']);
