@@ -18,12 +18,21 @@ class SurveyRepository implements SurveyInterface
     function getListSurveyByMcf($request)
     {
         $getUserId = $request->user()->id;
+        $getUserPosition = $request->user()->position;
 
-        $query = $this->surveyEntity->with('survey_approval')
-            ->where('created_by', $getUserId)
-            ->whereNull('deleted_at')
-            ->orderBy('created_at', 'desc')
-            ->get();
+        if ($getUserPosition != 'HO') {
+            $query = $this->surveyEntity->with('survey_approval')
+                ->where('created_by', $getUserId)
+                ->whereNull('deleted_at')
+                ->orderBy('created_at', 'desc')
+                ->get();
+        } else {
+            $query = $this->surveyEntity->with('survey_approval')
+                ->whereNull('deleted_at')
+                ->orderBy('created_at', 'desc')
+                ->get();
+        }
+
 
         return $query;
     }
