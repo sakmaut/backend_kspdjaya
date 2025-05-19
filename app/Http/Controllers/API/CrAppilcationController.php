@@ -1129,13 +1129,7 @@ class CrAppilcationController extends Controller
                 'kapos' => $approval->cr_application_kapos_desc ?? null,
                 'ho' => $approval->cr_application_ho_desc ?? null
             ],
-            "order_validation" => [],
-            "kk_count" =>  DB::table('credit as a')
-                ->join('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
-                ->where('a.STATUS', 'A')
-                ->where('b.KK_NUMBER', empty($cr_personal->KK) ? $cr_survey->kk : $cr_personal->KK)
-                ->where('a.ORDER_NUMBER', '!=', $application->ORDER_NUMBER)
-                ->count()
+            "order_validation" => []
         ];
 
         $ktp = empty($cr_personal->ID_NUMBER) ? $data->ktp ?? null : $cr_personal->ID_NUMBER ?? null;
@@ -1161,12 +1155,12 @@ class CrAppilcationController extends Controller
 
         // Validate KTP
         if ($checkIdNumber > 2) {
-            $array_build["order_validation"][] = "KTP : No KTP {$ktp} Masih Ada yang Aktif";
+            $arrayList["order_validation"][] = "KTP : No KTP {$ktp} Masih Ada yang Aktif";
         }
 
         // Validate KK
         if ($checkKkNumber > 2) {
-            $array_build["order_validation"][] = "KK : No KK {$kk} Aktif Lebih Dari 2";
+            $arrayList["order_validation"][] = "KK : No KK {$kk} Aktif Lebih Dari 2";
         }
 
         foreach ($guarente_vehicle as $list) {
