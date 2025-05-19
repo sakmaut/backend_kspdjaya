@@ -1129,7 +1129,13 @@ class CrAppilcationController extends Controller
                 'kapos' => $approval->cr_application_kapos_desc ?? null,
                 'ho' => $approval->cr_application_ho_desc ?? null
             ],
-            "order_validation" => []
+            "order_validation" => [],
+            "kk_count" =>  DB::table('credit as a')
+                ->join('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
+                ->where('a.STATUS', 'A')
+                ->where('b.KK_NUMBER', empty($cr_personal->KK) ? $cr_survey->kk : $cr_personal->KK)
+                ->where('a.ORDER_NUMBER', '!=', $application->ORDER_NUMBER)
+                ->count()
         ];
 
         $ktp = empty($cr_personal->ID_NUMBER) ? $data->ktp ?? null : $cr_personal->ID_NUMBER ?? null;
