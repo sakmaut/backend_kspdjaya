@@ -389,7 +389,7 @@ class CustomerController extends Controller
                 'jaminan' => $jaminan,
             ];
 
-            return response()->json($data, 200);
+            return response()->json([$data], 200);
         } catch (Exception $e) {
             return $this->log->logError($e, $request);
         }
