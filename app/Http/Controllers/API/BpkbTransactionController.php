@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\R_BpkbList;
 use App\Models\M_BpkbApproval;
@@ -21,11 +22,13 @@ class BpkbTransactionController extends Controller
 {
     protected $request;
     protected $locationStatus;
+    protected $log;
 
-    public function __construct(Request $request, LocationStatus $locationStatus)
+    public function __construct(Request $request, LocationStatus $locationStatus, ExceptionHandling $log)
     {
         $this->locationStatus = $locationStatus;
         $this->request = $request;
+        $this->log = $log;
     }
 
     public function index()
@@ -63,8 +66,7 @@ class BpkbTransactionController extends Controller
 
             return response()->json($jsonData, 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
@@ -100,8 +102,7 @@ class BpkbTransactionController extends Controller
 
             return response()->json($dto, 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
@@ -183,14 +184,8 @@ class BpkbTransactionController extends Controller
 
             DB::commit();
             return response()->json(['message' => 'created successfully'], 200);
-        } catch (QueryException $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($request, $e->getMessage(), 409);
-            return response()->json(['message' => $e->getMessage(), "status" => 409], 409);
         } catch (\Exception $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
@@ -227,14 +222,8 @@ class BpkbTransactionController extends Controller
             DB::commit();
             ActivityLogger::logActivity($request, "Success", 200);
             return response()->json(['message' => 'created successfully'], 200);
-        } catch (QueryException $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($request, $e->getMessage(), 409);
-            return response()->json(['message' => $e->getMessage(), "status" => 409], 409);
         } catch (\Exception $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
@@ -258,10 +247,6 @@ class BpkbTransactionController extends Controller
             $flag = $request->flag;
 
             if ($flag == 'yes') {
-
-                $check->update([
-                    'STATUS' => 'SELESAI',
-                ]);
 
                 if ($check->CATEGORY == 'request') {
 
@@ -315,23 +300,28 @@ class BpkbTransactionController extends Controller
                 } else {
 
                     if (!empty($request->jaminan) && is_array($request->jaminan)) {
-                        $transactionId = $check->ID;
 
-                        M_BpkbDetail::where('BPKB_TRANSACTION_ID', $transactionId)->update(['STATUS' => 'NORMAL']);
+                        M_CrCollateral::whereIn('ID', $request->jaminan)->update([
+                            'LOCATION_BRANCH' => $request->user()->branch_id ?? '',
+                            'STATUS' => 'NORMAL'
+                        ]);
+                        // $transactionId = $check->ID;
 
-                        $bpkbDetails = M_BpkbDetail::whereIn('ID', $request->jaminan)
-                            ->select('ID', 'COLLATERAL_ID')
-                            ->get();
+                        // M_BpkbDetail::where('BPKB_TRANSACTION_ID', $transactionId)->update(['STATUS' => 'NORMAL']);
 
-                        $collateralIds = $bpkbDetails->pluck('COLLATERAL_ID')->toArray();
+                        // $bpkbDetails = M_BpkbDetail::whereIn('ID', $request->jaminan)
+                        //     ->select('ID', 'COLLATERAL_ID')
+                        //     ->get();
 
-                        if (!empty($collateralIds)) {
-                            M_CrCollateral::whereIn('ID', $collateralIds)
-                                ->update([
-                                    'LOCATION_BRANCH' => $request->user()->branch_id ?? '',
-                                    'STATUS' => 'NORMAL'
-                                ]);
-                        }
+                        // $collateralIds = $bpkbDetails->pluck('COLLATERAL_ID')->toArray();
+
+                        // if (!empty($collateralIds)) {
+                        //     M_CrCollateral::whereIn('ID', $collateralIds)
+                        //         ->update([
+                        //             'LOCATION_BRANCH' => $request->user()->branch_id ?? '',
+                        //             'STATUS' => 'NORMAL'
+                        //         ]);
+                        // }
 
                         foreach ($request->jaminan as $list) {
                             $this->locationStatus->createLocationStatusLog($list, $request->user()->branch_id, 'SEND TO HO');
@@ -358,12 +348,15 @@ class BpkbTransactionController extends Controller
 
                     M_BpkbApproval::create($data_log);
                 }
+
+                $check->update([
+                    'STATUS' => 'SELESAI',
+                ]);
             }
 
             return response()->json(['message' => 'Approval Successfully'], 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage(), 'status' => 500], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
@@ -459,14 +452,8 @@ class BpkbTransactionController extends Controller
             DB::commit();
             ActivityLogger::logActivity($request, "Success", 200);
             return response()->json(['message' => 'created successfully'], 200);
-        } catch (QueryException $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($request, $e->getMessage(), 409);
-            return response()->json(['message' => $e->getMessage(), "status" => 409], 409);
         } catch (\Exception $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+            return $this->log->logError($e, $request);
         }
     }
 }
