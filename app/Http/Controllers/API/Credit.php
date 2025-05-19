@@ -480,7 +480,7 @@ class Credit extends Controller
 
         $cr_personal = M_CrPersonal::where('APPLICATION_ID', $data->ID)->first();
         $cr_order = M_CrOrder::where('APPLICATION_ID', $data->ID)->first();
-        $check_customer_ktp = M_Customer::where('ID_NUMBER', $cr_personal->ID_NUMBER)->first();
+        $check_customer_ktp =  M_Customer::where('ID_NUMBER', $cr_personal->ID_NUMBER)->orderBy('CREATE_DATE', 'desc')->first();
 
         $getAttachment = DB::select(
             "   SELECT *

@@ -289,110 +289,109 @@ class CustomerController extends Controller
     public function cekRO(Request $request)
     {
         try {
-            $data = M_Customer::where('ID_NUMBER', $request->no_ktp)->get();
+            $customer  = M_Customer::where('ID_NUMBER', $request->no_ktp)->orderBy('CREATE_DATE', 'desc')->first();
 
-            $datas = $data->map(function ($customer) {
+            if (!$customer) {
+                return response()->json([], 200);
+            }
 
-                $guarente_vehicle = DB::table('credit as a')
-                    ->leftJoin('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
-                    ->where('a.CUST_CODE', '=', $customer->CUST_CODE)
-                    ->where('a.CREATED_AT', '=', function ($query) {
-                        $query->select(DB::raw('MAX(CREATED_AT)'))
-                            ->from('credit');
-                    })
-                    ->select('b.*')
-                    ->get();
+            $guaranteeVehicle = DB::table('credit as a')
+                ->leftJoin('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
+                ->where('a.CUST_CODE', '=', $customer->CUST_CODE)
+                ->where('a.CREATED_AT', '=', function ($query) {
+                    $query->select(DB::raw('MAX(CREATED_AT)'))->from('credit');
+                })
+                ->select('b.*')
+                ->get();
 
-                $guarente_sertificat = DB::table('credit as a')
-                    ->leftJoin('cr_collateral_sertification as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
-                    ->where('a.CUST_CODE', '=', $customer->CUST_CODE)
-                    ->where('a.CREATED_AT', '=', function ($query) {
-                        $query->select(DB::raw('MAX(CREATED_AT)'))
-                            ->from('credit');
-                    })
-                    ->select('b.*')
-                    ->get();
+            $guaranteeCertificate = DB::table('credit as a')
+                ->leftJoin('cr_collateral_sertification as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
+                ->where('a.CUST_CODE', '=', $customer->CUST_CODE)
+                ->where('a.CREATED_AT', '=', function ($query) {
+                    $query->select(DB::raw('MAX(CREATED_AT)'))->from('credit');
+                })
+                ->select('b.*')
+                ->get();
 
-                $jaminan = [];
+            $jaminan = [];
 
-                foreach ($guarente_vehicle as $guarantee) {
-                    if (!empty($guarantee->ID)) {
-                        $jaminan[] = [
-                            "type" => "kendaraan",
-                            'counter_id' => $guarantee->HEADER_ID,
-                            "atr" => [
-                                'id' => $guarantee->ID ?? null,
-                                'status_jaminan' => null,
-                                "tipe" => $guarantee->TYPE ?? null,
-                                "merk" => $guarantee->BRAND ?? null,
-                                "tahun" => $guarantee->PRODUCTION_YEAR ?? null,
-                                "warna" => $guarantee->COLOR ?? null,
-                                "atas_nama" => $guarantee->ON_BEHALF ?? null,
-                                "no_polisi" => $guarantee->POLICE_NUMBER ?? null,
-                                "no_rangka" => $guarantee->CHASIS_NUMBER ?? null,
-                                "no_mesin" => $guarantee->ENGINE_NUMBER ?? null,
-                                "no_bpkb" => $guarantee->BPKB_NUMBER ?? null,
-                                "alamat_bpkb" => $guarantee->BPKB_ADDRESS ?? null,
-                                "no_faktur" => $guarantee->INVOICE_NUMBER ?? null,
-                                "no_stnk" => $guarantee->STNK_NUMBER ?? null,
-                                "tgl_stnk" => $guarantee->STNK_VALID_DATE ?? null,
-                                "nilai" => (int)($guarantee->VALUE ?? 0),
-                                "document" => $this->getCollateralDocument($guarantee->ID, ['no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri']),
-                            ]
-                        ];
-                    }
+            foreach ($guaranteeVehicle as $item) {
+                if (!empty($item->ID)) {
+                    $jaminan[] = [
+                        "type" => "kendaraan",
+                        "counter_id" => $item->HEADER_ID,
+                        "atr" => [
+                            "id" => $item->ID,
+                            "status_jaminan" => null,
+                            "tipe" => $item->TYPE,
+                            "merk" => $item->BRAND,
+                            "tahun" => $item->PRODUCTION_YEAR,
+                            "warna" => $item->COLOR,
+                            "atas_nama" => $item->ON_BEHALF,
+                            "no_polisi" => $item->POLICE_NUMBER,
+                            "no_rangka" => $item->CHASIS_NUMBER,
+                            "no_mesin" => $item->ENGINE_NUMBER,
+                            "no_bpkb" => $item->BPKB_NUMBER,
+                            "alamat_bpkb" => $item->BPKB_ADDRESS,
+                            "no_faktur" => $item->INVOICE_NUMBER,
+                            "no_stnk" => $item->STNK_NUMBER,
+                            "tgl_stnk" => $item->STNK_VALID_DATE,
+                            "nilai" => (int)($item->VALUE ?? 0),
+                            "document" => $this->getCollateralDocument($item->ID, [
+                                'no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri'
+                            ]),
+                        ],
+                    ];
                 }
+            }
 
-
-                foreach ($guarente_sertificat as $list) {
-                    if (!empty($list->ID)) {
-                        $jaminan[] = [
-                            "type" => "sertifikat",
-                            'counter_id' => $list->HEADER_ID ?? null,
-                            "atr" => [
-                                'id' => $list->ID ?? null,
-                                'status_jaminan' => null,
-                                "no_sertifikat" => $list->NO_SERTIFIKAT ?? null,
-                                "status_kepemilikan" => $list->STATUS_KEPEMILIKAN ?? null,
-                                "imb" => $list->IMB ?? null,
-                                "luas_tanah" => $list->LUAS_TANAH ?? null,
-                                "luas_bangunan" => $list->LUAS_BANGUNAN ?? null,
-                                "lokasi" => $list->LOKASI ?? null,
-                                "provinsi" => $list->PROVINSI ?? null,
-                                "kab_kota" => $list->KAB_KOTA ?? null,
-                                "kec" => $list->KECAMATAN ?? null,
-                                "desa" => $list->DESA ?? null,
-                                "atas_nama" => $list->ATAS_NAMA ?? null,
-                                "nilai" => (int)$list->NILAI ?? null,
-                                "document" => $this->getCollateralDocument($guarantee->ID, ['sertifikat'])
-                            ]
-                        ];
-                    }
+            foreach ($guaranteeCertificate as $item) {
+                if (!empty($item->ID)) {
+                    $jaminan[] = [
+                        "type" => "sertifikat",
+                        "counter_id" => $item->HEADER_ID,
+                        "atr" => [
+                            "id" => $item->ID,
+                            "status_jaminan" => null,
+                            "no_sertifikat" => $item->NO_SERTIFIKAT,
+                            "status_kepemilikan" => $item->STATUS_KEPEMILIKAN,
+                            "imb" => $item->IMB,
+                            "luas_tanah" => $item->LUAS_TANAH,
+                            "luas_bangunan" => $item->LUAS_BANGUNAN,
+                            "lokasi" => $item->LOKASI,
+                            "provinsi" => $item->PROVINSI,
+                            "kab_kota" => $item->KAB_KOTA,
+                            "kec" => $item->KECAMATAN,
+                            "desa" => $item->DESA,
+                            "atas_nama" => $item->ATAS_NAMA,
+                            "nilai" => (int)($item->NILAI ?? 0),
+                            "document" => $this->getCollateralDocument($item->ID, ['sertifikat']),
+                        ],
+                    ];
                 }
+            }
 
-                return [
-                    'no_ktp' => $customer->ID_NUMBER ?? null,
-                    'no_kk' => $customer->KK_NUMBER ?? null,
-                    'nama' => $customer->NAME ?? null,
-                    'tgl_lahir' => $customer->BIRTHDATE ?? null,
-                    'alamat' => $customer->ADDRESS ?? null,
-                    'rw' => $customer->RW ?? null,
-                    'rt' => $customer->RT ?? null,
-                    'provinsi' => $customer->PROVINCE ?? null,
-                    'city' => $customer->CITY ?? null,
-                    'kecamatan' => $customer->KECAMATAN ?? null,
-                    'kelurahan' => $customer->KELURAHAN ?? null,
-                    'kode_pos' => $customer->ZIP_CODE ?? null,
-                    'no_hp' => $customer->PHONE_PERSONAL ?? null,
-                    "dokumen_indentitas" => M_CustomerDocument::where('CUSTOMER_ID', $customer->ID)->get(),
-                    'jaminan' => $jaminan
-                ];
-            })->toArray();
+            $data = [
+                'no_ktp' => $customer->ID_NUMBER ?? null,
+                'no_kk' => $customer->KK_NUMBER ?? null,
+                'nama' => $customer->NAME ?? null,
+                'tgl_lahir' => $customer->BIRTHDATE ?? null,
+                'alamat' => $customer->ADDRESS ?? null,
+                'rw' => $customer->RW ?? null,
+                'rt' => $customer->RT ?? null,
+                'provinsi' => $customer->PROVINCE ?? null,
+                'city' => $customer->CITY ?? null,
+                'kecamatan' => $customer->KECAMATAN ?? null,
+                'kelurahan' => $customer->KELURAHAN ?? null,
+                'kode_pos' => $customer->ZIP_CODE ?? null,
+                'no_hp' => $customer->PHONE_PERSONAL ?? null,
+                'dokumen_indentitas' => M_CustomerDocument::where('CUSTOMER_ID', $customer->ID)->get(),
+                'jaminan' => $jaminan,
+            ];
 
-            return response()->json($datas, 200);
-        } catch (\Exception $e) {
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage()], 500);
+            return response()->json($data, 200);
+        } catch (Exception $e) {
+            return $this->log->logError($e, $request);
         }
     }
 

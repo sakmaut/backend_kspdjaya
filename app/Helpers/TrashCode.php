@@ -1950,3 +1950,104 @@ if ($valBeforePrincipal < $getPrincipal) { $remaining_to_principal=$getPrincipal
             //         ) as ml on date_format(ml.PAYMENT_DATE,'%d%m%Y') = date_format(a.PAYMENT_DATE,'%d%m%Y')
             //         where a.LOAN_NUMBER = '$id'
             //         order by a.PAYMENT_DATE,mp.ENTRY_DATE asc";
+
+
+
+//Customer 
+$datas = $data->map(function ($customer) {
+
+    $guarente_vehicle = DB::table('credit as a')
+        ->leftJoin('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
+        ->where('a.CUST_CODE', '=', $customer->CUST_CODE)
+        ->where('a.CREATED_AT', '=', function ($query) {
+            $query->select(DB::raw('MAX(CREATED_AT)'))
+                ->from('credit');
+        })
+        ->select('b.*')
+        ->get();
+
+    $guarente_sertificat = DB::table('credit as a')
+        ->leftJoin('cr_collateral_sertification as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
+        ->where('a.CUST_CODE', '=', $customer->CUST_CODE)
+        ->where('a.CREATED_AT', '=', function ($query) {
+            $query->select(DB::raw('MAX(CREATED_AT)'))
+                ->from('credit');
+        })
+        ->select('b.*')
+        ->get();
+
+    $jaminan = [];
+
+    foreach ($guarente_vehicle as $guarantee) {
+        if (!empty($guarantee->ID)) {
+            $jaminan[] = [
+                "type" => "kendaraan",
+                'counter_id' => $guarantee->HEADER_ID,
+                "atr" => [
+                    'id' => $guarantee->ID ?? null,
+                    'status_jaminan' => null,
+                    "tipe" => $guarantee->TYPE ?? null,
+                    "merk" => $guarantee->BRAND ?? null,
+                    "tahun" => $guarantee->PRODUCTION_YEAR ?? null,
+                    "warna" => $guarantee->COLOR ?? null,
+                    "atas_nama" => $guarantee->ON_BEHALF ?? null,
+                    "no_polisi" => $guarantee->POLICE_NUMBER ?? null,
+                    "no_rangka" => $guarantee->CHASIS_NUMBER ?? null,
+                    "no_mesin" => $guarantee->ENGINE_NUMBER ?? null,
+                    "no_bpkb" => $guarantee->BPKB_NUMBER ?? null,
+                    "alamat_bpkb" => $guarantee->BPKB_ADDRESS ?? null,
+                    "no_faktur" => $guarantee->INVOICE_NUMBER ?? null,
+                    "no_stnk" => $guarantee->STNK_NUMBER ?? null,
+                    "tgl_stnk" => $guarantee->STNK_VALID_DATE ?? null,
+                    "nilai" => (int)($guarantee->VALUE ?? 0),
+                    "document" => $this->getCollateralDocument($guarantee->ID, ['no_rangka', 'no_mesin', 'stnk', 'depan', 'belakang', 'kanan', 'kiri']),
+                ]
+            ];
+        }
+    }
+
+
+    foreach ($guarente_sertificat as $list) {
+        if (!empty($list->ID)) {
+            $jaminan[] = [
+                "type" => "sertifikat",
+                'counter_id' => $list->HEADER_ID ?? null,
+                "atr" => [
+                    'id' => $list->ID ?? null,
+                    'status_jaminan' => null,
+                    "no_sertifikat" => $list->NO_SERTIFIKAT ?? null,
+                    "status_kepemilikan" => $list->STATUS_KEPEMILIKAN ?? null,
+                    "imb" => $list->IMB ?? null,
+                    "luas_tanah" => $list->LUAS_TANAH ?? null,
+                    "luas_bangunan" => $list->LUAS_BANGUNAN ?? null,
+                    "lokasi" => $list->LOKASI ?? null,
+                    "provinsi" => $list->PROVINSI ?? null,
+                    "kab_kota" => $list->KAB_KOTA ?? null,
+                    "kec" => $list->KECAMATAN ?? null,
+                    "desa" => $list->DESA ?? null,
+                    "atas_nama" => $list->ATAS_NAMA ?? null,
+                    "nilai" => (int)$list->NILAI ?? null,
+                    "document" => $this->getCollateralDocument($guarantee->ID, ['sertifikat'])
+                ]
+            ];
+        }
+    }
+
+    return [
+        'no_ktp' => $customer->ID_NUMBER ?? null,
+        'no_kk' => $customer->KK_NUMBER ?? null,
+        'nama' => $customer->NAME ?? null,
+        'tgl_lahir' => $customer->BIRTHDATE ?? null,
+        'alamat' => $customer->ADDRESS ?? null,
+        'rw' => $customer->RW ?? null,
+        'rt' => $customer->RT ?? null,
+        'provinsi' => $customer->PROVINCE ?? null,
+        'city' => $customer->CITY ?? null,
+        'kecamatan' => $customer->KECAMATAN ?? null,
+        'kelurahan' => $customer->KELURAHAN ?? null,
+        'kode_pos' => $customer->ZIP_CODE ?? null,
+        'no_hp' => $customer->PHONE_PERSONAL ?? null,
+        "dokumen_indentitas" => M_CustomerDocument::where('CUSTOMER_ID', $customer->ID)->get(),
+        'jaminan' => $jaminan
+    ];
+})->toArray();
