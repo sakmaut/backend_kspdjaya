@@ -97,4 +97,9 @@ class M_Customer extends Model
     {
         return $this->hasOne(M_CustomerExtra::class, 'CUST_CODE', 'CUST_CODE');
     }
+
+    public function customer_document()
+    {
+        return $this->hasMany(M_CustomerDocument::class, 'CUSTOMER_ID', 'ID');
+    }
 }
