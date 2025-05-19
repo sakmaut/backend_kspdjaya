@@ -296,7 +296,7 @@ class CustomerController extends Controller
                 return response()->json([], 200);
             }
 
-            $data = R_RoDetail::collection($customer);
+            $data = new R_RoDetail($customer);
 
             return response()->json([$data], 200);
         } catch (Exception $e) {
