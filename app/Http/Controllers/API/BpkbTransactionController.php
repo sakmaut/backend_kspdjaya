@@ -301,27 +301,23 @@ class BpkbTransactionController extends Controller
 
                     if (!empty($request->jaminan) && is_array($request->jaminan)) {
 
-                        M_CrCollateral::whereIn('ID', $request->jaminan)->update([
-                            'LOCATION_BRANCH' => $request->user()->branch_id ?? '',
-                            'STATUS' => 'NORMAL'
-                        ]);
-                        // $transactionId = $check->ID;
+                        $transactionId = $check->ID;
 
-                        // M_BpkbDetail::where('BPKB_TRANSACTION_ID', $transactionId)->update(['STATUS' => 'NORMAL']);
+                        M_BpkbDetail::where('BPKB_TRANSACTION_ID', $transactionId)->update(['STATUS' => 'NORMAL']);
 
-                        // $bpkbDetails = M_BpkbDetail::whereIn('ID', $request->jaminan)
-                        //     ->select('ID', 'COLLATERAL_ID')
-                        //     ->get();
+                        $bpkbDetails = M_BpkbDetail::whereIn('ID', $request->jaminan)
+                            ->select('ID', 'COLLATERAL_ID')
+                            ->get();
 
-                        // $collateralIds = $bpkbDetails->pluck('COLLATERAL_ID')->toArray();
+                        $collateralIds = $bpkbDetails->pluck('COLLATERAL_ID')->toArray();
 
-                        // if (!empty($collateralIds)) {
-                        //     M_CrCollateral::whereIn('ID', $collateralIds)
-                        //         ->update([
-                        //             'LOCATION_BRANCH' => $request->user()->branch_id ?? '',
-                        //             'STATUS' => 'NORMAL'
-                        //         ]);
-                        // }
+                        if (!empty($collateralIds)) {
+                            M_CrCollateral::whereIn('ID', $collateralIds)
+                                ->update([
+                                    'LOCATION_BRANCH' => $request->user()->branch_id ?? '',
+                                    'STATUS' => 'NORMAL'
+                                ]);
+                        }
 
                         foreach ($request->jaminan as $list) {
                             $this->locationStatus->createLocationStatusLog($list, $request->user()->branch_id, 'SEND TO HO');
