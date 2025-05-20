@@ -14,6 +14,7 @@ class M_CrCollateral extends Model
     protected $fillable = [
         'ID',
         'CR_CREDIT_ID',
+        'VEHICLE_TYPE',
         'HEADER_ID',
         'BRAND',
         'TYPE',

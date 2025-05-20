@@ -24,6 +24,7 @@ use App\Models\M_Customer;
 use App\Models\M_CustomerExtra;
 use App\Models\M_SurveyApproval;
 use App\Models\M_SurveyApprovalLog;
+use App\Models\M_Taksasi;
 use App\Models\User;
 use Carbon\Carbon;
 use Exception;
@@ -246,10 +247,18 @@ class CrAppilcationController extends Controller
                     switch (strtolower($result['type'])) {
                         case 'kendaraan':
 
+                            $getBrand = $result['atr']['merk'];
+                            $getTipe = $result['atr']['tipe'];
+
+                            $getVehicleType = M_Taksasi::where('brand', $getBrand)
+                                ->whereRaw("CONCAT(code, ' - ', model, ' - ', descr) = ?", $getTipe)
+                                ->first();
+
                             $data_array_col = [
                                 'POSITION_FLAG' => $result['atr']['kondisi_jaminan'] ?? null,
-                                'TYPE' => $result['atr']['tipe'] ?? null,
-                                'BRAND' => $result['atr']['merk'] ?? null,
+                                'VEHICLE_TYPE' => $getVehicleType->vehicle_type ?? '',
+                                'TYPE' => $getTipe ?? '',
+                                'BRAND' => $getBrand ?? '',
                                 'PRODUCTION_YEAR' => $result['atr']['tahun'] ?? null,
                                 'COLOR' => $result['atr']['warna'] ?? null,
                                 'ON_BEHALF' => $result['atr']['atas_nama'] ?? null,

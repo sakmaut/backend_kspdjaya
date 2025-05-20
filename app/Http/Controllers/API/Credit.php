@@ -671,6 +671,7 @@ class Credit extends Controller
                 $data_jaminan = [
                     'HEADER_ID' => $setHeaderID,
                     'CR_CREDIT_ID' => $lastID ?? null,
+                    'VEHICLE_TYPE' => $res->VEHICLE_TYPE ?? '',
                     'TYPE' => $res->TYPE ?? null,
                     'BRAND' => $res->BRAND ?? null,
                     'PRODUCTION_YEAR' => $res->PRODUCTION_YEAR ?? null,

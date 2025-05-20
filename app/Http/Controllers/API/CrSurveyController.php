@@ -13,6 +13,7 @@ use App\Models\M_CrSurvey;
 use App\Models\M_CrSurveyDocument;
 use App\Models\M_SurveyApproval;
 use App\Models\M_SurveyApprovalLog;
+use App\Models\M_Taksasi;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -190,14 +191,24 @@ class CrSurveyController extends Controller
             foreach ($request->jaminan as $result) {
 
                 switch ($result['type']) {
+
                     case 'kendaraan':
+
+                        $getBrand =  $result['atr']['merk'];
+                        $getTipe =  $result['atr']['tipe'];
+
+                        $getVehicleType = M_Taksasi::where('brand', $getBrand)
+                            ->whereRaw("CONCAT(code, ' - ', model, ' - ', descr) = ?", $getTipe)
+                            ->first();
+
                         $data_array_col = [
                             'ID' => Uuid::uuid7()->toString(),
                             'CR_SURVEY_ID' => $request->id,
                             'HEADER_ID' => $result['counter_id'] ?? null,
                             'POSITION_FLAG' => $result['atr']['kondisi_jaminan'] ?? null,
-                            'TYPE' => $result['atr']['tipe'] ?? null,
-                            'BRAND' => $result['atr']['merk'] ?? null,
+                            'VEHICLE_TYPE' => $getVehicleType->vehicle_type ?? '',
+                            'TYPE' => $getTipe ?? null,
+                            'BRAND' =>  $getBrand ?? null,
                             'PRODUCTION_YEAR' => $result['atr']['tahun'] ?? null,
                             'COLOR' => $result['atr']['warna'] ?? null,
                             'ON_BEHALF' => $result['atr']['atas_nama'] ?? null,
@@ -329,28 +340,34 @@ class CrSurveyController extends Controller
 
             $prospek_check->update($data_prospect);
 
-            compareData(M_CrSurvey::class, $id, $data_prospect, $request);
-
             if (collect($request->jaminan)->isNotEmpty()) {
                 foreach ($request->jaminan as $result) {
 
                     switch ($result['type']) {
                         case 'kendaraan':
 
+                            $getBrand = $result['atr']['merk'];
+                            $getTipe = $result['atr']['tipe'];
+
+                            $getVehicleType = M_Taksasi::where('brand', $getBrand)
+                                ->whereRaw("CONCAT(code, ' - ', model, ' - ', descr) = ?", $getTipe)
+                                ->first();
+
                             $data_array_col = [
-                                'POSITION_FLAG' => $result['atr']['kondisi_jaminan'] ?? null,
-                                'TYPE' => $result['atr']['tipe'] ?? null,
-                                'BRAND' => $result['atr']['merk'] ?? null,
-                                'PRODUCTION_YEAR' => $result['atr']['tahun'] ?? null,
-                                'COLOR' => $result['atr']['warna'] ?? null,
-                                'ON_BEHALF' => $result['atr']['atas_nama'] ?? null,
-                                'POLICE_NUMBER' => $result['atr']['no_polisi'] ?? null,
-                                'CHASIS_NUMBER' => $result['atr']['no_rangka'] ?? null,
-                                'ENGINE_NUMBER' => $result['atr']['no_mesin'] ?? null,
-                                'BPKB_NUMBER' => $result['atr']['no_bpkb'] ?? null,
-                                'STNK_NUMBER' => $result['atr']['no_stnk'] ?? null,
+                                'POSITION_FLAG' => $result['atr']['kondisi_jaminan'] ?? '',
+                                'VEHICLE_TYPE' => $getVehicleType->vehicle_type ?? '',
+                                'TYPE' => $getTipe ?? '',
+                                'BRAND' => $getBrand ?? '',
+                                'PRODUCTION_YEAR' => $result['atr']['tahun'] ?? '',
+                                'COLOR' => $result['atr']['warna'] ?? '',
+                                'ON_BEHALF' => $result['atr']['atas_nama'] ?? '',
+                                'POLICE_NUMBER' => $result['atr']['no_polisi'] ?? '',
+                                'CHASIS_NUMBER' => $result['atr']['no_rangka'] ?? '',
+                                'ENGINE_NUMBER' => $result['atr']['no_mesin'] ?? '',
+                                'BPKB_NUMBER' => $result['atr']['no_bpkb'] ?? '',
+                                'STNK_NUMBER' => $result['atr']['no_stnk'] ?? '',
                                 'STNK_VALID_DATE' => $result['atr']['tgl_stnk'] ?? null,
-                                'VALUE' => $result['atr']['nilai'] ?? null,
+                                'VALUE' => $result['atr']['nilai'] ?? 0,
                                 'MOD_DATE' => $this->timeNow,
                                 'MOD_BY' => $request->user()->id,
                             ];

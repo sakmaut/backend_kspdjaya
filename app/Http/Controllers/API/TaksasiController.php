@@ -60,29 +60,16 @@ class TaksasiController extends Controller
     public function codeModelList(Request $request)
     {
         try {
-            $request->validate([
-                'merk' => 'required',
-            ], [
-                'merk.required' => 'Merk Tidak Boleh Kosong',
-            ]);
+
+            if (empty($request->merk)) {
+                return response()->json([], 200);
+            }
 
             $data = M_Taksasi::select('id', 'code', DB::raw("CONCAT(model, ' - ', descr) AS model"))
                 ->where('brand', $request->merk)
                 ->distinct()
                 ->get()
                 ->toArray();
-
-
-            // $year = M_TaksasiPrice::distinct()
-            //         ->select('year')
-            //         ->orderBy('year','asc')
-            //         ->get()
-            //         ->pluck('year')
-            //         ->toArray();
-
-            // foreach ($data as &$item) {
-            //     $item['tahun'] = $year;
-            // }
 
             return response()->json($data, 200);
         } catch (\Exception $e) {
@@ -93,22 +80,9 @@ class TaksasiController extends Controller
     public function year(Request $request)
     {
         try {
-            $request->validate([
-                'merk' => 'required',
-                'tipe' => 'required',
-            ], [
-                'merk.required' => 'Merk Tidak Boleh Kosong',
-                'tipe.required' => 'Tipe Tidak Boleh Kosong',
-            ]);
-
-            $tipe_array = explode(' - ', $request->tipe);
-
-            // $data = M_Taksasi::distinct()
-            //     ->select('id')
-            //     ->where('brand', '=', $request->merk)
-            //     ->where('code', '=', $tipe_array[0])
-            //     ->where('model', '=', $tipe_array[1])
-            //     ->get();
+            if (empty($request->merk) || empty($request->tipe)) {
+                return response()->json([], 200);
+            }
 
             $data = M_Taksasi::select('id')
                 ->where('brand', '=', $request->merk)
@@ -180,6 +154,10 @@ class TaksasiController extends Controller
     {
         DB::beginTransaction();
         try {
+
+            if (empty($request->jenis_kendaraan)) {
+                throw new Exception("Jenis Kendaraan nggak boleh kosong, Cung!", 404);
+            }
 
             $data_taksasi = [
                 'vehicle_type' => strtoupper($request->jenis_kendaraan ?? ''),
