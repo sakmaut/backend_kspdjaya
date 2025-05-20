@@ -468,7 +468,7 @@ class ReportController extends Controller
                     'Amt Bayar' => number_format($amtBayar ?? 0),
                     'Sisa Angs' => number_format($sisaAngss),
                     // 'Denda' => number_format($setPinalty),
-                    'Denda' => number_format($res->sisa_denda ?? 0),
+                    'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0),
                     'Byr Dnda' => number_format($res->denda ?? 0),
                     'Sisa Tghn' => "0",
                     'Ovd' => $res->OD ?? 0
