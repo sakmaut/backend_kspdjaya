@@ -10,7 +10,7 @@ class R_DebiturReportAR extends JsonResource
     public function toArray(Request $request): array
     {
         $results = [
-            'id' => $this->idCust ?? '',
+            'id' => $this->ID ?? '',
             'cust_code' => $this->CUST_CODE ?? '',
             'pelanggan' => [
                 "nama" => $this->NAME ?? '',
@@ -78,7 +78,7 @@ class R_DebiturReportAR extends JsonResource
             'pasangan' => [
                 "nama"  => $this->customer_extra->SPOUSE_NAME ?? '',
                 "tempat_lahir" => $this->customer_extra->SPOUSE_BIRTHPLACE ?? '',
-                "tgl_lahir" => isset($this->customer_extra) && isset($this->customer_extra->SPOUSE_BIRTHDATE)? date('Y-m-d', strtotime($this->customer_extra->SPOUSE_BIRTHDATE)): null,
+                "tgl_lahir" => isset($this->customer_extra) && isset($this->customer_extra->SPOUSE_BIRTHDATE) ? date('Y-m-d', strtotime($this->customer_extra->SPOUSE_BIRTHDATE)) : null,
                 "pekerjaan"  => $this->customer_extra->SPOUSE_OCCUPATION ?? '',
                 "ktp"  => $this->customer_extra->SPOUSE_ID_NUMBER ?? '',
                 "pendapatan"  => $this->customer_extra->SPOUSE_INCOME ?? '',
