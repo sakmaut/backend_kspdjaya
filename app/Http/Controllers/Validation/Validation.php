@@ -32,11 +32,11 @@ class Validation
                 ->count();
         };
 
-        if ($activeCredits($orderNumber, 'ID_NUMBER', $ktp) > 1) {
+        if ($ktp != '' && $activeCredits($orderNumber, 'ID_NUMBER', $ktp) > 1) {
             $message[] = "KTP : No KTP {$ktp} Masih Ada yang Aktif";
         }
 
-        if ($activeCredits($orderNumber, 'KK_NUMBER', $kk) > 2) {
+        if ($kk != '' && $activeCredits($orderNumber, 'KK_NUMBER', $kk) > 2) {
             $message[] = "KK : No KK {$kk} Aktif Lebih Dari 2";
         }
 

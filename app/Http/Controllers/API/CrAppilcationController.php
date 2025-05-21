@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Validation\Validation;
 use App\Http\Resources\R_CrApplicationDetail;
 use App\Http\Resources\R_CrProspect;
 use App\Models\M_ApplicationApproval;
@@ -36,10 +37,12 @@ use Ramsey\Uuid\Uuid;
 class CrAppilcationController extends Controller
 {
     protected $log;
+    protected $validation;
 
-    public function __construct(ExceptionHandling $log)
+    public function __construct(ExceptionHandling $log, Validation $validation)
     {
         $this->log = $log;
+        $this->validation = $validation;
     }
 
     public function index(Request $request)
@@ -996,10 +999,14 @@ class CrAppilcationController extends Controller
                 ->orWhere('DELETED_AT', '');
         })->get();
 
+        $ktp = empty($cr_personal->ID_NUMBER) ? $data->ktp ?? null : $cr_personal->ID_NUMBER ?? null;
+        $kk = empty($cr_personal->KK) ? $cr_survey->kk : $cr_personal->KK;
+        $orderNumber = $application->ORDER_NUMBER;
+
         $arrayList = [
             'id_application' => $setApplicationId,
             'survey_id' => $surveyId,
-            'order_number' => $application->ORDER_NUMBER,
+            'order_number' => $orderNumber,
             "flag" => !$check_exist ? 0 : 1,
             'jenis_angsuran' => empty($application->INSTALLMENT_TYPE) ? $cr_survey->jenis_angsuran ?? '' : $application->INSTALLMENT_TYPE ?? '',
             'pelanggan' => [
@@ -1138,39 +1145,12 @@ class CrAppilcationController extends Controller
                 'kapos' => $approval->cr_application_kapos_desc ?? null,
                 'ho' => $approval->cr_application_ho_desc ?? null
             ],
-            "order_validation" => []
+            "order_validation" => $this->validation->checkValidation([
+                "order_number" => $orderNumber,
+                "ktp" => $ktp,
+                "kk" => $kk
+            ])
         ];
-
-        $ktp = empty($cr_personal->ID_NUMBER) ? $data->ktp ?? null : $cr_personal->ID_NUMBER ?? null;
-        $kk = empty($cr_personal->KK) ? $cr_survey->kk : $cr_personal->KK;
-
-        $checkIdNumber = DB::table('credit as a')
-            ->join('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
-            ->where('a.STATUS', 'A')
-            ->where('b.ID_NUMBER', $ktp)
-            ->where('a.ORDER_NUMBER', '!=', $application->ORDER_NUMBER)
-            ->count();
-
-        $checkKkNumber = DB::table('credit as a')
-            ->join('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
-            ->where('a.STATUS', 'A')
-            ->where('b.KK_NUMBER', $kk)
-            ->where('a.ORDER_NUMBER', '!=', $application->ORDER_NUMBER)
-            ->count();
-
-        if (!isset($arrayList["order_validation"])) {
-            $arrayList["order_validation"] = [];
-        }
-
-        // Validate KTP
-        if ($checkIdNumber > 2) {
-            $arrayList["order_validation"][] = "KTP : No KTP {$ktp} Masih Ada yang Aktif";
-        }
-
-        // Validate KK
-        if ($checkKkNumber > 2) {
-            $arrayList["order_validation"][] = "KK : No KK {$kk} Aktif Lebih Dari 2";
-        }
 
         foreach ($guarente_vehicle as $list) {
 

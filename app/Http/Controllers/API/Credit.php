@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Repositories\CrCollateralMovingLog\CrCollateralMovingLogRepository;
+use App\Http\Controllers\Validation\Validation;
 use App\Http\Resources\R_CreditCancelLog;
 use App\Models\M_ApplicationApproval;
 use App\Models\M_ApplicationApprovalLog;
@@ -41,11 +42,13 @@ class Credit extends Controller
 
     private $timeNow;
     protected $locationStatus;
+    protected $validation;
 
-    public function __construct(LocationStatus $locationStatus)
+    public function __construct(LocationStatus $locationStatus, Validation $validation)
     {
         $this->timeNow = Carbon::now();
         $this->locationStatus = $locationStatus;
+        $this->validation = $validation;
     }
 
     public function index(Request $request)
@@ -197,6 +200,10 @@ class Credit extends Controller
                 ->orWhere('DELETED_AT', '');
         })->get();
 
+        $ktp = $cr_personal->ID_NUMBER;
+        $kk = $cr_personal->KK;
+        $orderNumber = $request->order_number;
+
         $array_build = [
             "no_perjanjian" => !$check_exist && $request->flag == 'yes' ? $loan_number ?? null : $check_exist->LOAN_NUMBER ?? null,
             "cabang" => 'CABANG ' . strtoupper($pihak1->name ?? null),
@@ -232,40 +239,13 @@ class Credit extends Controller
             "angsuran" => bilangan($angsuran) ?? null,
             "opt_periode" => $data->OPT_PERIODE ?? null,
             "jaminan" => [],
-            "order_validation" => [],
+            "order_validation" =>  $this->validation->checkValidation([
+                "order_number" => $orderNumber,
+                "ktp" => $ktp,
+                "kk" => $kk
+            ]),
             "struktur" => $check_exist != null && !empty($check_exist->LOAN_NUMBER) ? $schedule : $data_credit_schedule ?? null
         ];
-
-        $ktp = $cr_personal->ID_NUMBER;
-        $kk = $cr_personal->KK;
-
-        $checkIdNumber = DB::table('credit as a')
-            ->join('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
-            ->where('a.STATUS', 'A')
-            ->where('b.ID_NUMBER', $ktp)
-            ->where('a.ORDER_NUMBER', '!=', $request->order_number)
-            ->count();
-
-        $checkKkNumber = DB::table('credit as a')
-            ->join('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
-            ->where('a.STATUS', 'A')
-            ->where('b.KK_NUMBER', $kk)
-            ->where('a.ORDER_NUMBER', '!=', $request->order_number)
-            ->count();
-
-        if (!isset($array_build["order_validation"])) {
-            $array_build["order_validation"] = [];
-        }
-
-        // Validate KTP
-        if ($checkIdNumber > 2) {
-            $array_build["order_validation"][] = "KTP : No KTP {$ktp} Masih Ada yang Aktif";
-        }
-
-        // Validate KK
-        if ($checkKkNumber > 2) {
-            $array_build["order_validation"][] = "KK : No KK {$kk} Aktif Lebih Dari 2";
-        }
 
         foreach ($guarente_vehicle as $list) {
 

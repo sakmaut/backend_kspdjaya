@@ -2051,3 +2051,32 @@ $datas = $data->map(function ($customer) {
         'jaminan' => $jaminan
     ];
 })->toArray();
+
+
+$checkIdNumber = DB::table('credit as a')
+            ->join('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
+            ->where('a.STATUS', 'A')
+            ->where('b.ID_NUMBER', $ktp)
+            ->where('a.ORDER_NUMBER', '!=', $request->order_number)
+            ->count();
+
+        $checkKkNumber = DB::table('credit as a')
+            ->join('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
+            ->where('a.STATUS', 'A')
+            ->where('b.KK_NUMBER', $kk)
+            ->where('a.ORDER_NUMBER', '!=', $request->order_number)
+            ->count();
+
+        if (!isset($array_build["order_validation"])) {
+            $array_build["order_validation"] = [];
+        }
+
+        // Validate KTP
+        if ($checkIdNumber > 2) {
+            $array_build["order_validation"][] = "KTP : No KTP {$ktp} Masih Ada yang Aktif";
+        }
+
+        // Validate KK
+        if ($checkKkNumber > 2) {
+            $array_build["order_validation"][] = "KK : No KK {$kk} Aktif Lebih Dari 2";
+        }
