@@ -401,6 +401,11 @@ class PaymentController extends Controller
             'START_DATE' => $tgl_angsuran
         ])->first();
 
+        $credit_schedule = M_CreditSchedule::where([
+            'LOAN_NUMBER' => $loan_number,
+            'PAYMENT_DATE' => $tgl_angsuran
+        ])->first();
+
         $byr_angsuran = floatval($res['bayar_angsuran']);
         $bayar_denda = floatval($res['bayar_denda']);
 
@@ -409,7 +414,7 @@ class PaymentController extends Controller
 
             $new_penalty = floatval($current_penalty) + floatval($bayar_denda);
 
-            $valBeforePrincipal = floatval($check_arrears->PAID_PCP);
+            $valBeforePrincipal = floatval($check_arrears->PAID_PCPL);
             $valBeforeInterest = floatval($check_arrears->PAID_INT);
             $getPrincipal = floatval($check_arrears->PAST_DUE_PCPL);
             $getInterest = floatval($check_arrears->PAST_DUE_INTRST);
@@ -452,7 +457,7 @@ class PaymentController extends Controller
             $this->addCreditPaid($loan_number, ['BAYAR_DENDA' => $bayar_denda]);
 
             $updates['PAID_PENALTY'] = $new_penalty;
-            $updates['STATUS_REC'] = bccomp($getPenalty, $new_penalty, 2) === 0 ? 'S' : 'A';
+            $updates['STATUS_REC'] = bccomp($getPenalty, $new_penalty, 2) === 0 && $credit_schedule->PAID_FLAG == 'PAID' ? 'S' : 'A';
             $updates['END_DATE'] = now();
             $updates['UPDATED_AT'] = now();
 
