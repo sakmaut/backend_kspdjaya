@@ -218,18 +218,25 @@ class CollateralRepository implements CollateralInterface
 
             case 'JUAL':
                 if ($credit->STATUS_REC == 'RP') {
-                    M_Payment::create([
-                        'ID' => Uuid::uuid7()->toString(),
-                        'ACC_KEY' => 'JUAL UNIT',
-                        'STTS_RCRD' => 'PAID',
-                        'PAYMENT_METHOD' => 'cash',
-                        'BRANCH' => $request->user()->branch_id ?? '',
-                        'LOAN_NUM' => $credit->LOAN_NUMBER ?? '',
-                        'ENTRY_DATE' => now(),
-                        'TITLE' => 'JUAL UNIT TARIKAN',
-                        'ORIGINAL_AMOUNT' => $request->harga ?? 0,
-                        'USER_ID' => $userId,
-                    ]);
+                    $existing = M_Payment::where('LOAN_NUM', $credit->LOAN_NUMBER ?? '')
+                        ->where('ACC_KEY', 'JUAL UNIT')
+                        ->where('STTS_RCRD', 'PAID')
+                        ->first();
+
+                    if (!$existing) {
+                        M_Payment::create([
+                            'ID' => Uuid::uuid7()->toString(),
+                            'ACC_KEY' => 'JUAL UNIT',
+                            'STTS_RCRD' => 'PAID',
+                            'PAYMENT_METHOD' => 'cash',
+                            'BRANCH' => $request->user()->branch_id ?? '',
+                            'LOAN_NUM' => $credit->LOAN_NUMBER ?? '',
+                            'ENTRY_DATE' => now(),
+                            'TITLE' => 'JUAL UNIT TARIKAN',
+                            'ORIGINAL_AMOUNT' => $request->harga ?? 0,
+                            'USER_ID' => $userId,
+                        ]);
+                    }
 
                     $this->locationStatus->createLocationStatusLog($colId, $request->user()->branch_id, 'JUAL UNIT');
                 } else {
