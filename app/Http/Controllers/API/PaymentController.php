@@ -932,7 +932,7 @@ class PaymentController extends Controller
                     $getBayarDenda = floatval($resList['bayar_denda']);
                     $getTglAngsuran = Carbon::parse($resList['tgl_angsuran'])->format('Y-m-d') ?? null;
                     $getAngsuranKe = floatval($resList['angsuran_ke'] ?? 0);
-                    $getArrears = floatval($res['denda'] ?? 0);
+                    $getArrears = floatval($resList['denda'] ?? 0);
                     $getDiskonArrears = floatval($resList['diskon_denda']);
 
                     $creditScheduleCheck = M_CreditSchedule::where([
@@ -964,17 +964,20 @@ class PaymentController extends Controller
                     if ($arrearsCheck) {
                         $setArrearsCalculate = calculateArrears($getInstallment, $getTglAngsuran);
 
-                        $pastDuePenalty = $getPaidFlag == 'PAID' ? $getArrears : $setArrearsCalculate;
-
                         if ($getBayarDenda != 0 || $getDiskonArrears != 0 || $check->DISKON_FLAG == 'ya') {
-                            $arrearsCheck->update([
-                                'PAST_DUE_PENALTY' => $pastDuePenalty,
+                            $updateData = [
                                 'PAID_PCPL' => $getPrincipalPrev,
                                 'PAID_INT' =>  $getInterestPrev,
                                 'PAID_PENALTY' => floatval($arrearsCheck->PAID_PENALTY) - $getArrears,
                                 'WOFF_PENALTY' => floatval($arrearsCheck->WOFF_PENALTY) - $getDiskonArrears,
                                 'STATUS_REC' => 'A',
-                            ]);
+                            ];
+
+                            if ($getPaidFlag != 'PAID') {
+                                $updateData['PAST_DUE_PENALTY'] = $setArrearsCalculate;
+                            }
+
+                            $arrearsCheck->update($updateData);
 
                             $ttlBayarDenda += $getBayarDenda;
                         }
