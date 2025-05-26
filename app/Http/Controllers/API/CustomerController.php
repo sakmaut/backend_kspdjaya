@@ -14,6 +14,7 @@ use App\Models\M_CreditSchedule;
 use App\Models\M_CrSurveyDocument;
 use App\Models\M_Customer;
 use App\Models\M_CustomerDocument;
+use App\Models\M_Kwitansi;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
@@ -204,6 +205,12 @@ class CustomerController extends Controller
 
             $loanNumber = $request->loan_number;
 
+            $cekKwitansi = M_Kwitansi::where('STTS_PAYMENT', 'WAITING CANCEL')->where('LOAN_NUMBER',$loanNumber)->first();
+
+            if($cekKwitansi){
+                return $schedule;
+            }
+
             $data = DB::table('credit_schedule AS a')
                 ->leftJoin('arrears AS b', function ($join) {
                     $join->on('b.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
@@ -248,16 +255,6 @@ class CustomerController extends Controller
             foreach ($data as $res) {
 
                 $installment = floatval($res->INSTALLMENT) - floatval($res->PAYMENT_VALUE);
-
-                // if (!empty($res->STATUS_REC) && $res->STATUS_REC == 'PENDING') {
-                //     $cekStatus = $res->STATUS_REC;
-                // } else {
-                //     $cekStatus = $res->PAID_FLAG;
-                // }
-
-                // if ($res->PAID_FLAG == 'PAID' && ($res->STATUS_REC == 'D' || $res->STATUS_REC == 'S')) {
-                //     $cekStatus = 'PAID';
-                // }
 
                 $schedule[] = [
                     'key' => $j++,
