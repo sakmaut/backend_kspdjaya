@@ -965,13 +965,16 @@ class PaymentController extends Controller
                         $setArrearsCalculate = calculateArrears($getInstallment, $getTglAngsuran);
 
                         if ($getBayarDenda != 0 || $getDiskonArrears != 0 || $check->DISKON_FLAG == 'ya') {
+                            $amountToSubtractFromPenalty = ($getBayarDenda != 0) ? $getBayarDenda : $getArrears;
+
                             $updateData = [
                                 'PAID_PCPL' => $getPrincipalPrev,
                                 'PAID_INT' =>  $getInterestPrev,
-                                'PAID_PENALTY' => floatval($arrearsCheck->PAID_PENALTY) - $getBayarDenda != 0 ? $getBayarDenda : $getArrears,
+                                'PAID_PENALTY' => floatval($arrearsCheck->PAID_PENALTY) - $amountToSubtractFromPenalty,
                                 'WOFF_PENALTY' => floatval($arrearsCheck->WOFF_PENALTY) - $getDiskonArrears,
                                 'STATUS_REC' => 'A',
                             ];
+
 
                             if ($getPaidFlag != 'PAID') {
                                 $updateData['PAST_DUE_PENALTY'] = $setArrearsCalculate;
