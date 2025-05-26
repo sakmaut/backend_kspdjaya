@@ -968,7 +968,7 @@ class PaymentController extends Controller
                             $updateData = [
                                 'PAID_PCPL' => $getPrincipalPrev,
                                 'PAID_INT' =>  $getInterestPrev,
-                                'PAID_PENALTY' => floatval($arrearsCheck->PAID_PENALTY) - $getArrears,
+                                'PAID_PENALTY' => floatval($arrearsCheck->PAID_PENALTY) - $getBayarDenda != 0 ? $getBayarDenda : $getArrears,
                                 'WOFF_PENALTY' => floatval($arrearsCheck->WOFF_PENALTY) - $getDiskonArrears,
                                 'STATUS_REC' => 'A',
                             ];
