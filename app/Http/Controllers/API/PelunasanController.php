@@ -71,13 +71,14 @@ class PelunasanController extends Controller
         try {
 
             $loan_number = $request->loan_number;
+            $setPenaltyRate = 5;
 
             $allQuery = "SELECT 
                             (a.PCPL_ORI - COALESCE(a.PAID_PRINCIPAL, 0)) AS SISA_POKOK,
                             b.INT_ARR AS TUNGGAKAN_BUNGA,
                             e.TUNGGAKAN_DENDA AS TUNGGAKAN_DENDA,
                             e.DENDA_TOTAL AS DENDA,
-                            (COALESCE(a.PENALTY_RATE, 7.5) / 100) * (a.PCPL_ORI - COALESCE(a.PAID_PRINCIPAL, 0)) AS PINALTI,
+                            (COALESCE(a.PENALTY_RATE, $setPenaltyRate) / 100) * (a.PCPL_ORI - COALESCE(a.PAID_PRINCIPAL, 0)) AS PINALTI,
                             d.DISC_BUNGA
                         FROM 
                             credit a
