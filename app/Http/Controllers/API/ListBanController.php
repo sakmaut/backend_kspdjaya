@@ -124,14 +124,12 @@ class ListBanController extends Controller
 
             $getBranchIdUser = $request->user()->branch_id;
             $getNow = date('mY', strtotime(now()));
+
             $checkConditionDate = $getNow == $dateFrom;
 
             $jobName = $checkConditionDate ? 'LISBAN' : 'LISBAN_BELOM_MOVEON';
 
-            $checkQueue = DB::table('job_on_progress')
-                ->where('JOB_STATUS', 0)
-                ->where('JOB_NAME', $jobName)
-                ->first();
+            $checkQueue = DB::table('job_on_progress')->where('JOB_NAME', $jobName)->first();
 
             if ($checkQueue->JOB_STATUS == 1) {
                 throw new Exception("RUNNING JOB", 408);
