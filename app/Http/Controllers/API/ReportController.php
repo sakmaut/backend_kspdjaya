@@ -114,8 +114,7 @@ class ReportController extends Controller
                     case 'CL':
                         $statusNoActive = 'LUNAS NORMAL (CL)';
                         break;
-                    case 'PT':
-                    case 'BL':
+                    case 'PT' || 'BL':
                         $statusNoActive = 'LUNAS DIMUKA (' . $results->STATUS_REC . ')';
                         break;
                     case 'RP':
