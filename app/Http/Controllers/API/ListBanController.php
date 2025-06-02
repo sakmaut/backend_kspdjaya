@@ -129,6 +129,9 @@ class ListBanController extends Controller
 
             $jobName = $checkConditionDate ? 'LISBAN' : 'LISBAN_BELOM_MOVEON';
 
+            return response()->json($jobName, 200);
+            die;
+
             $checkQueue = DB::table('job_on_progress')->where('JOB_NAME', $jobName)->first();
 
             if ($checkQueue->JOB_STATUS == 1) {
