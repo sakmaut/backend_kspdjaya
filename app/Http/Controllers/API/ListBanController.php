@@ -126,16 +126,6 @@ class ListBanController extends Controller
             $getNow = date('mY', strtotime(now()));
             $checkConditionDate = $getNow == $dateFrom;
 
-            if ($checkConditionDate) {
-
-                return response()->json("BERJALAN", 200);
-            } else {
-
-                return response()->json("BULAN LALU", 200);
-            }
-
-            die;
-
             $jobName = $checkConditionDate ? 'LISBAN' : 'LISBAN_BELOM_MOVEON';
 
             $checkQueue = DB::table('job_on_progress')
