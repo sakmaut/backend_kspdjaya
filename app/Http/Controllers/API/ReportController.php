@@ -109,14 +109,21 @@ class ReportController extends Controller
             } else {
 
                 $statusNoActive = '';
-                if ($results->STATUS_REC === 'CL') {
-                    $statusNoActive = 'LUNAS NORMAL (CL)';
-                } elseif ($results->STATUS_REC === 'PT' || $results->STATUS_REC === 'BL') {
-                    $statusNoActive = 'LUNAS DIMUKA (' . $results->STATUS_REC . ')';
-                } elseif ($results->STATUS_REC === 'RP') {
-                    $statusNoActive = 'REPOSSED (RP)';
-                } else {
-                    $statusNoActive = 'AKTIF (AC)';
+
+                switch ($results->STATUS_REC) {
+                    case 'CL':
+                        $statusNoActive = 'LUNAS NORMAL (CL)';
+                        break;
+                    case 'PT':
+                    case 'BL':
+                        $statusNoActive = 'LUNAS DIMUKA (' . $results->STATUS_REC . ')';
+                        break;
+                    case 'RP':
+                        $statusNoActive = 'REPOSSED (RP)';
+                        break;
+                    default:
+                        $statusNoActive = 'AKTIF (AC)';
+                        break;
                 }
 
                 $buildArray = [
