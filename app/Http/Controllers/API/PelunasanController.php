@@ -551,6 +551,8 @@ class PelunasanController extends Controller
     {
         $credit = M_Credit::where('LOAN_NUMBER', $loan_number)->first();
 
+        $setStatusRec = floatval($res['diskon_pokok']) > 0 ? 'BL' : 'PT';
+
         if ($credit) {
             $credit->update([
                 'PAID_PRINCIPAL' => floatval($credit->PAID_PRINCIPAL) + floatval($res['bayar_pokok']),
@@ -560,7 +562,7 @@ class PelunasanController extends Controller
                 'PAID_PENALTY' => floatval($credit->PAID_PENALTY) + floatval($res['bayar_denda']),
                 'DISCOUNT_PENALTY' => floatval($credit->DISCOUNT_PENALTY) + floatval($res['diskon_denda']),
                 'STATUS' => 'D',
-                'STATUS_REC' => 'PT',
+                'STATUS_REC' => $setStatusRec,
                 'END_DATE' => now()
             ]);
         }
