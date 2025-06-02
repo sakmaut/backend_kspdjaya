@@ -111,8 +111,8 @@ class ReportController extends Controller
                 $statusNoActive = '';
                 if ($results->STATUS_REC === 'CL') {
                     $statusNoActive = 'LUNAS NORMAL (CL)';
-                } elseif ($results->STATUS_REC === 'PT') {
-                    $statusNoActive = 'LUNAS DIMUKA (PT)';
+                } elseif ($results->STATUS_REC === 'PT' || $results->STATUS_REC === 'BL') {
+                    $statusNoActive = 'LUNAS DIMUKA (' . $results->STATUS_REC . ')';
                 } elseif ($results->STATUS_REC === 'RP') {
                     $statusNoActive = 'REPOSSED (RP)';
                 } else {
