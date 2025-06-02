@@ -212,7 +212,7 @@ class ListBanController extends Controller
                                                 when en.arr_count > 8 then 'X'
                                                 else en.arr_count end) AS CYCLE_AKHIR,
                                 case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end as pola_bayar_akhir,
-                                ' 'as jenis_jaminan,
+                                col.COL_TYPE as jenis_jaminan,
                                 col.COLLATERAL,
                                 col.POLICE_NUMBER,
                                 col.ENGINE_NUMBER,
@@ -316,7 +316,7 @@ class ListBanController extends Controller
                                                 when en.arr_count > 8 then 'X'
                                                 else en.arr_count end) AS CYCLE_AKHIR,
                                 case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end as pola_bayar_akhir,
-                                ' 'as jenis_jaminan,
+                                col.COL_TYPE as jenis_jaminan,
                                 col.COLLATERAL,
                                 col.POLICE_NUMBER,
                                 col.ENGINE_NUMBER,
