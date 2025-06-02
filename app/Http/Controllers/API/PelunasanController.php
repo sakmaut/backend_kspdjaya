@@ -78,7 +78,7 @@ class PelunasanController extends Controller
                             b.INT_ARR AS TUNGGAKAN_BUNGA,
                             e.TUNGGAKAN_DENDA AS TUNGGAKAN_DENDA,
                             e.DENDA_TOTAL AS DENDA,
-                            ($setPenaltyRate / 100) * (a.PCPL_ORI - COALESCE(a.PAID_PRINCIPAL, 0) AS PINALTI,
+                            (($setPenaltyRate / 100) * (a.PCPL_ORI - COALESCE(a.PAID_PRINCIPAL, 0))) AS PINALTI,
                             d.DISC_BUNGA
                         FROM 
                             credit a
