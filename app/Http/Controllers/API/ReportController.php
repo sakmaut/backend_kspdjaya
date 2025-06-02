@@ -99,6 +99,29 @@ class ReportController extends Controller
         }
     }
 
+    public function setStatusNoActive($results)
+    {
+        $statusNoActive = '';
+
+        switch ($results) {
+            case 'CL':
+                $statusNoActive = 'LUNAS NORMAL (CL)';
+                break;
+            case 'PT':
+            case 'BL':
+                $statusNoActive = 'LUNAS DIMUKA (' . $results . ')';
+                break;
+            case 'RP':
+                $statusNoActive = 'REPOSSED (RP)';
+                break;
+            default:
+                $statusNoActive = 'AKTIF (AC)';
+                break;
+        }
+
+        return $statusNoActive;
+    }
+
     public function pinjaman(Request $request, $id)
     {
         try {
@@ -108,27 +131,10 @@ class ReportController extends Controller
                 $buildArray = [];
             } else {
 
-                $statusNoActive = '';
-
-                switch ($results->STATUS_REC) {
-                    case 'CL':
-                        $statusNoActive = 'LUNAS NORMAL (CL)';
-                        break;
-                    case 'PT' || 'BL':
-                        $statusNoActive = 'LUNAS DIMUKA (' . $results->STATUS_REC . ')';
-                        break;
-                    case 'RP':
-                        $statusNoActive = 'REPOSSED (RP)';
-                        break;
-                    default:
-                        $statusNoActive = 'AKTIF (AC)';
-                        break;
-                }
-
                 $buildArray = [
                     [
                         'title' => 'Status',
-                        'value' => $statusNoActive ?? ''
+                        'value' => $this->setStatusNoActive($results->STATUS_REC) ?? ''
                     ],
                     [
                         'title' => 'No Kontrak',
@@ -493,22 +499,13 @@ class ReportController extends Controller
                 $query->select('CUST_CODE', 'NAME');
             }])->where('LOAN_NUMBER', $id)->first();
 
-            $statusNoActive = '';
-            if ($creditDetail->STATUS_REC === 'CL') {
-                $statusNoActive = 'LUNAS NORMAL (CL)';
-            } elseif ($creditDetail->STATUS_REC === 'PT') {
-                $statusNoActive = 'LUNAS DIMUKA (PT)';
-            } elseif ($creditDetail->STATUS_REC === 'RP') {
-                $statusNoActive = 'REPOSSED (RP)';
-            }
-
             if ($creditDetail) {
                 $schedule['detail'] = [
                     'no_kontrak' => $creditDetail->LOAN_NUMBER ?? '',
                     'tgl_kontrak' => Carbon::parse($creditDetail->CREATED_AT)->format('d-m-Y'),
                     'nama' => $creditDetail->customer->NAME ?? '',
                     'no_pel' => $creditDetail->CUST_CODE ?? '',
-                    'status' => ($creditDetail->STATUS ?? '') == 'A' ? 'AKTIF' : 'TIDAK AKTIF / ' . $statusNoActive
+                    'status' => ($creditDetail->STATUS ?? '') == 'A' ? 'AKTIF' : 'TIDAK AKTIF / ' . $this->setStatusNoActive($creditDetail->STATUS_REC) ?? ''
                 ];
             }
 
