@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
 use App\Models\M_AdminFee;
 use App\Models\M_AdminType;
@@ -14,8 +15,9 @@ use Illuminate\Support\Facades\DB;
 class AdminFeeController extends Controller
 {
     protected $adminfee;
+    protected $log;
 
-    public function __construct(M_AdminFee $admin_fee)
+    public function __construct(M_AdminFee $admin_fee, ExceptionHandling $log)
     {
         $this->adminfee = $admin_fee;
     }
@@ -28,8 +30,7 @@ class AdminFeeController extends Controller
 
             return response()->json($show, 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
@@ -45,9 +46,8 @@ class AdminFeeController extends Controller
             $show = $this->buildArray($data);
     
             return response()->json($show, 200);
-        } catch (Exception $e) {
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
+        } catch (\Exception $e) {
+            return $this->log->logError($e, $request);
         }
     }
 
@@ -95,16 +95,9 @@ class AdminFeeController extends Controller
             }
 
             DB::commit();
-            ActivityLogger::logActivity($request,"Success",200);
-            return response()->json(['message' => 'created successfully',"status" => 200], 200);
-        }catch (QueryException $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($request,$e->getMessage(),409);
-            return response()->json(['message' => $e->getMessage()], 409);
+            return response()->json(['message' => 'success'], 200);
         } catch (\Exception $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage()], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
@@ -147,16 +140,9 @@ class AdminFeeController extends Controller
             }
 
             DB::commit();
-            ActivityLogger::logActivity($request,"Success",200);
-            return response()->json(['message' => 'update successfully'], 200);
-        }catch (QueryException $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($request,$e->getMessage(),409);
-            return response()->json(['message' => $e->getMessage()], 409);
+            return response()->json(['message' => 'success'], 200);
         } catch (\Exception $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage()], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
@@ -189,9 +175,8 @@ class AdminFeeController extends Controller
             }
     
             return response()->json($show, 200);
-        } catch (Exception $e) {
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage()], 500);
+        } catch (\Exception $e) {
+            return $this->log->logError($e, $request);
         }
     }
 
@@ -217,9 +202,8 @@ class AdminFeeController extends Controller
             }
 
             return response()->json($show, 200);
-        } catch (Exception $e) {
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
-            return response()->json(['message' => $e->getMessage()], 500);
+        } catch (\Exception $e) {
+            return $this->log->logError($e, $request);
         }
     }
 

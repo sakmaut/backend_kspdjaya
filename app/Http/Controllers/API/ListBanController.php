@@ -124,14 +124,12 @@ class ListBanController extends Controller
 
             $getBranchIdUser = $request->user()->branch_id;
             $getNow = date('mY', strtotime(now()));
+
             $checkConditionDate = $getNow == $dateFrom;
 
             $jobName = $checkConditionDate ? 'LISBAN' : 'LISBAN_BELOM_MOVEON';
 
-            $checkQueue = DB::table('job_on_progress')
-                ->where('JOB_STATUS', 0)
-                ->where('JOB_NAME', $jobName)
-                ->first();
+            $checkQueue = DB::table('job_on_progress')->where('JOB_NAME', $jobName)->first();
 
             if ($checkQueue->JOB_STATUS == 1) {
                 throw new Exception("RUNNING JOB", 408);
@@ -229,7 +227,7 @@ class ListBanController extends Controller
                                 left join cr_order co on cast(co.APPLICATION_ID as char) = cast(ca.ID as char)
                                 left join cr_survey cs on cast(cs.ID as char) = cast(ca.CR_SURVEY_ID as char)
                                 left join kolektor k on cast(k.loan_number as char) = cast(cl.LOAN_NUMBER as char)
-                                left join temp_lis_03 col on cast(col.CR_CREDIT_ID as char) = cast(cl.ID as char)
+                                left join temp_lis_03 col on cast(col.LOAN_NUMBER as char) = cast(cl.LOAN_NUMBER as char)
                                 left join temp_lis_01 st
                                     on cast(st.loan_number as char) = cast(cl.LOAN_NUMBER as char)
                                     and st.type=date_format(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval -1 day),'%d%m%Y')
@@ -350,12 +348,20 @@ class ListBanController extends Controller
 
                 $checkRunSp = DB::select(" SELECT
                                                 CASE
-                                                    WHEN (SELECT MAX(p.ENTRY_DATE) FROM payment p) > (SELECT MAX(temp_lis_02C.last_pay) FROM temp_lis_02C)
+                                                    WHEN (SELECT MAX(p.ENTRY_DATE) FROM payment p) >= (SELECT MAX(temp_lis_02C.last_pay) FROM temp_lis_02C)
                                                         AND job_status = 0 THEN 'run'
                                                     ELSE 'skip'
                                                 END AS execute_sp
                                             FROM job_on_progress
                                             WHERE job_name = 'LISBAN'");
+
+                // $checkRunSp = DB::select(" SELECT
+                //                                 CASE
+                //                                     WHEN job_status = 0 THEN 'run'
+                //                                     ELSE 'skip'
+                //                                 END AS execute_sp
+                //                             FROM job_on_progress
+                //                             WHERE job_name = 'LISBAN'");
 
                 if (!empty($checkRunSp) && $checkRunSp[0]->execute_sp === 'run') {
                     DB::select('CALL lisban_berjalan(?,?)', [$getNow, $getUserName]);
