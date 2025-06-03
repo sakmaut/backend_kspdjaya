@@ -469,16 +469,25 @@ class PaymentController extends Controller
 
     private function updateCredit($loan_number)
     {
-        $check_credit = M_Credit::where(['LOAN_NUMBER' => $loan_number])->first();
+        $credit = M_Credit::where(['LOAN_NUMBER' => $loan_number])->first();
 
-        $isActive = $this->checkStatusCreditActive($loan_number);
+        if ($credit) {
+            $isActive = $this->checkStatusCreditActive($loan_number);
 
-        $statusData = [
-            'STATUS' => $isActive == 0 ? 'D' : 'A',
-            'STATUS_REC' => $isActive == 0 ? 'CL' : 'AC'
-        ];
+            if ($isActive == 0) {
+                $statusData = [
+                    'STATUS' => 'D',
+                    'STATUS_REC' => 'CL'
+                ];
+            } else {
+                $statusData = [
+                    'STATUS' => 'A',
+                    'STATUS_REC' => 'AC'
+                ];
+            }
 
-        $check_credit->update($statusData);
+            $credit->update($statusData);
+        }
     }
 
     private function checkStatusCreditActive($loan_number)
