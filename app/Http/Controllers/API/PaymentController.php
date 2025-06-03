@@ -573,36 +573,36 @@ class PaymentController extends Controller
         if ($kwitansi) {
             $user_id = $kwitansi->CREATED_BY;
             $getCodeBranch = M_Branch::find($kwitansi->BRANCH_CODE);
-        }
 
-        $paymentData = [
-            'ID' => $uid,
-            'ACC_KEY' => $res['flag'] == 'PAID' ? 'angsuran_denda' : $request->pembayaran ?? '',
-            'STTS_RCRD' => 'PAID',
-            'INVOICE' => $no_inv,
-            'NO_TRX' => $request->uid,
-            'PAYMENT_METHOD' => $kwitansi->METODE_PEMBAYARAN ?? $request->payment_method,
-            'BRANCH' =>  $getCodeBranch->CODE_NUMBER ?? $branch->CODE_NUMBER,
-            'LOAN_NUM' => $loan_number,
-            'VALUE_DATE' => null,
-            'ENTRY_DATE' => now(),
-            'SUSPENSION_PENALTY_FLAG' => $request->penangguhan_denda ?? '',
-            'TITLE' => 'Angsuran Ke-' . $res['angsuran_ke'],
-            'ORIGINAL_AMOUNT' => floatval($res['bayar_angsuran']) + floatval($res['bayar_denda']),
-            'OS_AMOUNT' => $os_amount ?? 0,
-            'START_DATE' => $tgl_angsuran,
-            'END_DATE' => now(),
-            'USER_ID' => $user_id ?? $request->user()->id,
-            'AUTH_BY' => $request->user()->fullname ?? '',
-            'AUTH_DATE' => now(),
-            'ARREARS_ID' => $res['id_arrear'] ?? ''
-        ];
+            $paymentData = [
+                'ID' => $uid,
+                'ACC_KEY' => $res['flag'] == 'PAID' ? 'angsuran_denda' : $request->pembayaran ?? '',
+                'STTS_RCRD' => 'PAID',
+                'INVOICE' => $no_inv ?? '',
+                'NO_TRX' => $request->uid ?? '',
+                'PAYMENT_METHOD' => $kwitansi->METODE_PEMBAYARAN ?? $request->payment_method,
+                'BRANCH' =>  $getCodeBranch->CODE_NUMBER ?? $branch->CODE_NUMBER,
+                'LOAN_NUM' => $loan_number,
+                'VALUE_DATE' => null,
+                'ENTRY_DATE' => now(),
+                'SUSPENSION_PENALTY_FLAG' => $request->penangguhan_denda ?? '',
+                'TITLE' => 'Angsuran Ke-' . $res['angsuran_ke'],
+                'ORIGINAL_AMOUNT' => floatval($res['bayar_angsuran']) + floatval($res['bayar_denda']),
+                'OS_AMOUNT' => $os_amount ?? 0,
+                'START_DATE' => $tgl_angsuran ?? null,
+                'END_DATE' => now(),
+                'USER_ID' => $user_id ?? $request->user()->id,
+                'AUTH_BY' => $request->user()->fullname ?? '',
+                'AUTH_DATE' => now(),
+                'ARREARS_ID' => $res['id_arrear'] ?? ''
+            ];
 
-        $existing = M_Payment::where($paymentData)->first();
+            $existing = M_Payment::where($paymentData)->first();
 
-        if (!$existing) {
-            $paymentData['BANK_NAME'] = round(microtime(true) * 1000);
-            M_Payment::create($paymentData);
+            if (!$existing || $kwitansi->DISKON_FLAG == 'ya') {
+                $paymentData['BANK_NAME'] = round(microtime(true) * 1000);
+                M_Payment::create($paymentData);
+            }
         }
     }
 
