@@ -65,8 +65,8 @@ class R_Kwitansi extends JsonResource
                 ->where('no_invoice', $this->NO_TRANSAKSI)
                 ->where(function ($query) {
                     $query->where('installment', '<>', 0)
-                        ->orWhere('bayar_denda', '<>', 0)
-                        ->orWhere('diskon_denda', '=', 1);
+                        ->orWhere('bayar_denda', '<>', 0);
+                    // ->orWhere('diskon_denda', '=', 1);
                 })
                 ->orderByRaw('CAST(angsuran_ke AS SIGNED) ASC')
                 ->get();
