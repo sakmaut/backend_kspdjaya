@@ -25,7 +25,6 @@ class R_Kwitansi extends JsonResource
      */
     public function toArray(Request $request): array
     {
-
         if ($this->PAYMENT_TYPE === 'pelunasan') {
             $details = M_KwitansiDetailPelunasan::select(
                 'no_invoice',
@@ -62,13 +61,17 @@ class R_Kwitansi extends JsonResource
                 'denda',
                 'diskon_denda'
             )
-                ->where('no_invoice', $this->NO_TRANSAKSI)
-                ->where(function ($query) {
+                ->where('no_invoice', $this->NO_TRANSAKSI);
+
+            if ($this->DISKON_FLAG != 'ya') {
+                $details = $details->where(function ($query) {
                     $query->where('installment', '<>', 0)
-                        ->orWhere('bayar_denda', '<>', 0);
-                    // ->orWhere('diskon_denda', '=', 1);
-                })
-                ->orderByRaw('CAST(angsuran_ke AS SIGNED) ASC')
+                        ->orWhere('bayar_denda', '<>', 0)
+                        ->orWhere('diskon_denda', '=', 1);
+                });
+            }
+
+            $details = $details->orderByRaw('CAST(angsuran_ke AS SIGNED) ASC')
                 ->get();
         }
 
