@@ -599,7 +599,7 @@ class PaymentController extends Controller
 
             $existing = M_Payment::where($paymentData)->first();
 
-            if (!$existing || $kwitansi->DISKON_FLAG == 'ya') {
+            if (!$existing) {
                 $paymentData['BANK_NAME'] = round(microtime(true) * 1000);
                 M_Payment::create($paymentData);
             }
