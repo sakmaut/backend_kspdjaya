@@ -599,7 +599,12 @@ class PaymentController extends Controller
             'BANK_NAME' => round(microtime(true) * 1000)
         ];
 
-        M_Payment::create($paymentData);
+        $existing = M_Payment::where($paymentData)->first();
+
+        if (!$existing) {
+            $paymentData['BANK_NAME'] = round(microtime(true) * 1000);
+            M_Payment::create($paymentData);
+        }
     }
 
     function preparePaymentData($payment_id, $acc_key, $amount)
