@@ -568,7 +568,7 @@ class PaymentController extends Controller
 
     function createPaymentRecords($request, $res, $tgl_angsuran, $loan_number, $no_inv, $branch, $uid)
     {
-        $kwitansi = M_Kwitansi::where(['NO_TRANSAKSI' => $no_inv])->first();
+        $kwitansi = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
 
         if ($kwitansi) {
             $user_id = $kwitansi->CREATED_BY;
