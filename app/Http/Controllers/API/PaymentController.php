@@ -594,15 +594,11 @@ class PaymentController extends Controller
                 'USER_ID' => $user_id ?? $request->user()->id,
                 'AUTH_BY' => $request->user()->fullname ?? '',
                 'AUTH_DATE' => now(),
-                'ARREARS_ID' => $res['id_arrear'] ?? ''
+                'ARREARS_ID' => $res['id_arrear'] ?? '',
+                'BANK_NAME' => round(microtime(true) * 1000)
             ];
 
-            $existing = M_Payment::where($paymentData)->first();
-
-            if (!$existing) {
-                $paymentData['BANK_NAME'] = round(microtime(true) * 1000);
-                M_Payment::create($paymentData);
-            }
+            M_Payment::create($paymentData);
         }
     }
 
