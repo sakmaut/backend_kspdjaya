@@ -135,6 +135,7 @@ class PelunasanController extends Controller
                                     arrears
                                 WHERE 
                                     LOAN_NUMBER = '{$loan_number}' 
+                                    AND STATUS_REC != 'PENDING'
                                 GROUP BY LOAN_NUMBER
                             ) e ON e.LOAN_NUMBER = a.LOAN_NUMBER
                         WHERE 
