@@ -263,126 +263,65 @@ class TaksasiController extends Controller
         DB::beginTransaction();
         try {
 
-            $vehicles = collect($request->json()->all());
+            $getDataVehicle = collect($request->json()->all());
 
-            if ($vehicles->isEmpty()) {
+            if ($getDataVehicle->isEmpty()) {
                 return response()->json(['error' => 'No taksasi data provided'], 400);
             }
 
-            $result = DB::table('taksasi as a')
+            $setUniqueKey = [];
+            $vehicleMap = [];
+
+            foreach ($getDataVehicle as $vehicle) {
+                $key = $vehicle['brand'] . '-' . $vehicle['model'] . '-' . $vehicle['descr'] . '-' . $vehicle['year'];
+                $setUniqueKey[] = $key;
+                $vehicleMap[$key] = $vehicle;
+            }
+
+            $checkTaksasiData = DB::table('taksasi as a')
                 ->leftJoin('taksasi_price as b', 'b.taksasi_id', '=', 'a.id')
-                ->select('a.brand', 'a.code', 'a.model', 'a.descr', 'b.year', 'b.price')
-                ->orderBy('a.brand')
-                ->orderBy('a.code')
-                ->orderBy('b.year', 'asc')
+                ->select('a.id', 'a.brand', 'a.model', 'a.descr', 'b.id as price_id', 'b.year', 'b.price', DB::raw("CONCAT(a.brand,'-',a.model,'-',a.descr,'-',b.year) as keyss"))
+                ->whereRaw("CONCAT(a.brand,'-',a.model,'-',a.descr,'-',b.year) IN (" . implode(',', array_fill(0, count($setUniqueKey), '?')) . ")", $setUniqueKey)
                 ->get();
 
-            if ($result->isNotEmpty()) {
-
-                $max = DB::table('taksasi_bak')
-                    ->select(DB::raw('max(coalesce(count, 0)) as htung'))
-                    ->first();
-
-                $result->map(function ($list) use ($request, $max) {
-                    $log = [
-                        'count' => intval($max->htung ?? 0) + 1,
-                        'brand' => $list->brand,
-                        'code' => $list->code,
-                        'model' => $list->model,
-                        'descr' => $list->descr,
-                        'year' => $list->year,
-                        'price' => $list->price,
-                        'created_by' => $request->user()->id,
-                        'created_at' => $this->timeNow
-                    ];
-
-                    M_TaksasiBak::create($log);
-                });
-
-                M_Taksasi::query()->delete();
-                M_TaksasiPrice::query()->delete();
+            $dbKeys = [];
+            $dbDataMap = [];
+            foreach ($checkTaksasiData as $data) {
+                $dbKeys[] = $data->keyss;
+                $dbDataMap[$data->keyss] = $data;
             }
 
-            $insertData = [];
-            $dataExist = [];
+            foreach ($vehicleMap as $key => $vehicle) {
+                if (in_array($key, $dbKeys)) {
+                    $existing = $dbDataMap[$key];
 
-            foreach ($vehicles as $vehicle) {
-                $uuid = Uuid::uuid7()->toString();
-
-                // Create a unique key using all relevant fields
-                $uniqueKey = $vehicle['brand'] . '-' . $vehicle['vehicle'] . '-' . $vehicle['type'] . '-' . $vehicle['model'];
-
-                // Format the price consistently
-                $formattedPrice = number_format(floatval(str_replace(',', '', $vehicle['price'] ?? '0')), 0, '.', '');
-
-                if (!isset($dataExist[$uniqueKey])) {
-                    // First occurrence of this vehicle combination
-                    $insertData[] = [
-                        'id' => $uuid,
-                        'brand' => $vehicle['brand'] ?? '',
-                        'code' => $vehicle['vehicle'] ?? '',
-                        'model' => $vehicle['type'] ?? '',
-                        'descr' => $vehicle['model'] ?? '',
-                        'year' => [
-                            [
-                                'year' => $vehicle['year'] ?? '',
-                                'price' => $formattedPrice
-                            ]
-                        ],
-                        'create_by' => $request->user()->id,
-                        'create_at' => now(),
-                    ];
-
-                    // Store the index of this entry
-                    $dataExist[$uniqueKey] = count($insertData) - 1;
+                    M_TaksasiPrice::where('id', $existing->price_id)->update(['price' => floatval($vehicle['price'])]);
                 } else {
-                    // Vehicle combination already exists, add new year and price
-                    $existingIndex = $dataExist[$uniqueKey];
 
-                    // Check if this year entry already exists
-                    $yearExists = false;
-                    foreach ($insertData[$existingIndex]['year'] as $yearEntry) {
-                        if ($yearEntry['year'] === $vehicle['year']) {
-                            $yearExists = true;
-                            break;
-                        }
-                    }
+                    $setUuid = Uuid::uuid7()->toString();
 
-                    // Only add if this year doesn't exist yet
-                    if (!$yearExists) {
-                        $insertData[$existingIndex]['year'][] = [
-                            'year' => $vehicle['year'] ?? '',
-                            'price' => $formattedPrice
-                        ];
-                    }
-                }
-            }
-
-            if (count($insertData) > 0) {
-                foreach ($insertData as $data) {
                     M_Taksasi::insert([
-                        'id' => $data['id'],
-                        'brand' => $data['brand'],
-                        'code' => $data['code'],
-                        'model' => $data['model'],
-                        'descr' => $data['descr'],
-                        'create_by' => $data['create_by'],
-                        'create_at' => $data['create_at'],
+                        'id' => $setUuid,
+                        'vehicle_type' => $vehicle['jenis'] ?? '',
+                        'brand' => $vehicle['brand'] ?? '',
+                        'code' => $vehicle['model'] ?? '',
+                        'model' => $vehicle['model'] ?? '',
+                        'descr' => $vehicle['descr'] ?? '',
+                        'create_by' =>  $request->user()->id,
+                        'create_at' =>  now(),
                     ]);
 
-                    foreach ($data['year'] as $yearData) {
-                        M_TaksasiPrice::insert([
-                            'id' => Uuid::uuid7()->toString(),
-                            'taksasi_id' => $data['id'],
-                            'year' => $yearData['year'] ?? '',
-                            'price' => $yearData['price'] ?? 0
-                        ]);
-                    }
+                    M_TaksasiPrice::insert([
+                        'id' => Uuid::uuid7()->toString(),
+                        'taksasi_id' => $setUuid,
+                        'year' => $vehicle['year'] ?? '',
+                        'price' => $vehicle['price'] ?? 0
+                    ]);
                 }
             }
 
             DB::commit();
-            return response()->json(['message' => 'updated successfully'], 200);
+            return response()->json(['message' => 'anjay sukses'], 200);
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
         }
@@ -395,7 +334,7 @@ class TaksasiController extends Controller
 
             $result = DB::table('taksasi as a')
                 ->leftJoin('taksasi_price as b', 'b.taksasi_id', '=', 'a.id')
-                ->select('a.brand', 'a.code', 'a.model', 'a.descr', 'b.year', DB::raw('CAST(b.price AS UNSIGNED) AS price'))
+                ->select('a.vehicle_type', 'a.brand', 'a.code', 'a.model', 'a.descr', 'b.year', DB::raw('CAST(b.price AS UNSIGNED) AS price'))
                 ->orderBy('a.brand')
                 ->orderBy('a.code')
                 ->orderBy('b.year', 'asc')
