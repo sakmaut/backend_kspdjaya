@@ -302,7 +302,7 @@ class TaksasiController extends Controller
 
                     M_Taksasi::insert([
                         'id' => $setUuid,
-                        'vehicle_type' => $vehicle['jenis'] ?? '',
+                        'vehicle_type' => strtoupper($vehicle['jenis']) ?? '',
                         'brand' => $vehicle['brand'] ?? '',
                         'code' => $vehicle['model'] ?? '',
                         'model' => $vehicle['model'] ?? '',
