@@ -36,7 +36,7 @@ class R_Taksasi extends JsonResource
 
         return [
             'id' => $this->id,
-            "jenis_kendaraan" => $this->vehicle_type,
+            "jenis" => $this->vehicle_type,
             "brand" => $this->brand,
             "code" => $this->code,
             "model" => $this->model,
