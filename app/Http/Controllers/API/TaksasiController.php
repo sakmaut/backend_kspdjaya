@@ -153,16 +153,16 @@ class TaksasiController extends Controller
         DB::beginTransaction();
         try {
 
-            if (empty($request->jenis_kendaraan)) {
+            if (empty($request->jenis)) {
                 throw new Exception("Jenis Kendaraan nggak boleh kosong, Cung!", 404);
             }
 
             $data_taksasi = [
-                'vehicle_type' => strtoupper($request->jenis_kendaraan ?? ''),
-                'brand' => strtoupper($request->brand),
-                'code' => strtoupper($request->code),
+                'vehicle_type' => strtoupper($request->jenis ?? ''),
+                'brand' => strtoupper($request->merk),
+                'code' => strtoupper($request->tipe),
                 'model' => strtoupper($request->model),
-                'descr' => strtoupper($request->descr),
+                'descr' => strtoupper($request->keterangan),
                 'create_by' => $request->user()->id,
                 'create_at' => $this->timeNow
             ];
@@ -173,7 +173,7 @@ class TaksasiController extends Controller
                 foreach ($request->price as $res) {
                     $taksasi_price = [
                         'taksasi_id' => $taksasi_id->id,
-                        'year' => $res['name'],
+                        'year' => $res['tahun'],
                         'price' => $res['harga']
                     ];
 
