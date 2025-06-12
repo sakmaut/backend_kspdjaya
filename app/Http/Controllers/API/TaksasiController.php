@@ -310,7 +310,7 @@ class TaksasiController extends Controller
                 $uuid = Uuid::uuid7()->toString();
 
                 // Create a unique key using all relevant fields
-                $uniqueKey = $vehicle['brand'] . '-' . $vehicle['vehicle'] . '-' . $vehicle['type'] . '-' . $vehicle['model'];
+                $uniqueKey = $vehicle['brand'] . '-' . $vehicle['model'] . '-' . $vehicle['descr'];
 
                 // Format the price consistently
                 $formattedPrice = number_format(floatval(str_replace(',', '', $vehicle['price'] ?? '0')), 0, '.', '');
