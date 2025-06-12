@@ -199,11 +199,11 @@ class TaksasiController extends Controller
             }
 
             $data_taksasi = [
-                'vehicle_type' => $request->jenis_kendaraan ?? '',
-                'brand' => $request->brand,
-                'code' => $request->code,
-                'model' => $request->model,
-                'descr' => $request->descr,
+                'vehicle_type' => $request->jenis ?? '',
+                'brand' => $request->merk ?? '',
+                'code' => $request->tipe ?? '',
+                'model' => $request->model ?? '',
+                'descr' => $request->keterangan ?? '',
                 'updated_by' => $request->user()->id,
                 'updated_at' => $this->timeNow
             ];
