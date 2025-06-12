@@ -273,21 +273,25 @@ class TaksasiController extends Controller
             foreach ($getDataVehicle as $vehicle) {
                 $uuid = Uuid::uuid7()->toString();
 
-                $uniqueKey = $vehicle['brand'] . '-' . $vehicle['model'] . '-' . $vehicle['descr'];
+                if (empty($vehicle['merk']) || empty($vehicle['tipe']) || empty($vehicle['model']) || empty($vehicle['keterangan'])) {
+                    throw new Exception("Data kendaraan tidak lengkap. Pastikan 'merk', 'tipe', 'model', dan 'keterangan' terisi.");
+                }
 
-                $formattedPrice = number_format(floatval(str_replace(',', '', $vehicle['price'] ?? '0')), 0, '.', '');
+                $uniqueKey = $vehicle['merk'] . '-' . $vehicle['tipe'] . '-' . $vehicle['model'] . '-' . $vehicle['keterangan'];
+
+                $formattedPrice = number_format(floatval(str_replace(',', '', $vehicle['harga'] ?? '0')), 0, '.', '');
 
                 if (!isset($dataExist[$uniqueKey])) {
                     $insertData[] = [
                         'id' => $uuid,
                         'vehicle_type' => $vehicle['jenis'] ?? '',
-                        'brand' => $vehicle['brand'] ?? '',
-                        'code' => $vehicle['code'] ?? '',
+                        'brand' => $vehicle['merk'] ?? '',
+                        'code' => $vehicle['tipe'] ?? '',
                         'model' => $vehicle['model'] ?? '',
-                        'descr' => $vehicle['descr'] ?? '',
-                        'year' => [
+                        'descr' => $vehicle['keterangan'] ?? '',
+                        'tahun' => [
                             [
-                                'year' => $vehicle['year'] ?? '',
+                                'year' => $vehicle['tahun'] ?? '',
                                 'price' => $formattedPrice
                             ]
                         ],
@@ -300,16 +304,16 @@ class TaksasiController extends Controller
                     $existingIndex = $dataExist[$uniqueKey];
 
                     $yearExists = false;
-                    foreach ($insertData[$existingIndex]['year'] as $yearEntry) {
-                        if ($yearEntry['year'] === $vehicle['year']) {
+                    foreach ($insertData[$existingIndex]['tahun'] as $yearEntry) {
+                        if ($yearEntry['year'] === $vehicle['tahun']) {
                             $yearExists = true;
                             break;
                         }
                     }
 
                     if (!$yearExists) {
-                        $insertData[$existingIndex]['year'][] = [
-                            'year' => $vehicle['year'] ?? '',
+                        $insertData[$existingIndex]['tahun'][] = [
+                            'year' => $vehicle['tahun'] ?? '',
                             'price' => $formattedPrice
                         ];
                     }
@@ -333,7 +337,7 @@ class TaksasiController extends Controller
                         'create_at' => $data['create_at'],
                     ]);
 
-                    foreach ($data['year'] as $yearData) {
+                    foreach ($data['tahun'] as $yearData) {
                         M_TaksasiPrice::insert([
                             'id' => Uuid::uuid7()->toString(),
                             'taksasi_id' => $data['id'],
