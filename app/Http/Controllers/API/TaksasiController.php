@@ -419,27 +419,36 @@ class TaksasiController extends Controller
                     $compoundKey = $key . '-' . $yearData['year'];
 
                     if (isset($dbDataMap[$compoundKey])) {
-                        M_TaksasiPrice::where('id', $dbDataMap[$compoundKey]->price_id)->update(['price' => floatval($yearData['price'])]);
+                        M_TaksasiPrice::where('id', $dbDataMap[$compoundKey]->price_id)
+                            ->update(['price' => floatval($yearData['price'])]);
                     } else {
-
                         $taksasiId = null;
-                        if (isset($dbDataMap[$key . '-' . $vehicle['years'][0]['year']])) {
-                            $taksasiId = $dbDataMap[$key . '-' . $vehicle['years'][0]['year']]->id;
+
+                        $existingTaksasi = M_Taksasi::where([
+                            ['vehicle_type', '=', strtoupper($vehicle['jenis'] ?? '')],
+                            ['brand', '=', $vehicle['brand'] ?? ''],
+                            ['code', '=', $vehicle['model'] ?? ''],
+                            ['model', '=', $vehicle['model'] ?? ''],
+                            ['descr', '=', $vehicle['descr'] ?? ''],
+                        ])->first();
+
+                        if ($existingTaksasi) {
+                            $taksasiId = $existingTaksasi->id;
                         } else {
-                            // Insert Taksasi
                             $taksasiId = Uuid::uuid7()->toString();
                             M_Taksasi::insert([
                                 'id' => $taksasiId,
-                                'vehicle_type' => strtoupper($vehicle['jenis']) ?? '',
+                                'vehicle_type' => strtoupper($vehicle['jenis'] ?? ''),
                                 'brand' => $vehicle['brand'] ?? '',
                                 'code' => $vehicle['model'] ?? '',
                                 'model' => $vehicle['model'] ?? '',
                                 'descr' => $vehicle['descr'] ?? '',
-                                'create_by' =>  $request->user()->id,
-                                'create_at' =>  now(),
+                                'create_by' => $request->user()->id,
+                                'create_at' => now(),
                             ]);
                         }
 
+                        // Insert harga tahun untuk kendaraan
                         M_TaksasiPrice::insert([
                             'id' => Uuid::uuid7()->toString(),
                             'taksasi_id' => $taksasiId,
@@ -449,6 +458,7 @@ class TaksasiController extends Controller
                     }
                 }
             }
+
 
             DB::commit();
             return response()->json(['message' => 'anjay sukses'], 200);
