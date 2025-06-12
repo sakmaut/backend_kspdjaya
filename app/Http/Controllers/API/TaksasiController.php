@@ -273,11 +273,11 @@ class TaksasiController extends Controller
             foreach ($getDataVehicle as $vehicle) {
                 $uuid = Uuid::uuid7()->toString();
 
-                if (empty($vehicle['merk']) || empty($vehicle['tipe']) || empty($vehicle['model']) || empty($vehicle['keterangan'])) {
+                if (empty($vehicle['merk']) || empty($vehicle['tipe']) || empty($vehicle['keterangan'])) {
                     throw new Exception("Data kendaraan tidak lengkap. Pastikan 'merk', 'tipe', 'model', dan 'keterangan' terisi.");
                 }
 
-                $uniqueKey = $vehicle['merk'] . '-' . $vehicle['tipe'] . '-' . $vehicle['model'] . '-' . $vehicle['keterangan'];
+                $uniqueKey = $vehicle['merk'] . '-' . $vehicle['tipe'] . '-' . $vehicle['keterangan'];
 
                 $formattedPrice = number_format(floatval(str_replace(',', '', $vehicle['harga'] ?? '0')), 0, '.', '');
 
@@ -287,7 +287,7 @@ class TaksasiController extends Controller
                         'vehicle_type' => $vehicle['jenis'] ?? '',
                         'brand' => $vehicle['merk'] ?? '',
                         'code' => $vehicle['tipe'] ?? '',
-                        'model' => $vehicle['model'] ?? '',
+                        'model' => $vehicle['tipe'] ?? '',
                         'descr' => $vehicle['keterangan'] ?? '',
                         'tahun' => [
                             [
