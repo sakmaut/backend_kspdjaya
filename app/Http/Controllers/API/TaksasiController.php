@@ -319,6 +319,7 @@ class TaksasiController extends Controller
                     // First occurrence of this vehicle combination
                     $insertData[] = [
                         'id' => $uuid,
+                        'vehicle_type' => $vehicle['jenis'] ?? '',
                         'brand' => $vehicle['brand'] ?? '',
                         'code' => $vehicle['vehicle'] ?? '',
                         'model' => $vehicle['type'] ?? '',
@@ -362,6 +363,7 @@ class TaksasiController extends Controller
                 foreach ($insertData as $data) {
                     M_Taksasi::insert([
                         'id' => $data['id'],
+                        'vehicle_type' => $vehicle['vehicle_type'] ?? '',
                         'brand' => $data['brand'],
                         'code' => $data['code'],
                         'model' => $data['model'],
