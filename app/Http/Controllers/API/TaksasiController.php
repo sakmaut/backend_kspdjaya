@@ -321,9 +321,9 @@ class TaksasiController extends Controller
                         'id' => $uuid,
                         'vehicle_type' => $vehicle['jenis'] ?? '',
                         'brand' => $vehicle['brand'] ?? '',
-                        'code' => $vehicle['vehicle'] ?? '',
-                        'model' => $vehicle['type'] ?? '',
-                        'descr' => $vehicle['model'] ?? '',
+                        'code' => $vehicle['model'] ?? '',
+                        'model' => $vehicle['model'] ?? '',
+                        'descr' => $vehicle['descr'] ?? '',
                         'year' => [
                             [
                                 'year' => $vehicle['year'] ?? '',
@@ -334,10 +334,8 @@ class TaksasiController extends Controller
                         'create_at' => now(),
                     ];
 
-                    // Store the index of this entry
                     $dataExist[$uniqueKey] = count($insertData) - 1;
                 } else {
-                    // Vehicle combination already exists, add new year and price
                     $existingIndex = $dataExist[$uniqueKey];
 
                     // Check if this year entry already exists
@@ -363,7 +361,7 @@ class TaksasiController extends Controller
                 foreach ($insertData as $data) {
                     M_Taksasi::insert([
                         'id' => $data['id'],
-                        'vehicle_type' => $vehicle['vehicle_type'] ?? '',
+                        'vehicle_type' => $data['vehicle_type'] ?? '',
                         'brand' => $data['brand'],
                         'code' => $data['code'],
                         'model' => $data['model'],
@@ -384,7 +382,7 @@ class TaksasiController extends Controller
             }
 
             DB::commit();
-            return response()->json(['message' => 'updated successfully'], 200);
+            return response()->json(['message' => 'anjay sukses'], 200);
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
         }
