@@ -10,8 +10,6 @@ use App\Models\M_TaksasiBak;
 use App\Models\M_TaksasiPrice;
 use Carbon\Carbon;
 use Exception;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Ramsey\Uuid\Uuid;
@@ -269,54 +267,17 @@ class TaksasiController extends Controller
                 return response()->json(['error' => 'No taksasi data provided'], 400);
             }
 
-            $result = DB::table('taksasi as a')
-                ->leftJoin('taksasi_price as b', 'b.taksasi_id', '=', 'a.id')
-                ->select('a.brand', 'a.code', 'a.model', 'a.descr', 'b.year', 'b.price')
-                ->orderBy('a.brand')
-                ->orderBy('a.code')
-                ->orderBy('b.year', 'asc')
-                ->get();
-
-            if ($result->isNotEmpty()) {
-
-                $max = DB::table('taksasi_bak')
-                    ->select(DB::raw('max(coalesce(count, 0)) as htung'))
-                    ->first();
-
-                $result->map(function ($list) use ($request, $max) {
-                    $log = [
-                        'count' => intval($max->htung ?? 0) + 1,
-                        'brand' => $list->brand,
-                        'code' => $list->code,
-                        'model' => $list->model,
-                        'descr' => $list->descr,
-                        'year' => $list->year,
-                        'price' => $list->price,
-                        'created_by' => $request->user()->id,
-                        'created_at' => $this->timeNow
-                    ];
-
-                    M_TaksasiBak::create($log);
-                });
-
-                M_Taksasi::query()->delete();
-                M_TaksasiPrice::query()->delete();
-            }
-
             $insertData = [];
             $dataExist = [];
 
             foreach ($getDataVehicle as $vehicle) {
                 $uuid = Uuid::uuid7()->toString();
 
-                // Create a unique key using all relevant fields
                 $uniqueKey = $vehicle['brand'] . '-' . $vehicle['model'] . '-' . $vehicle['descr'];
 
-                // Format the price consistently
                 $formattedPrice = number_format(floatval(str_replace(',', '', $vehicle['price'] ?? '0')), 0, '.', '');
 
                 if (!isset($dataExist[$uniqueKey])) {
-                    // First occurrence of this vehicle combination
                     $insertData[] = [
                         'id' => $uuid,
                         'vehicle_type' => $vehicle['jenis'] ?? '',
@@ -338,7 +299,6 @@ class TaksasiController extends Controller
                 } else {
                     $existingIndex = $dataExist[$uniqueKey];
 
-                    // Check if this year entry already exists
                     $yearExists = false;
                     foreach ($insertData[$existingIndex]['year'] as $yearEntry) {
                         if ($yearEntry['year'] === $vehicle['year']) {
@@ -347,7 +307,6 @@ class TaksasiController extends Controller
                         }
                     }
 
-                    // Only add if this year doesn't exist yet
                     if (!$yearExists) {
                         $insertData[$existingIndex]['year'][] = [
                             'year' => $vehicle['year'] ?? '',
@@ -358,6 +317,10 @@ class TaksasiController extends Controller
             }
 
             if (count($insertData) > 0) {
+
+                M_Taksasi::query()->delete();
+                M_TaksasiPrice::query()->delete();
+
                 foreach ($insertData as $data) {
                     M_Taksasi::insert([
                         'id' => $data['id'],
@@ -382,7 +345,7 @@ class TaksasiController extends Controller
             }
 
             DB::commit();
-            return response()->json(['message' => 'anjay sukses'], 200);
+            return response()->json(['message' => 'CIE TAKSASINYA SUKSES DIUPDATE'], 200);
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
         }
@@ -464,7 +427,7 @@ class TaksasiController extends Controller
 
             $result = DB::table('taksasi as a')
                 ->leftJoin('taksasi_price as b', 'b.taksasi_id', '=', 'a.id')
-                ->select('a.vehicle_type as jenis', 'a.brand', 'a.code', 'a.model', 'a.descr', 'b.year', DB::raw('CAST(b.price AS UNSIGNED) AS price'))
+                ->select('a.vehicle_type as jenis', 'a.brand as merk', 'a.code as tipe', 'a.model', 'a.descr as keterangan', 'b.year as tahun', DB::raw('CAST(b.price AS UNSIGNED) AS harga'))
                 ->orderBy('a.brand')
                 ->orderBy('a.code')
                 ->orderBy('b.year', 'asc')
