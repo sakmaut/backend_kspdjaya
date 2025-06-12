@@ -29,7 +29,7 @@ class TaksasiController extends Controller
     public function index(Request $request)
     {
         try {
-            $data = M_Taksasi::all();
+            $data = M_Taksasi::whereNull('deleted_by')->get();
             $dto = R_Taksasi::collection($data);
 
             return response()->json($dto, 200);
