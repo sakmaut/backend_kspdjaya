@@ -321,7 +321,7 @@ class TaksasiController extends Controller
                         'id' => $uuid,
                         'vehicle_type' => $vehicle['jenis'] ?? '',
                         'brand' => $vehicle['brand'] ?? '',
-                        'code' => $vehicle['model'] ?? '',
+                        'code' => $vehicle['code'] ?? '',
                         'model' => $vehicle['model'] ?? '',
                         'descr' => $vehicle['descr'] ?? '',
                         'year' => [
