@@ -216,7 +216,7 @@ class TaksasiController extends Controller
                 foreach ($request->price as $res) {
                     $taksasi_price = [
                         'taksasi_id' => $id,
-                        'year' => $res['name'],
+                        'year' => $res['tahun'],
                         'price' => $res['harga']
                     ];
 
