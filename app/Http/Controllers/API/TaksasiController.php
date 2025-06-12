@@ -153,8 +153,8 @@ class TaksasiController extends Controller
         DB::beginTransaction();
         try {
 
-            if (empty($request->jenis)) {
-                throw new Exception("Jenis Kendaraan nggak boleh kosong, Cung!", 404);
+            if (empty($request->merk) || empty($request->tipe) || empty($request->keterangan) || empty($request->jenis)) {
+                throw new Exception("Data kendaraan tidak lengkap. Pastikan Merk, Tipe, Jenis,Model, dan Keterangan terisi.");
             }
 
             $data_taksasi = [
