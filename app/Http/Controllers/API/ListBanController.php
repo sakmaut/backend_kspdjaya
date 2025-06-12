@@ -132,7 +132,7 @@ class ListBanController extends Controller
             $checkQueue = DB::table('job_on_progress')->where('JOB_NAME', $jobName)->first();
 
             $lastCallTime = Carbon::parse($checkQueue->LAST_CALL);
-            if ($checkQueue->JOB_STATUS == 1 || $lastCallTime->diffInMinutes(now()) > 5) {
+            if ($checkQueue->JOB_STATUS == 1 || $lastCallTime->diffInMinutes(now()) < 5) {
                 throw new Exception("RUNNING JOB", 408);
             }
 
