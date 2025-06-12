@@ -359,7 +359,6 @@ class TaksasiController extends Controller
     {
         DB::beginTransaction();
         try {
-
             $getDataVehicle = collect($request->json()->all());
 
             if ($getDataVehicle->isEmpty()) {
@@ -370,50 +369,84 @@ class TaksasiController extends Controller
             $vehicleMap = [];
 
             foreach ($getDataVehicle as $vehicle) {
-                $key = $vehicle['brand'] . '-' . $vehicle['model'] . '-' . $vehicle['descr'] . '-' . $vehicle['year'];
-                $setUniqueKey[] = $key;
-                $vehicleMap[$key] = $vehicle;
+                $key = $vehicle['brand'] . '-' . $vehicle['model'] . '-' . $vehicle['descr'];
+                $formattedPrice = number_format(floatval(str_replace(',', '', $vehicle['price'] ?? '0')), 0, '.', '');
+
+                if (!isset($vehicleMap[$key])) {
+
+                    $setUniqueKey[] = $key;
+
+                    $vehicleMap[$key] = [
+                        'jenis' => $vehicle['jenis'],
+                        'brand' => $vehicle['brand'],
+                        'model' => $vehicle['model'],
+                        'descr' => $vehicle['descr'],
+                        'price' => $formattedPrice,
+                        'years' => []
+                    ];
+                }
+
+                $alreadyExists = false;
+                foreach ($vehicleMap[$key]['years'] as $yearData) {
+                    if ($yearData['year'] === $vehicle['year']) {
+                        $alreadyExists = true;
+                        break;
+                    }
+                }
+
+                if (!$alreadyExists) {
+                    $vehicleMap[$key]['years'][] = [
+                        'year' => $vehicle['year'],
+                        'price' => $formattedPrice
+                    ];
+                }
             }
 
             $checkTaksasiData = DB::table('taksasi as a')
                 ->leftJoin('taksasi_price as b', 'b.taksasi_id', '=', 'a.id')
-                ->select('a.id', 'a.brand', 'a.model', 'a.descr', 'b.id as price_id', 'b.year', 'b.price', DB::raw("CONCAT(a.brand,'-',a.model,'-',a.descr,'-',b.year) as keyss"))
-                ->whereRaw("CONCAT(a.brand,'-',a.model,'-',a.descr,'-',b.year) IN (" . implode(',', array_fill(0, count($setUniqueKey), '?')) . ")", $setUniqueKey)
+                ->select('a.id', 'a.vehicle_type', 'a.brand', 'a.model', 'a.descr', 'b.id as price_id', 'b.year', 'b.price', DB::raw("CONCAT(a.brand,'-',a.model,'-',a.descr) as keyss"))
+                ->whereRaw("CONCAT(a.brand,'-',a.model,'-',a.descr) IN (" . implode(',', array_fill(0, count($setUniqueKey), '?')) . ")", $setUniqueKey)
                 ->get();
 
-            $dbKeys = [];
             $dbDataMap = [];
             foreach ($checkTaksasiData as $data) {
-                $dbKeys[] = $data->keyss;
-                $dbDataMap[$data->keyss] = $data;
+                $compoundKey = $data->keyss . '-' . $data->year;
+                $dbDataMap[$compoundKey] = $data;
             }
 
             foreach ($vehicleMap as $key => $vehicle) {
-                if (in_array($key, $dbKeys)) {
-                    $existing = $dbDataMap[$key];
+                foreach ($vehicle['years'] as $yearData) {
+                    $compoundKey = $key . '-' . $yearData['year'];
 
-                    M_TaksasiPrice::where('id', $existing->price_id)->update(['price' => floatval($vehicle['price'])]);
-                } else {
+                    if (isset($dbDataMap[$compoundKey])) {
+                        M_TaksasiPrice::where('id', $dbDataMap[$compoundKey]->price_id)->update(['price' => floatval($yearData['price'])]);
+                    } else {
 
-                    $setUuid = Uuid::uuid7()->toString();
+                        $taksasiId = null;
+                        if (isset($dbDataMap[$key . '-' . $vehicle['years'][0]['year']])) {
+                            $taksasiId = $dbDataMap[$key . '-' . $vehicle['years'][0]['year']]->id;
+                        } else {
+                            // Insert Taksasi
+                            $taksasiId = Uuid::uuid7()->toString();
+                            M_Taksasi::insert([
+                                'id' => $taksasiId,
+                                'vehicle_type' => strtoupper($vehicle['jenis']) ?? '',
+                                'brand' => $vehicle['brand'] ?? '',
+                                'code' => $vehicle['model'] ?? '',
+                                'model' => $vehicle['model'] ?? '',
+                                'descr' => $vehicle['descr'] ?? '',
+                                'create_by' =>  $request->user()->id,
+                                'create_at' =>  now(),
+                            ]);
+                        }
 
-                    M_Taksasi::insert([
-                        'id' => $setUuid,
-                        'vehicle_type' => strtoupper($vehicle['jenis']) ?? '',
-                        'brand' => $vehicle['brand'] ?? '',
-                        'code' => $vehicle['model'] ?? '',
-                        'model' => $vehicle['model'] ?? '',
-                        'descr' => $vehicle['descr'] ?? '',
-                        'create_by' =>  $request->user()->id,
-                        'create_at' =>  now(),
-                    ]);
-
-                    M_TaksasiPrice::insert([
-                        'id' => Uuid::uuid7()->toString(),
-                        'taksasi_id' => $setUuid,
-                        'year' => $vehicle['year'] ?? '',
-                        'price' => $vehicle['price'] ?? 0
-                    ]);
+                        M_TaksasiPrice::insert([
+                            'id' => Uuid::uuid7()->toString(),
+                            'taksasi_id' => $taksasiId,
+                            'year' => $yearData['year'],
+                            'price' => floatval($yearData['price']),
+                        ]);
+                    }
                 }
             }
 
