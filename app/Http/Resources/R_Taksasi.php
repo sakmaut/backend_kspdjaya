@@ -18,7 +18,7 @@ class R_Taksasi extends JsonResource
     {
 
         $taksasi_price = M_TaksasiPrice::where('taksasi_id', $this->id)
-            ->select('year as name', 'price as harga')
+            ->select('year as tahun', 'price as harga')
             ->get()
             ->map(function ($item) {
                 $item->name = (int) $item->name;
@@ -36,14 +36,14 @@ class R_Taksasi extends JsonResource
 
         return [
             'id' => $this->id,
-            "jenis_kendaraan" => $this->vehicle_type,
-            "brand" => $this->brand,
-            "code" => $this->code,
+            "jenis" => $this->vehicle_type,
+            "merk" => $this->brand,
+            "tipe" => $this->code,
             "model" => $this->model,
-            "descr" => $this->descr,
+            "keterangan" => $this->descr,
             "dari" => intval($min_year),
             "sampai" => intval($max_year),
-            'price' => $taksasi_price
+            'harga' => $taksasi_price
         ];
     }
 }

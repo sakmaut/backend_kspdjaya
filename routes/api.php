@@ -93,6 +93,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::post('taksasi_year', [TaksasiController::class, 'year']);
     Route::post('taksasi_price', [TaksasiController::class, 'price']);
     Route::post('taksasi_dump', [TaksasiController::class, 'updateAll']);
+    Route::post('taksasi_update', [TaksasiController::class, 'updateAllChangeData']);
     Route::get('taksasi_download', [TaksasiController::class, 'download']);
 
     Route::resource('customer', CustomerController::class);
