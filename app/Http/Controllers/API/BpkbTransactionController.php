@@ -334,8 +334,13 @@ class BpkbTransactionController extends Controller
                                     'LOCATION_BRANCH' => $request->user()->branch_id ?? '',
                                     'STATUS' => 'NORMAL'
                                 ]);
-                        } else {
-                            M_CrCollateral::whereIn('ID', $collateralIds)
+                        }
+
+                        $getbpkbDetailsRejected = M_BpkbDetail::where('BPKB_TRANSACTION_ID', $transactionId)->where('STATUS', 'REJECTED');
+                        $collateralIdsRejected = $getbpkbDetailsRejected->pluck('COLLATERAL_ID')->toArray();
+
+                        if (!empty($collateralIdsRejected)) {
+                            M_CrCollateral::whereIn('ID', $collateralIdsRejected)
                                 ->update([
                                     'STATUS' => 'NORMAL'
                                 ]);
