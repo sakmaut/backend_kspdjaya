@@ -304,10 +304,10 @@ class BpkbTransactionController extends Controller
                     M_BpkbDetail::insert($details);
                 } else {
 
-                    if (!empty($request->jaminan) && is_array($request->jaminan)) {
+                    $jaminan = $request->jaminan;
+                    if (!empty($jaminan) && is_array($jaminan)) {
 
                         $transactionId = $check->ID;
-                        $jaminan = $request->jaminan;
 
                         M_BpkbDetail::where('BPKB_TRANSACTION_ID', $transactionId)->whereIn('COLLATERAL_ID', $jaminan)
                             ->update([
@@ -316,7 +316,9 @@ class BpkbTransactionController extends Controller
                                 'UPDATED_AT' => Carbon::now()
                             ]);
 
-                        M_BpkbDetail::where('BPKB_TRANSACTION_ID', $transactionId)->whereNotIn('COLLATERAL_ID', $jaminan)
+                        M_BpkbDetail::where('BPKB_TRANSACTION_ID', $transactionId)
+                            ->whereNotIn('COLLATERAL_ID', $jaminan)
+                            ->where('STATUS', '!=', 'NORMAL')
                             ->update([
                                 'STATUS' => 'REJECTED',
                                 'UPDATED_BY' => $request->user()->id,
@@ -335,7 +337,7 @@ class BpkbTransactionController extends Controller
                                 ]);
                         }
 
-                        foreach ($request->jaminan as $list) {
+                        foreach ($jaminan as $list) {
                             $this->locationStatus->createLocationStatusLog($list, $request->user()->branch_id, 'SEND TO HO');
                         }
                     }
