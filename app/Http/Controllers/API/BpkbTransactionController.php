@@ -302,12 +302,17 @@ class BpkbTransactionController extends Controller
                     if (!empty($request->jaminan) && is_array($request->jaminan)) {
 
                         $transactionId = $check->ID;
+                        $jaminan = $request->jaminan;
 
-                        M_BpkbDetail::where('BPKB_TRANSACTION_ID', $transactionId)->update(['STATUS' => 'NORMAL']);
+                        M_BpkbDetail::where('BPKB_TRANSACTION_ID', $transactionId)
+                            ->whereIn('COLLATERAL_ID', $jaminan)
+                            ->update(['STATUS' => 'NORMAL']);
 
-                        $bpkbDetails = M_BpkbDetail::whereIn('ID', $request->jaminan)
-                            ->select('ID', 'COLLATERAL_ID')
-                            ->get();
+                        M_BpkbDetail::where('BPKB_TRANSACTION_ID', $transactionId)
+                            ->whereNotIn('COLLATERAL_ID', $jaminan)
+                            ->update(['STATUS' => 'REJECTED']);
+
+                        $bpkbDetails = M_BpkbDetail::whereIn('COLLATERAL_ID', $jaminan)->where('STATUS', 'NORMAL')->select('ID', 'COLLATERAL_ID')->get();
 
                         $collateralIds = $bpkbDetails->pluck('COLLATERAL_ID')->toArray();
 
@@ -350,7 +355,7 @@ class BpkbTransactionController extends Controller
                 ]);
             }
 
-            return response()->json(['message' => 'Approval Successfully'], 200);
+            return response()->json(['message' => 'Successfully'], 200);
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
         }
