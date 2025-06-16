@@ -136,7 +136,9 @@ class ListBanController extends Controller
 
             $diffInMinutes = $lastCallTime->diffInMinutes($now);
 
-            if ($checkQueue->JOB_STATUS == 1 && $diffInMinutes < 5) {
+            // if ($checkQueue->JOB_STATUS == 1 && $diffInMinutes < 5) {
+
+            if ($checkQueue->JOB_STATUS == 1) {
                 throw new Exception("RUNNING JOB", 408);
             }
 
