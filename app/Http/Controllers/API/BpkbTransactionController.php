@@ -164,6 +164,11 @@ class BpkbTransactionController extends Controller
                 $collateralIds = [];
 
                 foreach ($request->bpkb as $res) {
+
+                    if (empty($res['ID'])) {
+                        throw new Exception("ID Not Found", 404);
+                    }
+
                     $details[] = [
                         'ID' => Uuid::uuid7()->toString(),
                         'BPKB_TRANSACTION_ID' => $transaction->ID,
@@ -304,13 +309,19 @@ class BpkbTransactionController extends Controller
                         $transactionId = $check->ID;
                         $jaminan = $request->jaminan;
 
-                        M_BpkbDetail::where('BPKB_TRANSACTION_ID', $transactionId)
-                            ->whereIn('COLLATERAL_ID', $jaminan)
-                            ->update(['STATUS' => 'NORMAL']);
+                        M_BpkbDetail::where('BPKB_TRANSACTION_ID', $transactionId)->whereIn('COLLATERAL_ID', $jaminan)
+                            ->update([
+                                'STATUS' => 'NORMAL',
+                                'UPDATED_BY' => $request->user()->id,
+                                'UPDATED_AT' => Carbon::now()
+                            ]);
 
-                        M_BpkbDetail::where('BPKB_TRANSACTION_ID', $transactionId)
-                            ->whereNotIn('COLLATERAL_ID', $jaminan)
-                            ->update(['STATUS' => 'REJECTED']);
+                        M_BpkbDetail::where('BPKB_TRANSACTION_ID', $transactionId)->whereNotIn('COLLATERAL_ID', $jaminan)
+                            ->update([
+                                'STATUS' => 'REJECTED',
+                                'UPDATED_BY' => $request->user()->id,
+                                'UPDATED_AT' => Carbon::now()
+                            ]);
 
                         $bpkbDetails = M_BpkbDetail::whereIn('COLLATERAL_ID', $jaminan)->where('STATUS', 'NORMAL')->select('ID', 'COLLATERAL_ID')->get();
 
