@@ -309,7 +309,7 @@ class BpkbTransactionController extends Controller
 
                         $transactionId = $check->ID;
 
-                        M_BpkbDetail::where('BPKB_TRANSACTION_ID', $transactionId)->whereIn('COLLATERAL_ID', $jaminan)
+                        M_BpkbDetail::where('BPKB_TRANSACTION_ID', $transactionId)->whereIn('ID', $jaminan)
                             ->update([
                                 'STATUS' => 'NORMAL',
                                 'UPDATED_BY' => $request->user()->id,
@@ -317,8 +317,7 @@ class BpkbTransactionController extends Controller
                             ]);
 
                         M_BpkbDetail::where('BPKB_TRANSACTION_ID', $transactionId)
-                            ->whereNotIn('COLLATERAL_ID', $jaminan)
-                            ->where('STATUS', '!=', 'NORMAL')
+                            ->whereNotIn('ID', $jaminan)
                             ->update([
                                 'STATUS' => 'REJECTED',
                                 'UPDATED_BY' => $request->user()->id,
