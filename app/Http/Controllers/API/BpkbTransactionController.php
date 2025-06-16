@@ -324,7 +324,7 @@ class BpkbTransactionController extends Controller
                                 'UPDATED_AT' => Carbon::now()
                             ]);
 
-                        $bpkbDetails = M_BpkbDetail::whereIn('COLLATERAL_ID', $jaminan)->where('STATUS', 'NORMAL')->select('ID', 'COLLATERAL_ID')->get();
+                        $bpkbDetails = M_BpkbDetail::whereIn('ID', $jaminan)->where('STATUS', 'NORMAL')->select('ID', 'COLLATERAL_ID')->get();
 
                         $collateralIds = $bpkbDetails->pluck('COLLATERAL_ID')->toArray();
 
@@ -332,6 +332,11 @@ class BpkbTransactionController extends Controller
                             M_CrCollateral::whereIn('ID', $collateralIds)
                                 ->update([
                                     'LOCATION_BRANCH' => $request->user()->branch_id ?? '',
+                                    'STATUS' => 'NORMAL'
+                                ]);
+                        } else {
+                            M_CrCollateral::whereIn('ID', $collateralIds)
+                                ->update([
                                     'STATUS' => 'NORMAL'
                                 ]);
                         }
