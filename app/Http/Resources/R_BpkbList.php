@@ -20,7 +20,8 @@ class R_BpkbList extends JsonResource
     public function toArray(Request $request): array
     {
 
-        $branch = M_Branch::where('ID', $this->FROM_BRANCH)->first();
+        $fromBranch = M_Branch::where('ID', $this->FROM_BRANCH)->first();
+
         $results = DB::table('bpkb_detail as a')
             ->leftJoin('cr_collateral as b', 'b.ID', '=', 'a.COLLATERAL_ID')
             ->leftJoin('credit as c', 'c.ID', '=', 'b.CR_CREDIT_ID')
@@ -35,9 +36,7 @@ class R_BpkbList extends JsonResource
                 'b.STNK_NUMBER',
                 'a.STATUS',
                 'c.LOAN_NUMBER'
-            )
-            ->get();
-
+            )->get();
 
         $user = User::where('id', $this->CREATED_BY)->first();
         $toBranch = M_Branch::find($this->TO_BRANCH);
@@ -45,7 +44,7 @@ class R_BpkbList extends JsonResource
         return [
             "id" => $this->ID,
             "trx_code" => $this->TRX_CODE ?? null,
-            "dari_cabang" => $branch->NAME ?? null,
+            "dari_cabang" => $fromBranch->NAME ?? null,
             "ke_cabang" =>  $toBranch->NAME ?? null,
             "keterangan" => $this->NOTE,
             "type" => strtoupper($this->CATEGORY),

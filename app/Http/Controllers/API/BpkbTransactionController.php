@@ -47,19 +47,18 @@ class BpkbTransactionController extends Controller
                 ->where('b.branch_id', '=', $branchId)
                 ->select('bpkb_transaction.*', 'b.branch_id');
 
-            // Apply filters based on request parameters
             if ($no_transaksi) {
                 $data->where('bpkb_transaction.TRX_CODE', '=', $no_transaksi);
             }
 
-            if ($status) {
+            if ($status && strtoupper($status) != "SEMUA") {
                 $data->where('bpkb_transaction.STATUS', '=', strtoupper($status));
-            } else {
-                $data->where('bpkb_transaction.STATUS', '!=', 'SELESAI');
             }
 
             if ($tgl) {
                 $data->whereDate('bpkb_transaction.CREATED_AT', Carbon::parse($tgl)->toDateString());
+            } else {
+                $data->whereDate('bpkb_transaction.CREATED_AT', Carbon::parse(now())->toDateString());
             }
 
             $jsonData = R_BpkbList::collection($data->get());
