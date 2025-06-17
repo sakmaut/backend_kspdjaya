@@ -306,16 +306,6 @@ class BpkbTransactionController extends Controller
 
                         $getDetail = M_BpkbDetail::where('BPKB_TRANSACTION_ID', $transactionId)->where('STATUS', 'NORMAL')->get();
 
-                        $collateralIds = $getDetail->pluck('COLLATERAL_ID')->toArray();
-
-                        if (!empty($collateralIds)) {
-                            M_CrCollateral::whereIn('ID', $collateralIds)
-                                ->update([
-                                    'LOCATION_BRANCH' => $check->FROM_BRANCH ?? '',
-                                    'STATUS' => 'NORMAL'
-                                ]);
-                        }
-
                         $getbpkbDetailsRejected = M_BpkbDetail::where('BPKB_TRANSACTION_ID', $transactionId)->where('STATUS', 'REJECTED');
                         $collateralIdsRejected = $getbpkbDetailsRejected->pluck('COLLATERAL_ID')->toArray();
 
@@ -335,7 +325,7 @@ class BpkbTransactionController extends Controller
                             ];
                             $collateralIds[] = $res['ID'];
 
-                            $checkCollateralId = M_CrCollateral::where('ID', $res['ID'])->first();
+                            $checkCollateralId = M_CrCollateral::where('ID', $res['COLLATERAL_ID'])->first();
 
                             if ($checkCollateralId) {
                                 $checkCollateralId->update(['STATUS' => 'SENDING']);
