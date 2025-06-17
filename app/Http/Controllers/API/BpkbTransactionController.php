@@ -306,6 +306,16 @@ class BpkbTransactionController extends Controller
 
                         $getDetail = M_BpkbDetail::where('BPKB_TRANSACTION_ID', $check->ID)->where('STATUS', 'NORMAL')->get();
 
+                        $collateralIds = $getDetail->pluck('COLLATERAL_ID')->toArray();
+
+                        if (!empty($collateralIds)) {
+                            M_CrCollateral::whereIn('ID', $collateralIds)
+                                ->update([
+                                    'LOCATION_BRANCH' => $check->FROM_BRANCH ?? '',
+                                    'STATUS' => 'NORMAL'
+                                ]);
+                        }
+
                         foreach ($getDetail as $res) {
                             $details[] = [
                                 'ID' => Uuid::uuid7()->toString(),
