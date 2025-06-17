@@ -8,6 +8,7 @@ use App\Models\M_CrCollateral;
 use App\Models\M_CrCollateralRequest;
 use App\Models\M_Credit;
 use App\Models\M_Payment;
+use App\Models\M_PaymentDetail;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
@@ -224,8 +225,11 @@ class CollateralRepository implements CollateralInterface
                         ->first();
 
                     if (!$existing) {
+
+                        $uuidGenerate = Uuid::uuid7()->toString();
+
                         M_Payment::create([
-                            'ID' => Uuid::uuid7()->toString(),
+                            'ID' => $uuidGenerate,
                             'ACC_KEY' => 'JUAL UNIT',
                             'STTS_RCRD' => 'PAID',
                             'PAYMENT_METHOD' => 'cash',
@@ -236,6 +240,14 @@ class CollateralRepository implements CollateralInterface
                             'ORIGINAL_AMOUNT' => $request->harga ?? 0,
                             'USER_ID' => $userId,
                         ]);
+
+                        $detailPayment =  [
+                            'PAYMENT_ID' => $uuidGenerate,
+                            'ACC_KEYS' => 'JUAL UNIT',
+                            'ORIGINAL_AMOUNT' =>  $request->harga ?? 0
+                        ];
+
+                        M_PaymentDetail::create($detailPayment);
                     }
 
                     $this->locationStatus->createLocationStatusLog($colId, $request->user()->branch_id, 'JUAL UNIT');
