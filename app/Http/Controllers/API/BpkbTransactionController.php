@@ -52,7 +52,13 @@ class BpkbTransactionController extends Controller
             }
 
             if ($status && strtoupper($status) != "SEMUA") {
-                $data->where('bpkb_transaction.STATUS', '=', strtoupper($status));
+
+                if (strtoupper($status) == 'PENDING') {
+                    $statuses = ['SENDING', 'REQUEST'];
+                    $data->whereIn('bpkb_transaction.STATUS', $statuses);
+                } else {
+                    $data->where('bpkb_transaction.STATUS', '=', strtoupper($status));
+                }
             }
 
             if ($tgl) {
@@ -87,14 +93,20 @@ class BpkbTransactionController extends Controller
                 $data->where('TRX_CODE', '=', $no_transaksi);
             }
 
-            if ($status) {
-                $data->where('STATUS', '=', strtoupper($status));
-            } else {
-                $data->where('STATUS', '!=', 'SELESAI');
+            if ($status && strtoupper($status) != "SEMUA") {
+
+                if (strtoupper($status) == 'PENDING') {
+                    $statuses = ['SENDING', 'REQUEST'];
+                    $data->whereIn('STATUS', $statuses);
+                } else {
+                    $data->where('STATUS', '=', strtoupper($status));
+                }
             }
 
             if ($tgl) {
                 $data->whereDate('CREATED_AT', Carbon::parse($tgl)->toDateString());
+            } else {
+                $data->whereDate('CREATED_AT', Carbon::parse(now())->toDateString());
             }
 
             $dto = R_BpkbList::collection($data->get());

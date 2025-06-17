@@ -47,13 +47,13 @@ class R_BpkbList extends JsonResource
             "dari_cabang" => $fromBranch->NAME ?? null,
             "ke_cabang" =>  $toBranch->NAME ?? null,
             "keterangan" => $this->NOTE,
-            "type" => strtoupper($this->CATEGORY),
+            "type" => strtoupper($this->CATEGORY == 'REQUEST' ? "PERMINTAAN" : "PENGIRIMAN"),
             "admin" => $user->fullname ?? null,
             "kurir" => $this->COURIER,
             "tgl" => Carbon::parse($this->CREATED_AT)->format('Y-m-d'),
             "jaminan" => $results,
             "jml_jaminan" => $results->count(),
-            "status" => $this->STATUS,
+            "status" =>  strtoupper($this->STATUS == 'SELESAI' ? "SELESAI" : "PENDING"),
         ];
     }
 }
