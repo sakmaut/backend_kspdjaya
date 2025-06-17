@@ -255,53 +255,75 @@ class BpkbTransactionController extends Controller
 
                 if ($check->CATEGORY == 'request') {
 
-                    $data = [
-                        'TRX_CODE' => generateCodeJaminan($request, 'bpkb_transaction', 'TRX_CODE', 'JMN'),
-                        'FROM_BRANCH' => $check->TO_BRANCH ?? '',
-                        'TO_BRANCH' => $check->FROM_BRANCH,
-                        'CATEGORY' => "send",
-                        'NOTE' => $request->catatan ?? '',
-                        'STATUS' => 'SENDING',
-                        'COURIER' => $request->kurir ?? "'",
-                        'CREATED_BY' => $user->id
-                    ];
+                    $jaminan = $request->jaminan;
+                    if (!empty($jaminan) && is_array($jaminan)) {
 
-                    $transaction = M_BpkbTransaction::create($data);
-                    $id = $transaction->ID;
+                        $transactionId = $check->ID;
 
-                    $data_approval = [
-                        'BPKB_TRANSACTION_ID' => $id,
-                        'ONCHARGE_APPRVL' => 'sending',
-                        'ONCHARGE_PERSON' => $user->id,
-                        'ONCHARGE_TIME' => Carbon::now(),
-                        'ONCHARGE_DESCR' => $request->catatan,
-                        'APPROVAL_RESULT' => 'SENDING'
-                    ];
+                        M_BpkbDetail::where('BPKB_TRANSACTION_ID', $transactionId)->whereIn('ID', $jaminan)
+                            ->update([
+                                'STATUS' => 'NORMAL',
+                                'UPDATED_BY' => $request->user()->id,
+                                'UPDATED_AT' => Carbon::now()
+                            ]);
 
-                    M_BpkbApproval::create($data_approval);
+                        M_BpkbDetail::where('BPKB_TRANSACTION_ID', $transactionId)
+                            ->whereNotIn('ID', $jaminan)
+                            ->update([
+                                'STATUS' => 'REJECTED',
+                                'UPDATED_BY' => $request->user()->id,
+                                'UPDATED_AT' => Carbon::now()
+                            ]);
 
-                    $details = [];
-                    $collateralIds = [];
-
-                    $getDetail = M_BpkbDetail::where('BPKB_TRANSACTION_ID', $check->ID)->get();
-
-                    foreach ($getDetail as $res) {
-                        $details[] = [
-                            'ID' => Uuid::uuid7()->toString(),
-                            'BPKB_TRANSACTION_ID' => $transaction->ID,
-                            'COLLATERAL_ID' => $res['COLLATERAL_ID'],
-                            'STATUS' => 'SENDING'
+                        $data = [
+                            'TRX_CODE' => generateCodeJaminan($request, 'bpkb_transaction', 'TRX_CODE', 'JMN'),
+                            'FROM_BRANCH' => $check->TO_BRANCH ?? '',
+                            'TO_BRANCH' => $check->FROM_BRANCH,
+                            'CATEGORY' => "send",
+                            'NOTE' => $request->catatan ?? '',
+                            'STATUS' => 'SENDING',
+                            'COURIER' => $request->kurir ?? "'",
+                            'CREATED_BY' => $user->id
                         ];
-                        $collateralIds[] = $res['ID'];
 
-                        $checkCollateralId = M_CrCollateral::where('ID', $res['ID'])->first();
+                        $transaction = M_BpkbTransaction::create($data);
 
-                        if ($checkCollateralId) {
-                            $checkCollateralId->update(['STATUS' => 'SENDING']);
+                        $id = $transaction->ID;
+
+                        $data_approval = [
+                            'BPKB_TRANSACTION_ID' => $id,
+                            'ONCHARGE_APPRVL' => 'sending',
+                            'ONCHARGE_PERSON' => $user->id,
+                            'ONCHARGE_TIME' => Carbon::now(),
+                            'ONCHARGE_DESCR' => $request->catatan,
+                            'APPROVAL_RESULT' => 'SENDING'
+                        ];
+
+                        M_BpkbApproval::create($data_approval);
+
+                        $details = [];
+                        $collateralIds = [];
+
+                        $getDetail = M_BpkbDetail::where('BPKB_TRANSACTION_ID', $check->ID)->where('STATUS', 'NORMAL')->get();
+
+                        foreach ($getDetail as $res) {
+                            $details[] = [
+                                'ID' => Uuid::uuid7()->toString(),
+                                'BPKB_TRANSACTION_ID' => $transaction->ID,
+                                'COLLATERAL_ID' => $res['COLLATERAL_ID'],
+                                'STATUS' => 'SENDING'
+                            ];
+                            $collateralIds[] = $res['ID'];
+
+                            $checkCollateralId = M_CrCollateral::where('ID', $res['ID'])->first();
+
+                            if ($checkCollateralId) {
+                                $checkCollateralId->update(['STATUS' => 'SENDING']);
+                            }
                         }
-                    }
 
-                    M_BpkbDetail::insert($details);
+                        M_BpkbDetail::insert($details);
+                    }
                 } else {
 
                     $jaminan = $request->jaminan;
