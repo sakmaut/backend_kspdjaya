@@ -67,7 +67,9 @@ class BpkbTransactionController extends Controller
                 $data->whereDate('bpkb_transaction.CREATED_AT', Carbon::parse(now())->toDateString());
             }
 
-            $jsonData = R_BpkbList::collection($data->get());
+            $result = $data->orderBy('bpkb_transaction.TRX_CODE', 'desc')->get();
+
+            $jsonData = R_BpkbList::collection($result);
 
             return response()->json($jsonData, 200);
         } catch (\Exception $e) {
@@ -109,7 +111,9 @@ class BpkbTransactionController extends Controller
                 $data->whereDate('CREATED_AT', Carbon::parse(now())->toDateString());
             }
 
-            $dto = R_BpkbList::collection($data->get());
+            $result = $data->orderBy('TRX_CODE', 'desc')->get();
+
+            $dto = R_BpkbList::collection($result);
 
             return response()->json($dto, 200);
         } catch (\Exception $e) {
