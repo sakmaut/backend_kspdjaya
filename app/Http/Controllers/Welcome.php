@@ -50,6 +50,15 @@ class Welcome extends Controller
 
     public function index(Request $request)
     {
+
+        $data_collateral = M_CrGuaranteVehicle::where('CR_SURVEY_ID', 'f20ac08b-3f9c-47ed-9d69-7d248a74cad9')->where(function ($query) {
+            $query->whereNull('DELETED_AT')
+                ->orWhere('DELETED_AT', '');
+        })->get();
+
+        return response()->json($data_collateral);
+        die;
+
         $getPenalty = 35200.01;
         $new_penalty = 35200.00;
         $setArrears = bccomp($getPenalty, $new_penalty, 2) === 0 ? 'S' : 'A';
