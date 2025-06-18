@@ -174,6 +174,7 @@ class ListBanController extends Controller
                                 replace(format(coalesce(st.arr_int,0),0),',','') as AMBC_BNG_AWAL,
                                 replace(format((coalesce(st.arr_pcpl,0)+coalesce(st.arr_int,0)),0),',','') as AMBC_TOTAL_AWAL,
                                 concat('C',case when date_format(cl.created_at,'%m%Y')='$dateFrom' then 'N'
+                                                when cl.STATUS_REC = 'RP' and py.ID is null then 'L'
                                                 when replace(format(case when date_format(cl.created_at,'%m%Y')='$dateFrom' then (cl.PCPL_ORI+cl.INTRST_ORI)
 			 			                                            else (st.init_pcpl+st.init_int) end,0),',','')=0 then 'L'
                                                 when case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'MUSIMAN'
@@ -280,6 +281,7 @@ class ListBanController extends Controller
                                 replace(format(coalesce(st.arr_int,0),0),',','') as AMBC_BNG_AWAL,
                                 replace(format((coalesce(st.arr_pcpl,0)+coalesce(st.arr_int,0)),0),',','') as AMBC_TOTAL_AWAL,
                                 concat('C',case when date_format(cl.created_at,'%m%Y')='$dateFrom' then 'N'
+                                                when cl.STATUS_REC = 'RP' and py.ID is null then 'L'
                                                 when replace(format(case when date_format(cl.created_at,'%m%Y')='$dateFrom' then (cl.PCPL_ORI+cl.INTRST_ORI)
 			 			                                            else (st.init_pcpl+st.init_int) end,0),',','')=0 then 'L'
                                                 when case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'MUSIMAN'
