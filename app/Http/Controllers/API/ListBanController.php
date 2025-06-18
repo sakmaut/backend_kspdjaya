@@ -60,7 +60,7 @@ class ListBanController extends Controller
                                 'nama_pelanggan' => $pelanggan,
                                 'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
                                 'keterangan' => $keterangan,
-                                'amount' => round(floatval($amount)),
+                                'amount' => floatval($amount),
                             ];
                         }
                     }
