@@ -27,6 +27,7 @@ use App\Models\M_CrSurveyDocument;
 use App\Models\M_Customer;
 use App\Models\M_CustomerDocument;
 use App\Models\M_CustomerExtra;
+use App\Models\M_InterestDecreasesSetting;
 use App\Models\M_LocationStatus;
 use App\Models\M_SurveyApproval;
 use App\Models\M_SurveyApprovalLog;
@@ -162,7 +163,7 @@ class Credit extends Controller
             $data_credit_schedule = $this->generateAmortizationSchedule($setDategenerate, $data);
 
             $installment_count = count($data_credit_schedule);
-        } else {
+        } elseif (strtolower($type) == 'musiman') {
             $data_credit_schedule = $this->generateAmortizationScheduleMusiman($setDategenerate, $data);
 
             $installment_count = count($data_credit_schedule);
@@ -889,6 +890,48 @@ class Credit extends Controller
             ];
 
             $startDate = $paymentDate;
+        }
+
+        return $schedule;
+    }
+
+    private function generateAmortizationBungaMenurun($setDate, $data)
+    {
+        $schedule = [];
+        $getInterestSetting = M_InterestDecreasesSetting::first();
+        $remainingBalance = $data->POKOK_PEMBAYARAN;
+        $term = intval($data->TENOR);
+        $angsuran = $data->INSTALLMENT;
+        $suku_bunga_konversi = ($data->FLAT_RATE / 100);
+        $ttal_bunga = $data->TOTAL_INTEREST;
+        $totalInterestPaid = 0;
+
+        for ($i = 1; $i <= $term; $i++) {
+            $interest = round($remainingBalance * $suku_bunga_konversi, 2);
+
+            if ($i < $term) {
+                $principalPayment = round($angsuran - $interest, 2);
+            } else {
+                $principalPayment = round($remainingBalance, 2);
+                $interest = round($ttal_bunga - $totalInterestPaid, 2);
+            }
+
+            $totalPayment = round($principalPayment + $interest, 2);
+            $remainingBalance = round($remainingBalance - $principalPayment, 2);
+            $totalInterestPaid += $interest;
+            if ($i == $term) {
+                $remainingBalance = 0.00;
+            }
+
+            $schedule[] = [
+                'angsuran_ke' => $i,
+                'tgl_angsuran' => setPaymentDate($setDate, $i),
+                'baki_debet_awal' => floatval($remainingBalance + $principalPayment),
+                'pokok' => floatval($principalPayment),
+                'bunga' => floatval($interest),
+                'total_angsuran' => floatval($totalPayment),
+                'baki_debet' => floatval($remainingBalance)
+            ];
         }
 
         return $schedule;

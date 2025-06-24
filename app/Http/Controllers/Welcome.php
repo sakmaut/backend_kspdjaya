@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\API\AdminFeeController;
 use App\Http\Controllers\API\LocationStatus;
 use App\Http\Controllers\API\PaymentController;
 use App\Http\Controllers\API\PelunasanController;
@@ -25,6 +26,7 @@ use App\Models\M_CustomerDocument;
 use App\Models\M_CustomerExtra;
 use App\Models\M_DeuteronomyTransactionLog;
 use App\Models\M_FirstArr;
+use App\Models\M_InterestDecreasesSetting;
 use App\Models\M_Kwitansi;
 use App\Models\M_KwitansiDetailPelunasan;
 use App\Models\M_KwitansiStructurDetail;
@@ -36,6 +38,7 @@ use Carbon\Carbon;
 use DateTime;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Ramsey\Uuid\Uuid;
@@ -47,72 +50,94 @@ use function Symfony\Component\Mailer\Event\getMessage;
 
 class Welcome extends Controller
 {
-
     public function index(Request $request)
     {
+        $db = M_InterestDecreasesSetting::first();
 
-        $data_collateral = M_CrGuaranteVehicle::where('CR_SURVEY_ID', 'f20ac08b-3f9c-47ed-9d69-7d248a74cad9')->where(function ($query) {
-            $query->whereNull('DELETED_AT')
-                ->orWhere('DELETED_AT', '');
-        })->get();
+        $plafond = intval($request->plafond ?? 0);
+        $interest = ($db->interest ?? 0) / 100;
+        $tenor = $db->tenor;
+        $admin_fee = $db->admin_fee;
 
-        return response()->json($data_collateral);
-        die;
+        $formula = floatval(($plafond + $admin_fee) * ($tenor / 12) * $interest);
 
-        $getPenalty = 35200.01;
-        $new_penalty = 35200.00;
-        $setArrears = bccomp($getPenalty, $new_penalty, 2) === 0 ? 'S' : 'A';
-        return response()->json($setArrears);
-        die;
-
-        $currentDate = '2025-04-26';
-        // $currentDate = now();
-        $date = Carbon::parse($currentDate);
-
-        $day = $date->day;
-
-        if ($day >= 26 && $day <= 31) {
-            $newDay = $day - 24;
-            $date->addMonthsNoOverflow(1)->day = $newDay;
+        $schedule = [];
+        for ($i = 1; $i <= $tenor; $i++) {
+            $schedule[] = [
+                'angsuran_ke' => $i,
+                'tgl_angsuran' => $this->setDate(),
+                'pokok' => ($i === $tenor) ? $plafond : 0,
+                'bunga' => $formula,
+                'total_angsuran' => (($i === $tenor) ? $plafond : 0) + $formula,
+                'baki_debet' => $plafond - (($i === $tenor) ? $plafond : 0)
+            ];
         }
 
-        $setDate = $date->format('Y-m-d');
-        // $endDate = Carbon::parse($setDate)->addMonths(intval(6))->format('Y-m-d');
+        return response()->json($schedule);
 
-        return response()->json($setDate);
-        die;
 
-        if ($request->bearerToken()) {
-            // Find the token using the provided bearer token
-            $token = PersonalAccessToken::findToken($request->bearerToken());
+        // $data_collateral = M_CrGuaranteVehicle::where('CR_SURVEY_ID', 'f20ac08b-3f9c-47ed-9d69-7d248a74cad9')->where(function ($query) {
+        //     $query->whereNull('DELETED_AT')
+        //         ->orWhere('DELETED_AT', '');
+        // })->get();
 
-            if (!$token) {
-                return response()->json([
-                    'token' => false,
-                    'message' => 'Token not found or invalid'
-                ], 401);
-            }
+        // return response()->json($data_collateral);
+        // die;
 
-            $dateToken =  date('Ymd', strtotime($token->expires_at));
-            $dateNow =  date('Ymd', strtotime(now()));
+        // $getPenalty = 35200.01;
+        // $new_penalty = 35200.00;
+        // $setArrears = bccomp($getPenalty, $new_penalty, 2) === 0 ? 'S' : 'A';
+        // return response()->json($setArrears);
+        // die;
 
-            if ($dateToken != $dateNow || $token->expires_at == null || !$token->expires_at || empty($token->expires_at)) {
-                return response()->json([
-                    'token' => false,
-                    'message' => 'Token expired'
-                ], 401);
-            }
+        // $currentDate = '2025-04-26';
+        // // $currentDate = now();
+        // $date = Carbon::parse($currentDate);
 
-            return response()->json([
-                'token' => true
-            ], 200);
-        }
+        // $day = $date->day;
 
-        // If no bearer token is provided
-        return response()->json([
-            'token' => false,
-            'message' => 'Authorization token missing'
-        ], 401);
+        // if ($day >= 26 && $day <= 31) {
+        //     $newDay = $day - 24;
+        //     $date->addMonthsNoOverflow(1)->day = $newDay;
+        // }
+
+        // $setDate = $date->format('Y-m-d');
+        // // $endDate = Carbon::parse($setDate)->addMonths(intval(6))->format('Y-m-d');
+
+        // return response()->json($setDate);
+        // die;
+
+        // if ($request->bearerToken()) {
+        //     // Find the token using the provided bearer token
+        //     $token = PersonalAccessToken::findToken($request->bearerToken());
+
+        //     if (!$token) {
+        //         return response()->json([
+        //             'token' => false,
+        //             'message' => 'Token not found or invalid'
+        //         ], 401);
+        //     }
+
+        //     $dateToken =  date('Ymd', strtotime($token->expires_at));
+        //     $dateNow =  date('Ymd', strtotime(now()));
+
+        //     if ($dateToken != $dateNow || $token->expires_at == null || !$token->expires_at || empty($token->expires_at)) {
+        //         return response()->json([
+        //             'token' => false,
+        //             'message' => 'Token expired'
+        //         ], 401);
+        //     }
+
+        //     return response()->json([
+        //         'token' => true
+        //     ], 200);
+        // }
+
+        // // If no bearer token is provided
+        // return response()->json([
+        //     'token' => false,
+        //     'message' => 'Authorization token missing'
+        // ], 401);
     }
 
     public function indexs(Request $req)
