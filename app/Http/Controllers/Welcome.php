@@ -54,7 +54,30 @@ class Welcome extends Controller
     {
         $data = M_CrApplication::where('ORDER_NUMBER', $request->order_number)->first();
 
-        $schedule = $this->generateAmortizationSchedule($request->set_date, $data);
+        if ($data) {
+            $schedule = $this->generateAmortizationSchedule($request->set_date, $data);
+
+            $loan = DB::table('credit')
+                ->where('ORDER_NUMBER', $request->order_number)
+                ->select('LOAN_NUMBER')
+                ->first();
+
+            if ($loan) {
+                foreach ($schedule as $value) {
+                    DB::table('credit_schedule')
+                        ->where('LOAN_NUMBER', $loan->LOAN_NUMBER)
+                        ->where('INSTALLMENT_COUNT', $value['angsuran_ke'])
+                        ->update([
+                            'PRINCIPAL'     => $value['pokok'],
+                            'INTEREST'   => $value['bunga'],
+                            'INSTALLMENT'   => $value['total_angsuran'],
+                            'PRINCIPAL_REMAINS' => $value['baki_debet'],
+                            'PAYMENT_VALUE_PRINCIPAL' => $value['pokok'],
+                            'PAYMENT_VALUE_INTEREST' => $value['bunga']
+                        ]);
+                }
+            }
+        }
 
         // $db = M_InterestDecreasesSetting::first();
 
