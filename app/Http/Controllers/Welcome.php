@@ -54,30 +54,7 @@ class Welcome extends Controller
     {
         $data = M_CrApplication::where('ORDER_NUMBER', $request->order_number)->first();
 
-        if ($data) {
-            $schedule = $this->generateAmortizationSchedule($request->set_date, $data);
-
-            $loan = DB::table('credit')
-                ->where('ORDER_NUMBER', $request->order_number)
-                ->select('LOAN_NUMBER')
-                ->first();
-
-            if ($loan) {
-                foreach ($schedule as $value) {
-                    DB::table('credit_schedule')
-                        ->where('LOAN_NUMBER', $loan->LOAN_NUMBER)
-                        ->where('INSTALLMENT_COUNT', $value['angsuran_ke'])
-                        ->update([
-                            'PRINCIPAL'     => $value['pokok'],
-                            'INTEREST'   => $value['bunga'],
-                            'INSTALLMENT'   => $value['total_angsuran'],
-                            'PRINCIPAL_REMAINS' => $value['baki_debet'],
-                            'PAYMENT_VALUE_PRINCIPAL' => $value['pokok'],
-                            'PAYMENT_VALUE_INTEREST' => $value['bunga']
-                        ]);
-                }
-            }
-        }
+        $schedule = $this->generateAmortizationScheduleBungaMenurun($request->set_date, $data);
 
         // $db = M_InterestDecreasesSetting::first();
 
@@ -896,6 +873,39 @@ class Welcome extends Controller
         }
     }
 
+    private function generateAmortizationScheduleBungaMenurun($setDate, $data)
+    {
+        $schedule = [];
+        $ttal_bayar = ($data->SUBMISSION_VALUE + $data->TOTAL_ADMIN);
+        $angsuran_bunga = $data->INSTALLMENT;
+        $term = ceil($data->TENOR);
+        $baki_debet = $ttal_bayar;
+
+        for ($i = 1; $i <= $term; $i++) {
+            $pokok = 0;
+
+            if ($i == $term) {
+                $pokok = $ttal_bayar;
+            }
+
+            $total_angsuran = $pokok + $angsuran_bunga;
+
+            $schedule[] = [
+                'angsuran_ke' => $i,
+                'tgl_angsuran' => setPaymentDate($setDate, $i),
+                'baki_debet_awal' => floatval($baki_debet),
+                'pokok' => floatval($pokok),
+                'bunga' => floatval($angsuran_bunga),
+                'total_angsuran' => floatval($total_angsuran),
+                'baki_debet' => floatval($baki_debet - $pokok)
+            ];
+
+            $baki_debet -= $pokok;
+        }
+
+        return $schedule;
+    }
+
     private function generateAmortizationSchedule($setDate, $data)
     {
         $schedule = [];
@@ -935,5 +945,31 @@ class Welcome extends Controller
         }
 
         return $schedule;
+    }
+
+    function add($data)
+    {
+        // $schedule = $this->generateAmortizationSchedule($request->set_date, $data);
+
+        // $loan = DB::table('credit')
+        //     ->where('ORDER_NUMBER', $request->order_number)
+        //     ->select('LOAN_NUMBER')
+        //     ->first();
+
+        // if ($loan) {
+        //     foreach ($schedule as $value) {
+        //         DB::table('credit_schedule')
+        //             ->where('LOAN_NUMBER', $loan->LOAN_NUMBER)
+        //             ->where('INSTALLMENT_COUNT', $value['angsuran_ke'])
+        //             ->update([
+        //                 'PRINCIPAL'     => $value['pokok'],
+        //                 'INTEREST'   => $value['bunga'],
+        //                 'INSTALLMENT'   => $value['total_angsuran'],
+        //                 'PRINCIPAL_REMAINS' => $value['baki_debet'],
+        //                 'PAYMENT_VALUE_PRINCIPAL' => $value['pokok'],
+        //                 'PAYMENT_VALUE_INTEREST' => $value['bunga']
+        //             ]);
+        //     }
+        // }
     }
 }

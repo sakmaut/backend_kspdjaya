@@ -475,7 +475,6 @@ class CrAppilcationController extends Controller
             $data_cr_application['ORDER_NUMBER'] = $this->createAutoCode(M_CrApplication::class, 'ORDER_NUMBER', 'COR');
             M_CrApplication::create($data_cr_application);
         } else {
-            // compareData(M_CrApplication::class,$id,$data_cr_application,$request);
             $data_cr_application['MOD_DATE'] = Carbon::now()->format('Y-m-d');
             $data_cr_application['MOD_BY'] = $request->user()->id;
             $applicationModel->update($data_cr_application);
@@ -1470,4 +1469,12 @@ class CrAppilcationController extends Controller
             'APPROVAL_RESULT' => $result,
         ]);
     }
+
+    // public function check_order_document(Request $request)
+    // {
+
+    //     $getCredit = M_CrApplication
+
+    //     return response()->json($request->all());
+    // }
 }

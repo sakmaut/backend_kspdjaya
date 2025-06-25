@@ -163,6 +163,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::get('tokenCheckValidation', [AuthController::class, 'tokenCheckValidation']);
 
     Route::resource('phone_book', PhoneBookController::class);
+    Route::post('check_order_document', [CrAppilcationController::class, 'check_order_document']);
 });
 
 
