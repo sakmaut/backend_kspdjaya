@@ -52,26 +52,30 @@ class Welcome extends Controller
 {
     public function index(Request $request)
     {
-        $db = M_InterestDecreasesSetting::first();
+        $data = M_CrApplication::where('ORDER_NUMBER', $request->order_number)->first();
 
-        $plafond = intval($request->plafond ?? 0);
-        $interest = ($db->interest ?? 0) / 100;
-        $tenor = $db->tenor;
-        $admin_fee = $db->admin_fee;
+        $schedule = $this->generateAmortizationSchedule('', $data);
 
-        $formula = floatval(($plafond + $admin_fee) * ($tenor / 12) * $interest);
+        // $db = M_InterestDecreasesSetting::first();
 
-        $schedule = [];
-        for ($i = 1; $i <= $tenor; $i++) {
-            $schedule[] = [
-                'angsuran_ke' => $i,
-                'tgl_angsuran' => $this->setDate(),
-                'pokok' => ($i === $tenor) ? $plafond : 0,
-                'bunga' => $formula,
-                'total_angsuran' => (($i === $tenor) ? $plafond : 0) + $formula,
-                'baki_debet' => $plafond - (($i === $tenor) ? $plafond : 0)
-            ];
-        }
+        // $plafond = intval($request->plafond ?? 0);
+        // $interest = ($db->interest ?? 0) / 100;
+        // $tenor = $db->tenor;
+        // $admin_fee = $db->admin_fee;
+
+        // $formula = floatval(($plafond + $admin_fee) * ($tenor / 12) * $interest);
+
+        // $schedule = [];
+        // for ($i = 1; $i <= $tenor; $i++) {
+        //     $schedule[] = [
+        //         'angsuran_ke' => $i,
+        //         'tgl_angsuran' => $this->setDate(),
+        //         'pokok' => ($i === $tenor) ? $plafond : 0,
+        //         'bunga' => $formula,
+        //         'total_angsuran' => (($i === $tenor) ? $plafond : 0) + $formula,
+        //         'baki_debet' => $plafond - (($i === $tenor) ? $plafond : 0)
+        //     ];
+        // }
 
         return response()->json($schedule);
 
@@ -867,5 +871,46 @@ class Welcome extends Controller
                 'END_DATE' => now()
             ]);
         }
+    }
+
+    private function generateAmortizationSchedule($setDate, $data)
+    {
+        $schedule = [];
+        $remainingBalance = $data->POKOK_PEMBAYARAN;
+        $term = ceil($data->TENOR);
+        $angsuran = $data->INSTALLMENT;
+        $suku_bunga_konversi = ($data->FLAT_RATE / 100);
+        $ttal_bunga = $data->TOTAL_INTEREST;
+        $totalInterestPaid = 0;
+
+        for ($i = 1; $i <= $term; $i++) {
+            $interest = round($remainingBalance * $suku_bunga_konversi, 2);
+
+            if ($i < $term) {
+                $principalPayment = round($angsuran - $interest, 2);
+            } else {
+                $principalPayment = round($remainingBalance, 2);
+                $interest = round($ttal_bunga - $totalInterestPaid, 2);
+            }
+
+            $totalPayment = round($principalPayment + $interest, 2);
+            $remainingBalance = round($remainingBalance - $principalPayment, 2);
+            $totalInterestPaid += $interest;
+            if ($i == $term) {
+                $remainingBalance = 0.00;
+            }
+
+            $schedule[] = [
+                'angsuran_ke' => $i,
+                'tgl_angsuran' => setPaymentDate($setDate, $i),
+                'baki_debet_awal' => floatval($remainingBalance + $principalPayment),
+                'pokok' => floatval($principalPayment),
+                'bunga' => floatval($interest),
+                'total_angsuran' => floatval($totalPayment),
+                'baki_debet' => floatval($remainingBalance)
+            ];
+        }
+
+        return $schedule;
     }
 }
