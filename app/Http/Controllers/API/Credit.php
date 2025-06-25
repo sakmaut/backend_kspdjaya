@@ -792,6 +792,20 @@ class Credit extends Controller
 
     private function generateAmortizationSchedule($setDate, $data)
     {
+        $requiredFields = [
+            $data->FLAT_RATE,
+            $data->POKOK_PEMBAYARAN,
+            $data->TENOR,
+            $data->INSTALLMENT,
+            $data->TOTAL_INTEREST
+        ];
+
+        foreach ($requiredFields as $field) {
+            if (empty($field) || floatval($field) == 0) {
+                throw new Exception("Data ada yang kurang lengkap", 404);
+            }
+        }
+
         $schedule = [];
         $remainingBalance = $data->POKOK_PEMBAYARAN;
         $term = ceil($data->TENOR);
@@ -833,6 +847,21 @@ class Credit extends Controller
 
     private function generateAmortizationScheduleMusiman($setDate, $data)
     {
+
+        $requiredFields = [
+            $data->FLAT_RATE,
+            $data->POKOK_PEMBAYARAN,
+            $data->TENOR,
+            $data->INSTALLMENT,
+            $data->TOTAL_INTEREST
+        ];
+
+        foreach ($requiredFields as $field) {
+            if (empty($field) || floatval($field) == 0) {
+                throw new Exception("Data ada yang kurang lengkap", 404);
+            }
+        }
+
         $schedule = [];
         $remainingBalance = $data->POKOK_PEMBAYARAN;  // Initial loan amount (POKOK_PEMBAYARAN)
         $term = ceil($data->TENOR);  // Loan term in months (TENOR)
