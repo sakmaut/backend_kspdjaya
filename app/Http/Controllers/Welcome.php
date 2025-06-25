@@ -54,7 +54,7 @@ class Welcome extends Controller
     {
         $data = M_CrApplication::where('ORDER_NUMBER', $request->order_number)->first();
 
-        $schedule = $this->generateAmortizationSchedule('', $data);
+        $schedule = $this->generateAmortizationSchedule($request->set_date, $data);
 
         // $db = M_InterestDecreasesSetting::first();
 
