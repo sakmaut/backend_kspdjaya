@@ -559,7 +559,7 @@ class AdminFeeController extends Controller
             $pokok_pembayaran = ($plafond + $total);
             $eff_rate = $tenorData['eff_rate'];
 
-            $calc = floatval($pokok_pembayaran * ($tenor / 12) * ($eff_rate / 100));
+            $calc = round($pokok_pembayaran * ($eff_rate / 100), 2);
 
             if ($calc > 0) {
                 $tenorData['angsuran'] = $calc;
