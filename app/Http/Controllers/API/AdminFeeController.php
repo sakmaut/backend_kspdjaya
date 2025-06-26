@@ -212,6 +212,7 @@ class AdminFeeController extends Controller
                         [
                             'returnSingle' => true,
                             'type' => 'fee',
+                            'tenor' => (int) $tenor,
                             'plafond' => $request->plafond,
                             'angsuran_type' => $angsuran_type
                         ]
