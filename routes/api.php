@@ -106,6 +106,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::post('payment_attachment', [PaymentController::class, 'upload']);
     Route::post('payment_approval', [PaymentController::class, 'approval']);
     Route::post('payment_cancel', [PaymentController::class, 'cancel']);
+    Route::post('payment_bunga_menurun', [PaymentController::class, 'processPaymentBungaMenurun']);
     // Route::get('payment_cancel_list', [PaymentController::class, 'cancelList']);
 
     Route::post('pelunasan', [PelunasanController::class, 'checkCredit']);

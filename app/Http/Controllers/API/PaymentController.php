@@ -10,6 +10,7 @@ use App\Models\M_Arrears;
 use App\Models\M_Branch;
 use App\Models\M_Credit;
 use App\Models\M_CreditSchedule;
+use App\Models\M_Customer;
 use App\Models\M_Kwitansi;
 use App\Models\M_KwitansiDetailPelunasan;
 use App\Models\M_KwitansiStructurDetail;
@@ -394,7 +395,6 @@ class PaymentController extends Controller
             }
         }
     }
-
 
     private function updateDiscountArrears($loan_number, $tgl_angsuran, $res, $uid)
     {
@@ -1093,5 +1093,220 @@ class PaymentController extends Controller
         } else {
             $check->update(['STTS_PAYMENT' => 'PAID']);
         }
+    }
+
+    public function processPaymentBungaMenurun(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $loan_number = $request->LOAN_NUMBER;
+            $no_inv = generateCodeKwitansi($request, 'kwitansi', 'NO_TRANSAKSI', 'INV');
+
+            $credit = M_Credit::where('LOAN_NUMBER', $loan_number)->firstOrFail();
+            $detail_customer = M_Customer::where('CUST_CODE', $credit->CUST_CODE)->firstOrFail();
+
+            $status = strtolower($request->METODE_PEMBAYARAN) === 'cash' ? "PAID" : 'PENDING';
+
+            $this->saveKwitansiBungaMenurun($request, $detail_customer, $no_inv, $status);
+            $this->proccessKwitansiDetail($request, $loan_number, $no_inv);
+            $this->processPokokBungaMenurun($loan_number, $no_inv);
+
+            $data = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
+
+            $dto = new R_Kwitansi($data);
+
+            DB::commit();
+            return response()->json($dto, 200);
+        } catch (Exception $e) {
+            DB::rollback();
+            return $this->log->logError($e, $request);
+        }
+    }
+
+    private function saveKwitansiBungaMenurun($request, $customer, $no_inv, $status)
+    {
+        $checkKwitansiExist = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
+
+        if ($checkKwitansiExist) {
+            throw new Exception("Kwitansi Exist", 500);
+        }
+
+        $idGenerate = Uuid::uuid7()->toString();
+
+        $data = [
+            "PAYMENT_TYPE" => 'pokok_sebagian',
+            "PAYMENT_ID" => $idGenerate ?? '',
+            "STTS_PAYMENT" => $status,
+            "NO_TRANSAKSI" => $no_inv,
+            "LOAN_NUMBER" => $request->LOAN_NUMBER,
+            "TGL_TRANSAKSI" => Carbon::now(),
+            "CUST_CODE" => $customer->CUST_CODE,
+            "BRANCH_CODE" => $request->user()->branch_id,
+            "NAMA" => $customer->NAME,
+            "ALAMAT" => $customer->ADDRESS,
+            "RT" => $customer->RT,
+            "RW" => $customer->RW,
+            "PROVINSI" => $customer->PROVINCE,
+            "KOTA" => $customer->CITY,
+            "KECAMATAN" => $customer->KECAMATAN,
+            "KELURAHAN" => $customer->KELURAHAN,
+            "METODE_PEMBAYARAN" => $request->METODE_PEMBAYARAN,
+            "TOTAL_BAYAR" => $request->TOTAL_BAYAR ?? 0,
+            "PINALTY_PELUNASAN" => 0,
+            "DISKON_PINALTY_PELUNASAN" => 0,
+            "PEMBULATAN" => $request->PEMBULATAN ?? 0,
+            "DISKON" => $request->JUMLAH_DISKON ?? 0,
+            "KEMBALIAN" => $request->KEMBALIAN ?? 0,
+            "JUMLAH_UANG" => $request->UANG_PELANGGAN,
+            "NAMA_BANK" => $request->NAMA_BANK,
+            "NO_REKENING" => $request->NO_REKENING,
+            "CREATED_BY" => $request->user()->id
+        ];
+
+        M_Kwitansi::create($data);
+    }
+
+    private function proccessKwitansiDetail($request, $loan_number, $no_inv)
+    {
+        $creditSchedules = M_CreditSchedule::where('LOAN_NUMBER', 'HRG250600001')
+            ->where(function ($query) {
+                $query->where('PAID_FLAG', '!=', 'PAID')
+                    ->orWhere('PAID_FLAG', '=', '')
+                    ->orWhereNull('PAID_FLAG');
+            })
+            ->orderBy('INSTALLMENT_COUNT', 'ASC')
+            ->first();
+
+        if ($creditSchedules) {
+            M_KwitansiStructurDetail::firstOrCreate([
+                'no_invoice' => $no_inv,
+                'loan_number' => $creditSchedules['LOAN_NUMBER'] ?? ''
+            ], [
+                'key' => $creditSchedules['INSTALLMENT_COUNT'] ?? 1,
+                'angsuran_ke' => $creditSchedules['INSTALLMENT_COUNT'] ?? '',
+                'tgl_angsuran' => Carbon::parse($creditSchedules['PAYMENT_DATE'])->format('d-m-Y') ?? null,
+                'principal' => $creditSchedules['PRINCIPAL'] ?? '',
+                'interest' => $creditSchedules['INTEREST'] ?? '',
+                'installment' => $creditSchedules['INSTALLMENT'] ?? '',
+                'principal_remains' => $creditSchedules['PRINCIPAL_REMAINS'] ?? '',
+                'principal_prev' => $creditSchedules['principal_prev'] ?? 0,
+                'payment' => $creditSchedules['INSTALLMENT'] ?? '',
+                'bayar_angsuran' => $request->UANG_PELANGGAN ?? '0',
+                'bayar_denda' => '0',
+                'total_bayar' => $request->TOTAL_BAYAR ?? '',
+                'flag' => $creditSchedules['PAID_FLAG'] ?? '',
+                'denda' => '0',
+                'diskon_denda' => 0
+            ]);
+        }
+    }
+
+    private function processPokokBungaMenurun($loan_number, $no_inv)
+    {
+        $kwitansi = M_KwitansiStructurDetail::where([
+            'loan_number' => $loan_number,
+            'no_invoice' => $no_inv
+        ])->first();
+
+        if (!$kwitansi) return;
+
+        $byr_angsuran = floatval($kwitansi->bayar_angsuran);
+
+        $credit_schedule = M_CreditSchedule::where([
+            'LOAN_NUMBER' => $loan_number,
+            'INSTALLMENT_COUNT' => floatval($kwitansi->angsuran_ke ?? 0)
+        ])->first();
+
+        if (!$credit_schedule) return;
+
+        $getInterest = floatval($credit_schedule->INTEREST);
+        $getPrincipalPay = floatval($byr_angsuran - $getInterest);
+
+        // Tandai angsuran ini sebagai sudah dibayar
+        $credit_schedule->update([
+            'PAYMENT_VALUE_PRINCIPAL' => $getPrincipalPay,
+            'PAYMENT_VALUE_INTEREST' => $getInterest,
+            'INSUFFICIENT_PAYMENT' => 0,
+            'PAYMENT_VALUE' => floatval($getInterest + $getPrincipalPay),
+            'PAID_FLAG' => 'PAID'
+        ]);
+
+        // Ambil semua angsuran belum dibayar
+        $creditSchedulesUpdate = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)
+            ->where(function ($query) {
+                $query->where('PAID_FLAG', '!=', 'PAID')
+                    ->orWhere('PAID_FLAG', '=', '')
+                    ->orWhereNull('PAID_FLAG');
+            })
+            ->orderBy('INSTALLMENT_COUNT', 'ASC')
+            ->orderBy('PAYMENT_DATE', 'ASC')
+            ->get();
+
+        if ($creditSchedulesUpdate->isEmpty()) return;
+
+        // Hitung total pokok yang belum dibayar
+        $totalSisaPokok = $creditSchedulesUpdate->sum('PRINCIPAL');
+
+        // // Kurangi dengan pokok yang baru saja dibayar
+        $sisa_pokok = $totalSisaPokok - $getPrincipalPay;
+        $sisa_pokok = max(0, $sisa_pokok);
+
+        // // Buat objek data dasar amortisasi
+        $getNewTenor = count($creditSchedulesUpdate);
+        $calc = round(floatval($sisa_pokok * ($getNewTenor / 12) * (3 / 100)), 2);
+
+        $data = new \stdClass();
+        $data->SUBMISSION_VALUE = $sisa_pokok;
+        $data->TOTAL_ADMIN = 0;
+        $data->INSTALLMENT = $calc; // bunga tetap 3% dari pokok
+        $data->TENOR = $getNewTenor; // jumlah angsuran yang belum dibayar
+        $data->START_FROM = $creditSchedulesUpdate->first()->INSTALLMENT_COUNT; // nomor angsuran lanjut
+
+        $data_credit_schedule = $this->generateAmortizationScheduleBungaMenurun($data);
+
+        foreach ($creditSchedulesUpdate as $index => $schedule) {
+            $updateData = $data_credit_schedule[$index];
+
+            $schedule->update([
+                'PRINCIPAL' => $updateData['pokok'],
+                'INTEREST' => $updateData['bunga'],
+                'INSTALLMENT' => $updateData['total_angsuran'],
+                'PRINCIPAL_REMAINS' => $updateData['baki_debet'],
+            ]);
+        }
+    }
+
+    private function generateAmortizationScheduleBungaMenurun($data)
+    {
+        $schedule = [];
+        $ttal_bayar = ($data->SUBMISSION_VALUE + $data->TOTAL_ADMIN);
+        $angsuran_bunga = $data->INSTALLMENT;
+        $term = ceil($data->TENOR);
+        $baki_debet = $ttal_bayar;
+
+        $startInstallment = $data->START_FROM ?? 1;
+
+        for ($i = 0; $i < $term; $i++) {
+            $pokok = 0;
+
+            if ($i == $term - 1) {
+                $pokok = $ttal_bayar;
+            }
+
+            $total_angsuran = $pokok + $angsuran_bunga;
+
+            $schedule[] = [
+                'angsuran_ke' => $startInstallment + $i,
+                'baki_debet_awal' => floatval($baki_debet),
+                'pokok' => floatval($pokok),
+                'bunga' => floatval($angsuran_bunga),
+                'total_angsuran' => floatval($total_angsuran),
+                'baki_debet' => floatval($baki_debet - $pokok)
+            ];
+
+            $baki_debet -= $pokok;
+        }
+
+        return $schedule;
     }
 }
