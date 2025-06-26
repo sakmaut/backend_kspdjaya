@@ -19,8 +19,6 @@ use App\Models\M_PaymentAttachment;
 use App\Models\M_PaymentDetail;
 use Carbon\Carbon;
 use Exception;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -708,7 +706,7 @@ class PaymentController extends Controller
         }
     }
 
-    public function destroyImage(Request $req, $id)
+    public function destroyImage(Request $request, $id)
     {
         DB::beginTransaction();
         try {
@@ -717,16 +715,10 @@ class PaymentController extends Controller
             $check->delete();
 
             DB::commit();
-            ActivityLogger::logActivity($req, "deleted successfully", 200);
             return response()->json(['message' => 'deleted successfully', "status" => 200], 200);
-        } catch (ModelNotFoundException $e) {
+        } catch (Exception $e) {
             DB::rollback();
-            ActivityLogger::logActivity($req, 'Document Id Not Found', 404);
-            return response()->json(['message' => 'Document Id Not Found', "status" => 404], 404);
-        } catch (\Exception $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($req, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
@@ -774,17 +766,11 @@ class PaymentController extends Controller
                 return response()->json(['message' => 'Image upload successfully', "status" => 200, 'response' => $url], 200);
             } else {
                 DB::rollback();
-                ActivityLogger::logActivity($req, 'No image file provided', 400);
                 return response()->json(['message' => 'No image file provided', "status" => 400], 400);
             }
-        } catch (QueryException $e) {
+        } catch (Exception $e) {
             DB::rollback();
-            ActivityLogger::logActivity($req, $e->getMessage(), 409);
-            return response()->json(['message' => $e->getMessage(), "status" => 409], 409);
-        } catch (\Exception $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($req, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+            return $this->log->logError($e, $req);
         }
     }
 
@@ -1109,7 +1095,7 @@ class PaymentController extends Controller
 
             $this->saveKwitansiBungaMenurun($request, $detail_customer, $no_inv, $status);
             $this->proccessKwitansiDetail($request, $loan_number, $no_inv);
-            $this->processPokokBungaMenurun($loan_number, $no_inv);
+            $this->processPokokBungaMenurun($request,$loan_number, $no_inv);
 
             $data = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
 
@@ -1168,11 +1154,15 @@ class PaymentController extends Controller
 
     private function proccessKwitansiDetail($request, $loan_number, $no_inv)
     {
-        $creditSchedules = M_CreditSchedule::where('LOAN_NUMBER', 'HRG250600001')
+        $creditSchedules = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)
             ->where(function ($query) {
                 $query->where('PAID_FLAG', '!=', 'PAID')
                     ->orWhere('PAID_FLAG', '=', '')
                     ->orWhereNull('PAID_FLAG');
+            })
+            ->where(function ($query) {
+                $query->WhereNull('PAYMENT_VALUE_PRINCIPAL')
+                    ->orWhere('PAYMENT_VALUE_PRINCIPAL', '=', 0);
             })
             ->orderBy('INSTALLMENT_COUNT', 'ASC')
             ->first();
@@ -1201,7 +1191,7 @@ class PaymentController extends Controller
         }
     }
 
-    private function processPokokBungaMenurun($loan_number, $no_inv)
+    private function processPokokBungaMenurun($request,$loan_number, $no_inv)
     {
         $kwitansi = M_KwitansiStructurDetail::where([
             'loan_number' => $loan_number,
@@ -1220,16 +1210,58 @@ class PaymentController extends Controller
         if (!$credit_schedule) return;
 
         $getInterest = floatval($credit_schedule->INTEREST);
-        $getPrincipalPay = floatval($byr_angsuran - $getInterest);
+        $getPrincipalPay = floatval($byr_angsuran);
 
-        // Tandai angsuran ini sebagai sudah dibayar
+        $kwitansi = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
+
+        if ($kwitansi) {
+            $user_id = $kwitansi->CREATED_BY;
+            $getCodeBranch = M_Branch::find($kwitansi->BRANCH_CODE);
+        }
+
+        $uid= Uuid::uuid7()->toString();
+
+        $paymentData = [
+            'ID' => $uid,
+            'ACC_KEY' => 'pokok_sebagian',
+            'STTS_RCRD' => 'PAID',
+            'INVOICE' => $no_inv ?? '',
+            'NO_TRX' => $request->uid ?? '',
+            'PAYMENT_METHOD' => $kwitansi->METODE_PEMBAYARAN ?? $request->payment_method,
+            'BRANCH' =>  $getCodeBranch->CODE_NUMBER ?? '',
+            'LOAN_NUM' => $loan_number,
+            'VALUE_DATE' => null,
+            'ENTRY_DATE' => now(),
+            'SUSPENSION_PENALTY_FLAG' => $request->penangguhan_denda ?? '',
+            'TITLE' => 'Pembayaran Pokok Sebagian',
+            'ORIGINAL_AMOUNT' => $getPrincipalPay,
+            'OS_AMOUNT' => $os_amount ?? 0,
+            'START_DATE' => $tgl_angsuran ?? null,
+            'END_DATE' => now(),
+            'USER_ID' => $user_id ?? $request->user()->id,
+            'AUTH_BY' => $request->user()->fullname ?? '',
+            'AUTH_DATE' => now(),
+            'ARREARS_ID' => $res['id_arrear'] ?? '',
+            'BANK_NAME' => round(microtime(true) * 1000)
+        ];
+
+        $existing = M_Payment::where($paymentData)->first();
+
+        if (!$existing) {
+            $paymentData['BANK_NAME'] = round(microtime(true) * 1000);
+            M_Payment::create($paymentData);
+        }
+
+        $data = $this->preparePaymentData($uid, 'ANGSURAN_POKOK', $getPrincipalPay);
+        M_PaymentDetail::create($data);
+
         $credit_schedule->update([
             'PAYMENT_VALUE_PRINCIPAL' => $getPrincipalPay,
-            'PAYMENT_VALUE_INTEREST' => $getInterest,
-            'INSUFFICIENT_PAYMENT' => 0,
-            'PAYMENT_VALUE' => floatval($getInterest + $getPrincipalPay),
-            'PAID_FLAG' => 'PAID'
+            'INSUFFICIENT_PAYMENT' => $getInterest,
+            'PAYMENT_VALUE' => $getPrincipalPay
         ]);
+
+        $this->addCreditPaid($loan_number, ['ANGSURAN_POKOK' => $getPrincipalPay]);
 
         // Ambil semua angsuran belum dibayar
         $creditSchedulesUpdate = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)
@@ -1237,6 +1269,10 @@ class PaymentController extends Controller
                 $query->where('PAID_FLAG', '!=', 'PAID')
                     ->orWhere('PAID_FLAG', '=', '')
                     ->orWhereNull('PAID_FLAG');
+            })
+            ->where(function ($query) {
+                $query->WhereNull('PAYMENT_VALUE_PRINCIPAL')
+                ->orWhere('PAYMENT_VALUE_PRINCIPAL', '=', 0);
             })
             ->orderBy('INSTALLMENT_COUNT', 'ASC')
             ->orderBy('PAYMENT_DATE', 'ASC')
@@ -1253,14 +1289,14 @@ class PaymentController extends Controller
 
         // // Buat objek data dasar amortisasi
         $getNewTenor = count($creditSchedulesUpdate);
-        $calc = round(floatval($sisa_pokok * ($getNewTenor / 12) * (3 / 100)), 2);
+        $calc = round($sisa_pokok * (3 / 100), 2);
 
         $data = new \stdClass();
         $data->SUBMISSION_VALUE = $sisa_pokok;
         $data->TOTAL_ADMIN = 0;
-        $data->INSTALLMENT = $calc; // bunga tetap 3% dari pokok
-        $data->TENOR = $getNewTenor; // jumlah angsuran yang belum dibayar
-        $data->START_FROM = $creditSchedulesUpdate->first()->INSTALLMENT_COUNT; // nomor angsuran lanjut
+        $data->INSTALLMENT = $calc;
+        $data->TENOR = $getNewTenor;
+        $data->START_FROM = $creditSchedulesUpdate->first()->INSTALLMENT_COUNT;
 
         $data_credit_schedule = $this->generateAmortizationScheduleBungaMenurun($data);
 
