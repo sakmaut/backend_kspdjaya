@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\Validation\Validation;
 use App\Http\Resources\R_CrApplicationDetail;
 use App\Http\Resources\R_CrProspect;
+use App\Http\Resources\R_DetailDocument;
 use App\Models\M_ApplicationApproval;
 use App\Models\M_ApplicationApprovalLog;
 use App\Models\M_CrApplication;
@@ -1470,11 +1471,26 @@ class CrAppilcationController extends Controller
         ]);
     }
 
-    // public function check_order_document(Request $request)
-    // {
+    public function check_order_document(Request $request)
+    {
 
-    //     $getCredit = M_CrApplication
+        // $getCredit = M_Credit::with(['customer.customer_document'])->where('LOAN_NUMBER', $request->no_kontrak)->first();
+        // $getCredit = M_CrApplication::with(['credit.customer'])
+        //     ->whereHas('credit', function ($query) use ($request) {
+        //         $query->where('LOAN_NUMBER', $request->no_kontrak);
+        //     })->first();
 
-    //     return response()->json($request->all());
-    // }
+        $getCredit = M_CrApplication::with(['credit.customer'])
+            ->whereHas('credit', function ($query) use ($request) {
+                $query->where('LOAN_NUMBER', $request->no_kontrak);
+            })->first();
+
+        if (!$getCredit) {
+            return response()->json([]);
+        }
+
+        $dto = new R_DetailDocument($getCredit);
+
+        return response()->json($dto);
+    }
 }

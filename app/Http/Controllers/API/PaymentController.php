@@ -226,7 +226,13 @@ class PaymentController extends Controller
         $tgl_angsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
         $uid = Uuid::uuid7()->toString();
 
-        $this->updateCreditSchedule($loan_number, $tgl_angsuran, $res, $uid);
+        $credit = M_Credit::where('LOAN_NUMBER', $request->no_facility)->first();
+
+        if ($credit->CREDIT_TYPE != 'bunga_menurun') {
+            $this->updateCreditSchedule($loan_number, $tgl_angsuran, $res, $uid);
+        } else {
+            $this->updateCreditScheduleBungaMenurun($loan_number, $tgl_angsuran, $res, $uid);
+        }
 
         if ((strtolower($request->diskon_flag) == 'ya' && isset($request->diskon_flag) && $request->diskon_flag != '')) {
             $this->updateDiscountArrears($loan_number, $tgl_angsuran, $res, $uid);
@@ -242,6 +248,84 @@ class PaymentController extends Controller
     }
 
     private function updateCreditSchedule($loan_number, $tgl_angsuran, $res, $uid)
+    {
+        $credit_schedule = M_CreditSchedule::where([
+            'LOAN_NUMBER' => $loan_number,
+            'PAYMENT_DATE' => $tgl_angsuran
+        ])->first();
+
+        $byr_angsuran = floatval($res['bayar_angsuran']);
+        $flag = $res['flag'];
+
+        if ($credit_schedule || $byr_angsuran != 0 || $flag != 'PAID') {
+
+            $payment_value = floatval($byr_angsuran) + floatval($credit_schedule->PAYMENT_VALUE);
+
+            $valBeforePrincipal = floatval($credit_schedule->PAYMENT_VALUE_PRINCIPAL);
+            $valBeforeInterest = floatval($credit_schedule->PAYMENT_VALUE_INTEREST);
+            $getPrincipal = floatval($credit_schedule->PRINCIPAL);
+            $getInterest = floatval($credit_schedule->INTEREST);
+
+            $new_payment_value_principal = floatval($valBeforePrincipal);
+            $new_payment_value_interest = floatval($valBeforeInterest);
+
+            if ($valBeforePrincipal < $getPrincipal) {
+                $remaining_to_principal = floatval($getPrincipal) - floatval($valBeforePrincipal);
+
+                if ($byr_angsuran >= $remaining_to_principal) {
+                    $new_payment_value_principal = $getPrincipal;
+                    $remaining_payment = $byr_angsuran - $remaining_to_principal;
+                } else {
+                    $new_payment_value_principal += $byr_angsuran;
+                    $remaining_payment = 0;
+                }
+            } else {
+                $remaining_payment = $byr_angsuran;
+            }
+
+            if ($new_payment_value_principal == $getPrincipal) {
+                if ($valBeforeInterest < $getInterest) {
+                    $new_payment_value_interest = min($valBeforeInterest + floatval($remaining_payment), $getInterest);
+                }
+            }
+
+            $updates = [];
+            if ($new_payment_value_principal !== $valBeforePrincipal) {
+                $updates['PAYMENT_VALUE_PRINCIPAL'] = $new_payment_value_principal;
+
+                $valPrincipal = $new_payment_value_principal - $valBeforePrincipal;
+                $data = $this->preparePaymentData($uid, 'ANGSURAN_POKOK', $valPrincipal);
+                M_PaymentDetail::create($data);
+                $this->addCreditPaid($loan_number, ['ANGSURAN_POKOK' => $valPrincipal]);
+            }
+
+            if ($new_payment_value_interest !== $valBeforeInterest) {
+                $updates['PAYMENT_VALUE_INTEREST'] = $new_payment_value_interest;
+
+                $valInterest = $new_payment_value_interest - $valBeforeInterest;
+                $data = $this->preparePaymentData($uid, 'ANGSURAN_BUNGA', $valInterest);
+                M_PaymentDetail::create($data);
+                $this->addCreditPaid($loan_number, ['ANGSURAN_BUNGA' => $valInterest]);
+            }
+
+            $total_paid = floatval($new_payment_value_principal) + floatval($new_payment_value_interest);
+
+            $insufficient_payment = ($getPrincipal > $new_payment_value_principal || $getInterest > $new_payment_value_interest)
+                ? ($total_paid - $credit_schedule->INSTALLMENT)
+                : 0;
+
+            $updates['INSUFFICIENT_PAYMENT'] = $insufficient_payment;
+            $updates['PAYMENT_VALUE'] = $payment_value;
+
+            if (!empty($updates)) {
+                $credit_schedule->update($updates);
+            }
+
+            $credit_schedule->update(['PAID_FLAG' => $credit_schedule->PAYMENT_VALUE >= $credit_schedule->INSTALLMENT ? 'PAID' : '']);
+        }
+    }
+
+    private function updateCreditScheduleBungaMenurun($loan_number, $tgl_angsuran, $res, $uid)
     {
         $credit_schedule = M_CreditSchedule::where([
             'LOAN_NUMBER' => $loan_number,
