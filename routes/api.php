@@ -98,6 +98,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
 
     Route::resource('customer', CustomerController::class);
     Route::post('search_customer', [CustomerController::class, 'searchCustomer']);
+    Route::post('search_customer_bunga_menurun', [CustomerController::class, 'searchCustomerBungaMenurun']);
     Route::post('check_ro', [CustomerController::class, 'cekRO']);
     Route::post('kontrak_fasilitas', [CustomerController::class, 'fasilitas']);
     Route::post('struktur_kredit', [CustomerController::class, 'creditStruktur']);

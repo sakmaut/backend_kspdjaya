@@ -135,7 +135,6 @@ class CustomerController extends Controller
                 return collect([]);
             }
 
-            // Base query with eager loading
             $query = DB::table('credit as a')
                 ->select([
                     'a.STATUS',
@@ -175,7 +174,58 @@ class CustomerController extends Controller
 
             return response()->json($dto, 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+        }
+    }
+
+    public function searchCustomerBungaMenurun(Request $request)
+    {
+        try {
+
+            if (empty($request->nama) && empty($request->no_kontrak) && empty($request->no_polisi)) {
+                return collect([]);
+            }
+
+            $query = DB::table('credit as a')
+                ->select([
+                    'a.STATUS',
+                    'a.LOAN_NUMBER',
+                    'a.ORDER_NUMBER',
+                    'c.NAME',
+                    'c.ALIAS',
+                    'c.ADDRESS',
+                    'b.POLICE_NUMBER',
+                    'a.INSTALLMENT'
+                ])
+                ->leftJoin('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
+                ->leftJoin('customer as c', 'c.CUST_CODE', '=', 'a.CUST_CODE')
+                ->where('a.STATUS', 'A')
+                ->where('a.CREDIT_TYPE', 'bunga_menurun');
+
+            if (!empty($request->nama)) {
+                $query->when($request->nama, function ($query, $nama) {
+                    return $query->where("c.NAME", 'LIKE', "%{$nama}%");
+                });
+            }
+
+            if (!empty($request->no_kontrak)) {
+                $query->when($request->no_kontrak, function ($query, $no_kontrak) {
+                    return $query->where('a.LOAN_NUMBER', 'LIKE', "%{$no_kontrak}%");
+                });
+            }
+
+            if (!empty($request->no_polisi)) {
+                $query->when($request->no_polisi, function ($query, $no_polisi) {
+                    return $query->where('b.POLICE_NUMBER', 'LIKE', "%{$no_polisi}%");
+                });
+            }
+
+            $results = $query->get();
+
+            $dto = R_CustomerSearch::collection($results);
+
+            return response()->json($dto, 200);
+        } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
@@ -205,9 +255,9 @@ class CustomerController extends Controller
 
             $loanNumber = $request->loan_number;
 
-            $cekKwitansi = M_Kwitansi::where('STTS_PAYMENT', 'WAITING CANCEL')->where('LOAN_NUMBER',$loanNumber)->first();
+            $cekKwitansi = M_Kwitansi::where('STTS_PAYMENT', 'WAITING CANCEL')->where('LOAN_NUMBER', $loanNumber)->first();
 
-            if($cekKwitansi){
+            if ($cekKwitansi) {
                 return $schedule;
             }
 
