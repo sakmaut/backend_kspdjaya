@@ -178,7 +178,6 @@ class AdminFeeController extends Controller
                     ]
                 );
             } else {
-
                 $show = $this->buildArrayBungaMenurun(
                     $adminFee,
                     [
@@ -207,16 +206,27 @@ class AdminFeeController extends Controller
             if ($tenor == 0) {
                 $show = [];
             } else {
-                $show = $this->buildArray(
-                    $adminFee,
-                    [
-                        'returnSingle' => true,
-                        'type' => 'fee',
-                        'tenor' => (int) $tenor,
-                        'angsuran_type' => $angsuran_type,
-                        'plafond' => $request->plafond,
-                    ]
-                );
+                if ($angsuran_type == 'bunga_menurun') {
+                    $show = $this->buildArrayBungaMenurun(
+                        $adminFee,
+                        [
+                            'returnSingle' => true,
+                            'plafond' => $request->plafond,
+                            'angsuran_type' => $angsuran_type
+                        ]
+                    );
+                } else {
+                    $show = $this->buildArray(
+                        $adminFee,
+                        [
+                            'returnSingle' => true,
+                            'type' => 'fee',
+                            'tenor' => (int) $tenor,
+                            'angsuran_type' => $angsuran_type,
+                            'plafond' => $request->plafond,
+                        ]
+                    );
+                }
             }
 
             return response()->json($show, 200);

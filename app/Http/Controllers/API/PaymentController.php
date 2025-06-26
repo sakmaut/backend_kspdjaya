@@ -332,76 +332,69 @@ class PaymentController extends Controller
             'PAYMENT_DATE' => $tgl_angsuran
         ])->first();
 
+        if (!$credit_schedule) return;
+
         $byr_angsuran = floatval($res['bayar_angsuran']);
         $flag = $res['flag'];
 
-        if ($credit_schedule || $byr_angsuran != 0 || $flag != 'PAID') {
+        $current_paid_interest = floatval($credit_schedule->PAYMENT_VALUE_INTEREST);
+        $total_interest = floatval($credit_schedule->INTEREST);
 
-            $payment_value = floatval($byr_angsuran) + floatval($credit_schedule->PAYMENT_VALUE);
+        if ($byr_angsuran != 0 || $flag != 'PAID') {
 
-            $valBeforePrincipal = floatval($credit_schedule->PAYMENT_VALUE_PRINCIPAL);
-            $valBeforeInterest = floatval($credit_schedule->PAYMENT_VALUE_INTEREST);
-            $getPrincipal = floatval($credit_schedule->PRINCIPAL);
-            $getInterest = floatval($credit_schedule->INTEREST);
+            $new_payment_value_interest = $current_paid_interest;
 
-            $new_payment_value_principal = floatval($valBeforePrincipal);
-            $new_payment_value_interest = floatval($valBeforeInterest);
+            $remaining_to_interest = $total_interest - $current_paid_interest;
+            $remaining_payment = 0;
 
-            if ($valBeforePrincipal < $getPrincipal) {
-                $remaining_to_principal = floatval($getPrincipal) - floatval($valBeforePrincipal);
-
-                if ($byr_angsuran >= $remaining_to_principal) {
-                    $new_payment_value_principal = $getPrincipal;
-                    $remaining_payment = $byr_angsuran - $remaining_to_principal;
+            if ($remaining_to_interest > 0) {
+                if ($byr_angsuran >= $remaining_to_interest) {
+                    $new_payment_value_interest = $total_interest;
+                    $remaining_payment = $byr_angsuran - $remaining_to_interest;
                 } else {
-                    $new_payment_value_principal += $byr_angsuran;
+                    $new_payment_value_interest += $byr_angsuran;
                     $remaining_payment = 0;
                 }
             } else {
                 $remaining_payment = $byr_angsuran;
             }
 
-            if ($new_payment_value_principal == $getPrincipal) {
-                if ($valBeforeInterest < $getInterest) {
-                    $new_payment_value_interest = min($valBeforeInterest + floatval($remaining_payment), $getInterest);
-                }
-            }
-
             $updates = [];
-            if ($new_payment_value_principal !== $valBeforePrincipal) {
-                $updates['PAYMENT_VALUE_PRINCIPAL'] = $new_payment_value_principal;
+            if ($new_payment_value_interest != $current_paid_interest) {
+                $valInterest = $new_payment_value_interest - $current_paid_interest;
 
-                $valPrincipal = $new_payment_value_principal - $valBeforePrincipal;
-                $data = $this->preparePaymentData($uid, 'ANGSURAN_POKOK', $valPrincipal);
-                M_PaymentDetail::create($data);
-                $this->addCreditPaid($loan_number, ['ANGSURAN_POKOK' => $valPrincipal]);
-            }
-
-            if ($new_payment_value_interest !== $valBeforeInterest) {
                 $updates['PAYMENT_VALUE_INTEREST'] = $new_payment_value_interest;
 
-                $valInterest = $new_payment_value_interest - $valBeforeInterest;
                 $data = $this->preparePaymentData($uid, 'ANGSURAN_BUNGA', $valInterest);
                 M_PaymentDetail::create($data);
                 $this->addCreditPaid($loan_number, ['ANGSURAN_BUNGA' => $valInterest]);
             }
 
-            $total_paid = floatval($new_payment_value_principal) + floatval($new_payment_value_interest);
+            $current_payment_value = floatval($credit_schedule->PAYMENT_VALUE);
+            $installment = floatval($credit_schedule->INSTALLMENT);
 
-            $insufficient_payment = ($getPrincipal > $new_payment_value_principal || $getInterest > $new_payment_value_interest)
-                ? ($total_paid - $credit_schedule->INSTALLMENT)
-                : 0;
+            if ($current_payment_value < $installment) {
+                $remaining_payment = $installment - $current_payment_value;
+                $additional_payment = min($byr_angsuran, $remaining_payment);
+                $payment_value = $current_payment_value + $additional_payment;
+
+                $updates['PAYMENT_VALUE'] = $payment_value;
+            }
+
+            $insufficient_payment = max(0, $total_interest - $new_payment_value_interest);
 
             $updates['INSUFFICIENT_PAYMENT'] = $insufficient_payment;
-            $updates['PAYMENT_VALUE'] = $payment_value;
 
             if (!empty($updates)) {
                 $credit_schedule->update($updates);
             }
 
-            $credit_schedule->update(['PAID_FLAG' => $credit_schedule->PAYMENT_VALUE >= $credit_schedule->INSTALLMENT ? 'PAID' : '']);
+            if ($new_payment_value_interest >= $total_interest) {
+                $credit_schedule->update(['PAID_FLAG' => 'PAID']);
+            }
         }
     }
+
 
     private function updateDiscountArrears($loan_number, $tgl_angsuran, $res, $uid)
     {
@@ -494,7 +487,7 @@ class PaymentController extends Controller
         $bayar_denda = floatval($res['bayar_denda']);
 
         if ($check_arrears || $res['bayar_denda'] != 0) {
-            $current_penalty = $check_arrears->PAID_PENALTY;
+            $current_penalty = $check_arrears->PAID_PENALTY ?? 0;
 
             $new_penalty = floatval($current_penalty) + floatval($bayar_denda);
 
