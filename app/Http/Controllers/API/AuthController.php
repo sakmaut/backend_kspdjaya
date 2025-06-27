@@ -55,7 +55,7 @@ class AuthController extends Controller
 
     private function generateToken(User $user)
     {
-        $user->tokens()->delete();
+        // $user->tokens()->delete();
         $token = $user->createToken($user->id)->plainTextToken;
         $tokenInstance = $user->tokens()->latest()->first();
         $tokenInstance->update(['expires_at' => now()->addDay()]);
