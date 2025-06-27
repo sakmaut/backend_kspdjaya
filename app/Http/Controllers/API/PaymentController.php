@@ -1160,10 +1160,6 @@ class PaymentController extends Controller
                     ->orWhere('PAID_FLAG', '=', '')
                     ->orWhereNull('PAID_FLAG');
             })
-            ->where(function ($query) {
-                $query->WhereNull('PAYMENT_VALUE_PRINCIPAL')
-                    ->orWhere('PAYMENT_VALUE_PRINCIPAL', '=', 0);
-            })
             ->orderBy('INSTALLMENT_COUNT', 'ASC')
             ->first();
 
@@ -1256,7 +1252,7 @@ class PaymentController extends Controller
         M_PaymentDetail::create($data);
 
         $credit_schedule->update([
-            'PAYMENT_VALUE_PRINCIPAL' => $getPrincipalPay,
+            'PAYMENT_VALUE_PRINCIPAL' => ($credit_schedule->PAYMENT_VALUE_PRINCIPAL + $getPrincipalPay),
             'INSUFFICIENT_PAYMENT' => $getInterest,
             'PAYMENT_VALUE' => $getPrincipalPay
         ]);
@@ -1272,7 +1268,7 @@ class PaymentController extends Controller
             })
             ->where(function ($query) {
                 $query->WhereNull('PAYMENT_VALUE_PRINCIPAL')
-                ->orWhere('PAYMENT_VALUE_PRINCIPAL', '=', 0);
+                    ->orWhere('PAYMENT_VALUE_PRINCIPAL', '=', 0);
             })
             ->orderBy('INSTALLMENT_COUNT', 'ASC')
             ->orderBy('PAYMENT_DATE', 'ASC')
