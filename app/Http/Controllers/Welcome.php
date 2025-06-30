@@ -46,15 +46,12 @@ use function Symfony\Component\Mailer\Event\getMessage;
 
 class Welcome extends Controller
 {
-    protected $locationStatus;
-
-    public function __construct(LocationStatus $locationStatus)
-    {
-        $this->locationStatus = $locationStatus;
-    }
-
     public function index(Request $request)
     {
+
+       echo 'TAEEEEE';
+        die;
+        
         try {
             // return response()->json("MAU APA");
             // die;
