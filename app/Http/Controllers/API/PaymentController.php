@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\R_Kwitansi;
 use App\Http\Resources\R_PaymentCancelLog;
@@ -29,6 +30,17 @@ use Ramsey\Uuid\Uuid;
 
 class PaymentController extends Controller
 {
+
+    protected $log;
+    protected $taskslogging;
+    protected $pelunasan;
+
+    public function __construct(ExceptionHandling $log, PelunasanController $pelunasan)
+    {
+        $this->log = $log;
+        $this->pelunasan = $pelunasan;
+    }
+
     public function index(Request $request)
     {
         try {
@@ -672,8 +684,7 @@ class PaymentController extends Controller
             if ($request->flag == 'yes') {
 
                 if ($kwitansi->PAYMENT_TYPE === 'pelunasan') {
-                    $pelunasan = new PelunasanController();
-                    $pelunasan->proccess($request, $kwitansi->LOAN_NUMBER, $getInvoice, 'PAID');
+                    $this->pelunasan->proccess($request, $kwitansi->LOAN_NUMBER, $getInvoice, 'PAID');
                 } else {
                     if (isset($request->struktur) && is_array($request->struktur)) {
                         foreach ($request->struktur as $res) {
@@ -688,8 +699,7 @@ class PaymentController extends Controller
                 $request->merge(['approval' => 'no']);
 
                 if ($kwitansi->PAYMENT_TYPE === 'pelunasan') {
-                    $pelunasan = new PelunasanController();
-                    $pelunasan->proccessCancel($kwitansi->LOAN_NUMBER, $getInvoice, 'CANCEL');
+                    $this->pelunasan->proccessCancel($kwitansi->LOAN_NUMBER, $getInvoice, 'CANCEL');
                 } else {
 
                     if (isset($request->struktur) && is_array($request->struktur)) {
@@ -819,8 +829,7 @@ class PaymentController extends Controller
         if (strtolower($request->flag) === 'yes') {
 
             if ($check->PAYMENT_TYPE === 'pelunasan') {
-                $pelunasan = new PelunasanController();
-                $pelunasan->proccessCancel($check->LOAN_NUMBER, $request->no_invoice, 'CANCEL');
+                $this->pelunasan->proccessCancel($check->LOAN_NUMBER, $request->no_invoice, 'CANCEL');
             } else {
                 $check->update([
                     'STTS_PAYMENT' => 'CANCEL'
