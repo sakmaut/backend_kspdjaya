@@ -119,7 +119,7 @@ class TaksasiController extends Controller
                 DB::raw('CAST(taksasi_price.price AS UNSIGNED) AS price')
             )
                 ->join('taksasi_price', 'taksasi_price.taksasi_id', '=', 'taksasi.id')
-                ->whereRaw('CONCAT(taksasi.code, " - ", taksasimodel, " - ", taksasi.descr) = ?', [$request->code])
+                ->whereRaw('CONCAT(taksasi.code, " - ", taksasi.model, " - ", taksasi.descr) = ?', [$request->code])
                 ->where('taksasi_price.year', '=',  $request->tahun)
                 ->get();
 
