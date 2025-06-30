@@ -541,7 +541,6 @@ class AdminFeeController extends Controller
         $strukturTenors = [];
 
         foreach ($tenors as $tenor) {
-            $tenorData = ['tenor' => 5];
             $total = 0;
             $tenor_name = $tenor . '_month';
 
@@ -562,6 +561,7 @@ class AdminFeeController extends Controller
             $calc = round($pokok_pembayaran * ($eff_rate / 100), 2);
 
             if ($calc > 0) {
+                $tenorData['tenor'] = 5;
                 $tenorData['angsuran'] = $calc;
                 $tenorData['suku_bunga'] = $eff_rate;
                 $tenorData['total_bunga'] = round($calc * $tenor, 2);
