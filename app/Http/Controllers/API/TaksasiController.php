@@ -113,18 +113,16 @@ class TaksasiController extends Controller
                 'tahun.required' => 'Tahun Tidak Boleh Kosong'
             ]);
 
-            $tipe_array = explode(' - ', $request->code);
-
             $data = M_Taksasi::select(
                 'taksasi.code',
                 'taksasi_price.year',
                 DB::raw('CAST(taksasi_price.price AS UNSIGNED) AS price')
             )
                 ->join('taksasi_price', 'taksasi_price.taksasi_id', '=', 'taksasi.id')
-                ->where('taksasi.code', '=', $tipe_array[0])
-                ->where('taksasi.model', '=', $tipe_array[1])
+                ->whereRaw('CONCAT(taksasi.code, " - ", taksasimodel, " - ", taksasi.descr) = ?', [$request->code])
                 ->where('taksasi_price.year', '=',  $request->tahun)
                 ->get();
+
             return response()->json($data, 200);
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
