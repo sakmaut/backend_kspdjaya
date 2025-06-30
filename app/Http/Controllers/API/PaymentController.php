@@ -1095,7 +1095,7 @@ class PaymentController extends Controller
 
             $this->saveKwitansiBungaMenurun($request, $detail_customer, $no_inv, $status);
             $this->proccessKwitansiDetail($request, $loan_number, $no_inv);
-            $this->processPokokBungaMenurun($request,$loan_number, $no_inv);
+            $this->processPokokBungaMenurun($request, $loan_number, $no_inv);
 
             $data = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
 
@@ -1187,35 +1187,29 @@ class PaymentController extends Controller
         }
     }
 
-    private function processPokokBungaMenurun($request,$loan_number, $no_inv)
+    private function processPokokBungaMenurun($request, $loan_number, $no_inv)
     {
-        $kwitansi = M_KwitansiStructurDetail::where([
-            'loan_number' => $loan_number,
-            'no_invoice' => $no_inv
+        $kwitansi = M_Kwitansi::with(['kwitansi_structur_detail', 'branch'])->where([
+            'LOAN_NUMBER' => $loan_number,
+            'NO_TRANSAKSI' => $no_inv
         ])->first();
 
         if (!$kwitansi) return;
 
-        $byr_angsuran = floatval($kwitansi->bayar_angsuran);
-
         $credit_schedule = M_CreditSchedule::where([
             'LOAN_NUMBER' => $loan_number,
-            'INSTALLMENT_COUNT' => floatval($kwitansi->angsuran_ke ?? 0)
+            'INSTALLMENT_COUNT' => $kwitansi->kwitansi_structur_detail->map(function ($res) {
+                return intval($res->angsuran_ke);
+            })
         ])->first();
 
         if (!$credit_schedule) return;
 
-        $getInterest = floatval($credit_schedule->INTEREST);
-        $getPrincipalPay = floatval($byr_angsuran);
+        $getPrincipalPay = (float) $kwitansi->kwitansi_structur_detail->sum(function ($detail) {
+            return floatval($detail->bayar_angsuran);
+        });
 
-        $kwitansi = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
-
-        if ($kwitansi) {
-            $user_id = $kwitansi->CREATED_BY;
-            $getCodeBranch = M_Branch::find($kwitansi->BRANCH_CODE);
-        }
-
-        $uid= Uuid::uuid7()->toString();
+        $uid = Uuid::uuid7()->toString();
 
         $paymentData = [
             'ID' => $uid,
@@ -1223,8 +1217,8 @@ class PaymentController extends Controller
             'STTS_RCRD' => 'PAID',
             'INVOICE' => $no_inv ?? '',
             'NO_TRX' => $request->uid ?? '',
-            'PAYMENT_METHOD' => $kwitansi->METODE_PEMBAYARAN ?? $request->payment_method,
-            'BRANCH' =>  $getCodeBranch->CODE_NUMBER ?? '',
+            'PAYMENT_METHOD' => $kwitansi->METODE_PEMBAYARAN ?? '',
+            'BRANCH' =>  $kwitansi->branch['CODE_NUMBER'] ?? '',
             'LOAN_NUM' => $loan_number,
             'VALUE_DATE' => null,
             'ENTRY_DATE' => now(),
@@ -1234,7 +1228,7 @@ class PaymentController extends Controller
             'OS_AMOUNT' => $os_amount ?? 0,
             'START_DATE' => $tgl_angsuran ?? null,
             'END_DATE' => now(),
-            'USER_ID' => $user_id ?? $request->user()->id,
+            'USER_ID' => $kwitansi->CREATED_BY ?? $request->user()->id,
             'AUTH_BY' => $request->user()->fullname ?? '',
             'AUTH_DATE' => now(),
             'ARREARS_ID' => $res['id_arrear'] ?? '',
@@ -1244,7 +1238,6 @@ class PaymentController extends Controller
         $existing = M_Payment::where($paymentData)->first();
 
         if (!$existing) {
-            $paymentData['BANK_NAME'] = round(microtime(true) * 1000);
             M_Payment::create($paymentData);
         }
 
@@ -1253,13 +1246,12 @@ class PaymentController extends Controller
 
         $credit_schedule->update([
             'PAYMENT_VALUE_PRINCIPAL' => ($credit_schedule->PAYMENT_VALUE_PRINCIPAL + $getPrincipalPay),
-            'INSUFFICIENT_PAYMENT' => $getInterest,
+            'INSUFFICIENT_PAYMENT' => (floatval($credit_schedule->PRINCIPAL) + floatval($credit_schedule->INTEREST)),
             'PAYMENT_VALUE' => $getPrincipalPay
         ]);
 
         $this->addCreditPaid($loan_number, ['ANGSURAN_POKOK' => $getPrincipalPay]);
 
-        // Ambil semua angsuran belum dibayar
         $creditSchedulesUpdate = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)
             ->where(function ($query) {
                 $query->where('PAID_FLAG', '!=', 'PAID')
@@ -1276,7 +1268,6 @@ class PaymentController extends Controller
 
         if ($creditSchedulesUpdate->isEmpty()) return;
 
-        // Hitung total pokok yang belum dibayar
         $totalSisaPokok = $creditSchedulesUpdate->sum('PRINCIPAL');
 
         // // Kurangi dengan pokok yang baru saja dibayar

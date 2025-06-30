@@ -62,4 +62,14 @@ class M_Kwitansi extends Model
     {
         return $this->belongsTo(User::class, 'CREATED_BY', 'id');
     }
+
+    public function kwitansi_structur_detail()
+    {
+        return $this->hasMany(M_KwitansiStructurDetail::class, 'no_invoice', 'NO_TRANSAKSI');
+    }
+
+    public function branch()
+    {
+        return $this->hasOne(M_Branch::class, 'ID', 'BRANCH_CODE');
+    }
 }
