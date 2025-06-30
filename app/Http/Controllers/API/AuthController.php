@@ -1,5 +1,7 @@
 <?php
+
 namespace App\Http\Controllers\API;
+
 use App\Http\Controllers\Controller;
 use App\Models\M_MasterUserAccessMenu;
 use App\Models\User;
@@ -31,7 +33,7 @@ class AuthController extends Controller
             if ($validator->fails()) {
                 throw new ValidationException($validator);
             }
-            
+
             $credentials = $request->only('username', 'password');
 
             if (!Auth::attempt($credentials)) {
@@ -46,7 +48,7 @@ class AuthController extends Controller
                 throw new AuthenticationException('Invalid credentials');
             }
 
-            $menu = M_MasterUserAccessMenu::where(['users_id'=>$user->id])->first();
+            $menu = M_MasterUserAccessMenu::where(['users_id' => $user->id])->first();
 
             if (!$menu) {
                 $this->logLoginActivity($request, 'Menu Not Found', 401);
@@ -55,9 +57,8 @@ class AuthController extends Controller
 
             $token = $this->generateToken($user);
 
-            $this->logLoginActivity($request, 'Success '.$token, 200);
+            $this->logLoginActivity($request, 'Success ' . $token, 200);
             return response()->json(['token' => $token], 200);
-
         } catch (\Exception $e) {
             $this->logLoginActivity($request, $e->getMessage(), 500);
             return response()->json([
@@ -69,7 +70,7 @@ class AuthController extends Controller
 
     private function generateToken(User $user)
     {
-        $user->tokens()->delete();
+        // $user->tokens()->delete();
         return $user->createToken($user->id)->plainTextToken;
     }
 
@@ -85,7 +86,7 @@ class AuthController extends Controller
 
             if ($user) {
                 $user->tokens()->delete();
-                ActivityLogger::logActivityLogout($request, $this->logout, "Success", 200,$user->username);
+                ActivityLogger::logActivityLogout($request, $this->logout, "Success", 200, $user->username);
                 return response()->json([
                     'message' => 'Logout successful',
                     'status' => 200,
@@ -94,15 +95,14 @@ class AuthController extends Controller
                     ]
                 ], 200);
             } else {
-                ActivityLogger::logActivityLogout($request, $this->logout, "Token not defined", 404,$user->username);
+                ActivityLogger::logActivityLogout($request, $this->logout, "Token not defined", 404, $user->username);
                 return response()->json([
                     'message' => 'Token not defined',
                     'status' => 404
                 ], 404);
             }
-    
         } catch (\Exception $e) {
-            ActivityLogger::logActivityLogout($request,$this->logout,$e,500,$user->username);
+            ActivityLogger::logActivityLogout($request, $this->logout, $e, 500, $user->username);
             return response()->json([
                 'message' => 'An error occurred',
                 'status' => 500
