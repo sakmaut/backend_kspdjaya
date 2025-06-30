@@ -701,7 +701,8 @@ class PaymentController extends Controller
             $check_credit->update([
                 'PAID_PRINCIPAL' => floatval($check_credit->PAID_PRINCIPAL) + floatval($paidPrincipal),
                 'PAID_INTEREST' => floatval($check_credit->PAID_INTEREST) + floatval($paidInterest),
-                'PAID_PENALTY' => floatval($check_credit->PAID_PENALTY) + floatval($paidPenalty)
+                'PAID_PENALTY' => floatval($check_credit->PAID_PENALTY) + floatval($paidPenalty),
+                'MOD_USER' => $req->user()->id ?? null
             ]);
         }
     }
