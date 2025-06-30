@@ -22,12 +22,10 @@ class AuthController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'username' => 'required|string|max:255',
-                'password' => 'required|string',
-                'device_info' => 'required|string|max:500'
+                'password' => 'required|string'
             ], [
                 'username.required' => 'Username is required',
-                'password.required' => 'Password is required',
-                'device_info.required' => 'Device information is required'
+                'password.required' => 'Password is required'
             ]);
 
             if ($validator->fails()) {
