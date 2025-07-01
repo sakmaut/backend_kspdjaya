@@ -11,6 +11,7 @@ use App\Models\M_Arrears;
 use App\Models\M_CrCollateral;
 use App\Models\M_Credit;
 use App\Models\M_CreditSchedule;
+use App\Models\M_CrOrder;
 use App\Models\M_CrSurveyDocument;
 use App\Models\M_Customer;
 use App\Models\M_CustomerDocument;
@@ -255,6 +256,7 @@ class CustomerController extends Controller
 
             $loanNumber = $request->loan_number;
 
+            $credit = M_Credit::where('LOAN_NUMBER', $loanNumber)->first();
             $cekKwitansi = M_Kwitansi::where('STTS_PAYMENT', 'WAITING CANCEL')->where('LOAN_NUMBER', $loanNumber)->first();
 
             if ($cekKwitansi) {
@@ -304,7 +306,11 @@ class CustomerController extends Controller
             $j = 0;
             foreach ($data as $res) {
 
-                $installment = floatval($res->INSTALLMENT) - floatval($res->PAYMENT_VALUE);
+                if ($credit->CREDIT_TYPE == 'bunga_menurun') {
+                    $installment = floatval($res->INSTALLMENT);
+                } else {
+                    $installment = floatval($res->INSTALLMENT) - floatval($res->PAYMENT_VALUE);
+                }
 
                 $schedule[] = [
                     'key' => $j++,
