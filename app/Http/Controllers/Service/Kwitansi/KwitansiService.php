@@ -56,10 +56,18 @@ class KwitansiService
 
         if ($dari && $dari !== 'null') {
             $query->whereDate('CREATED_AT', Carbon::parse($dari)->toDateString());
-        } elseif (!$request->filled('notrx') && !$request->filled('nama') && !$request->filled('no_kontrak')) {
+        } elseif (
+            blank($request->query('notrx')) &&
+            blank($request->query('nama')) &&
+            blank($request->query('no_kontrak'))
+        ) {
             $query->whereDate('CREATED_AT', Carbon::today()->toDateString());
         }
 
         return $query->get();
+    }
+
+    public function create()
+    {
     }
 }
