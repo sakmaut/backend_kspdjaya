@@ -308,30 +308,52 @@ class CustomerController extends Controller
 
                 if ($credit->CREDIT_TYPE == 'bunga_menurun') {
                     $installment = floatval($res->INSTALLMENT);
+
+
+                    $schedule[] = [
+                        'key' => $j++,
+                        'angsuran_ke' => $res->INSTALLMENT_COUNT,
+                        'loan_number' => $res->LOAN_NUMBER,
+                        'tgl_angsuran' => Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y'),
+                        'principal' => floatval($res->PRINCIPAL),
+                        'interest' => floatval($res->INTEREST),
+                        'installment' => $installment,
+                        'principal_prev' => floatval($res->PAYMENT_VALUE_PRINCIPAL),
+                        'interest_prev' => floatval($res->PAYMENT_VALUE_INTEREST),
+                        'insuficient_payment_prev' => floatval($res->INSUFFICIENT_PAYMENT),
+                        'principal_remains' => floatval($res->PRINCIPAL_REMAINS),
+                        'payment' => floatval($res->PAYMENT_VALUE),
+                        'bayar_angsuran' => $installment,
+                        'bayar_denda' => $installment == 0 ? 0 : floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->PAID_PENALTY ?? 0),
+                        'total_bayar' => floatval($res->INSTALLMENT + ($res->PAST_DUE_PENALTY ?? 0)),
+                        'id_arrear' => $res->id_arrear ?? '',
+                        'flag' => $res->PAID_FLAG ?? '',
+                        'denda' => floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->PAID_PENALTY ?? 0)
+                    ];
                 } else {
                     $installment = floatval($res->INSTALLMENT) - floatval($res->PAYMENT_VALUE);
-                }
 
-                $schedule[] = [
-                    'key' => $j++,
-                    'angsuran_ke' => $res->INSTALLMENT_COUNT,
-                    'loan_number' => $res->LOAN_NUMBER,
-                    'tgl_angsuran' => Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y'),
-                    'principal' => floatval($res->PRINCIPAL),
-                    'interest' => floatval($res->INTEREST),
-                    'installment' => $installment,
-                    'principal_prev' => floatval($res->PAYMENT_VALUE_PRINCIPAL),
-                    'interest_prev' => floatval($res->PAYMENT_VALUE_INTEREST),
-                    'insuficient_payment_prev' => floatval($res->INSUFFICIENT_PAYMENT),
-                    'principal_remains' => floatval($res->PRINCIPAL_REMAINS),
-                    'payment' => floatval($res->PAYMENT_VALUE),
-                    'bayar_angsuran' => floatval($res->INSTALLMENT) - floatval($res->PAYMENT_VALUE),
-                    'bayar_denda' => $installment == 0 ? 0 : floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->PAID_PENALTY ?? 0),
-                    'total_bayar' => floatval($res->INSTALLMENT + ($res->PAST_DUE_PENALTY ?? 0)),
-                    'id_arrear' => $res->id_arrear ?? '',
-                    'flag' => $res->PAID_FLAG ?? '',
-                    'denda' => floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->PAID_PENALTY ?? 0)
-                ];
+                    $schedule[] = [
+                        'key' => $j++,
+                        'angsuran_ke' => $res->INSTALLMENT_COUNT,
+                        'loan_number' => $res->LOAN_NUMBER,
+                        'tgl_angsuran' => Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y'),
+                        'principal' => floatval($res->PRINCIPAL),
+                        'interest' => floatval($res->INTEREST),
+                        'installment' => $installment,
+                        'principal_prev' => floatval($res->PAYMENT_VALUE_PRINCIPAL),
+                        'interest_prev' => floatval($res->PAYMENT_VALUE_INTEREST),
+                        'insuficient_payment_prev' => floatval($res->INSUFFICIENT_PAYMENT),
+                        'principal_remains' => floatval($res->PRINCIPAL_REMAINS),
+                        'payment' => floatval($res->PAYMENT_VALUE),
+                        'bayar_angsuran' => floatval($res->INSTALLMENT) - floatval($res->PAYMENT_VALUE),
+                        'bayar_denda' => $installment == 0 ? 0 : floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->PAID_PENALTY ?? 0),
+                        'total_bayar' => floatval($res->INSTALLMENT + ($res->PAST_DUE_PENALTY ?? 0)),
+                        'id_arrear' => $res->id_arrear ?? '',
+                        'flag' => $res->PAID_FLAG ?? '',
+                        'denda' => floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->PAID_PENALTY ?? 0)
+                    ];
+                }
             }
 
             return response()->json($schedule, 200);
