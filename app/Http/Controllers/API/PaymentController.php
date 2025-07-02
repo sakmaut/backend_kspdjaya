@@ -372,13 +372,19 @@ class PaymentController extends Controller
             $current_payment_value = floatval($credit_schedule->PAYMENT_VALUE);
             $installment = floatval($credit_schedule->INSTALLMENT);
 
-            if ($current_payment_value < $installment) {
-                $remaining_payment = $installment - $current_payment_value;
-                $additional_payment = min($byr_angsuran, $remaining_payment);
-                $payment_value = $current_payment_value + $additional_payment;
+            // if ($current_payment_value < $installment) {
+            //     $remaining_payment = $installment - $current_payment_value;
+            //     $additional_payment = min($byr_angsuran, $remaining_payment);
+            //     $payment_value = $current_payment_value + $additional_payment;
 
-                $updates['PAYMENT_VALUE'] = $payment_value;
-            }
+            //     $updates['PAYMENT_VALUE'] = $payment_value;
+            // }
+
+            $remaining_payment = $installment - $current_payment_value;
+            $additional_payment = min($byr_angsuran, $remaining_payment);
+            $payment_value = $current_payment_value + $additional_payment;
+
+            $updates['PAYMENT_VALUE'] = $payment_value + $current_payment_value;
 
             $insufficient_payment = max(0, $total_interest - $new_payment_value_interest);
 
@@ -1256,8 +1262,8 @@ class PaymentController extends Controller
 
         $credit_schedule->update([
             'PAYMENT_VALUE_PRINCIPAL' => ($credit_schedule->PAYMENT_VALUE_PRINCIPAL + $getPrincipalPay),
-            'INSUFFICIENT_PAYMENT' => (floatval($credit_schedule->PRINCIPAL) + floatval($credit_schedule->INTEREST)),
-            'PAYMENT_VALUE' => $getPrincipalPay
+            'INSUFFICIENT_PAYMENT' => (floatval($credit_schedule->INTEREST) - floatval($credit_schedule->PAYMENT_VALUE_INTEREST)),
+            'PAYMENT_VALUE' => (floatval($credit_schedule->PAYMENT_VALUE) + floatval($getPrincipalPay))
         ]);
 
         $this->addCreditPaid($loan_number, ['ANGSURAN_POKOK' => $getPrincipalPay]);
@@ -1283,7 +1289,6 @@ class PaymentController extends Controller
         $sisa_pokok = $totalSisaPokok - $getPrincipalPay;
         $sisa_pokok = max(0, $sisa_pokok);
 
-        // // Buat objek data dasar amortisasi
         $getNewTenor = count($creditSchedulesUpdate);
         $calc = round($sisa_pokok * (3 / 100), 2);
 
