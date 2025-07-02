@@ -207,12 +207,19 @@ class AdminFeeController extends Controller
                 $show = [];
             } else {
                 if ($angsuran_type == 'bunga_menurun') {
+
+                    $tenors = [
+                        '5' => 6
+                    ];
+
+                    $value = $tenors[(string)$tenor];
+
                     $show = $this->buildArrayBungaMenurun(
                         $adminFee,
                         [
                             'returnSingle' => true,
                             'type' => 'fee',
-                            'tenor' => (int) $tenor,
+                            'tenor' => $value,
                             'plafond' => $request->plafond,
                             'angsuran_type' => $angsuran_type
                         ]
