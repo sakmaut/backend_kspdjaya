@@ -1154,33 +1154,36 @@ class PaymentController extends Controller
 
     private function proccessKwitansiDetail($request, $loan_number, $no_inv)
     {
-        $creditSchedules = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)
+        $maxInstallmentCount = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)
+            ->max('INSTALLMENT_COUNT');
+
+        $creditSchedule = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)
+            ->where('INSTALLMENT_COUNT', $maxInstallmentCount)
             ->where(function ($query) {
                 $query->where('PAID_FLAG', '!=', 'PAID')
-                    ->orWhere('PAID_FLAG', '=', '')
+                    ->orWhere('PAID_FLAG', '')
                     ->orWhereNull('PAID_FLAG');
             })
-            ->orderBy('INSTALLMENT_COUNT', 'ASC')
             ->first();
 
-        if ($creditSchedules) {
+        if ($creditSchedule) {
             M_KwitansiStructurDetail::firstOrCreate([
                 'no_invoice' => $no_inv,
-                'loan_number' => $creditSchedules['LOAN_NUMBER'] ?? ''
+                'loan_number' => $creditSchedule['LOAN_NUMBER'] ?? ''
             ], [
-                'key' => $creditSchedules['INSTALLMENT_COUNT'] ?? 1,
-                'angsuran_ke' => $creditSchedules['INSTALLMENT_COUNT'] ?? '',
-                'tgl_angsuran' => Carbon::parse($creditSchedules['PAYMENT_DATE'])->format('d-m-Y') ?? null,
-                'principal' => $creditSchedules['PRINCIPAL'] ?? '',
-                'interest' => $creditSchedules['INTEREST'] ?? '',
-                'installment' => $creditSchedules['INSTALLMENT'] ?? '',
-                'principal_remains' => $creditSchedules['PRINCIPAL_REMAINS'] ?? '',
-                'principal_prev' => $creditSchedules['principal_prev'] ?? 0,
-                'payment' => $creditSchedules['INSTALLMENT'] ?? '',
+                'key' => $creditSchedule['INSTALLMENT_COUNT'] ?? 1,
+                'angsuran_ke' => $creditSchedule['INSTALLMENT_COUNT'] ?? '',
+                'tgl_angsuran' => Carbon::parse($creditSchedule['PAYMENT_DATE'])->format('d-m-Y') ?? null,
+                'principal' => $creditSchedule['PRINCIPAL'] ?? '',
+                'interest' => $creditSchedule['INTEREST'] ?? '',
+                'installment' => $creditSchedule['INSTALLMENT'] ?? '',
+                'principal_remains' => $creditSchedule['PRINCIPAL_REMAINS'] ?? '',
+                'principal_prev' => $creditSchedule['principal_prev'] ?? 0,
+                'payment' => $creditSchedule['INSTALLMENT'] ?? '',
                 'bayar_angsuran' => $request->UANG_PELANGGAN ?? '0',
                 'bayar_denda' => '0',
                 'total_bayar' => $request->TOTAL_BAYAR ?? '',
-                'flag' => $creditSchedules['PAID_FLAG'] ?? '',
+                'flag' => $creditSchedule['PAID_FLAG'] ?? '',
                 'denda' => '0',
                 'diskon_denda' => 0
             ]);
