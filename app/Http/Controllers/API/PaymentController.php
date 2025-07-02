@@ -57,7 +57,7 @@ class PaymentController extends Controller
                     ->where(function ($query) {
                         $query->where(function ($q) {
                             $q->where('METODE_PEMBAYARAN', '!=', 'cash')
-                                ->where('PAYMENT_TYPE', 'angsuran');
+                                ->whereIn('PAYMENT_TYPE', ['angsuran', 'pokok_sebagian']);
                         })->orWhere(function ($q) {
                             $q->where('METODE_PEMBAYARAN', 'cash')
                                 ->where('PAYMENT_TYPE', 'pelunasan');
@@ -805,7 +805,9 @@ class PaymentController extends Controller
                 if ($request->flag == 'yes') {
 
                     if ($kwitansi->PAYMENT_TYPE === 'pelunasan') {
-                        $this->pelunasan->proccess($request, $kwitansi->LOAN_NUMBER, $getNoInvoice, 'PAID');
+                        $this->pelunasan->proccess($request, $getLoanNumber, $getNoInvoice, 'PAID');
+                    } elseif ($kwitansi->PAYMENT_TYPE === 'pokok_sebagian') {
+                        $this->processPokokBungaMenurun($request, $getLoanNumber, $getNoInvoice);
                     } else {
                         $getKwitansiDetail = M_KwitansiStructurDetail::where([
                             'no_invoice' => $getNoInvoice
@@ -1101,7 +1103,10 @@ class PaymentController extends Controller
 
             $this->saveKwitansiBungaMenurun($request, $detail_customer, $no_inv, $status);
             $this->proccessKwitansiDetail($request, $loan_number, $no_inv);
-            $this->processPokokBungaMenurun($request, $loan_number, $no_inv);
+
+            if ($status == 'PAID') {
+                $this->processPokokBungaMenurun($request, $loan_number, $no_inv);
+            }
 
             $data = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
 
