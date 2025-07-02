@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Repositories\TasksLogging\TasksRepository;
+use App\Http\Controllers\Service\Kwitansi\KwitansiService;
 use App\Http\Resources\R_Kwitansi;
 use App\Models\M_Arrears;
 use App\Models\M_Branch;
@@ -30,73 +31,27 @@ class PaymentController extends Controller
     protected $log;
     protected $taskslogging;
     protected $pelunasan;
+    protected $kwitansiService;
 
-    public function __construct(ExceptionHandling $log, TasksRepository $taskslogging, PelunasanController $pelunasan)
-    {
+    public function __construct(
+        ExceptionHandling $log,
+        TasksRepository $taskslogging,
+        PelunasanController $pelunasan,
+        KwitansiService $kwitansiService
+    ) {
         $this->log = $log;
         $this->taskslogging = $taskslogging;
         $this->pelunasan = $pelunasan;
+        $this->kwitansiService = $kwitansiService;
     }
 
     public function index(Request $request)
     {
         try {
-            $notrx = $request->query('notrx');
-            $nama = $request->query('nama');
-            $no_kontrak = $request->query('no_kontrak');
-            $tipe = $request->query('tipe');
-            $dari = $request->query('dari');
+            $kwitansi = $this->kwitansiService->getKwitansiPayment($request);
+            $results = R_Kwitansi::collection($kwitansi);
 
-            $getPosition = $request->user()->position;
-            $getBranch = $request->user()->branch_id;
-
-            $data = M_Kwitansi::orderBy('CREATED_AT', 'DESC');
-
-            if (strtolower($getPosition) == 'ho') {
-                $results = $data->where('STTS_PAYMENT', 'PENDING')
-                    ->where(function ($query) {
-                        $query->where(function ($q) {
-                            $q->where('METODE_PEMBAYARAN', '!=', 'cash')
-                                ->whereIn('PAYMENT_TYPE', ['angsuran', 'pokok_sebagian']);
-                        })->orWhere(function ($q) {
-                            $q->where('METODE_PEMBAYARAN', 'cash')
-                                ->where('PAYMENT_TYPE', 'pelunasan');
-                        });
-                    })->get();
-
-                $dto = R_Kwitansi::collection($results);
-                return response()->json($dto, 200);
-            }
-
-            $data->where('BRANCH_CODE', $getBranch);
-
-            if ($tipe) {
-                $data->where('PAYMENT_TYPE', $tipe == 'pelunasan' ? 'pelunasan' : '!=', 'pelunasan');
-            }
-
-            if ($notrx) {
-                $data->where('NO_TRANSAKSI', $notrx);
-            }
-
-            if ($nama) {
-                $data->where('NAMA', 'like', '%' . $nama . '%');
-            }
-
-            if ($no_kontrak) {
-                $data->where('LOAN_NUMBER', $no_kontrak);
-            }
-
-            if ($dari && $dari != 'null') {
-                $data->whereDate('CREATED_AT', Carbon::parse($dari)->toDateString());
-            } elseif (empty($notrx) && empty($nama) && empty($no_kontrak)) {
-                $data->whereDate('CREATED_AT', Carbon::today()->toDateString());
-            }
-
-            $results = $data->get();
-
-            $dto = R_Kwitansi::collection($results);
-
-            return response()->json($dto, 200);
+            return response()->json($results, 200);
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
         }
