@@ -1264,12 +1264,18 @@ class PaymentController extends Controller
         foreach ($creditSchedulesUpdate as $index => $schedule) {
             $updateData = $data_credit_schedule[$index];
 
-            $schedule->update([
+            $updateArray = [
                 'PRINCIPAL' => $updateData['pokok'],
                 'INTEREST' => $updateData['bunga'],
                 'INSTALLMENT' => $updateData['total_angsuran'],
                 'PRINCIPAL_REMAINS' => $updateData['baki_debet'],
-            ]);
+            ];
+
+            if ((float)$updateData['total_angsuran'] == 0) {
+                $updateArray['PAID_FLAG'] = 'PAID';
+            }
+
+            $schedule->update($updateArray);
         }
     }
 
