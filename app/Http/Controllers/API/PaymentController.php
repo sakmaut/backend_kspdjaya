@@ -1154,16 +1154,23 @@ class PaymentController extends Controller
 
     private function proccessKwitansiDetail($request, $loan_number, $no_inv)
     {
-        $maxInstallmentCount = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)
-            ->max('INSTALLMENT_COUNT');
+        $firstInstallment = DB::table('credit_schedule')
+            ->select('INSTALLMENT_COUNT')
+            ->where('LOAN_NUMBER', $loan_number)
+            ->where('PAID_FLAG', 'PAID')
+            ->orderBy('INSTALLMENT_COUNT', 'desc')
+            ->first();
+
+        if (!$firstInstallment) {
+            $firstInstallment = DB::table('credit_schedule')
+                ->select('INSTALLMENT_COUNT')
+                ->where('LOAN_NUMBER', $loan_number)
+                ->orderBy('INSTALLMENT_COUNT', 'asc')
+                ->first();
+        }
 
         $creditSchedule = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)
-            ->where('INSTALLMENT_COUNT', $maxInstallmentCount)
-            ->where(function ($query) {
-                $query->where('PAID_FLAG', '!=', 'PAID')
-                    ->orWhere('PAID_FLAG', '')
-                    ->orWhereNull('PAID_FLAG');
-            })
+            ->where('INSTALLMENT_COUNT', intval($firstInstallment->INSTALLMENT_COUNT))
             ->first();
 
         if ($creditSchedule) {
@@ -1262,8 +1269,8 @@ class PaymentController extends Controller
                     ->orWhereNull('PAID_FLAG');
             })
             ->where(function ($query) {
-                $query->WhereNull('PAYMENT_VALUE_PRINCIPAL')
-                    ->orWhere('PAYMENT_VALUE_PRINCIPAL', '=', 0);
+                $query->whereNull('PAYMENT_VALUE_PRINCIPAL')
+                    ->orWhere('PAYMENT_VALUE_PRINCIPAL', '=', '');
             })
             ->orderBy('INSTALLMENT_COUNT', 'ASC')
             ->orderBy('PAYMENT_DATE', 'ASC')
@@ -1273,7 +1280,6 @@ class PaymentController extends Controller
 
         $totalSisaPokok = $creditSchedulesUpdate->sum('PRINCIPAL');
 
-        // // Kurangi dengan pokok yang baru saja dibayar
         $sisa_pokok = $totalSisaPokok - $getPrincipalPay;
         $sisa_pokok = max(0, $sisa_pokok);
 
