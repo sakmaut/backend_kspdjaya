@@ -1261,7 +1261,6 @@ class PaymentController extends Controller
 
         $data_credit_schedule = $this->generateAmortizationScheduleBungaMenurun($data);
 
-        $ttlInterest = 0;
         foreach ($creditSchedulesUpdate as $index => $schedule) {
             $updateData = $data_credit_schedule[$index];
 
@@ -1276,16 +1275,21 @@ class PaymentController extends Controller
                 $updateArray['PAID_FLAG'] = 'PAID';
             }
 
-            $ttlInterest += floatval($updateData['bunga']);
-
-            $check_credit = M_Credit::where(['LOAN_NUMBER' => $loan_number])->first();
-
-            $check_credit->update([
-                'INTRST_ORI' => $ttlInterest ?? 0
-            ]);
-
             $schedule->update($updateArray);
         }
+
+        $totalInterest = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)
+            ->where(function ($query) {
+                $query->where('PAID_FLAG', '')
+                    ->orWhereNull('PAID_FLAG');
+            })
+            ->sum('INTEREST');
+
+        $check_credit = M_Credit::where(['LOAN_NUMBER' => $loan_number])->first();
+
+        $check_credit->update([
+            'INTRST_ORI' => $totalInterest ?? 0
+        ]);
     }
 
     private function generateAmortizationScheduleBungaMenurun($data)
