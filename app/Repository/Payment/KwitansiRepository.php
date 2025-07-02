@@ -20,7 +20,7 @@ class KwitansiRepository
 
     public function getPendingForHO()
     {
-        return $this->model::orderBy('CREATED_AT', 'DESC')
+        return $this->getAllOrdered()
             ->where('STTS_PAYMENT', 'PENDING')
             ->where(function ($q) {
                 $q->where(function ($sub) {
@@ -35,8 +35,7 @@ class KwitansiRepository
 
     public function getFilteredForBranch($branchCode, $filters = [], $date = null)
     {
-        $query = $this->model::orderBy('CREATED_AT', 'DESC')
-            ->where('BRANCH_CODE', $branchCode);
+        $query = $this->getAllOrdered()->where('BRANCH_CODE', $branchCode);
 
         foreach ($filters as [$column, $operator, $value]) {
             if ($value && $value !== '%') {
