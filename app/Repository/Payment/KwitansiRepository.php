@@ -4,6 +4,7 @@ namespace App\Repository\Payment;
 
 use App\Models\M_Kwitansi;
 
+
 class KwitansiRepository
 {
     protected $model;
@@ -48,5 +49,10 @@ class KwitansiRepository
         }
 
         return $query->get();
+    }
+
+    public function create($request = [])
+    {
+        return $this->model->create($request);
     }
 }

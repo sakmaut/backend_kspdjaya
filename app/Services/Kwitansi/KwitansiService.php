@@ -5,16 +5,21 @@ namespace App\Services\Kwitansi;
 use App\Http\Controllers\Enum\UserPosition\UserPositionEnum;
 use App\Repository\Payment\KwitansiRepository;
 use Carbon\Carbon;
+use Ramsey\Uuid\Uuid;
 
 class KwitansiService
 {
     protected $kwitansiRepository;
     protected $userPositionEnum;
+    protected $uuid;
 
-    function __construct(KwitansiRepository $kwitansiRepository, UserPositionEnum $userPositionEnum)
-    {
+    function __construct(
+        KwitansiRepository $kwitansiRepository,
+        UserPositionEnum $userPositionEnum
+    ) {
         $this->kwitansiRepository = $kwitansiRepository;
         $this->userPositionEnum = $userPositionEnum;
+        $this->uuid = Uuid::uuid7()->toString();
     }
 
     public function getKwitansiPayment($request)
@@ -46,5 +51,10 @@ class KwitansiService
         }
 
         return $this->kwitansiRepository->getFilteredForBranch($user->branch_id, $filters, $dateFilter);
+    }
+
+    public function create($request)
+    {
+        $this->kwitansiRepository->create();
     }
 }

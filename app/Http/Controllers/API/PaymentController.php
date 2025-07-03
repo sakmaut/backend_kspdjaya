@@ -1220,8 +1220,12 @@ class PaymentController extends Controller
         $data = $this->preparePaymentData($uid, 'ANGSURAN_POKOK', $getPrincipalPay);
         M_PaymentDetail::create($data);
 
+        $principalPay = ($credit_schedule->PAYMENT_VALUE_PRINCIPAL + $getPrincipalPay);
+
         $credit_schedule->update([
-            'PAYMENT_VALUE_PRINCIPAL' => ($credit_schedule->PAYMENT_VALUE_PRINCIPAL + $getPrincipalPay),
+            'PRINCIPAL' => $principalPay,
+            'INSTALLMENT' => $principalPay + $credit_schedule->INSTALLMENT,
+            'PAYMENT_VALUE_PRINCIPAL' => $principalPay,
             'INSUFFICIENT_PAYMENT' => (floatval($credit_schedule->INTEREST) - floatval($credit_schedule->PAYMENT_VALUE_INTEREST)),
             'PAYMENT_VALUE' => (floatval($credit_schedule->PAYMENT_VALUE) + floatval($getPrincipalPay))
         ]);
