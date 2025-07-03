@@ -1225,7 +1225,7 @@ class PaymentController extends Controller
 
         $credit_schedule->update([
             'PRINCIPAL' => $principalPay,
-            'INSTALLMENT' => $principalPay + $credit_schedule->INSTALLMENT,
+            'INSTALLMENT' => $principalPay + $credit_schedule->INTEREST,
             'PAYMENT_VALUE_PRINCIPAL' => $principalPay,
             'INSUFFICIENT_PAYMENT' => (floatval($credit_schedule->INTEREST) - floatval($credit_schedule->PAYMENT_VALUE_INTEREST)),
             'PAYMENT_VALUE' => (floatval($credit_schedule->PAYMENT_VALUE) + floatval($getPrincipalPay))
