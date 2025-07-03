@@ -324,22 +324,23 @@ class PaymentController extends Controller
                 $this->addCreditPaid($loan_number, ['ANGSURAN_BUNGA' => $valInterest]);
             }
 
+
             $current_payment_value = floatval($credit_schedule->PAYMENT_VALUE);
-            $installment = floatval($credit_schedule->INSTALLMENT);
+            // $installment = floatval($credit_schedule->INSTALLMENT);
 
-            // if ($current_payment_value < $installment) {
-            //     $remaining_payment = $installment - $current_payment_value;
-            //     $additional_payment = min($byr_angsuran, $remaining_payment);
-            //     $payment_value = $current_payment_value + $additional_payment;
+            // // if ($current_payment_value < $installment) {
+            // //     $remaining_payment = $installment - $current_payment_value;
+            // //     $additional_payment = min($byr_angsuran, $remaining_payment);
+            // //     $payment_value = $current_payment_value + $additional_payment;
 
-            //     $updates['PAYMENT_VALUE'] = $payment_value;
-            // }
+            // //     $updates['PAYMENT_VALUE'] = $payment_value;
+            // // }
 
-            $remaining_payment = $installment - $current_payment_value;
-            $additional_payment = min($byr_angsuran, $remaining_payment);
-            $payment_value = $current_payment_value + $additional_payment;
+            // $remaining_payment = $installment - $current_payment_value;
+            // $additional_payment = min($byr_angsuran, $remaining_payment);
+            // $payment_value = $current_payment_value + $additional_payment;
 
-            $updates['PAYMENT_VALUE'] = $payment_value + $current_payment_value;
+            $updates['PAYMENT_VALUE'] = $byr_angsuran + $current_payment_value;
 
             $insufficient_payment = max(0, $total_interest - $new_payment_value_interest);
 
