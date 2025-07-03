@@ -10,7 +10,6 @@ use App\Models\M_Arrears;
 use App\Models\M_Branch;
 use App\Models\M_Credit;
 use App\Models\M_CreditSchedule;
-use App\Models\M_Customer;
 use App\Models\M_Kwitansi;
 use App\Models\M_KwitansiDetailPelunasan;
 use App\Models\M_KwitansiStructurDetail;
@@ -866,6 +865,14 @@ class PaymentController extends Controller
 
             $no_invoice = $request->no_invoice;
             $flag = $request->flag;
+
+            $ccheckPokokSebagian = M_Kwitansi::where([
+                'NO_TRANSAKSI' => $no_invoice
+            ])->where('PAYMENT_TYPE', 'pokok_sebagian')->first();
+
+            if (!$ccheckPokokSebagian) {
+                throw new Exception("Kwitansi Pokok Sebagian Tidak Boleh Dicancel", 404);
+            }
 
             $check = M_Kwitansi::where([
                 'NO_TRANSAKSI' => $no_invoice
