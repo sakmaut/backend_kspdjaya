@@ -1049,24 +1049,15 @@ class PaymentController extends Controller
     {
         DB::beginTransaction();
         try {
-            $loan_number = $request->LOAN_NUMBER;
-            $no_inv = generateCodeKwitansi($request, 'kwitansi', 'NO_TRANSAKSI', 'INV');
+            $kwitansi = $this->kwitansiService->create($request, 'pokok_sebagian');
 
-            $credit = M_Credit::where('LOAN_NUMBER', $loan_number)->firstOrFail();
-            $detail_customer = M_Customer::where('CUST_CODE', $credit->CUST_CODE)->firstOrFail();
+            $this->proccessKwitansiDetail($request, $kwitansi);
 
-            $status = strtolower($request->METODE_PEMBAYARAN) === 'cash' ? "PAID" : 'PENDING';
-
-            $this->saveKwitansiBungaMenurun($request, $detail_customer, $no_inv, $status);
-            $this->proccessKwitansiDetail($request, $loan_number, $no_inv);
-
-            if ($status == 'PAID') {
-                $this->processPokokBungaMenurun($request, $loan_number, $no_inv);
+            if ($kwitansi->STTS_PAYMENT == 'PAID') {
+                $this->processPokokBungaMenurun($request, $kwitansi);
             }
 
-            $data = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
-
-            $dto = new R_Kwitansi($data);
+            $dto = new R_Kwitansi($kwitansi);
 
             DB::commit();
             return response()->json($dto, 200);
@@ -1076,51 +1067,11 @@ class PaymentController extends Controller
         }
     }
 
-    private function saveKwitansiBungaMenurun($request, $customer, $no_inv, $status)
+    private function proccessKwitansiDetail($request, $kwitansi)
     {
-        $checkKwitansiExist = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
+        $loan_number = $request->LOAN_NUMBER;
+        $no_inv = $kwitansi->NO_TRANSAKSI;
 
-        if ($checkKwitansiExist) {
-            throw new Exception("Kwitansi Exist", 500);
-        }
-
-        $idGenerate = Uuid::uuid7()->toString();
-
-        $data = [
-            "PAYMENT_TYPE" => 'pokok_sebagian',
-            "PAYMENT_ID" => $idGenerate ?? '',
-            "STTS_PAYMENT" => $status,
-            "NO_TRANSAKSI" => $no_inv,
-            "LOAN_NUMBER" => $request->LOAN_NUMBER,
-            "TGL_TRANSAKSI" => Carbon::now(),
-            "CUST_CODE" => $customer->CUST_CODE,
-            "BRANCH_CODE" => $request->user()->branch_id,
-            "NAMA" => $customer->NAME,
-            "ALAMAT" => $customer->ADDRESS,
-            "RT" => $customer->RT,
-            "RW" => $customer->RW,
-            "PROVINSI" => $customer->PROVINCE,
-            "KOTA" => $customer->CITY,
-            "KECAMATAN" => $customer->KECAMATAN,
-            "KELURAHAN" => $customer->KELURAHAN,
-            "METODE_PEMBAYARAN" => $request->METODE_PEMBAYARAN,
-            "TOTAL_BAYAR" => $request->TOTAL_BAYAR ?? 0,
-            "PINALTY_PELUNASAN" => 0,
-            "DISKON_PINALTY_PELUNASAN" => 0,
-            "PEMBULATAN" => $request->PEMBULATAN ?? 0,
-            "DISKON" => $request->JUMLAH_DISKON ?? 0,
-            "KEMBALIAN" => $request->KEMBALIAN ?? 0,
-            "JUMLAH_UANG" => $request->UANG_PELANGGAN,
-            "NAMA_BANK" => $request->NAMA_BANK,
-            "NO_REKENING" => $request->NO_REKENING,
-            "CREATED_BY" => $request->user()->id
-        ];
-
-        M_Kwitansi::create($data);
-    }
-
-    private function proccessKwitansiDetail($request, $loan_number, $no_inv)
-    {
         $firstInstallment = DB::table('credit_schedule')
             ->select('INSTALLMENT_COUNT')
             ->where('LOAN_NUMBER', $loan_number)
@@ -1164,8 +1115,11 @@ class PaymentController extends Controller
         }
     }
 
-    private function processPokokBungaMenurun($request, $loan_number, $no_inv)
+    private function processPokokBungaMenurun($request, $kwitansiDetail)
     {
+        $loan_number = $request->LOAN_NUMBER;
+        $no_inv = $kwitansiDetail->NO_TRANSAKSI;
+
         $kwitansi = M_Kwitansi::with(['kwitansi_structur_detail', 'branch'])->where([
             'LOAN_NUMBER' => $loan_number,
             'NO_TRANSAKSI' => $no_inv

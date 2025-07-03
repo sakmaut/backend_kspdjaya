@@ -74,6 +74,6 @@ class M_Credit extends Model
 
     public function customer()
     {
-        return $this->belongsTo(M_Customer::class, 'CUST_CODE', 'CUST_CODE');
+        return $this->hasOne(M_Customer::class, 'CUST_CODE', 'CUST_CODE');
     }
 }

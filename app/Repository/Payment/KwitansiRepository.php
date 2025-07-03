@@ -51,8 +51,11 @@ class KwitansiRepository
         return $query->get();
     }
 
-    public function create($request = [])
+    public function create($no_inv, $data = [])
     {
-        return $this->model->create($request);
+        return $this->model::firstOrCreate(
+            ['NO_TRANSAKSI' => $no_inv],
+            $data
+        );
     }
 }

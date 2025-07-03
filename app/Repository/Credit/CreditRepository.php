@@ -15,6 +15,9 @@ class CreditRepository
 
     public function creditWithCustomer($loan_number)
     {
-        return $this->model::with('customer')->where('LOAN_NUMBER', $loan_number)->first();
+        return $this->model::with(['customer:NAME,CUST_CODE,ADDRESS,RT,RW,PROVINCE,CITY,KELURAHAN,KECAMATAN'])
+            ->where('LOAN_NUMBER', $loan_number)
+            ->select('LOAN_NUMBER', 'CUST_CODE')
+            ->first();
     }
 }
