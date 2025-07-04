@@ -169,7 +169,7 @@ class CustomerController extends Controller
                 });
             }
 
-            $results = $query->get();
+            $results = $query->limit(15)->get();
 
             $dto = R_CustomerSearch::collection($results);
 
