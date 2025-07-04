@@ -179,13 +179,15 @@ class PaymentController extends Controller
         $tgl_angsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
         $uid = Uuid::uuid7()->toString();
 
-        $credit = M_Credit::where('LOAN_NUMBER', $loan_number)->first();
+        // $credit = M_Credit::where('LOAN_NUMBER', $loan_number)->first();
 
-        if ($credit->CREDIT_TYPE != 'bunga_menurun') {
-            $this->updateCreditSchedule($loan_number, $tgl_angsuran, $res, $uid);
-        } else {
-            $this->updateCreditScheduleBungaMenurun($loan_number, $tgl_angsuran, $res, $uid);
-        }
+        $this->updateCreditSchedule($loan_number, $tgl_angsuran, $res, $uid);
+
+        // if ($credit->CREDIT_TYPE != 'bunga_menurun') {
+        //     $this->updateCreditSchedule($loan_number, $tgl_angsuran, $res, $uid);
+        // } else {
+        //     $this->updateCreditScheduleBungaMenurun($loan_number, $tgl_angsuran, $res, $uid);
+        // }
 
         if ((strtolower($request->diskon_flag) == 'ya' && isset($request->diskon_flag) && $request->diskon_flag != '')) {
             $this->updateDiscountArrears($loan_number, $tgl_angsuran, $res, $uid);
