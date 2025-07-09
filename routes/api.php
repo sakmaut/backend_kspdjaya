@@ -27,6 +27,7 @@ use App\Http\Controllers\API\{
     TaskPusher,
     TaskController
 };
+use App\Http\Controllers\Saving\Controller\C_ProductSaving;
 use App\Http\Controllers\Welcome;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -153,6 +154,11 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::post('listBanTest', [ListBanController::class, 'listBanTest']);
 
     Route::post('lap_pembayaran', [ReportController::class, 'lapPembayaran']);
+
+
+    //Saving
+    Route::resource('product_saving', C_ProductSaving::class);
+    Route::resource('account', C_ProductSaving::class);
 });
 
 

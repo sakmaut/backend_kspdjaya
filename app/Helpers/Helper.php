@@ -472,3 +472,25 @@ if (!function_exists('setPaymentDate')) {
         return date('Y-m-d', $newDate);
     }
 }
+
+if (!function_exists('generateAutoCode')) {
+    function generateAutoCode($model, $field, $prefix = '', $length = 4)
+    {
+        $prefixLength = strlen($prefix);
+
+        $last = $model::where($field, 'like', $prefix . '%')
+            ->orderByRaw("CAST(SUBSTRING($field, " . ($prefixLength + 1) . ") AS UNSIGNED) DESC")
+            ->first();
+
+        if ($last) {
+            $lastNumber = (int) str_replace($prefix, '', $last->$field);
+            $nextNumber = $lastNumber + 1;
+        } else {
+            $nextNumber = 1;
+        }
+
+        $newCode = $prefix . str_pad($nextNumber, $length, '0', STR_PAD_LEFT);
+
+        return $newCode;
+    }
+}
