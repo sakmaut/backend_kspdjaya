@@ -78,10 +78,10 @@ class S_PokokSebagian
             ->select('ID', 'INSTALLMENT_COUNT', 'PAYMENT_DATE', 'PRINCIPAL', 'INTEREST', 'PAYMENT_VALUE_PRINCIPAL', 'PAYMENT_VALUE_INTEREST')
             ->get();
 
-        $interest = $this->buildInterest($request, $creditSchedule);
-        $data = $this->buildPrincipal($request, $interest);
+        // $interest = $this->buildInterest($request, $creditSchedule);
+        // $data = $this->buildPrincipal($request, $interest);
 
-        return $data;
+        return $creditSchedule;
 
         // if ($creditSchedule) {
         //     M_KwitansiStructurDetail::firstOrCreate([
