@@ -25,9 +25,10 @@ use App\Http\Controllers\API\{
     PelunasanController2,
     PhoneBookController,
     ReportController,
-    TaskPusher,
-    TaskController
+    TaskPusher
 };
+
+use App\Http\Controllers\Payment\Controller\C_PokokSebagian;
 use App\Http\Controllers\Welcome;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -106,12 +107,15 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::post('payment_attachment', [PaymentController::class, 'upload']);
     Route::post('payment_approval', [PaymentController::class, 'approval']);
     Route::post('payment_cancel', [PaymentController::class, 'cancel']);
-    Route::post('payment_bunga_menurun', [PaymentController::class, 'processPaymentBungaMenurun']);
     // Route::get('payment_cancel_list', [PaymentController::class, 'cancelList']);
 
     Route::post('pelunasan', [PelunasanController::class, 'checkCredit']);
     Route::post('payment_pelunasan', [PelunasanController::class, 'processPayment']);
     Route::get('list_pelunasan', [PelunasanController::class, 'index']);
+
+    //Pembayaran Pokok Sebagian
+    Route::post('data_pokok_sebagian', [C_PokokSebagian::class, 'index']);
+    Route::post('proses_pokok_sebagian', [C_PokokSebagian::class, 'proccessPayment']);
 
     //Blacklist
     Route::resource('blacklist', CrBlacklistController::class);
