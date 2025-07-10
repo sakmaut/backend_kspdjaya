@@ -70,7 +70,7 @@ class MenuRepository implements MenuRepositoryInterface
         return $query;
     }
 
-    function create($request)
+    public function create($request)
     {
         $getName = $request->menu_name;
         $getRoute = $request->route;
@@ -106,7 +106,7 @@ class MenuRepository implements MenuRepositoryInterface
         return $this->menuEntity::create($data);
     }
 
-    function update($request, $menuId)
+    public function update($request, $menuId)
     {
         $getName = $request->menu_name;
 
@@ -126,6 +126,11 @@ class MenuRepository implements MenuRepositoryInterface
 
         $data = [
             'menu_name' => $request->menu_name,
+            'route' => $request->route,
+            'parent' => $request->parent['id'] ?? $request->parent ?? '',
+            'leading' => $request->leading,
+            'action' => $request->action,
+            'status' => $request->status,
             'updated_by' => $request->user()->id ?? '',
             'updated_at' => Carbon::now()
         ];
