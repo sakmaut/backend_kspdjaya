@@ -32,7 +32,7 @@ class S_ProductSaving
 
     public function createOrUpdate($request, $id = false, $type = "create")
     {
-        $productCode = $this->repository->generateCode();
+        $productCode = $this->repository->generateCodeProductSaving();
 
         $existing = $id ? $this->findById($id) : $this->repository->findByProductCode($productCode);
         $user = $request->user()->id;

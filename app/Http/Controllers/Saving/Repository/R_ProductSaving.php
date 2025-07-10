@@ -18,9 +18,9 @@ class R_ProductSaving
         return $this->model::find($id);
     }
 
-    public function generateCode()
+    public function generateCodeProductSaving()
     {
-        return generateAutoCode($this->model, 'product_code', 'SFI/PRD/');
+        return generateAutoCode($this->model, 'product_code', 'PRD-');
     }
 
     public function findByProductCode($code)
