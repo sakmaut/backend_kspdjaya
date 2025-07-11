@@ -47,6 +47,8 @@ class Wilayah extends Controller
     {
         $query = M_KodePos::where('kode', $request->id)->get();
 
-        return \response()->json($query);
+        $data = R_Wilayah::collection($query);
+
+        return \response()->json($data);
     }
 }

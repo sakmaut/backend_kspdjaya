@@ -16,7 +16,7 @@ class R_Wilayah extends JsonResource
     {
         return [
             'id' => $this->kode,
-            'text' => $this->nama,
+            'text' => $this->nama ?? $this->kodepos,
         ];
     }
 }
