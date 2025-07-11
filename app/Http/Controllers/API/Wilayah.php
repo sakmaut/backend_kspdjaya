@@ -18,7 +18,7 @@ class Wilayah extends Controller
         return \response()->json($data);
     }
 
-    public function kota($id)
+    public function kota(Request $req, $id)
     {
         $query = M_Wilayah::whereRaw('LENGTH(kode) = 5')->where('kode', 'like', '%' . $id . '%')->get();
         $data = R_Wilayah::collection($query);
