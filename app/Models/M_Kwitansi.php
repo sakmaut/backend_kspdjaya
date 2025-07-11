@@ -68,6 +68,11 @@ class M_Kwitansi extends Model
         return $this->hasMany(M_KwitansiStructurDetail::class, 'no_invoice', 'NO_TRANSAKSI');
     }
 
+    public function kwitansi_pelunasan_detail()
+    {
+        return $this->hasMany(M_KwitansiDetailPelunasan::class, 'no_invoice', 'NO_TRANSAKSI');
+    }
+
     public function branch()
     {
         return $this->hasOne(M_Branch::class, 'ID', 'BRANCH_CODE');
