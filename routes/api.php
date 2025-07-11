@@ -25,7 +25,8 @@ use App\Http\Controllers\API\{
     PelunasanController2,
     PhoneBookController,
     ReportController,
-    TaskPusher
+    TaskPusher,
+    Wilayah
 };
 
 use App\Http\Controllers\Payment\Controller\C_PokokSebagian;
@@ -41,6 +42,9 @@ Route::post('welcome', [Welcome::class, 'index']);
 Route::get('jobArrears', [Welcome::class, 'job']);
 Route::post('botpel', [PelunasanController2::class, 'getDetail']);
 Route::post('propel', [PelunasanController2::class, 'propel']);
+
+//Wilayah
+// Route::get('wilayah', Wilayah::class);
 
 Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::resource('users', UsersController::class)->only(['index']);
