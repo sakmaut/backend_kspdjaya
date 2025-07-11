@@ -36,7 +36,7 @@ class Wilayah extends Controller
 
     public function kelurahan($id)
     {
-        $query = M_Wilayah::whereRaw('LENGTH(kode) = 11')->where('kode', 'like', '%' . $id . '%')->get();
+        $query = M_Wilayah::whereRaw('LENGTH(kode) = 13')->where('kode', 'like', '%' . $id . '%')->get();
         $data = R_Wilayah::collection($query);
 
         return \response()->json($data);
