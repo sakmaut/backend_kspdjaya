@@ -48,7 +48,7 @@ Route::get('provinsi', [Wilayah::class, 'provinsi']);
 Route::get('kota/{id}', [Wilayah::class, 'kota']);
 Route::get('kecamatan', [Wilayah::class, 'kecamatan']);
 Route::get('kelurahan', [Wilayah::class, 'kelurahan']);
-Route::get('kode_pos', [Wilayah::class, 'kelurahan']);
+Route::get('kode_pos', [Wilayah::class, 'kode_pos']);
 
 // Route::get('kota', [Wilayah::class, 'wilayah']);
 // Route::get('kecamatan', [Wilayah::class, 'wilayah']);
