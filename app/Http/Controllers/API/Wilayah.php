@@ -16,19 +16,19 @@ class Wilayah extends Controller
 
     public function kota(Request $request)
     {
-        $query = M_Wilayah::where('kode', $request->kode)->get();
+        $query = M_Wilayah::whereRaw('LENGTH(kode) = 5')->where('kode', 'like', '%' . $request->kode . '%')->get();
         return $query;
     }
 
     public function kelurahan(Request $request)
     {
-        $query = M_Wilayah::where('kode', $request->kode)->get();
+        $query = M_Wilayah::whereRaw('LENGTH(kode) = 8')->where('kode', 'like', '%' . $request->kode . '%')->get();
         return $query;
     }
 
     public function kecamatan(Request $request)
     {
-        $query = M_Wilayah::where('kode', $request->kode)->get();
+        $query = M_Wilayah::whereRaw('LENGTH(kode) = 11')->where('kode', 'like', '%' . $request->kode . '%')->get();
         return $query;
     }
 }
