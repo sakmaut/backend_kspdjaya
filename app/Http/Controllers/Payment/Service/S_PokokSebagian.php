@@ -75,13 +75,41 @@ class S_PokokSebagian
                 $query->where('PAID_FLAG', '')
                     ->orWhereNull('PAID_FLAG');
             })
-            ->select('ID', 'INSTALLMENT_COUNT', 'PAYMENT_DATE', 'PRINCIPAL', 'INTEREST', 'PAYMENT_VALUE_PRINCIPAL', 'PAYMENT_VALUE_INTEREST')
+            ->select('ID', 'INSTALLMENT_COUNT', 'PAYMENT_DATE', 'INSTALLMENT', 'PRINCIPAL', 'INTEREST', 'PAYMENT_VALUE_PRINCIPAL', 'PAYMENT_VALUE_INTEREST')
             ->get();
 
-        // $interest = $this->buildInterest($request, $creditSchedule);
-        // $data = $this->buildPrincipal($request, $interest);
+        $interest = $this->buildInterest($request, $creditSchedule);
 
-        return $creditSchedule;
+        if ($request->BAYAR_POKOK != 0) {
+            $data = $this->buildPrincipal($request, $creditSchedule);
+
+            $lastZeroIndex = null;
+            $currentMonth = date('Y-m');
+
+            foreach ($interest as $index => &$item) {
+                if ($item['BAYAR_BUNGA'] == 0) {
+                    $paymentMonth = date('Y-m', strtotime($item['PAYMENT_DATE']));
+
+                    if ($paymentMonth > $currentMonth) {
+                        $item['INSTALLMENT'] = $data['angsuran'];
+
+                        if ($data['angsuran'] == 0) {
+                            $item['PAID_FLAG'] = "PAID";
+                        }
+
+                        $lastZeroIndex = $index;
+                    }
+                }
+            }
+
+            // unset($item);
+
+            if ($lastZeroIndex !== null) {
+                $interest[$lastZeroIndex]['PRINCIPAL'] = $data['pokok'];
+            }
+        }
+
+        return $interest;
 
         // if ($creditSchedule) {
         //     M_KwitansiStructurDetail::firstOrCreate([
@@ -126,6 +154,7 @@ class S_PokokSebagian
                 'ID' => $res->ID,
                 'PRINCIPAL' => floatval($res->PRINCIPAL),
                 'INSTALLMENT_COUNT' => $res->INSTALLMENT_COUNT,
+                'INSTALLMENT' => floatval($res->INSTALLMENT),
                 'PAYMENT_DATE' => $res->PAYMENT_DATE,
                 'BAYAR_BUNGA' => $remainingInterest > 0 ? $paidNow : 0,
                 'DISKON_BUNGA' => $remainingInterest > 0 ? $discount : $totalInterest,
@@ -135,50 +164,82 @@ class S_PokokSebagian
         return $interest;
     }
 
-    private function buildPrincipal($request, $interest)
+    private function buildPrincipal($request, $data)
     {
+
         $payment = $request->BAYAR_POKOK;
-
-        $maxInstallment = max(array_column($interest, 'INSTALLMENT_COUNT'));
-
-        $maxItem = array_filter($interest, function ($item) use ($maxInstallment) {
-            return $item['INSTALLMENT_COUNT'] === $maxInstallment;
-        });
-
-        $maxItem = reset($maxItem);
-
-        $lastValid = null;
-        for ($i = count($interest) - 1; $i >= 0; $i--) {
-            if ($interest[$i]['BAYAR_BUNGA'] != 0) {
-                $lastValid = [
-                    'INSTALLMENT_COUNT' => $interest[$i]['INSTALLMENT_COUNT']
-                ];
-                break;
+        $maxInstallment = null;
+        foreach ($data as $row) {
+            if ($maxInstallment === null || $row['INSTALLMENT_COUNT'] > $maxInstallment['INSTALLMENT_COUNT']) {
+                $maxInstallment = $row;
             }
         }
 
-        $count = 0;
-        foreach ($interest as $item) {
-            if ($item['BAYAR_BUNGA'] == 0) {
-                $count++;
-            }
-        }
-
-        $sisa_pokok = $maxItem ? $maxItem['PRINCIPAL'] - $payment : 0;
+        $sisa_pokok = floatval($maxInstallment['PRINCIPAL']) - floatval($payment);
         $calc = round($sisa_pokok * (3 / 100), 2);
 
-        $data = [
-            'SUBMISSION_VALUE' => $sisa_pokok,
-            'TOTAL_ADMIN' => 0,
-            'INSTALLMENT' => $calc,
-            'TENOR' => $count ?? 1,
-            'START_FROM' => $lastValid != null ? $lastValid['INSTALLMENT_COUNT'] : 1
+        $schedule = [
+            'bayar' => $payment,
+            'pokok' => $sisa_pokok,
+            'bunga' => $calc,
+            'angsuran' => floatval($calc)
         ];
 
-        $data_credit_schedule = $this->buildDataPokokSebagian($data);
-
-        return $data_credit_schedule;
+        return $schedule;
     }
+
+    // private function buildPrincipal($request, $data)
+    // {
+    //     $payment = $request->BAYAR_POKOK;
+
+    //     $maxInstallment = null;
+    //     foreach ($data as $row) {
+    //         if ($maxInstallment === null || $row['INSTALLMENT_COUNT'] > $maxInstallment['INSTALLMENT_COUNT']) {
+    //             $maxInstallment = $row;
+    //         }
+    //     }
+
+    //     return $maxInstallment;
+    //     die;
+
+    //     // $maxItem = array_filter($interest, function ($item) use ($maxInstallment) {
+    //     //     return $item['INSTALLMENT_COUNT'] === $maxInstallment;
+    //     // });
+
+    //     // $maxItem = reset($maxItem);
+
+    //     // $lastValid = null;
+    //     // for ($i = count($interest) - 1; $i >= 0; $i--) {
+    //     //     if ($interest[$i]['BAYAR_BUNGA'] != 0) {
+    //     //         $lastValid = [
+    //     //             'INSTALLMENT_COUNT' => $interest[$i]['INSTALLMENT_COUNT']
+    //     //         ];
+    //     //         break;
+    //     //     }
+    //     // }
+
+    //     // $count = 0;
+    //     // foreach ($interest as $item) {
+    //     //     if ($item['BAYAR_BUNGA'] == 0) {
+    //     //         $count++;
+    //     //     }
+    //     // }
+
+    //     // $sisa_pokok = $maxItem ? $maxItem['PRINCIPAL'] - $payment : 0;
+    //     // $calc = round($sisa_pokok * (3 / 100), 2);
+
+    //     // $data = [
+    //     //     'SUBMISSION_VALUE' => $sisa_pokok,
+    //     //     'TOTAL_ADMIN' => 0,
+    //     //     'INSTALLMENT' => $calc,
+    //     //     'TENOR' => $count ?? 1,
+    //     //     'START_FROM' => $lastValid != null ? $lastValid['INSTALLMENT_COUNT'] : 1
+    //     // ];
+
+    //     // $data_credit_schedule = $this->buildDataPokokSebagian($data);
+
+    //     // return $data_credit_schedule;
+    // }
 
     // private function processPokokBungaMenurun($request, $kwitansiDetail)
     // {
@@ -316,39 +377,39 @@ class S_PokokSebagian
     //     ]);
     // }
 
-    private function buildDataPokokSebagian($data)
-    {
-        $schedule = [];
-        $ttal_bayar = ($data['SUBMISSION_VALUE'] + $data['TOTAL_ADMIN']);
-        $angsuran_bunga = $data['INSTALLMENT'];
-        $term = ceil($data['TENOR']);
-        $baki_debet = $ttal_bayar;
+    // private function buildDataPokokSebagian($data)
+    // {
+    //     $schedule = [];
+    //     $ttal_bayar = ($data['SUBMISSION_VALUE'] + $data['TOTAL_ADMIN']);
+    //     $angsuran_bunga = $data['INSTALLMENT'];
+    //     $term = ceil($data['TENOR']);
+    //     $baki_debet = $ttal_bayar;
 
-        $startInstallment = $data->START_FROM ?? 1;
+    //     $startInstallment = $data->START_FROM ?? 1;
 
-        for ($i = 0; $i < $term; $i++) {
-            $pokok = 0;
+    //     for ($i = 0; $i < $term; $i++) {
+    //         $pokok = 0;
 
-            if ($i == $term - 1) {
-                $pokok = $ttal_bayar;
-            }
+    //         if ($i == $term - 1) {
+    //             $pokok = $ttal_bayar;
+    //         }
 
-            $total_angsuran = $pokok + $angsuran_bunga;
+    //         $total_angsuran = $pokok + $angsuran_bunga;
 
-            $schedule[] = [
-                'angsuran_ke' => $startInstallment + $i,
-                'baki_debet_awal' => floatval($baki_debet),
-                'pokok' => floatval($pokok),
-                'bunga' => floatval($angsuran_bunga),
-                'total_angsuran' => floatval($total_angsuran),
-                'baki_debet' => floatval($baki_debet - $pokok)
-            ];
+    //         $schedule[] = [
+    //             'angsuran_ke' => $startInstallment + $i,
+    //             'baki_debet_awal' => floatval($baki_debet),
+    //             'pokok' => floatval($pokok),
+    //             'bunga' => floatval($angsuran_bunga),
+    //             'total_angsuran' => floatval($total_angsuran),
+    //             'baki_debet' => floatval($baki_debet - $pokok)
+    //         ];
 
-            $baki_debet -= $pokok;
-        }
+    //         $baki_debet -= $pokok;
+    //     }
 
-        return $schedule;
-    }
+    //     return $schedule;
+    // }
 
     private function preparePaymentData($payment_id, $acc_key, $amount)
     {
