@@ -13,4 +13,22 @@ class Wilayah extends Controller
         $query = M_Wilayah::whereRaw('LENGTH(kode) = 2')->get();
         return $query;
     }
+
+    public function kota(Request $request)
+    {
+        $query = M_Wilayah::where('kode', $request->kode)->get();
+        return $query;
+    }
+
+    public function kelurahan(Request $request)
+    {
+        $query = M_Wilayah::where('kode', $request->kode)->get();
+        return $query;
+    }
+
+    public function kecamatan(Request $request)
+    {
+        $query = M_Wilayah::where('kode', $request->kode)->get();
+        return $query;
+    }
 }
