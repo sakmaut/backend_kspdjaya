@@ -10,13 +10,13 @@ use App\Models\M_Arrears;
 use App\Models\M_Branch;
 use App\Models\M_Credit;
 use App\Models\M_CreditSchedule;
-use App\Models\M_Customer;
 use App\Models\M_Kwitansi;
 use App\Models\M_KwitansiDetailPelunasan;
 use App\Models\M_KwitansiStructurDetail;
 use App\Models\M_Payment;
 use App\Models\M_PaymentAttachment;
 use App\Models\M_PaymentDetail;
+use App\Services\Kwitansi\KwitansiService;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
@@ -30,73 +30,27 @@ class PaymentController extends Controller
     protected $log;
     protected $taskslogging;
     protected $pelunasan;
+    protected $kwitansiService;
 
-    public function __construct(ExceptionHandling $log, TasksRepository $taskslogging, PelunasanController $pelunasan)
-    {
+    public function __construct(
+        ExceptionHandling $log,
+        TasksRepository $taskslogging,
+        PelunasanController $pelunasan,
+        KwitansiService $kwitansiService
+    ) {
         $this->log = $log;
         $this->taskslogging = $taskslogging;
         $this->pelunasan = $pelunasan;
+        $this->kwitansiService = $kwitansiService;
     }
 
     public function index(Request $request)
     {
         try {
-            $notrx = $request->query('notrx');
-            $nama = $request->query('nama');
-            $no_kontrak = $request->query('no_kontrak');
-            $tipe = $request->query('tipe');
-            $dari = $request->query('dari');
+            $kwitansi = $this->kwitansiService->getKwitansiPayment($request);
+            $results = R_Kwitansi::collection($kwitansi);
 
-            $getPosition = $request->user()->position;
-            $getBranch = $request->user()->branch_id;
-
-            $data = M_Kwitansi::orderBy('CREATED_AT', 'DESC');
-
-            if (strtolower($getPosition) == 'ho') {
-                $results = $data->where('STTS_PAYMENT', 'PENDING')
-                    ->where(function ($query) {
-                        $query->where(function ($q) {
-                            $q->where('METODE_PEMBAYARAN', '!=', 'cash')
-                                ->where('PAYMENT_TYPE', 'angsuran');
-                        })->orWhere(function ($q) {
-                            $q->where('METODE_PEMBAYARAN', 'cash')
-                                ->where('PAYMENT_TYPE', 'pelunasan');
-                        });
-                    })->get();
-
-                $dto = R_Kwitansi::collection($results);
-                return response()->json($dto, 200);
-            }
-
-            $data->where('BRANCH_CODE', $getBranch);
-
-            if ($tipe) {
-                $data->where('PAYMENT_TYPE', $tipe == 'pelunasan' ? 'pelunasan' : '!=', 'pelunasan');
-            }
-
-            if ($notrx) {
-                $data->where('NO_TRANSAKSI', $notrx);
-            }
-
-            if ($nama) {
-                $data->where('NAMA', 'like', '%' . $nama . '%');
-            }
-
-            if ($no_kontrak) {
-                $data->where('LOAN_NUMBER', $no_kontrak);
-            }
-
-            if ($dari && $dari != 'null') {
-                $data->whereDate('CREATED_AT', Carbon::parse($dari)->toDateString());
-            } elseif (empty($notrx) && empty($nama) && empty($no_kontrak)) {
-                $data->whereDate('CREATED_AT', Carbon::today()->toDateString());
-            }
-
-            $results = $data->get();
-
-            $dto = R_Kwitansi::collection($results);
-
-            return response()->json($dto, 200);
+            return response()->json($results, 200);
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
         }
@@ -225,13 +179,15 @@ class PaymentController extends Controller
         $tgl_angsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
         $uid = Uuid::uuid7()->toString();
 
-        $credit = M_Credit::where('LOAN_NUMBER', $loan_number)->first();
+        // $credit = M_Credit::where('LOAN_NUMBER', $loan_number)->first();
 
-        if ($credit->CREDIT_TYPE != 'bunga_menurun') {
-            $this->updateCreditSchedule($loan_number, $tgl_angsuran, $res, $uid);
-        } else {
-            $this->updateCreditScheduleBungaMenurun($loan_number, $tgl_angsuran, $res, $uid);
-        }
+        $this->updateCreditSchedule($loan_number, $tgl_angsuran, $res, $uid);
+
+        // if ($credit->CREDIT_TYPE != 'bunga_menurun') {
+        //     $this->updateCreditSchedule($loan_number, $tgl_angsuran, $res, $uid);
+        // } else {
+        //     $this->updateCreditScheduleBungaMenurun($loan_number, $tgl_angsuran, $res, $uid);
+        // }
 
         if ((strtolower($request->diskon_flag) == 'ya' && isset($request->diskon_flag) && $request->diskon_flag != '')) {
             $this->updateDiscountArrears($loan_number, $tgl_angsuran, $res, $uid);
@@ -369,16 +325,23 @@ class PaymentController extends Controller
                 $this->addCreditPaid($loan_number, ['ANGSURAN_BUNGA' => $valInterest]);
             }
 
+
             $current_payment_value = floatval($credit_schedule->PAYMENT_VALUE);
-            $installment = floatval($credit_schedule->INSTALLMENT);
+            // $installment = floatval($credit_schedule->INSTALLMENT);
 
-            if ($current_payment_value < $installment) {
-                $remaining_payment = $installment - $current_payment_value;
-                $additional_payment = min($byr_angsuran, $remaining_payment);
-                $payment_value = $current_payment_value + $additional_payment;
+            // // if ($current_payment_value < $installment) {
+            // //     $remaining_payment = $installment - $current_payment_value;
+            // //     $additional_payment = min($byr_angsuran, $remaining_payment);
+            // //     $payment_value = $current_payment_value + $additional_payment;
 
-                $updates['PAYMENT_VALUE'] = $payment_value;
-            }
+            // //     $updates['PAYMENT_VALUE'] = $payment_value;
+            // // }
+
+            // $remaining_payment = $installment - $current_payment_value;
+            // $additional_payment = min($byr_angsuran, $remaining_payment);
+            // $payment_value = $current_payment_value + $additional_payment;
+
+            $updates['PAYMENT_VALUE'] = $byr_angsuran + $current_payment_value;
 
             $insufficient_payment = max(0, $total_interest - $new_payment_value_interest);
 
@@ -799,7 +762,9 @@ class PaymentController extends Controller
                 if ($request->flag == 'yes') {
 
                     if ($kwitansi->PAYMENT_TYPE === 'pelunasan') {
-                        $this->pelunasan->proccess($request, $kwitansi->LOAN_NUMBER, $getNoInvoice, 'PAID');
+                        $this->pelunasan->proccess($request, $getLoanNumber, $getNoInvoice, 'PAID');
+                    } elseif ($kwitansi->PAYMENT_TYPE === 'pokok_sebagian') {
+                        $this->processPokokBungaMenurun($request, $getLoanNumber, $getNoInvoice);
                     } else {
                         $getKwitansiDetail = M_KwitansiStructurDetail::where([
                             'no_invoice' => $getNoInvoice
@@ -902,6 +867,14 @@ class PaymentController extends Controller
 
             $no_invoice = $request->no_invoice;
             $flag = $request->flag;
+
+            $ccheckPokokSebagian = M_Kwitansi::where([
+                'NO_TRANSAKSI' => $no_invoice
+            ])->where('PAYMENT_TYPE', 'pokok_sebagian')->first();
+
+            if (!$ccheckPokokSebagian) {
+                throw new Exception("Kwitansi Pokok Sebagian Tidak Boleh Dicancel", 404);
+            }
 
             $check = M_Kwitansi::where([
                 'NO_TRANSAKSI' => $no_invoice
@@ -1085,21 +1058,15 @@ class PaymentController extends Controller
     {
         DB::beginTransaction();
         try {
-            $loan_number = $request->LOAN_NUMBER;
-            $no_inv = generateCodeKwitansi($request, 'kwitansi', 'NO_TRANSAKSI', 'INV');
+            $kwitansi = $this->kwitansiService->create($request, 'pokok_sebagian');
 
-            $credit = M_Credit::where('LOAN_NUMBER', $loan_number)->firstOrFail();
-            $detail_customer = M_Customer::where('CUST_CODE', $credit->CUST_CODE)->firstOrFail();
+            $this->proccessKwitansiDetail($request, $kwitansi);
 
-            $status = strtolower($request->METODE_PEMBAYARAN) === 'cash' ? "PAID" : 'PENDING';
+            if ($kwitansi->STTS_PAYMENT == 'PAID') {
+                $this->processPokokBungaMenurun($request, $kwitansi);
+            }
 
-            $this->saveKwitansiBungaMenurun($request, $detail_customer, $no_inv, $status);
-            $this->proccessKwitansiDetail($request, $loan_number, $no_inv);
-            $this->processPokokBungaMenurun($request, $loan_number, $no_inv);
-
-            $data = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
-
-            $dto = new R_Kwitansi($data);
+            $dto = new R_Kwitansi($kwitansi);
 
             DB::commit();
             return response()->json($dto, 200);
@@ -1109,61 +1076,28 @@ class PaymentController extends Controller
         }
     }
 
-    private function saveKwitansiBungaMenurun($request, $customer, $no_inv, $status)
+    private function proccessKwitansiDetail($request, $kwitansi)
     {
-        $checkKwitansiExist = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
+        $loan_number = $request->LOAN_NUMBER;
+        $no_inv = $kwitansi->NO_TRANSAKSI;
 
-        if ($checkKwitansiExist) {
-            throw new Exception("Kwitansi Exist", 500);
+        $firstInstallment = DB::table('credit_schedule')
+            ->select('INSTALLMENT_COUNT')
+            ->where('LOAN_NUMBER', $loan_number)
+            ->where('PAID_FLAG', 'PAID')
+            ->orderBy('INSTALLMENT_COUNT', 'desc')
+            ->first();
+
+        if (!$firstInstallment) {
+            $firstInstallment = DB::table('credit_schedule')
+                ->select('INSTALLMENT_COUNT')
+                ->where('LOAN_NUMBER', $loan_number)
+                ->orderBy('INSTALLMENT_COUNT', 'asc')
+                ->first();
         }
 
-        $idGenerate = Uuid::uuid7()->toString();
-
-        $data = [
-            "PAYMENT_TYPE" => 'pokok_sebagian',
-            "PAYMENT_ID" => $idGenerate ?? '',
-            "STTS_PAYMENT" => $status,
-            "NO_TRANSAKSI" => $no_inv,
-            "LOAN_NUMBER" => $request->LOAN_NUMBER,
-            "TGL_TRANSAKSI" => Carbon::now(),
-            "CUST_CODE" => $customer->CUST_CODE,
-            "BRANCH_CODE" => $request->user()->branch_id,
-            "NAMA" => $customer->NAME,
-            "ALAMAT" => $customer->ADDRESS,
-            "RT" => $customer->RT,
-            "RW" => $customer->RW,
-            "PROVINSI" => $customer->PROVINCE,
-            "KOTA" => $customer->CITY,
-            "KECAMATAN" => $customer->KECAMATAN,
-            "KELURAHAN" => $customer->KELURAHAN,
-            "METODE_PEMBAYARAN" => $request->METODE_PEMBAYARAN,
-            "TOTAL_BAYAR" => $request->TOTAL_BAYAR ?? 0,
-            "PINALTY_PELUNASAN" => 0,
-            "DISKON_PINALTY_PELUNASAN" => 0,
-            "PEMBULATAN" => $request->PEMBULATAN ?? 0,
-            "DISKON" => $request->JUMLAH_DISKON ?? 0,
-            "KEMBALIAN" => $request->KEMBALIAN ?? 0,
-            "JUMLAH_UANG" => $request->UANG_PELANGGAN,
-            "NAMA_BANK" => $request->NAMA_BANK,
-            "NO_REKENING" => $request->NO_REKENING,
-            "CREATED_BY" => $request->user()->id
-        ];
-
-        M_Kwitansi::create($data);
-    }
-
-    private function proccessKwitansiDetail($request, $loan_number, $no_inv)
-    {
-        $maxInstallmentCount = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)
-            ->max('INSTALLMENT_COUNT');
-
         $creditSchedule = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)
-            ->where('INSTALLMENT_COUNT', $maxInstallmentCount)
-            ->where(function ($query) {
-                $query->where('PAID_FLAG', '!=', 'PAID')
-                    ->orWhere('PAID_FLAG', '')
-                    ->orWhereNull('PAID_FLAG');
-            })
+            ->where('INSTALLMENT_COUNT', intval($firstInstallment->INSTALLMENT_COUNT))
             ->first();
 
         if ($creditSchedule) {
@@ -1190,8 +1124,11 @@ class PaymentController extends Controller
         }
     }
 
-    private function processPokokBungaMenurun($request, $loan_number, $no_inv)
+    private function processPokokBungaMenurun($request, $kwitansiDetail)
     {
+        $loan_number = $request->LOAN_NUMBER;
+        $no_inv = $kwitansiDetail->NO_TRANSAKSI;
+
         $kwitansi = M_Kwitansi::with(['kwitansi_structur_detail', 'branch'])->where([
             'LOAN_NUMBER' => $loan_number,
             'NO_TRANSAKSI' => $no_inv
@@ -1247,10 +1184,14 @@ class PaymentController extends Controller
         $data = $this->preparePaymentData($uid, 'ANGSURAN_POKOK', $getPrincipalPay);
         M_PaymentDetail::create($data);
 
+        $principalPay = ($credit_schedule->PAYMENT_VALUE_PRINCIPAL + $getPrincipalPay);
+
         $credit_schedule->update([
-            'PAYMENT_VALUE_PRINCIPAL' => ($credit_schedule->PAYMENT_VALUE_PRINCIPAL + $getPrincipalPay),
-            'INSUFFICIENT_PAYMENT' => (floatval($credit_schedule->PRINCIPAL) + floatval($credit_schedule->INTEREST)),
-            'PAYMENT_VALUE' => $getPrincipalPay
+            'PRINCIPAL' => $principalPay,
+            'INSTALLMENT' => $principalPay + $credit_schedule->INTEREST,
+            'PAYMENT_VALUE_PRINCIPAL' => $principalPay,
+            'INSUFFICIENT_PAYMENT' => (floatval($credit_schedule->INTEREST) - floatval($credit_schedule->PAYMENT_VALUE_INTEREST)),
+            'PAYMENT_VALUE' => (floatval($credit_schedule->PAYMENT_VALUE) + floatval($getPrincipalPay))
         ]);
 
         $this->addCreditPaid($loan_number, ['ANGSURAN_POKOK' => $getPrincipalPay]);
@@ -1262,8 +1203,8 @@ class PaymentController extends Controller
                     ->orWhereNull('PAID_FLAG');
             })
             ->where(function ($query) {
-                $query->WhereNull('PAYMENT_VALUE_PRINCIPAL')
-                    ->orWhere('PAYMENT_VALUE_PRINCIPAL', '=', 0);
+                $query->whereNull('PAYMENT_VALUE_PRINCIPAL')
+                    ->orWhere('PAYMENT_VALUE_PRINCIPAL', '=', '');
             })
             ->orderBy('INSTALLMENT_COUNT', 'ASC')
             ->orderBy('PAYMENT_DATE', 'ASC')
@@ -1273,11 +1214,9 @@ class PaymentController extends Controller
 
         $totalSisaPokok = $creditSchedulesUpdate->sum('PRINCIPAL');
 
-        // // Kurangi dengan pokok yang baru saja dibayar
         $sisa_pokok = $totalSisaPokok - $getPrincipalPay;
         $sisa_pokok = max(0, $sisa_pokok);
 
-        // // Buat objek data dasar amortisasi
         $getNewTenor = count($creditSchedulesUpdate);
         $calc = round($sisa_pokok * (3 / 100), 2);
 
@@ -1293,13 +1232,32 @@ class PaymentController extends Controller
         foreach ($creditSchedulesUpdate as $index => $schedule) {
             $updateData = $data_credit_schedule[$index];
 
-            $schedule->update([
+            $updateArray = [
                 'PRINCIPAL' => $updateData['pokok'],
                 'INTEREST' => $updateData['bunga'],
                 'INSTALLMENT' => $updateData['total_angsuran'],
                 'PRINCIPAL_REMAINS' => $updateData['baki_debet'],
-            ]);
+            ];
+
+            if ((float)$updateData['total_angsuran'] == 0) {
+                $updateArray['PAID_FLAG'] = 'PAID';
+            }
+
+            $schedule->update($updateArray);
         }
+
+        $totalInterest = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)
+            ->where(function ($query) {
+                $query->where('PAID_FLAG', '')
+                    ->orWhereNull('PAID_FLAG');
+            })
+            ->sum('INTEREST');
+
+        $check_credit = M_Credit::where(['LOAN_NUMBER' => $loan_number])->first();
+
+        $check_credit->update([
+            'INTRST_ORI' => $totalInterest ?? 0
+        ]);
     }
 
     private function generateAmortizationScheduleBungaMenurun($data)

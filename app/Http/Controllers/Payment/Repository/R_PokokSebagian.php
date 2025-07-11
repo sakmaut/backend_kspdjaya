@@ -1,0 +1,80 @@
+<?php
+
+namespace App\Http\Controllers\Payment\Repository;
+
+use Illuminate\Support\Facades\DB;
+
+class R_PokokSebagian
+{
+    public function getAllData($request)
+    {
+        $loan_number = $request->loan_number;
+
+        $query = "  SELECT 
+                        (a.PCPL_ORI - COALESCE(a.PAID_PRINCIPAL, 0)) AS SISA_POKOK,
+                        b.INT_ARR AS TUNGGAKAN_BUNGA,
+                        e.TUNGGAKAN_DENDA AS TUNGGAKAN_DENDA,
+                        e.DENDA_TOTAL AS DENDA,
+                        d.DISC_BUNGA
+                    FROM credit a
+                        LEFT JOIN (
+                            SELECT 
+                                LOAN_NUMBER,
+                                SUM(COALESCE(INTEREST, 0)) - SUM(COALESCE(PAYMENT_VALUE_INTEREST, 0)) AS INT_ARR
+                            FROM 
+                                credit_schedule
+                            WHERE 
+                                LOAN_NUMBER = '{$loan_number}' 
+                                AND PAYMENT_DATE <= (
+                                    SELECT COALESCE(
+                                        MIN(PAYMENT_DATE), 
+                                        (SELECT MAX(PAYMENT_DATE) 
+                                        FROM credit_schedule 
+                                        WHERE LOAN_NUMBER = '{$loan_number}'  
+                                        AND PAYMENT_DATE < NOW())
+                                    )
+                                    FROM credit_schedule
+                                    WHERE LOAN_NUMBER = '{$loan_number}' 
+                                    AND PAYMENT_DATE > NOW()
+                                )
+                            GROUP BY LOAN_NUMBER
+                        ) b ON b.LOAN_NUMBER = a.LOAN_NUMBER
+                            LEFT JOIN (
+                                    SELECT
+                                        LOAN_NUMBER,
+                                        COALESCE(SUM(INTEREST), 0) AS DISC_BUNGA
+                                    FROM
+                                        credit_schedule
+                                    WHERE
+                                        LOAN_NUMBER = '{$loan_number}'
+                                        AND PAYMENT_DATE > (
+                                            SELECT COALESCE(MIN(PAYMENT_DATE),
+                                                (SELECT MAX(PAYMENT_DATE)
+                                                FROM credit_schedule
+                                                WHERE LOAN_NUMBER = '{$loan_number}'
+                                                AND PAYMENT_DATE < NOW())
+                                            )
+                                            FROM credit_schedule
+                                            WHERE LOAN_NUMBER = '{$loan_number}'
+                                            AND PAYMENT_DATE > NOW()
+                                        )
+                                    GROUP BY LOAN_NUMBER
+                        ) AS d ON d.LOAN_NUMBER = a.LOAN_NUMBER
+                        LEFT JOIN (
+                            SELECT 
+                                LOAN_NUMBER, 
+                                SUM(CASE WHEN STATUS_REC <> 'A' THEN COALESCE(PAST_DUE_PENALTY, 0) END) -
+                                    SUM(CASE WHEN STATUS_REC <> 'A' THEN COALESCE(PAID_PENALTY, 0) END) AS TUNGGAKAN_DENDA,
+                                SUM(COALESCE(PAST_DUE_PENALTY, 0)) - SUM(COALESCE(PAID_PENALTY, 0)) AS DENDA_TOTAL
+                            FROM 
+                                arrears
+                            WHERE LOAN_NUMBER = '{$loan_number}' 
+                                AND STATUS_REC != 'PENDING'
+                            GROUP BY LOAN_NUMBER
+                        ) e ON e.LOAN_NUMBER = a.LOAN_NUMBER
+                    WHERE 
+                        a.LOAN_NUMBER = '{$loan_number}' ";
+
+        return DB::select($query);
+    }
+}

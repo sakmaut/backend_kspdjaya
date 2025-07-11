@@ -169,7 +169,7 @@ class CustomerController extends Controller
                 });
             }
 
-            $results = $query->get();
+            $results = $query->limit(15)->get();
 
             $dto = R_CustomerSearch::collection($results);
 
@@ -306,11 +306,7 @@ class CustomerController extends Controller
             $j = 0;
             foreach ($data as $res) {
 
-                if ($credit->CREDIT_TYPE == 'bunga_menurun') {
-                    $installment = floatval($res->INSTALLMENT);
-                } else {
-                    $installment = floatval($res->INSTALLMENT) - floatval($res->PAYMENT_VALUE);
-                }
+                $installment = floatval($res->INSTALLMENT) - floatval($res->PAYMENT_VALUE);
 
                 $schedule[] = [
                     'key' => $j++,

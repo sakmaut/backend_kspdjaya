@@ -1,0 +1,33 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
+
+class M_KodePos extends Model
+{
+    use HasFactory;
+    protected $table = 'wilayah_kodepos_2023';
+
+    protected $fillable = [
+        'kode',
+        'kodepos'
+    ];
+
+    protected $guarded = [];
+    public $incrementing = false;
+    protected $keyType = 'string';
+    protected $primaryKey = 'kode';
+    public $timestamps = false;
+    protected static function boot()
+    {
+        parent::boot();
+        static::creating(function ($model) {
+            if ($model->getKey() == null) {
+                $model->setAttribute($model->getKeyName(), Str::uuid()->toString());
+            }
+        });
+    }
+}

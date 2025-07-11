@@ -25,7 +25,7 @@ class R_Kwitansi extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        if ($this->PAYMENT_TYPE === 'pelunasan') {
+        if ($this->PAYMENT_TYPE === 'pelunasan' || $this->PAYMENT_TYPE === 'pokok_sebagian') {
             $details = M_KwitansiDetailPelunasan::select(
                 'no_invoice',
                 'loan_number',
