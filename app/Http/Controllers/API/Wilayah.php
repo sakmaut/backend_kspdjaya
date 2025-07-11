@@ -8,8 +8,7 @@ use Illuminate\Http\Request;
 
 class Wilayah extends Controller
 {
-
-    public function index()
+    public function provinsi()
     {
         $query = M_Wilayah::whereRaw('LENGTH(kode) = 2')->get();
         return $query;

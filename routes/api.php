@@ -44,7 +44,10 @@ Route::post('botpel', [PelunasanController2::class, 'getDetail']);
 Route::post('propel', [PelunasanController2::class, 'propel']);
 
 //Wilayah
-Route::get('wilayah', [Wilayah::class, 'index']);
+Route::get('provinsi', [Wilayah::class, 'provinsi']);
+// Route::get('kota', [Wilayah::class, 'wilayah']);
+// Route::get('kecamatan', [Wilayah::class, 'wilayah']);
+// Route::get('keluaran', [Wilayah::class, 'wilayah']);
 
 Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::resource('users', UsersController::class)->only(['index']);
