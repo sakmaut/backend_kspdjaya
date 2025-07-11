@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 class M_KodePos extends Model
 {
     use HasFactory;
-    protected $table = 'wilayah';
+    protected $table = 'wilayah_kodepos_2023';
 
     protected $fillable = [
         'kode',
