@@ -18,25 +18,25 @@ class Wilayah extends Controller
         return \response()->json($data);
     }
 
-    public function kota(Request $request)
+    public function kota($id)
     {
-        $query = M_Wilayah::whereRaw('LENGTH(kode) = 5')->where('kode', 'like', '%' . $request->kode . '%')->get();
+        $query = M_Wilayah::whereRaw('LENGTH(kode) = 5')->where('kode', 'like', '%' . $id . '%')->get();
         $data = R_Wilayah::collection($query);
 
         return \response()->json($data);
     }
 
-    public function kelurahan(Request $request)
+    public function kelurahan($id)
     {
-        $query = M_Wilayah::whereRaw('LENGTH(kode) = 8')->where('kode', 'like', '%' . $request->kode . '%')->get();
+        $query = M_Wilayah::whereRaw('LENGTH(kode) = 8')->where('kode', 'like', '%' . $id . '%')->get();
         $data = R_Wilayah::collection($query);
 
         return \response()->json($data);
     }
 
-    public function kecamatan(Request $request)
+    public function kecamatan($id)
     {
-        $query = M_Wilayah::whereRaw('LENGTH(kode) = 11')->where('kode', 'like', '%' . $request->kode . '%')->get();
+        $query = M_Wilayah::whereRaw('LENGTH(kode) = 11')->where('kode', 'like', '%' . $id . '%')->get();
         $data = R_Wilayah::collection($query);
 
         return \response()->json($data);
