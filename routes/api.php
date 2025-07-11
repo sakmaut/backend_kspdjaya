@@ -44,7 +44,7 @@ Route::post('botpel', [PelunasanController2::class, 'getDetail']);
 Route::post('propel', [PelunasanController2::class, 'propel']);
 
 //Wilayah
-// Route::get('wilayah', Wilayah::class);
+Route::get('wilayah', Wilayah::class);
 
 Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::resource('users', UsersController::class)->only(['index']);
