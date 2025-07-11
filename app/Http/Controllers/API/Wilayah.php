@@ -29,10 +29,10 @@ class Wilayah extends Controller
 
     public function kecamatan($id)
     {
-        $query = M_Wilayah::whereRaw('LENGTH(kode) = 8')->where('kode', 'like', '%' . 11.05 . '%')->get();
-        $data = R_Wilayah::collection($query);
+        // $query = M_Wilayah::whereRaw('LENGTH(kode) = 8')->where('kode', 'like', '%' . 11.05 . '%')->get();
+        // $data = R_Wilayah::collection($query);
 
-        return \response()->json($data);
+        return \response()->json("aaaa");
     }
 
     public function kelurahan($id)
