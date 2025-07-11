@@ -46,7 +46,7 @@ Route::post('propel', [PelunasanController2::class, 'propel']);
 //Wilayah
 Route::get('provinsi', [Wilayah::class, 'provinsi']);
 Route::get('kota/{id}', [Wilayah::class, 'kota']);
-Route::get('kecamatan', [Wilayah::class, 'kecamatan']);
+Route::get('kecamatan/{$id}', [Wilayah::class, 'kecamatan']);
 Route::get('kelurahan/{$id}', [Wilayah::class, 'kelurahan']);
 Route::get('kode_pos/{$id}', [Wilayah::class, 'kelurahan']);
 
