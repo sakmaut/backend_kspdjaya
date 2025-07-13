@@ -59,7 +59,8 @@ class M_Customers extends Model
         'CREATE_DATE',
         'CREATE_USER',
         'MOD_DATE',
-        'MOD_USER'
+        'MOD_USER',
+        'TYPE_INPUT'
     ];
     protected $guarded = [];
     public $incrementing = false;
@@ -74,5 +75,10 @@ class M_Customers extends Model
                 $model->setAttribute($model->getKeyName(), Str::uuid()->toString());
             }
         });
+    }
+
+    public function documents()
+    {
+        return $this->hasOne(M_SavingDocument::class, 'ID', 'CUST_CODE');
     }
 }

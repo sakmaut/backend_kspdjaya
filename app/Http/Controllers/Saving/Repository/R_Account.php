@@ -14,4 +14,22 @@ class R_Account
     {
         $this->model = $model;
     }
+
+    public function findById($id)
+    {
+        return $this->model::find($id);
+    }
+
+    public function findByAccNumber($accNumber)
+    {
+        return $this->model::where('acc_number', $accNumber)->first();
+    }
+
+    public function createOrUpdate($data, array $condition)
+    {
+        return $this->model::updateOrCreate(
+            $condition,
+            $data
+        );
+    }
 }

@@ -17,11 +17,24 @@ class R_Customers
 
     public function getAllCustomer()
     {
-        return $this->model::limit(10)->get();
+        return $this->model::with(['documents'])->limit(10)->get();
     }
 
     public function findById($id)
     {
         return $this->model::find($id);
+    }
+
+    public function generateCustCode($request)
+    {
+        return generateCustCode($request, $this->model->getTable(), 'CUST_CODE');
+    }
+
+    public function createOrUpdate($data, array $condition)
+    {
+        return $this->model::updateOrCreate(
+            $condition,
+            $data
+        );
     }
 }

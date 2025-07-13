@@ -24,9 +24,9 @@ class C_Customers extends Controller
     {
         try {
             $data =  $this->service->getAllCustomer();
-            // $json = Rs_Customers::collection($data);
+            $json = Rs_Customers::collection($data);
 
-            return response()->json($data, 200);
+            return response()->json($json, 200);
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
         }
@@ -36,9 +36,9 @@ class C_Customers extends Controller
     {
         try {
             $data = $this->service->findById($id);
-            // $json = new Rs_ProductSaving($data);
+            $json = new Rs_Customers($data);
 
-            return response()->json($data, 200);
+            return response()->json($json, 200);
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
         }
@@ -48,10 +48,24 @@ class C_Customers extends Controller
     {
         DB::beginTransaction();
         try {
-            // $this->service->createOrUpdate($request);
+            $data = $this->service->createOrUpdate($request);    
 
             DB::commit();
-            return response()->json(["message" => "success"], 200);
+            return response()->json(["message" => "success",'data' => $data], 200);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return $this->log->logError($e, $request);
+        }
+    }
+
+    public function update(Request $request, $id)
+    {
+        DB::beginTransaction();
+        try {
+            $data = $this->service->createOrUpdate($request,$id.'update');
+
+            DB::commit();
+            return response()->json(["message" => "success", 'data' => $data], 200);
         } catch (\Exception $e) {
             DB::rollback();
             return $this->log->logError($e, $request);

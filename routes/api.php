@@ -29,6 +29,7 @@ use App\Http\Controllers\API\{
 };
 use App\Http\Controllers\Saving\Controller\C_Customers;
 use App\Http\Controllers\Saving\Controller\C_ProductSaving;
+use App\Http\Controllers\Saving\Controller\C_SavingDocument;
 use App\Http\Controllers\Welcome;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -161,6 +162,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::resource('product_saving', C_ProductSaving::class);
     Route::resource('account', C_ProductSaving::class);
     Route::resource('customers', C_Customers::class);
+    Route::resource('upload_saving_doc', C_SavingDocument::class);
 });
 
 
