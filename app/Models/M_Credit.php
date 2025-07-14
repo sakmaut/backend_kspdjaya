@@ -76,4 +76,9 @@ class M_Credit extends Model
     {
         return $this->hasOne(M_Customer::class, 'CUST_CODE', 'CUST_CODE');
     }
+
+    public function arrears()
+    {
+        return $this->hasMany(M_Arrears::class, 'LOAN_NUMBER', 'LOAN_NUMBER')->where('STATUS_REC', 'A');;
+    }
 }

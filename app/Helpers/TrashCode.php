@@ -2642,3 +2642,91 @@ $checkIdNumber = DB::table('credit as a')
             ]);
         }
     }
+
+     // private function buildDataPokokSebagian($data)
+    // {
+    //     $schedule = [];
+    //     $ttal_bayar = ($data['SUBMISSION_VALUE'] + $data['TOTAL_ADMIN']);
+    //     $angsuran_bunga = $data['INSTALLMENT'];
+    //     $term = ceil($data['TENOR']);
+    //     $baki_debet = $ttal_bayar;
+
+    //     $startInstallment = $data->START_FROM ?? 1;
+
+    //     for ($i = 0; $i < $term; $i++) {
+    //         $pokok = 0;
+
+    //         if ($i == $term - 1) {
+    //             $pokok = $ttal_bayar;
+    //         }
+
+    //         $total_angsuran = $pokok + $angsuran_bunga;
+
+    //         $schedule[] = [
+    //             'angsuran_ke' => $startInstallment + $i,
+    //             'baki_debet_awal' => floatval($baki_debet),
+    //             'pokok' => floatval($pokok),
+    //             'bunga' => floatval($angsuran_bunga),
+    //             'total_angsuran' => floatval($total_angsuran),
+    //             'baki_debet' => floatval($baki_debet - $pokok)
+    //         ];
+
+    //         $baki_debet -= $pokok;
+    //     }
+
+    //     return $schedule;
+    // }
+
+
+      // private function buildPrincipal($request, $data)
+    // {
+    //     $payment = $request->BAYAR_POKOK;
+
+    //     $maxInstallment = null;
+    //     foreach ($data as $row) {
+    //         if ($maxInstallment === null || $row['INSTALLMENT_COUNT'] > $maxInstallment['INSTALLMENT_COUNT']) {
+    //             $maxInstallment = $row;
+    //         }
+    //     }
+
+    //     return $maxInstallment;
+    //     die;
+
+    //     // $maxItem = array_filter($interest, function ($item) use ($maxInstallment) {
+    //     //     return $item['INSTALLMENT_COUNT'] === $maxInstallment;
+    //     // });
+
+    //     // $maxItem = reset($maxItem);
+
+    //     // $lastValid = null;
+    //     // for ($i = count($interest) - 1; $i >= 0; $i--) {
+    //     //     if ($interest[$i]['BAYAR_BUNGA'] != 0) {
+    //     //         $lastValid = [
+    //     //             'INSTALLMENT_COUNT' => $interest[$i]['INSTALLMENT_COUNT']
+    //     //         ];
+    //     //         break;
+    //     //     }
+    //     // }
+
+    //     // $count = 0;
+    //     // foreach ($interest as $item) {
+    //     //     if ($item['BAYAR_BUNGA'] == 0) {
+    //     //         $count++;
+    //     //     }
+    //     // }
+
+    //     // $sisa_pokok = $maxItem ? $maxItem['PRINCIPAL'] - $payment : 0;
+    //     // $calc = round($sisa_pokok * (3 / 100), 2);
+
+    //     // $data = [
+    //     //     'SUBMISSION_VALUE' => $sisa_pokok,
+    //     //     'TOTAL_ADMIN' => 0,
+    //     //     'INSTALLMENT' => $calc,
+    //     //     'TENOR' => $count ?? 1,
+    //     //     'START_FROM' => $lastValid != null ? $lastValid['INSTALLMENT_COUNT'] : 1
+    //     // ];
+
+    //     // $data_credit_schedule = $this->buildDataPokokSebagian($data);
+
+    //     // return $data_credit_schedule;
+    // }

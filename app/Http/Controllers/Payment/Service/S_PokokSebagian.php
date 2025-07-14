@@ -79,6 +79,10 @@ class S_PokokSebagian
             ->select('ID', 'INSTALLMENT_COUNT', 'PAYMENT_DATE', 'INSTALLMENT', 'PRINCIPAL', 'INTEREST', 'PAYMENT_VALUE_PRINCIPAL', 'PAYMENT_VALUE_INTEREST')
             ->get();
 
+        if ($creditSchedule->isEmpty()) {
+            throw new Exception("Credit Schedule Empty", 500);
+        }
+
         $interest = $this->buildInterest($request, $creditSchedule);
 
         if ($request->BAYAR_POKOK != 0) {
@@ -188,273 +192,135 @@ class S_PokokSebagian
         return $schedule;
     }
 
-    // private function buildPrincipal($request, $data)
-    // {
-    //     $payment = $request->BAYAR_POKOK;
-
-    //     $maxInstallment = null;
-    //     foreach ($data as $row) {
-    //         if ($maxInstallment === null || $row['INSTALLMENT_COUNT'] > $maxInstallment['INSTALLMENT_COUNT']) {
-    //             $maxInstallment = $row;
-    //         }
-    //     }
-
-    //     return $maxInstallment;
-    //     die;
-
-    //     // $maxItem = array_filter($interest, function ($item) use ($maxInstallment) {
-    //     //     return $item['INSTALLMENT_COUNT'] === $maxInstallment;
-    //     // });
-
-    //     // $maxItem = reset($maxItem);
-
-    //     // $lastValid = null;
-    //     // for ($i = count($interest) - 1; $i >= 0; $i--) {
-    //     //     if ($interest[$i]['BAYAR_BUNGA'] != 0) {
-    //     //         $lastValid = [
-    //     //             'INSTALLMENT_COUNT' => $interest[$i]['INSTALLMENT_COUNT']
-    //     //         ];
-    //     //         break;
-    //     //     }
-    //     // }
-
-    //     // $count = 0;
-    //     // foreach ($interest as $item) {
-    //     //     if ($item['BAYAR_BUNGA'] == 0) {
-    //     //         $count++;
-    //     //     }
-    //     // }
-
-    //     // $sisa_pokok = $maxItem ? $maxItem['PRINCIPAL'] - $payment : 0;
-    //     // $calc = round($sisa_pokok * (3 / 100), 2);
-
-    //     // $data = [
-    //     //     'SUBMISSION_VALUE' => $sisa_pokok,
-    //     //     'TOTAL_ADMIN' => 0,
-    //     //     'INSTALLMENT' => $calc,
-    //     //     'TENOR' => $count ?? 1,
-    //     //     'START_FROM' => $lastValid != null ? $lastValid['INSTALLMENT_COUNT'] : 1
-    //     // ];
-
-    //     // $data_credit_schedule = $this->buildDataPokokSebagian($data);
-
-    //     // return $data_credit_schedule;
-    // }
-
     private function processPokokBungaMenurun($request, $kwitansiDetail)
     {
-        $loan_number = $request->LOAN_NUMBER;
-        $no_inv = $kwitansiDetail->NO_TRANSAKSI;
+        $loanNumber = $request->LOAN_NUMBER;
+        $noTransaksi = $kwitansiDetail->NO_TRANSAKSI;
 
-        $kwitansi = M_Kwitansi::with(['kwitansi_pelunasan_detail', 'branch'])->where([
-            'LOAN_NUMBER' => $loan_number,
-            'NO_TRANSAKSI' => $no_inv
-        ])->first();
-
+        $kwitansi = $this->getKwitansi($loanNumber, $noTransaksi);
         if (!$kwitansi) return;
 
+        $credit = M_Credit::with(['arrears'])->where('LOAN_NUMBER', $loanNumber)->first();
 
-        foreach ($kwitansi->kwitansi_pelunasan_detail as $val) {
-            $creditS = M_CreditSchedule::where(
-                [
-                    'LOAN_NUMBER' =>  $loan_number,
-                    'INSTALLMENT_COUNT' => $val['angsuran_ke'],
-                    'PAYMENT_DATE' => $val['tgl_angsuran'],
-                ]
-            )->first();
+        $details = collect($kwitansi->kwitansi_pelunasan_detail);
+        $finalPrincipalRemains = $details->sortByDesc('angsuran_ke')->first()['bayar_pokok'];
+        $totalPrincipalPaid = $details->sum('bayar_pokok');
 
-            $creditS->update([
-                'PRINCIPAL' => $val['bayar_pokok'],
-                'INTEREST' => $val['installment'],
-                'PAYMENT_VALUE_PRINCIPAL' => $val['bayar_pokok'],
-                'PAYMENT_VALUE_INTEREST' => $val['bayar_bunga'],
-            ]);
+        foreach ($details as $detail) {
+            $this->processDetail($loanNumber, $detail, $finalPrincipalRemains, $totalPrincipalPaid, $request, $kwitansi, $credit);
         }
 
-        // return $kwitansi->kwitansi_pelunasan_detail;
-        // die;
-
-        // $credit_schedule = M_CreditSchedule::where([
-        //     'LOAN_NUMBER' => $loan_number,
-        //     'INSTALLMENT_COUNT' => $kwitansi->kwitansi_structur_detail->map(function ($res) {
-        //         return intval($res->angsuran_ke);
-        //     })
-        // ])->first();
-
-        // if (!$credit_schedule) return;
-
-        // $getPrincipalPay = (float) $kwitansi->kwitansi_structur_detail->sum(function ($detail) {
-        //     return floatval($detail->bayar_angsuran);
-        // });
-
-        // $uid = Uuid::uuid7()->toString();
-
-        // $paymentData = [
-        //     'ID' => $uid,
-        //     'ACC_KEY' => 'pokok_sebagian',
-        //     'STTS_RCRD' => 'PAID',
-        //     'INVOICE' => $no_inv ?? '',
-        //     'NO_TRX' => $request->uid ?? '',
-        //     'PAYMENT_METHOD' => $kwitansi->METODE_PEMBAYARAN ?? '',
-        //     'BRANCH' =>  $kwitansi->branch['CODE_NUMBER'] ?? '',
-        //     'LOAN_NUM' => $loan_number,
-        //     'VALUE_DATE' => null,
-        //     'ENTRY_DATE' => now(),
-        //     'SUSPENSION_PENALTY_FLAG' => $request->penangguhan_denda ?? '',
-        //     'TITLE' => 'Pembayaran Pokok Sebagian',
-        //     'ORIGINAL_AMOUNT' => $getPrincipalPay,
-        //     'OS_AMOUNT' => $os_amount ?? 0,
-        //     'START_DATE' => $tgl_angsuran ?? null,
-        //     'END_DATE' => now(),
-        //     'USER_ID' => $kwitansi->CREATED_BY ?? $request->user()->id,
-        //     'AUTH_BY' => $request->user()->fullname ?? '',
-        //     'AUTH_DATE' => now(),
-        //     'ARREARS_ID' => $res['id_arrear'] ?? '',
-        //     'BANK_NAME' => round(microtime(true) * 1000)
-        // ];
-
-        // $existing = M_Payment::where($paymentData)->first();
-
-        // if (!$existing) {
-        //     M_Payment::create($paymentData);
-        // }
-
-        // $data = $this->preparePaymentData($uid, 'ANGSURAN_POKOK', $getPrincipalPay);
-        // M_PaymentDetail::create($data);
-
-        // $principalPay = ($credit_schedule->PAYMENT_VALUE_PRINCIPAL + $getPrincipalPay);
-
-        // $credit_schedule->update([
-        //     'PRINCIPAL' => $principalPay,
-        //     'INSTALLMENT' => $principalPay + $credit_schedule->INTEREST,
-        //     'PAYMENT_VALUE_PRINCIPAL' => $principalPay,
-        //     'INSUFFICIENT_PAYMENT' => (floatval($credit_schedule->INTEREST) - floatval($credit_schedule->PAYMENT_VALUE_INTEREST)),
-        //     'PAYMENT_VALUE' => (floatval($credit_schedule->PAYMENT_VALUE) + floatval($getPrincipalPay))
-        // ]);
-
-        // $this->addCreditPaid($loan_number, ['ANGSURAN_POKOK' => $getPrincipalPay]);
-
-        // $creditSchedulesUpdate = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)
-        //     ->where(function ($query) {
-        //         $query->where('PAID_FLAG', '!=', 'PAID')
-        //             ->orWhere('PAID_FLAG', '=', '')
-        //             ->orWhereNull('PAID_FLAG');
-        //     })
-        //     ->where(function ($query) {
-        //         $query->whereNull('PAYMENT_VALUE_PRINCIPAL')
-        //             ->orWhere('PAYMENT_VALUE_PRINCIPAL', '=', '');
-        //     })
-        //     ->orderBy('INSTALLMENT_COUNT', 'ASC')
-        //     ->orderBy('PAYMENT_DATE', 'ASC')
-        //     ->get();
-
-        // if ($creditSchedulesUpdate->isEmpty()) return;
-
-        // $totalSisaPokok = $creditSchedulesUpdate->sum('PRINCIPAL');
-
-        // $sisa_pokok = $totalSisaPokok - $getPrincipalPay;
-        // $sisa_pokok = max(0, $sisa_pokok);
-
-        // $getNewTenor = count($creditSchedulesUpdate);
-        // $calc = round($sisa_pokok * (3 / 100), 2);
-
-        // $data = new \stdClass();
-        // $data->SUBMISSION_VALUE = $sisa_pokok;
-        // $data->TOTAL_ADMIN = 0;
-        // $data->INSTALLMENT = $calc;
-        // $data->TENOR = $getNewTenor;
-        // $data->START_FROM = $creditSchedulesUpdate->first()->INSTALLMENT_COUNT;
-
-        // // $data_credit_schedule = $this->buildDataPokokSebagian($data);
-
-        // foreach ($creditSchedulesUpdate as $index => $schedule) {
-        //     // $updateData = $data_credit_schedule[$index];
-
-        //     $updateArray = [
-        //         'PRINCIPAL' => $updateData['pokok'],
-        //         'INTEREST' => $updateData['bunga'],
-        //         'INSTALLMENT' => $updateData['total_angsuran'],
-        //         'PRINCIPAL_REMAINS' => $updateData['baki_debet'],
-        //     ];
-
-        //     if ((float)$updateData['total_angsuran'] == 0) {
-        //         $updateArray['PAID_FLAG'] = 'PAID';
-        //     }
-
-        //     $schedule->update($updateArray);
-        // }
-
-        // $totalInterest = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)
-        //     ->where(function ($query) {
-        //         $query->where('PAID_FLAG', '')
-        //             ->orWhereNull('PAID_FLAG');
-        //     })
-        //     ->sum('INTEREST');
-
-        // $check_credit = M_Credit::where(['LOAN_NUMBER' => $loan_number])->first();
-
-        // $check_credit->update([
-        //     'INTRST_ORI' => $totalInterest ?? 0
-        // ]);
+        $this->updateCreditStatus($credit, $loanNumber);
     }
 
-    // private function buildDataPokokSebagian($data)
-    // {
-    //     $schedule = [];
-    //     $ttal_bayar = ($data['SUBMISSION_VALUE'] + $data['TOTAL_ADMIN']);
-    //     $angsuran_bunga = $data['INSTALLMENT'];
-    //     $term = ceil($data['TENOR']);
-    //     $baki_debet = $ttal_bayar;
-
-    //     $startInstallment = $data->START_FROM ?? 1;
-
-    //     for ($i = 0; $i < $term; $i++) {
-    //         $pokok = 0;
-
-    //         if ($i == $term - 1) {
-    //             $pokok = $ttal_bayar;
-    //         }
-
-    //         $total_angsuran = $pokok + $angsuran_bunga;
-
-    //         $schedule[] = [
-    //             'angsuran_ke' => $startInstallment + $i,
-    //             'baki_debet_awal' => floatval($baki_debet),
-    //             'pokok' => floatval($pokok),
-    //             'bunga' => floatval($angsuran_bunga),
-    //             'total_angsuran' => floatval($total_angsuran),
-    //             'baki_debet' => floatval($baki_debet - $pokok)
-    //         ];
-
-    //         $baki_debet -= $pokok;
-    //     }
-
-    //     return $schedule;
-    // }
-
-    private function preparePaymentData($payment_id, $acc_key, $amount)
+    private function getKwitansi($loanNumber, $noTransaksi)
     {
-        return [
-            'PAYMENT_ID' => $payment_id,
-            'ACC_KEYS' => $acc_key,
-            'ORIGINAL_AMOUNT' => $amount
+        return M_Kwitansi::with(['kwitansi_pelunasan_detail', 'branch:ID,CODE,CODE_NUMBER'])
+            ->select('LOAN_NUMBER', 'METODE_PEMBAYARAN', 'BRANCH_CODE', 'NO_TRANSAKSI', 'CREATED_BY')
+            ->where('LOAN_NUMBER', $loanNumber)
+            ->where('NO_TRANSAKSI', $noTransaksi)
+            ->first();
+    }
+
+    private function processDetail($loanNumber, $detail, $finalPrincipalRemains, $totalPrincipalPaid, $request, $kwitansi, $credit)
+    {
+        $schedule = M_CreditSchedule::where([
+            'LOAN_NUMBER' => $loanNumber,
+            'INSTALLMENT_COUNT' => $detail['angsuran_ke'],
+            'PAYMENT_DATE' => $detail['tgl_angsuran'],
+        ])->first();
+
+        if (!$schedule) {
+            throw new Exception("Credit schedule not found for angsuran ke-{$detail['angsuran_ke']}", 1);
+        }
+
+        $paidPrincipal = floatval($detail['bayar_pokok']);
+        $paidInterest = floatval($detail['bayar_bunga']);
+        $installmentValue = $paidPrincipal + floatval($detail['installment']);
+        $totalPaid = $paidPrincipal + $paidInterest;
+        $expectedTotal = floatval($schedule->PRINCIPAL) + floatval($schedule->INTEREST);
+        $isPaid = $totalPaid == $expectedTotal;
+
+        $schedule->update([
+            'PRINCIPAL' => $paidPrincipal,
+            'INTEREST' => $detail['installment'],
+            'INSTALLMENT' => $installmentValue,
+            'PRINCIPAL_REMAINS' => $isPaid ? $totalPrincipalPaid : $finalPrincipalRemains,
+            'PAYMENT_VALUE_PRINCIPAL' => $paidPrincipal,
+            'PAYMENT_VALUE_INTEREST' => $paidInterest,
+            'PAID_FLAG' => $isPaid ? 'PAID' : '',
+        ]);
+
+        if ($paidInterest != 0) {
+            $this->addPayment($request, $kwitansi, $detail);
+            $credit->update([
+                'PAID_PRINCIPAL' => $credit->PAID_PRINCIPAL + $paidPrincipal,
+                'PAID_INTEREST' => $credit->PAID_INTEREST + $paidInterest,
+                'PAID_PENALTY' => $credit->PAID_PENALTY + floatval($detail['bayar_denda']),
+            ]);
+        }
+    }
+
+    private function updateCreditStatus($credit, $loanNumber)
+    {
+        $totalInterest = M_CreditSchedule::where('LOAN_NUMBER', $loanNumber)->sum('INTEREST');
+
+        $totalOriginal = $credit->PCPL_ORI + $credit->INTRST_ORI;
+        $totalPaid = $credit->PAID_PRINCIPAL + $credit->PAID_INTEREST;
+
+        $credit->update([
+            'INTRST_ORI' => $totalInterest ?? 0,
+            'STATUS_REC' => ($totalOriginal == $totalPaid && $credit->arrears->isEmpty()) ? 'PT' : $credit->STATUS_REC,
+            'STATUS'     => ($totalOriginal == $totalPaid && $credit->arrears->isEmpty()) ? 'D'  : $credit->STATUS,
+        ]);
+    }
+
+
+    public function addPayment($request, $kwitansi, $data)
+    {
+        $uid = Uuid::uuid7()->toString();
+        $loanNumber = $request->LOAN_NUMBER;
+        $bayarPokok = floatval($data['bayar_pokok'] ?? 0);
+        $bayarBunga = floatval($data['bayar_bunga'] ?? 0);
+        $totalPayment = $bayarPokok + $bayarBunga;
+
+        $paymentData = [
+            'ID' => $uid,
+            'ACC_KEY' => 'pokok_sebagian',
+            'STTS_RCRD' => 'PAID',
+            'INVOICE' => $kwitansi->NO_TRANSAKSI ?? '',
+            'NO_TRX' => $request->uid ?? '',
+            'PAYMENT_METHOD' => $kwitansi->METODE_PEMBAYARAN ?? '',
+            'BRANCH' => $kwitansi->branch['CODE_NUMBER'] ?? '',
+            'LOAN_NUM' => $loanNumber,
+            'VALUE_DATE' => null,
+            'ENTRY_DATE' => now(),
+            'SUSPENSION_PENALTY_FLAG' => $request->penangguhan_denda ?? '',
+            'TITLE' => 'Pembayaran Pokok Sebagian',
+            'ORIGINAL_AMOUNT' => $totalPayment,
+            'OS_AMOUNT' => $os_amount ?? 0,
+            'START_DATE' => $tgl_angsuran ?? null,
+            'END_DATE' => now(),
+            'USER_ID' => $kwitansi->CREATED_BY ?? $request->user()->id,
+            'AUTH_BY' => $request->user()->fullname ?? '',
+            'AUTH_DATE' => now(),
+            'ARREARS_ID' => $res['id_arrear'] ?? ''
         ];
-    }
 
-    private function addCreditPaid($loan_number, array $data)
-    {
-        $check_credit = M_Credit::where(['LOAN_NUMBER' => $loan_number])->first();
-
-        if ($check_credit) {
-            $paidPrincipal = isset($data['ANGSURAN_POKOK']) ? $data['ANGSURAN_POKOK'] : 0;
-            $paidInterest = isset($data['ANGSURAN_BUNGA']) ? $data['ANGSURAN_BUNGA'] : 0;
-            $paidPenalty = isset($data['BAYAR_DENDA']) ? $data['BAYAR_DENDA'] : 0;
-
-            $check_credit->update([
-                'PAID_PRINCIPAL' => floatval($check_credit->PAID_PRINCIPAL) + floatval($paidPrincipal),
-                'PAID_INTEREST' => floatval($check_credit->PAID_INTEREST) + floatval($paidInterest),
-                'PAID_PENALTY' => floatval($check_credit->PAID_PENALTY) + floatval($paidPenalty)
-            ]);
+        if (!M_Payment::where($paymentData)->first()) {
+            M_Payment::create($paymentData);
         }
+
+        M_PaymentDetail::create([
+            'PAYMENT_ID' => $uid,
+            'ACC_KEYS' => 'ANGSURAN_POKOK_SEBAGIAN',
+            'ORIGINAL_AMOUNT' => $bayarPokok
+        ]);
+
+        M_PaymentDetail::create([
+            'PAYMENT_ID' => $uid,
+            'ACC_KEYS' => 'ANGSURAN_BUNGA',
+            'ORIGINAL_AMOUNT' => $bayarBunga
+        ]);
     }
 }

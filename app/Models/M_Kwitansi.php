@@ -70,7 +70,7 @@ class M_Kwitansi extends Model
 
     public function kwitansi_pelunasan_detail()
     {
-        return $this->hasMany(M_KwitansiDetailPelunasan::class, 'no_invoice', 'NO_TRANSAKSI');
+        return $this->hasMany(M_KwitansiDetailPelunasan::class, 'no_invoice', 'NO_TRANSAKSI')->orderBy('angsuran_ke', 'asc');
     }
 
     public function branch()
