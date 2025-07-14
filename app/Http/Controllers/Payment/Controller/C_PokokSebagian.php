@@ -48,4 +48,18 @@ class C_PokokSebagian extends Controller
             return $this->log->logError($e, $request);
         }
     }
+
+    public function cancel(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $data = $this->service->cancel($request);
+
+            DB::commit();
+            return response()->json($data, 200);
+        } catch (Exception $e) {
+            DB::rollback();
+            return $this->log->logError($e, $request);
+        }
+    }
 }

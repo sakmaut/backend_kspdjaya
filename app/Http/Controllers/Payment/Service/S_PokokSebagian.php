@@ -15,6 +15,7 @@ use App\Services\Credit\CreditService;
 use App\Services\Kwitansi\KwitansiService;
 use Carbon\Carbon;
 use Exception;
+use GuzzleHttp\Psr7\Request;
 use Illuminate\Support\Facades\DB;
 use Ramsey\Uuid\Uuid;
 
@@ -63,7 +64,7 @@ class S_PokokSebagian
             return $this->processPokokBungaMenurun($request, $kwitansi);
         }
 
-        // return new R_Kwitansi($kwitansi);
+        return new R_Kwitansi($kwitansi);
     }
 
     private function proccessKwitansiDetail($request, $kwitansi)
@@ -322,5 +323,18 @@ class S_PokokSebagian
             'ACC_KEYS' => 'ANGSURAN_BUNGA',
             'ORIGINAL_AMOUNT' => $bayarBunga
         ]);
+    }
+
+    public function cancel($request)
+    {
+        $loan_number = $request->loan_number;
+        $no_inv = $request->no_inv;
+
+        $getAllTrx = M_Kwitansi::where('LOAN_NUMBER', $loan_number)
+            ->where('NO_TRANSAKSI', $no_inv)
+            ->orderByAsc('NO_TRANSAKSI')
+            ->get();
+
+        return $getAllTrx;
     }
 }
