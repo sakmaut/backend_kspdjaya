@@ -872,7 +872,7 @@ class PaymentController extends Controller
                 'NO_TRANSAKSI' => $no_invoice
             ])->where('PAYMENT_TYPE', 'pokok_sebagian')->first();
 
-            if (!$ccheckPokokSebagian) {
+            if ($ccheckPokokSebagian) {
                 throw new Exception("Kwitansi Pokok Sebagian Tidak Boleh Dicancel", 404);
             }
 
