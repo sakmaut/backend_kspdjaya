@@ -8,15 +8,10 @@ use App\Models\M_Credit;
 use App\Models\M_CreditSchedule;
 use App\Models\M_Kwitansi;
 use App\Models\M_KwitansiDetailPelunasan;
-use App\Models\M_KwitansiStructurDetail;
 use App\Models\M_Payment;
 use App\Models\M_PaymentDetail;
-use App\Services\Credit\CreditService;
 use App\Services\Kwitansi\KwitansiService;
-use Carbon\Carbon;
 use Exception;
-use GuzzleHttp\Psr7\Request;
-use Illuminate\Support\Facades\DB;
 use Ramsey\Uuid\Uuid;
 
 class S_PokokSebagian
@@ -61,7 +56,7 @@ class S_PokokSebagian
         $this->proccessKwitansiDetail($request, $kwitansi);
 
         if ($kwitansi->STTS_PAYMENT == 'PAID') {
-            return $this->processPokokBungaMenurun($request, $kwitansi);
+            $this->processPokokBungaMenurun($request, $kwitansi);
         }
 
         return new R_Kwitansi($kwitansi);
@@ -85,43 +80,9 @@ class S_PokokSebagian
         }
 
         $interest = $this->buildInterest($request, $creditSchedule);
+        $build = $this->buildPrincipal($request, $interest);
 
-        if ($request->BAYAR_POKOK != 0) {
-            $data = $this->buildPrincipal($request, $creditSchedule);
-
-            $lastZeroIndex = null;
-            $currentMonth = date('Y-m');
-            $lastIndex = null;
-
-            foreach ($interest as $index => &$item) {
-                $paymentMonth = date('Y-m', strtotime($item['PAYMENT_DATE']));
-
-                if ($item['BAYAR_BUNGA'] == 0) {
-                    if ($paymentMonth > $currentMonth) {
-                        $item['INSTALLMENT'] = $data['angsuran'];
-
-                        if ($data['angsuran'] == 0) {
-                            $item['PAID_FLAG'] = "PAID";
-                        }
-
-                        $lastZeroIndex = $index;
-                    }
-                } else {
-                    $lastIndex = $index;
-                }
-            }
-
-            if ($lastZeroIndex !== null) {
-                $interest[$lastZeroIndex]['PRINCIPAL'] = $data['pokok'];
-            }
-
-            if ($lastIndex !== null) {
-                $interest[$lastIndex]['PRINCIPAL'] = $data['bayar'];
-            }
-        }
-
-        foreach ($interest as $value) {
-
+        foreach ($build as $value) {
             $data = [
                 'no_invoice' => $no_inv ?? '',
                 'loan_number' => $loan_number ?? '',
@@ -171,26 +132,49 @@ class S_PokokSebagian
 
     private function buildPrincipal($request, $data)
     {
+        if ($request->BAYAR_POKOK != 0) {
+            $payment = $request->BAYAR_POKOK;
 
-        $payment = $request->BAYAR_POKOK;
-        $maxInstallment = null;
-        foreach ($data as $row) {
-            if ($maxInstallment === null || $row['INSTALLMENT_COUNT'] > $maxInstallment['INSTALLMENT_COUNT']) {
-                $maxInstallment = $row;
+            $minIndex = null;
+            $maxIndex = null;
+            $minCount = null;
+
+            // Temukan index installment terkecil dan terbesar
+            foreach ($data as $index => $row) {
+                if ($minIndex === null || $row['INSTALLMENT_COUNT'] < $data[$minIndex]['INSTALLMENT_COUNT']) {
+                    $minIndex = $index;
+                    $minCount = $row['INSTALLMENT_COUNT'];
+                }
+                if ($maxIndex === null || $row['INSTALLMENT_COUNT'] > $data[$maxIndex]['INSTALLMENT_COUNT']) {
+                    $maxIndex = $index;
+                }
+            }
+
+            // Tambahkan PRINCIPAL ke row terkecil
+            if ($minIndex !== null) {
+                $data[$minIndex]['PRINCIPAL'] += $payment;
+            }
+
+            // Kurangi PRINCIPAL dari row terbesar
+            $calc = 0;
+            if ($maxIndex !== null) {
+                $data[$maxIndex]['PRINCIPAL'] -= $payment;
+
+                // Hitung ulang bunga dari sisa pokok
+                $sisa_pokok = floatval($data[$maxIndex]['PRINCIPAL']);
+                $calc = round($sisa_pokok * (3 / 100), 2);
+            }
+
+            // Set INSTALLMENT = $calc untuk semua row setelah min installment_count
+            foreach ($data as $index => $row) {
+                if ($row['INSTALLMENT_COUNT'] > $minCount) {
+                    $data[$index]['INSTALLMENT'] = $calc;
+                    $data[$index]['DISKON_BUNGA'] = $calc - $data[$index]['BAYAR_BUNGA'];
+                }
             }
         }
 
-        $sisa_pokok = floatval($maxInstallment['PRINCIPAL']) - floatval($payment);
-        $calc = round($sisa_pokok * (3 / 100), 2);
-
-        $schedule = [
-            'bayar' => $payment,
-            'pokok' => $sisa_pokok,
-            'bunga' => $calc,
-            'angsuran' => floatval($calc)
-        ];
-
-        return $schedule;
+        return $data;
     }
 
     private function processPokokBungaMenurun($request, $kwitansiDetail)
@@ -211,7 +195,7 @@ class S_PokokSebagian
             $this->processDetail($loanNumber, $detail, $finalPrincipalRemains, $totalPrincipalPaid, $request, $kwitansi, $credit);
         }
 
-        $this->updateCreditStatus($credit, $loanNumber);
+        // $this->updateCreditStatus($credit, $loanNumber);
     }
 
     private function getKwitansi($loanNumber, $noTransaksi)
@@ -235,6 +219,9 @@ class S_PokokSebagian
             throw new Exception("Credit schedule not found for angsuran ke-{$detail['angsuran_ke']}", 1);
         }
 
+        $maxInstallment = M_CreditSchedule::where('LOAN_NUMBER', $loanNumber)->max('INSTALLMENT_COUNT');
+        $isLastInstallment = intval($detail['angsuran_ke']) === intval($maxInstallment);
+
         $paidPrincipal = floatval($detail['bayar_pokok']);
         $paidInterest = floatval($detail['bayar_bunga']);
         $installmentValue = $paidPrincipal + floatval($detail['installment']);
@@ -243,7 +230,7 @@ class S_PokokSebagian
         $isPaid = $totalPaid == $expectedTotal;
 
         $schedule->update([
-            'PRINCIPAL' => $paidPrincipal,
+            'PRINCIPAL' => $isLastInstallment && !$isPaid ? $paidPrincipal : $schedule->PRINCIPAL + $paidPrincipal,
             'INTEREST' => $detail['installment'],
             'INSTALLMENT' => $installmentValue,
             'PRINCIPAL_REMAINS' => $isPaid ? $totalPrincipalPaid : $finalPrincipalRemains,
@@ -331,8 +318,8 @@ class S_PokokSebagian
         $no_inv = $request->no_inv;
 
         $getAllTrx = M_Kwitansi::where('LOAN_NUMBER', $loan_number)
-            ->where('NO_TRANSAKSI', $no_inv)
-            ->orderByAsc('NO_TRANSAKSI')
+            ->where('NO_TRANSAKSI', '>=', $no_inv)
+            ->orderBy('NO_TRANSAKSI', 'asc')
             ->get();
 
         return $getAllTrx;
