@@ -2730,3 +2730,83 @@ $checkIdNumber = DB::table('credit as a')
 
     //     // return $data_credit_schedule;
     // }
+
+     private function buildPayment($request, $creditSchedule)
+    {
+        $paymentBunga = $request->BAYAR_BUNGA ?? 0;
+        $paymentPokok = $request->BAYAR_POKOK ?? 0;
+
+        $data = [];
+        $sisaPaymentBunga = $paymentBunga;
+
+        foreach ($creditSchedule as $res) {
+            $paidInterest = $res->PAYMENT_VALUE_INTEREST ?? 0;
+            $totalInterest = floatval($res->INTEREST);
+            $installmentRaw = floatval($res->INSTALLMENT);
+
+            $installmentAdjusted = max(0, $installmentRaw - $paidInterest);
+            $maxBayarBunga = min($installmentAdjusted, $totalInterest - $paidInterest);
+
+            $paidNow = min($sisaPaymentBunga, $maxBayarBunga);
+            $sisaPaymentBunga -= $paidNow;
+
+            $discount = $installmentAdjusted - $paidNow;
+
+            $data[] = [
+                'ID' => $res->ID,
+                'PRINCIPAL' => floatval($res->PRINCIPAL),
+                'INSTALLMENT_COUNT' => $res->INSTALLMENT_COUNT,
+                'INSTALLMENT' => $installmentRaw,
+                'INTEREST' => $installmentAdjusted,
+                'PAYMENT_DATE' => $res->PAYMENT_DATE,
+                'BAYAR_BUNGA' => $paidNow,
+                'DISKON_BUNGA' => max(0, $discount)
+            ];
+        }
+
+        if ($paymentPokok != 0) {
+            $minIndex = null;
+            $maxIndex = null;
+            $minCount = null;
+
+            foreach ($data as $index => $row) {
+                if ($minIndex === null || $row['INSTALLMENT_COUNT'] < $data[$minIndex]['INSTALLMENT_COUNT']) {
+                    $minIndex = $index;
+                    $minCount = $row['INSTALLMENT_COUNT'];
+                }
+                if ($maxIndex === null || $row['INSTALLMENT_COUNT'] > $data[$maxIndex]['INSTALLMENT_COUNT']) {
+                    $maxIndex = $index;
+                }
+            }
+
+            if ($minIndex !== null) {
+                $data[$minIndex]['PRINCIPAL'] += $paymentPokok;
+            }
+
+            $calc = 0;
+            if ($maxIndex !== null) {
+                $data[$maxIndex]['PRINCIPAL'] -= $paymentPokok;
+                $sisaPokok = floatval($data[$maxIndex]['PRINCIPAL']);
+                $calc = round($sisaPokok * (3 / 100), 2);
+            }
+
+            $sisaPaymentBunga = $paymentBunga;
+
+            foreach ($data as $index => $row) {
+                if ($row['INSTALLMENT_COUNT'] > $minCount) {
+                    $data[$index]['INSTALLMENT'] = $calc;
+                    $data[$index]['INTEREST'] = $calc;
+                }
+
+                $maxBayarBunga = min($data[$index]['INTEREST'], $totalInterest);
+
+                $paidNow = min($sisaPaymentBunga, $maxBayarBunga);
+                $sisaPaymentBunga -= $paidNow;
+
+                $data[$index]['BAYAR_BUNGA'] = $paidNow;
+                $data[$index]['DISKON_BUNGA'] = max(0, $data[$index]['INTEREST'] - $paidNow);
+            }
+        }
+
+        return $data;
+    }
