@@ -139,7 +139,6 @@ class S_PokokSebagian
             $maxIndex = null;
             $minCount = null;
 
-            // Temukan index installment terkecil dan terbesar
             foreach ($data as $index => $row) {
                 if ($minIndex === null || $row['INSTALLMENT_COUNT'] < $data[$minIndex]['INSTALLMENT_COUNT']) {
                     $minIndex = $index;
@@ -150,26 +149,22 @@ class S_PokokSebagian
                 }
             }
 
-            // Tambahkan PRINCIPAL ke row terkecil
             if ($minIndex !== null) {
                 $data[$minIndex]['PRINCIPAL'] += $payment;
             }
 
-            // Kurangi PRINCIPAL dari row terbesar
             $calc = 0;
             if ($maxIndex !== null) {
                 $data[$maxIndex]['PRINCIPAL'] -= $payment;
 
-                // Hitung ulang bunga dari sisa pokok
                 $sisa_pokok = floatval($data[$maxIndex]['PRINCIPAL']);
                 $calc = round($sisa_pokok * (3 / 100), 2);
             }
 
-            // Set INSTALLMENT = $calc untuk semua row setelah min installment_count
             foreach ($data as $index => $row) {
                 if ($row['INSTALLMENT_COUNT'] > $minCount) {
                     $data[$index]['INSTALLMENT'] = $calc;
-                    $data[$index]['DISKON_BUNGA'] = $calc - $data[$index]['BAYAR_BUNGA'];
+                    $data[$index]['DISKON_BUNGA'] = max(0, $calc - $data[$index]['BAYAR_BUNGA']);
                 }
             }
         }
@@ -224,20 +219,32 @@ class S_PokokSebagian
 
         $paidPrincipal = floatval($detail['bayar_pokok']);
         $paidInterest = floatval($detail['bayar_bunga']);
+        $interest = floatval($schedule->INTEREST);
+        $beforepaidPrincipal = floatval($schedule->PAYMENT_VALUE_PRINCIPAL);
+        $beforePaidInterest = floatval($schedule->PAYMENT_VALUE_INTEREST);
+
         $installmentValue = $paidPrincipal + floatval($detail['installment']);
         $totalPaid = $paidPrincipal + $paidInterest;
-        $expectedTotal = floatval($schedule->PRINCIPAL) + floatval($schedule->INTEREST);
-        $isPaid = $totalPaid == $expectedTotal;
+        $totalPrincipal  = $beforepaidPrincipal + $paidPrincipal;
+        $totalInterest  = $beforePaidInterest + $paidInterest;
+        $isPaid = $paidInterest == $interest;
 
-        $schedule->update([
+        $fields = [
             'PRINCIPAL' => $isLastInstallment && !$isPaid ? $paidPrincipal : $schedule->PRINCIPAL + $paidPrincipal,
             'INTEREST' => $detail['installment'],
             'INSTALLMENT' => $installmentValue,
             'PRINCIPAL_REMAINS' => $isPaid ? $totalPrincipalPaid : $finalPrincipalRemains,
-            'PAYMENT_VALUE_PRINCIPAL' => $paidPrincipal,
-            'PAYMENT_VALUE_INTEREST' => $paidInterest,
-            'PAID_FLAG' => $isPaid ? 'PAID' : '',
-        ]);
+            'PAYMENT_VALUE_PRINCIPAL' => !$isLastInstallment ? $totalPrincipal : 0,
+            'PAYMENT_VALUE_INTEREST' => $totalInterest
+        ];
+
+        if (!$isLastInstallment && ($paidPrincipal != 0 || $paidInterest != 0)) {
+            $fields['INSUFFICIENT_PAYMENT'] = $installmentValue - ($totalPrincipal + $totalInterest);
+            $fields['PAYMENT_VALUE'] = $totalPrincipal + $totalInterest;
+            $fields['PAID_FLAG'] = $installmentValue - ($totalPrincipal + $totalInterest) == 0 ? 'PAID' : '';
+        }
+
+        $schedule->update($fields);
 
         if ($paidInterest != 0) {
             $this->addPayment($request, $kwitansi, $detail);
