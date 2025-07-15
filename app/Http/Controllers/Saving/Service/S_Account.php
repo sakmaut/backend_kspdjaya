@@ -44,13 +44,18 @@ class S_Account
         $user = $request->user()->id;
 
         $data = [
-            // 'product_code' => $productCode,
-            'product_name' => $request->nama_produk,
-            'product_type' => $request->jenis_produk,
-            'interest_rate' => $request->suku_bunga,
-            'min_deposit' => $request->setoran_minimum,
-            'admin_fee' => $request->biaya_administrasi,
-            'term_length' => $request->jangka_waktu
+            'acc_number' => $request->no_rekening,
+            'acc_name' => $request->nama_pemilik,
+            'cust_code' => $request->nama_produk,
+            'branch' => $request->nama_produk,
+            'acc_type' => $request->nama_produk,
+            'clear_bal' => $request->nama_produk,
+            'min_bal' => $request->nama_produk,
+            'date_last_trans' => $request->nama_produk,
+            'date_acc_open' => $request->nama_produk,
+            'date_acc_close' => $request->nama_produk,
+            'block_bal' => $request->nama_produk,
+            'plafond_amount' => $request->nama_produk
         ];
 
         if ($existing && $type != 'create') {
