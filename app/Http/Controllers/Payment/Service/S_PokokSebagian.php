@@ -145,8 +145,6 @@ class S_PokokSebagian
             ];
         }
 
-        // return $data;
-
         // Jika ada BAYAR_POKOK
         if ($paymentPokok > 0) {
             $currentPaymentIndex = null;
@@ -184,6 +182,10 @@ class S_PokokSebagian
             $minCount = isset($currentPaymentIndex) ? $data[$currentPaymentIndex]['INSTALLMENT_COUNT'] : null;
 
             foreach ($data as $index => $row) {
+                if (isset($creditSchedule[$index]) && strtoupper($creditSchedule[$index]->PAID_FLAG) === 'PAID') {
+                    continue;
+                }
+
                 if ($minCount !== null && $row['INSTALLMENT_COUNT'] > $minCount) {
                     $data[$index]['INSTALLMENT'] = $calc;
                     $data[$index]['INTEREST'] = $calc;
@@ -200,8 +202,6 @@ class S_PokokSebagian
 
         return $data;
     }
-
-
 
     private function processPokokBungaMenurun($request, $kwitansiDetail)
     {
@@ -261,7 +261,8 @@ class S_PokokSebagian
         $isPaid = $paidInterest == $interest;
 
         $fields = [
-            'PRINCIPAL' => $isLastInstallment && !$isPaid ? $paidPrincipal : $schedule->PRINCIPAL + $paidPrincipal,
+            // 'PRINCIPAL' => $isLastInstallment && !$isPaid ? $paidPrincipal : $paidPrincipal,
+            'PRINCIPAL' => $paidPrincipal,
             'INTEREST' => $detail['installment'],
             'INSTALLMENT' => $installmentValue,
             'PRINCIPAL_REMAINS' => $isPaid ? $totalPrincipalPaid : $finalPrincipalRemains,
