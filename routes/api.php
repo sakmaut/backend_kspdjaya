@@ -129,7 +129,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
 
     //Pembayaran Pokok Sebagian
     Route::post('data_pokok_sebagian', [C_PokokSebagian::class, 'index']);
-    Route::post('proses_pokok_sebagian', [C_PokokSebagian::class, 'proccessPayment']);
+    Route::post('payment_bunga_menurun', [C_PokokSebagian::class, 'proccessPayment']);
 
     //Blacklist
     Route::resource('blacklist', CrBlacklistController::class);
