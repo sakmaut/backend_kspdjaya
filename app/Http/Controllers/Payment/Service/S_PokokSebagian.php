@@ -344,7 +344,7 @@ class S_PokokSebagian
             $this->processDetail($loanNumber, $detail, $finalPrincipalRemains, $totalPrincipalPaid, $request, $kwitansi, $credit);
         }
 
-        // $this->updateCreditStatus($credit, $loanNumber);
+        $this->updateCreditStatus($credit, $loanNumber);
     }
 
     private function getKwitansi($loanNumber, $noTransaksi)
@@ -404,14 +404,14 @@ class S_PokokSebagian
 
         $schedule->update($fields);
 
-        // if ($paidInterest != 0) {
-        //     $this->addPayment($request, $kwitansi, $detail);
-        //     $credit->update([
-        //         'PAID_PRINCIPAL' => $credit->PAID_PRINCIPAL + $paidPrincipal,
-        //         'PAID_INTEREST' => $credit->PAID_INTEREST + $paidInterest,
-        //         'PAID_PENALTY' => $credit->PAID_PENALTY + floatval($detail['bayar_denda']),
-        //     ]);
-        // }
+        if ($paidInterest != 0) {
+            $this->addPayment($request, $kwitansi, $detail);
+            $credit->update([
+                'PAID_PRINCIPAL' => $credit->PAID_PRINCIPAL + $paidPrincipal,
+                'PAID_INTEREST' => $credit->PAID_INTEREST + $paidInterest,
+                'PAID_PENALTY' => $credit->PAID_PENALTY + floatval($detail['bayar_denda']),
+            ]);
+        }
     }
 
     private function updateCreditStatus($credit, $loanNumber)
