@@ -17,7 +17,7 @@ class R_Customers
 
     public function getAllCustomer()
     {
-        return $this->model::with(['documents'])->limit(10)->get();
+        return $this->model::with(['documents'])->get();
     }
 
     public function findById($id)
