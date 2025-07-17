@@ -58,4 +58,9 @@ class M_Account extends Model
     {
         return $this->hasOne(M_ProductSaving::class, 'id', 'product_saving_id');
     }
+
+    public function transaction_log()
+    {
+        return $this->hasMany(M_SavingTransactionLog::class, 'acc_number', 'acc_number');
+    }
 }

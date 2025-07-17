@@ -20,13 +20,13 @@ class C_SavingTransactionLog extends Controller
         $this->log = $log;
     }
 
-    public function index(Request $request)
+    public function show(Request $request,$accNumber)
     {
         try {
-            // $data =  $this->service->getAllAccount();
+            $data =  $this->service->findTransactionLogByAccNumber($accNumber);
             // $json = Rs_SavingTransactionLog::collection($data);
 
-            // return response()->json($json, 200);
+            return response()->json($data, 200);
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
         }
@@ -36,10 +36,10 @@ class C_SavingTransactionLog extends Controller
     {
         DB::beginTransaction();
         try {
-            // $data = $this->service->createOrUpdate($request);
+            $data = $this->service->create($request);
 
             DB::commit();
-            // return response()->json(["message" => "success", 'data' => $data], 200);
+            return response()->json(["message" => "success", 'data' => $data], 200);
         } catch (\Exception $e) {
             DB::rollback();
             return $this->log->logError($e, $request);

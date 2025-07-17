@@ -3,24 +3,22 @@
 namespace App\Http\Controllers\Saving\Service;
 
 use App\Http\Controllers\Saving\Repository\R_Account;
-use App\Http\Controllers\Saving\Repository\R_Customers;
-use App\Http\Controllers\Saving\Repository\R_ProductSaving;
 use Exception;
 
 class S_Account
 {
     protected $repository;
-    protected $r_customer;
-    protected $r_product_saving;
+    protected $s_customer;
+    protected $s_product_saving;
 
     function __construct(
         R_Account $repository,
-        R_Customers $r_customer,
-        R_ProductSaving $r_product_saving
+        S_Customers $s_customer,
+        S_ProductSaving $s_product_saving
     ) {
         $this->repository = $repository;
-        $this->r_customer = $r_customer;
-        $this->r_product_saving = $r_product_saving;
+        $this->s_customer = $s_customer;
+        $this->s_product_saving = $s_product_saving;
     }
 
     public function getAllAccount()
@@ -28,23 +26,12 @@ class S_Account
         return $this->repository->getAllAccount();
     }
 
-    private function findCustomerById($id)
+    public function findCustomerByAccNumber($accNumber)
     {
-        $data = $this->r_customer->findById($id);
+        $data = $this->repository->findByAccNumber($accNumber);
 
         if (!$data) {
-            throw new Exception("Customer Not Found", 404);
-        }
-
-        return $data;
-    }
-
-    private function findProductSavingById($id)
-    {
-        $data = $this->r_product_saving->findById($id);
-
-        if (!$data) {
-            throw new Exception("Product Saving Not Found", 404);
+            throw new Exception("Account Not Found", 404);
         }
 
         return $data;
@@ -66,8 +53,8 @@ class S_Account
         $getCustomerId = $request->customer['id'];
         $getProductSavingId = $request->tabungan['id'];
 
-        $customer = $this->findCustomerById($getCustomerId);
-        $productSaving = $this->findProductSavingById($getProductSavingId);
+        $customer = $this->s_customer->findById($getCustomerId);
+        $productSaving = $this->s_product_saving->findById($getProductSavingId);
 
         $user = $request->user()->id;
         $branch = $request->user()->branch_id;
@@ -98,5 +85,26 @@ class S_Account
         }
 
         return $this->repository->createOrUpdate(['id' => $id], $data);
+    }
+
+    public function updateBalanceTransaction($request, $accNumber, $type)
+    {
+        $account = $this->findCustomerByAccNumber($accNumber);
+        $jumlah  = floatval($request->jumlah);
+        $userId  = $request->user()->id;
+
+        $newBalance = match ($type) {
+            'debit'  => $account->min_bal + $jumlah,
+            'credit' => $account->min_bal - $jumlah,
+            default  => throw new \InvalidArgumentException("Invalid transaction type: $type"),
+        };
+
+        return $account->update([
+            'min_bal'         => $newBalance,
+            'date_last_trans' => now(),
+            'version'         => $account->version + 1,
+            'updated_by'      => $userId,
+            'updated_at'      => now(),
+        ]);
     }
 }

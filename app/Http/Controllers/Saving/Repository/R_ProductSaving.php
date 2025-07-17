@@ -13,27 +13,27 @@ class R_ProductSaving
         $this->model = $model;
     }
 
-    public function findById($id)
+    protected function findById($id)
     {
         return $this->model::find($id);
     }
 
-    public function generateCodeProductSaving()
+    protected function generateCodeProductSaving()
     {
         return generateAutoCode($this->model, 'product_code', 'PRD-');
     }
 
-    public function findByProductCode($code)
+    protected function findByProductCode($code)
     {
         return $this->model::where('product_code', $code)->first();
     }
 
-    public function getAllDataProductSaving()
+    protected function getAllDataProductSaving()
     {
         return $this->model::all();
     }
 
-    public function updateOrCreate(array $where, array $data)
+    protected function updateOrCreate(array $where, array $data)
     {
         return $this->model::updateOrCreate($where, $data);
     }

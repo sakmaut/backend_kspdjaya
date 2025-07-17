@@ -25,7 +25,7 @@ class R_Account
 
     public function findByAccNumber($accNumber)
     {
-        return $this->model::where('acc_number', $accNumber)->first();
+        return $this->model::with(['customer', 'product_saving', 'transaction_log'])->where('acc_number', $accNumber)->first();
     }
 
     public function createOrUpdate($data, array $condition)

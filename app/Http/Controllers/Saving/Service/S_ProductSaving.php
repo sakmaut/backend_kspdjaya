@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Saving\Service;
 use App\Http\Controllers\Saving\Repository\R_ProductSaving;
 use Exception;
 
-class S_ProductSaving
+class S_ProductSaving extends R_ProductSaving
 {
     protected $repository;
 
@@ -19,7 +19,7 @@ class S_ProductSaving
         $data = $this->repository->findById($id);
 
         if (!$data) {
-            throw new Exception("Data Not Found", 404);
+            throw new Exception("Product Saving Not Found", 404);
         }
 
         return $data;

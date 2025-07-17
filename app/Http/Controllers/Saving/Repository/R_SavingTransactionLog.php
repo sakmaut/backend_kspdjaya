@@ -12,4 +12,9 @@ class R_SavingTransactionLog
     {
         $this->model = $model;
     }
+
+    protected function create($data)
+    {
+        return $this->model::create($data);
+    }
 }

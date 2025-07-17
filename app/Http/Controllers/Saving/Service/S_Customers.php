@@ -26,7 +26,7 @@ class S_Customers
         $data = $this->repository->findById($id);
 
         if (!$data) {
-            throw new Exception("Data Not Found", 404);
+            throw new Exception("Customer Not Found", 404);
         }
 
         return $data;

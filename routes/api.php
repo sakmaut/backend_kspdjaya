@@ -31,6 +31,7 @@ use App\Http\Controllers\Saving\Controller\C_Account;
 use App\Http\Controllers\Saving\Controller\C_Customers;
 use App\Http\Controllers\Saving\Controller\C_ProductSaving;
 use App\Http\Controllers\Saving\Controller\C_SavingDocument;
+use App\Http\Controllers\Saving\Controller\C_SavingTransactionLog;
 use App\Http\Controllers\Welcome;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -164,6 +165,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::resource('customers', C_Customers::class);
     Route::resource('saving', C_ProductSaving::class);
     Route::resource('upload_saving_doc', C_SavingDocument::class);
+    Route::resource('transaction', C_SavingTransactionLog::class);
 });
 
 
