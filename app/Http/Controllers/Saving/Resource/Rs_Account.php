@@ -11,12 +11,25 @@ class Rs_Account extends JsonResource
     {
         return [
             "id" => $this->id,
-            "nama_produk" => $this->product_name,
-            "jenis_produk" => $this->product_type,
-            "suku_bunga" => floatval($this->interest_rate),
-            "setoran_minimum" => floatval($this->min_deposit),
-            "biaya_administrasi" => floatval($this->admin_fee),
-            "jangka_waktu" => intval($this->term_length)
+            "no_rekening" => $this->acc_number,
+            "nama_pemilik" => $this->customer->NAME,
+            "nama_alias" => $this->customer->ALIAS,
+            "nama_ibu_kandung" =>  $this->customer->MOTHER_NAME,
+            "jenis_kelamin" =>  $this->customer->GENDER,
+            "tempat_lahir" =>  $this->customer->BIRTHPLACE,
+            "tanggal_lahir" =>  $this->customer->BIRTHDATE,
+            "alamat" =>  $this->customer->ADDRESS,
+            "telepon" => $this->customer->PHONE_PERSONAL,
+            "email" =>  $this->customer->EMAIL ?? "",
+            "tipe_identitas" =>  $this->customer->ID_TYPE,
+            "no_identitas" =>  $this->customer->ID_NUMBER,
+            "cabang" => "",
+            "jenis_tabungan" => $this->product_saving->product_type,
+            "kode_jenis_tabungan" => $this->product_saving->product_code,
+            "saldo" => floatval($this->min_bal),
+            "status" => "",
+            "tgl_registrasi" => $this->created_at,
+            "tgl_terakhir_transaksi" => $this->date_last_trans,
         ];
     }
 }

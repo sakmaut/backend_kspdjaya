@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Saving\Controller;
 
 use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Saving\Resource\Rs_Account;
 use App\Http\Controllers\Saving\Service\S_Account;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -22,10 +23,10 @@ class C_Account extends Controller
     public function index(Request $request)
     {
         try {
-            // $data =  $this->service->getAllCustomer();
-            // $json = Rs_Customers::collection($data);
+            $data =  $this->service->getAllAccount();
+            $json = Rs_Account::collection($data);
 
-            return response()->json("asss", 200);
+            return response()->json($json, 200);
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
         }
@@ -34,10 +35,10 @@ class C_Account extends Controller
     public function show(Request $request, $id)
     {
         try {
-            // $data = $this->service->findById($id);
-            // $json = new Rs_Customers($data);
+            $data = $this->service->findById($id);
+            $json = new Rs_Account($data);
 
-            return response()->json("lll", 200);
+            return response()->json($json, 200);
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
         }

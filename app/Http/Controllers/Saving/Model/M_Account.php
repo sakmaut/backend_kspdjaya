@@ -10,6 +10,8 @@ class M_Account extends Model
     protected $table = 'sv_master_account';
     protected $fillable = [
         'id',
+        'customer_id',
+        'product_saving_id',
         'stat_rec',
         'acc_number',
         'acc_name',
@@ -44,5 +46,15 @@ class M_Account extends Model
                 $model->setAttribute($model->getKeyName(), Str::uuid()->toString());
             }
         });
+    }
+
+    public function customer()
+    {
+        return $this->hasOne(M_Customers::class, 'ID', 'customer_id');
+    }
+
+    public function product_saving()
+    {
+        return $this->hasOne(M_ProductSaving::class, 'id', 'product_saving_id');
     }
 }

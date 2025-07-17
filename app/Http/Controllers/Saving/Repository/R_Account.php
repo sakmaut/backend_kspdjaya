@@ -15,9 +15,14 @@ class R_Account
         $this->model = $model;
     }
 
+    public function getAllAccount()
+    {
+        return $this->model::with(['customer', 'product_saving'])->get();
+    }
+
     public function findById($id)
     {
-        return $this->model::find($id);
+        return $this->model::with(['customer', 'product_saving'])->where('id', $id)->first();
     }
 
     public function findByAccNumber($accNumber)

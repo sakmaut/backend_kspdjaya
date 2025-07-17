@@ -3,76 +3,100 @@
 namespace App\Http\Controllers\Saving\Service;
 
 use App\Http\Controllers\Saving\Repository\R_Account;
+use App\Http\Controllers\Saving\Repository\R_Customers;
+use App\Http\Controllers\Saving\Repository\R_ProductSaving;
 use Exception;
 
 class S_Account
 {
     protected $repository;
+    protected $r_customer;
+    protected $r_product_saving;
 
-    function __construct(R_Account $repository)
-    {
+    function __construct(
+        R_Account $repository,
+        R_Customers $r_customer,
+        R_ProductSaving $r_product_saving
+    ) {
         $this->repository = $repository;
+        $this->r_customer = $r_customer;
+        $this->r_product_saving = $r_product_saving;
     }
 
-    private function findById($id)
+    public function getAllAccount()
     {
-        $data = $this->repository->findById($id);
+        return $this->repository->getAllAccount();
+    }
+
+    private function findCustomerById($id)
+    {
+        $data = $this->r_customer->findById($id);
 
         if (!$data) {
-            throw new Exception("Data Not Found", 404);
+            throw new Exception("Customer Not Found", 404);
         }
 
         return $data;
     }
 
-    private function findByAccNumber($accNumber)
+    private function findProductSavingById($id)
     {
-        $checkAccNumber =  $this->repository->findByAccNumber($accNumber);
+        $data = $this->r_product_saving->findById($id);
 
-        if (!$checkAccNumber) {
-            throw new Exception("Failed Acc Number Is Exist", 500);
+        if (!$data) {
+            throw new Exception("Product Saving Not Found", 404);
         }
 
-        return $checkAccNumber;
+        return $data;
+    }
+
+    public function findById($id)
+    {
+        $data = $this->repository->findById($id);
+
+        if (!$data) {
+            throw new Exception("Account Not Found", 404);
+        }
+
+        return $data;
     }
 
     public function createOrUpdate($request, $id = false, $type = "create")
     {
-        $getAccNumber = $request->no_rekening;
+        $getCustomerId = $request->customer['id'];
+        $getProductSavingId = $request->tabungan['id'];
 
-        $existing = $id ? $this->findById($id) : $this->findByAccNumber($getAccNumber);
+        $customer = $this->findCustomerById($getCustomerId);
+        $productSaving = $this->findProductSavingById($getProductSavingId);
+
         $user = $request->user()->id;
+        $branch = $request->user()->branch_id;
 
         $data = [
+            'customer_id' => $customer->ID,
+            'product_saving_id' => $productSaving->id,
             'acc_number' => $request->no_rekening,
-            'acc_name' => $request->nama_pemilik,
-            'cust_code' => $request->nama_produk,
-            'branch' => $request->nama_produk,
-            'acc_type' => $request->nama_produk,
-            'clear_bal' => $request->nama_produk,
-            'min_bal' => $request->nama_produk,
-            'date_last_trans' => $request->nama_produk,
-            'date_acc_open' => $request->nama_produk,
-            'date_acc_close' => $request->nama_produk,
-            'block_bal' => $request->nama_produk,
-            'plafond_amount' => $request->nama_produk
+            'acc_name' => $customer->NAME,
+            'cust_code' => $customer->CUST_CODE,
+            'branch' => $branch,
+            'min_bal' => $request->setoran_awal,
+            'plafond_amount' => $request->nama_produk,
+            'date_last_trans' => now()
         ];
 
-        if ($existing && $type != 'create') {
+        if (isset($id) && $type != 'create') {
+
+            $existing = $this->findById($id);
 
             $data['version']     = $existing->version + 1;
             $data['updated_by']  = $user;
             $data['updated_at']  = now();
-
-            // $key = $id ? ['id' => $id] : ['acc_number' => $productCode];
         } else {
             $data['version']     = 1;
             $data['created_by']  = $user;
             $data['created_at']  = now();
-
-            // $key = ['acc_number' => $productCode];
         }
 
-        // return $this->repository->updateOrCreate($key, $data);
+        return $this->repository->createOrUpdate(['id' => $id], $data);
     }
 }
