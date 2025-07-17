@@ -17,6 +17,8 @@ class M_ProductSaving extends Model
         'min_deposit',
         'admin_fee',
         'term_length',
+        'description',
+        'status',
         'version',
         'created_by',
         'created_at',

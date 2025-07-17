@@ -159,9 +159,9 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
 
 
     //Saving
-    Route::resource('product_saving', C_ProductSaving::class);
     Route::resource('account', C_ProductSaving::class);
     Route::resource('customers', C_Customers::class);
+    Route::resource('saving', C_ProductSaving::class);
     Route::resource('upload_saving_doc', C_SavingDocument::class);
 });
 

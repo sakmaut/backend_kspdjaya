@@ -39,12 +39,14 @@ class S_ProductSaving
 
         $data = [
             'product_code' => $productCode,
-            'product_name' => $request->nama_produk,
-            'product_type' => $request->jenis_produk,
-            'interest_rate' => $request->suku_bunga,
-            'min_deposit' => $request->setoran_minimum,
-            'admin_fee' => $request->biaya_administrasi,
-            'term_length' => $request->jangka_waktu
+            'product_name' => $request->nama_jenis ?? '',
+            'product_type' => $request->kode_jenis ?? '',
+            'interest_rate' => $request->bunga ?? 0,
+            'min_deposit' => $request->minimal_saldo,
+            'admin_fee' => $request->biaya_administrasi ?? 0,
+            'term_length' => $request->jangka_waktu ?? 0,
+            'description' => $request->deskripsi ?? '',
+            'status' => $request->status ?? ''
         ];
 
         if ($existing && $type != 'create') {

@@ -10,6 +10,7 @@ class Rs_Customers extends JsonResource
     public function toArray(Request $request): array
     {
         return [
+            'id'              => $this->ID,
             'cust_code'       => $this->CUST_CODE,
             'nama'            => $this->NAME,
             'nama_panggilan'  => $this->ALIAS,
