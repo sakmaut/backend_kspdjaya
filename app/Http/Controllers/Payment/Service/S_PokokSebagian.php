@@ -260,7 +260,6 @@ class S_PokokSebagian
         $paidPrincipal = floatval($detail['bayar_pokok']);
         $paidInterest = floatval($detail['bayar_bunga']);
         $interest = floatval($schedule->INTEREST);
-        $beforepaidPrincipal = floatval($schedule->PAYMENT_VALUE_PRINCIPAL);
         $beforePaidInterest = floatval($schedule->PAYMENT_VALUE_INTEREST);
 
         $installmentValue = floatval($detail['installment']);
@@ -279,7 +278,7 @@ class S_PokokSebagian
         ];
 
         if (!$isLastInstallment && ($paidPrincipal != 0 || $paidInterest != 0)) {
-            $fields['INSUFFICIENT_PAYMENT'] = $installmentValue - ($totalPrincipal + $totalInterest);
+            $fields['INSUFFICIENT_PAYMENT'] = ($totalPrincipal + $totalInterest) - $installmentValue;
             $fields['PAYMENT_VALUE'] = $totalPrincipal + $totalInterest;
             $fields['PAID_FLAG'] = $installmentValue - ($totalPrincipal + $totalInterest) == 0 ? 'PAID' : '';
         } else if ($paidPrincipal == 0 && $paidInterest == 0 && $installmentValue == 0) {
