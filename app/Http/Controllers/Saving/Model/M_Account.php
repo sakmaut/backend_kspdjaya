@@ -25,6 +25,7 @@ class M_Account extends Model
         'date_acc_close',
         'block_bal',
         'plafond_amount',
+        'status',
         'version',
         'created_by',
         'created_at',
