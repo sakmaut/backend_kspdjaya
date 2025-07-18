@@ -230,9 +230,10 @@ class S_PokokSebagian
         $details = collect($kwitansi->kwitansi_pelunasan_detail);
         $finalPrincipalRemains = $details->sortByDesc('angsuran_ke')->first()['bayar_pokok'];
         $totalPrincipalPaid = $details->sum('bayar_pokok');
+        $maxDetail = $details->sortByDesc('angsuran_ke')->first();
 
         foreach ($details as $detail) {
-            $this->processDetail($loanNumber, $detail, $finalPrincipalRemains, $totalPrincipalPaid, $request, $kwitansi, $credit);
+            $this->processDetail($loanNumber, $detail, $finalPrincipalRemains, $totalPrincipalPaid, $maxDetail, $kwitansi, $credit);
         }
 
         $this->updateCreditStatus($request, $credit, $loanNumber);
@@ -247,7 +248,7 @@ class S_PokokSebagian
             ->first();
     }
 
-    private function processDetail($loanNumber, $detail, $finalPrincipalRemains, $totalPrincipalPaid, $request, $kwitansi, $credit)
+    private function processDetail($loanNumber, $detail, $finalPrincipalRemains, $totalPrincipalPaid, $maxDetail)
     {
         $schedule = M_CreditSchedule::where([
             'LOAN_NUMBER' => $loanNumber,
@@ -261,9 +262,6 @@ class S_PokokSebagian
 
         $maxInstallment = M_CreditSchedule::where('LOAN_NUMBER', $loanNumber)->max('INSTALLMENT_COUNT');
         $isLastInstallment = intval($detail['angsuran_ke']) === intval($maxInstallment);
-
-        $max = $detail->max('angsuran_ke');
-        $lastDetail = $detail->firstWhere('angsuran_ke', $max);
 
         $paidPrincipal = floatval($detail['bayar_pokok']);
         $paidInterest = floatval($detail['bayar_bunga']);
@@ -291,7 +289,7 @@ class S_PokokSebagian
             $fields['INSUFFICIENT_PAYMENT'] = ($totalPrincipal + $totalInterest) - $installmentValue;
             $fields['PAYMENT_VALUE'] = $totalPrincipal + $totalInterest;
             $fields['PAID_FLAG'] = $installmentValue - ($totalPrincipal + $totalInterest) == 0 ? 'PAID' : '';
-        } else if ($paidPrincipal == 0 && $paidInterest == 0 && $installmentValue == 0 || floatval($lastDetail['bayar_pokok']) == 0) {
+        } else if ($paidPrincipal == 0 && $paidInterest == 0 && $installmentValue == 0 || floatval($maxDetail->bayar_pokok ?? 0) == 0) {
             $fields['PAID_FLAG'] = 'PAID';
             $fields['INSUFFICIENT_PAYMENT'] = $insufficientPayment != 0 ? $insufficientPayment : 0;
             $fields['PAYMENT_VALUE'] = $paymentValue > 0 ? $paymentValue : 0;
