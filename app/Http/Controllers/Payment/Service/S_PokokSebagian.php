@@ -106,7 +106,6 @@ class S_PokokSebagian
         $paymentBunga = $request->BAYAR_BUNGA ?? 0;
         $paymentPokok = $request->BAYAR_POKOK ?? 0;
 
-        $today = date('Y-m-d');
         $currentMonth = date('m');
         $currentYear = date('Y');
 
@@ -302,6 +301,9 @@ class S_PokokSebagian
 
     private function updateCreditStatus($request, $credit, $loanNumber)
     {
+
+        $allPaid =  M_CreditSchedule::where('LOAN_NUMBER', $loanNumber)->where('PAID_FLAG', '!=', 'PAID')->count();
+
         $totalInterest = M_CreditSchedule::where('LOAN_NUMBER', $loanNumber)->sum('INTEREST');
 
         $totalOriginal = $credit->PCPL_ORI + $credit->INTRST_ORI;
@@ -309,8 +311,8 @@ class S_PokokSebagian
 
         $credit->update([
             'INTRST_ORI' => $totalInterest ?? 0,
-            'STATUS_REC' => ($totalOriginal == $totalPaid && $credit->arrears->isEmpty()) ? 'PT' : $credit->STATUS_REC,
-            'STATUS'     => ($totalOriginal == $totalPaid && $credit->arrears->isEmpty()) ? 'D'  : $credit->STATUS,
+            'STATUS_REC' => ($totalOriginal == $totalPaid && $credit->arrears->isEmpty() || $allPaid == 0) ? 'PT' : $credit->STATUS_REC,
+            'STATUS'     => ($totalOriginal == $totalPaid && $credit->arrears->isEmpty() || $allPaid == 0) ? 'D'  : $credit->STATUS,
             'PAID_PRINCIPAL' => $credit->PAID_PRINCIPAL + $request->BAYAR_POKOK,
             'PAID_INTEREST' => $credit->PAID_INTEREST + $request->BAYAR_BUNGA,
             'PAID_PENALTY' => $credit->PAID_PENALTY + $request->BAYAR_DENDA,
