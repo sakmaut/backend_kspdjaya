@@ -375,6 +375,10 @@ class S_PokokSebagian
         //     ->orderBy('NO_TRANSAKSI', 'asc')
         // ->get();
 
+        $kwitansi = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->where('LOAN_NUMBER', $loan_number)->first();
+
+        $kwitansi->update(['STTS_PAYMENT' => 'CANCEL']);
+
         $creditScheduleBefore = $this->s_creditScheduleBefore->getDataCreditSchedule($no_inv);
 
         M_CreditSchedule::where('LOAN_NUMBER', $loan_number)->delete();
