@@ -54,7 +54,7 @@ class PaymentController extends Controller
             $kwitansi = $this->kwitansiService->getKwitansiPayment($request);
             $results = R_Kwitansi::collection($kwitansi);
 
-            return response()->json($kwitansi, 200);
+            return response()->json($results, 200);
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
         }
