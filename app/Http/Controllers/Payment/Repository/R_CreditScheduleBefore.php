@@ -18,11 +18,11 @@ class R_CreditScheduleBefore
 
     protected function findCreditScheduleByInvoice($invoiceNum)
     {
-        $this->model::where('NO_INVOICE', $invoiceNum)->get();
+        return $this->model::where('NO_INVOICE', $invoiceNum)->get();
     }
 
     protected function create($request)
     {
-        $this->model::create($request);
+        return  $this->model::create($request);
     }
 }

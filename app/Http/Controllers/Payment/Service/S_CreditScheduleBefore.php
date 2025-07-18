@@ -16,6 +16,11 @@ class S_CreditScheduleBefore extends R_CreditScheduleBefore
         $this->request = $request;
     }
 
+    protected function getDataCreditSchedule($invoiceNum)
+    {
+        return $this->respository->findCreditScheduleByInvoice($invoiceNum);
+    }
+
     public function created($data, $no_invoice)
     {
         $fields = [
