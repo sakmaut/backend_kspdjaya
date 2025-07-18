@@ -35,8 +35,18 @@ class KwitansiService
             return $this->kwitansiRepository->getPendingForHO();
         }
 
+        $tipe = $request->query('tipe');
+
+        if ($tipe === 'pelunasan') {
+            $paymentType = 'pelunasan';
+        } elseif ($tipe === 'pelunasan_pokok_sebagian') {
+            $paymentType = 'pokok_sebagian';
+        } else {
+            $paymentType = 'angsuran';
+        }
+
         $filters = [
-            ['PAYMENT_TYPE', $request->query('tipe') === 'pelunasan' ? '=' : '!=', 'pelunasan'],
+            ['PAYMENT_TYPE', '=', $paymentType],
             ['NO_TRANSAKSI', '=', $request->query('notrx')],
             ['NAMA', 'like', '%' . $request->query('nama') . '%'],
             ['LOAN_NUMBER', '=', $request->query('no_kontrak')],
