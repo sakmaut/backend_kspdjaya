@@ -33,7 +33,7 @@ class KwitansiService
         $user = $request->user();
         $url = url('/');
 
-        if ($user->position === $this->userPositionEnum::HO && $url != 'https://dapur.kspdjaya.id/') {
+        if ($user->position === $this->userPositionEnum::HO && $url != 'https://dapur.kspdjaya.id') {
             return $this->kwitansiRepository->getPendingForHO();
         }
 
