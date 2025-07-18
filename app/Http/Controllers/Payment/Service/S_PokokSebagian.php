@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Payment\Service;
 
 use App\Http\Controllers\Payment\Repository\R_PokokSebagian;
 use App\Http\Resources\R_Kwitansi;
+use App\Models\M_Arrears;
 use App\Models\M_Credit;
 use App\Models\M_CreditSchedule;
 use App\Models\M_Kwitansi;
@@ -20,17 +21,20 @@ class S_PokokSebagian
     protected $kwitansiService;
     protected $s_creditScheduleBefore;
     protected $s_creditBefore;
+    protected $s_arrearsBefore;
 
     public function __construct(
         R_PokokSebagian $repository,
         KwitansiService $kwitansiService,
         S_CreditScheduleBefore $s_creditScheduleBefore,
-        S_CreditBefore $s_creditBefore
+        S_CreditBefore $s_creditBefore,
+        S_ArrearsBefore $s_arrearsBefore
     ) {
         $this->repository = $repository;
         $this->kwitansiService = $kwitansiService;
         $this->s_creditScheduleBefore = $s_creditScheduleBefore;
         $this->s_creditBefore = $s_creditBefore;
+        $this->s_arrearsBefore = $s_arrearsBefore;
     }
 
     public function getAllCreditInstallment($request)
@@ -59,7 +63,6 @@ class S_PokokSebagian
         }
 
         $kwitansi = $this->kwitansiService->create($request, 'pokok_sebagian');
-        // return $this->proccessKwitansiDetail($request, $kwitansi);
 
         $this->proccessKwitansiDetail($request, $kwitansi);
 
@@ -72,15 +75,22 @@ class S_PokokSebagian
 
     private function proccessKwitansiDetail($request, $kwitansi)
     {
-        $loan_number = $request->LOAN_NUMBER;
-        $no_inv = $kwitansi->NO_TRANSAKSI;
+        $loanNumber = $request->LOAN_NUMBER;
+        $noInv = $kwitansi->NO_TRANSAKSI;
 
-        $creditSchedule = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)->get();
-
-        foreach ($creditSchedule as $value) {
-            $this->s_creditScheduleBefore->created($value, $no_inv);
+        // Backup Credit Schedule
+        $creditSchedules = M_CreditSchedule::where('LOAN_NUMBER', $loanNumber)->get();
+        foreach ($creditSchedules as $schedule) {
+            $this->s_creditScheduleBefore->created($schedule, $noInv);
         }
 
+        // Backup Arrears
+        $arrearsList = M_Arrears::where('LOAN_NUMBER', $loanNumber)->get();
+        foreach ($arrearsList as $arrear) {
+            $this->s_arrearsBefore->created($arrear, $noInv);
+        }
+
+        // Backup Credit Info
         $credit = M_Credit::select(
             'ID',
             'LOAN_NUMBER',
@@ -97,30 +107,30 @@ class S_PokokSebagian
             'DISCOUNT_PENALTY',
             'PINALTY_PELUNASAN',
             'DISKON_PINALTY_PELUNASAN'
-        )->where('LOAN_NUMBER', $loan_number)->first();
+        )->where('LOAN_NUMBER', $loanNumber)->first();
 
-        $this->s_creditBefore->created($credit, $no_inv);
+        $this->s_creditBefore->created($credit, $noInv);
 
-        $build = $this->buildPayment($request, $creditSchedule);
+        // Build and Save Payment Details
+        $payments = $this->buildPayment($request, $creditSchedules);
 
-        foreach ($build as $value) {
-            $data = [
-                'no_invoice' => $no_inv ?? '',
-                'loan_number' => $loan_number ?? '',
-                'angsuran_ke' => $value['INSTALLMENT_COUNT'] ?? 0,
-                'tgl_angsuran' => $value['PAYMENT_DATE'] ?? null,
-                'installment' => $value['INSTALLMENT'] ?? 0,
-                'bayar_pokok' => $value['PRINCIPAL'] ?? 0,
-                'bayar_bunga' => $value['BAYAR_BUNGA'] ?? 0,
-                'bayar_denda' => $value['BAYAR_DENDA'] ?? 0,
-                'diskon_pokok' => $value['DISKON_POKOK'] ?? 0,
-                'diskon_bunga' => $value['DISKON_BUNGA'] ?? 0,
-                'diskon_denda' => $value['DISKON_DENDA'] ?? 0,
-            ];
-
-            M_KwitansiDetailPelunasan::create($data);
+        foreach ($payments as $payment) {
+            M_KwitansiDetailPelunasan::create([
+                'no_invoice'     => $noInv,
+                'loan_number'    => $loanNumber,
+                'angsuran_ke'    => $payment['INSTALLMENT_COUNT'] ?? 0,
+                'tgl_angsuran'   => $payment['PAYMENT_DATE'] ?? null,
+                'installment'    => $payment['INSTALLMENT'] ?? 0,
+                'bayar_pokok'    => $payment['PRINCIPAL'] ?? 0,
+                'bayar_bunga'    => $payment['BAYAR_BUNGA'] ?? 0,
+                'bayar_denda'    => $payment['BAYAR_DENDA'] ?? 0,
+                'diskon_pokok'   => $payment['DISKON_POKOK'] ?? 0,
+                'diskon_bunga'   => $payment['DISKON_BUNGA'] ?? 0,
+                'diskon_denda'   => $payment['DISKON_DENDA'] ?? 0,
+            ]);
         }
     }
+
 
     private function buildPayment($request, $creditSchedule)
     {
@@ -391,13 +401,12 @@ class S_PokokSebagian
 
     public function cancel($loan_number, $no_inv)
     {
-        // Update status kwitansi jadi 'CANCEL'
         M_Kwitansi::where('LOAN_NUMBER', $loan_number)
             ->where('NO_TRANSAKSI', '>=', $no_inv)
             ->update(['STTS_PAYMENT' => 'CANCEL']);
 
-        // Ambil data sebelumnya
         $scheduleBefore = $this->s_creditScheduleBefore->getDataCreditSchedule($no_inv);
+        $arrearsBefore = $this->s_arrearsBefore->getDataArrears($no_inv);
         $creditBefore = $this->s_creditBefore->getDataCredit($no_inv);
 
         // Update data kredit
@@ -413,7 +422,6 @@ class S_PokokSebagian
             'DISCOUNT_PENALTY' => $creditBefore->DISCOUNT_PENALTY,
         ]);
 
-        // Reset dan insert ulang jadwal kredit
         M_CreditSchedule::where('LOAN_NUMBER', $loan_number)->delete();
         foreach ($scheduleBefore as $value) {
             $fields = [
@@ -435,53 +443,30 @@ class S_PokokSebagian
 
             M_CreditSchedule::create($fields);
         }
+
+        M_Arrears::where('LOAN_NUMBER', $loan_number)->delete();
+        foreach ($arrearsBefore as $details) {
+            $fields = [
+                'STATUS_REC' => $details['STATUS_REC'],
+                'LOAN_NUMBER' => $details['LOAN_NUMBER'],
+                'START_DATE' => $details['START_DATE'],
+                'END_DATE' => $details['END_DATE'],
+                'PAST_DUE_PCPL' => $details['PAST_DUE_PCPL'],
+                'PAST_DUE_INTRST' => $details['PAST_DUE_INTRST'],
+                'PAST_DUE_PENALTY' => $details['PAST_DUE_PENALTY'],
+                'PAID_PCPL' => $details['PAID_PCPL'],
+                'PAID_INT' => $details['PAID_INT'],
+                'PAID_PENALTY' => $details['PAID_PENALTY'],
+                'WOFF_PCPL' => $details['WOFF_PCPL'],
+                'WOFF_INT' => $details['WOFF_INT'],
+                'WOFF_PENALTY' => $details['WOFF_PENALTY'],
+                'PENALTY_RATE' => $details['PENALTY_RATE'],
+                'TRNS_CODE' => $details['TRNS_CODE'],
+                'CREATED_AT' => $details['CREATED_AT'],
+                'UPDATED_AT' => $details['UPDATED_AT'],
+            ];
+
+            M_Arrears::create($fields);
+        }
     }
-
-
-    // public function cancel($loan_number, $no_inv)
-    // {
-    //     $kwitansi = M_Kwitansi::with(['kwitansi_pelunasan_detail'])->select('ID', 'PAYMENT_TYPE', 'STTS_PAYMENT', 'NO_TRANSAKSI', 'LOAN_NUMBER')
-    //         ->where('LOAN_NUMBER', $loan_number)
-    //         ->where('NO_TRANSAKSI', '>=', $no_inv)
-    //         ->orderBy('NO_TRANSAKSI', 'asc')
-    //         ->get();
-
-    //     $kwitansi->update(['STTS_PAYMENT' => 'CANCEL']);
-
-    //     $creditScheduleBefore = $this->s_creditScheduleBefore->getDataCreditSchedule($no_inv);
-    //     $creditBefore = $this->s_creditBefore->getDataCredit($no_inv);
-
-    //     $credit = M_Credit::where('LOAN_NUMBER', $loan_number)->first()->update([
-    //         'INTRST_ORI' => $creditBefore->INTRST_ORI,
-    //         'PAID_PRINCIPAL' => $creditBefore->PAID_PRINCIPAL,
-    //         'PAID_INTEREST' => $creditBefore->PAID_INTEREST,
-    //         'PAID_PENALTY' => $creditBefore->PAID_PENALTY,
-    //         'DISCOUNT_PRINCIPAL' => $creditBefore->DISCOUNT_PRINCIPAL,
-    //         'DISCOUNT_INTEREST' => $creditBefore->DISCOUNT_INTEREST,
-    //         'DISCOUNT_PENALTY' => $creditBefore->DISCOUNT_PENALTY,
-    //     ]);
-
-    //     M_CreditSchedule::where('LOAN_NUMBER', $loan_number)->delete();
-
-    //     foreach ($creditScheduleBefore as $value) {
-    //         $fields = [
-    //             'LOAN_NUMBER' => $value['LOAN_NUMBER'],
-    //             'INSTALLMENT_COUNT' => $value['INSTALLMENT_COUNT'],
-    //             'PAYMENT_DATE' => $value['PAYMENT_DATE'],
-    //             'PRINCIPAL' => $value['PRINCIPAL'],
-    //             'INTEREST' => $value['INTEREST'],
-    //             'INSTALLMENT' => $value['INSTALLMENT'],
-    //             'PRINCIPAL_REMAINS' => $value['PRINCIPAL_REMAINS'],
-    //             'PAYMENT_VALUE_PRINCIPAL' => $value['PAYMENT_VALUE_PRINCIPAL'],
-    //             'PAYMENT_VALUE_INTEREST' => $value['PAYMENT_VALUE_INTEREST'],
-    //             'DISCOUNT_PRINCIPAL' => $value['DISCOUNT_PRINCIPAL'],
-    //             'DISCOUNT_INTEREST' => $value['DISCOUNT_INTEREST'],
-    //             'INSUFFICIENT_PAYMENT' => $value['INSUFFICIENT_PAYMENT'],
-    //             'PAYMENT_VALUE' => $value['PAYMENT_VALUE'],
-    //             'PAID_FLAG' => $value['PAID_FLAG']
-    //         ];
-
-    //         M_CreditSchedule::create($fields);
-    //     }
-    // }
 }
