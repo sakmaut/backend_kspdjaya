@@ -262,8 +262,8 @@ class S_PokokSebagian
         $maxInstallment = M_CreditSchedule::where('LOAN_NUMBER', $loanNumber)->max('INSTALLMENT_COUNT');
         $isLastInstallment = intval($detail['angsuran_ke']) === intval($maxInstallment);
 
-        $maxInstallment = $detail->max('angsuran_ke');
-        $lastDetail = $detail->firstWhere('angsuran_ke', $maxInstallment);
+        $max = $detail->max('angsuran_ke');
+        $lastDetail = $detail->firstWhere('angsuran_ke', $max);
 
         $paidPrincipal = floatval($detail['bayar_pokok']);
         $paidInterest = floatval($detail['bayar_bunga']);
