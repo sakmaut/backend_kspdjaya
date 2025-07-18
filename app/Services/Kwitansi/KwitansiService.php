@@ -7,6 +7,7 @@ use App\Repository\Payment\KwitansiRepository;
 use App\Services\Credit\CreditService;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Support\Facades\Http;
 use Ramsey\Uuid\Uuid;
 
 class KwitansiService
@@ -31,7 +32,9 @@ class KwitansiService
     {
         $user = $request->user();
 
-        if ($user->position === $this->userPositionEnum::HO) {
+        $response = Http::get('https://los.kspdjaya.id');
+
+        if ($user->position === $this->userPositionEnum::HO && $response->successful()) {
             return $this->kwitansiRepository->getPendingForHO();
         }
 
