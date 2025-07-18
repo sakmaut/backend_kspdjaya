@@ -2,10 +2,7 @@
 
 namespace App\Http\Controllers\Payment\Repository;
 
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\Payment\Model\M_CreditScheduleBefore;
-use Illuminate\Http\Request;
-use PhpParser\Node\Expr\FuncCall;
 
 class R_CreditScheduleBefore
 {
@@ -18,7 +15,7 @@ class R_CreditScheduleBefore
 
     protected function findCreditScheduleByInvoice($invoiceNum)
     {
-        return $this->model::where('NO_INVOICE', $invoiceNum)->get();
+        return $this->model::where('NO_INVOICE', $invoiceNum)->orderBy('INSTALLMENT_COUNT', 'ASC')->get();
     }
 
     protected function create($request)

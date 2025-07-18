@@ -216,7 +216,7 @@ class S_PokokSebagian
         return $data;
     }
 
-    private function processPokokBungaMenurun($request, $kwitansiDetail)
+    public function processPokokBungaMenurun($request, $kwitansiDetail)
     {
         $loanNumber = $request->LOAN_NUMBER;
         $noTransaksi = $kwitansiDetail->NO_TRANSAKSI;
@@ -368,16 +368,36 @@ class S_PokokSebagian
         ]);
     }
 
-    public function cancel($request)
+    public function cancel($loan_number, $no_inv)
     {
-        $loan_number = $request->loan_number;
-        $no_inv = $request->no_inv;
+        // $getAllTrx = M_Kwitansi::where('LOAN_NUMBER', $loan_number)
+        //     ->where('NO_TRANSAKSI', '>=', $no_inv)
+        //     ->orderBy('NO_TRANSAKSI', 'asc')
+        // ->get();
 
-        $getAllTrx = M_Kwitansi::where('LOAN_NUMBER', $loan_number)
-            ->where('NO_TRANSAKSI', '>=', $no_inv)
-            ->orderBy('NO_TRANSAKSI', 'asc')
-            ->get();
+        $creditScheduleBefore = $this->s_creditScheduleBefore->getDataCreditSchedule($no_inv);
 
-        return $getAllTrx;
+        M_CreditSchedule::where('LOAN_NUMBER', $loan_number)->delete();
+
+        foreach ($creditScheduleBefore as $value) {
+            $fields = [
+                'LOAN_NUMBER' => $value['LOAN_NUMBER'],
+                'INSTALLMENT_COUNT' => $value['INSTALLMENT_COUNT'],
+                'PAYMENT_DATE' => $value['PAYMENT_DATE'],
+                'PRINCIPAL' => $value['PRINCIPAL'],
+                'INTEREST' => $value['INTEREST'],
+                'INSTALLMENT' => $value['INSTALLMENT'],
+                'PRINCIPAL_REMAINS' => $value['PRINCIPAL_REMAINS'],
+                'PAYMENT_VALUE_PRINCIPAL' => $value['PAYMENT_VALUE_PRINCIPAL'],
+                'PAYMENT_VALUE_INTEREST' => $value['PAYMENT_VALUE_INTEREST'],
+                'DISCOUNT_PRINCIPAL' => $value['DISCOUNT_PRINCIPAL'],
+                'DISCOUNT_INTEREST' => $value['DISCOUNT_INTEREST'],
+                'INSUFFICIENT_PAYMENT' => $value['INSUFFICIENT_PAYMENT'],
+                'PAYMENT_VALUE' => $value['PAYMENT_VALUE'],
+                'PAID_FLAG' => $value['PAID_FLAG']
+            ];
+
+            M_CreditSchedule::create($fields);
+        }
     }
 }

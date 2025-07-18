@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Payment\Service\S_PokokSebagian;
 use App\Http\Controllers\Repositories\TasksLogging\TasksRepository;
 use App\Http\Resources\R_Kwitansi;
 use App\Models\M_Arrears;
@@ -31,17 +32,20 @@ class PaymentController extends Controller
     protected $taskslogging;
     protected $pelunasan;
     protected $kwitansiService;
+    protected $s_pokokSebagian;
 
     public function __construct(
         ExceptionHandling $log,
         TasksRepository $taskslogging,
         PelunasanController $pelunasan,
-        KwitansiService $kwitansiService
+        KwitansiService $kwitansiService,
+        S_PokokSebagian $s_PokokSebagian
     ) {
         $this->log = $log;
         $this->taskslogging = $taskslogging;
         $this->pelunasan = $pelunasan;
         $this->kwitansiService = $kwitansiService;
+        $this->s_PokokSebagian = $s_PokokSebagian;
     }
 
     public function index(Request $request)
@@ -760,11 +764,10 @@ class PaymentController extends Controller
                 }
 
                 if ($request->flag == 'yes') {
-
                     if ($kwitansi->PAYMENT_TYPE === 'pelunasan') {
                         $this->pelunasan->proccess($request, $getLoanNumber, $getNoInvoice, 'PAID');
                     } elseif ($kwitansi->PAYMENT_TYPE === 'pokok_sebagian') {
-                        $this->processPokokBungaMenurun($request, $getLoanNumber, $getNoInvoice);
+                        // $this->s_PokokSebagian->processPokokBungaMenurun($request, $getLoanNumber, $getNoInvoice);
                     } else {
                         $getKwitansiDetail = M_KwitansiStructurDetail::where([
                             'no_invoice' => $getNoInvoice
@@ -868,14 +871,6 @@ class PaymentController extends Controller
             $no_invoice = $request->no_invoice;
             $flag = $request->flag;
 
-            $ccheckPokokSebagian = M_Kwitansi::where([
-                'NO_TRANSAKSI' => $no_invoice
-            ])->where('PAYMENT_TYPE', 'pokok_sebagian')->first();
-
-            if ($ccheckPokokSebagian) {
-                throw new Exception("Kwitansi Pokok Sebagian Tidak Boleh Dicancel", 404);
-            }
-
             $check = M_Kwitansi::where([
                 'NO_TRANSAKSI' => $no_invoice
             ])
@@ -936,6 +931,8 @@ class PaymentController extends Controller
 
             if ($check->PAYMENT_TYPE === 'pelunasan') {
                 $this->pelunasan->proccessCancel($check->LOAN_NUMBER, $request->no_invoice, 'CANCEL');
+            } elseif ($check->PAYMENT_TYPE === 'pokok_sebagian') {
+                $this->s_PokokSebagian->cancel($getLoanNumber, $getNoInvoice);
             } else {
                 $check->update([
                     'STTS_PAYMENT' => 'CANCEL'
