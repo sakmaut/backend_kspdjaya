@@ -15,22 +15,22 @@ class R_Customers
         $this->model = $model;
     }
 
-    public function getAllCustomer()
+    protected function getAllCustomer()
     {
         return $this->model::with(['documents'])->get();
     }
 
-    public function findById($id)
+    protected function findById($id)
     {
         return $this->model::find($id);
     }
 
-    public function generateCustCode($request)
+    protected function generateCustCode($request)
     {
         return generateCustCode($request, $this->model->getTable(), 'CUST_CODE');
     }
 
-    public function createOrUpdate($data, array $condition)
+    protected function createOrUpdate($data, array $condition)
     {
         return $this->model::updateOrCreate(
             $condition,

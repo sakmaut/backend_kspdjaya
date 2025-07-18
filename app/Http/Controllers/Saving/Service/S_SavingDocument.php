@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Ramsey\Uuid\Uuid as Uuid;
 
-class S_SavingDocument
+class S_SavingDocument extends R_SavingDocument
 {
     protected $repository;
 

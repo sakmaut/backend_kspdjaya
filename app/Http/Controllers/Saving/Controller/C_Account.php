@@ -48,7 +48,7 @@ class C_Account extends Controller
     {
         DB::beginTransaction();
         try {
-            $data = $this->service->createOrUpdate($request);
+            $data = $this->service->create($request);
 
             DB::commit();
             return response()->json(["message" => "success", 'data' => $data], 200);
@@ -62,7 +62,7 @@ class C_Account extends Controller
     {
         DB::beginTransaction();
         try {
-            $data = $this->service->createOrUpdate($request, $id);
+            $data = $this->service->create($request, $id);
 
             DB::commit();
             return response()->json(["message" => "success", 'data' => $data], 200);

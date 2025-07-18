@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Saving\Service;
 use App\Http\Controllers\Saving\Repository\R_Account;
 use Exception;
 
-class S_Account
+class S_Account extends R_Account
 {
     protected $repository;
     protected $s_customer;
@@ -48,7 +48,7 @@ class S_Account
         return $data;
     }
 
-    public function createOrUpdate($request, $id = false, $type = "create")
+    public function create($request, $id = false, $type = "create")
     {
         $getCustomerId = $request->customer['id'];
         $getProductSavingId = $request->tabungan['id'];
@@ -93,11 +93,13 @@ class S_Account
         $jumlah  = floatval($request->jumlah);
         $userId  = $request->user()->id;
 
-        $newBalance = match ($type) {
-            'debit'  => $account->min_bal + $jumlah,
-            'credit' => $account->min_bal - $jumlah,
-            default  => throw new \InvalidArgumentException("Invalid transaction type: $type"),
-        };
+        if ($type === 'debit') {
+            $newBalance = $account->min_bal + $jumlah;
+        } elseif ($type === 'credit') {
+            $newBalance = $account->min_bal - $jumlah;
+        } else {
+            throw new \InvalidArgumentException("Invalid transaction type: $type");
+        }
 
         return $account->update([
             'min_bal'         => $newBalance,

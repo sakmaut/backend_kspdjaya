@@ -14,17 +14,17 @@ class R_SavingDocument
         $this->model = $model;
     }
 
-    public function findById($id)
+    protected function findById($id)
     {
         return $this->model::find($id);
-    } 
+    }
 
-    public function createOrDelete($data,$id)
+    protected function createOrDelete($data, $id)
     {
         $existing = $this->findById($id);
 
         if ($existing) {
-            $existing->delete(); 
+            $existing->delete();
         } else {
             $this->model->create($data);
         }

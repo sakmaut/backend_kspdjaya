@@ -7,7 +7,7 @@ use App\Http\Controllers\Saving\Repository\R_Customers;
 use Exception;
 use Illuminate\Http\Request;
 
-class S_Customers
+class S_Customers extends R_Customers
 {
     protected $repository;
 
@@ -43,7 +43,7 @@ class S_Customers
         return $setCustCode;
     }
 
-    public function createOrUpdate($request, $id = false, $type = "create")
+    public function create($request, $id = false, $type = "create")
     {
         $userId = $request->user()->id;
         $custCode = $this->generateCustCode($request);

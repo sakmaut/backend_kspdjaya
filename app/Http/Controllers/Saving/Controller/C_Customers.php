@@ -48,10 +48,10 @@ class C_Customers extends Controller
     {
         DB::beginTransaction();
         try {
-            $data = $this->service->createOrUpdate($request);    
+            $data = $this->service->create($request);
 
             DB::commit();
-            return response()->json(["message" => "success",'data' => $data], 200);
+            return response()->json(["message" => "success", 'data' => $data], 200);
         } catch (\Exception $e) {
             DB::rollback();
             return $this->log->logError($e, $request);
@@ -62,7 +62,7 @@ class C_Customers extends Controller
     {
         DB::beginTransaction();
         try {
-            $data = $this->service->createOrUpdate($request,$id.'update');
+            $data = $this->service->create($request, $id . 'update');
 
             DB::commit();
             return response()->json(["message" => "success", 'data' => $data], 200);
