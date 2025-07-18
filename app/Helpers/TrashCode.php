@@ -2810,3 +2810,243 @@ $checkIdNumber = DB::table('credit as a')
 
         return $data;
     }
+
+     // public function processPaymentBungaMenurun(Request $request)
+    // {
+    //     DB::beginTransaction();
+    //     try {
+    //         $kwitansi = $this->kwitansiService->create($request, 'pokok_sebagian');
+
+    //         $this->proccessKwitansiDetail($request, $kwitansi);
+
+    //         if ($kwitansi->STTS_PAYMENT == 'PAID') {
+    //             $this->processPokokBungaMenurun($request, $kwitansi);
+    //         }
+
+    //         $dto = new R_Kwitansi($kwitansi);
+
+    //         DB::commit();
+    //         return response()->json($dto, 200);
+    //     } catch (Exception $e) {
+    //         DB::rollback();
+    //         return $this->log->logError($e, $request);
+    //     }
+    // }
+
+    // private function proccessKwitansiDetail($request, $kwitansi)
+    // {
+    //     $loan_number = $request->LOAN_NUMBER;
+    //     $no_inv = $kwitansi->NO_TRANSAKSI;
+
+    //     $firstInstallment = DB::table('credit_schedule')
+    //         ->select('INSTALLMENT_COUNT')
+    //         ->where('LOAN_NUMBER', $loan_number)
+    //         ->where('PAID_FLAG', 'PAID')
+    //         ->orderBy('INSTALLMENT_COUNT', 'desc')
+    //         ->first();
+
+    //     if (!$firstInstallment) {
+    //         $firstInstallment = DB::table('credit_schedule')
+    //             ->select('INSTALLMENT_COUNT')
+    //             ->where('LOAN_NUMBER', $loan_number)
+    //             ->orderBy('INSTALLMENT_COUNT', 'asc')
+    //             ->first();
+    //     }
+
+    //     $creditSchedule = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)
+    //         ->where('INSTALLMENT_COUNT', intval($firstInstallment->INSTALLMENT_COUNT))
+    //         ->first();
+
+    //     if ($creditSchedule) {
+    //         M_KwitansiStructurDetail::firstOrCreate([
+    //             'no_invoice' => $no_inv,
+    //             'loan_number' => $creditSchedule['LOAN_NUMBER'] ?? ''
+    //         ], [
+    //             'key' => $creditSchedule['INSTALLMENT_COUNT'] ?? 1,
+    //             'angsuran_ke' => $creditSchedule['INSTALLMENT_COUNT'] ?? '',
+    //             'tgl_angsuran' => Carbon::parse($creditSchedule['PAYMENT_DATE'])->format('d-m-Y') ?? null,
+    //             'principal' => $creditSchedule['PRINCIPAL'] ?? '',
+    //             'interest' => $creditSchedule['INTEREST'] ?? '',
+    //             'installment' => $creditSchedule['INSTALLMENT'] ?? '',
+    //             'principal_remains' => $creditSchedule['PRINCIPAL_REMAINS'] ?? '',
+    //             'principal_prev' => $creditSchedule['principal_prev'] ?? 0,
+    //             'payment' => $creditSchedule['INSTALLMENT'] ?? '',
+    //             'bayar_angsuran' => $request->UANG_PELANGGAN ?? '0',
+    //             'bayar_denda' => '0',
+    //             'total_bayar' => $request->TOTAL_BAYAR ?? '',
+    //             'flag' => $creditSchedule['PAID_FLAG'] ?? '',
+    //             'denda' => '0',
+    //             'diskon_denda' => 0
+    //         ]);
+    //     }
+    // }
+
+    // private function processPokokBungaMenurun($request, $kwitansiDetail)
+    // {
+    //     $loan_number = $request->LOAN_NUMBER;
+    //     $no_inv = $kwitansiDetail->NO_TRANSAKSI;
+
+    //     $kwitansi = M_Kwitansi::with(['kwitansi_structur_detail', 'branch'])->where([
+    //         'LOAN_NUMBER' => $loan_number,
+    //         'NO_TRANSAKSI' => $no_inv
+    //     ])->first();
+
+    //     if (!$kwitansi) return;
+
+    //     $credit_schedule = M_CreditSchedule::where([
+    //         'LOAN_NUMBER' => $loan_number,
+    //         'INSTALLMENT_COUNT' => $kwitansi->kwitansi_structur_detail->map(function ($res) {
+    //             return intval($res->angsuran_ke);
+    //         })
+    //     ])->first();
+
+    //     if (!$credit_schedule) return;
+
+    //     $getPrincipalPay = (float) $kwitansi->kwitansi_structur_detail->sum(function ($detail) {
+    //         return floatval($detail->bayar_angsuran);
+    //     });
+
+    //     $uid = Uuid::uuid7()->toString();
+
+    //     $paymentData = [
+    //         'ID' => $uid,
+    //         'ACC_KEY' => 'pokok_sebagian',
+    //         'STTS_RCRD' => 'PAID',
+    //         'INVOICE' => $no_inv ?? '',
+    //         'NO_TRX' => $request->uid ?? '',
+    //         'PAYMENT_METHOD' => $kwitansi->METODE_PEMBAYARAN ?? '',
+    //         'BRANCH' =>  $kwitansi->branch['CODE_NUMBER'] ?? '',
+    //         'LOAN_NUM' => $loan_number,
+    //         'VALUE_DATE' => null,
+    //         'ENTRY_DATE' => now(),
+    //         'SUSPENSION_PENALTY_FLAG' => $request->penangguhan_denda ?? '',
+    //         'TITLE' => 'Pembayaran Pokok Sebagian',
+    //         'ORIGINAL_AMOUNT' => $getPrincipalPay,
+    //         'OS_AMOUNT' => $os_amount ?? 0,
+    //         'START_DATE' => $tgl_angsuran ?? null,
+    //         'END_DATE' => now(),
+    //         'USER_ID' => $kwitansi->CREATED_BY ?? $request->user()->id,
+    //         'AUTH_BY' => $request->user()->fullname ?? '',
+    //         'AUTH_DATE' => now(),
+    //         'ARREARS_ID' => $res['id_arrear'] ?? '',
+    //         'BANK_NAME' => round(microtime(true) * 1000)
+    //     ];
+
+    //     $existing = M_Payment::where($paymentData)->first();
+
+    //     if (!$existing) {
+    //         M_Payment::create($paymentData);
+    //     }
+
+    //     $data = $this->preparePaymentData($uid, 'ANGSURAN_POKOK', $getPrincipalPay);
+    //     M_PaymentDetail::create($data);
+
+    //     $principalPay = ($credit_schedule->PAYMENT_VALUE_PRINCIPAL + $getPrincipalPay);
+
+    //     $credit_schedule->update([
+    //         'PRINCIPAL' => $principalPay,
+    //         'INSTALLMENT' => $principalPay + $credit_schedule->INTEREST,
+    //         'PAYMENT_VALUE_PRINCIPAL' => $principalPay,
+    //         'INSUFFICIENT_PAYMENT' => (floatval($credit_schedule->INTEREST) - floatval($credit_schedule->PAYMENT_VALUE_INTEREST)),
+    //         'PAYMENT_VALUE' => (floatval($credit_schedule->PAYMENT_VALUE) + floatval($getPrincipalPay))
+    //     ]);
+
+    //     $this->addCreditPaid($loan_number, ['ANGSURAN_POKOK' => $getPrincipalPay]);
+
+    //     $creditSchedulesUpdate = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)
+    //         ->where(function ($query) {
+    //             $query->where('PAID_FLAG', '!=', 'PAID')
+    //                 ->orWhere('PAID_FLAG', '=', '')
+    //                 ->orWhereNull('PAID_FLAG');
+    //         })
+    //         ->where(function ($query) {
+    //             $query->whereNull('PAYMENT_VALUE_PRINCIPAL')
+    //                 ->orWhere('PAYMENT_VALUE_PRINCIPAL', '=', '');
+    //         })
+    //         ->orderBy('INSTALLMENT_COUNT', 'ASC')
+    //         ->orderBy('PAYMENT_DATE', 'ASC')
+    //         ->get();
+
+    //     if ($creditSchedulesUpdate->isEmpty()) return;
+
+    //     $totalSisaPokok = $creditSchedulesUpdate->sum('PRINCIPAL');
+
+    //     $sisa_pokok = $totalSisaPokok - $getPrincipalPay;
+    //     $sisa_pokok = max(0, $sisa_pokok);
+
+    //     $getNewTenor = count($creditSchedulesUpdate);
+    //     $calc = round($sisa_pokok * (3 / 100), 2);
+
+    //     $data = new \stdClass();
+    //     $data->SUBMISSION_VALUE = $sisa_pokok;
+    //     $data->TOTAL_ADMIN = 0;
+    //     $data->INSTALLMENT = $calc;
+    //     $data->TENOR = $getNewTenor;
+    //     $data->START_FROM = $creditSchedulesUpdate->first()->INSTALLMENT_COUNT;
+
+    //     $data_credit_schedule = $this->generateAmortizationScheduleBungaMenurun($data);
+
+    //     foreach ($creditSchedulesUpdate as $index => $schedule) {
+    //         $updateData = $data_credit_schedule[$index];
+
+    //         $updateArray = [
+    //             'PRINCIPAL' => $updateData['pokok'],
+    //             'INTEREST' => $updateData['bunga'],
+    //             'INSTALLMENT' => $updateData['total_angsuran'],
+    //             'PRINCIPAL_REMAINS' => $updateData['baki_debet'],
+    //         ];
+
+    //         if ((float)$updateData['total_angsuran'] == 0) {
+    //             $updateArray['PAID_FLAG'] = 'PAID';
+    //         }
+
+    //         $schedule->update($updateArray);
+    //     }
+
+    //     $totalInterest = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)
+    //         ->where(function ($query) {
+    //             $query->where('PAID_FLAG', '')
+    //                 ->orWhereNull('PAID_FLAG');
+    //         })
+    //         ->sum('INTEREST');
+
+    //     $check_credit = M_Credit::where(['LOAN_NUMBER' => $loan_number])->first();
+
+    //     $check_credit->update([
+    //         'INTRST_ORI' => $totalInterest ?? 0
+    //     ]);
+    // }
+
+    // private function generateAmortizationScheduleBungaMenurun($data)
+    // {
+    //     $schedule = [];
+    //     $ttal_bayar = ($data->SUBMISSION_VALUE + $data->TOTAL_ADMIN);
+    //     $angsuran_bunga = $data->INSTALLMENT;
+    //     $term = ceil($data->TENOR);
+    //     $baki_debet = $ttal_bayar;
+
+    //     $startInstallment = $data->START_FROM ?? 1;
+
+    //     for ($i = 0; $i < $term; $i++) {
+    //         $pokok = 0;
+
+    //         if ($i == $term - 1) {
+    //             $pokok = $ttal_bayar;
+    //         }
+
+    //         $total_angsuran = $pokok + $angsuran_bunga;
+
+    //         $schedule[] = [
+    //             'angsuran_ke' => $startInstallment + $i,
+    //             'baki_debet_awal' => floatval($baki_debet),
+    //             'pokok' => floatval($pokok),
+    //             'bunga' => floatval($angsuran_bunga),
+    //             'total_angsuran' => floatval($total_angsuran),
+    //             'baki_debet' => floatval($baki_debet - $pokok)
+    //         ];
+
+    //         $baki_debet -= $pokok;
+    //     }
+
+    //     return $schedule;
+    // }

@@ -19,15 +19,18 @@ class S_PokokSebagian
     protected $repository;
     protected $kwitansiService;
     protected $s_creditScheduleBefore;
+    protected $s_creditBefore;
 
     public function __construct(
         R_PokokSebagian $repository,
         KwitansiService $kwitansiService,
-        S_CreditScheduleBefore $s_creditScheduleBefore
+        S_CreditScheduleBefore $s_creditScheduleBefore,
+        S_CreditBefore $s_creditBefore
     ) {
         $this->repository = $repository;
         $this->kwitansiService = $kwitansiService;
         $this->s_creditScheduleBefore = $s_creditScheduleBefore;
+        $this->s_creditBefore = $s_creditBefore;
     }
 
     public function getAllCreditInstallment($request)
@@ -78,9 +81,27 @@ class S_PokokSebagian
             $this->s_creditScheduleBefore->created($value, $no_inv);
         }
 
-        $build = $this->buildPayment($request, $creditSchedule);
+        $credit = M_Credit::select(
+            'ID',
+            'LOAN_NUMBER',
+            'PCPL_ORI',
+            'INTRST_ORI',
+            'PAID_PRINCIPAL',
+            'PAID_INTEREST',
+            'PAID_PENALTY',
+            'DUE_PRINCIPAL',
+            'DUE_INTEREST',
+            'DUE_PENALTY',
+            'DISCOUNT_PRINCIPAL',
+            'DISCOUNT_INTEREST',
+            'DISCOUNT_PENALTY',
+            'PINALTY_PELUNASAN',
+            'DISKON_PINALTY_PELUNASAN'
+        )->where('LOAN_NUMBER', $loan_number)->first();
 
-        // return $build;
+        $this->s_creditBefore->created($credit, $no_inv);
+
+        $build = $this->buildPayment($request, $creditSchedule);
 
         foreach ($build as $value) {
             $data = [
@@ -370,20 +391,31 @@ class S_PokokSebagian
 
     public function cancel($loan_number, $no_inv)
     {
-        // $getAllTrx = M_Kwitansi::where('LOAN_NUMBER', $loan_number)
-        //     ->where('NO_TRANSAKSI', '>=', $no_inv)
-        //     ->orderBy('NO_TRANSAKSI', 'asc')
-        // ->get();
+        // Update status kwitansi jadi 'CANCEL'
+        M_Kwitansi::where('LOAN_NUMBER', $loan_number)
+            ->where('NO_TRANSAKSI', '>=', $no_inv)
+            ->update(['STTS_PAYMENT' => 'CANCEL']);
 
-        $kwitansi = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->where('LOAN_NUMBER', $loan_number)->first();
+        // Ambil data sebelumnya
+        $scheduleBefore = $this->s_creditScheduleBefore->getDataCreditSchedule($no_inv);
+        $creditBefore = $this->s_creditBefore->getDataCredit($no_inv);
 
-        $kwitansi->update(['STTS_PAYMENT' => 'CANCEL']);
+        // Update data kredit
+        M_Credit::where('LOAN_NUMBER', $loan_number)->update([
+            'STATUS_REC' => "AC",
+            'STATUS' => "A",
+            'INTRST_ORI' => $creditBefore->INTRST_ORI,
+            'PAID_PRINCIPAL' => $creditBefore->PAID_PRINCIPAL,
+            'PAID_INTEREST' => $creditBefore->PAID_INTEREST,
+            'PAID_PENALTY' => $creditBefore->PAID_PENALTY,
+            'DISCOUNT_PRINCIPAL' => $creditBefore->DISCOUNT_PRINCIPAL,
+            'DISCOUNT_INTEREST' => $creditBefore->DISCOUNT_INTEREST,
+            'DISCOUNT_PENALTY' => $creditBefore->DISCOUNT_PENALTY,
+        ]);
 
-        $creditScheduleBefore = $this->s_creditScheduleBefore->getDataCreditSchedule($no_inv);
-
+        // Reset dan insert ulang jadwal kredit
         M_CreditSchedule::where('LOAN_NUMBER', $loan_number)->delete();
-
-        foreach ($creditScheduleBefore as $value) {
+        foreach ($scheduleBefore as $value) {
             $fields = [
                 'LOAN_NUMBER' => $value['LOAN_NUMBER'],
                 'INSTALLMENT_COUNT' => $value['INSTALLMENT_COUNT'],
@@ -404,4 +436,52 @@ class S_PokokSebagian
             M_CreditSchedule::create($fields);
         }
     }
+
+
+    // public function cancel($loan_number, $no_inv)
+    // {
+    //     $kwitansi = M_Kwitansi::with(['kwitansi_pelunasan_detail'])->select('ID', 'PAYMENT_TYPE', 'STTS_PAYMENT', 'NO_TRANSAKSI', 'LOAN_NUMBER')
+    //         ->where('LOAN_NUMBER', $loan_number)
+    //         ->where('NO_TRANSAKSI', '>=', $no_inv)
+    //         ->orderBy('NO_TRANSAKSI', 'asc')
+    //         ->get();
+
+    //     $kwitansi->update(['STTS_PAYMENT' => 'CANCEL']);
+
+    //     $creditScheduleBefore = $this->s_creditScheduleBefore->getDataCreditSchedule($no_inv);
+    //     $creditBefore = $this->s_creditBefore->getDataCredit($no_inv);
+
+    //     $credit = M_Credit::where('LOAN_NUMBER', $loan_number)->first()->update([
+    //         'INTRST_ORI' => $creditBefore->INTRST_ORI,
+    //         'PAID_PRINCIPAL' => $creditBefore->PAID_PRINCIPAL,
+    //         'PAID_INTEREST' => $creditBefore->PAID_INTEREST,
+    //         'PAID_PENALTY' => $creditBefore->PAID_PENALTY,
+    //         'DISCOUNT_PRINCIPAL' => $creditBefore->DISCOUNT_PRINCIPAL,
+    //         'DISCOUNT_INTEREST' => $creditBefore->DISCOUNT_INTEREST,
+    //         'DISCOUNT_PENALTY' => $creditBefore->DISCOUNT_PENALTY,
+    //     ]);
+
+    //     M_CreditSchedule::where('LOAN_NUMBER', $loan_number)->delete();
+
+    //     foreach ($creditScheduleBefore as $value) {
+    //         $fields = [
+    //             'LOAN_NUMBER' => $value['LOAN_NUMBER'],
+    //             'INSTALLMENT_COUNT' => $value['INSTALLMENT_COUNT'],
+    //             'PAYMENT_DATE' => $value['PAYMENT_DATE'],
+    //             'PRINCIPAL' => $value['PRINCIPAL'],
+    //             'INTEREST' => $value['INTEREST'],
+    //             'INSTALLMENT' => $value['INSTALLMENT'],
+    //             'PRINCIPAL_REMAINS' => $value['PRINCIPAL_REMAINS'],
+    //             'PAYMENT_VALUE_PRINCIPAL' => $value['PAYMENT_VALUE_PRINCIPAL'],
+    //             'PAYMENT_VALUE_INTEREST' => $value['PAYMENT_VALUE_INTEREST'],
+    //             'DISCOUNT_PRINCIPAL' => $value['DISCOUNT_PRINCIPAL'],
+    //             'DISCOUNT_INTEREST' => $value['DISCOUNT_INTEREST'],
+    //             'INSUFFICIENT_PAYMENT' => $value['INSUFFICIENT_PAYMENT'],
+    //             'PAYMENT_VALUE' => $value['PAYMENT_VALUE'],
+    //             'PAID_FLAG' => $value['PAID_FLAG']
+    //         ];
+
+    //         M_CreditSchedule::create($fields);
+    //     }
+    // }
 }

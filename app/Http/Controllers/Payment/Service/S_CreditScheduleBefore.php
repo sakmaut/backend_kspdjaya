@@ -7,18 +7,18 @@ use Illuminate\Http\Request;
 
 class S_CreditScheduleBefore extends R_CreditScheduleBefore
 {
-    protected $respository;
+    protected $repository;
     protected $request;
 
-    public function __construct(R_CreditScheduleBefore $respository, Request $request)
+    public function __construct(R_CreditScheduleBefore $repository, Request $request)
     {
-        $this->respository = $respository;
+        $this->repository = $repository;
         $this->request = $request;
     }
 
     public function getDataCreditSchedule($invoiceNum)
     {
-        return $this->respository->findCreditScheduleByInvoice($invoiceNum);
+        return $this->repository->findCreditScheduleByInvoice($invoiceNum);
     }
 
     public function created($data, $no_invoice)
@@ -42,6 +42,6 @@ class S_CreditScheduleBefore extends R_CreditScheduleBefore
             'CREATED_BY' => $this->request->user()->id,
         ];
 
-        $this->respository->create($fields);
+        $this->repository->create($fields);
     }
 }
