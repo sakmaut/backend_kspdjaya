@@ -31,9 +31,9 @@ class KwitansiService
     public function getKwitansiPayment($request)
     {
         $user = $request->user();
-        $base = $request->url();
+        $url = url('/');
 
-        if ($user->position === $this->userPositionEnum::HO && $base != 'https://dapur.kspdjaya.id') {
+        if ($user->position === $this->userPositionEnum::HO && $url != 'https://dapur.kspdjaya.id/') {
             return $this->kwitansiRepository->getPendingForHO();
         }
 
