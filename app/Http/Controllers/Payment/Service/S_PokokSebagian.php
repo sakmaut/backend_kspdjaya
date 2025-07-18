@@ -18,13 +18,16 @@ class S_PokokSebagian
 {
     protected $repository;
     protected $kwitansiService;
+    protected $s_creditScheduleBefore;
 
     public function __construct(
         R_PokokSebagian $repository,
-        KwitansiService $kwitansiService
+        KwitansiService $kwitansiService,
+        S_CreditScheduleBefore $s_creditScheduleBefore
     ) {
         $this->repository = $repository;
         $this->kwitansiService = $kwitansiService;
+        $this->s_creditScheduleBefore = $s_creditScheduleBefore;
     }
 
     public function getAllCreditInstallment($request)
@@ -69,9 +72,11 @@ class S_PokokSebagian
         $loan_number = $request->LOAN_NUMBER;
         $no_inv = $kwitansi->NO_TRANSAKSI;
 
-        $creditSchedule = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)
-            ->select('ID', 'INSTALLMENT_COUNT', 'PAYMENT_DATE', 'INSTALLMENT', 'PRINCIPAL', 'INTEREST', 'PAYMENT_VALUE_PRINCIPAL', 'PAYMENT_VALUE_INTEREST', 'PAID_FLAG')
-            ->get();
+        $creditSchedule = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)->get();
+
+        foreach ($creditSchedule as $value) {
+            $this->s_creditScheduleBefore->created($value, $no_inv);
+        }
 
         $build = $this->buildPayment($request, $creditSchedule);
 
