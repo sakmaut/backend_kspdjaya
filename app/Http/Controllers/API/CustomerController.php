@@ -136,6 +136,10 @@ class CustomerController extends Controller
                 return collect([]);
             }
 
+            $url = url()->current();
+
+            $lastSegment = last(explode('/', $url));
+
             $query = DB::table('credit as a')
                 ->select([
                     'a.STATUS',
@@ -167,6 +171,10 @@ class CustomerController extends Controller
                 $query->when($request->no_polisi, function ($query, $no_polisi) {
                     return $query->where('b.POLICE_NUMBER', 'LIKE', "%{$no_polisi}%");
                 });
+            }
+
+            if ($lastSegment === 'addrepayment') {
+                return $query->where('a.CREDIT_TYPE', '!=', 'bunga_menurun');
             }
 
             $results = $query->limit(15)->get();
