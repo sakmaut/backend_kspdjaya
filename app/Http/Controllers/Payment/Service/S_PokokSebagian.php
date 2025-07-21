@@ -332,8 +332,12 @@ class S_PokokSebagian
 
     private function updateCreditStatus($request, $credit, $loanNumber)
     {
-
-        $allPaid =  M_CreditSchedule::where('LOAN_NUMBER', $loanNumber)->where('PAID_FLAG', '!=', 'PAID')->count();
+        $allPaid = M_CreditSchedule::where('LOAN_NUMBER', $loanNumber)
+            ->where(function ($query) {
+                $query->where('PAID_FLAG', '!=', 'PAID')
+                    ->orWhereNull('PAID_FLAG');
+            })
+            ->count();
 
         $totalInterest = M_CreditSchedule::where('LOAN_NUMBER', $loanNumber)->sum('INTEREST');
 
