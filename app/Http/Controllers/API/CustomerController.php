@@ -136,12 +136,6 @@ class CustomerController extends Controller
                 return collect([]);
             }
 
-            $url = url()->current();
-
-            $lastSegment = last(explode('/', $url));
-
-            echo $lastSegment;
-
             $query = DB::table('credit as a')
                 ->select([
                     'a.STATUS',
@@ -175,9 +169,9 @@ class CustomerController extends Controller
                 });
             }
 
-            if ($lastSegment === 'addrepayment') {
-                return $query->where('a.CREDIT_TYPE', '!=', 'bunga_menurun');
-            }
+            // if ($lastSegment === 'addrepayment') {
+            //     return $query->where('a.CREDIT_TYPE', '!=', 'bunga_menurun');
+            // }
 
             $results = $query->limit(15)->get();
 
