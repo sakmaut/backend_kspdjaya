@@ -90,7 +90,7 @@ class S_PokokSebagian
             $this->s_arrearsBefore->created($arrear, $noInv);
         }
 
-        // Backup Credit Info
+        // // Backup Credit Info
         $credit = M_Credit::select(
             'ID',
             'LOAN_NUMBER',
@@ -229,7 +229,7 @@ class S_PokokSebagian
                 $paymentValueInterest = floatval($creditSchedule[$index]->PAYMENT_VALUE_INTEREST ?? 0);
 
                 // Jangan update INTEREST dan INSTALLMENT jika PAYMENT_VALUE_INTEREST sudah diisi
-                if ($minCount !== null && $row['INSTALLMENT_COUNT'] > $minCount && $paymentValueInterest == 0) {
+                if ($minCount !== null && $row['INSTALLMENT_COUNT'] > $minCount && $paymentValueInterest == 0 && floatval($row['BAYAR_BUNGA']) == 0) {
                     $data[$index]['INTEREST'] = $calc;
                     $data[$index]['INSTALLMENT'] = $calc + $data[$index]['PRINCIPAL'];
                 }
