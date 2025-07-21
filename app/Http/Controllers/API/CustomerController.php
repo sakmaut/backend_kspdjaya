@@ -140,6 +140,8 @@ class CustomerController extends Controller
 
             $lastSegment = last(explode('/', $url));
 
+            echo $lastSegment;
+
             $query = DB::table('credit as a')
                 ->select([
                     'a.STATUS',
