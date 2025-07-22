@@ -55,8 +55,14 @@ class R_Kwitansi extends JsonResource
                 'diskon_denda'
             )
                 ->where('no_invoice', $this->NO_TRANSAKSI)
+                ->where(function ($query) {
+                    $query->where('bayar_pokok', '!=', 0)
+                        ->orWhere('bayar_bunga', '!=', 0)
+                        ->orWhere('bayar_denda', '!=', 0);
+                })
                 ->orderByRaw('CAST(angsuran_ke AS SIGNED) ASC')
                 ->get();
+
 
             $details = $details->map(function ($item) {
                 $item->bayar_pokok = (float) $item->bayar_pokok;

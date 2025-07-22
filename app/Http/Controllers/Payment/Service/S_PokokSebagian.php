@@ -290,8 +290,7 @@ class S_PokokSebagian
         // $maxDetail = $details->sortByDesc('angsuran_ke')->first();
 
         foreach ($details as $detail) {
-            $this->processDetail($loanNumber, $detail);
-            $this->addPayment($request, $kwitansi, $detail);
+            $this->processDetail($request, $loanNumber, $detail, $kwitansi);
         }
 
         $this->updateCreditStatus($request, $credit, $loanNumber);
@@ -306,7 +305,7 @@ class S_PokokSebagian
             ->first();
     }
 
-    private function processDetail($loanNumber, $detail)
+    private function processDetail($request, $loanNumber, $detail, $kwitansi)
     {
         $schedule = M_CreditSchedule::where([
             'LOAN_NUMBER' => $loanNumber,
@@ -317,9 +316,6 @@ class S_PokokSebagian
         if (!$schedule) {
             throw new Exception("Credit schedule not found for angsuran ke-{$detail['angsuran_ke']}", 1);
         }
-
-        // $maxInstallment = M_CreditSchedule::where('LOAN_NUMBER', $loanNumber)->max('INSTALLMENT_COUNT');
-        // $isLastInstallment = intval($detail['angsuran_ke']) === intval($maxInstallment);
 
         $principalDetail = floatval($detail['principal']);
         $interestDetail = floatval($detail['interest']);
@@ -354,6 +350,8 @@ class S_PokokSebagian
             $fields['INSUFFICIENT_PAYMENT'] = ($paidPrincipal + $totalInterest) - $installmentValue;
             $fields['PAYMENT_VALUE'] = $paidPrincipal + $totalInterest;
             $fields['PAID_FLAG'] = $installmentValue - ($paidPrincipal + $totalInterest) == 0 ? 'PAID' : '';
+
+            $this->addPayment($request, $kwitansi, $detail);
         } else if ($isPaid) {
             $fields['INSUFFICIENT_PAYMENT'] = $insufficientPayment != 0 ? $insufficientPayment : 0;
             $fields['PAYMENT_VALUE'] = $paymentValue > 0 ? $paymentValue : 0;
