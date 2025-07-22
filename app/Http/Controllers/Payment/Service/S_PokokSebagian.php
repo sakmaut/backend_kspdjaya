@@ -439,6 +439,10 @@ class S_PokokSebagian
             ->where('NO_TRANSAKSI', '>=', $no_inv)
             ->update(['STTS_PAYMENT' => 'CANCEL']);
 
+        M_Payment::where('LOAN_NUM', $loan_number)
+            ->where('INVOICE', '>=', $no_inv)
+            ->update(['STTS_RCRD' => 'CANCEL']);
+
         $scheduleBefore = $this->s_creditScheduleBefore->getDataCreditSchedule($no_inv);
         $arrearsBefore = $this->s_arrearsBefore->getDataArrears($no_inv);
         $creditBefore = $this->s_creditBefore->getDataCredit($no_inv);
