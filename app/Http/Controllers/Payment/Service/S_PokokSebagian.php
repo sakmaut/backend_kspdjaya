@@ -397,7 +397,7 @@ class S_PokokSebagian
 
         $paymentData = [
             'ID' => $uid,
-            'ACC_KEY' => 'pokok_sebagian',
+            'ACC_KEY' => 'angsuran',
             'STTS_RCRD' => 'PAID',
             'INVOICE' => $kwitansi->NO_TRANSAKSI ?? '',
             'NO_TRX' => $request->uid ?? '',
@@ -424,7 +424,7 @@ class S_PokokSebagian
 
         M_PaymentDetail::create([
             'PAYMENT_ID' => $uid,
-            'ACC_KEYS' => 'ANGSURAN_POKOK_SEBAGIAN',
+            'ACC_KEYS' => 'ANGSURAN_POKOK',
             'ORIGINAL_AMOUNT' => $bayarPokok
         ]);
 

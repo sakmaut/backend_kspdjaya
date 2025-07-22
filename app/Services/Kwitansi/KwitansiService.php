@@ -31,11 +31,6 @@ class KwitansiService
     public function getKwitansiPayment($request)
     {
         $user = $request->user();
-        $url = url('/');
-
-        // if ($user->position === $this->userPositionEnum::HO && $url != 'https://dapur.kspdjaya.id') {
-        //     return $this->kwitansiRepository->getPendingForHO();
-        // }
 
         $tipe = $request->query('tipe');
 

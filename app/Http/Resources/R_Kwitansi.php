@@ -26,18 +26,18 @@ class R_Kwitansi extends JsonResource
     public function toArray(Request $request): array
     {
         if ($this->PAYMENT_TYPE === 'pelunasan' || $this->PAYMENT_TYPE === 'pokok_sebagian') {
-            $details = M_KwitansiDetailPelunasan::select(
-                'no_invoice',
-                'loan_number',
-                'angsuran_ke',
-                'tgl_angsuran',
-                'bayar_pokok',
-                'bayar_bunga',
-                'bayar_denda',
-                'diskon_pokok',
-                'diskon_bunga',
-                'diskon_denda'
-            )
+            $details = M_KwitansiDetailPelunasan::selectRaw("
+                        no_invoice,
+                        loan_number,
+                        angsuran_ke,
+                        tgl_angsuran,
+                        CAST(bayar_pokok AS DECIMAL(15,2)) AS bayar_pokok,
+                        CAST(bayar_bunga AS DECIMAL(15,2)) AS bayar_bunga,
+                        CAST(bayar_denda AS DECIMAL(15,2)) AS bayar_denda,
+                        CAST(diskon_pokok AS DECIMAL(15,2)) AS diskon_pokok,
+                        CAST(diskon_bunga AS DECIMAL(15,2)) AS diskon_bunga,
+                        CAST(diskon_denda AS DECIMAL(15,2)) AS diskon_denda
+                    ")
                 ->where('no_invoice', $this->NO_TRANSAKSI)
                 ->orderByRaw('CAST(angsuran_ke AS SIGNED) ASC')
                 ->get();
