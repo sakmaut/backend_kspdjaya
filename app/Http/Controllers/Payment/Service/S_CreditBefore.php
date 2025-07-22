@@ -16,9 +16,9 @@ class S_CreditBefore extends R_CreditBefore
         $this->request = $request;
     }
 
-    public function getDataCredit($invoiceNum)
+    public function getDataCredit($loan_number, $invoiceNum)
     {
-        return $this->repository->findCreditByInvoice($invoiceNum);
+        return $this->repository->findCreditByInvoice($loan_number, $invoiceNum);
     }
 
     public function created($data, $no_invoice)

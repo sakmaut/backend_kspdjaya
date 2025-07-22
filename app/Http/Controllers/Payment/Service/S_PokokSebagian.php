@@ -443,9 +443,9 @@ class S_PokokSebagian
             ->where('INVOICE', '>=', $no_inv)
             ->update(['STTS_RCRD' => 'CANCEL']);
 
-        $scheduleBefore = $this->s_creditScheduleBefore->getDataCreditSchedule($no_inv);
+        $scheduleBefore = $this->s_creditScheduleBefore->getDataCreditSchedule($loan_number, $no_inv);
         $arrearsBefore = $this->s_arrearsBefore->getDataArrears($no_inv);
-        $creditBefore = $this->s_creditBefore->getDataCredit($no_inv);
+        $creditBefore = $this->s_creditBefore->getDataCredit($loan_number, $no_inv);
 
         // Update data kredit
         M_Credit::where('LOAN_NUMBER', $loan_number)->update([

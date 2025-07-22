@@ -13,9 +13,9 @@ class R_CreditScheduleBefore
         $this->model = $model;
     }
 
-    protected function findCreditScheduleByInvoice($invoiceNum)
+    protected function findCreditScheduleByInvoice($loan_number, $invoiceNum)
     {
-        return $this->model::where('NO_INVOICE', $invoiceNum)->orderBy('INSTALLMENT_COUNT', 'ASC')->get();
+        return $this->model::where('NO_INVOICE', $invoiceNum)->where('LOAN_NUMBER', $loan_number)->orderBy('INSTALLMENT_COUNT', 'ASC')->get();
     }
 
     protected function create($request)

@@ -13,9 +13,9 @@ class R_CreditBefore
         $this->model = $model;
     }
 
-    protected function findCreditByInvoice($invoiceNum)
+    protected function findCreditByInvoice($loan_number, $invoiceNum)
     {
-        return $this->model::where('NO_INVOICE', $invoiceNum)->first();
+        return $this->model::where('NO_INVOICE', $invoiceNum)->where('LOAN_NUMBER', $loan_number)->first();
     }
 
     protected function create($request)
