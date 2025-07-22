@@ -285,12 +285,13 @@ class S_PokokSebagian
         $credit = M_Credit::with(['arrears'])->where('LOAN_NUMBER', $loanNumber)->first();
 
         $details = collect($kwitansi->kwitansi_pelunasan_detail);
-        $finalPrincipalRemains = $details->sortByDesc('angsuran_ke')->first()['bayar_pokok'];
-        $totalPrincipalPaid = $details->sum('bayar_pokok');
-        $maxDetail = $details->sortByDesc('angsuran_ke')->first();
+        // $finalPrincipalRemains = $details->sortByDesc('angsuran_ke')->first()['bayar_pokok'];
+        // $totalPrincipalPaid = $details->sum('bayar_pokok');
+        // $maxDetail = $details->sortByDesc('angsuran_ke')->first();
 
         foreach ($details as $detail) {
-            $this->processDetail($loanNumber, $detail, $finalPrincipalRemains, $totalPrincipalPaid, $maxDetail, $kwitansi, $credit);
+            $this->processDetail($loanNumber, $detail);
+            $this->addPayment($request, $kwitansi, $detail);
         }
 
         $this->updateCreditStatus($request, $credit, $loanNumber);
@@ -305,7 +306,7 @@ class S_PokokSebagian
             ->first();
     }
 
-    private function processDetail($loanNumber, $detail, $finalPrincipalRemains, $totalPrincipalPaid, $maxDetail)
+    private function processDetail($loanNumber, $detail)
     {
         $schedule = M_CreditSchedule::where([
             'LOAN_NUMBER' => $loanNumber,
@@ -317,14 +318,13 @@ class S_PokokSebagian
             throw new Exception("Credit schedule not found for angsuran ke-{$detail['angsuran_ke']}", 1);
         }
 
-        $maxInstallment = M_CreditSchedule::where('LOAN_NUMBER', $loanNumber)->max('INSTALLMENT_COUNT');
-        $isLastInstallment = intval($detail['angsuran_ke']) === intval($maxInstallment);
+        // $maxInstallment = M_CreditSchedule::where('LOAN_NUMBER', $loanNumber)->max('INSTALLMENT_COUNT');
+        // $isLastInstallment = intval($detail['angsuran_ke']) === intval($maxInstallment);
 
         $principalDetail = floatval($detail['principal']);
         $interestDetail = floatval($detail['interest']);
         $paidPrincipal = floatval($detail['bayar_pokok']);
         $paidInterest = floatval($detail['bayar_bunga']);
-        $interest = floatval($schedule->INTEREST);
         $beforePaidPrincipal = floatval($schedule->PAYMENT_VALUE_PRINCIPAL);
         $beforePaidInterest = floatval($schedule->PAYMENT_VALUE_INTEREST);
         $insufficientPayment = floatval($schedule->INSUFFICIENT_PAYMENT);
@@ -361,8 +361,6 @@ class S_PokokSebagian
         }
 
         $schedule->update($fields);
-
-        // $this->addPayment($request, $kwitansi, $detail);
     }
 
     private function updateCreditStatus($request, $credit, $loanNumber)
