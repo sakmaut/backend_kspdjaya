@@ -112,7 +112,7 @@ class S_PokokSebagian
         $this->s_creditBefore->created($credit, $noInv);
 
         // Build and Save Payment Details
-        return $payments = $this->buildPayment($request, $creditSchedules);
+        $payments = $this->buildPayment($request, $creditSchedules);
 
         foreach ($payments as $payment) {
             M_KwitansiDetailPelunasan::create([
@@ -316,48 +316,63 @@ class S_PokokSebagian
             throw new Exception("Credit schedule not found for angsuran ke-{$detail['angsuran_ke']}", 1);
         }
 
-        $principalDetail = floatval($detail['principal']);
-        $interestDetail = floatval($detail['interest']);
-        $paidPrincipal = floatval($detail['bayar_pokok']);
-        $paidInterest = floatval($detail['bayar_bunga']);
+        // Extract detail values and cast to float
+        $principalDetail     = floatval($detail['principal']);
+        $interestDetail      = floatval($detail['interest']);
+        $paidPrincipal       = floatval($detail['bayar_pokok']);
+        $paidInterest        = floatval($detail['bayar_bunga']);
+        $installmentValue    = floatval($detail['installment']);
+
         $beforePaidPrincipal = floatval($schedule->PAYMENT_VALUE_PRINCIPAL);
-        $beforePaidInterest = floatval($schedule->PAYMENT_VALUE_INTEREST);
+        $beforePaidInterest  = floatval($schedule->PAYMENT_VALUE_INTEREST);
         $insufficientPayment = floatval($schedule->INSUFFICIENT_PAYMENT);
-        $paymentValue = floatval($schedule->PAYMENT_VALUE);
+        $paymentValue        = floatval($schedule->PAYMENT_VALUE);
 
-        $installmentValue = floatval($detail['installment']);
-        $totalInterest  = $beforePaidInterest + $paidInterest;
+        $totalInterest       = $beforePaidInterest + $paidInterest;
+        $totalPrincipal      = $beforePaidPrincipal + $paidPrincipal;
+        $totalPaid           = $paidPrincipal + $paidInterest;
+
         $currentDate = date('Y-m-d');
-        $isPastDue = strtotime($schedule->PAYMENT_DATE) < strtotime($currentDate);
+        $isPastDue   = strtotime($schedule->PAYMENT_DATE) < strtotime($currentDate);
 
-        $isPaid = ($principalDetail + $interestDetail) == ($paidPrincipal + $totalInterest);
-
+        // Step 1: Initial update
         $fields = [
-            'PRINCIPAL' => $principalDetail,
-            'INTEREST' => $interestDetail,
-            'INSTALLMENT' => $installmentValue,
-            'PAYMENT_VALUE_PRINCIPAL' => $paidPrincipal + $beforePaidPrincipal ?? 0,
-            'PAYMENT_VALUE_INTEREST' => $totalInterest
+            'PRINCIPAL'               => $principalDetail,
+            'INTEREST'                => $interestDetail,
+            'INSTALLMENT'             => $installmentValue,
+            'PAYMENT_VALUE_PRINCIPAL' => $totalPrincipal,
+            'PAYMENT_VALUE_INTEREST'  => $totalInterest,
         ];
 
         if (!$isPastDue) {
             $fields['PRINCIPAL_REMAINS'] = $principalDetail;
         }
 
-        if (($paidPrincipal != 0 || $paidInterest != 0)) {
-            $fields['INSUFFICIENT_PAYMENT'] = ($paidPrincipal + $paidInterest) - $installmentValue;
-            $fields['PAYMENT_VALUE'] = $paymentValue + ($paidPrincipal + $paidInterest);
-            $fields['PAID_FLAG'] = $installmentValue - ($paidPrincipal + $totalInterest) == 0 ? 'PAID' : '';
+        $schedule->update($fields); // Update awal
+
+        // Step 2: Process payment status
+        $isPaid = ($principalDetail + $interestDetail) == ($totalPrincipal + $totalInterest);
+
+        if (!$isPaid && $paidPrincipal != 0 && $paidInterest != 0) {
+            $insufficient = $totalPaid - $installmentValue;
+            // $paidFlag = ($isPaid >= $installmentValue) ? 'PAID' : '';
+
+            $schedule->update([
+                'INSUFFICIENT_PAYMENT' => $insufficient,
+                'PAYMENT_VALUE'        => $paymentValue + $totalPaid,
+                // 'PAID_FLAG'            => $paidFlag,
+            ]);
 
             $this->addPayment($request, $kwitansi, $detail);
-        } else if ($isPaid) {
-            $fields['INSUFFICIENT_PAYMENT'] = $insufficientPayment != 0 ? $insufficientPayment : 0;
-            $fields['PAYMENT_VALUE'] = $paymentValue > 0 ? $paymentValue : 0;
-            $fields['PAID_FLAG'] = 'PAID';
+        } else {
+            $schedule->update([
+                'INSUFFICIENT_PAYMENT' => $insufficientPayment > 0 ? $insufficientPayment : 0,
+                'PAYMENT_VALUE'        => $paymentValue > 0 ? $paymentValue + $totalPaid : 0,
+                'PAID_FLAG'            => $isPaid ? 'PAID' : "",
+            ]);
         }
-
-        $schedule->update($fields);
     }
+
 
     private function updateCreditStatus($request, $credit, $loanNumber)
     {
