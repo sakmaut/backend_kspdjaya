@@ -34,8 +34,11 @@ class KwitansiRepository
             })->get();
     }
 
-    public function getFilteredForBranch($branchCode, $filters = [], $date = null)
+    public function getFilteredForBranch($request, $filters = [], $date = null)
     {
+        $branchCode = $request->user()->branch_id;
+        $position = $request->user()->position;
+
         $query = $this->getAllOrdered()->where('BRANCH_CODE', $branchCode);
 
         foreach ($filters as [$column, $operator, $value]) {
@@ -46,6 +49,10 @@ class KwitansiRepository
 
         if ($date) {
             $query->whereDate('CREATED_AT', $date);
+        }
+
+        if ($position === 'HO') {
+            $this->getPendingForHO();
         }
 
         return $query->get();
