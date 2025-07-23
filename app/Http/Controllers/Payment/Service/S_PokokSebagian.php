@@ -78,7 +78,7 @@ class S_PokokSebagian
         $loanNumber = $request->LOAN_NUMBER;
         $noInv = $kwitansi->NO_TRANSAKSI;
 
-        // // Backup Credit Schedule
+        // Backup Credit Schedule
         $creditSchedules = M_CreditSchedule::where('LOAN_NUMBER', $loanNumber)->get();
         foreach ($creditSchedules as $schedule) {
             $this->s_creditScheduleBefore->created($schedule, $noInv);
@@ -90,7 +90,7 @@ class S_PokokSebagian
             $this->s_arrearsBefore->created($arrear, $noInv);
         }
 
-        // // Backup Credit Info
+        // Backup Credit Info
         $credit = M_Credit::select(
             'ID',
             'LOAN_NUMBER',
@@ -186,7 +186,6 @@ class S_PokokSebagian
             ];
         }
 
-        // Cek apakah semua tanggal sudah lewat
         $semuaSudahLewat = true;
         foreach ($data as $row) {
             if ($row['PAYMENT_DATE'] >= $currentDate) {
@@ -205,8 +204,7 @@ class S_PokokSebagian
             }
 
             if ($semuaSudahLewat && $maxIndex !== null) {
-                // Langsung kurangi ke PRINCIPAL terakhir
-                $data[$maxIndex]['PRINCIPAL'] -= $paymentPokok;
+                // $data[$maxIndex]['PRINCIPAL'] -= $paymentPokok;
                 $data[$maxIndex]['INSTALLMENT'] -= $paymentPokok;
                 $data[$maxIndex]['BAYAR_POKOK'] = $paymentPokok;
             } else {
