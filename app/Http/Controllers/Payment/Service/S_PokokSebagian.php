@@ -355,18 +355,16 @@ class S_PokokSebagian
 
         if (!$isPaid && $paidPrincipal != 0 && $paidInterest != 0) {
             $insufficient = $totalPaid - $installmentValue;
-            // $paidFlag = ($isPaid >= $installmentValue) ? 'PAID' : '';
 
             $schedule->update([
                 'INSUFFICIENT_PAYMENT' => $insufficient,
-                'PAYMENT_VALUE'        => $paymentValue + $totalPaid,
-                // 'PAID_FLAG'            => $paidFlag,
+                'PAYMENT_VALUE'        => $paymentValue + $totalPaid
             ]);
 
             $this->addPayment($request, $kwitansi, $detail);
         } else {
             $schedule->update([
-                'INSUFFICIENT_PAYMENT' => $insufficientPayment > 0 ? $insufficientPayment : 0,
+                'INSUFFICIENT_PAYMENT' => $paymentValue > 0 ? $insufficientPayment + $totalPaid : 0,
                 'PAYMENT_VALUE'        => $paymentValue > 0 ? $paymentValue + $totalPaid : 0,
                 'PAID_FLAG'            => $isPaid ? 'PAID' : "",
             ]);
