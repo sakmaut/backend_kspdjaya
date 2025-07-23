@@ -229,7 +229,7 @@ class S_PokokSebagian
 
                 if ($currentPaymentIndex !== null) {
                     $data[$currentPaymentIndex]['PRINCIPAL'] += $paymentPokok;
-                    $data[$currentPaymentIndex]['INSTALLMENT'] += $paymentPokok;
+                    // $data[$currentPaymentIndex]['INSTALLMENT'] += $paymentPokok;
                     $data[$currentPaymentIndex]['BAYAR_POKOK'] = $paymentPokok;
                 }
 
