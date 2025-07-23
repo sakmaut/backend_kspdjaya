@@ -112,7 +112,7 @@ class S_PokokSebagian
         $this->s_creditBefore->created($credit, $noInv);
 
         // Build and Save Payment Details
-        $payments = $this->buildPayment($request, $creditSchedules);
+        return $payments = $this->buildPayment($request, $creditSchedules);
 
         foreach ($payments as $payment) {
             M_KwitansiDetailPelunasan::create([
@@ -205,7 +205,8 @@ class S_PokokSebagian
 
             if ($semuaSudahLewat && $maxIndex !== null) {
                 // $data[$maxIndex]['PRINCIPAL'] -= $paymentPokok;
-                $data[$maxIndex]['INSTALLMENT'] -= $paymentPokok;
+                // $data[$maxIndex]['INSTALLMENT'] -= $paymentPokok;
+                $data[$maxIndex]['INSTALLMENT'] = $res->PRINCIPAL + $totalInterest;
                 $data[$maxIndex]['BAYAR_POKOK'] = $paymentPokok;
             } else {
                 // Jalankan proses biasa
@@ -343,10 +344,9 @@ class S_PokokSebagian
             $fields['PRINCIPAL_REMAINS'] = $principalDetail;
         }
 
-        // if (!$isLastInstallment && ($paidPrincipal != 0 || $paidInterest != 0)) {
         if (($paidPrincipal != 0 || $paidInterest != 0)) {
-            $fields['INSUFFICIENT_PAYMENT'] = ($paidPrincipal + $totalInterest) - $installmentValue;
-            $fields['PAYMENT_VALUE'] = $paidPrincipal + $totalInterest;
+            $fields['INSUFFICIENT_PAYMENT'] = ($paidPrincipal + $paidInterest) - $installmentValue;
+            $fields['PAYMENT_VALUE'] = $paymentValue + ($paidPrincipal + $paidInterest);
             $fields['PAID_FLAG'] = $installmentValue - ($paidPrincipal + $totalInterest) == 0 ? 'PAID' : '';
 
             $this->addPayment($request, $kwitansi, $detail);
