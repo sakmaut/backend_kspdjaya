@@ -30,6 +30,12 @@ class KwitansiService
 
     public function getKwitansiPayment($request)
     {
+        $user = $request->user();
+
+        if ($user->position === 'HO') {
+            return $this->kwitansiRepository->getPendingForHO();
+        }
+
         $tipe = $request->query('tipe');
 
         if ($tipe === 'pelunasan') {
@@ -60,7 +66,7 @@ class KwitansiService
             $dateFilter = Carbon::today()->toDateString();
         }
 
-        return $this->kwitansiRepository->getFilteredForBranch($request, $filters, $dateFilter);
+        return $this->kwitansiRepository->getFilteredForBranch($user->branch_id, $filters, $dateFilter);
     }
 
     public function create($request, $tipe = 'angsuran')
