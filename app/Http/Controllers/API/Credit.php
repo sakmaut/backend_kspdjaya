@@ -405,6 +405,10 @@ class Credit extends Controller
         $cr_personal = M_CrPersonal::where('APPLICATION_ID', $data->ID)->first();
         $check_customer_ktp = M_Customer::where('ID_NUMBER', $cr_personal->ID_NUMBER)->first();
 
+        $tenor = intval($data->TENOR);
+        $ttalPrincipal = $data->SUBMISSION_VALUE + ($data->TOTAL_ADMIN ?? 0);
+        $ttalInterest = $data->INSTALLMENT_TYPE === 'bunga_menurun' ? ($ttalPrincipal * 0.03) * $tenor : $data->TOTAL_INTEREST;
+
         $data_credit = [
             'ID' =>  $SET_UUID,
             'LOAN_NUMBER' => $loan_number,
@@ -414,11 +418,11 @@ class Credit extends Controller
             'STATUS'  => 'A',
             'MCF_ID'  => $survey->created_by ?? null,
             'ENTRY_DATE'  => $setDategenerate ?? null,
-            'END_DATE'  => Carbon::parse($setDategenerate)->addMonths(intval($data->TENOR))->format('Y-m-d') ?? null,
+            'END_DATE'  => Carbon::parse($setDategenerate)->addMonths($tenor)->format('Y-m-d') ?? null,
             'FIRST_ARR_DATE'  => null,
             'INSTALLMENT_DATE'  => $setDate ?? null,
-            'PCPL_ORI'  => $data->SUBMISSION_VALUE + ($data->TOTAL_ADMIN ?? 0) ?? null,
-            'INTRST_ORI' => $data->TOTAL_INTEREST ?? 0,
+            'PCPL_ORI'  => $ttalPrincipal ?? null,
+            'INTRST_ORI' => $ttalInterest ?? 0,
             'PAID_PRINCIPAL'  => 0,
             'PAID_INTEREST'  => 0,
             'PAID_PENALTY'  => 0,
@@ -427,7 +431,7 @@ class Credit extends Controller
             'DUE_PENALTY'  => 0,
             'CREDIT_TYPE'  => $data->INSTALLMENT_TYPE ?? null,
             'INSTALLMENT_COUNT'  => $installment_count,
-            'PERIOD'  => $data->TENOR,
+            'PERIOD'  =>  $tenor,
             'INSTALLMENT'  => $data->INSTALLMENT,
             'FLAT_RATE'  => $data->FLAT_RATE ?? null,
             'EFF_RATE'  => $data->EFF_RATE ?? null,
