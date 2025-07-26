@@ -35,6 +35,8 @@ class M_CrApplication extends Model
         'POKOK_PEMBAYARAN',
         'NET_ADMIN',
         'TOTAL_ADMIN',
+        'INTEREST_FEE',
+        'PROCCESS_FEE',
         'CADANGAN',
         'PAYMENT_WAY',
         'PROVISION',

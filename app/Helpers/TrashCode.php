@@ -3050,3 +3050,91 @@ $checkIdNumber = DB::table('credit as a')
 
     //     return $schedule;
     // }
+
+
+    private function buildStrukturBungaMenurun($links, $specificTenor = null, $plafond)
+    {
+        $struktur = $links->map(function ($link) {
+            return [
+                'fee_name' => $link['fee_name'],
+                '6_month' =>  floatval($link['6_month']),
+                '12_month' =>  floatval($link['12_month']),
+                '18_month' =>  floatval($link['18_month']),
+                '24_month' =>  floatval($link['24_month']),
+            ];
+        })->toArray();
+
+        $tenors = $specificTenor ? [$specificTenor] : ['6', '12', '18', '24'];
+
+        $strukturTenors = [];
+
+        foreach ($tenors as $tenor) {
+            $total = 0;
+            $tenor_name = $tenor . '_month';
+
+            foreach ($struktur as $s) {
+                $feeName = $s['fee_name'];
+                $feeValue = (int) $s[$tenor_name];
+
+                $tenorData[$feeName] = $feeValue;
+
+                if ($feeName !== 'eff_rate') {
+                    $total += $feeValue;
+                }
+            }
+
+            $pokok_pembayaran = ($plafond + $total);
+            $eff_rate = $tenorData['eff_rate'];
+
+            $calc = round($pokok_pembayaran * ($eff_rate / 100), 2);
+
+            if ($calc > 0) {
+                $tenorData['tenor'] = 5;
+                $tenorData['angsuran'] = $calc;
+                $tenorData['suku_bunga'] = $eff_rate;
+                $tenorData['total_bunga'] = round($calc * $tenor, 2);
+                $tenorData['flat_rate'] = 0;
+                $tenorData['eff_rate'] = 0;
+                $tenorData['total'] = $total;
+                $strukturTenors["tenor_$tenor"] = $tenorData;
+            }
+        }
+
+        $datas = !empty($plafond) ? $strukturTenors : [];
+
+        return $datas;
+    }
+
+     public function buildArrayBungaMenurun($data, $options = [])
+    {
+        $returnSingle = $options['returnSingle'] ?? false;
+        $specificTenor = $options['tenor'] ?? null;
+        $plafond = $options['plafond'] ?? null;
+
+        $build = [];
+        foreach ($data as $value) {
+            $strukturTenors = $this->buildStrukturBungaMenurun($value->links, $specificTenor, $plafond);
+
+            $item = [
+                'id' => $value->id,
+                'tipe' => $value->category,
+                'range_start' => (int) $value->start_value,
+                'range_end' => (int) $value->end_value,
+            ];
+
+            if ($specificTenor) {
+                $tenorKey = $specificTenor;
+                $item += $strukturTenors["tenor_$tenorKey"];
+            } else {
+                $item += $strukturTenors;
+            }
+
+            if ($returnSingle) {
+                return $item;
+            }
+
+            $build[] = $item;
+        }
+
+        return $build;
+    }
