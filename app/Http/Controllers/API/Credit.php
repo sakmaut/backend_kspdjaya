@@ -29,6 +29,8 @@ use App\Models\M_CustomerDocument;
 use App\Models\M_CustomerExtra;
 use App\Models\M_InterestDecreasesSetting;
 use App\Models\M_LocationStatus;
+use App\Models\M_Payment;
+use App\Models\M_PaymentDetail;
 use App\Models\M_SurveyApproval;
 use App\Models\M_SurveyApprovalLog;
 use Carbon\Carbon;
@@ -345,12 +347,6 @@ class Credit extends Controller
 
         if (!$check_exist && $check_count <= 1 && $request->flag == 'yes') {
 
-            // $checkCountKK = $this->countKK($cr_personal->KK ?? null);
-
-            // if ($checkCountKK > 2) {
-            //     throw new Exception("KK greater than 2", 500);
-            // }
-
             $checkCreditMaxLoan = DB::table('credit as a')
                 ->join('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
                 ->where('a.STATUS', 'A')
@@ -390,6 +386,43 @@ class Credit extends Controller
             $this->insert_customer_xtra($data, $cust_code);
             $this->insert_collateral($request, $data, $SET_UUID, $loan_number);
             $this->insert_collateral_sertification($request, $data, $SET_UUID);
+
+            if($data->INSTALLMENT_TYPE === 'bunga_menurun'){
+                $uid = Uuid::uuid7()->toString();
+
+                $fields = [
+                    'ID' => $uid,
+                    'ACC_KEY' => 'bunga_menurun_fee',
+                    'STTS_RCRD' => 'PAID',
+                    'INVOICE' => 'AUTO-PAYMENT',
+                    'PAYMENT_METHOD' => $kwitansi->METODE_PEMBAYARAN ?? '',
+                    'BRANCH' => $kwitansi->branch['CODE_NUMBER'] ?? '',
+                    'LOAN_NUM' => $loan_number,
+                    'VALUE_DATE' => null,
+                    'ENTRY_DATE' => now(),
+                    'TITLE' => 'Fee Bunga Menurun',
+                    'ORIGINAL_AMOUNT' => (float)(($data->INTEREST_FEE ?? 0) + ($data->PROCCESS_FEE ?? 0)),
+                    'USER_ID' => $request->user()->id,
+                    'AUTH_BY' => $request->user()->fullname ?? '',
+                    'AUTH_DATE' => now()
+                ];
+
+                if (!M_Payment::where($fields)->first()) {
+                    M_Payment::create($fields);
+                }
+
+                M_PaymentDetail::create([
+                    'PAYMENT_ID' => $uid,
+                    'ACC_KEYS' => 'FEE_BUNGA',
+                    'ORIGINAL_AMOUNT' => (float)($data->INTEREST_FEE ?? 0)
+                ]);
+
+                M_PaymentDetail::create([
+                    'PAYMENT_ID' => $uid,
+                    'ACC_KEYS' => 'FEE_PROCCESS',
+                    'ORIGINAL_AMOUNT' => (float)($data->PROCCESS_FEE ?? 0)
+                ]);
+            }
         }
 
         return $array_build;
