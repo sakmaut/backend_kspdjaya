@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use App\Http\Controllers\Repositories\CrCollateralMovingLog\CrCollateralMovingLogRepository;
 use App\Http\Controllers\Validation\Validation;
 use App\Http\Resources\R_CreditCancelLog;
 use App\Models\M_ApplicationApproval;
 use App\Models\M_ApplicationApprovalLog;
+use App\Models\M_Branch;
 use App\Models\M_CrApplication;
 use App\Models\M_CrApplicationGuarantor;
 use App\Models\M_CrApplicationSpouse;
@@ -23,11 +23,9 @@ use App\Models\M_CrOrder;
 use App\Models\M_CrPersonal;
 use App\Models\M_CrPersonalExtra;
 use App\Models\M_CrSurvey;
-use App\Models\M_CrSurveyDocument;
 use App\Models\M_Customer;
 use App\Models\M_CustomerDocument;
 use App\Models\M_CustomerExtra;
-use App\Models\M_InterestDecreasesSetting;
 use App\Models\M_LocationStatus;
 use App\Models\M_Payment;
 use App\Models\M_PaymentDetail;
@@ -389,14 +387,15 @@ class Credit extends Controller
 
             if($data->INSTALLMENT_TYPE === 'bunga_menurun'){
                 $uid = Uuid::uuid7()->toString();
+                $getCodeBranch = M_Branch::find($data->BRANCH)->CODE_NUMBER ?? '';
 
                 $fields = [
                     'ID' => $uid,
                     'ACC_KEY' => 'bunga_menurun_fee',
                     'STTS_RCRD' => 'PAID',
                     'INVOICE' => 'AUTO-PAYMENT',
-                    'PAYMENT_METHOD' => $kwitansi->METODE_PEMBAYARAN ?? '',
-                    'BRANCH' => $kwitansi->branch['CODE_NUMBER'] ?? '',
+                    'PAYMENT_METHOD' => 'cash',
+                    'BRANCH' => $getCodeBranch,
                     'LOAN_NUM' => $loan_number,
                     'VALUE_DATE' => null,
                     'ENTRY_DATE' => now(),
