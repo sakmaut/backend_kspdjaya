@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Repositories\Survey\SurveyRepository;
+use App\Http\Credit\BungaMenurunFee\Service\S_BungaMenurunFee;
 use App\Http\Resources\R_CrSurvey;
 use App\Http\Resources\R_CrSurveyDetail;
 use App\Models\M_CrGuaranteSertification;
@@ -31,17 +32,20 @@ class CrSurveyController extends Controller
     private $timeNow;
     private $SurveyRepository;
     protected $log;
+    protected $s_bungaMenurunFee;
 
     public function __construct(
         M_CrSurvey $CrSurvey,
         SurveyRepository $SurveyRepository,
-        ExceptionHandling $log
+        ExceptionHandling $log,
+        S_BungaMenurunFee $s_bungaMenurunFee
     ) {
         $this->CrSurvey = $CrSurvey;
         $this->uuid = Uuid::uuid7()->toString();
         $this->timeNow = Carbon::now();
         $this->SurveyRepository = $SurveyRepository;
         $this->log = $log;
+        $this->s_bungaMenurunFee = $s_bungaMenurunFee;
     }
 
     public function index(Request $request)
@@ -123,9 +127,11 @@ class CrSurveyController extends Controller
 
     private function createCrSurvey($request)
     {
+        $plafond = (int) $request->order['plafond'];
 
-        // if ($request->order['jenis_angsuran'] === 'bunga_menurun') {
-        // }
+        if ($request->order['jenis_angsuran'] === 'bunga_menurun') {
+            $angsuran = $this->s_bungaMenurunFee->getFeeByLoanAmount($plafond);
+        }
 
         $data_array = [
             'id' => $request->id,
@@ -133,6 +139,7 @@ class CrSurveyController extends Controller
             'visit_date' => isset($request->data_survey['tgl_survey']) && !empty($request->data_survey['tgl_survey']) ? $request->data_survey['tgl_survey'] : null,
             'tujuan_kredit' => $request->order['tujuan_kredit'] ?? null,
             'plafond' => $request->order['plafond'] ?? null,
+            'angsuran' => $angsuran ?? 0,
             'tenor' => $request->order['tenor'] ?? null,
             'category' => $request->order['category'] ?? null,
             'jenis_angsuran' => $request->order['jenis_angsuran'] ?? null,
