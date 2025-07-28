@@ -32,8 +32,11 @@ class CrSurveyController extends Controller
     private $SurveyRepository;
     protected $log;
 
-    public function __construct(M_CrSurvey $CrSurvey, SurveyRepository $SurveyRepository, ExceptionHandling $log)
-    {
+    public function __construct(
+        M_CrSurvey $CrSurvey,
+        SurveyRepository $SurveyRepository,
+        ExceptionHandling $log
+    ) {
         $this->CrSurvey = $CrSurvey;
         $this->uuid = Uuid::uuid7()->toString();
         $this->timeNow = Carbon::now();
@@ -120,6 +123,10 @@ class CrSurveyController extends Controller
 
     private function createCrSurvey($request)
     {
+
+        // if ($request->order['jenis_angsuran'] === 'bunga_menurun') {
+        // }
+
         $data_array = [
             'id' => $request->id,
             'branch_id' => $request->user()->branch_id,

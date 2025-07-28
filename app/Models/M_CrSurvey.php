@@ -17,6 +17,7 @@ class M_CrSurvey extends Model
         'visit_date',
         'tujuan_kredit',
         'plafond',
+        'angsuran',
         'tenor',
         'category',
         'jenis_angsuran',
