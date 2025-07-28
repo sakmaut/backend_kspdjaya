@@ -4,12 +4,10 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
+use App\Http\Credit\BungaMenurunFee\Service\S_BungaMenurunFee;
 use App\Models\M_AdminFee;
 use App\Models\M_AdminType;
-use App\Models\M_InterestDecreasesSetting;
 use Exception;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -17,10 +15,17 @@ class AdminFeeController extends Controller
 {
     protected $adminfee;
     protected $log;
+    protected $s_bungaMenurunFee;
 
-    public function __construct(M_AdminFee $admin_fee, ExceptionHandling $log)
+    public function __construct(
+        M_AdminFee $admin_fee, 
+        ExceptionHandling $log,
+        S_BungaMenurunFee $s_bungaMenurunFee
+    )
     {
         $this->adminfee = $admin_fee;
+        $this->log = $log;
+        $this->s_bungaMenurunFee = $s_bungaMenurunFee;
     }
 
     public function index(Request $request)
@@ -179,11 +184,9 @@ class AdminFeeController extends Controller
                 );
             } else {
                 $show = $this->buildArrayBungaMenurun(
-                    $adminFee,
                     [
-                        'returnSingle' => true,
-                        'plafond' => $request->plafond,
-                        'angsuran_type' => $angsuran_type
+                        'returnSingle' => false,
+                        'plafond' => $request->plafond
                     ]
                 );
             }
@@ -197,34 +200,23 @@ class AdminFeeController extends Controller
     public function fee(Request $request)
     {
         try {
-            $plafond = (int) $request->plafond / 1000000;
+            $plafond = floatval($request->plafond / 1000000);
             $angsuran_type = strtolower($request->jenis_angsuran);
             $tenor = $request->tenor;
-
-            $adminFee = $this->adminfee->checkRange($plafond, $angsuran_type);
 
             if ($tenor == 0) {
                 $show = [];
             } else {
                 if ($angsuran_type == 'bunga_menurun') {
-
-                    $tenors = [
-                        '5' => 6
-                    ];
-
-                    $value = $tenors[(string)$tenor];
-
                     $show = $this->buildArrayBungaMenurun(
-                        $adminFee,
                         [
                             'returnSingle' => true,
-                            'type' => 'fee',
-                            'tenor' => $value,
-                            'plafond' => $request->plafond,
-                            'angsuran_type' => $angsuran_type
+                            'plafond' => $request->plafond
                         ]
                     );
                 } else {
+                    $adminFee = $this->adminfee->checkRange($plafond, $angsuran_type);
+
                     $show = $this->buildArray(
                         $adminFee,
                         [
@@ -344,39 +336,42 @@ class AdminFeeController extends Controller
         return $data;
     }
 
-    public function buildArrayBungaMenurun($data, $options = [])
+    public function buildArrayBungaMenurun(array $options = [])
     {
-        $returnSingle = $options['returnSingle'] ?? false;
-        $specificTenor = $options['tenor'] ?? null;
         $plafond = $options['plafond'] ?? null;
+        $returnSingle = $options['returnSingle'] ?? false;
 
-        $build = [];
-        foreach ($data as $value) {
-            $strukturTenors = $this->buildStrukturBungaMenurun($value->links, $specificTenor, $plafond);
+        $fee = $this->s_bungaMenurunFee->getFeeByLoanAmount($plafond);
 
-            $item = [
-                'id' => $value->id,
-                'tipe' => $value->category,
-                'range_start' => (int) $value->start_value,
-                'range_end' => (int) $value->end_value,
-            ];
-
-            if ($specificTenor) {
-                $tenorKey = $specificTenor;
-                $item += $strukturTenors["tenor_$tenorKey"];
-            } else {
-                $item += $strukturTenors;
-            }
-
-            if ($returnSingle) {
-                return $item;
-            }
-
-            $build[] = $item;
+        if (!$fee) {
+            return [];
         }
 
-        return $build;
+        $data = [
+            'tenor'       => 5,
+            'angsuran'    => (float) $fee->INSTALLMENT,
+            'admin_fee'   => (float) $fee->ADMIN_FEE,
+            'bunga_fee'   => (float) $fee->INTEREST_FEE,
+            'proses_fee'  => (float) $fee->PROCCESS_FEE,
+            'suku_bunga'  => (float) $fee->INTEREST_PERCENTAGE,
+            'total_bunga' => 0,
+            'flat_rate'   => 0,
+            'total'       => 0,
+        ];
+
+        if ($returnSingle) {
+            return $data;
+        }
+
+        return [
+            'id'          => $fee->ID,
+            'tipe'        => 'bunga_menurun',
+            'range_start' => 1,
+            'range_end'   => 999,
+            'tenor_6'     => $data,
+        ];
     }
+
 
     private function buildStrukturBulanan($links, $specificTenor = null, $plafond)
     {
@@ -531,58 +526,58 @@ class AdminFeeController extends Controller
         return $datas;
     }
 
-    private function buildStrukturBungaMenurun($links, $specificTenor = null, $plafond)
-    {
-        $struktur = $links->map(function ($link) {
-            return [
-                'fee_name' => $link['fee_name'],
-                '6_month' =>  floatval($link['6_month']),
-                '12_month' =>  floatval($link['12_month']),
-                '18_month' =>  floatval($link['18_month']),
-                '24_month' =>  floatval($link['24_month']),
-            ];
-        })->toArray();
+    // private function buildStrukturBungaMenurun($links, $specificTenor = null, $plafond)
+    // {
+    //     $struktur = $links->map(function ($link) {
+    //         return [
+    //             'fee_name' => $link['fee_name'],
+    //             '6_month' =>  floatval($link['6_month']),
+    //             '12_month' =>  floatval($link['12_month']),
+    //             '18_month' =>  floatval($link['18_month']),
+    //             '24_month' =>  floatval($link['24_month']),
+    //         ];
+    //     })->toArray();
 
-        $tenors = $specificTenor ? [$specificTenor] : ['6', '12', '18', '24'];
+    //     $tenors = $specificTenor ? [$specificTenor] : ['6', '12', '18', '24'];
 
-        $strukturTenors = [];
+    //     $strukturTenors = [];
 
-        foreach ($tenors as $tenor) {
-            $total = 0;
-            $tenor_name = $tenor . '_month';
+    //     foreach ($tenors as $tenor) {
+    //         $total = 0;
+    //         $tenor_name = $tenor . '_month';
 
-            foreach ($struktur as $s) {
-                $feeName = $s['fee_name'];
-                $feeValue = (int) $s[$tenor_name];
+    //         foreach ($struktur as $s) {
+    //             $feeName = $s['fee_name'];
+    //             $feeValue = (int) $s[$tenor_name];
 
-                $tenorData[$feeName] = $feeValue;
+    //             $tenorData[$feeName] = $feeValue;
 
-                if ($feeName !== 'eff_rate') {
-                    $total += $feeValue;
-                }
-            }
+    //             if ($feeName !== 'eff_rate') {
+    //                 $total += $feeValue;
+    //             }
+    //         }
 
-            $pokok_pembayaran = ($plafond + $total);
-            $eff_rate = $tenorData['eff_rate'];
+    //         $pokok_pembayaran = ($plafond + $total);
+    //         $eff_rate = $tenorData['eff_rate'];
 
-            $calc = round($pokok_pembayaran * ($eff_rate / 100), 2);
+    //         $calc = round($pokok_pembayaran * ($eff_rate / 100), 2);
 
-            if ($calc > 0) {
-                $tenorData['tenor'] = 5;
-                $tenorData['angsuran'] = $calc;
-                $tenorData['suku_bunga'] = $eff_rate;
-                $tenorData['total_bunga'] = round($calc * $tenor, 2);
-                $tenorData['flat_rate'] = 0;
-                $tenorData['eff_rate'] = 0;
-                $tenorData['total'] = $total;
-                $strukturTenors["tenor_$tenor"] = $tenorData;
-            }
-        }
+    //         if ($calc > 0) {
+    //             $tenorData['tenor'] = 5;
+    //             $tenorData['angsuran'] = $calc;
+    //             $tenorData['suku_bunga'] = $eff_rate;
+    //             $tenorData['total_bunga'] = round($calc * $tenor, 2);
+    //             $tenorData['flat_rate'] = 0;
+    //             $tenorData['eff_rate'] = 0;
+    //             $tenorData['total'] = $total;
+    //             $strukturTenors["tenor_$tenor"] = $tenorData;
+    //         }
+    //     }
 
-        $datas = !empty($plafond) ? $strukturTenors : [];
+    //     $datas = !empty($plafond) ? $strukturTenors : [];
 
-        return $datas;
-    }
+    //     return $datas;
+    // }
 
     function angsuran($pokok, $admin, $bunga, $tenor)
     {
