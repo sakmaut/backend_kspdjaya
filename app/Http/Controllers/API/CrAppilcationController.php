@@ -805,6 +805,7 @@ class CrAppilcationController extends Controller
                     'BRANCH' => $request->user()->branch_id,
                     'TENOR' => $check_survey_id->tenor ?? null,
                     'INSTALLMENT_TYPE' => $check_survey_id->jenis_angsuran ?? null,
+                    'INSTALLMENT' => $check_survey_id->angsuran ?? 0,
                     'VERSION' => 1,
                     'CREATE_DATE' => Carbon::now()->format('Y-m-d'),
                     'CREATE_BY' => $request->user()->id,
