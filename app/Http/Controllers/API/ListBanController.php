@@ -464,7 +464,7 @@ class ListBanController extends Controller
                     "OVERDUE AKHIR" => intval($result->OVERDUE_AKHIR) ?? 0,
                     "ANGSURAN" => intval($result->INSTALLMENT) ?? 0,
                     "ANGS KE" => intval($result->LAST_INST ?? ''),
-                    "TIPE ANGSURAN" => $result->pola_bayar ?? '',
+                    "TIPE ANGSURAN" => $result->pola_bayar === 'bunga_menurun' ? str_replace('_', '', $result->pola_bayar) : $result->pola_bayar ?? '',
                     "JTH TEMPO AWAL" => $result->F_ARR_CR_SCHEDL == '0' || $result->F_ARR_CR_SCHEDL == '' || $result->F_ARR_CR_SCHEDL == 'null' ? '' :  Carbon::parse($result->F_ARR_CR_SCHEDL)->format('m/d/Y'),
                     "JTH TEMPO AKHIR" => $result->curr_arr == '0' || $result->curr_arr == '' || $result->curr_arr == 'null' ? '' : Carbon::parse($result->curr_arr)->format('m/d/Y'),
                     "TGL BAYAR" => $result->LAST_PAY == '0' || $result->LAST_PAY == '' || $result->LAST_PAY == 'null' ? '' : Carbon::parse($result->LAST_PAY)->format('m/d/Y'),
