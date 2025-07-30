@@ -225,7 +225,7 @@ class ListBanController extends Controller
                                 col.POLICE_NUMBER,
                                 col.ENGINE_NUMBER,
                                 col.CHASIS_NUMBER,
-                                CAST(col.PRODUCTION_YEAR AS INT) AS PRODUCTION_YEAR,
+                                col.PRODUCTION_YEAR,
                                 replace(format(cl.PCPL_ORI-cl.TOTAL_ADMIN,0),',','') as NILAI_PINJAMAN,
                                 replace(format(cl.TOTAL_ADMIN,0),',','') as TOTAL_ADMIN,
                                 cl.CUST_CODE
@@ -334,7 +334,7 @@ class ListBanController extends Controller
                                 col.POLICE_NUMBER,
                                 col.ENGINE_NUMBER,
                                 col.CHASIS_NUMBER,
-                                CAST(col.PRODUCTION_YEAR AS INT) AS PRODUCTION_YEAR,
+                                col.PRODUCTION_YEAR,
                                 replace(format(cl.PCPL_ORI-cl.TOTAL_ADMIN,0),',','') as NILAI_PINJAMAN,
                                 replace(format(cl.TOTAL_ADMIN,0),',','') as TOTAL_ADMIN,
                                 cl.CUST_CODE
@@ -483,7 +483,7 @@ class ListBanController extends Controller
                     "NO POL" =>  $result->POLICE_NUMBER ?? '',
                     "NO MESIN" =>  $result->ENGINE_NUMBER ?? '',
                     "NO RANGKA" =>  $result->CHASIS_NUMBER ?? '',
-                    "TAHUN" =>  $result->PRODUCTION_YEAR ?? '',
+                    "TAHUN" => (int) $result->PRODUCTION_YEAR ?? '',
                     "NILAI PINJAMAN" => intval($result->NILAI_PINJAMAN) ?? 0,
                     "ADMIN" =>  intval($result->TOTAL_ADMIN) ?? '',
                     "CUST_ID" => is_numeric($result->CUST_CODE) ? intval($result->CUST_CODE ?? '') : $result->CUST_CODE ?? ''
