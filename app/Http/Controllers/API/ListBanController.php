@@ -225,7 +225,7 @@ class ListBanController extends Controller
                                 col.POLICE_NUMBER,
                                 col.ENGINE_NUMBER,
                                 col.CHASIS_NUMBER,
-                                CAST(col.PRODUCTION_YEAR AS INT) AS PRODUCTION_YEAR
+                                CAST(col.PRODUCTION_YEAR AS INT) AS PRODUCTION_YEAR,
                                 replace(format(cl.PCPL_ORI-cl.TOTAL_ADMIN,0),',','') as NILAI_PINJAMAN,
                                 replace(format(cl.TOTAL_ADMIN,0),',','') as TOTAL_ADMIN,
                                 cl.CUST_CODE
@@ -334,7 +334,7 @@ class ListBanController extends Controller
                                 col.POLICE_NUMBER,
                                 col.ENGINE_NUMBER,
                                 col.CHASIS_NUMBER,
-                                CAST(col.PRODUCTION_YEAR AS INT) AS PRODUCTION_YEAR
+                                CAST(col.PRODUCTION_YEAR AS INT) AS PRODUCTION_YEAR,
                                 replace(format(cl.PCPL_ORI-cl.TOTAL_ADMIN,0),',','') as NILAI_PINJAMAN,
                                 replace(format(cl.TOTAL_ADMIN,0),',','') as TOTAL_ADMIN,
                                 cl.CUST_CODE
