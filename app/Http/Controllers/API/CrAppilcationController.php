@@ -5,7 +5,6 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Validation\Validation;
-use App\Http\Resources\R_CrApplicationDetail;
 use App\Http\Resources\R_CrProspect;
 use App\Http\Resources\R_DetailDocument;
 use App\Models\M_ApplicationApproval;
@@ -455,6 +454,8 @@ class CrAppilcationController extends Controller
             'POKOK_PEMBAYARAN' => $request->ekstra['pokok_pembayaran'] ?? null,
             'NET_ADMIN' => $request->ekstra['net_admin'] ?? null,
             'TOTAL_ADMIN' => $request->ekstra['total'] ?? null,
+            'INTEREST_FEE' => $request->ekstra['bunga_fee'] ?? 0,
+            'PROCCESS_FEE' => $request->ekstra['proses_fee'] ?? 0,
             'CADANGAN' => $request->ekstra['cadangan'] ?? null,
             'PAYMENT_WAY' => $request->ekstra['cara_pembayaran'] ?? null,
             'PROVISION' => $request->ekstra['provisi'] ?? null,
