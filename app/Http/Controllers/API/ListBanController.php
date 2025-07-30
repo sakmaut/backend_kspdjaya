@@ -187,7 +187,7 @@ class ListBanController extends Controller
                                 cl.STATUS_REC,
                                 cl.STATUS_REC as STATUS_BEBAN,
                                 -- case when (cl.PERIOD/cl.INSTALLMENT_COUNT)=1 then 'REGULER' else 'MUSIMAN' end as pola_bayar,
-                                cl.CREDIT_TYPE as pola_bayar, 
+                                case when cl.CREDIT_TYPE = 'bulanan' then 'reguler' else cl.CREDIT_TYPE end as pola_bayar, 
                                 replace(format(coalesce(en.init_pcpl,0),0),',','') OS_PKK_AKHIR,
                                 replace(format(coalesce(en.init_int,0),0),',','') as OS_BNG_AKHIR,
                                 case when coalesce(datediff(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),en.first_arr),0) < 0 then 0
@@ -219,7 +219,7 @@ class ListBanController extends Controller
                                                 when en.arr_count > 8 then 'X'
                                                 else en.arr_count end) AS CYCLE_AKHIR,
                                 -- case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end as pola_bayar_akhir,
-                                cl.CREDIT_TYPE as pola_bayar_akhir, 
+                                case when cl.CREDIT_TYPE = 'bulanan' then 'reguler' else cl.CREDIT_TYPE end as pola_bayar_akhir, 
                                 col.COL_TYPE as jenis_jaminan,
                                 col.COLLATERAL,
                                 col.POLICE_NUMBER,
@@ -296,7 +296,7 @@ class ListBanController extends Controller
                                 cl.STATUS_REC,
                                 cl.STATUS_REC as STATUS_BEBAN,
                                 -- case when (cl.PERIOD/cl.INSTALLMENT_COUNT)=1 then 'REGULER' else 'MUSIMAN' end as pola_bayar,
-                                cl.CREDIT_TYPE as pola_bayar,
+                                case when cl.CREDIT_TYPE = 'bulanan' then 'reguler' else cl.CREDIT_TYPE end as pola_bayar,
                                 replace(format(coalesce(en.init_pcpl,0),0),',','') OS_PKK_AKHIR,
                                 replace(format(coalesce(en.init_int,0),0),',','') as OS_BNG_AKHIR,
                                 case when coalesce(datediff(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),en.first_arr),0) < 0 then 0
@@ -328,7 +328,7 @@ class ListBanController extends Controller
                                                 when en.arr_count > 8 then 'X'
                                                 else en.arr_count end) AS CYCLE_AKHIR,
                                 -- case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end as pola_bayar_akhir,
-                                cl.CREDIT_TYPE as pola_bayar_akhir,
+                                case when cl.CREDIT_TYPE = 'bulanan' then 'reguler' else cl.CREDIT_TYPE end as pola_bayar_akhir,
                                 col.COL_TYPE as jenis_jaminan,
                                 col.COLLATERAL,
                                 col.POLICE_NUMBER,
