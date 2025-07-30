@@ -186,7 +186,8 @@ class ListBanController extends Controller
                                                 else st.arr_count end) AS CYCLE_AWAL,
                                 cl.STATUS_REC,
                                 cl.STATUS_REC as STATUS_BEBAN,
-                                case when (cl.PERIOD/cl.INSTALLMENT_COUNT)=1 then 'REGULER' else 'MUSIMAN' end as pola_bayar,
+                                -- case when (cl.PERIOD/cl.INSTALLMENT_COUNT)=1 then 'REGULER' else 'MUSIMAN' end as pola_bayar,
+                                cl.CREDIT_TYPE as pola_bayar, 
                                 replace(format(coalesce(en.init_pcpl,0),0),',','') OS_PKK_AKHIR,
                                 replace(format(coalesce(en.init_int,0),0),',','') as OS_BNG_AKHIR,
                                 case when coalesce(datediff(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),en.first_arr),0) < 0 then 0
@@ -217,7 +218,8 @@ class ListBanController extends Controller
                                                         and case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'REGULER'  then 'M'
                                                 when en.arr_count > 8 then 'X'
                                                 else en.arr_count end) AS CYCLE_AKHIR,
-                                case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end as pola_bayar_akhir,
+                                -- case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end as pola_bayar_akhir,
+                                cl.CREDIT_TYPE as pola_bayar_akhir, 
                                 col.COL_TYPE as jenis_jaminan,
                                 col.COLLATERAL,
                                 col.POLICE_NUMBER,
@@ -293,7 +295,8 @@ class ListBanController extends Controller
                                                 else st.arr_count end) AS CYCLE_AWAL,
                                 cl.STATUS_REC,
                                 cl.STATUS_REC as STATUS_BEBAN,
-                                case when (cl.PERIOD/cl.INSTALLMENT_COUNT)=1 then 'REGULER' else 'MUSIMAN' end as pola_bayar,
+                                -- case when (cl.PERIOD/cl.INSTALLMENT_COUNT)=1 then 'REGULER' else 'MUSIMAN' end as pola_bayar,
+                                cl.CREDIT_TYPE as pola_bayar,
                                 replace(format(coalesce(en.init_pcpl,0),0),',','') OS_PKK_AKHIR,
                                 replace(format(coalesce(en.init_int,0),0),',','') as OS_BNG_AKHIR,
                                 case when coalesce(datediff(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),en.first_arr),0) < 0 then 0
@@ -324,7 +327,8 @@ class ListBanController extends Controller
                                                         and case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'REGULER'  then 'M'
                                                 when en.arr_count > 8 then 'X'
                                                 else en.arr_count end) AS CYCLE_AKHIR,
-                                case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end as pola_bayar_akhir,
+                                -- case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end as pola_bayar_akhir,
+                                cl.CREDIT_TYPE as pola_bayar_akhir,
                                 col.COL_TYPE as jenis_jaminan,
                                 col.COLLATERAL,
                                 col.POLICE_NUMBER,
@@ -428,7 +432,7 @@ class ListBanController extends Controller
                     "NAMA CABANG" => $result->NAMA_CABANG ?? '',
                     "NO KONTRAK" => is_numeric($result->NO_KONTRAK) ? intval($result->NO_KONTRAK ?? '') : $result->NO_KONTRAK ?? '',
                     "NAMA PELANGGAN" => $result->NAMA_PELANGGAN ?? '',
-                    "TGL BOOKING" => isset($result->TGL_BOOKING) && !empty($result->TGL_BOOKING) ?  Carbon::parse($result->TGL_BOOKING)->format('d/n/Y') : '',
+                    "TGL BOOKING" => isset($result->TGL_BOOKING) && !empty($result->TGL_BOOKING) ?  Carbon::parse($result->TGL_BOOKING)->format('m/d/Y') : '',
                     "UB" => $result->UB ?? '',
                     "PLATFORM" => $result->PLATFORM ?? '',
                     "ALAMAT TAGIH" => $result->ALAMAT_TAGIH ?? '',
