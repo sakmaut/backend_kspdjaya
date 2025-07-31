@@ -493,10 +493,6 @@ class ListBanController extends Controller
                     "ADMIN" =>  intval($result->TOTAL_ADMIN) ?? '',
                     "CUST_ID" => is_numeric($result->CUST_CODE) ? intval($result->CUST_CODE ?? '') : $result->CUST_CODE ?? ''
                 ];
-
-                echo "Value: '" . $result->LAST_PAY . "'";
-                echo "\nType: " . gettype($result->LAST_PAY);
-                echo "\nLength: " . strlen($result->LAST_PAY);
             }
 
             return response()->json($build, 200);
