@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\M_Branch;
 use App\Models\User;
 use Carbon\Carbon;
+use DateTime;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 
 class ListBanController extends Controller
@@ -467,7 +469,7 @@ class ListBanController extends Controller
                     "TIPE ANGSURAN" => $result->pola_bayar === 'bunga_menurun' ? str_replace('_', ' ', $result->pola_bayar) : $result->pola_bayar ?? '',
                     "JTH TEMPO AWAL" => $result->F_ARR_CR_SCHEDL == '0' || $result->F_ARR_CR_SCHEDL == '' || $result->F_ARR_CR_SCHEDL == 'null' ? '' :  Carbon::parse($result->F_ARR_CR_SCHEDL)->format('m/d/Y'),
                     "JTH TEMPO AKHIR" => $result->curr_arr == '0' || $result->curr_arr == '' || $result->curr_arr == 'null' ? '' : Carbon::parse($result->curr_arr)->format('m/d/Y'),
-                    "TGL BAYAR" => $result->LAST_PAY == '0' || $result->LAST_PAY == '' || $result->LAST_PAY == 'null' ? '' : Carbon::parse($result->LAST_PAY)->format('m-d-Y'),
+                    "TGL BAYAR" => $result->LAST_PAY == '0' || $result->LAST_PAY == '' || $result->LAST_PAY == 'null' ? '' : date('m/d/Y', strtotime($result->LAST_PAY)),
                     "KOLEKTOR" => $result->COLLECTOR,
                     "CARA BYR" => $result->cara_bayar,
                     "AMBC PKK_AKHIR" => intval($result->AMBC_PKK_AKHIR) ?? 0,
