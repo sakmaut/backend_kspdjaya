@@ -1152,7 +1152,7 @@ class CrAppilcationController extends Controller
                 'tenor' => intval($application->TENOR),
                 'bunga' => $applicationDetail->INTEREST_RATE != null || $applicationDetail->INTEREST_RATE != 0 || !empty($applicationDetail->INTEREST_RATE) ? floatval($applicationDetail->INTEREST_RATE)  : floatval($cr_survey->interest_month),
                 "biaya_admin" => $applicationDetail->NET_ADMIN != null || $applicationDetail->NET_ADMIN != 0 || !empty($applicationDetail->NET_ADMIN) ? intval($applicationDetail->NET_ADMIN)  : 0,
-                'pokok_pembayaran' => $applicationDetail->POKOK_PEMBAYARAN != null || $applicationDetail->POKOK_PEMBAYARAN != 0 || !empty($applicationDetail->POKOK_PEMBAYARAN) ? intval($applicationDetail->POKOK_PEMBAYARAN)  : intval($cr_survey->plafond),
+                // 'pokok_pembayaran' => $applicationDetail->POKOK_PEMBAYARAN != null || $applicationDetail->POKOK_PEMBAYARAN != 0 || !empty($applicationDetail->POKOK_PEMBAYARAN) ? intval($applicationDetail->POKOK_PEMBAYARAN)  : intval($cr_survey->plafond),
                 "flat_rate" => $applicationDetail->FLAT_RATE != null || $applicationDetail->FLAT_RATE != 0 || !empty($applicationDetail->FLAT_RATE) ? floatval($applicationDetail->FLAT_RATE) : $this->calculateFlatRate($data->plafond, $data->tenor, $data->installment, $data->interest_year)['flat_rate'] ?? 0,
             ],
             'jaminan' => [],
@@ -1279,7 +1279,7 @@ class CrAppilcationController extends Controller
         $angsuran = ceil(round($set_angs, 3) / 1000) * 1000;
 
         $flat_rate = excelRate($term, -$angsuran, $remainingBalance) * 100;
-        
+
         $suku_bunga = ((12 * ($angsuran - ($remainingBalance / $term))) / $remainingBalance) * 100;
         $total_bunga = round(($remainingBalance * ($suku_bunga / 100) / 12) * $term, 2);
 
