@@ -209,8 +209,8 @@ class CollateralRepository implements CollateralInterface
                     $credit->update([
                         'STATUS_REC' => 'RP',
                         'STATUS' => 'D',
-                        'MOD_DATE' => $now,
-                        'MOD_USER' => $userId,
+                        'SITA_AT' => $now,
+                        'SITA_BY' => $userId,
                     ]);
                 }
 
@@ -249,6 +249,13 @@ class CollateralRepository implements CollateralInterface
 
                         M_PaymentDetail::create($detailPayment);
                     }
+
+                    $credit->update([
+                        'STATUS_REC' => 'RP',
+                        'STATUS' => 'D',
+                        'JUAL_AT' => $now,
+                        'JUAL_BY' => $userId,
+                    ]);
 
                     $this->locationStatus->createLocationStatusLog($colId, $request->user()->branch_id, 'JUAL UNIT');
                 } else {
