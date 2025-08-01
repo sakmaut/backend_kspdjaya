@@ -208,7 +208,10 @@ class CollateralRepository implements CollateralInterface
                 if ($credit) {
                     $credit->update([
                         'STATUS_REC' => 'RP',
-                        'STATUS' => 'D',
+                        'STATUS' => 'D'
+                    ]);
+
+                    $findCollateralById->update([
                         'SITA_AT' => $now,
                         'SITA_BY' => $userId,
                     ]);
@@ -252,9 +255,12 @@ class CollateralRepository implements CollateralInterface
 
                     $credit->update([
                         'STATUS_REC' => 'RP',
-                        'STATUS' => 'D',
-                        'JUAL_AT' => $now,
-                        'JUAL_BY' => $userId,
+                        'STATUS' => 'D'
+                    ]);
+
+                    $findCollateralById->update([
+                        'SITA_AT' => $now,
+                        'SITA_BY' => $userId,
                     ]);
 
                     $this->locationStatus->createLocationStatusLog($colId, $request->user()->branch_id, 'JUAL UNIT');
