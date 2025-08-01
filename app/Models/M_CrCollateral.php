@@ -39,7 +39,11 @@ class M_CrCollateral extends Model
         'MOD_DATE',
         'MOD_BY',
         'DELETED_AT',
-        'DELETED_BY'
+        'DELETED_BY',
+        'SITA_BY',
+        'SITA_AT',
+        'JUAL_BY',
+        'JUAL_AT',
     ];
 
     protected $guarded = [];
