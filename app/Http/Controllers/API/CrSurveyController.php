@@ -139,7 +139,7 @@ class CrSurveyController extends Controller
             'visit_date' => isset($request->data_survey['tgl_survey']) && !empty($request->data_survey['tgl_survey']) ? $request->data_survey['tgl_survey'] : null,
             'tujuan_kredit' => $request->order['tujuan_kredit'] ?? null,
             'plafond' => $request->order['plafond'] ?? null,
-            'angsuran' => (float) $angsuran ?? 0,
+            'angsuran' => (float) $angsuranModel->getAttribute('INSTALLMENT') ?? 0,
             'tenor' => $request->order['tenor'] ?? null,
             'category' => $request->order['category'] ?? null,
             'jenis_angsuran' => $request->order['jenis_angsuran'] ?? null,
