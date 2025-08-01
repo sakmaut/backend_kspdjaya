@@ -51,6 +51,10 @@ class M_Credit extends Model
         'MOD_USER',
         'DELETED_BY',
         'DELETED_AT',
+        'SITA_BY',
+        'SITA_AT',
+        'JUAL_BY',
+        'JUAL_AT',
     ];
     protected $guarded = [];
     public $incrementing = false;
