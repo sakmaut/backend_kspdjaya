@@ -131,6 +131,10 @@ class CrSurveyController extends Controller
 
         if ($request->order['jenis_angsuran'] === 'bunga_menurun') {
             $angsuran = $this->s_bungaMenurunFee->getFeeByLoanAmount($plafond);
+        }else{
+            $angsuran = (object) [
+                'INSTALLMENT' => 0
+            ];
         }
 
         $data_array = [
