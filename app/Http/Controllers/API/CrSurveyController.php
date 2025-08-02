@@ -129,9 +129,9 @@ class CrSurveyController extends Controller
     {
         $plafond = (int) $request->order['plafond'];
 
-        // if ($request->order['jenis_angsuran'] === 'bunga_menurun') {
-        //     $angsuran = $this->s_bungaMenurunFee->getFeeByLoanAmount($plafond);
-        // }
+        if ($request->order['jenis_angsuran'] === 'bunga_menurun') {
+            $angsuran = $this->s_bungaMenurunFee->getFeeByLoanAmount($plafond);
+        }
 
         $data_array = [
             'id' => $request->id,
@@ -139,7 +139,7 @@ class CrSurveyController extends Controller
             'visit_date' => isset($request->data_survey['tgl_survey']) && !empty($request->data_survey['tgl_survey']) ? $request->data_survey['tgl_survey'] : null,
             'tujuan_kredit' => $request->order['tujuan_kredit'] ?? null,
             'plafond' => $request->order['plafond'] ?? null,
-            // 'angsuran' => (float) $angsuran->INSTALLMENT ?? 0,
+            'angsuran' => (float) $angsuran->INSTALLMENT ?? 0,
             'angsuran' => 0,
             'tenor' => $request->order['tenor'] ?? null,
             'category' => $request->order['category'] ?? null,
