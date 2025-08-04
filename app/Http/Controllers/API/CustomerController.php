@@ -74,6 +74,8 @@ class CustomerController extends Controller
             $data = [
                 'NAME' => $request->nama,
                 'ALIAS' => $request->nama_panggilan,
+                'ID_NUMBER' => $request->pelanggan['no_identitas'],
+                'KK_NUMBER' => $request->pelanggan['no_kk'],
                 // 'GENDER' => $request->pelanggan['jenis_kelamin'],
                 // 'BIRTHPLACE' => $request->pelanggan['tempat_lahir'],
                 // 'BIRTHDATE' => date('Y-m-d', strtotime($request->pelanggan['tgl_lahir'])),
@@ -82,8 +84,6 @@ class CustomerController extends Controller
                 // 'MARTIAL_STATUS' => $request->pelanggan['status_kawin'],
                 // 'MARTIAL_DATE' => date('Y-m-d', strtotime($request->pelanggan['tgl_kawin'])),
                 // 'ID_TYPE' => $request->pelanggan['tipe_identitas'],
-                // 'ID_NUMBER' => $request->pelanggan['no_identitas'],
-                // 'KK_NUMBER' => $request->pelanggan['no_kk'],
                 // 'ID_ISSUE_DATE' => date('Y-m-d', strtotime($request->pelanggan['tgl_terbit_identitas'])),
                 // 'ID_VALID_DATE' => date('Y-m-d', strtotime($request->pelanggan['masa_berlaku_identitas'])),
                 // 'KK' => $request->pelanggan['no_kk'],
