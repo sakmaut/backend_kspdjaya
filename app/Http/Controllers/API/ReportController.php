@@ -208,9 +208,9 @@ class ReportController extends Controller
     public function debitur(Request $request, $id)
     {
         try {
-            $customer = M_Customer::with('customer_extra')->find($id);
+            $credit = M_Credit::with(['customer', 'customer.customer_extra'])->select('ID', 'LOAN_NUMBER', 'CUST_CODE', 'MCF_ID')->find($id);
 
-            $result = $customer ? new R_DebiturReportAR($customer) : [];
+            $result = $credit ? new R_DebiturReportAR($credit) : [];
 
             return response()->json($result, 200);
         } catch (\Exception $e) {
