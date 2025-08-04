@@ -131,6 +131,10 @@ class CrSurveyController extends Controller
 
         if ($request->order['jenis_angsuran'] === 'bunga_menurun') {
             $angsuran = $this->s_bungaMenurunFee->getFeeByLoanAmount($plafond);
+        }else{
+            $angsuran = (object) [
+                'INSTALLMENT' => 0
+            ];
         }
 
         $data_array = [
@@ -140,6 +144,7 @@ class CrSurveyController extends Controller
             'tujuan_kredit' => $request->order['tujuan_kredit'] ?? null,
             'plafond' => $request->order['plafond'] ?? null,
             'angsuran' => (float) $angsuran->INSTALLMENT ?? 0,
+            'angsuran' => 0,
             'tenor' => $request->order['tenor'] ?? null,
             'category' => $request->order['category'] ?? null,
             'jenis_angsuran' => $request->order['jenis_angsuran'] ?? null,
