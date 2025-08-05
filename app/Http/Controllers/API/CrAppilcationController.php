@@ -1475,20 +1475,43 @@ class CrAppilcationController extends Controller
 
     public function check_order_document(Request $request)
     {
-        $credit = M_Credit::with([
-            'customer' => function ($query) {
-                $query->select('ID', 'CUST_CODE', 'NAME');
-            },
-            'customer.customer_document',
-            'collateral' => function ($query) {
-                $query->select('ID', 'CR_CREDIT_ID');
-            },
-            'collateral.documents'
-        ])
-            ->select('ID', 'LOAN_NUMBER', 'CUST_CODE')
-            ->orderByDesc('CREATED_AT')
-            ->limit(15)
-            ->get();
+        $loan_number = $request->loan_number;
+        $atas_nama = $request->atas_nama;
+        $cabang = $request->cabang;
+
+        $query = M_Credit::select(
+            'credit.ID',
+            'credit.LOAN_NUMBER',
+            'credit.CUST_CODE',
+            'customer.NAME',
+            'branch.NAME as nama_cabang'
+        )
+            ->join('customer', 'credit.CUST_CODE', '=', 'customer.CUST_CODE')
+            ->join('branch', 'credit.BRANCH', '=', 'branch.ID')
+            ->with([
+                'customer:ID,CUST_CODE,NAME',
+                'customer.customer_document',
+                'collateral:ID,CR_CREDIT_ID',
+                'collateral.documents'
+            ])
+            ->orderByDesc('credit.CREATED_AT');
+
+        if (!empty($loan_number)) {
+            $query->where('credit.LOAN_NUMBER', $loan_number);
+        }
+
+        if (!empty($atas_nama)) {
+            $query->where('customer.NAME', 'like', "%$atas_nama%");
+        }
+
+        if (!empty($cabang)) {
+            $query->where('branch.CODE', $cabang);
+        }
+
+        $query->limit(15);
+
+        $credit = $query->get();
+
 
         $dto = R_DetailDocument::collection($credit);
 
