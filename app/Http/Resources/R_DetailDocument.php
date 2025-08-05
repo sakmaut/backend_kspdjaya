@@ -20,7 +20,8 @@ class R_DetailDocument extends JsonResource
 
         return [
             "no_kontrak"     => $this->LOAN_NUMBER,
-            "atas_nama"      => $this->customer->NAME ?? '',
+            "atas_nama"      => $this->NAME ?? '',
+            "nama_cabang"      => $this->nama_cabang ?? '',
 
             // Dokumen customer
             "ktp"            => $customer_doc->get('ktp')['PATH'] ?? '',
