@@ -1496,15 +1496,15 @@ class CrAppilcationController extends Controller
             ])
             ->orderByDesc('credit.CREATED_AT');
 
-        if (!empty($loan_number)) {
+        if (!empty($loan_number) || $loan_number != 'undefined') {
             $query->where('credit.LOAN_NUMBER', $loan_number);
         }
 
-        if (!empty($atas_nama)) {
+        if (!empty($atas_nama) || $atas_nama != 'undefined') {
             $query->where('customer.NAME', 'like', "%$atas_nama%");
         }
 
-        if (!empty($cabang)) {
+        if (!empty($cabang) || $cabang != 'undefined') {
             $query->where('branch.CODE', $cabang);
         }
 
