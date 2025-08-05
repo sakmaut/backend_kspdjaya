@@ -14,20 +14,27 @@ class R_DetailDocument extends JsonResource
      */
     public function toArray(Request $request): array
     {
+
+        $customer_doc = collect($this->customer->customer_document ?? [])->keyBy('TYPE');
+        $collateral_doc = collect($this->collateral->documents ?? [])->keyBy('TYPE');
+
         return [
-            "no_kontrak" => $this->credit['LOAN_NUMBER'],
-            "atas_nama" => $this->credit['customer']['NAME'],
-            // "ktp" => $this->customer['NAME'],
-            // kk: 'https://i.pinimg.com/474x/e7/ac/62/e7ac62da918dc5d72062953570bac97f.jpg',
-            // ktp_pasangan: 'https://i.pinimg.com/474x/e7/ac/62/e7ac62da918dc5d72062953570bac97f.jpg',
-            // no_rangka: 'https://i.pinimg.com/474x/e7/ac/62/e7ac62da918dc5d72062953570bac97f.jpg',
-            // no_mesin: 'https://i.pinimg.com/474x/e7/ac/62/e7ac62da918dc5d72062953570bac97f.jpg',
-            // stnk: 'https://i.pinimg.com/474x/e7/ac/62/e7ac62da918dc5d72062953570bac97f.jpg',
-            // depan: 'https://i.pinimg.com/474x/e7/ac/62/e7ac62da918dc5d72062953570bac97f.jpg',
-            // belakang: 'https://i.pinimg.com/474x/e7/ac/62/e7ac62da918dc5d72062953570bac97f.jpg',
-            // kanan: 'https://i.pinimg.com/474x/e7/ac/62/e7ac62da918dc5d72062953570bac97f.jpg',
-            // kiri: 'https://i.pinimg.com/474x/e7/ac/62/e7ac62da918dc5d72062953570bac97f.jpg',
-            // dok_pendukung: 'https://i.pinimg.com/474x/e7/ac/62/e7ac62da918dc5d72062953570bac97f.jpg',
+            "no_kontrak"     => $this->LOAN_NUMBER,
+            "atas_nama"      => $this->customer->NAME ?? '',
+
+            // Dokumen customer
+            "ktp"            => $customer_doc->get('ktp')['PATH'] ?? '',
+            "kk"             => $customer_doc->get('kk')['PATH'] ?? '',
+            "ktp_pasangan"   => $customer_doc->get('ktp_pasangan')['PATH'] ?? '',
+
+            // Dokumen collateral
+            "no_rangka"      => $collateral_doc->get('no_rangka')['PATH'] ?? '',
+            "no_mesin"       => $collateral_doc->get('no_mesin')['PATH'] ?? '',
+            "stnk"           => $collateral_doc->get('stnk')['PATH'] ?? '',
+            "depan"          => $collateral_doc->get('depan')['PATH'] ?? '',
+            "belakang"       => $collateral_doc->get('belakang')['PATH'] ?? '',
+            "kanan"          => $collateral_doc->get('kanan')['PATH'] ?? '',
+            "kiri"           => $collateral_doc->get('kiri')['PATH'] ?? '',
         ];
     }
 }

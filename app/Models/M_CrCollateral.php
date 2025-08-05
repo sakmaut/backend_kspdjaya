@@ -75,4 +75,9 @@ class M_CrCollateral extends Model
     {
         return $this->belongsTo(M_Branch::class, 'LOCATION_BRANCH', 'ID');
     }
+
+    public function documents()
+    {
+        return $this->hasMany(M_CrCollateralDocument::class, 'COLLATERAL_ID', 'ID');
+    }
 }

@@ -69,7 +69,7 @@ class M_Credit extends Model
 
     public function collateral()
     {
-        return $this->hasMany(M_CrCollateral::class, 'CR_CREDIT_ID', 'ID');
+        return $this->hasOne(M_CrCollateral::class, 'CR_CREDIT_ID', 'ID');
     }
 
     public function customer()
