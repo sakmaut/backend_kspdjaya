@@ -137,45 +137,45 @@ class CrAppilcationController extends Controller
     public function show(Request $request, $id)
     {
         try {
-            // $check = M_CrApplication::where('CR_SURVEY_ID', $id)->whereNull('deleted_at')->first();
+            $check = M_CrApplication::where('CR_SURVEY_ID', $id)->whereNull('deleted_at')->first();
 
-            // if (!$check) {
-            //     $check_application_id = M_CrApplication::where('ID', $id)->whereNull('deleted_at')->first();
-            // } else {
-            //     $check_application_id = $check;
-            // }
+            if (!$check) {
+                $check_application_id = M_CrApplication::where('ID', $id)->whereNull('deleted_at')->first();
+            } else {
+                $check_application_id = $check;
+            }
 
-            // $surveyID = $check_application_id->CR_SURVEY_ID;
+            $surveyID = $check_application_id->CR_SURVEY_ID;
 
-            // if (!isset($surveyID)  || $surveyID == '') {
-            //     throw new Exception("Id FPK Is Not Exist", 404);
-            // }
-
-            // $detail_prospect = M_CrSurvey::where('id', $surveyID)->first();
-
-            $getSurvey = M_CrSurvey::with([
-                'cr_application',
-                'cr_application.cr_personal',
-                'cr_application.cr_personal_extra',
-                'cr_application.cr_oder',
-                'cr_application.cr_guarantor',
-                'cr_application.cr_spouse',
-                'cr_application.approval',
-                'cr_application.credit',
-                'cr_guarante_vehicle',
-                'cr_guarante_sertification',
-            ])->where('id', $id)->first();
-
-            if (!$getSurvey) {
+            if (!isset($surveyID)  || $surveyID == '') {
                 throw new Exception("Id FPK Is Not Exist", 404);
             }
 
-            $dto = new R_CrApplicationDetail($getSurvey);
+            $detail_prospect = M_CrSurvey::where('id', $surveyID)->first();
 
-            return response()->json($dto, 200);
+            // $getSurvey = M_CrSurvey::with([
+            //     'cr_application',
+            //     'cr_application.cr_personal',
+            //     'cr_application.cr_personal_extra',
+            //     'cr_application.cr_oder',
+            //     'cr_application.cr_guarantor',
+            //     'cr_application.cr_spouse',
+            //     'cr_application.approval',
+            //     'cr_application.credit',
+            //     'cr_guarante_vehicle',
+            //     'cr_guarante_sertification',
+            // ])->where('id', $id)->first();
+
+            // if (!$getSurvey) {
+            //     throw new Exception("Id FPK Is Not Exist", 404);
+            // }
+
+            // $dto = new R_CrApplicationDetail($getSurvey);
+
+            // return response()->json($dto, 200);
             // die;
 
-            // return response()->json(['response' =>  $this->resourceDetail($detail_prospect, $check_application_id)], 200);
+            return response()->json(['response' =>  $this->resourceDetail($detail_prospect, $check_application_id)], 200);
         } catch (\Exception $e) {
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
