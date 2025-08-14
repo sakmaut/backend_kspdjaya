@@ -17,7 +17,7 @@ class R_CrApplicationDetail extends JsonResource
     public function toArray(Request $request): array
     {
         $arrayList = [
-            'id_application' => $this->cr_application->ID,
+            'id_application' => $this->cr_application->ID ?? '',
             'survey_id' => $this->id,
             'order_number' => $this->cr_application->ORDER_NUMBER,
             "flag" => $this->cr_application->credit->ID ? 1 : 0,
