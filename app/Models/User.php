@@ -25,6 +25,7 @@ class User extends Authenticatable
         'alamat',
         'gender',
         'status',
+        'keterangan',
         'mobile_number',
         'profile_photo_path',
         'created_by',
