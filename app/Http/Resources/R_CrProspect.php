@@ -26,11 +26,28 @@ class R_CrProspect extends JsonResource
         $check_exist = M_Credit::where('ORDER_NUMBER', $this->order_number)->first();
         $getApproval = M_SurveyApproval::where('CR_SURVEY_ID', $this->id)->first();
 
+        $type = empty($this->INSTALLMENT_TYPE) ? ($this->jenis_angsuran ?? '') : ($this->INSTALLMENT_TYPE ?? '');
+
+        switch (strtolower($type)) {
+            case 'bunga_menurun':
+                $jenis_angsuran =  'BUNGA MENURUN';
+                break;
+            case 'bulanan':
+                $jenis_angsuran =  'BULANAN';
+                break;
+            case 'musiman':
+                $jenis_angsuran =  'MUSIMAN';
+                break;
+            default:
+                $jenis_angsuran=  $type;
+                break;
+        }
+
         $data = [
             'id' => $this->id,
             "flag" => !$check_exist ? 0 : 1,
             "credit_id" => !$check_exist ? null : $check_exist->ID ?? null,
-            "jenis_angsuran" =>  empty($this->INSTALLMENT_TYPE) ? $this->jenis_angsuran ?? '' : $this->INSTALLMENT_TYPE ?? '',
+            "jenis_angsuran" =>  $jenis_angsuran,
             'order_number' => $this->order_number,
             'visit_date' => $this->visit_date  == null ? null : date('d-m-Y', strtotime($this->visit_date)),
             'nama_debitur' => $this->nama_debitur,
