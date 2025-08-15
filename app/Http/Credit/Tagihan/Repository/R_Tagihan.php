@@ -136,4 +136,9 @@ class R_Tagihan
     {
         return $this->model->create($fields);
     }
+
+    protected function deleteByUserId($userId)
+    {
+        return $this->model->where('USER_ID', $userId)->delete();
+    }
 }

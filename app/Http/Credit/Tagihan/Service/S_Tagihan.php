@@ -19,8 +19,29 @@ class S_Tagihan extends R_Tagihan
         return $sql;
     }
 
-    public function createTagihan($fields)
+    public function createTagihan($request, $id = "")
     {
-        return $this->repository->create($fields);
+        $savedData = [];
+
+        if (!empty($id)) {
+            $this->repository->deleteByUserId($request['user_id']);
+        }
+
+        foreach ($request['list_tagihan'] as $item) {
+            $detailData = [
+                'USER_ID'      => $request['user_id'],
+                'LOAN_NUMBER'  => $item['loan_number'],
+                'TGL_JTH_TEMPO' => $item['tgl_jth_tmp'],
+                'NAMA_CUST'    => $item['nama_cust'],
+                'CYCLE_AWAL'   => $item['cycle_awal'],
+                'ALAMAT'       => $item['alamat'],
+                'CREATED_BY'   => $request->user()->id ?? null,
+            ];
+
+            $saved = $this->repository->create($detailData);
+            $savedData[] = $saved;
+        }
+
+        return $savedData;
     }
 }

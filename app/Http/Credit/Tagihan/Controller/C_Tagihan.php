@@ -6,7 +6,10 @@ use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
 use App\Http\Credit\Tagihan\Service\S_Tagihan;
 use App\Http\Resources\R_TagihanDetail;
+use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class C_Tagihan extends Controller
 {
@@ -42,16 +45,57 @@ class C_Tagihan extends Controller
 
     public function store(Request $request)
     {
-        // TODO: implement store
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required|integer',
+            'list_tagihan' => 'required|array|min:1',
+            'list_tagihan.*.loan_number' => 'required|string',
+            'list_tagihan.*.tgl_jth_tmp' => 'required|date'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        DB::beginTransaction();
+        try {
+            $data = $this->service->createTagihan($request);
+
+            DB::commit();
+            return response()->json($data, 200);
+        } catch (Exception $e) {
+            DB::rollback();
+            return $this->log->logError($e, $request);
+        }
     }
 
     public function update(Request $request, $id)
     {
-        // TODO: implement update
-    }
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required|integer',
+            'list_tagihan' => 'required|array|min:1',
+            'list_tagihan.*.loan_number' => 'required|string',
+            'list_tagihan.*.tgl_jth_tmp' => 'required|date',
+        ]);
 
-    public function destroy($id)
-    {
-        // TODO: implement destroy
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        DB::beginTransaction();
+        try {
+            $data = $this->service->createTagihan($request, $id);
+
+            DB::commit();
+            return response()->json($data, 200);
+        } catch (Exception $e) {
+            DB::rollback();
+            return $this->log->logError($e, $request);
+        }
     }
 }

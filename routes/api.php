@@ -189,6 +189,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
 
     //Tagihan
     Route::resource('tagihan', C_Tagihan::class);
+    // Route::get('tagihan_by_user', C_Tagihan::class);
 });
 
 
