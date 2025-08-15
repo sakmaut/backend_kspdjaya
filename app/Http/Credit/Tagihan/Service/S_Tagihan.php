@@ -13,9 +13,14 @@ class S_Tagihan extends R_Tagihan
         $this->repository = $repository;
     }
 
-    public function getAllListTagihan()
+    public function getListTagihan($request)
     {
-        $sql = $this->repository->getAllListTagihan();
+        $sql = $this->repository->getAllListTagihan($request);
         return $sql;
+    }
+
+    public function createTagihan($fields)
+    {
+        return $this->repository->create($fields);
     }
 }

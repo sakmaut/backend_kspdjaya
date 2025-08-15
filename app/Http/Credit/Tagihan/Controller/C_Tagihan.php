@@ -25,7 +25,7 @@ class C_Tagihan extends Controller
     public function index(Request $request)
     {
         try {
-            $data = $this->service->getAllListTagihan();
+            $data = $this->service->getListTagihan($request);
 
             $dto = R_TagihanDetail::collection($data);
 

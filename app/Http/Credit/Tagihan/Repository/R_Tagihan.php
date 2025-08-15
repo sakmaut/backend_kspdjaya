@@ -14,9 +14,11 @@ class R_Tagihan
         $this->model = $model;
     }
 
-    protected function getAllListTagihan()
+    protected function getAllListTagihan($request)
     {
         $dateFrom = date('mY', strtotime(now()));
+        $currentBranch = $request->user()->branch_id;
+        $currentPosition = $request->user()->position_id;
 
         $sql = "SELECT	CONCAT(b.CODE, '-', b.CODE_NUMBER) AS KODE,
                                 b.NAME AS NAMA_CABANG,
@@ -123,7 +125,15 @@ class R_Tagihan
                                     or (cl.STATUS_REC = 'RP' and cl.mod_user <> 'exclude jaminan' and cast(cl.LOAN_NUMBER as char) not in (select cast(pp.LOAN_NUM as char) from payment pp where pp.ACC_KEY = 'JUAL UNIT'))
                                     or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char) from temp_lis_02C )))";
 
+        if ($currentBranch) {
+            $sql .= " AND b.ID = '$currentBranch'";
+        }
 
         return DB::select($sql);
+    }
+
+    protected function create($fields)
+    {
+        return $this->model->create($fields);
     }
 }

@@ -10,9 +10,22 @@ class M_Tagihan extends Model
 {
     use HasFactory;
 
-    protected $table = '';
-    protected $fillable = [];
-    protected $guarded = [];
+    protected $table = 'tagihan';
+    protected $fillable = [
+        'ID',
+        'USER_ID',
+        'LOAN_NUMBER',
+        'TGL_JTH_TEMPO',
+        'NAMA_CUST',
+        'CYCLE_AWAL',
+        'ALAMAT',
+        'CREATED_BY',
+        'CREATED_AT',
+        'UPDATED_BY',
+        'UPDATED_AT',
+        'DELETED_BY',
+        'DELETED_AT'
+    ];
 
     public $incrementing = false;
     protected $keyType = 'string';

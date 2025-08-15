@@ -188,7 +188,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::get('check_order_document', [CrAppilcationController::class, 'check_order_document']);
 
     //Tagihan
-    Route::get('tagihan', [C_Tagihan::class, 'index']);
+    Route::resource('tagihan', C_Tagihan::class);
 });
 
 
