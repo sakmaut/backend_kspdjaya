@@ -32,6 +32,7 @@ use App\Http\Controllers\API\{
 use App\Http\Controllers\Payment\Controller\C_PokokSebagian;
 use App\Http\Controllers\Payment\Service\S_PokokSebagian;
 use App\Http\Controllers\Welcome;
+use App\Http\Credit\Tagihan\Controller\C_Tagihan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -185,6 +186,9 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
 
     Route::resource('phone_book', PhoneBookController::class);
     Route::get('check_order_document', [CrAppilcationController::class, 'check_order_document']);
+
+    //Tagihan
+    Route::get('tagihan', [C_Tagihan::class, 'index']);
 });
 
 
