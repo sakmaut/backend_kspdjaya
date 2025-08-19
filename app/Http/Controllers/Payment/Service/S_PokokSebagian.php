@@ -353,7 +353,7 @@ class S_PokokSebagian
         // Step 2: Process payment status
         $isPaid = ($principalDetail + $interestDetail) == ($totalPrincipal + $totalInterest);
 
-        if (!$isPaid && $paidPrincipal != 0 && $paidInterest != 0) {
+        if (!$isPaid && ($paidPrincipal != 0 || $paidInterest != 0)) {
             $insufficient = $totalPaid - $installmentValue;
 
             $schedule->update([
