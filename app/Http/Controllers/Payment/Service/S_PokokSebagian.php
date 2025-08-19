@@ -350,10 +350,9 @@ class S_PokokSebagian
 
         $schedule->update($fields); // Update awal
 
-        // Step 2: Process payment status
         $isPaid = ($principalDetail + $interestDetail) == ($totalPrincipal + $totalInterest);
 
-        if (!$isPaid && ($paidPrincipal != 0 || $paidInterest != 0)) {
+        if (!$isPaid && $paidPrincipal != 0 || $paidInterest != 0) {
             $insufficient = $totalPaid - $installmentValue;
 
             $schedule->update([
@@ -417,7 +416,7 @@ class S_PokokSebagian
             'ENTRY_DATE' => now(),
             'SUSPENSION_PENALTY_FLAG' => $request->penangguhan_denda ?? '',
             'TITLE' => 'Pembayaran Pokok Sebagian',
-            'ORIGINAL_AMOUNT' => $totalPayment,
+            'ORIGINAL_AMOUNT' => $totalPayment ?? 0,
             'OS_AMOUNT' => $os_amount ?? 0,
             'START_DATE' => $tgl_angsuran ?? null,
             'END_DATE' => now(),
@@ -431,17 +430,21 @@ class S_PokokSebagian
             M_Payment::create($paymentData);
         }
 
-        M_PaymentDetail::create([
-            'PAYMENT_ID' => $uid,
-            'ACC_KEYS' => 'ANGSURAN_POKOK',
-            'ORIGINAL_AMOUNT' => $bayarPokok
-        ]);
+        if ($bayarPokok != 0) {
+            M_PaymentDetail::create([
+                'PAYMENT_ID' => $uid,
+                'ACC_KEYS' => 'ANGSURAN_POKOK',
+                'ORIGINAL_AMOUNT' => $bayarPokok
+            ]);
+        }
 
-        M_PaymentDetail::create([
-            'PAYMENT_ID' => $uid,
-            'ACC_KEYS' => 'ANGSURAN_BUNGA',
-            'ORIGINAL_AMOUNT' => $bayarBunga
-        ]);
+        if ($bayarBunga != 0) {
+            M_PaymentDetail::create([
+                'PAYMENT_ID' => $uid,
+                'ACC_KEYS' => 'ANGSURAN_BUNGA',
+                'ORIGINAL_AMOUNT' => $bayarBunga
+            ]);
+        }
     }
 
     public function cancel($loan_number, $no_inv)
