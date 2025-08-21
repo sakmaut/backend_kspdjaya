@@ -237,7 +237,9 @@ class S_PokokSebagian
                 if ($maxIndex !== null) {
                     $data[$maxIndex]['PRINCIPAL'] -= $paymentPokok;
                     $sisaPokok = floatval($data[$maxIndex]['PRINCIPAL']);
-                    $calc = round($sisaPokok * (3 / 100), 2);
+                    $value = round($sisaPokok * (3 / 100), 2);
+
+                    $calc = ceil($value / 1000) * 1000;
                 }
 
                 $sisaPaymentBunga = $paymentBunga;
