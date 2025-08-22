@@ -411,110 +411,6 @@ class ReportController extends Controller
         }
     }
 
-    public function strukturCredit(Request $request, $id)
-    {
-        try {
-            $schedule = [
-                'detail' => [],
-                'data_credit' => [],
-                'total' => []
-            ];
-
-            $data = DB::select("CALL inquiry_details(?)", [$id]);
-
-            if (empty($data)) {
-                return $schedule;
-            }
-
-            $checkExist = [];
-            $previousSisaAngs = 0;
-            $setPinalty = 0;
-            $setSisaDenda = 0;
-            $ttlAmtAngs = 0;
-            $ttlAmtBayar  = 0;
-            $ttlDenda  = 0;
-            $ttlBayarDenda  = 0;
-            $sisaAngss = 0;
-
-            foreach ($data as $res) {
-                $currentJtTempo = isset($res->PAYMENT_DATE) ? Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y') : '';
-                $currentAngs = isset($res->INSTALLMENT_COUNT) ? $res->INSTALLMENT_COUNT : '';
-
-                $uniqArr = $currentJtTempo . '-' . $currentAngs;
-
-                if (in_array($uniqArr, $checkExist)) {
-                    $currentJtTempo = '';
-                    $currentAngs = '';
-                    $amtAngs = $sisaAngss;
-                    $sisaAngs = max($previousSisaAngs - floatval($res->angsuran ?? 0), 0);
-
-                    $setPinalty = floatval($setSisaDenda ?? 0);
-
-                    $previousSisaAngs = $sisaAngs;
-                } else {
-                    $sisaAngs = max(floatval($res->INSTALLMENT ?? 0) - floatval($res->angsuran ?? 0), 0);
-                    $previousSisaAngs = $sisaAngs;
-                    $amtAngs = $res->INSTALLMENT;
-                    $setPinalty = floatval($res->PAST_DUE_PENALTY ?? 0);
-                    $setSisaDenda = floatval($res->PAST_DUE_PENALTY ?? 0) -  floatval($res->denda ?? 0);
-                    array_push($checkExist, $uniqArr);
-
-                    $ttlAmtAngs += $res->INSTALLMENT;
-                    $ttlDenda  += $res->PAST_DUE_PENALTY;
-                }
-
-                $ttlBayarDenda  += $res->denda ?? 0;
-
-                $amtBayar =  floatval($res->angsuran ?? 0);
-                $sisaAngss = floatval($amtAngs ?? 0) - floatval($amtBayar ?? 0);
-
-                $ttlAmtBayar += $amtBayar;
-
-                $schedule['data_credit'][] = [
-                    'Jt.Tempo' => $currentJtTempo,
-                    'Angs' => $currentAngs,
-                    'Seq' => $res->INST_COUNT_INCREMENT ?? 0,
-                    'Amt Angs' => number_format($amtAngs ?? 0),
-                    'No Ref' => $res->INVOICE ?? '',
-                    '' =>  '',
-                    'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
-                    'Amt Bayar' => number_format($amtBayar ?? 0),
-                    'Sisa Angs' => number_format($sisaAngss),
-                    'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0),
-                    'Byr Dnda' => number_format($res->denda ?? 0),
-                    'Sisa Tghn' => "0",
-                    'Ovd' => $res->OD ?? 0
-                ];
-            }
-
-            $schedule['total'] = [
-                'ttlAmtAngs' => $ttlAmtAngs ?? '0',
-                'ttlAmtBayar' => $ttlAmtBayar ?? '0',
-                'ttlSisaAngs' => $ttlAmtAngs - $ttlAmtBayar ?? '0',
-                'ttlDenda' => $ttlDenda ?? '0',
-                'ttlBayarDenda' => $ttlBayarDenda ?? '0',
-            ];
-
-            $creditDetail = M_Credit::with(['customer' => function ($query) {
-                $query->select('CUST_CODE', 'NAME');
-            }])->where('LOAN_NUMBER', $id)->first();
-
-            if ($creditDetail) {
-                $schedule['detail'] = [
-                    'no_kontrak' => $creditDetail->LOAN_NUMBER ?? '',
-                    'tgl_kontrak' => Carbon::parse($creditDetail->CREATED_AT)->format('d-m-Y'),
-                    'nama' => $creditDetail->customer->NAME ?? '',
-                    'no_pel' => $creditDetail->CUST_CODE ?? '',
-                    'status' => ($creditDetail->STATUS ?? '') == 'A' ? 'AKTIF' : 'TIDAK AKTIF / ' . $this->setStatusNoActive($creditDetail->STATUS_REC) ?? ''
-                ];
-            }
-
-            return response()->json($schedule, 200);
-        } catch (\Exception $e) {
-            return $this->log->logError($e, $request);
-        }
-    }
-
     // public function strukturCredit(Request $request, $id)
     // {
     //     try {
@@ -524,7 +420,11 @@ class ReportController extends Controller
     //             'total' => []
     //         ];
 
-    //         $credit = M_Credit::where('CREDIT_TYPE', 'bunga_menurun')->first();
+    //         $data = DB::select("CALL inquiry_details(?)", [$id]);
+
+    //         if (empty($data)) {
+    //             return $schedule;
+    //         }
 
     //         $checkExist = [];
     //         $previousSisaAngs = 0;
@@ -536,118 +436,55 @@ class ReportController extends Controller
     //         $ttlBayarDenda  = 0;
     //         $sisaAngss = 0;
 
-    //         if (!$credit) {
-    //             $data = DB::select("CALL inquiry_details(?)", [$id]);
+    //         foreach ($data as $res) {
+    //             $currentJtTempo = isset($res->PAYMENT_DATE) ? Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y') : '';
+    //             $currentAngs = isset($res->INSTALLMENT_COUNT) ? $res->INSTALLMENT_COUNT : '';
 
-    //             if (empty($data)) {
-    //                 return $schedule;
+    //             $uniqArr = $currentJtTempo . '-' . $currentAngs;
+
+    //             if (in_array($uniqArr, $checkExist)) {
+    //                 $currentJtTempo = '';
+    //                 $currentAngs = '';
+    //                 $amtAngs = $sisaAngss;
+    //                 $sisaAngs = max($previousSisaAngs - floatval($res->angsuran ?? 0), 0);
+
+    //                 $setPinalty = floatval($setSisaDenda ?? 0);
+
+    //                 $previousSisaAngs = $sisaAngs;
+    //             } else {
+    //                 $sisaAngs = max(floatval($res->INSTALLMENT ?? 0) - floatval($res->angsuran ?? 0), 0);
+    //                 $previousSisaAngs = $sisaAngs;
+    //                 $amtAngs = $res->INSTALLMENT;
+    //                 $setPinalty = floatval($res->PAST_DUE_PENALTY ?? 0);
+    //                 $setSisaDenda = floatval($res->PAST_DUE_PENALTY ?? 0) -  floatval($res->denda ?? 0);
+    //                 array_push($checkExist, $uniqArr);
+
+    //                 $ttlAmtAngs += $res->INSTALLMENT;
+    //                 $ttlDenda  += $res->PAST_DUE_PENALTY;
     //             }
 
-    //             foreach ($data as $res) {
-    //                 $currentJtTempo = isset($res->PAYMENT_DATE) ? Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y') : '';
-    //                 $currentAngs = isset($res->INSTALLMENT_COUNT) ? $res->INSTALLMENT_COUNT : '';
+    //             $ttlBayarDenda  += $res->denda ?? 0;
 
-    //                 $uniqArr = $currentJtTempo . '-' . $currentAngs;
+    //             $amtBayar =  floatval($res->angsuran ?? 0);
+    //             $sisaAngss = floatval($amtAngs ?? 0) - floatval($amtBayar ?? 0);
 
-    //                 if (in_array($uniqArr, $checkExist)) {
-    //                     $currentJtTempo = '';
-    //                     $currentAngs = '';
-    //                     $amtAngs = $sisaAngss;
-    //                     $sisaAngs = max($previousSisaAngs - floatval($res->angsuran ?? 0), 0);
+    //             $ttlAmtBayar += $amtBayar;
 
-    //                     $setPinalty = floatval($setSisaDenda ?? 0);
-
-    //                     $previousSisaAngs = $sisaAngs;
-    //                 } else {
-    //                     $sisaAngs = max(floatval($res->INSTALLMENT ?? 0) - floatval($res->angsuran ?? 0), 0);
-    //                     $previousSisaAngs = $sisaAngs;
-    //                     $amtAngs = $res->INSTALLMENT;
-    //                     $setPinalty = floatval($res->PAST_DUE_PENALTY ?? 0);
-    //                     $setSisaDenda = floatval($res->PAST_DUE_PENALTY ?? 0) -  floatval($res->denda ?? 0);
-    //                     array_push($checkExist, $uniqArr);
-
-    //                     $ttlAmtAngs += $res->INSTALLMENT;
-    //                     $ttlDenda  += $res->PAST_DUE_PENALTY;
-    //                 }
-
-    //                 $ttlBayarDenda  += $res->denda ?? 0;
-
-    //                 $amtBayar =  floatval($res->angsuran ?? 0);
-    //                 $sisaAngss = floatval($amtAngs ?? 0) - floatval($amtBayar ?? 0);
-
-    //                 $ttlAmtBayar += $amtBayar;
-
-    //                 $schedule['data_credit'][] = [
-    //                     'Jt.Tempo' => $currentJtTempo,
-    //                     'Angs' => $currentAngs,
-    //                     'Seq' => $res->INST_COUNT_INCREMENT ?? 0,
-    //                     'Amt Angs' => number_format($amtAngs ?? 0),
-    //                     'No Ref' => $res->INVOICE ?? '',
-    //                     '' =>  '',
-    //                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
-    //                     'Amt Bayar' => number_format($amtBayar ?? 0),
-    //                     'Sisa Angs' => number_format($sisaAngss),
-    //                     'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0),
-    //                     'Byr Dnda' => number_format($res->denda ?? 0),
-    //                     'Sisa Tghn' => "0",
-    //                     'Ovd' => $res->OD ?? 0
-    //                 ];
-    //             }
-    //         } else {
-
-    //             $data = DB::select("CALL inquiry_details_bunga_menurun(?)", [$id]);
-
-    //             if (empty($data)) {
-    //                 return $schedule;
-    //             }
-
-    //             $creditSchedule = M_CreditSchedule::where('LOAN_NUMBER', $id)->get();
-
-    //             // Hitung total principal dari seluruh jadwal kredit
-    //             $totalPrincipal = array_sum(array_map(function ($item) {
-    //                 return floatval($item['PRINCIPAL'] ?? 0);
-    //             }, $creditSchedule->toArray()));
-
-    //             $data_credit = [];
-
-    //             usort($data, function ($a, $b) {
-    //                 return ($a->INSTALLMENT_COUNT ?? 0) <=> ($b->INSTALLMENT_COUNT ?? 0);
-    //             });
-
-    //             $sisaPokok = $totalPrincipal;
-
-    //             foreach ($data as $index => $res) {
-    //                 $angs = $res->INSTALLMENT_COUNT ?? 0;
-    //                 $tglTempo = $res->PAYMENT_DATE ?? '';
-    //                 $tglTempoFormatted = $tglTempo ? Carbon::parse($tglTempo)->format('d-m-Y') : '';
-    //                 $tglBayarFormatted = $res->tgl_byr ? Carbon::parse($res->tgl_byr)->format('d-m-Y') : '';
-
-    //                 $byrPokok = floatval($res->bayar_pokok ?? 0);
-    //                 $byrBunga = floatval($res->bayar_bunga ?? 0);
-    //                 $interest = floatval($res->INTEREST ?? 0);
-
-    //                 // Pokok saat ini adalah sisa pokok sebelum dikurangi
-    //                 $pokokTampil = $sisaPokok;
-
-    //                 // Update sisa pokok untuk baris selanjutnya
-    //                 $sisaPokok = max(0, $sisaPokok - $byrPokok);
-
-    //                 $data_credit[] = [
-    //                     'Angs' => $angs,
-    //                     'Jt.Tempo' => $tglTempoFormatted,
-    //                     'Seq' => $res->INST_COUNT_INCREMENT ?? 0,
-    //                     'Pokok' => number_format($pokokTampil, 0),
-    //                     'Bunga' => number_format($interest, 0),
-    //                     'Denda' => 0,
-    //                     'Tgl Bayar' => $tglBayarFormatted,
-    //                     'Byr Pokok' => $byrPokok > 0 ? number_format($byrPokok, 0) : 0,
-    //                     'Byr Bunga' => $byrBunga > 0 ? number_format($byrBunga, 0) : 0,
-    //                     'Byr Dnda' => 0,
-    //                     'Hari OD' => $res->OD ?? 0
-    //                 ];
-    //             }
-
-    //             $schedule['data_credit'] = $data_credit;
+    //             $schedule['data_credit'][] = [
+    //                 'Jt.Tempo' => $currentJtTempo,
+    //                 'Angs' => $currentAngs,
+    //                 'Seq' => $res->INST_COUNT_INCREMENT ?? 0,
+    //                 'Amt Angs' => number_format($amtAngs ?? 0),
+    //                 'No Ref' => $res->INVOICE ?? '',
+    //                 '' =>  '',
+    //                 'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
+    //                 'Amt Bayar' => number_format($amtBayar ?? 0),
+    //                 'Sisa Angs' => number_format($sisaAngss),
+    //                 'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0),
+    //                 'Byr Dnda' => number_format($res->denda ?? 0),
+    //                 'Sisa Tghn' => "0",
+    //                 'Ovd' => $res->OD ?? 0
+    //             ];
     //         }
 
     //         $schedule['total'] = [
@@ -677,6 +514,168 @@ class ReportController extends Controller
     //         return $this->log->logError($e, $request);
     //     }
     // }
+
+    public function strukturCredit(Request $request, $id)
+    {
+        try {
+            $schedule = [
+                'detail' => [],
+                'data_credit' => [],
+                'total' => []
+            ];
+
+            $credit = M_Credit::where([
+                'LOAN_NUMBER' => $id,
+                'CREDIT_TYPE' => 'bunga_menurun'
+            ])->first();
+
+            $checkExist = [];
+            $previousSisaAngs = 0;
+            $setSisaDenda = 0;
+            $ttlAmtAngs = 0;
+            $ttlAmtBayar  = 0;
+            $ttlDenda  = 0;
+            $ttlBayarDenda  = 0;
+            $sisaAngss = 0;
+
+            if (!$credit) {
+                $data = DB::select("CALL inquiry_details(?)", [$id]);
+
+                if (empty($data)) {
+                    return $schedule;
+                }
+
+                foreach ($data as $res) {
+                    $currentJtTempo = isset($res->PAYMENT_DATE) ? Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y') : '';
+                    $currentAngs = isset($res->INSTALLMENT_COUNT) ? $res->INSTALLMENT_COUNT : '';
+
+                    $uniqArr = $currentJtTempo . '-' . $currentAngs;
+
+                    if (in_array($uniqArr, $checkExist)) {
+                        $currentJtTempo = '';
+                        $currentAngs = '';
+                        $amtAngs = $sisaAngss;
+                        $sisaAngs = max($previousSisaAngs - floatval($res->angsuran ?? 0), 0);
+
+                        $setPinalty = floatval($setSisaDenda ?? 0);
+
+                        $previousSisaAngs = $sisaAngs;
+                    } else {
+                        $sisaAngs = max(floatval($res->INSTALLMENT ?? 0) - floatval($res->angsuran ?? 0), 0);
+                        $previousSisaAngs = $sisaAngs;
+                        $amtAngs = $res->INSTALLMENT;
+                        $setPinalty = floatval($res->PAST_DUE_PENALTY ?? 0);
+                        $setSisaDenda = floatval($res->PAST_DUE_PENALTY ?? 0) -  floatval($res->denda ?? 0);
+                        array_push($checkExist, $uniqArr);
+
+                        $ttlAmtAngs += $res->INSTALLMENT;
+                        $ttlDenda  += $res->PAST_DUE_PENALTY;
+                    }
+
+                    $ttlBayarDenda  += $res->denda ?? 0;
+
+                    $amtBayar =  floatval($res->angsuran ?? 0);
+                    $sisaAngss = floatval($amtAngs ?? 0) - floatval($amtBayar ?? 0);
+
+                    $ttlAmtBayar += $amtBayar;
+
+                    $schedule['data_credit'][] = [
+                        'Jt.Tempo' => $currentJtTempo,
+                        'Angs' => $currentAngs,
+                        'Seq' => $res->INST_COUNT_INCREMENT ?? 0,
+                        'Amt Angs' => number_format($amtAngs ?? 0),
+                        'No Ref' => $res->INVOICE ?? '',
+                        '' =>  '',
+                        'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
+                        'Amt Bayar' => number_format($amtBayar ?? 0),
+                        'Sisa Angs' => number_format($sisaAngss),
+                        'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0),
+                        'Byr Dnda' => number_format($res->denda ?? 0),
+                        'Sisa Tghn' => "0",
+                        'Ovd' => $res->OD ?? 0
+                    ];
+                }
+            } else {
+
+                $data = DB::select("CALL inquiry_details_bunga_menurun(?)", [$id]);
+
+                if (empty($data)) {
+                    return $schedule;
+                }
+
+                $creditSchedule = M_CreditSchedule::where('LOAN_NUMBER', $id)->get();
+
+                $totalPrincipal = array_sum(array_map(function ($item) {
+                    return floatval($item['PRINCIPAL'] ?? 0);
+                }, $creditSchedule->toArray()));
+
+                $data_credit = [];
+
+                usort($data, function ($a, $b) {
+                    return ($a->INSTALLMENT_COUNT ?? 0) <=> ($b->INSTALLMENT_COUNT ?? 0);
+                });
+
+                $sisaPokok = $totalPrincipal;
+
+                foreach ($data as $index => $res) {
+                    $angs = $res->INSTALLMENT_COUNT ?? 0;
+                    $tglTempo = $res->PAYMENT_DATE ?? '';
+                    $tglTempoFormatted = $tglTempo ? Carbon::parse($tglTempo)->format('d-m-Y') : '';
+                    $tglBayarFormatted = $res->tgl_byr ? Carbon::parse($res->tgl_byr)->format('d-m-Y') : '';
+
+                    $byrPokok = floatval($res->bayar_pokok ?? 0);
+                    $byrBunga = floatval($res->bayar_bunga ?? 0);
+                    $interest = floatval($res->INTEREST ?? 0);
+
+                    $pokokTampil = $sisaPokok;
+
+                    $sisaPokok = max(0, $sisaPokok - $byrPokok);
+
+                    $data_credit[] = [
+                        'Angs' => $angs,
+                        'Jt.Tempo' => $tglTempoFormatted,
+                        'Seq' => $index + 1,
+                        'Pokok' => number_format($pokokTampil, 0),
+                        'Bunga' => number_format($interest, 0),
+                        'Denda' => 0,
+                        'Tgl Bayar' => $tglBayarFormatted,
+                        'Byr Pokok' => $byrPokok > 0 ? number_format($byrPokok, 0) : 0,
+                        'Byr Bunga' => $byrBunga > 0 ? number_format($byrBunga, 0) : 0,
+                        'Byr Dnda' => 0,
+                        'Hari OD' => $res->OD ?? 0
+                    ];
+                }
+
+                $schedule['data_credit'] = $data_credit;
+            }
+
+            $schedule['total'] = [
+                'ttlAmtAngs' => $ttlAmtAngs ?? '0',
+                'ttlAmtBayar' => $ttlAmtBayar ?? '0',
+                'ttlSisaAngs' => $ttlAmtAngs - $ttlAmtBayar ?? '0',
+                'ttlDenda' => $ttlDenda ?? '0',
+                'ttlBayarDenda' => $ttlBayarDenda ?? '0',
+            ];
+
+            $creditDetail = M_Credit::with(['customer' => function ($query) {
+                $query->select('CUST_CODE', 'NAME');
+            }])->where('LOAN_NUMBER', $id)->first();
+
+            if ($creditDetail) {
+                $schedule['detail'] = [
+                    'no_kontrak' => $creditDetail->LOAN_NUMBER ?? '',
+                    'tgl_kontrak' => Carbon::parse($creditDetail->CREATED_AT)->format('d-m-Y'),
+                    'nama' => $creditDetail->customer->NAME ?? '',
+                    'no_pel' => $creditDetail->CUST_CODE ?? '',
+                    'status' => ($creditDetail->STATUS ?? '') == 'A' ? 'AKTIF' : 'TIDAK AKTIF / ' . $this->setStatusNoActive($creditDetail->STATUS_REC) ?? ''
+                ];
+            }
+
+            return response()->json($schedule, 200);
+        } catch (\Exception $e) {
+            return $this->log->logError($e, $request);
+        }
+    }
 
     function queryKapos($branchID)
     {
