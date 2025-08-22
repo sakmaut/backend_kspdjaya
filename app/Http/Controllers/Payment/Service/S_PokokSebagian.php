@@ -318,7 +318,6 @@ class S_PokokSebagian
             throw new Exception("Credit schedule not found for angsuran ke-{$detail['angsuran_ke']}", 1);
         }
 
-        // Extract detail values and cast to float
         $principalDetail     = floatval($detail['principal']);
         $interestDetail      = floatval($detail['interest']);
         $paidPrincipal       = floatval($detail['bayar_pokok']);
@@ -420,7 +419,7 @@ class S_PokokSebagian
             'TITLE' => 'Pembayaran Pokok Sebagian',
             'ORIGINAL_AMOUNT' => $totalPayment ?? 0,
             'OS_AMOUNT' => $os_amount ?? 0,
-            'START_DATE' => $tgl_angsuran ?? null,
+            'START_DATE' => $request->tgl_angsuran ?? null,
             'END_DATE' => now(),
             'USER_ID' => $kwitansi->CREATED_BY ?? $request->user()->id,
             'AUTH_BY' => $request->user()->fullname ?? '',

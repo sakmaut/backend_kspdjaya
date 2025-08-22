@@ -11,6 +11,7 @@ use App\Models\M_Branch;
 use App\Models\M_CrCollateral;
 use App\Models\M_CrCollateralSertification;
 use App\Models\M_Credit;
+use App\Models\M_CreditSchedule;
 use App\Models\M_Customer;
 use App\Models\M_Kwitansi;
 use App\Models\User;
@@ -475,10 +476,10 @@ class ReportController extends Controller
                     'Seq' => $res->INST_COUNT_INCREMENT ?? 0,
                     'Amt Angs' => number_format($amtAngs ?? 0),
                     'No Ref' => $res->INVOICE ?? '',
+                    '' =>  '',
                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
                     'Amt Bayar' => number_format($amtBayar ?? 0),
                     'Sisa Angs' => number_format($sisaAngss),
-                    // 'Denda' => number_format($setPinalty),
                     'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0),
                     'Byr Dnda' => number_format($res->denda ?? 0),
                     'Sisa Tghn' => "0",
@@ -523,12 +524,6 @@ class ReportController extends Controller
     //             'total' => []
     //         ];
 
-    //         $data = DB::select("CALL inquiry_details(?)", [$id]);
-
-    //         if (empty($data)) {
-    //             return $schedule;
-    //         }
-
     //         $credit = M_Credit::where('CREDIT_TYPE', 'bunga_menurun')->first();
 
     //         $checkExist = [];
@@ -542,6 +537,12 @@ class ReportController extends Controller
     //         $sisaAngss = 0;
 
     //         if (!$credit) {
+    //             $data = DB::select("CALL inquiry_details(?)", [$id]);
+
+    //             if (empty($data)) {
+    //                 return $schedule;
+    //             }
+
     //             foreach ($data as $res) {
     //                 $currentJtTempo = isset($res->PAYMENT_DATE) ? Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y') : '';
     //                 $currentAngs = isset($res->INSTALLMENT_COUNT) ? $res->INSTALLMENT_COUNT : '';
@@ -582,11 +583,9 @@ class ReportController extends Controller
     //                     'Seq' => $res->INST_COUNT_INCREMENT ?? 0,
     //                     'Amt Angs' => number_format($amtAngs ?? 0),
     //                     'No Ref' => $res->INVOICE ?? '',
-    //                     'Bank' => '',
     //                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
     //                     'Amt Bayar' => number_format($amtBayar ?? 0),
     //                     'Sisa Angs' => number_format($sisaAngss),
-    //                     // 'Denda' => number_format($setPinalty),
     //                     'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0),
     //                     'Byr Dnda' => number_format($res->denda ?? 0),
     //                     'Sisa Tghn' => "0",
@@ -595,61 +594,88 @@ class ReportController extends Controller
     //             }
     //         } else {
 
+    //             $data = DB::select("CALL inquiry_details_bunga_menurun(?)", [$id]);
+
+    //             if (empty($data)) {
+    //                 return $schedule;
+    //             }
+
+    //             $creditSchedule = M_CreditSchedule::where('LOAN_NUMBER', $id)->get();
+
+    //             $data_credit = [];
+    //             $lastInstallment = null;
+    //             $lastSisaPokok = null;
+    //             $lastSisaBunga = null;
+
+    //             // Hitung total principal dari $creditSchedule
     //             $totalPrincipal = array_sum(array_map(function ($item) {
-    //                 return floatval($item->PRINCIPAL ?? 0);
-    //             }, $data));
+    //                 return floatval($item['PRINCIPAL'] ?? 0);
+    //             }, $creditSchedule->toArray()));
+
+    //             // Sort $data berdasarkan INSTALLMENT_COUNT supaya urutannya jelas
+    //             usort($data, function ($a, $b) {
+    //                 return ($a->INSTALLMENT_COUNT ?? 0) <=> ($b->INSTALLMENT_COUNT ?? 0);
+    //             });
 
     //             foreach ($data as $res) {
-    //                 $currentJtTempo = isset($res->PAYMENT_DATE) ? Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y') : '';
-    //                 $currentAngs = isset($res->INSTALLMENT_COUNT) ? $res->INSTALLMENT_COUNT : '';
+    //                 $angs = $res->INSTALLMENT_COUNT ?? 0;
+    //                 $jt_tempo = $res->PAYMENT_DATE ?? '';
+    //                 $tglTempoFormatted = $jt_tempo ? Carbon::parse($jt_tempo)->format('d-m-Y') : '';
+    //                 $tglBayarFormatted = $res->tgl_byr ? Carbon::parse($res->tgl_byr)->format('d-m-Y') : '';
 
-    //                 $uniqArr = $currentJtTempo . '-' . $currentAngs;
+    //                 $byrPokok = floatval($res->bayar_pokok ?? 0);
+    //                 $byrBunga = floatval($res->bayar_bunga ?? 0);
 
-    //                 if (in_array($uniqArr, $checkExist)) {
-    //                     $currentJtTempo = '';
-    //                     $currentAngs = '';
-    //                     $amtAngs = $sisaAngss;
-    //                     $sisaAngs = max($previousSisaAngs - floatval($res->angsuran ?? 0), 0);
+    //                 if ($lastInstallment !== $angs) {
+    //                     // Angsuran baru
+    //                     if ($lastSisaPokok === null) {
+    //                         // Angsuran pertama, hitung sisa dari total principal
+    //                         $sisaPokok = max(0, $totalPrincipal - $byrPokok);
+    //                         $sisaBunga = max(0, floatval($res->INTEREST ?? 0) - $byrBunga);
+    //                     } else {
+    //                         // Angsuran baru, hitung sisa dari sisa sebelumnya
+    //                         $sisaPokok = max(0, $lastSisaPokok - $byrPokok);
+    //                         $sisaBunga = max(0, $lastSisaBunga - $byrBunga);
+    //                     }
 
-    //                     $setPinalty = floatval($setSisaDenda ?? 0);
+    //                     $data_credit[] = [
+    //                         'Angs' => $angs,
+    //                         'Jt.Tempo' => $tglTempoFormatted,
+    //                         'Seq' => $res->INST_COUNT_INCREMENT ?? 0,
+    //                         'Pokok' => number_format($sisaPokok),
+    //                         'Bunga' => number_format($sisaBunga),
+    //                         'Denda' => 0,
+    //                         'Tgl Bayar' => $tglBayarFormatted,
+    //                         'Byr Pokok' => number_format($byrPokok),
+    //                         'Byr Bunga' => number_format($byrBunga),
+    //                         'Byr Dnda' => 0,
+    //                         'Hari OD' => $res->OD ?? 0
+    //                     ];
 
-    //                     $previousSisaAngs = $sisaAngs;
+    //                     // Update sisa dan angsuran terakhir
+    //                     $lastSisaPokok = $sisaPokok;
+    //                     $lastSisaBunga = $sisaBunga;
+    //                     $lastInstallment = $angs;
     //                 } else {
-    //                     $sisaAngs = max(floatval($res->INSTALLMENT ?? 0) - floatval($res->angsuran ?? 0), 0);
-    //                     $previousSisaAngs = $sisaAngs;
-    //                     $amtAngs = $res->INSTALLMENT;
-    //                     $setPinalty = floatval($res->PAST_DUE_PENALTY ?? 0);
-    //                     $setSisaDenda = floatval($res->PAST_DUE_PENALTY ?? 0) -  floatval($res->denda ?? 0);
-    //                     array_push($checkExist, $uniqArr);
-
-    //                     $ttlAmtAngs += $res->INSTALLMENT;
-    //                     $ttlDenda  += $res->PAST_DUE_PENALTY;
+    //                     // Baris kedua dst di angsuran yang sama
+    //                     $data_credit[] = [
+    //                         'Angs' => $angs,
+    //                         'Jt.Tempo' => $tglTempoFormatted,
+    //                         'Seq' => $res->INST_COUNT_INCREMENT ?? 0,
+    //                         'Pokok' => '',
+    //                         'Bunga' => '',
+    //                         'Denda' => '',
+    //                         'Tgl Bayar' => $tglBayarFormatted,
+    //                         'Byr Pokok' => number_format($byrPokok),
+    //                         'Byr Bunga' => number_format($byrBunga),
+    //                         'Byr Dnda' => 0,
+    //                         'Hari OD' => $res->OD ?? 0
+    //                     ];
     //                 }
-
-    //                 $ttlBayarDenda  += $res->denda ?? 0;
-
-    //                 $amtBayar =  floatval($res->angsuran ?? 0);
-    //                 $sisaAngss = floatval($amtAngs ?? 0) - floatval($amtBayar ?? 0);
-
-    //                 $ttlAmtBayar += $amtBayar;
-
-    //                 $schedule['data_credit'][] = [
-    //                     'Jt.Tempo' => $currentJtTempo,
-    //                     'Angs' => $currentAngs,
-    //                     'Seq' => $res->INST_COUNT_INCREMENT ?? 0,
-    //                     'Amt Angs' => number_format($totalPrincipal ?? 0),
-    //                     'No Ref' => $res->INVOICE ?? '',
-    //                     'Bank' => '',
-    //                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
-    //                     'Amt Bayar' => number_format($amtBayar ?? 0),
-    //                     'Sisa Angs' => number_format($sisaAngss),
-    //                     // 'Denda' => number_format($setPinalty),
-    //                     'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0),
-    //                     'Byr Dnda' => number_format($res->denda ?? 0),
-    //                     'Sisa Tghn' => "0",
-    //                     'Ovd' => $res->OD ?? 0
-    //                 ];
     //             }
+
+    //             // Simpan hasil akhir ke $schedule
+    //             $schedule['data_credit'] = $data_credit;
     //         }
 
     //         $schedule['total'] = [
