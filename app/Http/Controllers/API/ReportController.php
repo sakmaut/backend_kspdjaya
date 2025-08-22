@@ -660,16 +660,27 @@ class ReportController extends Controller
                 $query->select('CUST_CODE', 'NAME');
             }])->where('LOAN_NUMBER', $id)->first();
 
+            $typeMap = [
+                'bunga_menurun' => 'BUNGA MENURUN',
+                'bulanan'       => 'BULANAN',
+                'musiman'       => 'MUSIMAN',
+            ];
+
+            $type = $typeMap[$creditDetail->CREDIT_TYPE] ?? '';
+
             if ($creditDetail) {
                 $schedule['detail'] = [
                     'no_kontrak' => $creditDetail->LOAN_NUMBER ?? '',
-                    'tgl_kontrak' => Carbon::parse($creditDetail->CREATED_AT)->format('d-m-Y'),
+                    'tgl_kontrak' => isset($creditDetail->CREATED_AT) ? Carbon::parse($creditDetail->CREATED_AT)->format('d-m-Y') : '',
                     'nama' => $creditDetail->customer->NAME ?? '',
                     'no_pel' => $creditDetail->CUST_CODE ?? '',
-                    'jns_credit' => $creditDetail->CREDIT_TYPE ?? '',
-                    'status' => ($creditDetail->STATUS ?? '') == 'A' ? 'AKTIF' : 'TIDAK AKTIF / ' . $this->setStatusNoActive($creditDetail->STATUS_REC) ?? ''
+                    'jns_credit' => $type,
+                    'status' => ($creditDetail->STATUS ?? '') === 'A'
+                        ? 'AKTIF'
+                        : 'TIDAK AKTIF / ' . ($this->setStatusNoActive($creditDetail->STATUS_REC) ?? '')
                 ];
             }
+
 
             return response()->json($schedule, 200);
         } catch (\Exception $e) {
