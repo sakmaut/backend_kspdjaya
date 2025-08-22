@@ -475,7 +475,6 @@ class ReportController extends Controller
                     'Seq' => $res->INST_COUNT_INCREMENT ?? 0,
                     'Amt Angs' => number_format($amtAngs ?? 0),
                     'No Ref' => $res->INVOICE ?? '',
-                    'Bank' => '',
                     'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
                     'Amt Bayar' => number_format($amtBayar ?? 0),
                     'Sisa Angs' => number_format($sisaAngss),
