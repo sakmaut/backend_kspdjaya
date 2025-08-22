@@ -634,7 +634,6 @@ class ReportController extends Controller
                     $data_credit[] = [
                         'Angs' => $angs,
                         'Jt.Tempo' => $tglTempoFormatted,
-                        'Seq' => $index + 1,
                         'Pokok' => number_format($pokokTampil, 0),
                         'Bunga' => number_format($interest, 0),
                         'Denda' => 0,
