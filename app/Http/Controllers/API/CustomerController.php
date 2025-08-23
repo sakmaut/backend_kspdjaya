@@ -5,16 +5,12 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\R_CreditList;
+use App\Http\Resources\R_CustomerDetail;
 use App\Http\Resources\R_CustomerSearch;
 use App\Http\Resources\R_RoDetail;
-use App\Models\M_Arrears;
 use App\Models\M_CrCollateral;
 use App\Models\M_Credit;
-use App\Models\M_CreditSchedule;
-use App\Models\M_CrOrder;
-use App\Models\M_CrSurveyDocument;
 use App\Models\M_Customer;
-use App\Models\M_CustomerDocument;
 use App\Models\M_Kwitansi;
 use Carbon\Carbon;
 use Exception;
@@ -33,7 +29,6 @@ class CustomerController extends Controller
     public function index(Request $request)
     {
         try {
-
             $search = $request->get('search');
 
             if (isset($search)) {
@@ -61,6 +56,19 @@ class CustomerController extends Controller
         }
     }
 
+    public function show(Request $request, $id)
+    {
+        try {
+            $customer = M_Customer::where('ID', $id)->first();
+
+            $result = $customer ? new R_CustomerDetail($customer) : [];
+
+            return response()->json($result, 200);
+        } catch (\Exception $e) {
+            return $this->log->logError($e, $request);
+        }
+    }
+
     public function update(Request $request, $id)
     {
         try {
@@ -74,6 +82,8 @@ class CustomerController extends Controller
             $data = [
                 'NAME' => $request->nama,
                 'ALIAS' => $request->nama_panggilan,
+                'ID_NUMBER' => $request->no_identitas,
+                'KK_NUMBER' => $request->no_kk,
                 // 'GENDER' => $request->pelanggan['jenis_kelamin'],
                 // 'BIRTHPLACE' => $request->pelanggan['tempat_lahir'],
                 // 'BIRTHDATE' => date('Y-m-d', strtotime($request->pelanggan['tgl_lahir'])),
@@ -82,8 +92,6 @@ class CustomerController extends Controller
                 // 'MARTIAL_STATUS' => $request->pelanggan['status_kawin'],
                 // 'MARTIAL_DATE' => date('Y-m-d', strtotime($request->pelanggan['tgl_kawin'])),
                 // 'ID_TYPE' => $request->pelanggan['tipe_identitas'],
-                // 'ID_NUMBER' => $request->pelanggan['no_identitas'],
-                // 'KK_NUMBER' => $request->pelanggan['no_kk'],
                 // 'ID_ISSUE_DATE' => date('Y-m-d', strtotime($request->pelanggan['tgl_terbit_identitas'])),
                 // 'ID_VALID_DATE' => date('Y-m-d', strtotime($request->pelanggan['masa_berlaku_identitas'])),
                 // 'KK' => $request->pelanggan['no_kk'],

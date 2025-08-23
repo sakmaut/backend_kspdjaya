@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Validation\Validation;
+use App\Http\Resources\R_CrApplicationDetail;
 use App\Http\Resources\R_CrProspect;
 use App\Http\Resources\R_DetailDocument;
 use App\Models\M_ApplicationApproval;
@@ -163,11 +164,15 @@ class CrAppilcationController extends Controller
             //     'cr_application.credit',
             //     'cr_guarante_vehicle',
             //     'cr_guarante_sertification',
-            // ])->where('id', $surveyID)->first();
+            // ])->where('id', $id)->first();
+
+            // if (!$getSurvey) {
+            //     throw new Exception("Id FPK Is Not Exist", 404);
+            // }
 
             // $dto = new R_CrApplicationDetail($getSurvey);
 
-            // return response()->json($getSurvey, 200);
+            // return response()->json($dto, 200);
             // die;
 
             return response()->json(['response' =>  $this->resourceDetail($detail_prospect, $check_application_id)], 200);
@@ -1475,23 +1480,45 @@ class CrAppilcationController extends Controller
 
     public function check_order_document(Request $request)
     {
+        $loan_number = $request->loan_number;
+        $atas_nama = $request->atas_nama;
+        $cabang = $request->cabang;
 
-        // $getCredit = M_Credit::with(['customer.customer_document'])->where('LOAN_NUMBER', $request->no_kontrak)->first();
-        // $getCredit = M_CrApplication::with(['credit.customer'])
-        //     ->whereHas('credit', function ($query) use ($request) {
-        //         $query->where('LOAN_NUMBER', $request->no_kontrak);
-        //     })->first();
+        $query = M_Credit::select(
+            'credit.ID',
+            'credit.LOAN_NUMBER',
+            'credit.CUST_CODE',
+            'customer.NAME',
+            'branch.NAME as nama_cabang'
+        )
+            ->join('customer', 'credit.CUST_CODE', '=', 'customer.CUST_CODE')
+            ->join('branch', 'credit.BRANCH', '=', 'branch.ID')
+            ->with([
+                'customer:ID,CUST_CODE,NAME',
+                'customer.customer_document',
+                'collateral:ID,CR_CREDIT_ID',
+                'collateral.documents'
+            ])
+            ->orderByDesc('credit.CREATED_AT');
 
-        $getCredit = M_CrApplication::with(['credit.customer'])
-            ->whereHas('credit', function ($query) use ($request) {
-                $query->where('LOAN_NUMBER', $request->no_kontrak);
-            })->first();
-
-        if (!$getCredit) {
-            return response()->json([]);
+        if (!empty($loan_number) && $loan_number != 'undefined') {
+            $query->where('credit.LOAN_NUMBER', $loan_number);
         }
 
-        $dto = new R_DetailDocument($getCredit);
+        if (!empty($atas_nama) && $atas_nama != 'undefined') {
+            $query->where('customer.NAME', 'like', "%$atas_nama%");
+        }
+
+        if (!empty($cabang) && $cabang != 'undefined') {
+            $query->where('branch.CODE', $cabang);
+        }
+
+        $query->limit(15);
+
+        $credit = $query->get();
+
+
+        $dto = R_DetailDocument::collection($credit);
 
         return response()->json($dto);
     }
