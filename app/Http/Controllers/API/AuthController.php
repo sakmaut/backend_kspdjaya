@@ -69,7 +69,6 @@ class AuthController extends Controller
 
             if ($user) {
                 $user->tokens()->delete();
-                ActivityLogger::logActivityLogout($request, $this->logout, "Success", 200, $user->username);
                 return response()->json([
                     'message' => 'Logout successful',
                     'status' => 200,
@@ -78,14 +77,12 @@ class AuthController extends Controller
                     ]
                 ], 200);
             } else {
-                ActivityLogger::logActivityLogout($request, $this->logout, "Token not defined", 404, $user->username);
                 return response()->json([
                     'message' => 'Token not defined',
                     'status' => 404
                 ], 404);
             }
         } catch (\Exception $e) {
-            ActivityLogger::logActivityLogout($request, $this->logout, $e, 500, $user->username);
             return response()->json([
                 'message' => 'An error occurred',
                 'status' => 500

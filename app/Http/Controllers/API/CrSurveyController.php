@@ -494,7 +494,6 @@ class CrSurveyController extends Controller
                         }
                     } catch (\Exception $e) {
                         DB::rollback();
-                        ActivityLogger::logActivity($request, $e->getMessage(), 500);
                         return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
                     }
                 }
@@ -521,7 +520,6 @@ class CrSurveyController extends Controller
                         }
                     } catch (\Exception $e) {
                         DB::rollback();
-                        ActivityLogger::logActivity($request, $e->getMessage(), 500);
                         return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
                     }
                 }
@@ -563,20 +561,10 @@ class CrSurveyController extends Controller
             }
 
             DB::commit();
-            ActivityLogger::logActivity($request, "Success", 200);
             return response()->json(['message' => 'updated successfully'], 200);
-        } catch (ModelNotFoundException $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($request, 'Cr Prospect Id Not Found', 404);
-            return response()->json(['message' => 'Cr Prospect Id Not Found', "status" => 404], 404);
-        } catch (QueryException $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($request, $e->getMessage(), 409);
-            return response()->json(['message' => $e->getMessage(), 'status' => 409], 409);
         } catch (\Exception $e) {
             DB::rollback();
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage(), 'status' => 500], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
@@ -594,20 +582,10 @@ class CrSurveyController extends Controller
             $check->update($data);
 
             DB::commit();
-            ActivityLogger::logActivity($req, "Success", 200);
             return response()->json(['message' => 'deleted successfully', "status" => 200], 200);
-        } catch (ModelNotFoundException $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($req, 'Cr Prospect Id Not Found', 404);
-            return response()->json(['message' => 'Cr Prospect Id Not Found', "status" => 404], 404);
-        } catch (QueryException $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($req, $e->getMessage(), 409);
-            return response()->json(['message' => $e->getMessage(), "status" => 409], 409);
         } catch (\Exception $e) {
             DB::rollback();
-            ActivityLogger::logActivity($req, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+            return $this->log->logError($e, $req);
         }
     }
 
@@ -620,16 +598,10 @@ class CrSurveyController extends Controller
             $check->delete();
 
             DB::commit();
-            ActivityLogger::logActivity($req, "deleted successfully", 200);
             return response()->json(['message' => 'deleted successfully', "status" => 200], 200);
-        } catch (ModelNotFoundException $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($req, 'Document Id Not Found', 404);
-            return response()->json(['message' => 'Document Id Not Found', "status" => 404], 404);
         } catch (\Exception $e) {
             DB::rollback();
-            ActivityLogger::logActivity($req, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+            return $this->log->logError($e, $req);
         }
     }
 
@@ -683,17 +655,11 @@ class CrSurveyController extends Controller
                 return response()->json(['message' => 'Image upload successfully', "status" => 200, 'response' => $url], 200);
             } else {
                 DB::rollback();
-                ActivityLogger::logActivity($req, 'No image file provided', 400);
                 return response()->json(['message' => 'No image file provided', "status" => 400], 400);
             }
-        } catch (QueryException $e) {
+        }  catch (\Exception $e) {
             DB::rollback();
-            ActivityLogger::logActivity($req, $e->getMessage(), 409);
-            return response()->json(['message' => $e->getMessage(), "status" => 409], 409);
-        } catch (\Exception $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($req, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+            return $this->log->logError($e, $req);
         }
     }
 
@@ -753,14 +719,9 @@ class CrSurveyController extends Controller
             }
 
             return response()->json(['message' => 'Image upload successfully', "status" => 200, 'response' => $uploadedUrls], 200);
-        } catch (QueryException $e) {
+        }  catch (\Exception $e) {
             DB::rollback();
-            ActivityLogger::logActivity($req, $e->getMessage(), 409);
-            return response()->json(['message' => $e->getMessage(), "status" => 409], 409);
-        } catch (\Exception $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($req, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+            return $this->log->logError($e, $req);
         }
     }
 }

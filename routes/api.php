@@ -30,7 +30,6 @@ use App\Http\Controllers\API\{
 };
 
 use App\Http\Controllers\Payment\Controller\C_PokokSebagian;
-use App\Http\Controllers\Payment\Service\S_PokokSebagian;
 use App\Http\Controllers\Welcome;
 use App\Http\Credit\Tagihan\Controller\C_Tagihan;
 use Illuminate\Http\Request;
@@ -52,10 +51,6 @@ Route::get('kecamatan', [Wilayah::class, 'kecamatan']);
 Route::get('kelurahan', [Wilayah::class, 'kelurahan']);
 Route::get('kode_pos', [Wilayah::class, 'kode_pos']);
 Route::post('cancels', [C_PokokSebagian::class, 'cancel']);
-
-// Route::get('kota', [Wilayah::class, 'wilayah']);
-// Route::get('kecamatan', [Wilayah::class, 'wilayah']);
-// Route::get('keluaran', [Wilayah::class, 'wilayah']);
 
 Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::resource('users', UsersController::class)->only(['index']);
@@ -189,7 +184,6 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
 
     //Tagihan
     Route::resource('tagihan', C_Tagihan::class);
-    // Route::get('tagihan_by_user', C_Tagihan::class);
 });
 
 

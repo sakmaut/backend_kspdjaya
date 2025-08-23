@@ -118,8 +118,7 @@ class CrAppilcationController extends Controller
             $data = M_CrApplication::fpkListData($request, 'WAKPS', 'WAHO', 'APKPS', 'APHO', 'REORHO', 'CLHO', 'REORKPS', 'CLKPS');
             return response()->json(['message' => true, "status" => 200, 'response' => $data], 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
@@ -129,8 +128,7 @@ class CrAppilcationController extends Controller
             $data = M_CrApplication::fpkListData($request, 'APKPS', 'WAKPS', 'WAHO', 'APHO', 'REORHO', 'CLHO', 'REORKPS', 'CLKPS');
             return response()->json(['message' => true, "status" => 200, 'response' => $data], 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
@@ -177,8 +175,7 @@ class CrAppilcationController extends Controller
 
             return response()->json(['response' =>  $this->resourceDetail($detail_prospect, $check_application_id)], 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
@@ -202,16 +199,10 @@ class CrAppilcationController extends Controller
             $this->insert_bank_account($request, $uuid);
 
             DB::commit();
-            // ActivityLogger::logActivity($request,"Success",200);
             return response()->json(['message' => 'Application created successfully', "status" => 200], 200);
-        } catch (QueryException $e) {
+        }  catch (\Exception $e) {
             DB::rollback();
-            ActivityLogger::logActivity($request, $e->getMessage(), 409);
-            return response()->json(['message' => $e->getMessage(), "status" => 409], 409);
-        } catch (\Exception $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
@@ -384,8 +375,8 @@ class CrAppilcationController extends Controller
                         }
                     } catch (\Exception $e) {
                         DB::rollback();
-                        ActivityLogger::logActivity($request, $e->getMessage(), 500);
-                        return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+        
+                        return $this->log->logError($e, $request);
                     }
                 }
             }
@@ -411,8 +402,8 @@ class CrAppilcationController extends Controller
                         }
                     } catch (\Exception $e) {
                         DB::rollback();
-                        ActivityLogger::logActivity($request, $e->getMessage(), 500);
-                        return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+        
+                        return $this->log->logError($e, $request);
                     }
                 }
             }
@@ -433,8 +424,7 @@ class CrAppilcationController extends Controller
             return response()->json(['message' => 'Updated Successfully', "status" => 200], 200);
         } catch (\Exception $e) {
             DB::rollback();
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
@@ -928,8 +918,7 @@ class CrAppilcationController extends Controller
             return response()->json(['message' => 'OK', "status" => 200, 'response' => ['uuid' => $generate_uuid]], 200);
         } catch (\Exception $e) {
             DB::rollback();
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+            return $this->log->logError($e, $request);
         }
     }
 
@@ -1382,7 +1371,6 @@ class CrAppilcationController extends Controller
             // Return success response
             return response()->json(['message' => 'Approval Kapos Successfully', 'status' => 200], 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), 'status' => 500], 500);
         }
     }
@@ -1439,8 +1427,7 @@ class CrAppilcationController extends Controller
 
             return response()->json(['message' => 'Approval Ho Successfully'], 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+            return $this->log->logError($e, $request);
         }
     }
 

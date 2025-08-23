@@ -45,7 +45,6 @@ class LogPrintController extends Controller
             return response()->json(['message' => 'created successfully'], 200);
         }catch (\Exception $e) {
             DB::rollback();
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
         }
     }

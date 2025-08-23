@@ -111,7 +111,6 @@ class S_PokokSebagian
 
         $this->s_creditBefore->created($credit, $noInv);
 
-        // Build and Save Payment Details
         $payments = $this->buildPayment($request, $creditSchedules);
 
         foreach ($payments as $payment) {
@@ -204,8 +203,6 @@ class S_PokokSebagian
             }
 
             if ($semuaSudahLewat && $maxIndex !== null) {
-                // $data[$maxIndex]['PRINCIPAL'] -= $paymentPokok;
-                // $data[$maxIndex]['INSTALLMENT'] -= $paymentPokok;
                 $data[$maxIndex]['INSTALLMENT'] = $res->PRINCIPAL + $totalInterest;
                 $data[$maxIndex]['BAYAR_POKOK'] = $paymentPokok;
             } else {
