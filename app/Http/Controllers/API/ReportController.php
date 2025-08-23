@@ -71,7 +71,7 @@ class ReportController extends Controller
                     });
                 }
 
-                $results = $query->get();
+                $results = $query->limit(10)->get();
 
                 if (empty($results)) {
                     $mapping = [];
