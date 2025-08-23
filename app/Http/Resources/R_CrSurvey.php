@@ -15,9 +15,25 @@ class R_CrSurvey extends JsonResource
      */
     public function toArray(Request $request): array
     {
+
+        switch (strtolower($this->jenis_angsuran)) {
+            case 'bunga_menurun':
+                $jenis_angsuran =  'BUNGA MENURUN';
+                break;
+            case 'bulanan':
+                $jenis_angsuran =  'BULANAN';
+                break;
+            case 'musiman':
+                $jenis_angsuran =  'MUSIMAN';
+                break;
+            default:
+                $jenis_angsuran =  $this->jenis_angsuran;
+                break;
+        }
+
         $data = [
             'id' => $this->id,
-            "jenis_angsuran" =>  $this->jenis_angsuran ?? '',
+            "jenis_angsuran" =>  $jenis_angsuran ?? '',
             'visit_date' => $this->visit_date ? date('d-m-Y', strtotime($this->visit_date)) : null,
             'nama_debitur' => $this->nama ?? '',
             'alamat' => $this->alamat ?? '',
