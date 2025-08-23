@@ -32,7 +32,7 @@ class PaymentController extends Controller
     protected $taskslogging;
     protected $pelunasan;
     protected $kwitansiService;
-    protected $s_pokokSebagian;
+    protected $s_PokokSebagian;
 
     public function __construct(
         ExceptionHandling $log,
