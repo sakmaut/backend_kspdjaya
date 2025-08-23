@@ -37,11 +37,16 @@ use Ramsey\Uuid\Uuid;
 
 class CrAppilcationController extends Controller
 {
+    protected $adminfee;
     protected $log;
     protected $validation;
 
-    public function __construct(ExceptionHandling $log, Validation $validation)
+    public function __construct(
+        AdminFeeController $admin_fee,
+        ExceptionHandling $log, 
+        Validation $validation)
     {
+        $this->adminfee = $admin_fee;
         $this->log = $log;
         $this->validation = $validation;
     }
@@ -430,57 +435,91 @@ class CrAppilcationController extends Controller
 
     private function insert_cr_application($request, $applicationModel)
     {
-        $data_cr_application = [
-            'FORM_NUMBER' => '',
-            'CUST_CODE' => '',
-            'ENTRY_DATE' => Carbon::now()->format('Y-m-d'),
-            'SUBMISSION_VALUE' => $request->ekstra['nilai_yang_diterima'] ?? null,
-            'CREDIT_TYPE' => $request->ekstra['tipe_angsuran'] ?? null,
+        $ekstra = $request->ekstra;
+        $user = $request->user();
+
+        $creditType = $ekstra['jenis_angsuran'] ?? null;
+        $tenor = $ekstra['tenor'] ?? null;
+        $submissionValue = $ekstra['nilai_yang_diterima'] ?? null;
+
+        // Default field values
+        $fields = [
+            'FORM_NUMBER'       => '',
+            'CUST_CODE'         => '',
+            'ENTRY_DATE'        => now()->format('Y-m-d'),
+            'SUBMISSION_VALUE'  => $submissionValue,
+            'CREDIT_TYPE'       => $creditType,
             'INSTALLMENT_COUNT' => null,
-            'PERIOD' => $request->ekstra['periode'] ?? null,
-            'INSTALLMENT' => $request->ekstra['angsuran'] ?? null,
-            'OPT_PERIODE' => $request->ekstra['opt_periode'] ?? null,
-            'EFF_RATE' => $request->ekstra['eff_rate'] ?? null,
-            'FLAT_RATE' => $request->ekstra['flat_rate'] ?? null,
-            'INTEREST_RATE' => $request->ekstra['suku_bunga'] ?? null,
-            'TOTAL_INTEREST' => $request->ekstra['total_bunga'] ?? null,
-            'INSTALLMENT_TYPE' => $request->ekstra['jenis_angsuran'] ?? null,
-            'TENOR' => $request->ekstra['tenor'] ?? null,
-            'POKOK_PEMBAYARAN' => $request->ekstra['pokok_pembayaran'] ?? null,
-            'NET_ADMIN' => $request->ekstra['net_admin'] ?? null,
-            'TOTAL_ADMIN' => $request->ekstra['total'] ?? null,
-            'INTEREST_FEE' => $request->ekstra['bunga_fee'] ?? 0,
-            'PROCCESS_FEE' => $request->ekstra['proses_fee'] ?? 0,
-            'CADANGAN' => $request->ekstra['cadangan'] ?? null,
-            'PAYMENT_WAY' => $request->ekstra['cara_pembayaran'] ?? null,
-            'PROVISION' => $request->ekstra['provisi'] ?? null,
-            'INSURANCE' => $request->ekstra['asuransi'] ?? null,
-            'TRANSFER_FEE' => $request->ekstra['biaya_transfer'] ?? null,
-            'INTEREST_MARGIN' => $request->ekstra['bunga_margin'] ?? null,
-            'PRINCIPAL_MARGIN' => $request->ekstra['pokok_margin'] ?? null,
-            'LAST_INSTALLMENT' => $request->ekstra['angsuran_terakhir'] ?? null,
-            'INTEREST_MARGIN_EFF_ACTUAL' => $request->ekstra['bunga_eff_actual'] ?? null,
-            'INTEREST_MARGIN_EFF_FLAT' => $request->ekstra['bunga_flat'] ?? null,
-            'VERSION' => 1
+            'PERIOD'            => $ekstra['periode'] ?? null,
+            'INSTALLMENT_TYPE'  => $creditType,
+            'TENOR'             => $tenor,
+            'OPT_PERIODE'       => $ekstra['opt_periode'] ?? null,
+            'VERSION'           => 1,
         ];
 
+        // Add creator fields if new record
         if (!$applicationModel) {
-            $data_cr_application['ID'] = Uuid::uuid7()->toString();
-            $data_cr_application['CREATE_DATE'] = Carbon::now()->format('Y-m-d');
-            $data_cr_application['CREATE_BY'] = $request->user()->id;
-            $data_cr_application['BRANCH'] = $request->user()->branch_id;
-            $data_cr_application['ORDER_NUMBER'] = $this->createAutoCode(M_CrApplication::class, 'ORDER_NUMBER', 'COR');
-            M_CrApplication::create($data_cr_application);
-        } else {
-            $data_cr_application['MOD_DATE'] = Carbon::now()->format('Y-m-d');
-            $data_cr_application['MOD_BY'] = $request->user()->id;
-            $applicationModel->update($data_cr_application);
+            $fields = array_merge($fields, [
+                'ID'           => Uuid::uuid7()->toString(),
+                'CREATE_DATE'  => now()->format('Y-m-d'),
+                'CREATE_BY'    => $user->id,
+                'BRANCH'       => $user->branch_id,
+                'ORDER_NUMBER' => $this->createAutoCode(M_CrApplication::class, 'ORDER_NUMBER', 'COR'),
+            ]);
+
+            M_CrApplication::create($fields);
+            return;
         }
+
+        // Calculate admin fee data (recreate request object to pass to fee())
+        $feeRequest = new Request([
+            'plafond'         => $submissionValue,
+            'jenis_angsuran'  => $creditType,
+            'tenor'           => $tenor,
+        ]);
+
+        $feeData = $this->adminfee->fee($feeRequest)->getData(true);
+
+        // Assign fee-related fields
+        $fields = array_merge($fields, [
+            'INSTALLMENT'              => $feeData['angsuran']      ?? 0,
+            'EFF_RATE'                 => $feeData['eff_rate']      ?? 0,
+            'FLAT_RATE'                => $feeData['flat_rate']     ?? 0,
+            'INTEREST_RATE'            => $feeData['suku_bunga']    ?? 0,
+            'TOTAL_INTEREST'           => $feeData['total_bunga']   ?? 0,
+            'NET_ADMIN'                => $feeData['total']         ?? 0,
+            'TOTAL_ADMIN'              => $feeData['total']         ?? ($feeData['admin_fee'] ?? 0),
+            'INTEREST_FEE'             => $feeData['bunga_fee']     ?? 0,
+            'PROCCESS_FEE'             => $feeData['proses_fee']    ?? 0,
+            'POKOK_PEMBAYARAN'         => ($feeData['total'] ?? 0) + ($submissionValue ?? 0),
+        ]);
+
+        // Optional extras (added only if available)
+        $optionalFields = [
+            'CADANGAN'                 => 'cadangan',
+            'PAYMENT_WAY'              => 'cara_pembayaran',
+            'PROVISION'                => 'provisi',
+            'INSURANCE'                => 'asuransi',
+            'TRANSFER_FEE'             => 'biaya_transfer',
+            'INTEREST_MARGIN'          => 'bunga_margin',
+            'PRINCIPAL_MARGIN'         => 'pokok_margin',
+            'LAST_INSTALLMENT'         => 'angsuran_terakhir',
+            'INTEREST_MARGIN_EFF_ACTUAL' => 'bunga_eff_actual',
+            'INTEREST_MARGIN_EFF_FLAT'   => 'bunga_flat',
+        ];
+
+        foreach ($optionalFields as $field => $key) {
+            $fields[$field] = $ekstra[$key] ?? null;
+        }
+
+        $fields['MOD_DATE'] = now()->format('Y-m-d');
+        $fields['MOD_BY'] = $user->id;
+
+        $applicationModel->update($fields);
     }
 
     private function insert_cr_order($request, $id, $fpkId)
     {
-
         $check = M_CrOrder::where('APPLICATION_ID', $fpkId)->first();
 
         $data_order = [
@@ -523,7 +562,6 @@ class CrAppilcationController extends Controller
 
     private function insert_cr_personal($request, $applicationId)
     {
-
         $check = M_CrPersonal::where('APPLICATION_ID', $applicationId)->first();
 
         $data_cr_application = [
