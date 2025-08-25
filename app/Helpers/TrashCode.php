@@ -786,7 +786,7 @@ if ($valBeforePrincipal < $getPrincipal) { $remaining_to_principal=$getPrincipal
             ]);
         }
 
-        //LBH QUERY
+        //LKBH QUERY
         // $query = "SELECT
         //                 b.JENIS,
         //                 b.BRANCH,
