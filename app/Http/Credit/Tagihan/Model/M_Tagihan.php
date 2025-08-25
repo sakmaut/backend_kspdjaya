@@ -19,6 +19,7 @@ class M_Tagihan extends Model
         'NAMA_CUST',
         'CYCLE_AWAL',
         'ALAMAT',
+        'KETERANGAN',
         'CREATED_BY',
         'CREATED_AT',
         'UPDATED_BY',
