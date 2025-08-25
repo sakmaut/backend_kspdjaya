@@ -132,6 +132,11 @@ class R_Tagihan
         return DB::select($sql);
     }
 
+    protected function getListTagihanByUserId($userId)
+    {
+        return $this->model->where('USER_ID', $userId)->get();
+    }
+
     protected function create($fields)
     {
         return $this->model->create($fields);

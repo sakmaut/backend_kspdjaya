@@ -184,6 +184,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
 
     //Tagihan
     Route::resource('tagihan', C_Tagihan::class);
+    Route::get('list_tagihan_collector',  [C_Tagihan::class, 'listTagihanByUserId']);
 });
 
 

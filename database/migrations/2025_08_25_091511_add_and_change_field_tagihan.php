@@ -12,7 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('tagihan', function (Blueprint $table) {
-            $table->text('KETERANGAN')->nullable()->after('ALAMAT');
+            $table->string('NO_SURAT', 50)->nullable()->after('USER_ID');
+            $table->date('TGL_EXP')->nullable()->after('ALAMAT');
+            $table->date('TGL_KUNJUNGAN')->nullable()->after('TGL_EXP');
+            $table->text('KETERANGAN')->nullable()->after('TGL_KUNJUNGAN');
         });
     }
 
