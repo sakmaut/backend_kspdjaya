@@ -132,7 +132,7 @@ class R_Tagihan
         return DB::select($sql);
     }
 
-    protected function getListTagihanByUserId($userId)
+    protected function getListTagihanByUserUsername($userId)
     {
         return $this->model->where('USER_ID', $userId)->get();
     }

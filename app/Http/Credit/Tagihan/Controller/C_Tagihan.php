@@ -60,10 +60,10 @@ class C_Tagihan extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'user_id' => 'required|integer',
+            'user_id' => 'required|exists:users,username',
             'list_tagihan' => 'required|array|min:1',
-            'list_tagihan.*.loan_number' => 'required|string',
-            'list_tagihan.*.tgl_jth_tmp' => 'required|date'
+            'list_tagihan.*.NO KONTRAK' => 'required|string',
+            'list_tagihan.*.TGL BOOKING' => 'required|date'
         ]);
 
         if ($validator->fails()) {
@@ -88,10 +88,10 @@ class C_Tagihan extends Controller
     public function update(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'user_id' => 'required|integer',
+            'user_id' => 'required|exists:users,username',
             'list_tagihan' => 'required|array|min:1',
-            'list_tagihan.*.loan_number' => 'required|string',
-            'list_tagihan.*.tgl_jth_tmp' => 'required|date',
+            'list_tagihan.*.NO KONTRAK' => 'required|string',
+            'list_tagihan.*.TGL BOOKING' => 'required|date'
         ]);
 
         if ($validator->fails()) {
