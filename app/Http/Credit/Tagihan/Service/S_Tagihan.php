@@ -4,8 +4,10 @@ namespace App\Http\Credit\Tagihan\Service;
 
 use App\Http\Credit\Tagihan\Model\M_Tagihan;
 use App\Http\Credit\Tagihan\Repository\R_Tagihan;
+use App\Http\Credit\TagihanDetail\Model\M_TagihanDetail;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Support\Facades\DB;
 
 class S_Tagihan extends R_Tagihan
 {
@@ -44,6 +46,10 @@ class S_Tagihan extends R_Tagihan
         return $this->repository->getListTagihanByUserUsername($userId);
     }
 
+    public function listTagihanWithCreditSchedule($loanNumber)
+    {
+        return $this->repository->listTagihanWithCreditSchedule($loanNumber);
+    }
 
     public function getListTagihan($request)
     {
@@ -51,30 +57,83 @@ class S_Tagihan extends R_Tagihan
         return $sql;
     }
 
+    protected function deleteByUserId($userId)
+    {
+        return $this->repository->deleteByUserId($userId);
+    }
+
     public function createTagihan($request, $id = "")
     {
         $savedData = [];
 
-        if (!empty($id)) {
-            $this->repository->deleteByUserId($request['user_id']);
-        }
-
         foreach ($request['list_tagihan'] as $item) {
+            $loanNumber = $item['NO KONTRAK'] ?? null;
+
+            // Jalankan stored procedure untuk ambil data kredit
+            $result = !empty($loanNumber)
+                ? DB::select('CALL get_credit_schedule(?)', [$loanNumber])
+                : [];
+
+            // Data tagihan utama
             $detailData = [
-                'USER_ID'      => $request['user_id'],
-                'NO_SURAT'     => $this->createAutoCode(M_Tagihan::class, 'NO_SURAT', 'STG'),
-                'LOAN_NUMBER'  => $item['NO KONTRAK'] ?? NULL,
-                'TGL_JTH_TEMPO' => Carbon::parse($item['TGL BOOKING'])->format('Y-m-d') ?? NULL,
-                'NAMA_CUST'    => $item['NAMA PELANGGAN'] ?? NULL,
-                'CYCLE_AWAL'   => $item['CYCLE AWAL'] ?? NULL,
-                'ALAMAT'       => $item['ALAMAT TAGIH'] ?? NULL,
-                'CREATED_BY'   => $request->user()->id ?? null,
+                'USER_ID'       => $request['user_id'],
+                'NO_SURAT'      => $this->createAutoCode(M_Tagihan::class, 'NO_SURAT', 'STG'),
+                'LOAN_NUMBER'   => $loanNumber,
+                'TGL_JTH_TEMPO' => isset($item['TGL BOOKING']) ? Carbon::parse($item['TGL BOOKING'])->format('Y-m-d') : null,
+                'NAMA_CUST'     => $item['NAMA PELANGGAN'] ?? null,
+                'CYCLE_AWAL'    => $item['CYCLE AWAL'] ?? null,
+                'ALAMAT'        => $item['ALAMAT TAGIH'] ?? null,
+                'CREATED_BY'    => $request->user()->id ?? null,
             ];
 
+            // Cek jika sudah ada tagihan dengan LOAN_NUMBER ini
+            if ($loanNumber) {
+                $existing = $this->repository->findByLoanNumber($loanNumber);
+
+                if ($existing) {
+                    $updated = $this->repository->update($existing->ID, $detailData);
+                    $savedData[] = $updated;
+
+                    // Simpan data detail baru
+                    $this->saveTagihanDetail($updated->ID, $result);
+                    continue;
+                }
+            }
+
+            // Simpan tagihan baru
             $saved = $this->repository->create($detailData);
             $savedData[] = $saved;
+
+            // Simpan data detail hasil dari stored procedure
+            $this->saveTagihanDetail($saved->ID, $result);
         }
 
         return $savedData;
+    }
+
+    protected function saveTagihanDetail($tagihanId, $creditScheduleData)
+    {
+        foreach ($creditScheduleData as $item) {
+            M_TagihanDetail::updateOrCreate(
+                [
+                    'TAGIHAN_ID'        => $tagihanId,
+                    'INSTALLMENT_COUNT' => $item->INSTALLMENT_COUNT ?? null,
+                ],
+                [
+                    'PAYMENT_DATE'            => $item->PAYMENT_DATE ?? null,
+                    'PRINCIPAL'               => $item->PRINCIPAL ?? null,
+                    'INTEREST'                => $item->INTEREST ?? null,
+                    'INSTALLMENT'             => $item->INSTALLMENT ?? null,
+                    'PRINCIPAL_REMAINS'       => $item->PRINCIPAL_REMAINS ?? null,
+                    'PAYMENT_VALUE_PRINCIPAL' => $item->PAYMENT_VALUE_PRINCIPAL ?? null,
+                    'PAYMENT_VALUE_INTEREST'  => $item->PAYMENT_VALUE_INTEREST ?? null,
+                    'DISCOUNT_PRINCIPAL'      => $item->DISCOUNT_PRINCIPAL ?? null,
+                    'DISCOUNT_INTEREST'       => $item->DISCOUNT_INTEREST ?? null,
+                    'INSUFFICIENT_PAYMENT'    => $item->INSUFFICIENT_PAYMENT ?? null,
+                    'PAYMENT_VALUE'           => $item->PAYMENT_VALUE ?? null,
+                    'PAID_FLAG'               => $item->PAID_FLAG ?? null,
+                ]
+            );
+        }
     }
 }

@@ -1,35 +1,32 @@
 <?php
 
-namespace App\Http\Credit\Tagihan\Model;
+namespace App\Http\Credit\TagihanDetail\Model;
 
-use App\Models\M_CreditSchedule;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-class M_Tagihan extends Model
+class M_TagihanDetail extends Model
 {
     use HasFactory;
 
-    protected $table = 'tagihan';
+    protected $table = 'tagihan_detail';
     protected $fillable = [
         'ID',
-        'USER_ID',
-        'NO_SURAT',
-        'LOAN_NUMBER',
-        'NAMA_CUST',
-        'CYCLE_AWAL',
-        'ALAMAT',
-        'TGL_EXP',
-        'TGL_KUNJUNGAN',
-        'KETERANGAN',
-        'CREATED_BY',
-        'CREATED_AT',
-        'UPDATED_BY',
-        'UPDATED_AT',
-        'DELETED_BY',
-        'DELETED_AT'
+        'TAGIHAN_ID',
+        'INSTALLMENT_COUNT',
+        'PAYMENT_DATE',
+        'PRINCIPAL',
+        'INTEREST',
+        'INSTALLMENT',
+        'PRINCIPAL_REMAINS',
+        'PAYMENT_VALUE_PRINCIPAL',
+        'PAYMENT_VALUE_INTEREST',
+        'DISCOUNT_PRINCIPAL',
+        'DISCOUNT_INTEREST',
+        'INSUFFICIENT_PAYMENT',
+        'PAYMENT_VALUE',
+        'PAID_FLAG'
     ];
 
     public $incrementing = false;

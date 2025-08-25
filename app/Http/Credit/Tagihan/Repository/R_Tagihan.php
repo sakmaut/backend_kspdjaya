@@ -123,7 +123,9 @@ class R_Tagihan
                                     and en.type=date_format(now(),'%d%m%Y')
                                 left join temp_lis_02C py on cast(py.loan_num as char) = cast(cl.LOAN_NUMBER as char)
                                 left join old_survey_note osn on cast(osn.loan_number as char) = cast(cl.LOAN_NUMBER as char)
-                                left join tagihan tg on cast(tg.LOAN_NUMBER as char) = cast(cl.LOAN_NUMBER as char)
+                                left join tagihan tg 
+                                        ON cast(tg.LOAN_NUMBER as char) = cast(cl.LOAN_NUMBER as char)
+                                        AND tg.CREATED_AT < DATE_ADD(DATE_SUB(CURDATE(), INTERVAL DAY(CURDATE()) - 1 DAY), INTERVAL 1 MONTH)
                                 left join users us on us.username = tg.USER_ID
                         WHERE	(cl.STATUS = 'A'  
                                     or (cl.STATUS_REC = 'RP' and cl.mod_user <> 'exclude jaminan' and cast(cl.LOAN_NUMBER as char) not in (select cast(pp.LOAN_NUM as char) from payment pp where pp.ACC_KEY = 'JUAL UNIT'))
@@ -138,6 +140,16 @@ class R_Tagihan
         return DB::select($sql);
     }
 
+    protected function listTagihanWithCreditSchedule($loanNumber)
+    {
+        return  $this->model::with(['credit_schedule'])->where('LOAN_NUMBER', $loanNumber)->get();
+    }
+
+    protected function findByLoanNumber($loanNumber)
+    {
+        return  $this->model->where('LOAN_NUMBER', $loanNumber)->first();
+    }
+
     protected function getListTagihanByUserUsername($userId)
     {
         return $this->model->where('USER_ID', $userId)->get();
@@ -147,6 +159,19 @@ class R_Tagihan
     {
         return $this->model->create($fields);
     }
+
+    protected function update($id, $data)
+    {
+        $record = $this->model::find($id);
+
+        if ($record) {
+            $record->update($data);
+            return $record;
+        }
+
+        return null;
+    }
+
 
     protected function deleteByUserId($userId)
     {
