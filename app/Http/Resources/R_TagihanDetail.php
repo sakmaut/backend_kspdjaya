@@ -81,7 +81,9 @@ class R_TagihanDetail extends JsonResource
             "TAHUN" => (int) $this->PRODUCTION_YEAR ?? '',
             "NILAI PINJAMAN" => (int) $this->NILAI_PINJAMAN ?? 0,
             "ADMIN" => (int) $this->TOTAL_ADMIN ?? '',
-            "CUST_ID" => is_numeric($this->CUST_CODE) ? (int) $this->CUST_CODE ?? '' : $this->CUST_CODE ?? ''
+            "CUST_ID" => is_numeric($this->CUST_CODE) ? (int) $this->CUST_CODE ?? '' : $this->CUST_CODE ?? '',
+            "NO SURAT" => $this->NO_SURAT ?? '',
+            "ASSIGN AO" => $this->username ?? '',
         ];
     }
 }

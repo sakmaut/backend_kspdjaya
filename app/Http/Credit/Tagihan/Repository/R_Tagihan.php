@@ -103,7 +103,9 @@ class R_Tagihan
                                 col.PRODUCTION_YEAR,
                                 replace(format(cl.PCPL_ORI-cl.TOTAL_ADMIN,0),',','') as NILAI_PINJAMAN,
                                 replace(format(cl.TOTAL_ADMIN,0),',','') as TOTAL_ADMIN,
-                                cl.CUST_CODE
+                                cl.CUST_CODE,
+                                tg.NO_SURAT,
+                                us.fullname AS username
                         FROM	credit cl
                                 inner join branch b on cast(b.ID as char) = cast(cl.BRANCH as char)
                                 left join customer c on cast(c.CUST_CODE as char) = cast(cl.CUST_CODE as char)
@@ -121,6 +123,8 @@ class R_Tagihan
                                     and en.type=date_format(now(),'%d%m%Y')
                                 left join temp_lis_02C py on cast(py.loan_num as char) = cast(cl.LOAN_NUMBER as char)
                                 left join old_survey_note osn on cast(osn.loan_number as char) = cast(cl.LOAN_NUMBER as char)
+                                left join tagihan tg on tg.LOAN_NUMBER = cl.LOAN_NUMBER
+                                left join users us on us.USER_ID = tg.username
                         WHERE	(cl.STATUS = 'A'  
                                     or (cl.STATUS_REC = 'RP' and cl.mod_user <> 'exclude jaminan' and cast(cl.LOAN_NUMBER as char) not in (select cast(pp.LOAN_NUM as char) from payment pp where pp.ACC_KEY = 'JUAL UNIT'))
                                     or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char) from temp_lis_02C )))";
@@ -128,6 +132,8 @@ class R_Tagihan
         if ($currentBranch) {
             $sql .= " AND b.ID = '$currentBranch'";
         }
+
+        $sql .= " ORDER BY tg.LOAN_NUMBER IS NOT NULL";
 
         return DB::select($sql);
     }
