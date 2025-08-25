@@ -32,6 +32,7 @@ use App\Http\Controllers\API\{
 use App\Http\Controllers\Payment\Controller\C_PokokSebagian;
 use App\Http\Controllers\Welcome;
 use App\Http\Credit\Tagihan\Controller\C_Tagihan;
+use App\Http\Credit\TagihanDocument\Controller\C_TagihanDocument;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -184,6 +185,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
 
     //Tagihan
     Route::resource('tagihan', C_Tagihan::class);
+    Route::resource('upload_tagihan_document', C_TagihanDocument::class);
     Route::get('list_tagihan_collector',  [C_Tagihan::class, 'listTagihanByUserId']);
 });
 

@@ -13,5 +13,8 @@ class R_TagihanDocument
         $this->model = $model;
     }
 
-    // TODO: Repository methods here
+    protected function create($fields)
+    {
+        return $this->model->create($fields);
+    }
 }
