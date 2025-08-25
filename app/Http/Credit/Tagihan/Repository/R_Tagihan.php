@@ -133,7 +133,7 @@ class R_Tagihan
             $sql .= " AND b.ID = '$currentBranch'";
         }
 
-        $sql .= " ORDER BY tg.LOAN_NUMBER IS NOT NULL";
+        // $sql .= " ORDER BY tg.LOAN_NUMBER IS NOT NULL";
 
         return DB::select($sql);
     }
