@@ -123,7 +123,7 @@ class R_Tagihan
                                     and en.type=date_format(now(),'%d%m%Y')
                                 left join temp_lis_02C py on cast(py.loan_num as char) = cast(cl.LOAN_NUMBER as char)
                                 left join old_survey_note osn on cast(osn.loan_number as char) = cast(cl.LOAN_NUMBER as char)
-                                left join tagihan tg on tg.LOAN_NUMBER = cl.LOAN_NUMBER
+                                left join tagihan tg on cast(tg.LOAN_NUMBER as char) = cast(cl.LOAN_NUMBER as char)
                                 left join users us on us.username = tg.USER_ID
                         WHERE	(cl.STATUS = 'A'  
                                     or (cl.STATUS_REC = 'RP' and cl.mod_user <> 'exclude jaminan' and cast(cl.LOAN_NUMBER as char) not in (select cast(pp.LOAN_NUM as char) from payment pp where pp.ACC_KEY = 'JUAL UNIT'))
