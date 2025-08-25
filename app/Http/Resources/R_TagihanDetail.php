@@ -83,7 +83,7 @@ class R_TagihanDetail extends JsonResource
             "ADMIN" => (int) $this->TOTAL_ADMIN ?? '',
             "CUST_ID" => is_numeric($this->CUST_CODE) ? (int) $this->CUST_CODE ?? '' : $this->CUST_CODE ?? '',
             "NO SURAT" => $this->NO_SURAT ?? '',
-            "ASSIGN AO" => $this->username ?? '',
+            "PIC" => $this->username ?? '',
         ];
     }
 }
