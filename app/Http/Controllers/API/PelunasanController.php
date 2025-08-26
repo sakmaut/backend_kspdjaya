@@ -100,7 +100,7 @@ class PelunasanController extends Controller
                                         )
                                         FROM credit_schedule
                                         WHERE LOAN_NUMBER = '{$loan_number}' 
-                                        AND PAYMENT_DATE < NOW()
+                                        AND PAYMENT_DATE > NOW()
                                     )
                                 GROUP BY LOAN_NUMBER
                             ) b ON b.LOAN_NUMBER = a.LOAN_NUMBER
