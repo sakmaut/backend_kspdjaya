@@ -62,31 +62,25 @@ class S_Tagihan extends R_Tagihan
         return $this->repository->deleteByUserId($userId);
     }
 
-    public function createTagihan($request, $id = "")
+    public function createTagihan($request)
     {
         $savedData = [];
 
         foreach ($request['list_tagihan'] as $item) {
             $loanNumber = $item['NO KONTRAK'] ?? null;
 
-            // Jalankan stored procedure untuk ambil data kredit
-            $result = !empty($loanNumber)
-                ? DB::select('CALL get_credit_schedule(?)', [$loanNumber])
-                : [];
+            $result = !empty($loanNumber) ? DB::select('CALL get_credit_schedule(?)', [$loanNumber]) : [];
 
-            // Data tagihan utama
             $detailData = [
                 'USER_ID'       => $request['user_id'],
                 'NO_SURAT'      => $this->createAutoCode(M_Tagihan::class, 'NO_SURAT', 'STG'),
                 'LOAN_NUMBER'   => $loanNumber,
-                'TGL_JTH_TEMPO' => isset($item['TGL BOOKING']) ? Carbon::parse($item['TGL BOOKING'])->format('Y-m-d') : null,
                 'NAMA_CUST'     => $item['NAMA PELANGGAN'] ?? null,
                 'CYCLE_AWAL'    => $item['CYCLE AWAL'] ?? null,
                 'ALAMAT'        => $item['ALAMAT TAGIH'] ?? null,
                 'CREATED_BY'    => $request->user()->id ?? null,
             ];
 
-            // Cek jika sudah ada tagihan dengan LOAN_NUMBER ini
             if ($loanNumber) {
                 $existing = $this->repository->findByLoanNumber($loanNumber);
 
@@ -94,17 +88,14 @@ class S_Tagihan extends R_Tagihan
                     $updated = $this->repository->update($existing->ID, $detailData);
                     $savedData[] = $updated;
 
-                    // Simpan data detail baru
                     $this->saveTagihanDetail($updated->ID, $result);
                     continue;
                 }
             }
 
-            // Simpan tagihan baru
             $saved = $this->repository->create($detailData);
             $savedData[] = $saved;
 
-            // Simpan data detail hasil dari stored procedure
             $this->saveTagihanDetail($saved->ID, $result);
         }
 

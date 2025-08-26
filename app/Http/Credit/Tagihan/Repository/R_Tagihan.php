@@ -147,8 +147,13 @@ class R_Tagihan
 
     protected function findByLoanNumber($loanNumber)
     {
-        return  $this->model->where('LOAN_NUMBER', $loanNumber)->first();
+        return $this->model
+            ->where('LOAN_NUMBER', $loanNumber)
+            ->whereMonth('CREATED_AT', now()->month)
+            ->whereYear('CREATED_AT', now()->year)
+            ->first();
     }
+
 
     protected function getListTagihanByUserUsername($userId)
     {
