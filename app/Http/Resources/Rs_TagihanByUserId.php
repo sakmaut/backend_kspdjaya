@@ -18,7 +18,7 @@ class Rs_TagihanByUserId extends JsonResource
             'id' => $this->ID,
             'no_surat' => $this->NO_SURAT,
             'loan_number' => $this->LOAN_NUMBER,
-            'tgl_jth_tempo' => $this->tagihan_detail
+            'detail' => $this->tagihan_detail
                 ? $this->tagihan_detail->map(function ($item) {
                     return [
                         'angs_ke' => $item['INSTALLMENT_COUNT'] ?? '',
