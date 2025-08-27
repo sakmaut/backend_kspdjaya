@@ -157,7 +157,7 @@ class R_Tagihan
 
     protected function getListTagihanByUserUsername($userId)
     {
-        return $this->model->where('USER_ID', $userId)->get();
+        return $this->model::with(['tagihan_detail'])->where('USER_ID', $userId)->get();
     }
 
     protected function create($fields)

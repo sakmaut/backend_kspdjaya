@@ -2,6 +2,7 @@
 
 namespace App\Http\Credit\Tagihan\Model;
 
+use App\Http\Credit\TagihanDetail\Model\M_TagihanDetail;
 use App\Models\M_CreditSchedule;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -46,5 +47,10 @@ class M_Tagihan extends Model
                 $model->setAttribute($model->getKeyName(), Str::uuid()->toString());
             }
         });
+    }
+
+    public function tagihan_detail()
+    {
+        return $this->hasMany(M_TagihanDetail::class, 'TAGIHAN_ID');
     }
 }
