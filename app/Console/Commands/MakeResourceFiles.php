@@ -12,32 +12,46 @@ class MakeResourceFiles extends Command
 
     public function handle()
     {
-        $name = Str::studly($this->argument('name'));
+        $inputName = $this->argument('name'); // contoh: Slik/Slik
+        $segments = explode('/', $inputName);
+        $rawName = array_pop($segments); // ambil nama class (Slik)
+        $name = Str::studly($rawName);
+        $subFolder = implode('/', array_map([Str::class, 'studly'], $segments)); // jadi Slik
 
-        $baseNamespace = 'App\Http\Controllers\Payment';
-        $basePath = app_path('Http/Controllers/Payment');
+        // Base namespace dan path
+        $baseNamespace = 'App\Http' . ($subFolder ? '\\' . str_replace('/', '\\', $subFolder) : '');
+        $basePath = app_path('Http' . ($subFolder ? '/' . $subFolder : ''));
 
-        // Struktur pembuatan: Controller, Service, Repository
-        $structure = [
-            'Controller' => "C_$name",
-            'Service'    => "S_$name",
-            'Repository' => "R_$name",
-        ];
+        // Namespace per komponen
+        $controllerNamespace = "$baseNamespace\\Controller";
+        $repoNamespace = "$baseNamespace\\Repository";
+        $serviceNamespace = "$baseNamespace\\Service";
+        $modelNamespace = "$baseNamespace\\Model";
 
-        // Buat Controller via Artisan (extends Controller Laravel)
-        $controllerRelative = "Payment/Controller/C_$name";
-        // Buat Controller manual dengan method resource default
+        // Folder path
         $controllerFolder = "$basePath/Controller";
-        $controllerClass = "C_$name";
-        $controllerPath = "$controllerFolder/$controllerClass.php";
+        $repoFolder = "$basePath/Repository";
+        $serviceFolder = "$basePath/Service";
+        $modelFolder = "$basePath/Model";
 
+        // Class name
+        $controllerClass = "C_$name";
+        $repoClass = "R_$name";
+        $serviceClass = "S_$name";
+        $modelClass = "M_$name";
+
+        // File path
+        $controllerPath = "$controllerFolder/$controllerClass.php";
+        $repoPath = "$repoFolder/$repoClass.php";
+        $servicePath = "$serviceFolder/$serviceClass.php";
+        $modelPath = "$modelFolder/$modelClass.php";
+
+        // ===== Controller =====
         if (!file_exists($controllerFolder)) {
             mkdir($controllerFolder, 0755, true);
         }
 
         if (!file_exists($controllerPath)) {
-            $controllerNamespace = "$baseNamespace\\Controller";
-
             $controllerContent = "<?php
 
 namespace $controllerNamespace;
@@ -73,32 +87,23 @@ class $controllerClass extends Controller
     }
 }
 ";
-
             file_put_contents($controllerPath, $controllerContent);
             $this->info("Created: $controllerPath");
         } else {
             $this->warn("Skipped (exists): $controllerPath");
         }
 
-        $this->info("Created (via Artisan): app/Http/Controllers/$controllerRelative.php");
-
-        // Buat Repository manual, inject Model
-        $repoFolder = "$basePath/Repository";
-        $repoClass = "R_$name";
-        $repoPath = "$repoFolder/$repoClass.php";
+        // ===== Repository =====
         if (!file_exists($repoFolder)) {
             mkdir($repoFolder, 0755, true);
         }
-        if (!file_exists($repoPath)) {
-            $modelClass = "M_$name";
-            $modelNamespace = "$baseNamespace\\Model\\$modelClass";
-            $repoNamespace = "$baseNamespace\\Repository";
 
+        if (!file_exists($repoPath)) {
             $repoContent = "<?php
 
 namespace $repoNamespace;
 
-use $modelNamespace;
+use $modelNamespace\\$modelClass;
 
 class $repoClass
 {
@@ -118,18 +123,12 @@ class $repoClass
             $this->warn("Skipped (exists): $repoPath");
         }
 
-        // Buat Service manual, extend Repository, inject Repository
-        $serviceFolder = "$basePath/Service";
-        $serviceClass = "S_$name";
-        $servicePath = "$serviceFolder/$serviceClass.php";
+        // ===== Service =====
         if (!file_exists($serviceFolder)) {
             mkdir($serviceFolder, 0755, true);
         }
-        if (!file_exists($servicePath)) {
-            $serviceNamespace = "$baseNamespace\\Service";
-            $repoNamespace = "$baseNamespace\\Repository";
-            $repoClass = "R_$name";
 
+        if (!file_exists($servicePath)) {
             $serviceContent = "<?php
 
 namespace $serviceNamespace;
@@ -154,18 +153,12 @@ class $serviceClass extends $repoClass
             $this->warn("Skipped (exists): $servicePath");
         }
 
-        // Buat Model manual dengan isi tetap seperti yang kamu minta
-        $modelFolder = "$basePath/Model";
-        $modelClass = "M_$name";
-        $modelPath = "$modelFolder/$modelClass.php";
-
+        // ===== Model =====
         if (!file_exists($modelFolder)) {
             mkdir($modelFolder, 0755, true);
         }
 
         if (!file_exists($modelPath)) {
-            $modelNamespace = "$baseNamespace\\Model";
-
             $modelContent = "<?php
 
 namespace $modelNamespace;
@@ -177,18 +170,20 @@ use Illuminate\\Support\\Str;
 class $modelClass extends Model
 {
     use HasFactory;
-    protected \$table = '';
-    protected \$fillable = [
 
-    ];
+    protected \$table = '';
+    protected \$fillable = [];
     protected \$guarded = [];
+
     public \$incrementing = false;
     protected \$keyType = 'string';
     protected \$primaryKey = 'ID';
     public \$timestamps = false;
+
     protected static function boot()
     {
         parent::boot();
+
         static::creating(function (\$model) {
             if (\$model->getKey() == null) {
                 \$model->setAttribute(\$model->getKeyName(), Str::uuid()->toString());

@@ -494,3 +494,21 @@ if (!function_exists('generateAutoCode')) {
         return $newCode;
     }
 }
+
+if (!function_exists('mkautono')) {
+    function generateCodeWithPrefix($modelClass, $field, $prefix)
+    {
+        $datePart = date("Ymd");
+        $fullPrefix = "{$prefix}/{$datePart}/";
+
+        $latestCode = $modelClass::where($field, 'like', "{$fullPrefix}%")
+            ->orderBy($field, 'desc')
+            ->value($field);
+
+        $nextNumber = $latestCode
+            ? ((int) substr($latestCode, strlen($fullPrefix)) + 1)
+            : 1;
+
+        return $fullPrefix . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+    }
+}
