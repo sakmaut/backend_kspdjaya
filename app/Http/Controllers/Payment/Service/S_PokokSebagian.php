@@ -121,7 +121,7 @@ class S_PokokSebagian
                 'tgl_angsuran'   => $payment['PAYMENT_DATE'] ?? null,
                 'principal'   => $payment['PRINCIPAL'] ?? null,
                 'interest'   => $payment['INTEREST'] ?? null,
-                'installment'    => $payment['INSTALLMENT'] ?? 0,
+                'installment'    => $payment['PRINCIPAL'] + $payment['INTEREST']  ?? 0,
                 'bayar_pokok'    => $payment['BAYAR_POKOK'] ?? 0,
                 'bayar_bunga'    => $payment['BAYAR_BUNGA'] ?? 0,
                 'bayar_denda'    => $payment['BAYAR_DENDA'] ?? 0,
@@ -333,7 +333,6 @@ class S_PokokSebagian
         $currentDate = date('Y-m-d');
         $isPastDue   = strtotime($schedule->PAYMENT_DATE) < strtotime($currentDate);
 
-        // Step 1: Initial update
         $fields = [
             'PRINCIPAL'               => $principalDetail,
             'INTEREST'                => $interestDetail,
@@ -346,28 +345,41 @@ class S_PokokSebagian
             $fields['PRINCIPAL_REMAINS'] = $principalDetail;
         }
 
-        $schedule->update($fields); // Update awal
+        $schedule->update($fields);
 
-        $isPaid = ($principalDetail + $interestDetail) == ($totalPrincipal + $totalInterest);
+        // $insufficient = $totalPaid - $installmentValue;
+        $insufficient = ($totalPrincipal + $totalInterest) - $installmentValue;
 
-        if (!$isPaid && $paidPrincipal != 0 || $paidInterest != 0) {
-            $insufficient = $totalPaid - $installmentValue;
-
+        if ($totalPaid > 0) {
             $schedule->update([
                 'INSUFFICIENT_PAYMENT' => $insufficient,
-                'PAYMENT_VALUE'        => $paymentValue + $totalPaid
+                'PAYMENT_VALUE'        => $paymentValue + $totalPaid,
+                'PAID_FLAG'            => $insufficient == 0 ? "PAID" : "",
             ]);
 
             $this->addPayment($request, $kwitansi, $detail);
-        } else {
-            $schedule->update([
-                'INSUFFICIENT_PAYMENT' => $paymentValue > 0 ? $insufficientPayment + $totalPaid : 0,
-                'PAYMENT_VALUE'        => $paymentValue > 0 ? $paymentValue + $totalPaid : 0,
-                'PAID_FLAG'            => $isPaid ? 'PAID' : "",
-            ]);
         }
-    }
 
+
+        // $isPaid = ($principalDetail + $interestDetail) == ($paidPrincipal + $paidInterest);
+
+        // if (!$isPaid && $paidPrincipal != 0 || $paidInterest != 0) {
+        //     $insufficient = $totalPaid - $installmentValue;
+
+        //     $schedule->update([
+        //         'INSUFFICIENT_PAYMENT' => $insufficient,
+        //         'PAYMENT_VALUE'        => $paymentValue + $totalPaid
+        //     ]);
+
+        //     $this->addPayment($request, $kwitansi, $detail);
+        // } else {
+        //     $schedule->update([
+        //         'INSUFFICIENT_PAYMENT' => $paymentValue > 0 ? $insufficientPayment + $totalPaid : 0,
+        //         'PAYMENT_VALUE'        => $paymentValue > 0 ? $paymentValue + $totalPaid : 0,
+        //         'PAID_FLAG'            => $isPaid ? 'PAID' : "",
+        //     ]);
+        // }
+    }
 
     private function updateCreditStatus($request, $credit, $loanNumber)
     {
@@ -416,7 +428,7 @@ class S_PokokSebagian
             'TITLE' => 'Pembayaran Pokok Sebagian',
             'ORIGINAL_AMOUNT' => $totalPayment ?? 0,
             'OS_AMOUNT' => $os_amount ?? 0,
-            'START_DATE' => $request->tgl_angsuran ?? null,
+            'START_DATE' => $data['tgl_angsuran'] ?? null,
             'END_DATE' => now(),
             'USER_ID' => $kwitansi->CREATED_BY ?? $request->user()->id,
             'AUTH_BY' => $request->user()->fullname ?? '',
