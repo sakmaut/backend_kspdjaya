@@ -32,10 +32,10 @@ class C_Deposits extends Controller
         }
     }
 
-    public function show(Request $request)
+    public function show(Request $request, $id)
     {
         try {
-            $data = $this->service->getDepositByNumber($request->number);
+            $data = $this->service->getDepositByNumber($id);
             // $json = new Rs_Deposits($data);
 
             return response()->json($data, 200);

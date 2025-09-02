@@ -169,7 +169,6 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::resource('upload_saving_doc', C_SavingDocument::class);
     Route::resource('transaction', C_SavingTransactionLog::class);
     Route::resource('deposits', C_Deposits::class);
-    Route::get('deposits_detail',  [C_Deposits::class, 'show']);
 });
 
 
