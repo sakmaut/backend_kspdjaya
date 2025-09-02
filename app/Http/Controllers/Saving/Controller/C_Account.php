@@ -32,6 +32,18 @@ class C_Account extends Controller
         }
     }
 
+    public function getByCustCode(Request $request, $custCode)
+    {
+        try {
+            $data =  $this->service->getAllAccountByCustCode($custCode);
+            $json = Rs_Account::collection($data);
+
+            return response()->json($json, 200);
+        } catch (\Exception $e) {
+            return $this->log->logError($e, $request);
+        }
+    }
+
     public function show(Request $request, $id)
     {
         try {

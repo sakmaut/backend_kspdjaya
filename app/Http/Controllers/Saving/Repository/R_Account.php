@@ -18,6 +18,11 @@ class R_Account
         return $this->model::with(['customer', 'product_saving'])->get();
     }
 
+    protected function getAllAccountByCustCode($custCode)
+    {
+        return $this->model::with(['customer', 'product_saving'])->where('cust_code', $custCode)->get();
+    }
+
     protected function findById($id)
     {
         return $this->model::with(['customer', 'product_saving'])->where('id', $id)->first();

@@ -26,6 +26,11 @@ class S_Account extends R_Account
         return $this->repository->getAllAccount();
     }
 
+    public function getAllAccountByCustCode($custCode)
+    {
+        return $this->repository->getAllAccountByCustCode($custCode);
+    }
+
     public function findCustomerByAccNumber($accNumber)
     {
         $data = $this->repository->findByAccNumber($accNumber);

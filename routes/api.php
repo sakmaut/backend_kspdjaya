@@ -65,7 +65,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
 
     // Route Group Branch
     Route::resource('cabang', BranchController::class);
-    Route::get('collateral_count', [BpkbController::class, 'countAll']);
+    // Route::get('collateral_count', [BpkbController::class, 'countAll']);
 
     // Route Group Cr Application
     Route::resource('cr_application', CrAppilcationController::class)->except(['index']);
@@ -163,6 +163,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
 
     //Saving
     Route::resource('account', C_Account::class);
+    Route::get('account_by_custcode/{id}', [C_Account::class, 'getByCustCode']);
     Route::resource('customers', C_Customers::class);
     Route::resource('saving', C_ProductSaving::class);
     Route::resource('upload_saving_doc', C_SavingDocument::class);
