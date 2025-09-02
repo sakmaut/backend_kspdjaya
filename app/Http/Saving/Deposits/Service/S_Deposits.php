@@ -28,7 +28,8 @@ class S_Deposits extends R_Deposits
     {
         $fields = [
             'status' => "active",
-            'deposit_number' => generateCodeWithPrefix($this->repository->model, 'deposit_number', 'SFD'),
+            // 'deposit_number' => generateCodeWithPrefix($this->repository->model, 'deposit_number', 'SFD'),
+            'deposit_number' =>  $request->no_deposito ?? 0,
             'deposit_holder' => $request->nama_pemilik,
             'branch' => $request->user()->branch_id,
             'cust_code' => $request->cust_code,
