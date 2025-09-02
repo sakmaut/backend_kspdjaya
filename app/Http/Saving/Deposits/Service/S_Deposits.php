@@ -19,6 +19,11 @@ class S_Deposits extends R_Deposits
         return $this->repository->all();
     }
 
+    public function getDepositByNumber($deposit_number)
+    {
+        return $this->repository->findDepositoBy($deposit_number);
+    }
+
     public function createDeposit($request)
     {
         $fields = [

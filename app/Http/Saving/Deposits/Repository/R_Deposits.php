@@ -18,6 +18,11 @@ class R_Deposits
         return $this->model->all();
     }
 
+    protected function findDepositoBy($deposit_number)
+    {
+        return $this->model->where('deposit_number', $deposit_number)->first();
+    }
+
     protected function create($fields)
     {
         return $this->model->create($fields);
