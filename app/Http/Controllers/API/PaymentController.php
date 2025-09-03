@@ -665,10 +665,9 @@ class PaymentController extends Controller
             $getCurrentPosition = strtolower($request->user()->position);
 
             $kwitansi = M_Kwitansi::where(['NO_TRANSAKSI' => $getNoInvoice, 'STTS_PAYMENT' => 'PENDING'])->lockForUpdate()->first();
-            
-            $getLoanNumber = $kwitansi->LOAN_NUMBER;
 
             if ($kwitansi) {
+                $getLoanNumber = $kwitansi->LOAN_NUMBER;
                 $getCodeBranch = M_Branch::findOrFail($request->user()->branch_id);
 
                 $request->merge(['payment_method' => 'transfer']);

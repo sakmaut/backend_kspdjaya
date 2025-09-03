@@ -289,7 +289,7 @@ class S_PokokSebagian
             $this->processDetail($request, $loanNumber, $detail, $kwitansi);
         }
 
-        $this->updateCreditStatus($request, $credit, $loanNumber);
+        $this->updateCreditStatus($request, $credit, $loanNumber, $details);
     }
 
     private function getKwitansi($loanNumber, $noTransaksi)
@@ -345,7 +345,6 @@ class S_PokokSebagian
 
         $schedule->update($fields);
 
-        // $insufficient = $totalPaid - $installmentValue;
         $insufficient = ($totalPrincipal + $totalInterest) - $installmentValue;
 
         if ($totalPaid > 0) {
@@ -357,36 +356,20 @@ class S_PokokSebagian
 
             $this->addPayment($request, $kwitansi, $detail);
         }
-
-
-        // $isPaid = ($principalDetail + $interestDetail) == ($paidPrincipal + $paidInterest);
-
-        // if (!$isPaid && $paidPrincipal != 0 || $paidInterest != 0) {
-        //     $insufficient = $totalPaid - $installmentValue;
-
-        //     $schedule->update([
-        //         'INSUFFICIENT_PAYMENT' => $insufficient,
-        //         'PAYMENT_VALUE'        => $paymentValue + $totalPaid
-        //     ]);
-
-        //     $this->addPayment($request, $kwitansi, $detail);
-        // } else {
-        //     $schedule->update([
-        //         'INSUFFICIENT_PAYMENT' => $paymentValue > 0 ? $insufficientPayment + $totalPaid : 0,
-        //         'PAYMENT_VALUE'        => $paymentValue > 0 ? $paymentValue + $totalPaid : 0,
-        //         'PAID_FLAG'            => $isPaid ? 'PAID' : "",
-        //     ]);
-        // }
     }
 
-    private function updateCreditStatus($request, $credit, $loanNumber)
+    private function updateCreditStatus($request, $credit, $loanNumber, $details)
     {
+        $total_bayar_pokok = $request->BAYAR_POKOK ?: $details->sum(fn($item) => (float) $item['bayar_pokok']);
+        $total_bayar_bunga = $request->BAYAR_BUNGA ?: $details->sum(fn($item) => (float) $item['bayar_bunga']);
+        $total_bayar_denda = $request->BAYAR_DENDA ?: $details->sum(fn($item) => (float) $item['bayar_denda']);
+
         $allPaid = M_CreditSchedule::where('LOAN_NUMBER', $loanNumber)
-            ->where(function ($query) {
+            ->where(
+                fn($query) =>
                 $query->where('PAID_FLAG', '!=', 'PAID')
-                    ->orWhereNull('PAID_FLAG');
-            })
-            ->count();
+                    ->orWhereNull('PAID_FLAG')
+            )->count();
 
         $totalInterest = M_CreditSchedule::where('LOAN_NUMBER', $loanNumber)->sum('INTEREST');
 
@@ -397,11 +380,36 @@ class S_PokokSebagian
             'INTRST_ORI' => $totalInterest ?? 0,
             'STATUS_REC' => ($totalOriginal == $totalPaid && $credit->arrears->isEmpty() || $allPaid == 0) ? 'PT' : $credit->STATUS_REC,
             'STATUS'     => ($totalOriginal == $totalPaid && $credit->arrears->isEmpty() || $allPaid == 0) ? 'D'  : $credit->STATUS,
-            'PAID_PRINCIPAL' => $credit->PAID_PRINCIPAL + $request->BAYAR_POKOK,
-            'PAID_INTEREST' => $credit->PAID_INTEREST + $request->BAYAR_BUNGA,
-            'PAID_PENALTY' => $credit->PAID_PENALTY + $request->BAYAR_DENDA,
+            'PAID_PRINCIPAL' => $credit->PAID_PRINCIPAL + $total_bayar_pokok,
+            'PAID_INTEREST'  => $credit->PAID_INTEREST + $total_bayar_bunga,
+            'PAID_PENALTY'   => $credit->PAID_PENALTY + $total_bayar_denda,
         ]);
     }
+
+
+    // private function updateCreditStatus($request, $credit, $loanNumber)
+    // {
+    //     $allPaid = M_CreditSchedule::where('LOAN_NUMBER', $loanNumber)
+    //         ->where(function ($query) {
+    //             $query->where('PAID_FLAG', '!=', 'PAID')
+    //                 ->orWhereNull('PAID_FLAG');
+    //         })
+    //         ->count();
+
+    //     $totalInterest = M_CreditSchedule::where('LOAN_NUMBER', $loanNumber)->sum('INTEREST');
+
+    //     $totalOriginal = $credit->PCPL_ORI + $credit->INTRST_ORI;
+    //     $totalPaid = $credit->PAID_PRINCIPAL + $credit->PAID_INTEREST;
+
+    //     $credit->update([
+    //         'INTRST_ORI' => $totalInterest ?? 0,
+    //         'STATUS_REC' => ($totalOriginal == $totalPaid && $credit->arrears->isEmpty() || $allPaid == 0) ? 'PT' : $credit->STATUS_REC,
+    //         'STATUS'     => ($totalOriginal == $totalPaid && $credit->arrears->isEmpty() || $allPaid == 0) ? 'D'  : $credit->STATUS,
+    //         'PAID_PRINCIPAL' => $credit->PAID_PRINCIPAL + $request->BAYAR_POKOK,
+    //         'PAID_INTEREST' => $credit->PAID_INTEREST + $request->BAYAR_BUNGA,
+    //         'PAID_PENALTY' => $credit->PAID_PENALTY + $request->BAYAR_DENDA,
+    //     ]);
+    // }
 
     public function addPayment($request, $kwitansi, $data)
     {
