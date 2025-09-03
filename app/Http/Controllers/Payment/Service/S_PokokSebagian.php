@@ -66,7 +66,7 @@ class S_PokokSebagian
 
         $this->proccessKwitansiDetail($request, $kwitansi);
 
-        if ($kwitansi->STTS_PAYMENT == 'PAID') {
+        if ($kwitansi->STTS_PAYMENT === 'PAID') {
             $this->processPokokBungaMenurun($request, $kwitansi);
         }
 
@@ -274,18 +274,16 @@ class S_PokokSebagian
 
     public function processPokokBungaMenurun($request, $kwitansiDetail)
     {
-        $loanNumber = $request->LOAN_NUMBER;
+        $loanNumber = $request->LOAN_NUMBER ?? $kwitansiDetail->LOAN_NUMBER;
         $noTransaksi = $kwitansiDetail->NO_TRANSAKSI;
 
         $kwitansi = $this->getKwitansi($loanNumber, $noTransaksi);
+
         if (!$kwitansi) return;
 
         $credit = M_Credit::with(['arrears'])->where('LOAN_NUMBER', $loanNumber)->first();
 
         $details = collect($kwitansi->kwitansi_pelunasan_detail);
-        // $finalPrincipalRemains = $details->sortByDesc('angsuran_ke')->first()['bayar_pokok'];
-        // $totalPrincipalPaid = $details->sum('bayar_pokok');
-        // $maxDetail = $details->sortByDesc('angsuran_ke')->first();
 
         foreach ($details as $detail) {
             $this->processDetail($request, $loanNumber, $detail, $kwitansi);

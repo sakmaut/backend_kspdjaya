@@ -183,15 +183,7 @@ class PaymentController extends Controller
         $tgl_angsuran = Carbon::parse($res['tgl_angsuran'])->format('Y-m-d');
         $uid = Uuid::uuid7()->toString();
 
-        // $credit = M_Credit::where('LOAN_NUMBER', $loan_number)->first();
-
         $this->updateCreditSchedule($loan_number, $tgl_angsuran, $res, $uid);
-
-        // if ($credit->CREDIT_TYPE != 'bunga_menurun') {
-        //     $this->updateCreditSchedule($loan_number, $tgl_angsuran, $res, $uid);
-        // } else {
-        //     $this->updateCreditScheduleBungaMenurun($loan_number, $tgl_angsuran, $res, $uid);
-        // }
 
         if ((strtolower($request->diskon_flag) == 'ya' && isset($request->diskon_flag) && $request->diskon_flag != '')) {
             $this->updateDiscountArrears($loan_number, $tgl_angsuran, $res, $uid);
@@ -281,83 +273,6 @@ class PaymentController extends Controller
             }
 
             $credit_schedule->update(['PAID_FLAG' => $credit_schedule->PAYMENT_VALUE >= $credit_schedule->INSTALLMENT ? 'PAID' : '']);
-        }
-    }
-
-    private function updateCreditScheduleBungaMenurun($loan_number, $tgl_angsuran, $res, $uid)
-    {
-        $credit_schedule = M_CreditSchedule::where([
-            'LOAN_NUMBER' => $loan_number,
-            'PAYMENT_DATE' => $tgl_angsuran
-        ])->first();
-
-        if (!$credit_schedule) return;
-
-        $byr_angsuran = floatval($res['bayar_angsuran']);
-        $flag = $res['flag'];
-
-        $current_paid_interest = floatval($credit_schedule->PAYMENT_VALUE_INTEREST);
-        $total_interest = floatval($credit_schedule->INTEREST);
-
-        if ($byr_angsuran != 0 || $flag != 'PAID') {
-
-            $new_payment_value_interest = $current_paid_interest;
-
-            $remaining_to_interest = $total_interest - $current_paid_interest;
-            $remaining_payment = 0;
-
-            if ($remaining_to_interest > 0) {
-                if ($byr_angsuran >= $remaining_to_interest) {
-                    $new_payment_value_interest = $total_interest;
-                    $remaining_payment = $byr_angsuran - $remaining_to_interest;
-                } else {
-                    $new_payment_value_interest += $byr_angsuran;
-                    $remaining_payment = 0;
-                }
-            } else {
-                $remaining_payment = $byr_angsuran;
-            }
-
-            $updates = [];
-            if ($new_payment_value_interest != $current_paid_interest) {
-                $valInterest = $new_payment_value_interest - $current_paid_interest;
-
-                $updates['PAYMENT_VALUE_INTEREST'] = $new_payment_value_interest;
-
-                $data = $this->preparePaymentData($uid, 'ANGSURAN_BUNGA', $valInterest);
-                M_PaymentDetail::create($data);
-                $this->addCreditPaid($loan_number, ['ANGSURAN_BUNGA' => $valInterest]);
-            }
-
-
-            $current_payment_value = floatval($credit_schedule->PAYMENT_VALUE);
-            // $installment = floatval($credit_schedule->INSTALLMENT);
-
-            // // if ($current_payment_value < $installment) {
-            // //     $remaining_payment = $installment - $current_payment_value;
-            // //     $additional_payment = min($byr_angsuran, $remaining_payment);
-            // //     $payment_value = $current_payment_value + $additional_payment;
-
-            // //     $updates['PAYMENT_VALUE'] = $payment_value;
-            // // }
-
-            // $remaining_payment = $installment - $current_payment_value;
-            // $additional_payment = min($byr_angsuran, $remaining_payment);
-            // $payment_value = $current_payment_value + $additional_payment;
-
-            $updates['PAYMENT_VALUE'] = $byr_angsuran + $current_payment_value;
-
-            $insufficient_payment = max(0, $total_interest - $new_payment_value_interest);
-
-            $updates['INSUFFICIENT_PAYMENT'] = $insufficient_payment;
-
-            if (!empty($updates)) {
-                $credit_schedule->update($updates);
-            }
-
-            if ($new_payment_value_interest >= $total_interest) {
-                $credit_schedule->update(['PAID_FLAG' => 'PAID']);
-            }
         }
     }
 
@@ -750,6 +665,7 @@ class PaymentController extends Controller
             $getCurrentPosition = strtolower($request->user()->position);
 
             $kwitansi = M_Kwitansi::where(['NO_TRANSAKSI' => $getNoInvoice, 'STTS_PAYMENT' => 'PENDING'])->lockForUpdate()->first();
+            
             $getLoanNumber = $kwitansi->LOAN_NUMBER;
 
             if ($kwitansi) {
