@@ -795,7 +795,7 @@ class PaymentController extends Controller
                         $kwitansi->update(['STTS_PAYMENT' => 'WAITING CANCEL']);
                     } else {
 
-                        $checkType = $kwitansi->PAYMENT_TYPE === 'pelunasan';
+                        $checkType = in_array($kwitansi->PAYMENT_TYPE, ['pelunasan', 'pokok_sebagian']);
 
                         $detailModel = $checkType ? M_KwitansiDetailPelunasan::class : M_KwitansiStructurDetail::class;
 
