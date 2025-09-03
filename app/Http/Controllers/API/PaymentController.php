@@ -767,7 +767,7 @@ class PaymentController extends Controller
                     if ($kwitansi->PAYMENT_TYPE === 'pelunasan') {
                         $this->pelunasan->proccess($request, $getLoanNumber, $getNoInvoice, 'PAID');
                     } elseif ($kwitansi->PAYMENT_TYPE === 'pokok_sebagian') {
-                        $this->s_PokokSebagian->processPokokBungaMenurun($request, $getLoanNumber, $getNoInvoice);
+                        $this->s_PokokSebagian->processPokokBungaMenurun($request, $kwitansi);
                     } else {
                         $getKwitansiDetail = M_KwitansiStructurDetail::where([
                             'no_invoice' => $getNoInvoice
