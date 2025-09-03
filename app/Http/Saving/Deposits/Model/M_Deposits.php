@@ -2,6 +2,7 @@
 
 namespace App\Http\Saving\Deposits\Model;
 
+use App\Models\M_Customer;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
@@ -58,5 +59,10 @@ class M_Deposits extends Model
                 $model->setAttribute($model->getKeyName(), Str::uuid()->toString());
             }
         });
+    }
+
+    public function customer()
+    {
+        return $this->hasOne(M_Customer::class, 'CUST_CODE', 'cust_code');
     }
 }

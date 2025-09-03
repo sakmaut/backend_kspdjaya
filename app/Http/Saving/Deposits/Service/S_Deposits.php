@@ -41,6 +41,7 @@ class S_Deposits extends R_Deposits
             'deposit_value' => $request->nominal,
             'flag_tax' => $request->restitusi_pajak == 'ya' ? 1 : 0,
             'acc_source' => $request->sumber_dana,
+            'acc_destination' => $request->no_rekening,
             'created_by' => $request->user()->id,
         ];
 

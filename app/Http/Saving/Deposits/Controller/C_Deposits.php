@@ -4,6 +4,7 @@ namespace App\Http\Saving\Deposits\Controller;
 
 use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
+use App\Http\Saving\Deposits\Resource\Rs_DepositDetails;
 use App\Http\Saving\Deposits\Resource\Rs_Deposits;
 use App\Http\Saving\Deposits\Service\S_Deposits;
 use Illuminate\Http\Request;
@@ -36,9 +37,10 @@ class C_Deposits extends Controller
     {
         try {
             $data = $this->service->getDepositByNumber($id);
-            // $json = new Rs_Deposits($data);
 
-            return response()->json($data, 200);
+            $json = new Rs_DepositDetails($data);
+
+            return response()->json($json, 200);
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
         }
