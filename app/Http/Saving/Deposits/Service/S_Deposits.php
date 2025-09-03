@@ -37,6 +37,7 @@ class S_Deposits extends R_Deposits
             'roll_over' => $request->rollover,
             'int_rate' => $request->suku_bunga,
             'entry_date' => Carbon::parse($request->tgl_mulai)->format('Y-m-d H:i:s'),
+            'mature_date' => Carbon::parse($request->tgl_mulai)->addMonths($request->periode)->format('Y-m-d H:i:s'),
             'deposit_value' => $request->nominal,
             'flag_tax' => $request->restitusi_pajak == 'ya' ? 1 : 0,
             'acc_source' => $request->sumber_dana,
