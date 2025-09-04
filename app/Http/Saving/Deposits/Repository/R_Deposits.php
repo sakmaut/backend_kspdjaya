@@ -20,7 +20,7 @@ class R_Deposits
 
     protected function findDepositoBy($deposit_number)
     {
-        return $this->model::with(['customer'])->where('deposit_number', $deposit_number)->first();
+        return $this->model::with(['customer', 'account_source', 'account_destination'])->where('deposit_number', $deposit_number)->first();
     }
 
     protected function create($fields)

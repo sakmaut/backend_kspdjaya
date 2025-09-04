@@ -2,6 +2,7 @@
 
 namespace App\Http\Saving\Deposits\Model;
 
+use App\Http\Controllers\Saving\Model\M_Account;
 use App\Models\M_Customer;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -68,5 +69,15 @@ class M_Deposits extends Model
     public function customer()
     {
         return $this->hasOne(M_Customer::class, 'CUST_CODE', 'cust_code');
+    }
+
+    public function account_source()
+    {
+        return $this->hasOne(M_Account::class, 'acc_number', 'acc_source');
+    }
+
+    public function account_destination()
+    {
+        return $this->hasOne(M_Account::class, 'acc_number', 'acc_destination');
     }
 }

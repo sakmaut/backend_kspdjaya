@@ -27,11 +27,14 @@ class Rs_DepositDetails extends JsonResource
             "tempo" => (int) $this->period,
             "roll_over" => $this->roll_over,
             "sumber_dana" => $this->acc_source,
-            "no_rek_sumber_dana" => $this->acc_source_num,
-            "nama_sumber_dana" => $this->acc_source_name,
             "rekening_tujuan" => $this->acc_destination,
-            "no_rek_tujuan" => $this->acc_destination_num,
-            "nama_rek_tujuan" => $this->acc_destination_name,
+
+            // Hanya tampil jika bukan "lainnya"
+            "no_rek_sumber_dana" => $this->acc_source == 'Lainnya' ? $this->acc_source_num ?? '' : $this->account_source->acc_number ?? '',
+            "nama_sumber_dana" => $this->acc_source == 'Lainnya' ? $this->acc_source_name : $this->account_source->acc_name ?? '',
+
+            "no_rek_tujuan" =>  $this->acc_destination == 'Lainnya' ? $this->acc_destination_num ?? '' : $this->account_destination->acc_number ?? '',
+            "nama_rek_tujuan" =>  $this->acc_destination == 'Lainnya' ? $this->acc_destination_name ?? '' : $this->account_destination->acc_name ?? '',
         ];
     }
 }
