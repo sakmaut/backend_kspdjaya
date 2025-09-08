@@ -12,11 +12,11 @@ class R_PokokSebagian
         $today = date('Y-m-d');
 
         $query = "  SELECT 
-                        (a.PCPL_ORI - COALESCE(a.PAID_PRINCIPAL, 0)) AS SISA_POKOK,
-                        b.INT_ARR AS TUNGGAKAN_BUNGA,
-                        e.TUNGGAKAN_DENDA AS TUNGGAKAN_DENDA,
-                        e.DENDA_TOTAL AS DENDA,
-                        d.DISC_BUNGA
+                        COALESCE(a.PCPL_ORI - COALESCE(a.PAID_PRINCIPAL, 0), 0) AS SISA_POKOK,
+                        COALESCE(b.INT_ARR, 0) AS TUNGGAKAN_BUNGA,
+                        COALESCE(e.TUNGGAKAN_DENDA, 0) AS TUNGGAKAN_DENDA,
+                        COALESCE(e.DENDA_TOTAL, 0) AS DENDA,
+                        COALESCE(d.DISC_BUNGA, 0) AS DISC_BUNGA
                     FROM credit a
                         LEFT JOIN (
                             SELECT 
