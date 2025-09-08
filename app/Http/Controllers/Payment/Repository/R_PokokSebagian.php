@@ -81,6 +81,17 @@ class R_PokokSebagian
                     WHERE 
                         a.LOAN_NUMBER = '{$loan_number}' ";
 
-        return DB::select($query);
+        $result = DB::select($query);
+
+        $processedResults = array_map(function ($item) {
+            return [
+                'SISA_POKOK' => round(floatval($item->SISA_POKOK), 2),
+                'TUNGGAKAN_BUNGA' => round(floatval($item->TUNGGAKAN_BUNGA), 2),
+                'TUNGGAKAN_DENDA' => round(floatval($item->TUNGGAKAN_DENDA), 2),
+                'DENDA' => round(floatval($item->DENDA), 2),
+                'PINALTI' => round(floatval($item->PINALTI), 2),
+                'DISC_BUNGA' => round(floatval($item->DISC_BUNGA), 2)
+            ];
+        }, $result);
     }
 }
