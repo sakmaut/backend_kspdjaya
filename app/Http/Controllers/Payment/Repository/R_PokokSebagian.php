@@ -9,6 +9,7 @@ class R_PokokSebagian
     public function getAllData($request)
     {
         $loan_number = $request->loan_number;
+        $today = date('Y-m-d');
 
         $query = "  SELECT 
                         (a.PCPL_ORI - COALESCE(a.PAID_PRINCIPAL, 0)) AS SISA_POKOK,
@@ -32,13 +33,13 @@ class R_PokokSebagian
                                                 SELECT 1 
                                                 FROM credit_schedule 
                                                 WHERE LOAN_NUMBER = '{$loan_number}' 
-                                                AND PAYMENT_DATE = CURRENT_DATE
-                                            ) THEN CURRENT_DATE
+                                                AND PAYMENT_DATE = '{$today}'
+                                            ) THEN '{$today}'
                                             ELSE (
                                                 SELECT MIN(PAYMENT_DATE)
                                                 FROM credit_schedule 
                                                 WHERE LOAN_NUMBER = '{$loan_number}' 
-                                                AND PAYMENT_DATE > CURRENT_DATE
+                                                AND PAYMENT_DATE > '{$today}'
                                             )
                                         END
                                 )
@@ -57,11 +58,11 @@ class R_PokokSebagian
                                                 (SELECT MAX(PAYMENT_DATE)
                                                 FROM credit_schedule
                                                 WHERE LOAN_NUMBER = '{$loan_number}'
-                                                AND PAYMENT_DATE < NOW())
+                                                AND PAYMENT_DATE < '{$today}')
                                             )
                                             FROM credit_schedule
                                             WHERE LOAN_NUMBER = '{$loan_number}'
-                                            AND PAYMENT_DATE > NOW()
+                                            AND PAYMENT_DATE > '{$today}'
                                         )
                                     GROUP BY LOAN_NUMBER
                         ) AS d ON d.LOAN_NUMBER = a.LOAN_NUMBER
