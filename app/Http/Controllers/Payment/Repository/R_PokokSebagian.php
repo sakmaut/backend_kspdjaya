@@ -24,18 +24,23 @@ class R_PokokSebagian
                             FROM 
                                 credit_schedule
                             WHERE 
-                                LOAN_NUMBER = '{$loan_number}' 
+                                LOAN_NUMBER = '{$loan_number}'
                                 AND PAYMENT_DATE <= (
-                                    SELECT COALESCE(
-                                        MIN(PAYMENT_DATE), 
-                                        (SELECT MAX(PAYMENT_DATE) 
-                                        FROM credit_schedule 
-                                        WHERE LOAN_NUMBER = '{$loan_number}'  
-                                        AND PAYMENT_DATE < NOW())
-                                    )
-                                    FROM credit_schedule
-                                    WHERE LOAN_NUMBER = '{$loan_number}' 
-                                    AND PAYMENT_DATE > NOW()
+                                    SELECT 
+                                        CASE 
+                                            WHEN EXISTS (
+                                                SELECT 1 
+                                                FROM credit_schedule 
+                                                WHERE LOAN_NUMBER = '{$loan_number}' 
+                                                AND PAYMENT_DATE = CURRENT_DATE
+                                            ) THEN CURRENT_DATE
+                                            ELSE (
+                                                SELECT MIN(PAYMENT_DATE)
+                                                FROM credit_schedule 
+                                                WHERE LOAN_NUMBER = '{$loan_number}' 
+                                                AND PAYMENT_DATE > CURRENT_DATE
+                                            )
+                                        END
                                 )
                             GROUP BY LOAN_NUMBER
                         ) b ON b.LOAN_NUMBER = a.LOAN_NUMBER
@@ -52,7 +57,7 @@ class R_PokokSebagian
                                                 (SELECT MAX(PAYMENT_DATE)
                                                 FROM credit_schedule
                                                 WHERE LOAN_NUMBER = '{$loan_number}'
-                                                AND PAYMENT_DATE <= NOW())
+                                                AND PAYMENT_DATE < NOW())
                                             )
                                             FROM credit_schedule
                                             WHERE LOAN_NUMBER = '{$loan_number}'
