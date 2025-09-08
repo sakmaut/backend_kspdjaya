@@ -4,6 +4,8 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Payment\Repository\R_PokokSebagian;
+use App\Http\Controllers\Payment\Service\S_PokokSebagian;
 use App\Http\Controllers\Repositories\TasksLogging\TasksRepository;
 use App\Http\Resources\R_KwitansiPelunasan;
 use App\Http\Resources\R_Pelunasan;
@@ -27,11 +29,16 @@ class PelunasanController extends Controller
 
     protected $log;
     protected $taskslogging;
+    protected $r_pokokSebagian;
 
-    public function __construct(ExceptionHandling $log, TasksRepository $taskslogging)
+    public function __construct(
+        ExceptionHandling $log, 
+        TasksRepository $taskslogging,
+        R_PokokSebagian $r_pokokSebagian)
     {
         $this->log = $log;
         $this->taskslogging = $taskslogging;
+        $this->r_pokokSebagian = $r_pokokSebagian;
     }
 
     public function index(Request $request)
@@ -69,9 +76,14 @@ class PelunasanController extends Controller
     public function checkCredit(Request $request)
     {
         try {
-
             $loan_number = $request->loan_number;
             $setPenaltyRate = 5;
+
+            $checkCreditType = M_Credit::where('LOAN_NUMBER',$loan_number)->first();
+
+            if(strtolower($checkCreditType->CREDIT_TYPE) === 'bunga_menurun'){
+                return $this->r_pokokSebagian->getAllData($request);
+            }
 
             $allQuery = "SELECT 
                             (a.PCPL_ORI - COALESCE(a.PAID_PRINCIPAL, 0)) AS SISA_POKOK,
