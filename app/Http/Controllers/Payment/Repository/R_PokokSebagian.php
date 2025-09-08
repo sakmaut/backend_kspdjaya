@@ -93,5 +93,7 @@ class R_PokokSebagian
                 'DISC_BUNGA' => round(floatval($item->DISC_BUNGA), 2)
             ];
         }, $result);
+
+        return $processedResults;
     }
 }
