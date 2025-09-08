@@ -414,7 +414,7 @@ class S_PokokSebagian
     public function addPayment($request, $kwitansi, $data)
     {
         $uid = Uuid::uuid7()->toString();
-        $loanNumber = $request->LOAN_NUMBER;
+        $loanNumber = $request->LOAN_NUMBER ?? $kwitansi->LOAN_NUMBER;
         $bayarPokok = floatval($data['bayar_pokok'] ?? 0);
         $bayarBunga = floatval($data['bayar_bunga'] ?? 0);
         $totalPayment = $bayarPokok + $bayarBunga;
