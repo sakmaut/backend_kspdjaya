@@ -52,7 +52,7 @@ class R_PokokSebagian
                                                 (SELECT MAX(PAYMENT_DATE)
                                                 FROM credit_schedule
                                                 WHERE LOAN_NUMBER = '{$loan_number}'
-                                                AND PAYMENT_DATE < NOW())
+                                                AND PAYMENT_DATE <= NOW())
                                             )
                                             FROM credit_schedule
                                             WHERE LOAN_NUMBER = '{$loan_number}'
