@@ -105,9 +105,9 @@ class ListBanController extends Controller
         $dari = $request->dari;
         $sampai = $request->sampai;
 
-        $position = $request->user()->position;
-
         $query = DB::table('lkbh_report_view')->whereBetween('ENTRY_DATE', [$dari, $sampai]);
+
+        $position = $request->user()->position;
 
         if ($position != 'HO') {
             $query->where('BRANCH_ID', $request->user()->branch_id);
