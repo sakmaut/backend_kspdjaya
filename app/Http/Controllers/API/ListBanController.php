@@ -100,15 +100,17 @@ class ListBanController extends Controller
         }
     }
 
-    private function queryArusKas($cabangId, $request)
+    private function queryArusKas($request)
     {
         $dari = $request->dari;
         $sampai = $request->sampai;
 
+        $position = $request->user()->position;
+
         $query = DB::table('lkbh_report_view')->whereBetween('ENTRY_DATE', [$dari, $sampai]);
 
-        if (!empty($cabangId) && $cabangId !== 'SEMUA CABANG') {
-            $query->where('BRANCH_ID', $cabangId);
+        if ($position != 'HO') {
+            $query->where('BRANCH_ID', $request->user()->branch_id);
         }
 
         $results = $query->orderByRaw('ENTRY_DATE, position, LOAN_NUM, no_invoice, angsuran_ke')->get();
