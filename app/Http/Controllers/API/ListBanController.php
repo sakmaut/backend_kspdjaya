@@ -27,7 +27,7 @@ class ListBanController extends Controller
             if (!empty($request->dari)) {
                 $cabangId = $request->cabang_id;
 
-                $arusKas = $this->queryArusKas($cabangId, $request);
+                $arusKas = $this->queryArusKas($request);
 
                 foreach ($arusKas as $item) {
 
