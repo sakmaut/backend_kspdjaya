@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Saving\Service;
 
 use App\Http\Controllers\Saving\Repository\R_Account;
+use App\Models\M_Saving;
+use App\Models\M_SavingLog;
 use Exception;
 
 class S_Account extends R_Account
@@ -71,10 +73,24 @@ class S_Account extends R_Account
             'acc_name' => $customer->NAME,
             'cust_code' => $customer->CUST_CODE,
             'branch' => $branch,
-            'min_bal' => $request->setoran_awal,
+            'min_bal' => $request->tabungan['minimal_saldo'],
             'plafond_amount' => $request->nama_produk,
             'date_last_trans' => now()
         ];
+
+        $saving = M_Saving::create([
+            'CUST_CODE' => $customer->CUST_CODE,
+            'ACC_NUM' => $request->no_rekening,
+            'BALANCE' => $request->setoran_awal
+        ]);
+
+        M_SavingLog::create([
+            'SAVING_ID' => $saving->ID ?? '',
+            'TRX_TYPE' => 'CREDIT',
+            'TRX_DATE' => now(),
+            'BALANCE' =>  $request->setoran_awal,
+            'DESCRIPTION' => 'Setoran awal'
+        ]);
 
         if (isset($id) && $type != 'create') {
 

@@ -6,6 +6,7 @@ use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Saving\Resource\Rs_SavingTransactionLog;
 use App\Http\Controllers\Saving\Service\S_SavingTransactionLog;
+use App\Models\M_Saving;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -20,7 +21,19 @@ class C_SavingTransactionLog extends Controller
         $this->log = $log;
     }
 
-    public function show(Request $request,$accNumber)
+    public function index(Request $request)
+    {
+        try {
+            $data = M_Saving::with(['customer', 'saving_log'])->get();
+            // $json = Rs_SavingTransactionLog::collection($data);
+
+            return response()->json($data, 200);
+        } catch (\Exception $e) {
+            return $this->log->logError($e, $request);
+        }
+    }
+
+    public function show(Request $request, $accNumber)
     {
         try {
             $data =  $this->service->findTransactionLogByAccNumber($accNumber);
