@@ -105,13 +105,13 @@ class ListBanController extends Controller
         $sampai   = $request->sampai;
         $cabangId = $request->cabang_id;
         $position = $request->user()->position;
-        $branchId = $request->user()->branch_id;
+        $userBranchId = $request->user()->branch_id;
 
         $query = DB::table('lkbh_report_view')
             ->whereBetween('ENTRY_DATE', [$dari, $sampai]);
 
         if ($position !== 'HO') {
-            $query->where('BRANCH_ID', $branchId);
+            $query->where('BRANCH_ID', $userBranchId);
         } elseif (!empty($cabangId) && $cabangId !== 'SEMUA CABANG') {
             $query->where('BRANCH_ID', $cabangId);
         }
