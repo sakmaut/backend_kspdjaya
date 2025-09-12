@@ -78,7 +78,7 @@ class C_SavingTransactionLog extends Controller
     {
         DB::beginTransaction();
         try {
-            $data = $this->service->create($request);
+            $data = $this->service->createSaving($request);
 
             DB::commit();
             return response()->json(["message" => "success", 'data' => $data], 200);
