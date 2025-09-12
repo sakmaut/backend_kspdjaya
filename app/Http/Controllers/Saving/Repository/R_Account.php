@@ -25,7 +25,7 @@ class R_Account
 
     protected function findById($id)
     {
-        return $this->model::with(['customer', 'product_saving'])->where('id', $id)->first();
+        return $this->model::with(['customer', 'product_saving', 'savings'])->where('id', $id)->first();
     }
 
     protected function findByAccNumber($accNumber)

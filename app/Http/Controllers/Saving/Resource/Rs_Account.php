@@ -27,7 +27,7 @@ class Rs_Account extends JsonResource
             "cabang" => "",
             "jenis_tabungan" => $this->product_saving->product_type,
             "kode_jenis_tabungan" => $this->product_saving->product_code,
-            "saldo" => floatval($this->min_bal),
+            "saldo" => floatval($this->savings->BALANCE),
             "status" => "",
             "tgl_registrasi" => $this->created_at,
             "tgl_terakhir_transaksi" => $this->date_last_trans,

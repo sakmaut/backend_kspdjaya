@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Saving\Model;
 
+use App\Models\M_Saving;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
@@ -62,5 +63,10 @@ class M_Account extends Model
     public function transaction_log()
     {
         return $this->hasMany(M_SavingTransactionLog::class, 'acc_number', 'acc_number');
+    }
+
+    public function savings()
+    {
+        return $this->hasOne(M_Saving::class, 'ACC_NUM', 'acc_number');
     }
 }
