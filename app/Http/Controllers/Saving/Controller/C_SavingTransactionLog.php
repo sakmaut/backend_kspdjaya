@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Saving\Controller;
 use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Saving\Resource\Rs_SavingTransactionLog;
+use App\Http\Controllers\Saving\Resource\Rs_TransaksiLog;
 use App\Http\Controllers\Saving\Service\S_SavingTransactionLog;
 use App\Models\M_Saving;
+use App\Models\M_SavingLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -24,10 +26,10 @@ class C_SavingTransactionLog extends Controller
     public function index(Request $request)
     {
         try {
-            $data = M_Saving::with(['customer', 'saving_log'])->get();
-            // $json = Rs_SavingTransactionLog::collection($data);
+            $data = M_SavingLog::with(['savings', 'savings.customer', 'user'])->get();
+            $json = Rs_TransaksiLog::collection($data);
 
-            return response()->json($data, 200);
+            return response()->json($json, 200);
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
         }

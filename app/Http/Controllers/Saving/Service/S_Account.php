@@ -89,7 +89,8 @@ class S_Account extends R_Account
             'TRX_TYPE' => 'CREDIT',
             'TRX_DATE' => now(),
             'BALANCE' =>  $request->setoran_awal,
-            'DESCRIPTION' => 'Setoran awal'
+            'DESCRIPTION' => 'Setoran awal',
+            'CREATED_BY' =>  $user
         ]);
 
         if (isset($id) && $type != 'create') {

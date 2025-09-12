@@ -16,9 +16,10 @@ class M_SavingLog extends Model
         'TRX_TYPE',
         'TRX_DATE',
         'BALANCE',
-        'DESCRIPTION'
+        'DESCRIPTION',
+        'CREATED_BY'
     ];
-    
+
     protected $guarded = [];
     public $incrementing = false;
     protected $keyType = 'string';
@@ -33,5 +34,15 @@ class M_SavingLog extends Model
                 $model->setAttribute($model->getKeyName(), Str::uuid()->toString());
             }
         });
+    }
+
+    public function savings()
+    {
+        return $this->hasOne(M_Saving::class, 'ID', 'SAVING_ID');
+    }
+
+    public function user()
+    {
+        return $this->hasOne(User::class, 'id', 'CREATED_BY');
     }
 }
