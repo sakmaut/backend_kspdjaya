@@ -13,6 +13,7 @@ class Rs_Account extends JsonResource
             "id" => $this->id,
             "no_rekening" => $this->acc_number,
             "nama_pemilik" => $this->customer->NAME,
+            "cust_code" => $this->customer->CUST_CODE,
             "nama_alias" => $this->customer->ALIAS,
             "nama_ibu_kandung" =>  $this->customer->MOTHER_NAME,
             "jenis_kelamin" =>  $this->customer->GENDER,
