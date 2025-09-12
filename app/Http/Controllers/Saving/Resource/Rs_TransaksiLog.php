@@ -15,6 +15,7 @@ class Rs_TransaksiLog extends JsonResource
             "pemilik" => $this->savings->customer->NAME,
             "nominal" => (float) $this->BALANCE,
             "operator" => $this->user->fullname,
+            "tipe" => $this->TRX_TYPE,
         ];
     }
 }
