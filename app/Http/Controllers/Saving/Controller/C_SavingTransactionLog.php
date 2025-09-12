@@ -26,13 +26,40 @@ class C_SavingTransactionLog extends Controller
     public function index(Request $request)
     {
         try {
-            $data = M_SavingLog::with(['savings', 'savings.customer', 'user'])->get();
+            $data = $this->getListData();
             $json = Rs_TransaksiLog::collection($data);
 
             return response()->json($json, 200);
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
         }
+    }
+
+    public function findTrxByAcc(Request $request, $id)
+    {
+        try {
+            $data = $this->getListData($id);
+            $json = Rs_TransaksiLog::collection($data);
+
+            return response()->json($json, 200);
+        } catch (\Exception $e) {
+            return $this->log->logError($e, $request);
+        }
+    }
+
+    public function getListData($accnum = null)
+    {
+        $query = M_SavingLog::with(['savings', 'savings.customer', 'user']);
+
+        if (!is_null($accnum)) {
+            $query->whereHas('savings', function ($q) use ($accnum) {
+                $q->where('ACC_NUM', $accnum);
+            });
+        }
+
+        $data = $query->get();
+
+        return $data;
     }
 
     public function show(Request $request, $accNumber)

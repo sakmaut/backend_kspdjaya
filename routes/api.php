@@ -169,6 +169,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::resource('upload_saving_doc', C_SavingDocument::class);
     Route::resource('transaction', C_SavingTransactionLog::class);
     Route::resource('deposits', C_Deposits::class);
+    Route::get('transaction_by_acc/{id}', [C_SavingTransactionLog::class, 'findTrxByAcc']);
 });
 
 
