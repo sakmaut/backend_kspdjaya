@@ -17,7 +17,10 @@ class M_SavingLog extends Model
         'TRX_DATE',
         'BALANCE',
         'DESCRIPTION',
-        'CREATED_BY'
+        'CREATED_BY',
+        'BOOK',
+        'ROW',
+        'PAGE'
     ];
 
     protected $guarded = [];

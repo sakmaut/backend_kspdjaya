@@ -17,8 +17,10 @@ class C_SavingTransactionLog extends Controller
     protected $service;
     protected $log;
 
-    function __construct(S_SavingTransactionLog $service, ExceptionHandling $log)
-    {
+    function __construct(
+        S_SavingTransactionLog $service,
+        ExceptionHandling $log
+    ) {
         $this->service = $service;
         $this->log = $log;
     }

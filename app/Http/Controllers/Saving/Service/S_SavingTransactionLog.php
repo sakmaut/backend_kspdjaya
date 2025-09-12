@@ -48,9 +48,9 @@ class S_SavingTransactionLog extends R_SavingTransactionLog
 
     public function createSaving($request)
     {
-        $accNumber = $request->no_rekening;
-        $type      = $request->tipe_transaksi;
-        $amount    = floatval($request->jumlah);
+        $accNumber = $request->nomor_rekening;
+        $type      = $request->sandi_transaksi;
+        $amount    = floatval($request->nominal);
         $userId    = $request->user()->id;
 
         $saving = M_Saving::where('CUST_CODE', $request->cust_code)
@@ -58,13 +58,13 @@ class S_SavingTransactionLog extends R_SavingTransactionLog
             ->first();
 
         if ($saving) {
-            $saving->BALANCE += $request->setoran;
+            $saving->BALANCE += $amount;
             $saving->save();
         } else {
             $saving = M_Saving::create([
                 'CUST_CODE' => $request->cust_code,
                 'ACC_NUM'   => $accNumber,
-                'BALANCE'   => $request->setoran
+                'BALANCE'   => $amount
             ]);
         }
 
@@ -80,7 +80,10 @@ class S_SavingTransactionLog extends R_SavingTransactionLog
             'TRX_DATE' => now(),
             'BALANCE' =>  $amount,
             'DESCRIPTION' =>  $request->keterangan ?? $type,
-            'CREATED_BY' =>  $userId
+            'CREATED_BY' =>  $userId,
+            'BOOK' => $request->buku ?? 0,
+            'ROW' => $request->baris ?? 0,
+            'PAGE' => $request->hal ?? 0
         ]);
 
         return $saving;
