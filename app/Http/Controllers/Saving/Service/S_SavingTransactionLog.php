@@ -58,33 +58,40 @@ class S_SavingTransactionLog extends R_SavingTransactionLog
             ->first();
 
         if ($saving) {
-            $saving->BALANCE += $amount;
+            if ($type == 'setor') {
+                $saving->BALANCE += $amount;
+                $trx_type = 'CREDIT';
+            } else {
+                $saving->BALANCE -= $amount;
+                $trx_type = 'DEBIT';
+            }
+
             $saving->save();
         } else {
-            $saving = M_Saving::create([
-                'CUST_CODE' => $request->cust_code,
-                'ACC_NUM'   => $accNumber,
-                'BALANCE'   => $amount
-            ]);
-        }
-
-        if ($type == 'setor') {
-            $trx_type = 'CREDIT';
-        } else {
-            $trx_type = 'DEBIT';
+            if ($type == 'setor') {
+                $saving = M_Saving::create([
+                    'CUST_CODE' => $request->cust_code,
+                    'ACC_NUM'   => $accNumber,
+                    'BALANCE'   => $amount
+                ]);
+                $trx_type = 'CREDIT';
+            } else {
+                return response()->json(['error' => 'Akun tidak ditemukan untuk penarikan.'], 400);
+            }
         }
 
         M_SavingLog::create([
-            'SAVING_ID' => $saving->ID ?? '',
-            'TRX_TYPE' => $trx_type,
-            'TRX_DATE' => now(),
-            'BALANCE' =>  $amount,
-            'DESCRIPTION' =>  $request->keterangan ?? $type,
-            'CREATED_BY' =>  $userId,
-            'BOOK' => $request->buku ?? 0,
-            'ROW' => $request->baris ?? 0,
-            'PAGE' => $request->hal ?? 0
+            'SAVING_ID'   => $saving->ID ?? null,
+            'TRX_TYPE'    => $trx_type,
+            'TRX_DATE'    => now(),
+            'BALANCE'     => $amount,
+            'DESCRIPTION' => $request->keterangan ?? $type,
+            'CREATED_BY'  => $userId,
+            'BOOK'        => $request->buku ?? 0,
+            'ROW'         => $request->baris ?? 0,
+            'PAGE'        => $request->hal ?? 0
         ]);
+
 
         return $saving;
     }
