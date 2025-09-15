@@ -347,7 +347,7 @@ class S_PokokSebagian
 
         $insufficient = ($totalPrincipal + $totalInterest) - $installmentValue;
 
-        if ($totalPaid > 0) {
+        if ($totalPaid > 0 || $insufficient == 0) {
             $schedule->update([
                 'INSUFFICIENT_PAYMENT' => $insufficient,
                 'PAYMENT_VALUE'        => $paymentValue + $totalPaid,
