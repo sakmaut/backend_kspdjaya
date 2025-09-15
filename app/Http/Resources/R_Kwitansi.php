@@ -156,7 +156,9 @@ class R_Kwitansi extends JsonResource
             "pembulatan" => intval($this->PEMBULATAN ?? 0),
             "pinalti" => intval($this->PINALTY_PELUNASAN ?? 0),
             "kembalian" => intval($this->KEMBALIAN ?? 0),
-            "total_bayar" => $this->PAYMENT_TYPE == 'pokok_sebagian' ? intval($this->JUMLAH_UANG ?? 0) : intval($this->TOTAL_BAYAR ?? 0),
+            "total_bayar" => in_array($this->PAYMENT_TYPE, ['pokok_sebagian', 'pelunasan'])
+                ? (int) ($this->JUMLAH_UANG ?? 0)
+                : (int) ($this->TOTAL_BAYAR ?? 0),
             "jumlah_uang" => intval($this->JUMLAH_UANG ?? 0),
             "terbilang" => bilangan($this->TOTAL_BAYAR) ?? null,
             'attachment' => $attachment,
