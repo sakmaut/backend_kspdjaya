@@ -618,9 +618,10 @@ class ReportController extends Controller
 
                 $usedAngsuranTempo = [];
                 $bungaDibayarPerKey = [];
-                $pokokSudahTampilPerKey = [];
 
-                $data_credit = []; // Pastikan array ini dideklarasi
+                $data_credit = [];
+
+                $lastIndex = count($data) - 1;
 
                 foreach ($data as $index => $res) {
                     $angs = $res->INSTALLMENT_COUNT ?? 0;
@@ -642,8 +643,13 @@ class ReportController extends Controller
                     $interest = max(0, $interest - $bungaDibayarPerKey[$uniqKey]);
                     $bungaDibayarPerKey[$uniqKey] += $byrBunga;
 
-                    // Tampilkan pokok hanya sebesar yang dibayar, bukan sisa pokok
+                    // Pokok default = jumlah yang dibayarkan
                     $pokokTampil = $byrPokok;
+
+                    // Jika ini baris terakhir dan tidak ada byrPokok, maka tampilkan sisa pokok
+                    if ($index === $lastIndex && $byrPokok == 0 && $sisaPokok > 0) {
+                        $pokokTampil = $sisaPokok;
+                    }
 
                     // Update sisa pokok
                     $sisaPokok = max(0, $sisaPokok - $byrPokok);
@@ -672,21 +678,6 @@ class ReportController extends Controller
                     ];
                 }
 
-                // Tambahkan satu baris di akhir untuk sisa pokok (jika masih ada)
-                if ($sisaPokok > 0) {
-                    $data_credit[] = [
-                        'Angs' => '',
-                        'Jt.Tempo' => '',
-                        'Pokok' => number_format($sisaPokok, 0),
-                        'Bunga' => 0,
-                        'Denda' => 0,
-                        'Tgl Bayar' => '',
-                        'Byr Pokok' => 0,
-                        'Byr Bunga' => 0,
-                        'Byr Dnda' => 0,
-                        'Hari OD' => ''
-                    ];
-                }
 
 
                 $schedule['data_credit'] = $data_credit;
