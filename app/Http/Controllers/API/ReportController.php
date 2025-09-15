@@ -617,6 +617,7 @@ class ReportController extends Controller
                 $sisaPokok = $totalPrincipal;
 
                 $usedAngsuranTempo = [];
+                $bungaDibayarPerKey = [];
 
                 foreach ($data as $index => $res) {
                     $angs = $res->INSTALLMENT_COUNT ?? 0;
@@ -634,6 +635,17 @@ class ReportController extends Controller
 
                     // Buat key unik dari angsuran ke dan tanggal jatuh tempo
                     $uniqKey = $angs . '-' . $tglTempoFormatted;
+
+                    // Hitung bunga yang sudah dibayar untuk key ini
+                    if (!isset($bungaDibayarPerKey[$uniqKey])) {
+                        $bungaDibayarPerKey[$uniqKey] = 0;
+                    }
+
+                    // Kurangi bunga jika sebelumnya sudah dibayar
+                    $interest = max(0, $interest - $bungaDibayarPerKey[$uniqKey]);
+
+                    // Tambahkan pembayaran bunga saat ini ke total bunga yang dibayar untuk key ini
+                    $bungaDibayarPerKey[$uniqKey] += $byrBunga;
 
                     // Jika sudah pernah muncul, kosongkan Angs dan Jt.Tempo
                     if (in_array($uniqKey, $usedAngsuranTempo)) {
@@ -658,6 +670,7 @@ class ReportController extends Controller
                         'Hari OD' => $res->OD ?? 0
                     ];
                 }
+
 
                 $schedule['data_credit'] = $data_credit;
             }
