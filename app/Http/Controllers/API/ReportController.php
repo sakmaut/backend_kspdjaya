@@ -616,6 +616,8 @@ class ReportController extends Controller
 
                 $sisaPokok = $totalPrincipal;
 
+                $usedAngsuranTempo = [];
+
                 foreach ($data as $index => $res) {
                     $angs = $res->INSTALLMENT_COUNT ?? 0;
                     $tglTempo = $res->PAYMENT_DATE ?? '';
@@ -630,9 +632,22 @@ class ReportController extends Controller
 
                     $sisaPokok = max(0, $sisaPokok - $byrPokok);
 
+                    // Buat key unik dari angsuran ke dan tanggal jatuh tempo
+                    $uniqKey = $angs . '-' . $tglTempoFormatted;
+
+                    // Jika sudah pernah muncul, kosongkan Angs dan Jt.Tempo
+                    if (in_array($uniqKey, $usedAngsuranTempo)) {
+                        $displayAngs = '';
+                        $displayTglTempo = '';
+                    } else {
+                        $displayAngs = $angs;
+                        $displayTglTempo = $tglTempoFormatted;
+                        $usedAngsuranTempo[] = $uniqKey;
+                    }
+
                     $data_credit[] = [
-                        'Angs' => $angs,
-                        'Jt.Tempo' => $tglTempoFormatted,
+                        'Angs' => $displayAngs,
+                        'Jt.Tempo' => $displayTglTempo,
                         'Pokok' => number_format($pokokTampil, 0),
                         'Bunga' => number_format($interest, 0),
                         'Denda' => 0,
