@@ -578,21 +578,23 @@ class ReportController extends Controller
 
                     $ttlAmtBayar += $amtBayar;
 
-                    $schedule['data_credit'][] = [
-                        'Jt.Tempo' => $currentJtTempo,
-                        'Angs' => $currentAngs,
-                        'Seq' => $res->INST_COUNT_INCREMENT ?? 0,
-                        'Amt Angs' => number_format($amtAngs ?? 0),
-                        'No Ref' => $res->INVOICE ?? '',
-                        '' =>  '',
-                        'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
-                        'Amt Bayar' => number_format($amtBayar ?? 0),
-                        'Sisa Angs' => number_format($sisaAngss),
-                        'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0),
-                        'Byr Dnda' => number_format($res->denda ?? 0),
-                        'Sisa Tghn' => "0",
-                        'Ovd' => $res->OD ?? 0
-                    ];
+                    if (floatval($res->BAYAR_DENDA ?? 0) != 0) {
+                        $schedule['data_credit'][] = [
+                            'Jt.Tempo' => $currentJtTempo,
+                            'Angs' => $currentAngs,
+                            'Seq' => $res->INST_COUNT_INCREMENT ?? 0,
+                            'Amt Angs' => number_format($amtAngs ?? 0),
+                            'No Ref' => $res->INVOICE ?? '',
+                            '' =>  '',
+                            'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
+                            'Amt Bayar' => number_format($amtBayar ?? 0),
+                            'Sisa Angs' => number_format($sisaAngss),
+                            'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0),
+                            'Byr Dnda' => number_format($res->denda ?? 0),
+                            'Sisa Tghn' => "0",
+                            'Ovd' => $res->OD ?? 0
+                        ];
+                    }
                 }
             } else {
 
