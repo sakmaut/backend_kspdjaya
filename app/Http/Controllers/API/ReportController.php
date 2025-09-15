@@ -620,6 +620,8 @@ class ReportController extends Controller
                 $bungaDibayarPerKey = [];
                 $pokokSudahTampilPerKey = [];
 
+                $data_credit = []; // Pastikan array ini dideklarasi
+
                 foreach ($data as $index => $res) {
                     $angs = $res->INSTALLMENT_COUNT ?? 0;
                     $tglTempo = $res->PAYMENT_DATE ?? '';
@@ -632,28 +634,18 @@ class ReportController extends Controller
 
                     $uniqKey = $angs . '-' . $tglTempoFormatted;
 
-                    // Inisialisasi tracking bunga & pokok jika belum ada
                     if (!isset($bungaDibayarPerKey[$uniqKey])) {
                         $bungaDibayarPerKey[$uniqKey] = 0;
-                    }
-
-                    if (!isset($pokokSudahTampilPerKey[$uniqKey])) {
-                        $pokokSudahTampilPerKey[$uniqKey] = false;
                     }
 
                     // Hitung bunga yang tersisa
                     $interest = max(0, $interest - $bungaDibayarPerKey[$uniqKey]);
                     $bungaDibayarPerKey[$uniqKey] += $byrBunga;
 
-                    // Pokok tampil hanya jika belum pernah ditampilkan dan ada bayar pokok
-                    if (!$pokokSudahTampilPerKey[$uniqKey] && $byrPokok > 0) {
-                        $pokokTampil = $sisaPokok;
-                        $pokokSudahTampilPerKey[$uniqKey] = true; // tandai sudah tampil
-                    } else {
-                        $pokokTampil = 0;
-                    }
+                    // Tampilkan pokok hanya sebesar yang dibayar, bukan sisa pokok
+                    $pokokTampil = $byrPokok;
 
-                    // Update sisa pokok (selalu dikurangi meskipun tidak ditampilkan)
+                    // Update sisa pokok
                     $sisaPokok = max(0, $sisaPokok - $byrPokok);
 
                     // Jika sudah pernah muncul, kosongkan Angs dan Jt.Tempo
@@ -669,7 +661,7 @@ class ReportController extends Controller
                     $data_credit[] = [
                         'Angs' => $displayAngs,
                         'Jt.Tempo' => $displayTglTempo,
-                        'Pokok' => number_format($pokokTampil, 0),
+                        'Pokok' => $pokokTampil > 0 ? number_format($pokokTampil, 0) : 0,
                         'Bunga' => number_format($interest, 0),
                         'Denda' => 0,
                         'Tgl Bayar' => $tglBayarFormatted,
@@ -679,6 +671,23 @@ class ReportController extends Controller
                         'Hari OD' => $res->OD ?? 0
                     ];
                 }
+
+                // Tambahkan satu baris di akhir untuk sisa pokok (jika masih ada)
+                if ($sisaPokok > 0) {
+                    $data_credit[] = [
+                        'Angs' => '',
+                        'Jt.Tempo' => '',
+                        'Pokok' => number_format($sisaPokok, 0),
+                        'Bunga' => 0,
+                        'Denda' => 0,
+                        'Tgl Bayar' => '',
+                        'Byr Pokok' => 0,
+                        'Byr Bunga' => 0,
+                        'Byr Dnda' => 0,
+                        'Hari OD' => ''
+                    ];
+                }
+
 
                 $schedule['data_credit'] = $data_credit;
             }
