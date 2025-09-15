@@ -545,13 +545,14 @@ class ReportController extends Controller
                 }
 
                 $checkExist = [];
-                $usedJtTempo = [];
+                $usedAngsuranTempo = []; // Simpan kombinasi Angsuran + Jt.Tempo
 
                 foreach ($data as $res) {
                     $currentJtTempo = isset($res->PAYMENT_DATE) ? Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y') : '';
                     $currentAngs = isset($res->INSTALLMENT_COUNT) ? $res->INSTALLMENT_COUNT : '';
 
-                    $uniqArr = $currentJtTempo . '-' . $currentAngs;
+                    $uniqArr = $currentJtTempo . '-' . $currentAngs; // untuk hitung total
+                    $uniqAngsJt = $currentAngs . '-' . $currentJtTempo; // untuk tampilkan di baris pertama aja
 
                     if (in_array($uniqArr, $checkExist)) {
                         $currentAngs = '';
@@ -559,7 +560,6 @@ class ReportController extends Controller
                         $sisaAngs = max($previousSisaAngs - floatval($res->angsuran ?? 0), 0);
 
                         $setPinalty = floatval($setSisaDenda ?? 0);
-
                         $previousSisaAngs = $sisaAngs;
                     } else {
                         $sisaAngs = max(floatval($res->INSTALLMENT ?? 0) - floatval($res->angsuran ?? 0), 0);
@@ -570,14 +570,15 @@ class ReportController extends Controller
                         array_push($checkExist, $uniqArr);
 
                         $ttlAmtAngs += $res->INSTALLMENT;
-                        $ttlDenda  += $res->PAST_DUE_PENALTY;
+                        $ttlDenda += $res->PAST_DUE_PENALTY;
                     }
 
-                    // Kosongkan Jt.Tempo jika sudah pernah ditampilkan sebelumnya
-                    if (in_array($currentJtTempo, $usedJtTempo)) {
+                    // ❗️Kosongkan Jt.Tempo & Angs kalau sudah pernah ditampilkan kombinasi ini
+                    if (in_array($uniqAngsJt, $usedAngsuranTempo)) {
                         $currentJtTempo = '';
+                        $currentAngs = '';
                     } else {
-                        $usedJtTempo[] = $currentJtTempo;
+                        $usedAngsuranTempo[] = $uniqAngsJt;
                     }
 
                     $ttlBayarDenda += $res->denda ?? 0;
