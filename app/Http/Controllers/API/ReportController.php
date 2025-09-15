@@ -544,46 +544,36 @@ class ReportController extends Controller
                     return $schedule;
                 }
 
-                $checkExist = [];
-                $usedAngsuranTempo = []; // Simpan kombinasi Angsuran + Jt.Tempo
-
                 foreach ($data as $res) {
                     $currentJtTempo = isset($res->PAYMENT_DATE) ? Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y') : '';
                     $currentAngs = isset($res->INSTALLMENT_COUNT) ? $res->INSTALLMENT_COUNT : '';
 
-                    $uniqArr = $currentJtTempo . '-' . $currentAngs; // untuk hitung total
-                    $uniqAngsJt = $currentAngs . '-' . $currentJtTempo; // untuk tampilkan di baris pertama aja
+                    $uniqArr = $currentJtTempo . '-' . $currentAngs;
 
                     if (in_array($uniqArr, $checkExist)) {
+                        $currentJtTempo = '';
                         $currentAngs = '';
                         $amtAngs = $sisaAngss;
                         $sisaAngs = max($previousSisaAngs - floatval($res->angsuran ?? 0), 0);
 
                         $setPinalty = floatval($setSisaDenda ?? 0);
+
                         $previousSisaAngs = $sisaAngs;
                     } else {
                         $sisaAngs = max(floatval($res->INSTALLMENT ?? 0) - floatval($res->angsuran ?? 0), 0);
                         $previousSisaAngs = $sisaAngs;
                         $amtAngs = $res->INSTALLMENT;
                         $setPinalty = floatval($res->PAST_DUE_PENALTY ?? 0);
-                        $setSisaDenda = floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->denda ?? 0);
+                        $setSisaDenda = floatval($res->PAST_DUE_PENALTY ?? 0) -  floatval($res->denda ?? 0);
                         array_push($checkExist, $uniqArr);
 
                         $ttlAmtAngs += $res->INSTALLMENT;
-                        $ttlDenda += $res->PAST_DUE_PENALTY;
+                        $ttlDenda  += $res->PAST_DUE_PENALTY;
                     }
 
-                    // ❗️Kosongkan Jt.Tempo & Angs kalau sudah pernah ditampilkan kombinasi ini
-                    if (in_array($uniqAngsJt, $usedAngsuranTempo)) {
-                        $currentJtTempo = '';
-                        $currentAngs = '';
-                    } else {
-                        $usedAngsuranTempo[] = $uniqAngsJt;
-                    }
+                    $ttlBayarDenda  += $res->denda ?? 0;
 
-                    $ttlBayarDenda += $res->denda ?? 0;
-
-                    $amtBayar = floatval($res->angsuran ?? 0);
+                    $amtBayar =  floatval($res->angsuran ?? 0);
                     $sisaAngss = floatval($amtAngs ?? 0) - floatval($amtBayar ?? 0);
 
                     $ttlAmtBayar += $amtBayar;
@@ -594,8 +584,8 @@ class ReportController extends Controller
                         'Seq' => $res->INST_COUNT_INCREMENT ?? 0,
                         'Amt Angs' => number_format($amtAngs ?? 0),
                         'No Ref' => $res->INVOICE ?? '',
-                        '' => '',
-                        'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE)->format('d-m-Y') : '',
+                        '' =>  '',
+                        'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
                         'Amt Bayar' => number_format($amtBayar ?? 0),
                         'Sisa Angs' => number_format($sisaAngss),
                         'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0),
