@@ -544,6 +544,9 @@ class ReportController extends Controller
                     return $schedule;
                 }
 
+                $checkExist = [];
+                $usedJtTempo = [];
+
                 foreach ($data as $res) {
                     $currentJtTempo = isset($res->PAYMENT_DATE) ? Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y') : '';
                     $currentAngs = isset($res->INSTALLMENT_COUNT) ? $res->INSTALLMENT_COUNT : '';
@@ -551,7 +554,6 @@ class ReportController extends Controller
                     $uniqArr = $currentJtTempo . '-' . $currentAngs;
 
                     if (in_array($uniqArr, $checkExist)) {
-                        $currentJtTempo = '';
                         $currentAngs = '';
                         $amtAngs = $sisaAngss;
                         $sisaAngs = max($previousSisaAngs - floatval($res->angsuran ?? 0), 0);
@@ -564,16 +566,23 @@ class ReportController extends Controller
                         $previousSisaAngs = $sisaAngs;
                         $amtAngs = $res->INSTALLMENT;
                         $setPinalty = floatval($res->PAST_DUE_PENALTY ?? 0);
-                        $setSisaDenda = floatval($res->PAST_DUE_PENALTY ?? 0) -  floatval($res->denda ?? 0);
+                        $setSisaDenda = floatval($res->PAST_DUE_PENALTY ?? 0) - floatval($res->denda ?? 0);
                         array_push($checkExist, $uniqArr);
 
                         $ttlAmtAngs += $res->INSTALLMENT;
                         $ttlDenda  += $res->PAST_DUE_PENALTY;
                     }
 
-                    $ttlBayarDenda  += $res->denda ?? 0;
+                    // Kosongkan Jt.Tempo jika sudah pernah ditampilkan sebelumnya
+                    if (in_array($currentJtTempo, $usedJtTempo)) {
+                        $currentJtTempo = '';
+                    } else {
+                        $usedJtTempo[] = $currentJtTempo;
+                    }
 
-                    $amtBayar =  floatval($res->angsuran ?? 0);
+                    $ttlBayarDenda += $res->denda ?? 0;
+
+                    $amtBayar = floatval($res->angsuran ?? 0);
                     $sisaAngss = floatval($amtAngs ?? 0) - floatval($amtBayar ?? 0);
 
                     $ttlAmtBayar += $amtBayar;
@@ -584,8 +593,8 @@ class ReportController extends Controller
                         'Seq' => $res->INST_COUNT_INCREMENT ?? 0,
                         'Amt Angs' => number_format($amtAngs ?? 0),
                         'No Ref' => $res->INVOICE ?? '',
-                        '' =>  '',
-                        'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
+                        '' => '',
+                        'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE)->format('d-m-Y') : '',
                         'Amt Bayar' => number_format($amtBayar ?? 0),
                         'Sisa Angs' => number_format($sisaAngss),
                         'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0),
