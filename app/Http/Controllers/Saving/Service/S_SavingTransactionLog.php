@@ -63,7 +63,7 @@ class S_SavingTransactionLog extends R_SavingTransactionLog
                 $trx_type = 'CREDIT';
             } else {
                 $saving->BALANCE -= $amount;
-                $trx_type = 'DEBIT';
+                $trx_type = 'DEBET';
             }
 
             $saving->save();
