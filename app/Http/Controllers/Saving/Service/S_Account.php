@@ -90,6 +90,9 @@ class S_Account extends R_Account
             'TRX_DATE' => now(),
             'BALANCE' =>  $request->setoran_awal,
             'DESCRIPTION' => 'Setoran awal',
+            'BOOK'        => 1,
+            'ROW'         => 1,
+            'PAGE'        => 1,
             'CREATED_BY' =>  $user
         ]);
 
