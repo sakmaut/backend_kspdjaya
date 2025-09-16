@@ -51,7 +51,9 @@ class C_SavingTransactionLog extends Controller
 
     public function getListData($accnum = null)
     {
-        $query = M_SavingLog::with(['savings', 'savings.customer', 'user']);
+        $query = M_SavingLog::with(['savings', 'savings.customer', 'user'])
+            ->orderBy('TRX_DATE', 'asc')
+            ->get();
 
         if (!is_null($accnum)) {
             $query->whereHas('savings', function ($q) use ($accnum) {
