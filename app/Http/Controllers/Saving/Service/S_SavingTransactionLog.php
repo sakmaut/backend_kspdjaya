@@ -79,6 +79,16 @@ class S_SavingTransactionLog extends R_SavingTransactionLog
                 return response()->json(['error' => 'Akun tidak ditemukan untuk penarikan.'], 400);
             }
         }
+        $lastRow = M_SavingLog::where('BOOK', 1)
+            ->whereHas('savings', function ($query) use ($request, $accNumber) {
+                $query->where('CUST_CODE', $request->cust_code)
+                    ->where('ACC_NUM', $accNumber);
+            })
+            ->max('ROW');
+
+        $newRow = ($lastRow ?? 1) + 1;
+
+        $newPage = ceil($newRow / 12);
 
         M_SavingLog::create([
             'SAVING_ID'   => $saving->ID ?? null,
@@ -87,12 +97,10 @@ class S_SavingTransactionLog extends R_SavingTransactionLog
             'BALANCE'     => $amount,
             'DESCRIPTION' => $request->keterangan ?? $type,
             'CREATED_BY'  => $userId,
-            'BOOK'        => $request->buku ?? 0,
-            'ROW'         => $request->baris ?? 0,
-            'PAGE'        => $request->hal ?? 0
+            'BOOK'        => 1,
+            'ROW'         => $newRow,
+            'PAGE'        => $newPage
         ]);
-
-
         return $saving;
     }
 }
