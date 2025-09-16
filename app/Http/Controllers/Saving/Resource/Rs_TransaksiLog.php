@@ -19,7 +19,7 @@ class Rs_TransaksiLog extends JsonResource
             "buku" => $this->BOOK ?? '',
             "hal" => $this->PAGE ?? '',
             "baris" => $this->ROW ?? '',
-            "saldo" => (float) $this->savings->BALANCE ?? 0,
+            "saldo" => (float) $this->LAST_BALANCE ?? 0,
         ];
     }
 }

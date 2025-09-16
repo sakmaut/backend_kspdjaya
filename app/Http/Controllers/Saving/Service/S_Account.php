@@ -93,6 +93,7 @@ class S_Account extends R_Account
             'BOOK'        => 1,
             'ROW'         => 1,
             'PAGE'        => 1,
+            'LAST_BALANCE' => $request->setoran_awal,
             'CREATED_BY' =>  $user
         ]);
 

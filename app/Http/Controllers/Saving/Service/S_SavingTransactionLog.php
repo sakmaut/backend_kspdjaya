@@ -99,7 +99,8 @@ class S_SavingTransactionLog extends R_SavingTransactionLog
             'CREATED_BY'  => $userId,
             'BOOK'        => 1,
             'ROW'         => $newRow,
-            'PAGE'        => $newPage
+            'PAGE'        => $newPage,
+            'LAST_BALANCE' => $saving->BALANCE ?? 0
         ]);
         return $saving;
     }

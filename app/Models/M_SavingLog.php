@@ -20,7 +20,8 @@ class M_SavingLog extends Model
         'CREATED_BY',
         'BOOK',
         'ROW',
-        'PAGE'
+        'PAGE',
+        'LAST_BALANCE'
     ];
 
     protected $guarded = [];
