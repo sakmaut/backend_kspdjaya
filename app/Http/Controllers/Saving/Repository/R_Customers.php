@@ -25,6 +25,11 @@ class R_Customers
         return $this->model::find($id);
     }
 
+    protected function findBCustCode($custCode)
+    {
+        return $this->model::where('CUST_CODE', $custCode)->first();
+    }
+
     protected function generateCustCode($request)
     {
         return generateCustCode($request, $this->model->getTable(), 'CUST_CODE');

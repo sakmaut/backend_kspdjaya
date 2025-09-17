@@ -47,7 +47,6 @@ class S_Customers extends R_Customers
     {
         $userId = $request->user()->id;
         $custCode = $this->generateCustCode($request);
-        $existing = $id ? $this->findById($id) : null;
 
         $fields = [
             'CUST_CODE'   => $custCode,
@@ -77,15 +76,17 @@ class S_Customers extends R_Customers
 
         $timestamp = now();
 
+        $existing = $id ? $this->findBCustCode($custCode) : null;
+
         if ($existing && $type != 'create') {
             $fields['VERSION']  = $existing->version + 1;
             $fields['MOD_DATE'] = $userId;
             $fields['MOD_USER'] = $timestamp;
-            $key = $id ? ['ID' => $id] : ['CUST_CODE' => $custCode];
+            $key = ['CUST_CODE' => $custCode];
         } else {
             $fields['VERSION']    = 1;
             $fields['CREATE_USER'] = $userId;
-            $key = ['ID' => $id];
+            $key = ['CUST_CODE' => $custCode];
         }
 
         return $this->repository->createOrUpdate($fields, $key);
