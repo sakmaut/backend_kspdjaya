@@ -142,7 +142,7 @@ class R_Tagihan
                                             or coalesce(st.first_arr, en.first_arr) is not null
                                         )
                                     then 'YA'
-                                    else null
+                                    else 'TIDAK'
                                 end as nbot
                         FROM	credit cl
                                 inner join branch b on cast(b.ID as char) = cast(cl.BRANCH as char)
