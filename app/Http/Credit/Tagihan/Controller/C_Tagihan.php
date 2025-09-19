@@ -33,7 +33,7 @@ class C_Tagihan extends Controller
 
             $dto = R_TagihanDetail::collection($data);
 
-            return response()->json($dto, 200);
+            return response()->json("sss", 200);
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
         }
