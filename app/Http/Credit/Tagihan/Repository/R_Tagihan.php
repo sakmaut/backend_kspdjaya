@@ -120,7 +120,7 @@ class R_Tagihan
                                         else st.arr_count end)) in ('CM','C5','C4','C3','C2','C1','C0') 
                                         and (case when date_format(cl.created_at,'%m%Y')='$dateFrom' then 1
                                 when coalesce(st.first_arr,en.first_arr) is null then ''
-                                else coalesce(st.last_inst,en.last_inst) end) in (1,2,3) then 'YA' else 'TIDAK' 
+                                else coalesce(st.last_inst,en.last_inst) end) in (1,2,3) then 'Y' else 'N' 
                                 end as nbot
                         FROM	credit cl
                                 inner join branch b on cast(b.ID as char) = cast(cl.BRANCH as char)
