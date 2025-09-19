@@ -31,9 +31,9 @@ class C_Tagihan extends Controller
         try {
             $data = $this->service->getListTagihan($request);
 
-            $dto = R_TagihanDetail::collection($data);
+            // $dto = R_TagihanDetail::collection($data);
 
-            return response()->json($dto, 200);
+            return response()->json($data, 200);
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
         }
