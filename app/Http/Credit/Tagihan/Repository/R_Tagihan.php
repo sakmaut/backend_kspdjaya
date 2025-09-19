@@ -36,6 +36,7 @@ class R_Tagihan
                                 c.OCCUPATION AS PEKERJAAN,
                                 CONCAT(co.REF_PELANGGAN, ' ', co.REF_PELANGGAN_OTHER) AS supplier,
                                 coalesce(u.fullname,cl.mcf_id) AS SURVEYOR,
+                                u.keterangan AS SURVEYOR_STATUS,
                                 coalesce(cs.survey_note,osn.SURVEY_NOTE) AS CATT_SURVEY,
                                 replace(format(cl.PCPL_ORI ,0),',','') AS PKK_HUTANG,
                                 cl.PERIOD AS JUMLAH_ANGSURAN,
@@ -106,7 +107,6 @@ class R_Tagihan
                                 cl.CUST_CODE,
                                 tg.NO_SURAT,
                                 us.fullname AS username,
-                                us.keterangan,
                                 case 
                                     when 
                                         (

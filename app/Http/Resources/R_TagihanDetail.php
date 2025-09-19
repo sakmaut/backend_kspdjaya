@@ -39,6 +39,7 @@ class R_TagihanDetail extends JsonResource
             "PEKERJAAN" => $this->PEKERJAAN ?? '',
             "SUPPLIER" => $this->supplier ?? '',
             "SURVEYOR" => $getUsers ? $getUsers->fullname ?? '' : $this->SURVEYOR ?? '',
+            "SURVEYOR_STATUS" => $this->SURVEYOR_STATUS ?? '',
             "CATT SURVEY" => $this->CATT_SURVEY ?? '',
             "PKK HUTANG" => (int) $this->PKK_HUTANG ?? 0,
             "JML ANGS" => $this->JUMLAH_ANGSURAN ?? '',
@@ -84,8 +85,7 @@ class R_TagihanDetail extends JsonResource
             "CUST_ID" => is_numeric($this->CUST_CODE) ? (int) $this->CUST_CODE ?? '' : $this->CUST_CODE ?? '',
             "NO SURAT" => $this->NO_SURAT ?? '',
             "PIC" => $this->username ?? '',
-            "NBOT" => $this->nbot ?? '',
-            "PIC_STATUS" => $this->keterangan ?? '',
+            "NBOT" => $this->nbot ?? ''
         ];
     }
 }
