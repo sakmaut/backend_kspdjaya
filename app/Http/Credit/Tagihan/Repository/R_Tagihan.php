@@ -20,6 +20,8 @@ class R_Tagihan
         $currentBranch = $request->user()->branch_id;
         $currentPosition = $request->user()->position_id;
 
+        return $currentPosition;
+
         $sql = "SELECT	CONCAT(b.CODE, '-', b.CODE_NUMBER) AS KODE,
                                 b.NAME AS NAMA_CABANG,
                                 cl.LOAN_NUMBER AS NO_KONTRAK,
