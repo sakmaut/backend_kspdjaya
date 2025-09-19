@@ -131,7 +131,7 @@ class R_Tagihan
                                     or (cl.STATUS_REC = 'RP' and cl.mod_user <> 'exclude jaminan' and cast(cl.LOAN_NUMBER as char) not in (select cast(pp.LOAN_NUM as char) from payment pp where pp.ACC_KEY = 'JUAL UNIT'))
                                     or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char) from temp_lis_02C )))";
 
-        if ($currentBranch) {
+        if ($currentBranch && $currentPosition != 'HO') {
             $sql .= " AND b.ID = '$currentBranch'";
         }
 
