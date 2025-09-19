@@ -84,6 +84,8 @@ class R_TagihanDetail extends JsonResource
             "CUST_ID" => is_numeric($this->CUST_CODE) ? (int) $this->CUST_CODE ?? '' : $this->CUST_CODE ?? '',
             "NO SURAT" => $this->NO_SURAT ?? '',
             "PIC" => $this->username ?? '',
+            "NBOT" => $this->nbot ?? '',
+            "PIC_STATUS" => $this->keterangan ?? '',
         ];
     }
 }
