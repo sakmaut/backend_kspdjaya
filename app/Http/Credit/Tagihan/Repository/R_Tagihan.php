@@ -18,9 +18,7 @@ class R_Tagihan
     {
         $dateFrom = date('mY', strtotime(now()));
         $currentBranch = $request->user()->branch_id;
-        $currentPosition = $request->user()->position_id;
-
-        return $currentPosition;
+        $currentPosition = $request->user()->position;
 
         $sql = "SELECT	CONCAT(b.CODE, '-', b.CODE_NUMBER) AS KODE,
                                 b.NAME AS NAMA_CABANG,
