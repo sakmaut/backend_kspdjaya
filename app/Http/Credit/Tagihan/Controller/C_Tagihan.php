@@ -62,8 +62,15 @@ class C_Tagihan extends Controller
         $validator = Validator::make($request->all(), [
             'user_id' => 'required|exists:users,username',
             'list_tagihan' => 'required|array|min:1',
-            'list_tagihan.*.NO KONTRAK' => 'required|string',
-            'list_tagihan.*.TGL BOOKING' => 'required|date'
+            'list_tagihan.*.NO KONTRAK' => [
+                'required',
+                function ($attribute, $value, $fail) {
+                    if (!is_string($value) && !is_numeric($value)) {
+                        $fail($attribute . ' harus berupa string atau angka.');
+                    }
+                },
+            ],
+            'list_tagihan.*.TGL BOOKING' => 'required|date',
         ]);
 
         if ($validator->fails()) {
