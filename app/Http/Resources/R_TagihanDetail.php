@@ -39,7 +39,7 @@ class R_TagihanDetail extends JsonResource
             "PEKERJAAN" => $this->PEKERJAAN ?? '',
             "SUPPLIER" => $this->supplier ?? '',
             "SURVEYOR" => $getUsers ? $getUsers->fullname ?? '' : $this->SURVEYOR ?? '',
-            "SURVEYOR_STATUS" => $this->SURVEYOR_STATUS ?? '',
+            "SURVEYOR STATUS" => $this->SURVEYOR_STATUS ?? '',
             "CATT SURVEY" => $this->CATT_SURVEY ?? '',
             "PKK HUTANG" => (int) $this->PKK_HUTANG ?? 0,
             "JML ANGS" => $this->JUMLAH_ANGSURAN ?? '',
