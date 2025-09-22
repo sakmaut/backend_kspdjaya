@@ -631,6 +631,7 @@ class ReportController extends Controller
 
                     $byrPokok = floatval($res->bayar_pokok ?? 0);
                     $byrBunga = floatval($res->bayar_bunga ?? 0);
+                    $byrDenda = floatval($res->bayar_denda ?? 0);
                     $interest = floatval($res->INTEREST ?? 0);
 
                     $uniqKey = $angs . '-' . $tglTempoFormatted;
@@ -673,7 +674,7 @@ class ReportController extends Controller
                         'Tgl Bayar' => $tglBayarFormatted,
                         'Byr Pokok' => $byrPokok > 0 ? number_format($byrPokok, 0) : 0,
                         'Byr Bunga' => $byrBunga > 0 ? number_format($byrBunga, 0) : 0,
-                        'Byr Dnda' => 0,
+                        'Byr Dnda' => $byrDenda > 0 ? number_format($byrDenda, 0) : 0,
                         'Hari OD' => $res->OD ?? 0
                     ];
                 }
