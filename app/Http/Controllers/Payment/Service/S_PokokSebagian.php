@@ -70,18 +70,32 @@ class S_PokokSebagian
 
     public function processPayment($request)
     {
-        $check = $request->only(['BAYAR_POKOK', 'BAYAR_BUNGA', 'BAYAR_DENDA', 'DISKON_POKOK', 'DISKON_BUNGA', 'DISKON_DENDA']);
+        $check = $request->only([
+            'BAYAR_POKOK',
+            'BAYAR_BUNGA',
+            'BAYAR_DENDA',
+            'DISKON_POKOK',
+            'DISKON_BUNGA',
+            'DISKON_DENDA'
+        ]);
 
         if (array_sum($check) == 0) {
             throw new Exception('Parameter Is 0');
         }
 
         $kwitansi = $this->kwitansiService->create($request, 'pokok_sebagian');
-
         $this->proccessKwitansiDetail($request, $kwitansi);
 
         if ($this->checkPosition($request)) {
-            $this->taskslogging->create($request, 'Pembayaran Cash Bunga Menurun ' . $request->user()->fullname ?? '', 'request_payment', $kwitansi->NO_TRANSAKSI ?? '', 'PENDING', "Pembayaran Cash Bunga Menurun ");
+            $userName = $request->user()->fullname ?? '';
+            $this->taskslogging->create(
+                $request,
+                "Pembayaran Cash Bunga Menurun $userName",
+                'request_payment',
+                $kwitansi->NO_TRANSAKSI ?? '',
+                'PENDING',
+                'Pembayaran Cash Bunga Menurun'
+            );
         }
 
         if ($kwitansi->STTS_PAYMENT === 'PAID') {
