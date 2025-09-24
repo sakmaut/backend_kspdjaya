@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Payment\Service;
 
 use App\Http\Controllers\Payment\Repository\R_PokokSebagian;
+use App\Http\Controllers\Repositories\TasksLogging\TasksRepository;
 use App\Http\Resources\R_Kwitansi;
 use App\Models\M_Arrears;
 use App\Models\M_Credit;
@@ -22,19 +23,22 @@ class S_PokokSebagian
     protected $s_creditScheduleBefore;
     protected $s_creditBefore;
     protected $s_arrearsBefore;
+    protected $taskslogging;
 
     public function __construct(
         R_PokokSebagian $repository,
         KwitansiService $kwitansiService,
         S_CreditScheduleBefore $s_creditScheduleBefore,
         S_CreditBefore $s_creditBefore,
-        S_ArrearsBefore $s_arrearsBefore
+        S_ArrearsBefore $s_arrearsBefore,
+        TasksRepository $taskslogging,
     ) {
         $this->repository = $repository;
         $this->kwitansiService = $kwitansiService;
         $this->s_creditScheduleBefore = $s_creditScheduleBefore;
         $this->s_creditBefore = $s_creditBefore;
         $this->s_arrearsBefore = $s_arrearsBefore;
+        $this->taskslogging = $taskslogging;
     }
 
     public function getAllCreditInstallment($request)
@@ -54,6 +58,16 @@ class S_PokokSebagian
         return $data;
     }
 
+    private function checkPosition($request)
+    {
+        $getCurrentPosition = $request->user()->position;
+
+        $setPositionAvailable  = ['mcf', 'kolektor'];
+        $checkposition = in_array(strtolower($getCurrentPosition), $setPositionAvailable);
+
+        return $checkposition;
+    }
+
     public function processPayment($request)
     {
         $check = $request->only(['BAYAR_POKOK', 'BAYAR_BUNGA', 'BAYAR_DENDA', 'DISKON_POKOK', 'DISKON_BUNGA', 'DISKON_DENDA']);
@@ -65,6 +79,10 @@ class S_PokokSebagian
         $kwitansi = $this->kwitansiService->create($request, 'pokok_sebagian');
 
         $this->proccessKwitansiDetail($request, $kwitansi);
+
+        if ($this->checkPosition($request)) {
+            $this->taskslogging->create($request, 'Pembayaran Cash Bunga Menurun ' . $request->user()->fullname ?? '', 'request_payment', $kwitansi->NO_TRANSAKSI ?? '', 'PENDING', "Pembayaran Cash Bunga Menurun ");
+        }
 
         if ($kwitansi->STTS_PAYMENT === 'PAID') {
             $this->processPokokBungaMenurun($request, $kwitansi);
