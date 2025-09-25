@@ -516,3 +516,15 @@ if (!function_exists('calculateArrears')) {
         return $resValue;
     }
 }
+
+if (!function_exists('checkPosition')) {
+    function checkPosition($request)
+    {
+        $getCurrentPosition = $request->user()->position;
+
+        $setPositionAvailable  = ['mcf', 'kolektor'];
+        $checkposition = in_array(strtolower($getCurrentPosition), $setPositionAvailable);
+
+        return $checkposition;
+    }
+}

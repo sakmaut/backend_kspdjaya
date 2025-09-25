@@ -79,7 +79,8 @@ class KwitansiService
         }
 
         $no_inv = generateCodeKwitansi($request, 'kwitansi', 'NO_TRANSAKSI', 'INV');
-        $status = strtolower($request->METODE_PEMBAYARAN) === 'cash' ? "PAID" : 'PENDING';
+        // $status = strtolower($request->METODE_PEMBAYARAN) === 'cash' ? "PAID" : 'PENDING';
+        $status = (strtolower($request->METODE_PEMBAYARAN) === 'cash' && !checkPosition($request)) ? "PAID" : 'PENDING';
 
         $data = [
             "PAYMENT_TYPE" => $tipe,

@@ -58,16 +58,6 @@ class S_PokokSebagian
         return $data;
     }
 
-    private function checkPosition($request)
-    {
-        $getCurrentPosition = $request->user()->position;
-
-        $setPositionAvailable  = ['mcf', 'kolektor'];
-        $checkposition = in_array(strtolower($getCurrentPosition), $setPositionAvailable);
-
-        return $checkposition;
-    }
-
     public function processPayment($request)
     {
         $check = $request->only([
@@ -83,10 +73,7 @@ class S_PokokSebagian
             throw new Exception('Parameter Is 0');
         }
 
-        $kwitansi = $this->kwitansiService->create($request, 'pokok_sebagian');
-        $this->proccessKwitansiDetail($request, $kwitansi);
-
-        if ($this->checkPosition($request)) {
+        if (checkPosition($request)) {
             $userName = $request->user()->fullname ?? '';
             $this->taskslogging->create(
                 $request,
@@ -97,6 +84,11 @@ class S_PokokSebagian
                 'Pembayaran Cash Bunga Menurun'
             );
         }
+
+        $kwitansi = $this->kwitansiService->create($request, 'pokok_sebagian');
+        $this->proccessKwitansiDetail($request, $kwitansi);
+
+
 
         if ($kwitansi->STTS_PAYMENT === 'PAID') {
             $this->processPokokBungaMenurun($request, $kwitansi);
