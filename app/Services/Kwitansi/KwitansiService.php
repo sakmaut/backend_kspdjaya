@@ -84,7 +84,7 @@ class KwitansiService
 
         $data = [
             "PAYMENT_TYPE" => $tipe,
-            "PAYMENT_ID" => $idGenerate ?? '',
+            "PAYMENT_ID" => $idGenerate ?? $request->uid ?? '',
             "STTS_PAYMENT" => $status,
             "NO_TRANSAKSI" => $no_inv,
             "LOAN_NUMBER" => $request->LOAN_NUMBER,
