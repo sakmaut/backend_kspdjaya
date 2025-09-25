@@ -73,6 +73,9 @@ class S_PokokSebagian
             throw new Exception('Parameter Is 0');
         }
 
+        $kwitansi = $this->kwitansiService->create($request, 'pokok_sebagian');
+        $this->proccessKwitansiDetail($request, $kwitansi);
+
         if (checkPosition($request)) {
             $userName = $request->user()->fullname ?? '';
             $this->taskslogging->create(
@@ -84,11 +87,6 @@ class S_PokokSebagian
                 'Pembayaran Cash Bunga Menurun'
             );
         }
-
-        $kwitansi = $this->kwitansiService->create($request, 'pokok_sebagian');
-        $this->proccessKwitansiDetail($request, $kwitansi);
-
-
 
         if ($kwitansi->STTS_PAYMENT === 'PAID') {
             $this->processPokokBungaMenurun($request, $kwitansi);
