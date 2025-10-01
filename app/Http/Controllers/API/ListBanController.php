@@ -53,7 +53,7 @@ class ListBanController extends Controller
                             $datas['datas'][] = [
                                 'type' => $setType,
                                 'no_invoice' => $no_invoice,
-                                'no_kontrak' => $loan_num,
+                                'no_kontrak' => is_numeric($loan_num) ? (int) $loan_num ?? '' : $loan_num ?? '',
                                 'tgl' => $tgl ?? '',
                                 'cabang' => $cabang ?? '',
                                 'user' => $user ?? '',
@@ -75,7 +75,7 @@ class ListBanController extends Controller
                         $datas['datas'][] = [
                             'type' => 'CASH_OUT',
                             'no_invoice' => '',
-                            'no_kontrak' => $item->LOAN_NUM ?? '',
+                            'no_kontrak' => is_numeric($item->LOAN_NUM) ? (int) $item->LOAN_NUM  ?? '' : $item->LOAN_NUM  ?? '',
                             'tgl' => $item->ENTRY_DATE ?? '',
                             'cabang' => $item->nama_cabang ?? '',
                             'user' => $item->fullname ?? '',
