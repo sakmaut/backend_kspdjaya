@@ -34,13 +34,17 @@ class MenuRepository implements MenuRepositoryInterface
 
     function findActiveMenu($id)
     {
-        return $this->menuEntity::where('id', $id)
-            ->where(function ($query) {
-                $query->whereNull('deleted_by')
-                    ->orWhere('deleted_by', '');
-            })
+        $checkActiveMenu = $this->menuEntity::where('id', $id)
+            ->whereNull('deleted_by')
+            ->orWhere('deleted_by', '')
             ->where('status', 'active')
             ->first();
+
+        if (!$checkActiveMenu) {
+            throw new Exception("Menu Id Not Found", 404);
+        }
+
+        return $checkActiveMenu;
     }
 
     function findMenuByName($name)
@@ -66,7 +70,7 @@ class MenuRepository implements MenuRepositoryInterface
         return $query;
     }
 
-    public function create($request)
+    function create($request)
     {
         $getName = $request->menu_name;
         $getRoute = $request->route;
@@ -102,7 +106,7 @@ class MenuRepository implements MenuRepositoryInterface
         return $this->menuEntity::create($data);
     }
 
-    public function update($request, $menuId)
+    function update($request, $menuId)
     {
         $getName = $request->menu_name;
 
@@ -122,11 +126,6 @@ class MenuRepository implements MenuRepositoryInterface
 
         $data = [
             'menu_name' => $request->menu_name,
-            'route' => $request->route,
-            'parent' => $request->parent['id'] ?? $request->parent ?? '',
-            'leading' => $request->leading,
-            'action' => $request->action,
-            'status' => $request->status,
             'updated_by' => $request->user()->id ?? '',
             'updated_at' => Carbon::now()
         ];
@@ -153,7 +152,6 @@ class MenuRepository implements MenuRepositoryInterface
     function getListAccessMenuUser($request)
     {
         $getlistMenu = $this->getListAccessMenuByUserId($request);
-
         $menuArray = [];
         $homeParent = null;
 
@@ -204,7 +202,6 @@ class MenuRepository implements MenuRepositoryInterface
                 } else {
                     if (!isset($menuArray[$menuItem['parent']])) {
                         $parentMenuItem = $this->findActiveMenu($menuItem['parent']);
-
                         if ($parentMenuItem) {
                             $menuArray[$menuItem['parent']] = [
                                 'menuid' => $parentMenuItem->id,
@@ -220,18 +217,16 @@ class MenuRepository implements MenuRepositoryInterface
                         }
                     }
 
-                    if (isset($menuArray[$menuItem['parent']])) {
-                        if (!$this->menuItemExists($menuArray[$menuItem['parent']]['menuitem']['submenu'], $menuItem['id'])) {
-                            $menuArray[$menuItem['parent']]['menuitem']['submenu'][] = [
-                                'subid' => $menuItem['id'],
-                                'sublabel' => $menuItem['menu_name'],
-                                'subroute' => $menuItem['route'],
-                                'leading' => explode(',', $menuItem['leading']),
-                                'action' => $menuItem['action'],
-                                'ability' => $menuItem['ability'],
-                                'submenu' => $this->buildSubMenu($menuItem['id'], $menuItem)
-                            ];
-                        }
+                    if (!$this->menuItemExists($menuArray[$menuItem['parent']]['menuitem']['submenu'], $menuItem['id'])) {
+                        $menuArray[$menuItem['parent']]['menuitem']['submenu'][] = [
+                            'subid' => $menuItem['id'],
+                            'sublabel' => $menuItem['menu_name'],
+                            'subroute' => $menuItem['route'],
+                            'leading' => explode(',', $menuItem['leading']),
+                            'action' => $menuItem['action'],
+                            'ability' => $menuItem['ability'],
+                            'submenu' => $this->buildSubMenu($menuItem['id'], $menuItem)
+                        ];
                     }
                 }
             }
