@@ -34,26 +34,18 @@ class MenuRepository implements MenuRepositoryInterface
 
     function findActiveMenu($id)
     {
-        $checkActiveMenu = $this->menuEntity::where('id', $id)
+        return $this->menuEntity::where('id', $id)
             ->where(function ($query) {
                 $query->whereNull('deleted_by')
                     ->orWhere('deleted_by', '');
             })
             ->where('status', 'Active')
+            ->where(function ($query) {
+                $query->whereNull('parent')
+                    ->orWhere('parent', '');
+            })
             ->first();
-
-        // // Debug: log hasil query
-        // \print_r('Checking Menu ID: ' . $id);
-        // \print_r('Menu Result: ', $checkActiveMenu);
-
-        if (!$checkActiveMenu) {
-            throw new Exception("Menu Id Not Found", 404);
-        }
-
-        return $checkActiveMenu;
     }
-
-
 
     function findMenuByName($name)
     {
@@ -189,76 +181,59 @@ class MenuRepository implements MenuRepositoryInterface
             ];
         }
 
-        $datas = [];
-        // foreach ($getlistMenu as $listMenu) {
-
-        //     $menuItem = $listMenu['masterMenu'];
-
-        //     if ($menuItem !== null) {
-        //         if ($menuItem['parent'] === null || $menuItem['parent'] === 0) {
-        //             if (!isset($menuArray[$menuItem['id']])) {
-        //                 $menuArray[$menuItem['id']] = [
-        //                     'menuid' => $menuItem['id'],
-        //                     'menuitem' => [
-        //                         'labelmenu' => $menuItem['menu_name'],
-        //                         'routename' => $menuItem['route'],
-        //                         'leading' => explode(',', $menuItem['leading']),
-        //                         'action' => $menuItem['action'],
-        //                         'ability' => $menuItem['ability'],
-        //                         'submenu' => $this->buildSubMenu($menuItem['id'], $menuItem)
-        //                     ]
-        //                 ];
-        //             }
-        //         } else {
-        //             if (!isset($menuArray[$menuItem['parent']])) {
-        //                 $parentMenuItem = $this->findActiveMenu($menuItem['parent']);
-        //                 if ($parentMenuItem) {
-        //                     $menuArray[$menuItem['parent']] = [
-        //                         'menuid' => $parentMenuItem->id,
-        //                         'menuitem' => [
-        //                             'labelmenu' => $parentMenuItem->menu_name,
-        //                             'routename' => $parentMenuItem->route,
-        //                             'leading' => explode(',', $parentMenuItem->leading),
-        //                             'action' => $parentMenuItem->action,
-        //                             'ability' => $parentMenuItem->ability,
-        //                             'submenu' => []
-        //                         ]
-        //                     ];
-        //                 }
-        //             }
-
-        //             // if (!$this->menuItemExists($menuArray[$menuItem['parent']]['menuitem']['submenu'], $menuItem['id'])) {
-        //             //     $menuArray[$menuItem['parent']]['menuitem']['submenu'][] = [
-        //             //         'subid' => $menuItem['id'],
-        //             //         'sublabel' => $menuItem['menu_name'],
-        //             //         'subroute' => $menuItem['route'],
-        //             //         'leading' => explode(',', $menuItem['leading']),
-        //             //         'action' => $menuItem['action'],
-        //             //         'ability' => $menuItem['ability'],
-        //             //         'submenu' => $this->buildSubMenu($menuItem['id'], $menuItem)
-        //             //     ];
-        //             // }
-        //         }
-        //     }
-        // }
-
         foreach ($getlistMenu as $listMenu) {
+
             $menuItem = $listMenu['masterMenu'];
 
             if ($menuItem !== null) {
-                if (!empty($menuItem['parent']) && !isset($menuArray[$menuItem['parent']])) {
-                    try {
+                if ($menuItem['parent'] === null || $menuItem['parent'] === 0) {
+                    if (!isset($menuArray[$menuItem['id']])) {
+                        $menuArray[$menuItem['id']] = [
+                            'menuid' => $menuItem['id'],
+                            'menuitem' => [
+                                'labelmenu' => $menuItem['menu_name'],
+                                'routename' => $menuItem['route'],
+                                'leading' => explode(',', $menuItem['leading']),
+                                'action' => $menuItem['action'],
+                                'ability' => $menuItem['ability'],
+                                'submenu' => $this->buildSubMenu($menuItem['id'], $menuItem)
+                            ]
+                        ];
+                    }
+                } else {
+                    if (!isset($menuArray[$menuItem['parent']])) {
                         $parentMenuItem = $this->findActiveMenu($menuItem['parent']);
-                        $datas[] = $parentMenuItem;
-                    } catch (\Exception $e) {
-                        echo "Error: " . $e->getMessage() . " for parent ID: " . $menuItem['parent'] . PHP_EOL;
+                        if ($parentMenuItem) {
+                            $menuArray[$menuItem['parent']] = [
+                                'menuid' => $parentMenuItem->id,
+                                'menuitem' => [
+                                    'labelmenu' => $parentMenuItem->menu_name,
+                                    'routename' => $parentMenuItem->route,
+                                    'leading' => explode(',', $parentMenuItem->leading),
+                                    'action' => $parentMenuItem->action,
+                                    'ability' => $parentMenuItem->ability,
+                                    'submenu' => []
+                                ]
+                            ];
+                        }
+                    }
+
+                    if (isset($menuArray[$menuItem['parent']])) {
+                        if (!$this->menuItemExists($menuArray[$menuItem['parent']]['menuitem']['submenu'], $menuItem['id'])) {
+                            $menuArray[$menuItem['parent']]['menuitem']['submenu'][] = [
+                                'subid' => $menuItem['id'],
+                                'sublabel' => $menuItem['menu_name'],
+                                'subroute' => $menuItem['route'],
+                                'leading' => explode(',', $menuItem['leading']),
+                                'action' => $menuItem['action'],
+                                'ability' => $menuItem['ability'],
+                                'submenu' => $this->buildSubMenu($menuItem['id'], $menuItem)
+                            ];
+                        }
                     }
                 }
             }
         }
-
-
-        return $datas;
 
         foreach ($menuArray as $key => $menu) {
             $menuArray[$key]['menuitem']['submenu'] = array_values($menu['menuitem']['submenu']);
