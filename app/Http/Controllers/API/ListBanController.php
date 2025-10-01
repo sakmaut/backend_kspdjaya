@@ -61,7 +61,7 @@ class ListBanController extends Controller
                                 'nama_pelanggan' => $pelanggan,
                                 'metode_pembayaran' => $item->PAYMENT_METHOD ?? '',
                                 'keterangan' => $keterangan,
-                                'amount' => floatval($amount),
+                                'amount' => number_format($amount),
                             ];
                         }
                     }
@@ -83,7 +83,7 @@ class ListBanController extends Controller
                             'nama_pelanggan' => $item->PELANGGAN ?? '',
                             'metode_pembayaran' => '',
                             'keterangan' => 'PENCAIRAN NO KONTRAK ' . $item->LOAN_NUM ?? '',
-                            'amount' => floatval(round($getTttl, 2)),
+                            'amount' => number_format(round($getTttl, 2)),
 
                         ];
                     }
