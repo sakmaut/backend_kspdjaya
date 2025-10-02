@@ -259,8 +259,8 @@ class CollateralRepository implements CollateralInterface
                     ]);
 
                     $findCollateralById->update([
-                        'SITA_AT' => $now,
-                        'SITA_BY' => $userId,
+                        'JUAL_AT' => $now,
+                        'JUAL_BY' => $userId,
                     ]);
 
                     $this->locationStatus->createLocationStatusLog($colId, $request->user()->branch_id, 'JUAL UNIT');
