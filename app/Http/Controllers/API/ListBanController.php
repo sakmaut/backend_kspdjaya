@@ -259,8 +259,6 @@ class ListBanController extends Controller
                                 and (cl.STATUS = 'A' or (cl.STATUS_REC = 'RP' and coalesce(cl.mod_user,'') <> 'exclude jaminan' and cast(cl.LOAN_NUMBER as char) not in (select cast(pp.LOAN_NUM as char) from payment pp where pp.ACC_KEY = 'JUAL UNIT')) 
                                         or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char)from temp_lis_02 )))";
 
-
-
             $query2 = "SELECT	CONCAT(b.CODE, '-', b.CODE_NUMBER) AS KODE,
                                 b.NAME AS NAMA_CABANG,
                                 cl.LOAN_NUMBER AS NO_KONTRAK,
