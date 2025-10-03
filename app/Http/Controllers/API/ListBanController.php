@@ -255,26 +255,11 @@ class ListBanController extends Controller
                                     and en.type=date_format(date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day),'%d%m%Y')
                                 left join temp_lis_02 py on cast(py.loan_num as char) = cast(cl.LOAN_NUMBER as char)
                                 left join old_survey_note osn on cast(osn.loan_number as char) = cast(cl.LOAN_NUMBER as char)
-                                WHERE date_format(cl.BACK_DATE,'%d%m%Y') = date_format(date_add(date_add(str_to_date(concat('01','092025'),'%d%m%Y'), interval 1 month), interval -1 day), '%d%m%Y')
-                                AND (
-                                    cl.STATUS = 'A'
-                                    OR (
-                                        cl.STATUS_REC = 'RP'
-                                        AND coalesce(cl.mod_user,'') <> 'exclude jaminan'
-                                        AND cast(cl.LOAN_NUMBER as char) NOT IN (
-                                            SELECT cast(pp.LOAN_NUM as char)
-                                            FROM payment pp
-                                            WHERE pp.ACC_KEY = 'JUAL UNIT'
-                                                AND pp.ENTRY_DATE < date_add(date_add(str_to_date(concat('01','092025'),'%d%m%Y'), interval 1 month), interval -1 day)
-                                        )
-                                    )
-                                    OR (
-                                        cast(cl.LOAN_NUMBER as char) IN (
-                                            SELECT cast(loan_num as char)
-                                            FROM temp_lis_02
-                                        )
-                                    )
-                                )";
+                                WHERE date_format(cl.BACK_DATE,'%d%m%Y') = date_format(date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'), interval 1 month), interval -1 day), '%d%m%Y')
+                                        and (cl.STATUS = 'A'
+                                                        or (cl.STATUS_REC = 'RP' and coalesce(cl.mod_user,'') <> 'exclude jaminan' and cast(cl.LOAN_NUMBER as char) not in (select cast(pp.LOAN_NUM as char) from payment pp where pp.ACC_KEY = 'JUAL UNIT' 
+                                                                and pp.ENTRY_DATE < date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day))) 
+                                                        or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char)from temp_lis_02 )))";
 
 
             $query2 = "SELECT	CONCAT(b.CODE, '-', b.CODE_NUMBER) AS KODE,
