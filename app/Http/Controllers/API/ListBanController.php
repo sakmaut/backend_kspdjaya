@@ -406,6 +406,9 @@ class ListBanController extends Controller
 
                 if (!empty($checkRunSp) && $checkRunSp[0]->execute_sp === 'run') {
                     DB::select('CALL lisban_masa_lalu(?,?)', [$dateFrom, $getUserName]);
+                    DB::select('CALL lisban_old_1(?,?)', [$dateFrom, $getUserName]);
+                    DB::select('CALL lisban_old_2(?,?)', [$dateFrom, $getUserName]);
+                    DB::select('CALL lisban_old_3(?,?)', [$dateFrom, $getUserName]);
                 }
 
                 $query = $query1;
