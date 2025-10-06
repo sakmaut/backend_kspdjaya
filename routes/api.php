@@ -175,7 +175,8 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::post('inquiryList', [ReportController::class, 'inquiryList']);
     Route::resource('log_print', LogPrintController::class);
 
-    Route::post('listBanTest', [ListBanController::class, 'listBanTest']);
+    // Route::post('listBanTest', [ListBanController::class, 'listBanTest']);
+    Route::post('listBanTest', [ListBanController::class, 'stored_procedure1']);
 
     Route::post('lap_pembayaran', [ReportController::class, 'lapPembayaran']);
     Route::get('tokenCheckValidation', [AuthController::class, 'tokenCheckValidation']);
@@ -187,6 +188,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::resource('tagihan', C_Tagihan::class);
     Route::resource('upload_tagihan_document', C_TagihanDocument::class);
     Route::get('list_tagihan_collector',  [C_Tagihan::class, 'listTagihanByUserId']);
+    Route::get('stored_procedure1',  [ListBanController::class, 'stored_procedure1']);
 });
 
 

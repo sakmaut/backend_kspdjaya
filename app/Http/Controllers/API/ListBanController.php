@@ -510,4 +510,18 @@ class ListBanController extends Controller
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
+
+    public function stored_procedure1(Request $request)
+    {
+        try {
+            $dateFrom = $request->dari;
+            $getUserName = $request->user()->fullname;
+
+            DB::select('CALL lisban_masa_lalu(?,?)', [$dateFrom, $getUserName]);
+
+            return response()->json(['message' => 'Stored procedure executed successfully'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+        }
+    }
 }
