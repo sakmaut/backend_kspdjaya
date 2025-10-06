@@ -517,14 +517,9 @@ class ListBanController extends Controller
             $dateFrom = $request->dari;
             $getUserName = $request->user()->fullname;
 
-            $result = DB::select('CALL lisban_masa_lalu(?,?)', [$dateFrom, $getUserName]);
+            DB::select('CALL lisban_masa_lalu(?,?)', [$dateFrom, $getUserName]);
 
-            // Selesai dan berhasil
-            if ($result) {
-                return response()->json(['message' => 'Stored procedure executed successfully'], 200);
-            } else {
-                return response()->json(['message' => 'Stored procedure SUE'], 200);
-            }
+            return response()->json(['message' => 'Stored procedure executed successfully'], 200);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
