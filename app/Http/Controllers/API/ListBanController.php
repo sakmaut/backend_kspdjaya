@@ -405,12 +405,12 @@ class ListBanController extends Controller
                                             FROM job_on_progress
                                             WHERE job_name = 'LISBAN_BELOM_MOVEON'");
 
-                if (!empty($checkRunSp) && $checkRunSp[0]->execute_sp === 'run') {
-                    DB::select('CALL lisban_masa_lalu(?,?)', [$dateFrom, $getUserName]);
-                    DB::select('CALL lisban_old_1(?,?)', [$dateFrom, $getUserName]);
-                    DB::select('CALL lisban_old_2(?,?)', [$dateFrom, $getUserName]);
-                    DB::select('CALL lisban_old_3(?,?)', [$dateFrom, $getUserName]);
-                }
+                // if (!empty($checkRunSp) && $checkRunSp[0]->execute_sp === 'run') {
+                //     DB::select('CALL lisban_masa_lalu(?,?)', [$dateFrom, $getUserName]);
+                //     DB::select('CALL lisban_old_1(?,?)', [$dateFrom, $getUserName]);
+                //     DB::select('CALL lisban_old_2(?,?)', [$dateFrom, $getUserName]);
+                //     DB::select('CALL lisban_old_3(?,?)', [$dateFrom, $getUserName]);
+                // }
 
                 $query = $query1;
             }
@@ -511,15 +511,54 @@ class ListBanController extends Controller
         }
     }
 
-    public function stored_procedure1(Request $request)
+    public function sp1(Request $request)
     {
         try {
             $dateFrom = $request->dari;
             $getUserName = $request->user()->fullname;
 
-            // DB::select('CALL lisban_masa_lalu(?,?)', [$dateFrom, $getUserName]);
-            // DB::select('CALL lisban_old_1(?,?)', [$dateFrom, $getUserName]);
-            // DB::select('CALL lisban_old_2(?,?)', [$dateFrom, $getUserName]);
+            DB::select('CALL lisban_masa_lalu(?,?)', [$dateFrom, $getUserName]);
+
+            return response()->json(['message' => 'Stored procedure executed successfully'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+        }
+    }
+
+    public function sp2(Request $request)
+    {
+        try {
+            $dateFrom = $request->dari;
+            $getUserName = $request->user()->fullname;
+
+            DB::select('CALL lisban_old_1(?,?)', [$dateFrom, $getUserName]);
+
+            return response()->json(['message' => 'Stored procedure executed successfully'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+        }
+    }
+
+    public function sp3(Request $request)
+    {
+        try {
+            $dateFrom = $request->dari;
+            $getUserName = $request->user()->fullname;
+
+            DB::select('CALL lisban_old_2(?,?)', [$dateFrom, $getUserName]);
+
+            return response()->json(['message' => 'Stored procedure executed successfully'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+        }
+    }
+
+    public function sp4(Request $request)
+    {
+        try {
+            $dateFrom = $request->dari;
+            $getUserName = $request->user()->fullname;
+
             DB::select('CALL lisban_old_3(?,?)', [$dateFrom, $getUserName]);
 
             return response()->json(['message' => 'Stored procedure executed successfully'], 200);
