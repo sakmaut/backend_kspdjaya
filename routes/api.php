@@ -193,7 +193,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::get('sp2',  [ListBanController::class, 'sp2']);
     Route::get('sp3',  [ListBanController::class, 'sp3']);
     Route::get('sp4',  [ListBanController::class, 'sp4']);
-    Route::post('listBanTest', [ListBanController::class, 'stored_procedure1']);
+    Route::post('listBanTest', [ListBanController::class, 'listBanTest']);
 });
 
 
