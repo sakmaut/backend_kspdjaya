@@ -519,8 +519,8 @@ class ListBanController extends Controller
 
             // DB::select('CALL lisban_masa_lalu(?,?)', [$dateFrom, $getUserName]);
             // DB::select('CALL lisban_old_1(?,?)', [$dateFrom, $getUserName]);
-            DB::select('CALL lisban_old_2(?,?)', [$dateFrom, $getUserName]);
-            // DB::select('CALL lisban_old_3(?,?)', [$dateFrom, $getUserName]);
+            // DB::select('CALL lisban_old_2(?,?)', [$dateFrom, $getUserName]);
+            DB::select('CALL lisban_old_3(?,?)', [$dateFrom, $getUserName]);
 
             return response()->json(['message' => 'Stored procedure executed successfully'], 200);
         } catch (\Exception $e) {
