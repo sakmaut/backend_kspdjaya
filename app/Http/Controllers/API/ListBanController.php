@@ -147,9 +147,9 @@ class ListBanController extends Controller
 
             // if ($checkQueue->JOB_STATUS == 1) {
 
-            if ($checkQueue->JOB_STATUS == 1 && $diffInMinutes < 5) {
-                throw new Exception("RUNNING JOB", 408);
-            }
+            // if ($checkQueue->JOB_STATUS == 1 && $diffInMinutes < 5) {
+            //     throw new Exception("RUNNING JOB", 408);
+            // }
 
             $query1 = "SELECT  CONCAT(b.CODE, '-', b.CODE_NUMBER) AS KODE,
                                 b.NAME AS NAMA_CABANG,
