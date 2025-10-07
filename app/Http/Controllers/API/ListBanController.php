@@ -390,10 +390,8 @@ class ListBanController extends Controller
                 //                             FROM job_on_progress
                 //                             WHERE job_name = 'LISBAN'");
 
-                $branchCondition = empty($getBranch) && $getBranch == 'SEMUA CABANG';
+                $branchCondition = empty($getBranch) && $getBranch == 'SEMUA CABANG' && $getBranch == '8593fd4e-b54e-11ef-97d5-bc24112eb731';
                 $branchCon = $branchCondition ? '%' : $getBranch;
-
-                print_r($branchCon);
 
                 if (!empty($checkRunSp) && $checkRunSp[0]->execute_sp === 'run') {
                     DB::select('CALL lisban_berjalan(?,?,?)', [$getNow, $getUserName, $branchCon]);
