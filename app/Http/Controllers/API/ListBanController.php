@@ -390,8 +390,9 @@ class ListBanController extends Controller
                 //                             FROM job_on_progress
                 //                             WHERE job_name = 'LISBAN'");
 
+                $branchCondition = empty($getBranch) && $getBranch == 'SEMUA CABANG';
                 if (!empty($checkRunSp) && $checkRunSp[0]->execute_sp === 'run') {
-                    DB::select('CALL lisban_berjalan(?,?)', [$getNow, $getUserName]);
+                    DB::select('CALL lisban_berjalan(?,?,?)', [$getNow, $getUserName, $branchCondition ? '%' : $getBranch]);
                 }
 
                 $query = $query2;
@@ -515,13 +516,15 @@ class ListBanController extends Controller
     {
         try {
             $dateFrom = $request->dari;
+            $getBranch = $request->cabang_id;
             $getUserName = $request->user()->fullname;
             $getNow = date('mY', strtotime(now()));
 
             $checkConditionDate = $getNow == $dateFrom;
+            $branchCondition = empty($getBranch) && $getBranch == 'SEMUA CABANG';
 
             if (!$checkConditionDate) {
-                DB::select('CALL lisban_masa_lalu(?,?)', [$dateFrom, $getUserName]);
+                DB::select('CALL lisban_masa_lalu(?,?,?)', [$dateFrom, $getUserName, $branchCondition ? '%' : $getBranch]);
 
                 return response()->json(['message' => 'Stored procedure executed successfully'], 200);
             } else {
@@ -536,15 +539,17 @@ class ListBanController extends Controller
     {
         try {
             $dateFrom = $request->dari;
+            $getBranch = $request->cabang_id;
             $getUserName = $request->user()->fullname;
 
             $getNow = date('mY', strtotime(now()));
 
             $checkConditionDate = $getNow == $dateFrom;
+            $branchCondition = empty($getBranch) && $getBranch == 'SEMUA CABANG';
 
             if (!$checkConditionDate) {
 
-                DB::select('CALL lisban_old_1(?,?)', [$dateFrom, $getUserName]);
+                DB::select('CALL lisban_old_1(?,?,?)', [$dateFrom, $getUserName, $branchCondition ? '%' : $getBranch]);
                 return response()->json(['message' => 'Stored procedure executed successfully'], 200);
             } else {
                 return response()->json(['message' => 'Bulan Berjalan'], 200);
@@ -558,14 +563,16 @@ class ListBanController extends Controller
     {
         try {
             $dateFrom = $request->dari;
+            $getBranch = $request->cabang_id;
             $getUserName = $request->user()->fullname;
 
             $getNow = date('mY', strtotime(now()));
 
             $checkConditionDate = $getNow == $dateFrom;
+            $branchCondition = empty($getBranch) && $getBranch == 'SEMUA CABANG';
 
             if (!$checkConditionDate) {
-                DB::select('CALL lisban_old_2(?,?)', [$dateFrom, $getUserName]);
+                DB::select('CALL lisban_old_2(?,?,?)', [$dateFrom, $getUserName, $branchCondition ? '%' : $getBranch]);
                 return response()->json(['message' => 'Stored procedure executed successfully'], 200);
             } else {
                 return response()->json(['message' => 'Bulan Berjalan'], 200);
@@ -579,13 +586,15 @@ class ListBanController extends Controller
     {
         try {
             $dateFrom = $request->dari;
+            $getBranch = $request->cabang_id;
             $getUserName = $request->user()->fullname;
             $getNow = date('mY', strtotime(now()));
 
             $checkConditionDate = $getNow == $dateFrom;
+            $branchCondition = empty($getBranch) && $getBranch == 'SEMUA CABANG';
 
             if (!$checkConditionDate) {
-                DB::select('CALL lisban_old_3(?,?)', [$dateFrom, $getUserName]);
+                DB::select('CALL lisban_old_3(?,?,?)', [$dateFrom, $getUserName, $branchCondition ? '%' : $getBranch]);
                 return response()->json(['message' => 'Stored procedure executed successfully'], 200);
             } else {
                 return response()->json(['message' => 'Bulan Berjalan'], 200);
