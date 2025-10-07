@@ -393,6 +393,9 @@ class ListBanController extends Controller
                 $branchCondition = empty($getBranch) && ($getBranch == 'SEMUA CABANG' || $getBranch == 'semua');
                 $branchCon = $branchCondition ? '%' : $getBranch;
 
+                print_r($branchCon);
+                die;
+
                 if (!empty($checkRunSp) && $checkRunSp[0]->execute_sp === 'run') {
                     DB::select('CALL lisban_berjalan(?,?,?)', [$getNow, $getUserName, $branchCon]);
                 }
