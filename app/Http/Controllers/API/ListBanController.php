@@ -372,8 +372,7 @@ class ListBanController extends Controller
 
             if ($checkConditionDate) {
 
-                \print_r("TAIKL");
-                die;
+                print_r("TAIKL");
 
                 $checkRunSp = DB::select("  SELECT
                                             CASE
@@ -383,6 +382,8 @@ class ListBanController extends Controller
                                             END AS execute_sp
                                             FROM job_on_progress
                                             WHERE job_name = 'LISBAN'");
+
+                \print_r($checkRunSp);
 
                 // $checkRunSp = DB::select(" SELECT
                 //                                 CASE
@@ -395,6 +396,8 @@ class ListBanController extends Controller
 
                 $branchCondition = empty($getBranch) || ($getBranch == 'SEMUA CABANG' || $getBranch == 'semua');
                 $branchCon = $branchCondition ? '%' : $getBranch;
+
+                \print_r($branchCon);
 
                 if (!empty($checkRunSp) && $checkRunSp[0]->execute_sp === 'run') {
                     DB::select('CALL lisban_berjalan(?,?,?)', [$getNow, $getUserName, $branchCon]);
