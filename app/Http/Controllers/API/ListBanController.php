@@ -522,9 +522,11 @@ class ListBanController extends Controller
 
             if (!$checkConditionDate) {
                 DB::select('CALL lisban_masa_lalu(?,?)', [$dateFrom, $getUserName]);
-            }
 
-            return response()->json(['message' => 'Stored procedure executed successfully'], 200);
+                return response()->json(['message' => 'Stored procedure executed successfully'], 200);
+            } else {
+                return response()->json(['message' => 'Bulan Berjalan'], 200);
+            }
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
@@ -543,9 +545,10 @@ class ListBanController extends Controller
             if (!$checkConditionDate) {
 
                 DB::select('CALL lisban_old_1(?,?)', [$dateFrom, $getUserName]);
+                return response()->json(['message' => 'Stored procedure executed successfully'], 200);
+            } else {
+                return response()->json(['message' => 'Bulan Berjalan'], 200);
             }
-
-            return response()->json(['message' => 'Stored procedure executed successfully'], 200);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
@@ -563,9 +566,10 @@ class ListBanController extends Controller
 
             if (!$checkConditionDate) {
                 DB::select('CALL lisban_old_2(?,?)', [$dateFrom, $getUserName]);
+                return response()->json(['message' => 'Stored procedure executed successfully'], 200);
+            } else {
+                return response()->json(['message' => 'Bulan Berjalan'], 200);
             }
-
-            return response()->json(['message' => 'Stored procedure executed successfully'], 200);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
@@ -582,9 +586,10 @@ class ListBanController extends Controller
 
             if (!$checkConditionDate) {
                 DB::select('CALL lisban_old_3(?,?)', [$dateFrom, $getUserName]);
+                return response()->json(['message' => 'Stored procedure executed successfully'], 200);
+            } else {
+                return response()->json(['message' => 'Bulan Berjalan'], 200);
             }
-
-            return response()->json(['message' => 'Stored procedure executed successfully'], 200);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
