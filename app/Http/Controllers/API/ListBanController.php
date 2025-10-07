@@ -516,8 +516,13 @@ class ListBanController extends Controller
         try {
             $dateFrom = $request->dari;
             $getUserName = $request->user()->fullname;
+            $getNow = date('mY', strtotime(now()));
 
-            DB::select('CALL lisban_masa_lalu(?,?)', [$dateFrom, $getUserName]);
+            $checkConditionDate = $getNow == $dateFrom;
+
+            if (!$checkConditionDate) {
+                DB::select('CALL lisban_masa_lalu(?,?)', [$dateFrom, $getUserName]);
+            }
 
             return response()->json(['message' => 'Stored procedure executed successfully'], 200);
         } catch (\Exception $e) {
@@ -531,7 +536,14 @@ class ListBanController extends Controller
             $dateFrom = $request->dari;
             $getUserName = $request->user()->fullname;
 
-            DB::select('CALL lisban_old_1(?,?)', [$dateFrom, $getUserName]);
+            $getNow = date('mY', strtotime(now()));
+
+            $checkConditionDate = $getNow == $dateFrom;
+
+            if (!$checkConditionDate) {
+
+                DB::select('CALL lisban_old_1(?,?)', [$dateFrom, $getUserName]);
+            }
 
             return response()->json(['message' => 'Stored procedure executed successfully'], 200);
         } catch (\Exception $e) {
@@ -545,7 +557,13 @@ class ListBanController extends Controller
             $dateFrom = $request->dari;
             $getUserName = $request->user()->fullname;
 
-            DB::select('CALL lisban_old_2(?,?)', [$dateFrom, $getUserName]);
+            $getNow = date('mY', strtotime(now()));
+
+            $checkConditionDate = $getNow == $dateFrom;
+
+            if (!$checkConditionDate) {
+                DB::select('CALL lisban_old_2(?,?)', [$dateFrom, $getUserName]);
+            }
 
             return response()->json(['message' => 'Stored procedure executed successfully'], 200);
         } catch (\Exception $e) {
@@ -558,8 +576,13 @@ class ListBanController extends Controller
         try {
             $dateFrom = $request->dari;
             $getUserName = $request->user()->fullname;
+            $getNow = date('mY', strtotime(now()));
 
-            DB::select('CALL lisban_old_3(?,?)', [$dateFrom, $getUserName]);
+            $checkConditionDate = $getNow == $dateFrom;
+
+            if (!$checkConditionDate) {
+                DB::select('CALL lisban_old_3(?,?)', [$dateFrom, $getUserName]);
+            }
 
             return response()->json(['message' => 'Stored procedure executed successfully'], 200);
         } catch (\Exception $e) {
