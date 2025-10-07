@@ -522,7 +522,7 @@ class ListBanController extends Controller
             $getNow = date('mY', strtotime(now()));
 
             $checkConditionDate = $getNow == $dateFrom;
-            $branchCondition = empty($getBranch) && $getBranch == 'SEMUA CABANG';
+            $branchCondition = empty($getBranch) || $getBranch == 'semua';
 
             if (!$checkConditionDate) {
                 DB::select('CALL lisban_masa_lalu(?,?,?)', [$dateFrom, $getUserName, $branchCondition ? '%' : $getBranch]);
@@ -546,7 +546,7 @@ class ListBanController extends Controller
             $getNow = date('mY', strtotime(now()));
 
             $checkConditionDate = $getNow == $dateFrom;
-            $branchCondition = empty($getBranch) && $getBranch == 'SEMUA CABANG';
+            $branchCondition = empty($getBranch) || $getBranch == 'semua';
 
             if (!$checkConditionDate) {
 
@@ -570,7 +570,7 @@ class ListBanController extends Controller
             $getNow = date('mY', strtotime(now()));
 
             $checkConditionDate = $getNow == $dateFrom;
-            $branchCondition = empty($getBranch) && $getBranch == 'SEMUA CABANG';
+            $branchCondition = empty($getBranch) || $getBranch == 'semua';
 
             if (!$checkConditionDate) {
                 DB::select('CALL lisban_old_2(?,?,?)', [$dateFrom, $getUserName, $branchCondition ? '%' : $getBranch]);
@@ -592,7 +592,7 @@ class ListBanController extends Controller
             $getNow = date('mY', strtotime(now()));
 
             $checkConditionDate = $getNow == $dateFrom;
-            $branchCondition = empty($getBranch) && $getBranch == 'SEMUA CABANG';
+            $branchCondition = empty($getBranch) || $getBranch == 'semua';
 
             if (!$checkConditionDate) {
                 DB::select('CALL lisban_old_3(?,?,?)', [$dateFrom, $getUserName, $branchCondition ? '%' : $getBranch]);
