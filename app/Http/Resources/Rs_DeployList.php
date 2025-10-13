@@ -16,6 +16,7 @@ class Rs_DeployList extends JsonResource
             'nama_customer' => $this->NAMA_CUST ?? "",
             'cycle_awal' => $this->CYCLE_AWAL ?? "",
             'nbot' => $this->N_BOT ?? "",
+            'alamat' => $this->ALAMAT ?? "",
             'desa' => $this->DESA ?? "",
             'kec' => $this->KEC ?? "",
             'ket' => "",

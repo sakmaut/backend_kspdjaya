@@ -7,7 +7,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Credit\Tagihan\Service\S_Tagihan;
 use App\Http\Resources\R_TagihanDetail;
 use App\Http\Resources\Rs_DeployList;
+use App\Http\Resources\Rs_LkpList;
 use App\Http\Resources\Rs_TagihanByUserId;
+use App\Models\M_Lkp;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -143,6 +145,44 @@ class C_Tagihan extends Controller
             return response()->json($data, 200);
         } catch (Exception $e) {
             DB::rollback();
+            return $this->log->logError($e, $request);
+        }
+    }
+
+    public function cl_lkp_add(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $validator = Validator::make($request->all(), [
+                'user_id' => 'required|exists:users,username'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $data = $this->service->createLkp($request);
+
+            DB::commit();
+            return response()->json($data, 200);
+        } catch (Exception $e) {
+            DB::rollback();
+            return $this->log->logError($e, $request);
+        }
+    }
+
+    public function cl_lkp_list(Request $request)
+    {
+        try {
+            $data = M_Lkp::all();
+
+            $dto = Rs_LkpList::collection($data);
+
+            return response()->json($dto, 200);
+        } catch (\Exception $e) {
             return $this->log->logError($e, $request);
         }
     }

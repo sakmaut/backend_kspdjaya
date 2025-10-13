@@ -5,6 +5,8 @@ namespace App\Http\Credit\Tagihan\Service;
 use App\Http\Credit\Tagihan\Model\M_Tagihan;
 use App\Http\Credit\Tagihan\Repository\R_Tagihan;
 use App\Http\Credit\TagihanDetail\Model\M_TagihanDetail;
+use App\Models\M_Lkp;
+use App\Models\M_LkpDetail;
 use App\Models\M_TagihanLog;
 use Carbon\Carbon;
 use Exception;
@@ -19,22 +21,22 @@ class S_Tagihan extends R_Tagihan
         $this->repository = $repository;
     }
 
-    // private function createAutoCode($table, $field, $prefix)
-    // {
-    //     $query = $table::max($field);
-    //     $_trans = date("Ymd");
+    private function createAutoCode($table, $field, $prefix)
+    {
+        $query = $table::max($field);
+        $_trans = date("Ymd");
 
-    //     $prefixLength = strlen($prefix);
+        $prefixLength = strlen($prefix);
 
-    //     $startPos = $prefixLength + 11;
+        $startPos = $prefixLength + 11;
 
-    //     $noUrut = !empty($query) ? (int) substr($query, $startPos, 5) : 0;
-    //     $noUrut++;
+        $noUrut = !empty($query) ? (int) substr($query, $startPos, 5) : 0;
+        $noUrut++;
 
-    //     $generateCode = $prefix . '/' . $_trans . '/' . sprintf("%05d", $noUrut);
+        $generateCode = $prefix . '/' . $_trans . '/' . sprintf("%05d", $noUrut);
 
-    //     return $generateCode;
-    // }
+        return $generateCode;
+    }
 
     public function listTagihanByUserId($request)
     {
@@ -126,30 +128,58 @@ class S_Tagihan extends R_Tagihan
         return $savedData;
     }
 
-    protected function saveTagihanDetail($tagihanId, $creditScheduleData)
+    public function createLkp($request)
     {
-        // $result = !empty($loanNumber) ? DB::select('CALL get_credit_schedule(?)', [$loanNumber]) : [];
-        foreach ($creditScheduleData as $item) {
-            M_TagihanDetail::updateOrCreate(
-                [
-                    'TAGIHAN_ID'        => $tagihanId,
-                    'INSTALLMENT_COUNT' => $item->INSTALLMENT_COUNT ?? null,
-                ],
-                [
-                    'PAYMENT_DATE'            => $item->PAYMENT_DATE ?? null,
-                    'PRINCIPAL'               => $item->PRINCIPAL ?? null,
-                    'INTEREST'                => $item->INTEREST ?? null,
-                    'INSTALLMENT'             => $item->INSTALLMENT ?? null,
-                    'PRINCIPAL_REMAINS'       => $item->PRINCIPAL_REMAINS ?? null,
-                    'PAYMENT_VALUE_PRINCIPAL' => $item->PAYMENT_VALUE_PRINCIPAL ?? null,
-                    'PAYMENT_VALUE_INTEREST'  => $item->PAYMENT_VALUE_INTEREST ?? null,
-                    'DISCOUNT_PRINCIPAL'      => $item->DISCOUNT_PRINCIPAL ?? null,
-                    'DISCOUNT_INTEREST'       => $item->DISCOUNT_INTEREST ?? null,
-                    'INSUFFICIENT_PAYMENT'    => $item->INSUFFICIENT_PAYMENT ?? null,
-                    'PAYMENT_VALUE'           => $item->PAYMENT_VALUE ?? null,
-                    'PAID_FLAG'               => $item->PAID_FLAG ?? null,
-                ]
-            );
+        $savedData = [];
+
+        $listTagihan = is_array($request['list_tagihan']) ? $request['list_tagihan'] : [];
+        $countNoa = count($listTagihan);
+
+        $detailData = [
+            'LKP_NUMBER' => $this->createAutoCode(M_Lkp::class, 'LKP_NUMBER', 'LKP'),
+            'USER_ID'    => $request['user_id'] ?? null,
+            'BRANCH_ID'  => $request->user()->branch_id ?? null,
+            'NOA'        => $countNoa,
+            'CREATED_BY' => $request->user()->id ?? null,
+        ];
+
+        $saved = M_Lkp::create($detailData);
+
+        foreach ($listTagihan as $item) {
+            $loanNumber = $item['no_kontrak'] ?? "";
+
+            if (empty($loanNumber)) {
+                throw new Exception("NO KONTRAK is required.");
+            }
+
+            $result = DB::select('CALL get_credit_schedule(?)', [$loanNumber]);
+
+            if (!empty($result)) {
+                foreach ($result as $res) {
+                    M_LkpDetail::create([
+                        'LKP_ID'      => $saved->ID ?? null,
+                        'LOAN_NUMBER' => $loanNumber,
+                        'LOAN_HOLDER' => $loanNumber,
+                        'ADDRESS'    => $item['alamat'] ?? null,
+                        'CYCLE'      => $item['cycle_awal'] ?? null,
+                        'CREATED_BY' => $request->user()->id ?? null,
+                        'DUE_DATE'   => $res->PAYMENT_DATE ?? null,
+                        'PRINCIPAL'  => $res->PRINCIPAL ?? null,
+                        'INTEREST'   => $res->INTEREST ?? null,
+                        'INST_COUNT' => $res->INSTALLMENT_COUNT ?? null,
+                    ]);
+                }
+            }
+
+            M_TagihanLog::create([
+                'LOAN_NUMBER' => $loanNumber,
+                'LKP_ID'      => $saved->ID ?? null,
+                'DESCRIPTION' => 'LKP created with LOAN_NUMBER: ' . $loanNumber,
+                'STATUS'      => 'CREATE_LKP',
+                'CREATED_BY'  => $request->user()->id ?? null,
+            ]);
         }
+
+        return $saved;
     }
 }
