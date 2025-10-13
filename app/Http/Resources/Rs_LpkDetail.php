@@ -10,8 +10,6 @@ class Rs_LpkDetail extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        $userName = User::where('username', $this->USER_ID)->first();
-
         return [
             'id' => $this->ID,
             'no_kontrak' => $this->LOAN_NUMBER ?? "",
@@ -21,7 +19,7 @@ class Rs_LpkDetail extends JsonResource
             'tgl_jatuh_tempo' => $this->DUE_DATE ?? "",
             'cycle_awal' => $this->CYCLE ?? "",
             'angusran_ke' => $this->INST_COUNT ?? "",
-            'angusran' => $this->INST_COUNT ?? "",
+            'angusran' => (float) $this->PRINCIPAL + (float) $this->INTEREST ?? "",
             'bayar' => "",
             "hasil_kunjungan" => "",
         ];
