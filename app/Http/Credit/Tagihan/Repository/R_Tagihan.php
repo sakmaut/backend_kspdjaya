@@ -105,7 +105,6 @@ class R_Tagihan
                                 replace(format(cl.PCPL_ORI-cl.TOTAL_ADMIN,0),',','') as NILAI_PINJAMAN,
                                 replace(format(cl.TOTAL_ADMIN,0),',','') as TOTAL_ADMIN,
                                 cl.CUST_CODE,
-                                tg.NO_SURAT,
                                 us.fullname AS username,
                                 case    when (	concat('C',case when date_format(cl.created_at,'%m%Y')='$dateFrom' then 'N'
                                         when cl.STATUS_REC = 'RP' and py.ID is null and date_format(col.SITA_AT,'%m%Y')<>'$dateFrom'  then 'L'
@@ -139,14 +138,14 @@ class R_Tagihan
                                     and en.type=date_format(now(),'%d%m%Y')
                                 left join temp_lis_02C py on cast(py.loan_num as char) = cast(cl.LOAN_NUMBER as char)
                                 left join old_survey_note osn on cast(osn.loan_number as char) = cast(cl.LOAN_NUMBER as char)
-                                left join tagihan tg 
+                                left join cl_deploy tg 
                                         ON cast(tg.LOAN_NUMBER as char) = cast(cl.LOAN_NUMBER as char)
                                         AND tg.CREATED_AT < DATE_ADD(DATE_SUB(CURDATE(), INTERVAL DAY(CURDATE()) - 1 DAY), INTERVAL 1 MONTH)
                                 left join users us on us.username = tg.USER_ID
                         WHERE	(cl.STATUS = 'A'  
                                     or (cl.STATUS_REC = 'RP' and cl.mod_user <> 'exclude jaminan' and cast(cl.LOAN_NUMBER as char) not in (select cast(pp.LOAN_NUM as char) from payment pp where pp.ACC_KEY = 'JUAL UNIT'))
                                     or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char) from temp_lis_02C )))
-                                AND (tg.NO_SURAT IS NULL OR tg.NO_SURAT = '')";
+                                AND (tg.LOAN_NUMBER IS NULL OR tg.LOAN_NUMBER = '')";
 
         if ($currentPosition != 'HO') {
             $sql .= " AND cl.BRANCH = '$currentBranch'";
