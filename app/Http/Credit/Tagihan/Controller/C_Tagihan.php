@@ -186,4 +186,17 @@ class C_Tagihan extends Controller
             return $this->log->logError($e, $request);
         }
     }
+
+    public function cl_lkp_detail(Request $request, $id)
+    {
+        try {
+            $data = M_Lkp::with('detail')->where('LKP_NUMBER', $id)->first();
+
+            // $dto = Rs_LkpList::collection($data);
+
+            return response()->json($data, 200);
+        } catch (\Exception $e) {
+            return $this->log->logError($e, $request);
+        }
+    }
 }

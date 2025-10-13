@@ -39,4 +39,9 @@ class M_Lkp extends Model
             }
         });
     }
+
+    public function detail()
+    {
+        return $this->hasMany(M_LkpDetail::class, 'LKP_ID');
+    }
 }

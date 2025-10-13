@@ -33,7 +33,7 @@ class S_Tagihan extends R_Tagihan
         $noUrut = !empty($query) ? (int) substr($query, $startPos, 5) : 0;
         $noUrut++;
 
-        $generateCode = $prefix . '/' . $_trans . '/' . sprintf("%05d", $noUrut);
+        $generateCode = $prefix . '-' . $_trans . '-' . sprintf("%05d", $noUrut);
 
         return $generateCode;
     }
