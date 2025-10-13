@@ -3,25 +3,26 @@
 namespace App\Http\Credit\Tagihan\Model;
 
 use App\Http\Credit\TagihanDetail\Model\M_TagihanDetail;
-use App\Models\M_CreditSchedule;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class M_Tagihan extends Model
 {
     use HasFactory;
 
-    protected $table = 'tagihan';
+    protected $table = 'cl_deploy';
     protected $fillable = [
         'ID',
         'USER_ID',
-        'NO_SURAT',
         'LOAN_NUMBER',
+        'TGL_JTH_TEMPO',
         'NAMA_CUST',
         'CYCLE_AWAL',
+        'N_BOT',
         'ALAMAT',
+        'DESA',
+        'KEC',
         'TGL_EXP',
         'TGL_KUNJUNGAN',
         'KETERANGAN',

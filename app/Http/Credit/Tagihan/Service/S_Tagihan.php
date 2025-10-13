@@ -67,17 +67,22 @@ class S_Tagihan extends R_Tagihan
         $savedData = [];
 
         foreach ($request['list_tagihan'] as $item) {
-            $loanNumber = $item['NO KONTRAK'] ?? null;
+            $loanNumber = $item['NO KONTRAK'] ?? "";
 
-            $result = !empty($loanNumber) ? DB::select('CALL get_credit_schedule(?)', [$loanNumber]) : [];
+            if (empty($loanNumber)) {
+                throw new Exception("NO KONTRAK is required.");
+            }
 
             $detailData = [
                 'USER_ID'       => $request['user_id'],
-                'NO_SURAT'      => $this->createAutoCode(M_Tagihan::class, 'NO_SURAT', 'STG'),
                 'LOAN_NUMBER'   => $loanNumber,
+                'TGL_JTH_TEMPO' => Carbon::parse($item['JTH TEMPO AWAL'])->format('Y-m-d') ?? null,
                 'NAMA_CUST'     => $item['NAMA PELANGGAN'] ?? null,
                 'CYCLE_AWAL'    => $item['CYCLE AWAL'] ?? null,
+                'N_BOT'         => $item['NBOT'] ?? null,
                 'ALAMAT'        => $item['ALAMAT TAGIH'] ?? null,
+                'DESA'          => $item['KELURAHAN'] ?? null,
+                'KEC'           => $item['KECAMATAN'] ?? null,
                 'CREATED_BY'    => $request->user()->id ?? null,
             ];
 
@@ -87,16 +92,12 @@ class S_Tagihan extends R_Tagihan
                 if ($existing) {
                     $updated = $this->repository->update($existing->ID, $detailData);
                     $savedData[] = $updated;
-
-                    $this->saveTagihanDetail($updated->ID, $result);
                     continue;
                 }
             }
 
             $saved = $this->repository->create($detailData);
             $savedData[] = $saved;
-
-            $this->saveTagihanDetail($saved->ID, $result);
         }
 
         return $savedData;
@@ -104,6 +105,7 @@ class S_Tagihan extends R_Tagihan
 
     protected function saveTagihanDetail($tagihanId, $creditScheduleData)
     {
+        // $result = !empty($loanNumber) ? DB::select('CALL get_credit_schedule(?)', [$loanNumber]) : [];
         foreach ($creditScheduleData as $item) {
             M_TagihanDetail::updateOrCreate(
                 [
