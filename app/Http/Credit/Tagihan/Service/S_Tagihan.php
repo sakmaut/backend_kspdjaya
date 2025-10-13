@@ -132,8 +132,8 @@ class S_Tagihan extends R_Tagihan
     {
         $savedData = [];
 
-        $listTagihan = is_array($request['list_tagihan']) ? $request['list_tagihan'] : [];
-        $countNoa = count($listTagihan);
+        $list_lkp = is_array($request['list_lkp']) ? $request['list_lkp'] : [];
+        $countNoa = count($list_lkp);
 
         $detailData = [
             'LKP_NUMBER' => $this->createAutoCode(M_Lkp::class, 'LKP_NUMBER', 'LKP'),
@@ -145,7 +145,7 @@ class S_Tagihan extends R_Tagihan
 
         $saved = M_Lkp::create($detailData);
 
-        foreach ($listTagihan as $item) {
+        foreach ($list_lkp as $item) {
             $loanNumber = $item['no_kontrak'] ?? "";
 
             if (empty($loanNumber)) {
