@@ -161,6 +161,11 @@ class R_Tagihan
         return  $this->model::with(['credit_schedule'])->where('LOAN_NUMBER', $loanNumber)->get();
     }
 
+    protected function listTagihanByBranchId($currentBranch)
+    {
+        return  $this->model::where('BRANCH_ID', $currentBranch)->get();
+    }
+
     protected function findByLoanNumber($loanNumber)
     {
         return $this->model

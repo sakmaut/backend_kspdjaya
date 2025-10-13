@@ -1,40 +1,26 @@
 <?php
 
-namespace App\Http\Credit\Tagihan\Model;
+namespace App\Models;
 
-use App\Http\Credit\TagihanDetail\Model\M_TagihanDetail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
-class M_Tagihan extends Model
+class M_TagihanLog extends Model
 {
     use HasFactory;
-
-    protected $table = 'cl_deploy';
+    protected $table = 'tagihan_log';
     protected $fillable = [
         'ID',
-        'USER_ID',
-        'BRANCH_ID',
         'LOAN_NUMBER',
-        'TGL_JTH_TEMPO',
-        'NAMA_CUST',
-        'CYCLE_AWAL',
-        'N_BOT',
-        'ALAMAT',
-        'DESA',
-        'KEC',
-        'TGL_EXP',
-        'TGL_KUNJUNGAN',
-        'KETERANGAN',
+        'LKP_ID',
+        'DESCRIPTION',
+        'STATUS',
         'CREATED_BY',
         'CREATED_AT',
-        'UPDATED_BY',
-        'UPDATED_AT',
-        'DELETED_BY',
-        'DELETED_AT'
     ];
 
+    protected $guarded = [];
     public $incrementing = false;
     protected $keyType = 'string';
     protected $primaryKey = 'ID';
@@ -43,7 +29,6 @@ class M_Tagihan extends Model
     protected static function boot()
     {
         parent::boot();
-
         static::creating(function ($model) {
             if ($model->getKey() == null) {
                 $model->setAttribute($model->getKeyName(), Str::uuid()->toString());

@@ -5,6 +5,7 @@ namespace App\Http\Credit\Tagihan\Service;
 use App\Http\Credit\Tagihan\Model\M_Tagihan;
 use App\Http\Credit\Tagihan\Repository\R_Tagihan;
 use App\Http\Credit\TagihanDetail\Model\M_TagihanDetail;
+use App\Models\M_TagihanLog;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\DB;
@@ -18,22 +19,22 @@ class S_Tagihan extends R_Tagihan
         $this->repository = $repository;
     }
 
-    private function createAutoCode($table, $field, $prefix)
-    {
-        $query = $table::max($field);
-        $_trans = date("Ymd");
+    // private function createAutoCode($table, $field, $prefix)
+    // {
+    //     $query = $table::max($field);
+    //     $_trans = date("Ymd");
 
-        $prefixLength = strlen($prefix);
+    //     $prefixLength = strlen($prefix);
 
-        $startPos = $prefixLength + 11;
+    //     $startPos = $prefixLength + 11;
 
-        $noUrut = !empty($query) ? (int) substr($query, $startPos, 5) : 0;
-        $noUrut++;
+    //     $noUrut = !empty($query) ? (int) substr($query, $startPos, 5) : 0;
+    //     $noUrut++;
 
-        $generateCode = $prefix . '/' . $_trans . '/' . sprintf("%05d", $noUrut);
+    //     $generateCode = $prefix . '/' . $_trans . '/' . sprintf("%05d", $noUrut);
 
-        return $generateCode;
-    }
+    //     return $generateCode;
+    // }
 
     public function listTagihanByUserId($request)
     {
@@ -46,10 +47,19 @@ class S_Tagihan extends R_Tagihan
         return $this->repository->getListTagihanByUserUsername($userId);
     }
 
+
     public function listTagihanWithCreditSchedule($loanNumber)
     {
         return $this->repository->listTagihanWithCreditSchedule($loanNumber);
     }
+
+    public function listTagihanByBranchId($request)
+    {
+        $getCurrentBranch = $request->user()->branch_id ?? null;
+
+        return $this->repository->listTagihanByBranchId($getCurrentBranch);
+    }
+
 
     public function getListTagihan($request)
     {
@@ -75,6 +85,7 @@ class S_Tagihan extends R_Tagihan
 
             $detailData = [
                 'USER_ID'       => $request['user_id'],
+                'BRANCH_ID'     => $request->user()->branch_id ?? null,
                 'LOAN_NUMBER'   => $loanNumber,
                 'TGL_JTH_TEMPO' => Carbon::parse($item['JTH TEMPO AWAL'])->format('Y-m-d') ?? null,
                 'NAMA_CUST'     => $item['NAMA PELANGGAN'] ?? null,
@@ -97,6 +108,13 @@ class S_Tagihan extends R_Tagihan
             }
 
             $saved = $this->repository->create($detailData);
+            M_TagihanLog::create([
+                'LOAN_NUMBER' => $loanNumber,
+                'LKP_ID' => $saved->ID ?? "",
+                'DESCRIPTION' => 'Tagihan created with LOAN_NUMBER: ' . $loanNumber,
+                'STATUS'     => 'CREATE_DEPLOY',
+                'CREATED_BY' => $request->user()->id ?? null,
+            ]);
             $savedData[] = $saved;
         }
 
