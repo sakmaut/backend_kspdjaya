@@ -178,7 +178,11 @@ class C_Tagihan extends Controller
     public function cl_lkp_list(Request $request)
     {
         try {
-            $data = M_Lkp::all();
+            $data = M_Lkp::join('users', 'cl_lkp.USER_ID', '=', 'users.username')
+                ->with('user')
+                ->orderBy('users.fullname', 'ASC')
+                ->select('cl_lkp.*')
+                ->get();
 
             $dto = Rs_LkpList::collection($data);
 

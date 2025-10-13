@@ -44,4 +44,9 @@ class M_Lkp extends Model
     {
         return $this->hasMany(M_LkpDetail::class, 'LKP_ID');
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'USER_ID', 'username');
+    }
 }
