@@ -19,7 +19,7 @@ class Rs_LpkDetail extends JsonResource
             'tgl_jatuh_tempo' => $this->DUE_DATE ?? "",
             'cycle_awal' => $this->CYCLE ?? "",
             'angusran_ke' => $this->INST_COUNT ?? "",
-            'angsuran' => number_format((float) $this->PRINCIPAL + (float) $this->INTEREST ?? 0, 2, '.', ','),
+            'angsuran' => number_format((float) $this->PRINCIPAL + (float) $this->INTEREST ?? 0, '.', ','),
             'bayar' => "",
             "hasil_kunjungan" => "",
         ];
