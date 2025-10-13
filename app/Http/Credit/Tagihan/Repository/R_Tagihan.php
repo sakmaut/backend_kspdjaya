@@ -145,7 +145,8 @@ class R_Tagihan
                                 left join users us on us.username = tg.USER_ID
                         WHERE	(cl.STATUS = 'A'  
                                     or (cl.STATUS_REC = 'RP' and cl.mod_user <> 'exclude jaminan' and cast(cl.LOAN_NUMBER as char) not in (select cast(pp.LOAN_NUM as char) from payment pp where pp.ACC_KEY = 'JUAL UNIT'))
-                                    or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char) from temp_lis_02C )))";
+                                    or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char) from temp_lis_02C )))
+                                AND (tg.NO_SURAT IS NULL OR tg.NO_SURAT = '')";
 
         if ($currentPosition != 'HO') {
             $sql .= " AND cl.BRANCH = '$currentBranch'";
