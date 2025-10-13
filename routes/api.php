@@ -189,6 +189,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::resource('upload_tagihan_document', C_TagihanDocument::class);
     Route::get('list_tagihan_collector',  [C_Tagihan::class, 'listBanTest']);
     Route::get('cl_deploy_list',  [C_Tagihan::class, 'cl_deploy_list']);
+    Route::get('cl_deploy_by_pic/{id}',  [C_Tagihan::class, 'cl_deploy_by_pic']);
 
     Route::post('sp1',  [ListBanController::class, 'sp1']);
     Route::post('sp2',  [ListBanController::class, 'sp2']);

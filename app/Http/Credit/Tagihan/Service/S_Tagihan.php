@@ -60,6 +60,11 @@ class S_Tagihan extends R_Tagihan
         return $this->repository->listTagihanByBranchId($getCurrentBranch);
     }
 
+    public function cl_deploy_by_pic($pic)
+    {
+        $sql = $this->repository->cl_deploy_by_pic($pic);
+        return $sql;
+    }
 
     public function getListTagihan($request)
     {

@@ -166,6 +166,11 @@ class R_Tagihan
         return  $this->model::where('BRANCH_ID', $currentBranch)->get();
     }
 
+    protected function cl_deploy_by_pic($pic)
+    {
+        return  $this->model::where('USER_ID', $pic)->get();
+    }
+
     protected function findByLoanNumber($loanNumber)
     {
         return $this->model
@@ -174,7 +179,6 @@ class R_Tagihan
             ->whereYear('CREATED_AT', now()->year)
             ->first();
     }
-
 
     protected function getListTagihanByUserUsername($userId)
     {

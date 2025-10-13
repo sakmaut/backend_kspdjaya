@@ -66,6 +66,19 @@ class C_Tagihan extends Controller
         }
     }
 
+    public function cl_deploy_by_pic(Request $request, $pic)
+    {
+        try {
+            $data = $this->service->cl_deploy_by_pic($pic);
+
+            $dto = Rs_DeployList::collection($data);
+
+            return response()->json($dto, 200);
+        } catch (\Exception $e) {
+            return $this->log->logError($e, $request);
+        }
+    }
+
     public function show($id)
     {
         // TODO: implement show
