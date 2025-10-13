@@ -159,7 +159,7 @@ class S_Tagihan extends R_Tagihan
                     M_LkpDetail::create([
                         'LKP_ID'      => $saved->ID ?? null,
                         'LOAN_NUMBER' => $loanNumber,
-                        'LOAN_HOLDER' => $loanNumber,
+                        'LOAN_HOLDER' => $item['nama_customer'] ?? null,
                         'ADDRESS'    => $item['alamat'] ?? null,
                         'CYCLE'      => $item['cycle_awal'] ?? null,
                         'CREATED_BY' => $request->user()->id ?? null,

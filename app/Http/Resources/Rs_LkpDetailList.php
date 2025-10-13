@@ -19,7 +19,7 @@ class Rs_LkpDetailList extends JsonResource
             'petugas' => $userName->fullname ?? "",
             'tanggal' => Carbon::parse($this->CREATED_AT)->format('Y-m-d') ?? "",
             'jml_surat_tgh' => $this->NOA ?? 0,
-            'details' => Rs_DeployList::collection($this->detail ?? [])
+            'details' => Rs_LpkDetail::collection($this->detail ?? [])
         ];
     }
 }
