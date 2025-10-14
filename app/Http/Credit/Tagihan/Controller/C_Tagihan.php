@@ -102,7 +102,7 @@ class C_Tagihan extends Controller
             // $data = $this->service->cl_deploy_by_pic($pic);
 
             $data = DB::table('cl_deploy as a')
-                ->leftJoin('cl_lkp_detail as b', 'b.NO_SURAT', '=', 'a.NO_SURAT')
+                ->leftJoin('cl_lkp_detail as b', 'b.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
                 ->leftJoin('cl_lkp as c', 'c.ID', '=', 'b.LKP_ID')
                 ->where('a.USER_ID', $pic)
                 ->where(function ($query) {
