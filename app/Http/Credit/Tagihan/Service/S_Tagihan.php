@@ -21,22 +21,60 @@ class S_Tagihan extends R_Tagihan
         $this->repository = $repository;
     }
 
+    // private function createAutoCode($table, $field, $prefix)
+    // {
+    //     $query = $table::max($field);
+    //     $_trans = date("ym");
+
+    //     $prefixLength = strlen($prefix);
+
+    //     $startPos = $prefixLength + 11;
+
+    //     $noUrut = !empty($query) ? (int) substr($query, $startPos, 5) : 0;
+    //     $noUrut++;
+
+    //     $generateCode = $prefix . $_trans . sprintf("%05d", $noUrut);
+
+    //     return $generateCode;
+    // }
+
     private function createAutoCode($table, $field, $prefix)
     {
-        $query = $table::max($field);
+        // Ambil kode terbesar dari database
+        $lastCode = $table::max($field);
+
+        // Ambil tanggal saat ini dalam format tahun dan bulan (yyMM)
         $_trans = date("ym");
 
         $prefixLength = strlen($prefix);
+        $codeDateLength = 4; // 'ym' -> 2 (year) + 2 (month) = 4
 
-        $startPos = $prefixLength + 11;
+        // Jika ada kode terakhir
+        if (!empty($lastCode)) {
+            // Ambil bagian tanggal dari kode terakhir setelah prefix
+            $lastCodeDate = substr($lastCode, $prefixLength, $codeDateLength);
 
-        $noUrut = !empty($query) ? (int) substr($query, $startPos, 5) : 0;
-        $noUrut++;
+            // Cek apakah bulan-tahun sama dengan sekarang
+            if ($lastCodeDate === $_trans) {
+                // Ambil nomor urut dari kode terakhir
+                $startPos = $prefixLength + $codeDateLength;
+                $lastNumber = (int) substr($lastCode, $startPos, 5);
+                $noUrut = $lastNumber + 1;
+            } else {
+                // Reset nomor urut ke 1 jika bulan-tahun berbeda
+                $noUrut = 1;
+            }
+        } else {
+            // Jika tidak ada kode sebelumnya, mulai dari 1
+            $noUrut = 1;
+        }
 
+        // Buat kode baru
         $generateCode = $prefix . $_trans . sprintf("%05d", $noUrut);
 
         return $generateCode;
     }
+
 
     public function listTagihanByUserId($request)
     {
