@@ -312,24 +312,25 @@ class C_Tagihan extends Controller
         DB::beginTransaction();
         try {
 
-            if ($req->hasFile('image') && $req->file('image')->isValid()) {
-                $file = $req->file('image');
+            if (preg_match('/^data:image\/(\w+);base64,/', $req->image, $type)) {
+                $data = substr($req->image, strpos($req->image, ',') + 1);
+                $data = base64_decode($data);
 
-                $extension = $file->getClientOriginalExtension();
+                // Generate a unique filename
+                $extension = strtolower($type[1]); // Get the image extension
+                $fileName = Uuid::uuid4()->toString() . '.' . $extension;
 
-                $fileName = Uuid::uuid4()->toString() . '.' . strtolower($extension);
+                // Store the image
+                $image_path = Storage::put("public/Tagihan/{$fileName}", $data);
+                $image_path = str_replace('public/', '', $image_path);
 
-                $path = $file->storeAs('public/Tagihan', $fileName);
-
-                $image_path = str_replace('public/', '', $path);
-
-                $url = URL::to('/') . '/storage/' . $image_path;
+                $url = URL::to('/') . '/storage/' . 'Tagihan/' . $fileName;
 
                 DB::commit();
-                return response()->json($url, 200);
+                return response()->json(['response' => $url], 200);
             } else {
                 DB::rollback();
-                return response()->json(['message' => 'No image file provided', 'status' => 400], 400);
+                return response()->json(['message' => 'No image file provided', "status" => 400], 400);
             }
         } catch (Exception $e) {
             DB::rollback();
