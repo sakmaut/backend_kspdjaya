@@ -97,6 +97,19 @@ class C_Tagihan extends Controller
         }
     }
 
+    public function cl_logs(Request $request, $id)
+    {
+        try {
+            $data = DB::table('cl_logs')
+                ->where('reference', $id)
+                ->get();
+
+            return response()->json($data, 200);
+        } catch (\Exception $e) {
+            return $this->log->logError($e, $request);
+        }
+    }
+
     public function cl_deploy_by_pic(Request $request, $pic)
     {
         try {
