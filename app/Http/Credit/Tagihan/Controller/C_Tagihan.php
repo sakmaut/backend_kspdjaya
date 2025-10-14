@@ -59,6 +59,7 @@ class C_Tagihan extends Controller
                 ->leftJoin('cl_lkp as c', 'c.ID', '=', 'b.LKP_ID')
                 ->where('a.USER_ID', $userId)
                 ->select('a.*', 'c.*')
+                ->orderByRaw('c.LKP_NUMBER IS NOT NULL DESC')
                 ->get();
 
             $dto = Rs_DeployList::collection($data);
