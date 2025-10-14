@@ -4,6 +4,7 @@ namespace App\Http\Credit\Tagihan\Controller;
 
 use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
+use App\Http\Credit\Tagihan\Model\M_Tagihan;
 use App\Http\Credit\Tagihan\Service\S_Tagihan;
 use App\Http\Resources\R_TagihanDetail;
 use App\Http\Resources\Rs_DeployList;
@@ -37,6 +38,20 @@ class C_Tagihan extends Controller
             $data = $this->service->getListTagihan($request);
 
             $dto = R_TagihanDetail::collection($data);
+
+            return response()->json($dto, 200);
+        } catch (\Exception $e) {
+            return $this->log->logError($e, $request);
+        }
+    }
+
+    public function list_tagihan_collector(Request $request)
+    {
+        try {
+            $userId = $request->user()->username ?? null;
+            $data = M_Tagihan::where('USER_ID', $userId)->get();
+
+            $dto = Rs_DeployList::collection($data);
 
             return response()->json($dto, 200);
         } catch (\Exception $e) {
