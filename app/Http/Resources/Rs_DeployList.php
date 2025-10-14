@@ -15,6 +15,7 @@ class Rs_DeployList extends JsonResource
         return [
             'id' => $this->ID,
             'nama_pic' =>  $userName->fullname ?? "",
+            'no_surat' => $this->NO_SURAT ?? "",
             'no_kontrak' => $this->LOAN_NUMBER ?? "",
             'nama_customer' => $this->NAMA_CUST ?? "",
             'cycle_awal' => $this->CYCLE_AWAL ?? "",
@@ -22,6 +23,7 @@ class Rs_DeployList extends JsonResource
             'alamat' => $this->ALAMAT ?? "",
             'desa' => $this->DESA ?? "",
             'kec' => $this->KEC ?? "",
+            'mcf' => $this->MCF ?? "",
             'ket' => "",
         ];
     }

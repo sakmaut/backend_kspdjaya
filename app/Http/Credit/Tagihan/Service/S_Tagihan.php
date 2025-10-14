@@ -91,6 +91,7 @@ class S_Tagihan extends R_Tagihan
             }
 
             $detailData = [
+                'NO_SURAT'      => $this->createAutoCode(M_Tagihan::class, 'NO_SURAT', 'SRT'),
                 'USER_ID'       => $request['user_id'],
                 'BRANCH_ID'     => $request->user()->branch_id ?? null,
                 'LOAN_NUMBER'   => $loanNumber,
@@ -101,6 +102,7 @@ class S_Tagihan extends R_Tagihan
                 'ALAMAT'        => $item['ALAMAT TAGIH'] ?? null,
                 'DESA'          => $item['KELURAHAN'] ?? null,
                 'KEC'           => $item['KECAMATAN'] ?? null,
+                'MCF'           => $item['KOLEKTOR'] ?? null,
                 'CREATED_BY'    => $request->user()->id ?? null,
             ];
 

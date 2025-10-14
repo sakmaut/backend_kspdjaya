@@ -14,6 +14,7 @@ class M_Tagihan extends Model
     protected $table = 'cl_deploy';
     protected $fillable = [
         'ID',
+        'NO_SURAT',
         'USER_ID',
         'BRANCH_ID',
         'LOAN_NUMBER',
@@ -24,9 +25,8 @@ class M_Tagihan extends Model
         'ALAMAT',
         'DESA',
         'KEC',
+        'MCF',
         'TGL_EXP',
-        'TGL_KUNJUNGAN',
-        'KETERANGAN',
         'CREATED_BY',
         'CREATED_AT',
         'UPDATED_BY',
