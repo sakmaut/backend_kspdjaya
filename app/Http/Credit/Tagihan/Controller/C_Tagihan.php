@@ -66,14 +66,22 @@ class C_Tagihan extends Controller
                 ->whereYear('ENTRY_DATE', Carbon::now()->year)
                 ->groupBy('LOAN_NUM');
 
+            $log = DB::table('cl_survey_logs')
+                ->select('REFERENCE_ID', 'DESCRIPTION')
+                ->orderBy('CREATED_AT', 'desc')
+                ->first();
+
             $data = DB::table('cl_deploy as a')
                 ->leftJoin('cl_lkp_detail as b', 'b.NO_SURAT', '=', 'a.NO_SURAT')
                 ->leftJoin('cl_lkp as c', 'c.ID', '=', 'b.LKP_ID')
                 ->leftJoinSub($subQuery, 'd', function ($join) {
                     $join->on('d.LOAN_NUM', '=', 'a.LOAN_NUMBER');
                 })
+                ->leftJoinSub($log, 'e', function ($join) {
+                    $join->on('e.REFERENCE_ID', '=', 'a.NO_SURAT');
+                })
                 ->where('a.USER_ID', $userId)
-                ->select('a.*', 'c.*', 'd.total_bayar')
+                ->select('a.*', 'c.*', 'd.total_bayar', 'e.DESCRIPTION')
                 ->orderByRaw('c.LKP_NUMBER IS NOT NULL DESC')
                 ->get();
 
@@ -135,6 +143,11 @@ class C_Tagihan extends Controller
                 ->whereYear('ENTRY_DATE', Carbon::now()->year)
                 ->groupBy('LOAN_NUM');
 
+            $log = DB::table('cl_survey_logs')
+                ->select('REFERENCE_ID', 'DESCRIPTION')
+                ->orderBy('CREATED_AT', 'desc')
+                ->first();
+
             // Query utama
             $data = DB::table('cl_deploy as a')
                 ->leftJoin('cl_lkp_detail as b', 'b.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
@@ -142,12 +155,15 @@ class C_Tagihan extends Controller
                 ->leftJoinSub($subQuery, 'd', function ($join) {
                     $join->on('d.LOAN_NUM', '=', 'a.LOAN_NUMBER');
                 })
+                ->leftJoinSub($log, 'e', function ($join) {
+                    $join->on('e.REFERENCE_ID', '=', 'a.NO_SURAT');
+                })
                 ->where('a.USER_ID', $pic)
                 ->where(function ($query) {
                     $query->whereNull('c.LKP_NUMBER')
                         ->orWhere('c.LKP_NUMBER', '');
                 })
-                ->select('a.*', 'c.*', 'd.total_bayar')
+                ->select('a.*', 'c.*', 'd.total_bayar', 'e.DESCRIPTION')
                 ->get();
 
             $dto = Rs_LkpPicList::collection($data);
