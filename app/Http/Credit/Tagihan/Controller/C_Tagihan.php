@@ -49,7 +49,17 @@ class C_Tagihan extends Controller
     {
         try {
             $userId = $request->user()->username ?? null;
-            $data = M_Tagihan::where('USER_ID', $userId)->get();
+
+            if (!$userId) {
+                throw new \Exception("User ID not found.", 500);
+            }
+
+            $data = DB::table('cl_deploy as a')
+                ->leftJoin('cl_lkp_detail as b', 'b.NO_SURAT', '=', 'a.NO_SURAT')
+                ->leftJoin('cl_lkp as c', 'c.ID', '=', 'b.LKP_ID')
+                ->where('a.USER_ID', $userId)
+                ->select('a.*', 'c.*')
+                ->get();
 
             $dto = Rs_DeployList::collection($data);
 
