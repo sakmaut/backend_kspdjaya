@@ -145,7 +145,18 @@ class R_Tagihan
                         WHERE	(cl.STATUS = 'A'  
                                     or (cl.STATUS_REC = 'RP' and cl.mod_user <> 'exclude jaminan' and cast(cl.LOAN_NUMBER as char) not in (select cast(pp.LOAN_NUM as char) from payment pp where pp.ACC_KEY = 'JUAL UNIT'))
                                     or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char) from temp_lis_02C )))
-                                AND (tg.LOAN_NUMBER IS NULL OR tg.LOAN_NUMBER = '')";
+                                AND (tg.LOAN_NUMBER IS NULL OR tg.LOAN_NUMBER = '')
+                                AND concat('C',case when date_format(cl.created_at,'%m%Y')='$dateFrom' then 'N'
+                                                when cl.STATUS_REC = 'RP' and py.ID is null then 'L'
+                                                when replace(format(case when date_format(cl.created_at,'%m%Y')='$dateFrom' then (cl.PCPL_ORI+cl.INTRST_ORI)
+			 			                                            else (st.init_pcpl+st.init_int) end,0),',','')=0 then 'L'
+                                                when case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'MUSIMAN'
+                                                        and date_format(st.first_arr,'%m%Y')=date_format(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),'%m%Y') then 'N'
+                                                when st.first_arr>=date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 2 month) then 'N'
+                                                when st.first_arr > date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day)
+                                                        and case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'REGULER'  then 'M'
+                                                when st.arr_count > 8 then 'X'
+                                                else st.arr_count end) in ('CM','CX','C8','C7','C6','C5','C4','C3','C2','C1','C0')";
 
         if ($currentPosition != 'HO') {
             $sql .= " AND cl.BRANCH = '$currentBranch'";
