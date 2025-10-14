@@ -66,10 +66,10 @@ class C_Tagihan extends Controller
                 ->whereYear('ENTRY_DATE', Carbon::now()->year)
                 ->groupBy('LOAN_NUM');
 
-            $log = DB::table('cl_survey_logs')
+            $logSubQuery = DB::table('cl_survey_logs')
                 ->select('REFERENCE_ID', 'DESCRIPTION')
                 ->orderBy('CREATED_AT', 'desc')
-                ->first();
+                ->limit(1);
 
             $data = DB::table('cl_deploy as a')
                 ->leftJoin('cl_lkp_detail as b', 'b.NO_SURAT', '=', 'a.NO_SURAT')
@@ -77,7 +77,7 @@ class C_Tagihan extends Controller
                 ->leftJoinSub($subQuery, 'd', function ($join) {
                     $join->on('d.LOAN_NUM', '=', 'a.LOAN_NUMBER');
                 })
-                ->leftJoinSub($log, 'e', function ($join) {
+                ->leftJoinSub($logSubQuery, 'e', function ($join) {
                     $join->on('e.REFERENCE_ID', '=', 'a.NO_SURAT');
                 })
                 ->where('a.USER_ID', $userId)
@@ -143,10 +143,10 @@ class C_Tagihan extends Controller
                 ->whereYear('ENTRY_DATE', Carbon::now()->year)
                 ->groupBy('LOAN_NUM');
 
-            $log = DB::table('cl_survey_logs')
+            $logSubQuery = DB::table('cl_survey_logs')
                 ->select('REFERENCE_ID', 'DESCRIPTION')
                 ->orderBy('CREATED_AT', 'desc')
-                ->first();
+                ->limit(1);
 
             // Query utama
             $data = DB::table('cl_deploy as a')
@@ -155,7 +155,7 @@ class C_Tagihan extends Controller
                 ->leftJoinSub($subQuery, 'd', function ($join) {
                     $join->on('d.LOAN_NUM', '=', 'a.LOAN_NUMBER');
                 })
-                ->leftJoinSub($log, 'e', function ($join) {
+                ->leftJoinSub($logSubQuery, 'e', function ($join) {
                     $join->on('e.REFERENCE_ID', '=', 'a.NO_SURAT');
                 })
                 ->where('a.USER_ID', $pic)
