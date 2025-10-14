@@ -12,12 +12,16 @@ use App\Http\Resources\Rs_LkpDetailList;
 use App\Http\Resources\Rs_LkpList;
 use App\Http\Resources\Rs_LkpPicList;
 use App\Http\Resources\Rs_TagihanByUserId;
+use App\Models\M_ClSurveyLogs;
 use App\Models\M_Lkp;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Validator;
+use Ramsey\Uuid\Uuid;
 
 class C_Tagihan extends Controller
 {
@@ -144,11 +148,6 @@ class C_Tagihan extends Controller
         }
     }
 
-    public function show($id)
-    {
-        // TODO: implement show
-    }
-
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -264,6 +263,67 @@ class C_Tagihan extends Controller
             return response()->json($dto, 200);
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
+        }
+    }
+
+    public function cl_survey_add(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+
+            $data = M_ClSurveyLogs::create([
+                'REFERENCE_ID' => $request->no_surat ?? "",
+                'DESCRIPTION' => $request->keterangan,
+                'CONFIRM_DATE' => Carbon::parse($request->tgl_jb)->format('Y-m-d') ?? null,
+                'PATH' => json_encode($request->path),
+                'CREATED_BY' => $request->user()->id ?? null,
+            ]);
+
+            DB::commit();
+            return response()->json($data, 200);
+        } catch (Exception $e) {
+            DB::rollback();
+            return $this->log->logError($e, $request);
+        }
+    }
+
+    public function cl_survey_detail(Request $request, $id)
+    {
+        try {
+            $data = M_ClSurveyLogs::where('REFERENCE_ID', $id)->get();
+            return response()->json($data, 200);
+        } catch (\Exception $e) {
+            return $this->log->logError($e, $request);
+        }
+    }
+
+    public function cl_survey_upload(Request $req)
+    {
+        DB::beginTransaction();
+        try {
+
+            if ($req->hasFile('file') && $req->file('file')->isValid()) {
+                $file = $req->file('file');
+
+                $extension = $file->getClientOriginalExtension();
+
+                $fileName = Uuid::uuid4()->toString() . '.' . strtolower($extension);
+
+                $path = $file->storeAs('public/Tagihan', $fileName);
+
+                $image_path = str_replace('public/', '', $path);
+
+                $url = URL::to('/') . '/storage/' . $image_path;
+
+                DB::commit();
+                return response()->json($url, 200);
+            } else {
+                DB::rollback();
+                return response()->json(['message' => 'No image file provided', 'status' => 400], 400);
+            }
+        } catch (Exception $e) {
+            DB::rollback();
+            return $this->log->logError($e, $req);
         }
     }
 }

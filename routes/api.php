@@ -196,6 +196,10 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::get('cl_lkp_detail/{id}',  [C_Tagihan::class, 'cl_lkp_detail']);
     Route::get('cl_logs/{id}',  [C_Tagihan::class, 'cl_logs']);
 
+    Route::post('cl_survey_add',  [C_Tagihan::class, 'cl_survey_add']);
+    Route::get('cl_survey_detail/{id}',  [C_Tagihan::class, 'cl_survey_detail']);
+    Route::post('cl_survey_upload',  [C_Tagihan::class, 'cl_survey_upload']);
+
     Route::post('sp1',  [ListBanController::class, 'sp1']);
     Route::post('sp2',  [ListBanController::class, 'sp2']);
     Route::post('sp3',  [ListBanController::class, 'sp3']);
