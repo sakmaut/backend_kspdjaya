@@ -25,6 +25,7 @@ class Rs_DeployList extends JsonResource
             'kec' => $this->KEC ?? "",
             'mcf' => $this->MCF ?? "",
             'angusran_ke' => $this->ANGSURAN_KE ?? "",
+            'tgl_jatuh_tempo' => $this->TGL_JTH_TEMPO ?? "",
             'angsuran' => $this->ANGSURAN ?? "",
             'bayar' => $this->BAYAR ?? "",
             'hasil_kunjungan' => "",
