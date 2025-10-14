@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Credit\Tagihan\Model\M_Tagihan;
 use App\Http\Credit\Tagihan\Service\S_Tagihan;
 use App\Http\Resources\R_TagihanDetail;
+use App\Http\Resources\Rs_CollectorList;
 use App\Http\Resources\Rs_DeployList;
 use App\Http\Resources\Rs_LkpDetailList;
 use App\Http\Resources\Rs_LkpList;
@@ -76,7 +77,7 @@ class C_Tagihan extends Controller
                 ->orderByRaw('c.LKP_NUMBER IS NOT NULL DESC')
                 ->get();
 
-            $dto = Rs_DeployList::collection($data);
+            $dto = Rs_CollectorList::collection($data);
 
             return response()->json($dto, 200);
         } catch (\Exception $e) {
