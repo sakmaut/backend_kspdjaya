@@ -165,10 +165,9 @@ class S_Tagihan extends R_Tagihan
                 'KEC'       => $item['kec'] ?? null,
                 'CYCLE'      => $item['cycle_awal'] ?? null,
                 'CREATED_BY' => $request->user()->id ?? null,
-                'DUE_DATE'   => $res->PAYMENT_DATE ?? null,
-                'PRINCIPAL'  => $res->PRINCIPAL ?? null,
-                'INTEREST'   => $res->INTEREST ?? null,
-                'INST_COUNT' => $res->INSTALLMENT_COUNT ?? null,
+                'DUE_DATE'   => $item['tgl_jatuh_tempo'] ?? null,
+                'INSTALLMENT'  => $item['angsuran'] ?? 0,
+                'INST_COUNT' => $item['angsuran_ke'] ?? 0,
             ]);
 
             M_TagihanLog::create([

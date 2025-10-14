@@ -24,6 +24,7 @@ class M_LkpDetail extends Model
         'INST_COUNT',
         'PRINCIPAL',
         'INTEREST',
+        'INSTALLMENT',
         'PINALTY',
         'VISIT_TIME',
         'VISIT_RESULT',
