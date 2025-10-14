@@ -59,11 +59,20 @@ class C_Tagihan extends Controller
                 throw new \Exception("User ID not found.", 500);
             }
 
+            $subQuery = DB::table('payment')
+                ->selectRaw('SUM(ORIGINAL_AMOUNT) AS total_bayar, LOAN_NUM')
+                ->whereMonth('ENTRY_DATE', Carbon::now()->month)
+                ->whereYear('ENTRY_DATE', Carbon::now()->year)
+                ->groupBy('LOAN_NUM');
+
             $data = DB::table('cl_deploy as a')
                 ->leftJoin('cl_lkp_detail as b', 'b.NO_SURAT', '=', 'a.NO_SURAT')
                 ->leftJoin('cl_lkp as c', 'c.ID', '=', 'b.LKP_ID')
+                ->leftJoinSub($subQuery, 'd', function ($join) {
+                    $join->on('d.LOAN_NUM', '=', 'a.LOAN_NUMBER');
+                })
                 ->where('a.USER_ID', $userId)
-                ->select('a.*', 'c.*')
+                ->select('a.*', 'c.*', 'd.total_bayar')
                 ->orderByRaw('c.LKP_NUMBER IS NOT NULL DESC')
                 ->get();
 
@@ -132,7 +141,7 @@ class C_Tagihan extends Controller
                 ->leftJoinSub($subQuery, 'd', function ($join) {
                     $join->on('d.LOAN_NUM', '=', 'a.LOAN_NUMBER');
                 })
-                ->where('a.USER_ID', 'superadmin')
+                ->where('a.USER_ID', $pic)
                 ->where(function ($query) {
                     $query->whereNull('c.LKP_NUMBER')
                         ->orWhere('c.LKP_NUMBER', '');
