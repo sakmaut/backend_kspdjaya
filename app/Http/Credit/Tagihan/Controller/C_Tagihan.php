@@ -9,6 +9,7 @@ use App\Http\Resources\R_TagihanDetail;
 use App\Http\Resources\Rs_DeployList;
 use App\Http\Resources\Rs_LkpDetailList;
 use App\Http\Resources\Rs_LkpList;
+use App\Http\Resources\Rs_LkpPicList;
 use App\Http\Resources\Rs_TagihanByUserId;
 use App\Models\M_Lkp;
 use Exception;
@@ -74,7 +75,7 @@ class C_Tagihan extends Controller
         try {
             $data = $this->service->cl_deploy_by_pic($pic);
 
-            $dto = Rs_DeployList::collection($data);
+            $dto = Rs_LkpPicList::collection($data);
 
             return response()->json($dto, 200);
         } catch (\Exception $e) {
