@@ -104,7 +104,7 @@ class C_Tagihan extends Controller
             $data = DB::table('cl_deploy as a')
                 ->leftJoin('cl_lkp_detail as b', 'b.NO_SURAT', '=', 'a.NO_SURAT')
                 ->leftJoin('cl_lkp as c', 'c.ID', '=', 'b.LKP_ID')
-                ->where('a.USER_ID', 'superadmin')
+                ->where('a.USER_ID', $pic)
                 ->where(function ($query) {
                     $query->whereNull('c.LKP_NUMBER')
                         ->orWhere('c.LKP_NUMBER', '');
