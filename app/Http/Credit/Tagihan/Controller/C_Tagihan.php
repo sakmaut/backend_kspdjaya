@@ -113,7 +113,7 @@ class C_Tagihan extends Controller
                 ->leftJoin('cl_lkp_detail as b', 'b.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
                 ->leftJoin('cl_lkp as c', 'c.ID', '=', 'b.LKP_ID')
                 ->leftJoinSub($subQuery, 'd', function ($join) {
-                    $join->on('d.LOAN_NUM', '=', 'b.LOAN_NUMBER');
+                    $join->on('d.LOAN_NUM', '=', 'a.LOAN_NUMBER');
                 })
                 ->where('a.USER_ID', 'superadmin')
                 ->where(function ($query) {
