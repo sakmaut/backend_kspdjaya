@@ -13,6 +13,7 @@ use App\Http\Resources\Rs_LkpList;
 use App\Http\Resources\Rs_LkpPicList;
 use App\Http\Resources\Rs_TagihanByUserId;
 use App\Models\M_Lkp;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -101,15 +102,25 @@ class C_Tagihan extends Controller
         try {
             // $data = $this->service->cl_deploy_by_pic($pic);
 
+            $subQuery = DB::table('payment')
+                ->selectRaw('SUM(ORIGINAL_AMOUNT) AS total_bayar, LOAN_NUM')
+                ->whereMonth('ENTRY_DATE', Carbon::now()->month)
+                ->whereYear('ENTRY_DATE', Carbon::now()->year)
+                ->groupBy('LOAN_NUM');
+
+            // Query utama
             $data = DB::table('cl_deploy as a')
                 ->leftJoin('cl_lkp_detail as b', 'b.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
                 ->leftJoin('cl_lkp as c', 'c.ID', '=', 'b.LKP_ID')
-                ->where('a.USER_ID', $pic)
+                ->leftJoinSub($subQuery, 'd', function ($join) {
+                    $join->on('d.LOAN_NUM', '=', 'b.LOAN_NUMBER');
+                })
+                ->where('a.USER_ID', 'superadmin')
                 ->where(function ($query) {
                     $query->whereNull('c.LKP_NUMBER')
                         ->orWhere('c.LKP_NUMBER', '');
                 })
-                ->select('a.*', 'c.*')
+                ->select('a.*', 'c.*', 'd.total_bayar')
                 ->get();
 
             $dto = Rs_LkpPicList::collection($data);
