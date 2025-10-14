@@ -102,7 +102,7 @@ class S_Tagihan extends R_Tagihan
                 'ALAMAT'        => $item['ALAMAT TAGIH'] ?? null,
                 'DESA'          => $item['KELURAHAN'] ?? null,
                 'KEC'           => $item['KECAMATAN'] ?? null,
-                'MCF'           => $item['KOLEKTOR'] ?? null,
+                'MCF'           => $item['SURVEYOR'] ?? null,
                 'CREATED_BY'    => $request->user()->id ?? null,
             ];
 
