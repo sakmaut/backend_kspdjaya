@@ -158,13 +158,13 @@ class S_Tagihan extends R_Tagihan
             }
 
             $saved = $this->repository->create($detailData);
-            M_TagihanLog::create([
-                'LOAN_NUMBER' => $loanNumber,
-                'LKP_ID' => $saved->ID ?? "",
-                'DESCRIPTION' => 'Tagihan created with LOAN_NUMBER: ' . $loanNumber,
-                'STATUS'     => 'CREATE_DEPLOY',
-                'CREATED_BY' => $request->user()->id ?? null,
-            ]);
+            // M_TagihanLog::create([
+            //     'LOAN_NUMBER' => $loanNumber,
+            //     'LKP_ID' => $saved->ID ?? "",
+            //     'DESCRIPTION' => 'Tagihan created with LOAN_NUMBER: ' . $loanNumber,
+            //     'STATUS'     => 'CREATE_DEPLOY',
+            //     'CREATED_BY' => $request->user()->id ?? null,
+            // ]);
             $savedData[] = $saved;
         }
 
@@ -208,13 +208,13 @@ class S_Tagihan extends R_Tagihan
                 'INST_COUNT' => $item['angsuran_ke'] ?? 0,
             ]);
 
-            M_TagihanLog::create([
-                'LOAN_NUMBER' => $loanNumber,
-                'LKP_ID'      => $saved->ID ?? null,
-                'DESCRIPTION' => 'LKP created with LOAN_NUMBER: ' . $loanNumber,
-                'STATUS'      => 'CREATE_LKP',
-                'CREATED_BY'  => $request->user()->id ?? null,
-            ]);
+            // M_TagihanLog::create([
+            //     'LOAN_NUMBER' => $loanNumber,
+            //     'LKP_ID'      => $saved->ID ?? null,
+            //     'DESCRIPTION' => 'LKP created with LOAN_NUMBER: ' . $loanNumber,
+            //     'STATUS'      => 'CREATE_LKP',
+            //     'CREATED_BY'  => $request->user()->id ?? null,
+            // ]);
         }
 
         return $saved;
