@@ -12,10 +12,11 @@ class Rs_LpkDetail extends JsonResource
     {
         return [
             'id' => $this->ID,
+            'no_surat' => $this->NO_SURAT ?? "",
             'no_kontrak' => $this->LOAN_NUMBER ?? "",
             'nama_customer' => $this->LOAN_HOLDER ?? "",
-            'desa' => "",
-            'kec' => "",
+            'desa' => $this->DESA ?? "",
+            'kec' => $this->KEC ?? "",
             'tgl_jatuh_tempo' => $this->DUE_DATE ?? "",
             'cycle_awal' => $this->CYCLE ?? "",
             'angusran_ke' => $this->INST_COUNT ?? "",

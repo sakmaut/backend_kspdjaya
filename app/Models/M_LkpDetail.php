@@ -12,10 +12,13 @@ class M_LkpDetail extends Model
     protected $table = 'cl_lkp_detail';
     protected $fillable = [
         'ID',
+        'NO_SURAT',
         'LKP_ID',
         'LOAN_NUMBER',
         'LOAN_HOLDER',
         'ADDRESS',
+        'DESA',
+        'KEC',
         'DUE_DATE',
         'CYCLE',
         'INST_COUNT',
