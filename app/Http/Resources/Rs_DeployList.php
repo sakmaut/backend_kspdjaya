@@ -24,10 +24,10 @@ class Rs_DeployList extends JsonResource
             'desa' => $this->DESA ?? "",
             'kec' => $this->KEC ?? "",
             'mcf' => $this->MCF ?? "",
-            'angusran_ke' => $this->ANGSURAN_KE ?? "",
+            'angusran_ke' => $this->ANGSURAN_KE ?? 0,
             'tgl_jatuh_tempo' => $this->TGL_JTH_TEMPO ?? "",
-            'angsuran' => $this->ANGSURAN ?? "",
-            'bayar' => $this->BAYAR ?? "",
+            'angsuran' => $this->ANGSURAN ?? 0,
+            'bayar' => $this->BAYAR ?? 0,
             'hasil_kunjungan' => "",
         ];
     }
