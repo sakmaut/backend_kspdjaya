@@ -312,8 +312,8 @@ class C_Tagihan extends Controller
         DB::beginTransaction();
         try {
 
-            if ($req->hasFile('file') && $req->file('file')->isValid()) {
-                $file = $req->file('file');
+            if ($req->hasFile('image') && $req->file('image')->isValid()) {
+                $file = $req->file('image');
 
                 $extension = $file->getClientOriginalExtension();
 
