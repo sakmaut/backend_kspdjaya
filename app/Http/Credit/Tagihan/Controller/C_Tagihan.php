@@ -166,6 +166,7 @@ class C_Tagihan extends Controller
                         ->orWhere('c.LKP_NUMBER', '');
                 })
                 ->select('a.*', 'c.*', 'd.total_bayar', 'e.DESCRIPTION')
+                ->orderBy('d.total_bayar', 'asc')
                 ->get();
 
             $dto = Rs_LkpPicList::collection($data);
