@@ -60,11 +60,13 @@ class C_Tagihan extends Controller
                 throw new \Exception("User ID not found.", 500);
             }
 
-            $subQuery = DB::table('payment')
-                ->selectRaw('SUM(ORIGINAL_AMOUNT) AS total_bayar, LOAN_NUM')
-                ->whereMonth('ENTRY_DATE', Carbon::now()->month)
-                ->whereYear('ENTRY_DATE', Carbon::now()->year)
-                ->groupBy('LOAN_NUM');
+            $subQuery = DB::table('payment as p')
+                ->leftJoin('payment_detail as pd', 'pd.PAYMENT_ID', '=', 'p.ID')
+                ->whereIn('pd.ACC_KEYS', ['BAYAR_POKOK', 'BAYAR_BUNGA'])
+                ->whereMonth('pd.ENTRY_DATE', now()->month)
+                ->whereYear('pd.ENTRY_DATE', now()->year)
+                ->selectRaw('SUM(pd.ORIGINAL_AMOUNT) AS total_bayar, p.LOAN_NUM')
+                ->groupBy('p.LOAN_NUM');
 
             $logSubQuery = DB::table('cl_survey_logs')
                 ->select('REFERENCE_ID', 'DESCRIPTION')
@@ -135,11 +137,13 @@ class C_Tagihan extends Controller
     public function cl_deploy_by_pic(Request $request, $pic)
     {
         try {
-            $subQuery = DB::table('payment')
-                ->selectRaw('SUM(ORIGINAL_AMOUNT) AS total_bayar, LOAN_NUM')
-                ->whereMonth('ENTRY_DATE', Carbon::now()->month)
-                ->whereYear('ENTRY_DATE', Carbon::now()->year)
-                ->groupBy('LOAN_NUM');
+            $subQuery = DB::table('payment as p')
+                ->leftJoin('payment_detail as pd', 'pd.PAYMENT_ID', '=', 'p.ID')
+                ->whereIn('pd.ACC_KEYS', ['BAYAR_POKOK', 'BAYAR_BUNGA'])
+                ->whereMonth('pd.ENTRY_DATE', now()->month)
+                ->whereYear('pd.ENTRY_DATE', now()->year)
+                ->selectRaw('SUM(pd.ORIGINAL_AMOUNT) AS total_bayar, p.LOAN_NUM')
+                ->groupBy('p.LOAN_NUM');
 
             $logSubQuery = DB::table('cl_survey_logs')
                 ->select('REFERENCE_ID', 'DESCRIPTION')
