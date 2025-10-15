@@ -18,12 +18,10 @@ class M_Lkp extends Model
         'NOA',
         'TOTAL_ANGSURAN',
         'STATUS',
-        'STATUS_EXP',
         'CREATED_BY',
         'CREATED_AT',
         'UPDATED_BY',
-        'UPDATED_AT',
-        'DELETED_BY'
+        'UPDATED_AT'
     ];
     protected $guarded = [];
     public $incrementing = false;

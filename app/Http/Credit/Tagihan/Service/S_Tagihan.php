@@ -2,6 +2,7 @@
 
 namespace App\Http\Credit\Tagihan\Service;
 
+use App\Http\Controllers\API\OrderStatus;
 use App\Http\Credit\Tagihan\Model\M_Tagihan;
 use App\Http\Credit\Tagihan\Repository\R_Tagihan;
 use App\Http\Credit\TagihanDetail\Model\M_TagihanDetail;
@@ -181,7 +182,9 @@ class S_Tagihan extends R_Tagihan
             'USER_ID'    => $request['user_id'] ?? null,
             'BRANCH_ID'  => $request->user()->branch_id ?? null,
             'NOA'        => $countNoa,
+            'STATUS'     => 'Active',
             'CREATED_BY' => $request->user()->id ?? null,
+            'CREATED_AT' => Carbon::now('Asia/Jakarta'),
         ];
 
         $saved = M_Lkp::create($detailData);
