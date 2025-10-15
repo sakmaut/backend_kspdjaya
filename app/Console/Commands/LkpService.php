@@ -2,7 +2,10 @@
 
 namespace App\Console\Commands;
 
+use App\Models\M_Lkp;
+use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 
 class LkpService extends Command
 {
@@ -25,6 +28,18 @@ class LkpService extends Command
      */
     public function handle()
     {
-        //
+        $results = M_Lkp::where('STATUS', 'Active')
+            ->whereDate('CREATED_AT', Carbon::today())
+            ->get();
+
+        if ($results->isNotEmpty()) {
+            foreach ($results as $row) {
+                $row->update([
+                    'STATUS' => 'Inactive',
+                    'UPDATED_BY' => 'SYSTEM',
+                    'UPDATED_AT' => Carbon::now('Asia/Jakarta'),
+                ]);
+            }
+        }
     }
 }

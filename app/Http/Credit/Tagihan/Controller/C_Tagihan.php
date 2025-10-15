@@ -135,8 +135,6 @@ class C_Tagihan extends Controller
     public function cl_deploy_by_pic(Request $request, $pic)
     {
         try {
-            // $data = $this->service->cl_deploy_by_pic($pic);
-
             $subQuery = DB::table('payment')
                 ->selectRaw('SUM(ORIGINAL_AMOUNT) AS total_bayar, LOAN_NUM')
                 ->whereMonth('ENTRY_DATE', Carbon::now()->month)

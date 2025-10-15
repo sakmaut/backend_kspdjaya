@@ -30,6 +30,7 @@ use App\Models\M_InterestDecreasesSetting;
 use App\Models\M_Kwitansi;
 use App\Models\M_KwitansiDetailPelunasan;
 use App\Models\M_KwitansiStructurDetail;
+use App\Models\M_Lkp;
 use App\Models\M_LocationStatus;
 use App\Models\M_Payment;
 use App\Models\M_PaymentDetail;
@@ -52,9 +53,25 @@ class Welcome extends Controller
 {
     public function index(Request $request)
     {
-        $data = M_CrApplication::where('ORDER_NUMBER', $request->order_number)->first();
+        // $results = M_Lkp::where('STATUS', 'Active')
+        //     ->whereDate('CREATED_AT', Carbon::today())
+        //     ->get();
 
-        $schedule = $this->generateAmortizationScheduleBungaMenurun($request->set_date, $data);
+        // if ($results->isNotEmpty()) {
+        //     foreach ($results as $row) {
+        //         $row->update([
+        //             'STATUS' => 'Inactive',
+        //             'UPDATED_BY' => 'SYSTEM',
+        //             'UPDATED_AT' => Carbon::now('Asia/Jakarta'),
+        //         ]);
+        //     }
+        // }
+
+        return response()->json("Welcome to MOTHER FUCKER API");
+
+        // $data = M_CrApplication::where('ORDER_NUMBER', $request->order_number)->first();
+
+        // $schedule = $this->generateAmortizationScheduleBungaMenurun($request->set_date, $data);
 
         // $db = M_InterestDecreasesSetting::first();
 
