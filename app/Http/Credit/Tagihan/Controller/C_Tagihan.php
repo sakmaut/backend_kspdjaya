@@ -63,8 +63,8 @@ class C_Tagihan extends Controller
             $subQuery = DB::table('payment as p')
                 ->leftJoin('payment_detail as pd', 'pd.PAYMENT_ID', '=', 'p.ID')
                 ->whereIn('pd.ACC_KEYS', ['BAYAR_POKOK', 'BAYAR_BUNGA'])
-                ->whereMonth('pd.ENTRY_DATE', now()->month)
-                ->whereYear('pd.ENTRY_DATE', now()->year)
+                ->whereMonth('p.ENTRY_DATE', now()->month)
+                ->whereYear('p.ENTRY_DATE', now()->year)
                 ->selectRaw('SUM(pd.ORIGINAL_AMOUNT) AS total_bayar, p.LOAN_NUM')
                 ->groupBy('p.LOAN_NUM');
 
@@ -140,8 +140,8 @@ class C_Tagihan extends Controller
             $subQuery = DB::table('payment as p')
                 ->leftJoin('payment_detail as pd', 'pd.PAYMENT_ID', '=', 'p.ID')
                 ->whereIn('pd.ACC_KEYS', ['BAYAR_POKOK', 'BAYAR_BUNGA'])
-                ->whereMonth('pd.ENTRY_DATE', now()->month)
-                ->whereYear('pd.ENTRY_DATE', now()->year)
+                ->whereMonth('p.ENTRY_DATE', now()->month)
+                ->whereYear('p.ENTRY_DATE', now()->year)
                 ->selectRaw('SUM(pd.ORIGINAL_AMOUNT) AS total_bayar, p.LOAN_NUM')
                 ->groupBy('p.LOAN_NUM');
 
