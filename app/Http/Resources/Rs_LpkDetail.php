@@ -12,12 +12,14 @@ class Rs_LpkDetail extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        $totalBayarRow = DB::table('payment')
-            ->selectRaw('SUM(ORIGINAL_AMOUNT) AS total_bayar')
+        $totalBayarRow = DB::table('payment as p')
+            ->leftJoin('payment_detail as pd', 'pd.PAYMENT_ID', '=', 'p.ID')
             ->where('LOAN_NUM', $this->LOAN_NUMBER)
-            ->whereMonth('ENTRY_DATE', Carbon::now()->month)
-            ->whereYear('ENTRY_DATE', Carbon::now()->year)
-            ->groupBy('LOAN_NUM')
+            ->whereIn('pd.ACC_KEYS', ['BAYAR_POKOK', 'BAYAR_BUNGA', 'ANGSURAN_POKOK', 'ANGSURAN_BUNGA'])
+            ->whereMonth('p.ENTRY_DATE', now()->month)
+            ->whereYear('p.ENTRY_DATE', now()->year)
+            ->selectRaw('SUM(pd.ORIGINAL_AMOUNT) AS total_bayar, p.LOAN_NUM')
+            ->groupBy('p.LOAN_NUM')
             ->first();
 
         $log = DB::table('cl_survey_logs')
