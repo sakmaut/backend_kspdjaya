@@ -265,7 +265,7 @@ class C_Tagihan extends Controller
         try {
             $data = M_Lkp::join('users', 'cl_lkp.USER_ID', '=', 'users.username')
                 ->with('user')
-                ->where('STATUS', 'Active')
+                ->where('cl_lkp.STATUS', 'Active')
                 ->orderBy('users.fullname', 'ASC')
                 ->select('cl_lkp.*')
                 ->get();
