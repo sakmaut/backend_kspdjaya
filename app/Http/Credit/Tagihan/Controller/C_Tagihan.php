@@ -126,7 +126,7 @@ class C_Tagihan extends Controller
         try {
             $data = DB::table('cl_logs')
                 ->where('reference', $id)
-                ->orderBy('create_date', 'asc')
+                ->orderBy('create_date', 'desc')
                 ->get();
 
             return response()->json($data, 200);
