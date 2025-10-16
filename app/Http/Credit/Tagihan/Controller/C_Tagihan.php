@@ -126,6 +126,7 @@ class C_Tagihan extends Controller
         try {
             $data = DB::table('cl_logs')
                 ->where('reference', $id)
+                ->orderBy('create_date', 'asc')
                 ->get();
 
             return response()->json($data, 200);
@@ -320,7 +321,7 @@ class C_Tagihan extends Controller
     public function cl_survey_detail(Request $request, $id)
     {
         try {
-            $data = M_ClSurveyLogs::where('REFERENCE_ID', $id)->get();
+            $data = M_ClSurveyLogs::where('REFERENCE_ID', $id)->orderBy('CREATED_AT', 'ASC')->get();
             return response()->json($data, 200);
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
