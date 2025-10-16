@@ -6,6 +6,7 @@ use App\Http\Controllers\API\OrderStatus;
 use App\Http\Credit\Tagihan\Model\M_Tagihan;
 use App\Http\Credit\Tagihan\Repository\R_Tagihan;
 use App\Http\Credit\TagihanDetail\Model\M_TagihanDetail;
+use App\Models\M_Branch;
 use App\Models\M_Lkp;
 use App\Models\M_LkpDetail;
 use App\Models\M_TagihanLog;
@@ -22,56 +23,31 @@ class S_Tagihan extends R_Tagihan
         $this->repository = $repository;
     }
 
-    // private function createAutoCode($table, $field, $prefix)
-    // {
-    //     $query = $table::max($field);
-    //     $_trans = date("ym");
-
-    //     $prefixLength = strlen($prefix);
-
-    //     $startPos = $prefixLength + 11;
-
-    //     $noUrut = !empty($query) ? (int) substr($query, $startPos, 5) : 0;
-    //     $noUrut++;
-
-    //     $generateCode = $prefix . $_trans . sprintf("%05d", $noUrut);
-
-    //     return $generateCode;
-    // }
-
-    private function createAutoCode($table, $field, $prefix)
+    private function createAutoCode($request, $table, $field, $prefix)
     {
-        // Ambil kode terbesar dari database
-        $lastCode = $table::max($field);
-
-        // Ambil tanggal saat ini dalam format tahun dan bulan (yyMM)
         $_trans = date("ym");
 
-        $prefixLength = strlen($prefix);
-        $codeDateLength = 4; // 'ym' -> 2 (year) + 2 (month) = 4
+        $branchId = $request->user()->branch_id;
+        $branch = M_Branch::find($branchId);
 
-        // Jika ada kode terakhir
+        // Susun bagian awal kode: PREFIX + BRANCH_CODE + YM
+        $codeStart = $prefix . $branch->CODE_NUMBER . $_trans;
+
+        // Cari kode terakhir yang punya pola awal yang sama
+        $lastCode = $table::where($field, 'like', $codeStart . '%')
+            ->max($field);
+
+        // Default nomor urut
+        $noUrut = 1;
+
         if (!empty($lastCode)) {
-            // Ambil bagian tanggal dari kode terakhir setelah prefix
-            $lastCodeDate = substr($lastCode, $prefixLength, $codeDateLength);
-
-            // Cek apakah bulan-tahun sama dengan sekarang
-            if ($lastCodeDate === $_trans) {
-                // Ambil nomor urut dari kode terakhir
-                $startPos = $prefixLength + $codeDateLength;
-                $lastNumber = (int) substr($lastCode, $startPos, 5);
-                $noUrut = $lastNumber + 1;
-            } else {
-                // Reset nomor urut ke 1 jika bulan-tahun berbeda
-                $noUrut = 1;
-            }
-        } else {
-            // Jika tidak ada kode sebelumnya, mulai dari 1
-            $noUrut = 1;
+            // Ambil 5 digit terakhir sebagai nomor urut
+            $lastNumber = (int) substr($lastCode, -5);
+            $noUrut = $lastNumber + 1;
         }
 
         // Buat kode baru
-        $generateCode = $prefix . $_trans . sprintf("%05d", $noUrut);
+        $generateCode = $codeStart . sprintf("%05d", $noUrut);
 
         return $generateCode;
     }
@@ -130,7 +106,7 @@ class S_Tagihan extends R_Tagihan
             }
 
             $detailData = [
-                'NO_SURAT'      => $this->createAutoCode(M_Tagihan::class, 'NO_SURAT', 'SRT'),
+                'NO_SURAT'      => $this->createAutoCode($request, M_Tagihan::class, 'NO_SURAT', 'SRT'),
                 'USER_ID'       => $request['user_id'],
                 'BRANCH_ID'     => $request->user()->branch_id ?? null,
                 'LOAN_NUMBER'   => $loanNumber,
@@ -178,7 +154,7 @@ class S_Tagihan extends R_Tagihan
         $countNoa = count($list_lkp);
 
         $detailData = [
-            'LKP_NUMBER' => $this->createAutoCode(M_Lkp::class, 'LKP_NUMBER', 'LKP'),
+            'LKP_NUMBER' => $this->createAutoCode($request, M_Lkp::class, 'LKP_NUMBER', 'LKP'),
             'USER_ID'    => $request['user_id'] ?? null,
             'BRANCH_ID'  => $request->user()->branch_id ?? null,
             'NOA'        => $countNoa,
