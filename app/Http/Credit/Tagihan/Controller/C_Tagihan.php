@@ -305,7 +305,9 @@ class C_Tagihan extends Controller
             $data = M_ClSurveyLogs::create([
                 'REFERENCE_ID' => $request->no_surat ?? "",
                 'DESCRIPTION' => $request->keterangan,
-                'CONFIRM_DATE' => $request->tgl_jb ? Carbon::createFromTimestamp($request->tgl_jb)->format('Y-m-d') : null,
+                'CONFIRM_DATE' => $request->tgl_jb
+                    ? Carbon::createFromTimestamp($request->tgl_jb / 1000)->format('Y-m-d')
+                    : null,
                 'PATH' => json_encode($request->path),
                 'CREATED_BY' => $request->user()->id ?? null,
                 'CREATED_AT' => Carbon::now('Asia/Jakarta'),
