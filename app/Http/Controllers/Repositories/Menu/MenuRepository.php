@@ -62,7 +62,9 @@ class MenuRepository implements MenuRepositoryInterface
         $userId = $request->user()->id;
 
         $query = M_MasterUserAccessMenu::with(['masterMenu' => function ($query) {
-            $query->where('status', 'active');
+            $query->where('status', 'active')
+                ->orderBy('order', 'asc')
+                ->orderBy('menu_name', 'asc');
         }])
             ->where('users_id', $userId)
             ->get();
