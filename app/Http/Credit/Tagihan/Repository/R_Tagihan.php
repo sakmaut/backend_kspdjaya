@@ -145,7 +145,7 @@ class R_Tagihan
                         WHERE	(cl.STATUS = 'A'  
                                     or (cl.STATUS_REC = 'RP' and cl.mod_user <> 'exclude jaminan' and cast(cl.LOAN_NUMBER as char) not in (select cast(pp.LOAN_NUM as char) from payment pp where pp.ACC_KEY = 'JUAL UNIT'))
                                     or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char) from temp_lis_02C )))
-                                AND (tg.LOAN_NUMBER IS NULL OR tg.LOAN_NUMBER = '')
+                                -- AND (tg.LOAN_NUMBER IS NULL OR tg.LOAN_NUMBER = '')
                                 AND concat('C',case when date_format(cl.created_at,'%m%Y')='$dateFrom' then 'N'
                                                 when cl.STATUS_REC = 'RP' and py.ID is null then 'L'
                                                 when replace(format(case when date_format(cl.created_at,'%m%Y')='$dateFrom' then (cl.PCPL_ORI+cl.INTRST_ORI)
