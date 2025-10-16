@@ -11,7 +11,7 @@ class Rs_SurveyLogs extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        $userName = User::where('username', $this->USER_ID)->first();
+        $userName = User::where('id', $this->CREATED_BY)->first();
 
         return [
             'no_surat' => $this->REFERENCE_ID ?? "",
