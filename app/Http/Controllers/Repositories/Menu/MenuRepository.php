@@ -241,6 +241,10 @@ class MenuRepository implements MenuRepositoryInterface
             $menuArray[$key]['menuitem']['submenu'] = array_values($menu['menuitem']['submenu']);
         }
 
+        usort($menuArray, function ($a, $b) {
+            return strcmp(strtolower($a['menuitem']['labelmenu']), strtolower($b['menuitem']['labelmenu']));
+        });
+
         return array_values($menuArray);
     }
 
