@@ -4,7 +4,6 @@ namespace App\Http\Credit\Tagihan\Controller;
 
 use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
-use App\Http\Credit\Tagihan\Model\M_Tagihan;
 use App\Http\Credit\Tagihan\Service\S_Tagihan;
 use App\Http\Resources\R_TagihanDetail;
 use App\Http\Resources\Rs_CollectorList;
@@ -12,6 +11,7 @@ use App\Http\Resources\Rs_DeployList;
 use App\Http\Resources\Rs_LkpDetailList;
 use App\Http\Resources\Rs_LkpList;
 use App\Http\Resources\Rs_LkpPicList;
+use App\Http\Resources\Rs_SurveyLogs;
 use App\Http\Resources\Rs_TagihanByUserId;
 use App\Models\M_ClSurveyLogs;
 use App\Models\M_Lkp;
@@ -308,6 +308,7 @@ class C_Tagihan extends Controller
                 'CONFIRM_DATE' => Carbon::parse($request->tgl_jb)->format('Y-m-d') ?? null,
                 'PATH' => json_encode($request->path),
                 'CREATED_BY' => $request->user()->id ?? null,
+                'CREATED_AT' => Carbon::now('Asia/Jakarta'),
             ]);
 
             DB::commit();
@@ -322,7 +323,10 @@ class C_Tagihan extends Controller
     {
         try {
             $data = M_ClSurveyLogs::where('REFERENCE_ID', $id)->orderBy('CREATED_AT', 'ASC')->get();
-            return response()->json($data, 200);
+
+            $dto = Rs_SurveyLogs::collection($data);
+
+            return response()->json($dto, 200);
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
         }
