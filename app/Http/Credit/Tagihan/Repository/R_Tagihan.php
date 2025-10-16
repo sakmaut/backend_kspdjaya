@@ -162,7 +162,7 @@ class R_Tagihan
             $sql .= " AND cl.BRANCH = '$currentBranch'";
         }
 
-        $sql .= " ORDER BY cl.LOAN_NUMBER ,COALESCE(u.fullname, cl.mcf_id) ASC";
+        $sql .= " ORDER BY COALESCE(u.fullname, cl.mcf_id),cl.LOAN_NUMBER ASC";
 
         return DB::select($sql);
     }
