@@ -106,40 +106,67 @@ class R_Tagihan
                                 replace(format(cl.TOTAL_ADMIN,0),',','') as TOTAL_ADMIN,
                                 cl.CUST_CODE,
                                 us.fullname AS username,
-                                case    when (	concat('C',case when date_format(cl.created_at,'%m%Y')='$dateFrom' then 'N'
-												when cl.STATUS_REC = 'RP' and py.ID is null and date_format(col.SITA_AT,'%m%Y')<>'$dateFrom'  then 'L'
-												when replace(format(case when date_format(cl.created_at,'%m%Y')='$dateFrom' then (cl.PCPL_ORI+cl.INTRST_ORI)
-																	else (st.init_pcpl+st.init_int) end,0),',','')=0 then 'L'
-												when case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'MUSIMAN'
-														and date_format(st.first_arr,'%m%Y')=date_format(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),'%m%Y') then 'N'
-												when st.first_arr>=date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 2 month) then 'N'
-												when st.first_arr > date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day)
-														and case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'REGULER'  then 'M'
-												when st.arr_count > 8 then 'X'
-												else st.arr_count end)) in ('CM','C5','C4','C3','C2','C1','C0') 
-                                        and (	case when date_format(cl.created_at,'%m%Y')='$dateFrom' then 1
-												when coalesce(st.first_arr,en.first_arr) is null then ''
-												else coalesce(st.last_inst,en.last_inst) end) in (1,2,3) 
-										 and u.keterangan = 'AKTIF'
-										then 'Y' 
-										when (	concat('C',case when date_format(cl.created_at,'%m%Y')='$dateFrom' then 'N'
-												when cl.STATUS_REC = 'RP' and py.ID is null and date_format(col.SITA_AT,'%m%Y')<>'$dateFrom'  then 'L'
-												when replace(format(case when date_format(cl.created_at,'%m%Y')='$dateFrom' then (cl.PCPL_ORI+cl.INTRST_ORI)
-																	else (st.init_pcpl+st.init_int) end,0),',','')=0 then 'L'
-												when case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'MUSIMAN'
-														and date_format(st.first_arr,'%m%Y')=date_format(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),'%m%Y') then 'N'
-												when st.first_arr>=date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 2 month) then 'N'
-												when st.first_arr > date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day)
-														and case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'REGULER'  then 'M'
-												when st.arr_count > 8 then 'X'
-												else st.arr_count end)) in ('CM','C0','C1','C2') 
-                                        and (	case when date_format(cl.created_at,'%m%Y')='$dateFrom' then 1
-												when coalesce(st.first_arr,en.first_arr) is null then ''
-												else coalesce(st.last_inst,en.last_inst) end) in (1,2,3) 
-										 and u.keterangan = 'RESIGN'
-										then 'Y'
-								else 'N' 
-                                end as nbot
+                                CASE
+                                WHEN (
+                                    CONCAT('C',
+                                        CASE 
+                                            WHEN DATE_FORMAT(cl.created_at, '%m%Y') = '$dateFrom' THEN 'N'
+                                            WHEN cl.STATUS_REC = 'RP' AND py.ID IS NULL AND DATE_FORMAT(col.SITA_AT, '%m%Y') <> '$dateFrom' THEN 'L'
+                                            WHEN REPLACE(FORMAT(
+                                                    CASE 
+                                                        WHEN DATE_FORMAT(cl.created_at, '%m%Y') = '$dateFrom' 
+                                                        THEN (cl.PCPL_ORI + cl.INTRST_ORI)
+                                                        ELSE (st.init_pcpl + st.init_int)
+                                                    END, 0), ',', '') = '0' THEN 'L'
+                                            WHEN (cl.INSTALLMENT_COUNT / cl.PERIOD) = 1 
+                                                AND st.first_arr > LAST_DAY(STR_TO_DATE(CONCAT('01', '$dateFrom'), '%d%m%Y')) THEN 'M'
+                                            WHEN (cl.INSTALLMENT_COUNT / cl.PERIOD) <> 1 
+                                                AND DATE_FORMAT(st.first_arr, '%m%Y') = DATE_FORMAT(DATE_ADD(STR_TO_DATE(CONCAT('01', '$dateFrom'), '%d%m%Y'), INTERVAL 1 MONTH), '%m%Y') THEN 'N'
+                                            WHEN st.first_arr >= DATE_ADD(STR_TO_DATE(CONCAT('01', '$dateFrom'), '%d%m%Y'), INTERVAL 2 MONTH) THEN 'N'
+                                            WHEN st.arr_count > 8 THEN 'X'
+                                            ELSE st.arr_count
+                                        END
+                                    ) IN ('CM', 'C5', 'C4', 'C3', 'C2', 'C1', 'C0')
+                                    AND (
+                                        CASE 
+                                            WHEN DATE_FORMAT(cl.created_at, '%m%Y') = '$dateFrom' THEN 1
+                                            WHEN COALESCE(st.first_arr, en.first_arr) IS NULL THEN ''
+                                            ELSE COALESCE(st.last_inst, en.last_inst)
+                                        END
+                                    ) IN (1, 2, 3)
+                                    AND u.keterangan = 'AKTIF'
+                                )
+                                THEN 'Y'
+                                WHEN (
+                                    CONCAT('C',
+                                        CASE 
+                                            WHEN DATE_FORMAT(cl.created_at, '%m%Y') = '$dateFrom' THEN 'N'
+                                            WHEN cl.STATUS_REC = 'RP' AND py.ID IS NULL AND DATE_FORMAT(col.SITA_AT, '%m%Y') <> '$dateFrom' THEN 'L'
+                                            WHEN REPLACE(FORMAT(
+                                                    CASE 
+                                                        WHEN DATE_FORMAT(cl.created_at, '%m%Y') = '$dateFrom' 
+                                                        THEN (cl.PCPL_ORI + cl.INTRST_ORI)
+                                                        ELSE (st.init_pcpl + st.init_int)
+                                                    END, 0), ',', '') = '0' THEN 'L'
+                                            WHEN (cl.INSTALLMENT_COUNT / cl.PERIOD) = 1 
+                                                AND st.first_arr > LAST_DAY(STR_TO_DATE(CONCAT('01', '$dateFrom'), '%d%m%Y')) THEN 'M'
+                                            WHEN (cl.INSTALLMENT_COUNT / cl.PERIOD) <> 1 
+                                                AND DATE_FORMAT(st.first_arr, '%m%Y') = DATE_FORMAT(DATE_ADD(STR_TO_DATE(CONCAT('01', '$dateFrom'), '%d%m%Y'), INTERVAL 1 MONTH), '%m%Y') THEN 'N'
+                                            WHEN st.first_arr >= DATE_ADD(STR_TO_DATE(CONCAT('01', '$dateFrom'), '%d%m%Y'), INTERVAL 2 MONTH) THEN 'N'
+                                            WHEN st.arr_count > 8 THEN 'X'
+                                            ELSE st.arr_count
+                                        END
+                                    ) IN ('CM', 'C0', 'C1', 'C2')
+                                    AND (
+                                        CASE 
+                                            WHEN DATE_FORMAT(cl.created_at, '%m%Y') = '$dateFrom' THEN 1
+                                            WHEN COALESCE(st.first_arr, en.first_arr) IS NULL THEN ''
+                                            ELSE COALESCE(st.last_inst, en.last_inst)
+                                        END
+                                    ) IN (1, 2, 3)
+                                    AND u.keterangan = 'RESIGN'
+                                )
+                                THEN 'Y' ELSE 'N' END AS nbot
                         FROM	credit cl
                                 inner join branch b on cast(b.ID as char) = cast(cl.BRANCH as char)
                                 left join customer c on cast(c.CUST_CODE as char) = cast(cl.CUST_CODE as char)
