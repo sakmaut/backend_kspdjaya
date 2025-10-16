@@ -322,7 +322,7 @@ class C_Tagihan extends Controller
     public function cl_survey_detail(Request $request, $id)
     {
         try {
-            $data = M_ClSurveyLogs::where('REFERENCE_ID', $id)->orderBy('CREATED_AT', 'ASC')->get();
+            $data = M_ClSurveyLogs::where('REFERENCE_ID', $id)->orderBy('CREATED_AT', 'DESC')->get();
 
             $dto = Rs_SurveyLogs::collection($data);
 
