@@ -219,7 +219,7 @@ class R_Tagihan
                                             ELSE COALESCE(st.last_inst, en.last_inst)
                                         END
                                     ) IN (1, 2, 3)
-                                    AND u.keterangan = 'AKTIF'
+                                    AND coalesce(u.keterangan,'RESIGN') = 'AKTIF'
                                 )
                                 THEN 'Y'
                                 WHEN (
@@ -249,7 +249,7 @@ class R_Tagihan
                                             ELSE COALESCE(st.last_inst, en.last_inst)
                                         END
                                     ) IN (1, 2, 3)
-                                    AND u.keterangan = 'RESIGN'
+                                    AND coalesce(u.keterangan,'RESIGN') = 'RESIGN'
                                 )
                                 THEN 'Y' ELSE 'N' END AS nbot
                         FROM	credit cl
