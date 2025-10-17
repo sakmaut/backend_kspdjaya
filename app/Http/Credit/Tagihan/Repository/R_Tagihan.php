@@ -98,6 +98,7 @@ class R_Tagihan
         $dateFrom = date('mY', strtotime(now()));
         $currentBranch = $request->user()->branch_id;
         $currentPosition = $request->user()->position;
+        $getUserName = "Get Deploy";
 
         if ($currentPosition != 'HO') {
             $showCycle = "'CM','C8','C7','C6','C5','C4','C3','C2','C1','C0'";
@@ -291,6 +292,21 @@ class R_Tagihan
 
         if ($currentPosition != 'HO') {
             $sql .= " AND cl.BRANCH = '$currentBranch'";
+        }
+
+        $checkRunSp = DB::select("  SELECT
+                                            CASE
+                                                WHEN (SELECT MAX(p.ENTRY_DATE) FROM payment p) >= (SELECT coalesce(MAX(temp_lis_02C.last_pay),(SELECT MAX(p.ENTRY_DATE) FROM payment p)) FROM temp_lis_02C)
+                                                    AND job_status = 0 THEN 'run'
+                                                ELSE 'skip'
+                                            END AS execute_sp
+                                            FROM job_on_progress
+                                            WHERE job_name = 'LISBAN'");
+
+        $branchCon = $currentBranch == 'semua' ? '%' : $currentBranch;
+
+        if (!empty($checkRunSp) && $checkRunSp[0]->execute_sp === 'run') {
+            DB::select('CALL lisban_berjalan(?,?,?)', [$dateFrom, $getUserName, $branchCon]);
         }
 
         $sql .= " ORDER BY COALESCE(u.fullname, cl.mcf_id),cl.LOAN_NUMBER ASC";
