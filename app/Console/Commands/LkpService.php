@@ -29,7 +29,7 @@ class LkpService extends Command
     public function handle()
     {
         $results = M_Lkp::where('STATUS', 'Active')
-            ->whereDate('CREATED_AT', Carbon::today())
+            ->whereDate('CREATED_AT', '<', Carbon::today())
             ->get();
 
         if ($results->isNotEmpty()) {
