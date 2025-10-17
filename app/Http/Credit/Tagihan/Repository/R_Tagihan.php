@@ -99,6 +99,12 @@ class R_Tagihan
         $currentBranch = $request->user()->branch_id;
         $currentPosition = $request->user()->position;
 
+        if ($currentPosition != 'HO') {
+            $showCycle = "'CM','C8','C7','C6','C5','C4','C3','C2','C1','C0'";
+        } else {
+            $showCycle = "'CM','CX','C8','C7','C6','C5','C4','C3','C2','C1','C0'";
+        }
+
         $sql = "SELECT	CONCAT(b.CODE, '-', b.CODE_NUMBER) AS KODE,
                                 b.NAME AS NAMA_CABANG,
                                 cl.LOAN_NUMBER AS NO_KONTRAK,
@@ -281,7 +287,7 @@ class R_Tagihan
                                                 when st.first_arr > date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day)
                                                         and case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'REGULER'  then 'M'
                                                 when st.arr_count > 8 then 'X'
-                                                else st.arr_count end) in ('CM','CX','C8','C7','C6','C5','C4','C3','C2','C1','C0')";
+                                                else st.arr_count end) in ($showCycle)";
 
         if ($currentPosition != 'HO') {
             $sql .= " AND cl.BRANCH = '$currentBranch'";
