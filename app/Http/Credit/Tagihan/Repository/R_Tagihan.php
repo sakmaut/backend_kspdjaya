@@ -303,7 +303,7 @@ class R_Tagihan
                                             FROM job_on_progress
                                             WHERE job_name = 'LISBAN'");
 
-        $branchCon = $currentBranch == 'semua' ? '%' : $currentBranch;
+        $branchCon = $currentPosition == 'HO' ? '%' : $currentBranch;
 
         if (!empty($checkRunSp) && $checkRunSp[0]->execute_sp === 'run') {
             DB::select('CALL lisban_berjalan(?,?,?)', [$dateFrom, $getUserName, $branchCon]);
