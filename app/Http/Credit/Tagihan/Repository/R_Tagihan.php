@@ -260,15 +260,14 @@ class R_Tagihan
                                 left join cr_order co on cast(co.APPLICATION_ID as char) = cast(ca.ID as char)
                                 left join cr_survey cs on cast(cs.ID as char) = cast(ca.CR_SURVEY_ID as char)
                                 left join kolektor k on cast(k.loan_number as char) = cast(cl.LOAN_NUMBER as char)
-                                left join lis_03C col on cast(col.CR_CREDIT_ID as char) = cast(cl.ID as char)
+                                left join temp_lis_03C col on cast(col.CR_CREDIT_ID as char) = cast(cl.ID as char)
                                 left join temp_lis_01C st
                                     on cast(st.loan_number as char) = cast(cl.LOAN_NUMBER as char)
                                     and st.type=date_format(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval -1 day),'%d%m%Y')
                                 left join temp_lis_01C en
                                     on cast(en.loan_number as char) = cast(cl.LOAN_NUMBER as char)
                                     and en.type=date_format(now(),'%d%m%Y')
-                                -- left join temp_lis_02C py on cast(py.loan_num as char) = cast(cl.LOAN_NUMBER as char)
-                                left join lis_02C py on cast(py.loan_num as char) = cast(cl.LOAN_NUMBER as char)
+                                left join temp_lis_02C py on cast(py.loan_num as char) = cast(cl.LOAN_NUMBER as char)
                                 left join old_survey_note osn on cast(osn.loan_number as char) = cast(cl.LOAN_NUMBER as char)
                                 left join cl_deploy tg 
                                         ON cast(tg.LOAN_NUMBER as char) = cast(cl.LOAN_NUMBER as char)
@@ -276,7 +275,7 @@ class R_Tagihan
                                 left join users us on us.username = tg.USER_ID
                         WHERE	(cl.STATUS = 'A'  
                                     or (cl.STATUS_REC = 'RP' and cl.mod_user <> 'exclude jaminan' and cast(cl.LOAN_NUMBER as char) not in (select cast(pp.LOAN_NUM as char) from payment pp where pp.ACC_KEY = 'JUAL UNIT'))
-                                    or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char) from lis_02C )))
+                                    or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char) from temp_lis_02C )))
                                 -- AND (tg.LOAN_NUMBER IS NULL OR tg.LOAN_NUMBER = '')
                                 AND concat('C',case when date_format(cl.created_at,'%m%Y')='$dateFrom' then 'N'
                                                 when cl.STATUS_REC = 'RP' and py.ID is null then 'L'
