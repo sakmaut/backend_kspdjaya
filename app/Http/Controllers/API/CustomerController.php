@@ -155,7 +155,11 @@ class CustomerController extends Controller
                     'b.POLICE_NUMBER',
                     'a.INSTALLMENT'
                 ])
-                ->leftJoin('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
+                ->leftJoin(DB::raw('(   SELECT * FROM cr_collateral 
+                                        WHERE ID IN (
+                                            SELECT MIN(ID) FROM cr_collateral GROUP BY CR_CREDIT_ID
+                                        )
+                                    ) as b'), 'b.CR_CREDIT_ID', '=', 'a.ID')
                 ->leftJoin('customer as c', 'c.CUST_CODE', '=', 'a.CUST_CODE')
                 ->where('a.STATUS', 'A');
 
