@@ -21,14 +21,13 @@ use App\Http\Controllers\API\{
     HrPositionController,
     ListBanController,
     LogPrintController,
+    OrderResourcesController,
     PelunasanController,
-    PelunasanController2,
     PhoneBookController,
     ReportController,
     TaskPusher,
     Wilayah
 };
-
 use App\Http\Controllers\Payment\Controller\C_PokokSebagian;
 use App\Http\Controllers\Welcome;
 use App\Http\Credit\Tagihan\Controller\C_Tagihan;
@@ -205,6 +204,8 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::post('sp3',  [ListBanController::class, 'sp3']);
     Route::post('sp4',  [ListBanController::class, 'sp4']);
     Route::post('listBanTest', [ListBanController::class, 'listBanTest']);
+
+    Route::resource('order_resources', OrderResourcesController::class);
 });
 
 
