@@ -144,10 +144,6 @@ class CustomerController extends Controller
                 return collect([]);
             }
 
-            $subCollateral = DB::table('cr_collateral')
-                ->select('CR_CREDIT_ID', 'POLICE_NUMBER')
-                ->limit(1);
-
             $query = DB::table('credit as a')
                 ->select([
                     'a.STATUS',
@@ -159,9 +155,7 @@ class CustomerController extends Controller
                     'b.POLICE_NUMBER',
                     'a.INSTALLMENT'
                 ])
-                ->leftJoinSub($subCollateral, 'b', function ($join) {
-                    $join->on('b.CR_CREDIT_ID', '=', 'a.ID');
-                })
+                ->leftJoin('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
                 ->leftJoin('customer as c', 'c.CUST_CODE', '=', 'a.CUST_CODE')
                 ->where('a.STATUS', 'A');
 
