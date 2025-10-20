@@ -144,6 +144,12 @@ class CustomerController extends Controller
                 return collect([]);
             }
 
+            $subCollateral = DB::table('cr_collateral')
+                ->select('CR_CREDIT_ID', 'POLICE_NUMBER')
+                ->whereNotNull('POLICE_NUMBER')
+                ->groupBy('CR_CREDIT_ID')
+                ->limit(1);
+
             $query = DB::table('credit as a')
                 ->select([
                     'a.STATUS',
@@ -155,7 +161,9 @@ class CustomerController extends Controller
                     'b.POLICE_NUMBER',
                     'a.INSTALLMENT'
                 ])
-                ->leftJoin('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
+                ->leftJoinSub($subCollateral, 'b', function ($join) {
+                    $join->on('b.CR_CREDIT_ID', '=', 'a.ID');
+                })
                 ->leftJoin('customer as c', 'c.CUST_CODE', '=', 'a.CUST_CODE')
                 ->where('a.STATUS', 'A');
 
@@ -176,10 +184,6 @@ class CustomerController extends Controller
                     return $query->where('b.POLICE_NUMBER', 'LIKE', "%{$no_polisi}%");
                 });
             }
-
-            // if ($lastSegment === 'addrepayment') {
-            //     return $query->where('a.CREDIT_TYPE', '!=', 'bunga_menurun');
-            // }
 
             $results = $query->limit(15)->get();
 
