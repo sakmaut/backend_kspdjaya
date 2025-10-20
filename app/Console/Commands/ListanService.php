@@ -133,7 +133,10 @@ class ListanService extends Command
 
         $results = DB::select($sql);
 
-        if(!empty($results)){
+        if (!empty($results)) {
+
+            M_ListbanData::truncate();
+
             foreach ($results as $row) {
                 M_ListbanData::create([
                     'KODE' => $row->KODE ?? null,

@@ -106,7 +106,9 @@ class R_Tagihan
             $showCycle = "'CM','CX','C8','C7','C6','C5','C4','C3','C2','C1','C0'";
         }
 
-        $sql = "SELECT	CONCAT(b.CODE, '-', b.CODE_NUMBER) AS KODE,
+        $sql = "SELECT	        CONCAT(b.CODE, '-', b.CODE_NUMBER) AS KODE,
+                                cl.ID AS CREDIT_ID,
+                                cl.CUST_CODE AS CUST_CODE,
                                 b.NAME AS NAMA_CABANG,
                                 cl.LOAN_NUMBER AS NO_KONTRAK,
                                 c.NAME AS NAMA_PELANGGAN,
@@ -148,7 +150,6 @@ class R_Tagihan
                                                         and case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'REGULER'  then 'M'
                                                 when st.arr_count > 8 then 'X'
                                                 else st.arr_count end) AS CYCLE_AWAL,
-                                cl.STATUS_REC,
                                 cl.STATUS_REC as STATUS_BEBAN,
                                 case when cl.CREDIT_TYPE = 'bulanan' then 'reguler' else cl.CREDIT_TYPE end as pola_bayar,
                                 replace(format(coalesce(en.init_pcpl,0),0),',','') OS_PKK_AKHIR,
@@ -190,7 +191,6 @@ class R_Tagihan
                                 col.PRODUCTION_YEAR,
                                 replace(format(cl.PCPL_ORI-cl.TOTAL_ADMIN,0),',','') as NILAI_PINJAMAN,
                                 replace(format(cl.TOTAL_ADMIN,0),',','') as TOTAL_ADMIN,
-                                cl.CUST_CODE,
                                 us.fullname AS username,
                                  CASE
                                 WHEN (
@@ -321,7 +321,7 @@ class R_Tagihan
 
     protected function listTagihanByBranchId($currentBranch)
     {
-        return  $this->model::where('BRANCH_ID', $currentBranch)->get();
+        return  $this->model::with(['customer'])->where('BRANCH_ID', $currentBranch)->get();
     }
 
     protected function cl_deploy_by_pic($pic)

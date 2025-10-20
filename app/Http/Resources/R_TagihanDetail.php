@@ -24,6 +24,8 @@ class R_TagihanDetail extends JsonResource
 
         return [
             "KODE CABANG" => $this->KODE ?? '',
+            "CREDIT_ID" => $this->CREDIT_ID ?? '',
+            "CUST_CODE" => $this->CUST_CODE ?? '',
             "NAMA CABANG" => $this->NAMA_CABANG ?? '',
             "NO KONTRAK" => is_numeric($this->NO_KONTRAK) ? (int) $this->NO_KONTRAK ?? '' : $this->NO_KONTRAK ?? '',
             "NAMA PELANGGAN" => $this->NAMA_PELANGGAN ?? '',

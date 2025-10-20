@@ -3,6 +3,8 @@
 namespace App\Http\Credit\Tagihan\Model;
 
 use App\Http\Credit\TagihanDetail\Model\M_TagihanDetail;
+use App\Models\M_CrCollateral;
+use App\Models\M_Customer;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
@@ -17,14 +19,13 @@ class M_Tagihan extends Model
         'NO_SURAT',
         'USER_ID',
         'BRANCH_ID',
+        'CREDIT_ID',
         'LOAN_NUMBER',
+        'CUST_CODE',
         'TGL_JTH_TEMPO',
-        'NAMA_CUST',
         'CYCLE_AWAL',
         'N_BOT',
         'ALAMAT',
-        'DESA',
-        'KEC',
         'MCF',
         'ANGSURAN_KE',
         'ANGSURAN',
@@ -52,5 +53,15 @@ class M_Tagihan extends Model
                 $model->setAttribute($model->getKeyName(), Str::uuid()->toString());
             }
         });
+    }
+
+    public function customer()
+    {
+        return $this->hasOne(M_Customer::class, 'CUST_CODE', 'CUST_CODE');
+    }
+
+    public function collateral()
+    {
+        return $this->hasOne(M_CrCollateral::class, 'CR_CREDIT_ID', 'CREDIT_ID');
     }
 }
