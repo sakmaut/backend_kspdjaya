@@ -146,7 +146,6 @@ class CustomerController extends Controller
 
             $subCollateral = DB::table('cr_collateral')
                 ->select('CR_CREDIT_ID', 'POLICE_NUMBER')
-                ->whereNotNull('POLICE_NUMBER')
                 ->limit(1);
 
             $query = DB::table('credit as a')
