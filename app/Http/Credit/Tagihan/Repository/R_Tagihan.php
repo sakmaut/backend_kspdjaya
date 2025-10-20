@@ -294,20 +294,20 @@ class R_Tagihan
             $sql .= " AND cl.BRANCH = '$currentBranch'";
         }
 
-        $checkRunSp = DB::select("  SELECT
-                                            CASE
-                                                WHEN (SELECT MAX(p.ENTRY_DATE) FROM payment p) >= (SELECT coalesce(MAX(temp_lis_02C.last_pay),(SELECT MAX(p.ENTRY_DATE) FROM payment p)) FROM temp_lis_02C)
-                                                    AND job_status = 0 THEN 'run'
-                                                ELSE 'skip'
-                                            END AS execute_sp
-                                            FROM job_on_progress
-                                            WHERE job_name = 'LISBAN'");
+        // $checkRunSp = DB::select("  SELECT
+        //                                     CASE
+        //                                         WHEN (SELECT MAX(p.ENTRY_DATE) FROM payment p) >= (SELECT coalesce(MAX(temp_lis_02C.last_pay),(SELECT MAX(p.ENTRY_DATE) FROM payment p)) FROM temp_lis_02C)
+        //                                             AND job_status = 0 THEN 'run'
+        //                                         ELSE 'skip'
+        //                                     END AS execute_sp
+        //                                     FROM job_on_progress
+        //                                     WHERE job_name = 'LISBAN'");
 
-        $branchCon = $currentPosition == 'HO' ? '%' : $currentBranch;
+        // $branchCon = $currentPosition == 'HO' ? '%' : $currentBranch;
 
-        if (!empty($checkRunSp) && $checkRunSp[0]->execute_sp === 'run') {
-            DB::select('CALL lisban_berjalan(?,?,?)', [$dateFrom, $getUserName, $branchCon]);
-        }
+        // if (!empty($checkRunSp) && $checkRunSp[0]->execute_sp === 'run') {
+        //     DB::select('CALL lisban_berjalan(?,?,?)', [$dateFrom, $getUserName, $branchCon]);
+        // }
 
         $sql .= " ORDER BY COALESCE(u.fullname, cl.mcf_id),cl.LOAN_NUMBER ASC";
 
