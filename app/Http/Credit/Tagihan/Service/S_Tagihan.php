@@ -118,8 +118,8 @@ class S_Tagihan extends R_Tagihan
                 'MCF'           => $item['SURVEYOR'] ?? null,
                 'ANGSURAN_KE'   => $item['ANGS KE'] ?? 0,
                 'ANGSURAN'      => $item['ANGSURAN'] ?? 0,
-                'BAYAR'         => $item['AC TOTAL'] ?? 0,
                 'CREATED_BY'    => $request->user()->id ?? null,
+                'CREATED_AT' => Carbon::now('Asia/Jakarta'),
             ];
 
             if ($loanNumber) {
