@@ -51,22 +51,33 @@ class C_Tagihan extends Controller
                 $cycles = ['CM', 'CX', 'C8', 'C7', 'C6', 'C5', 'C4', 'C3', 'C2', 'C1', 'C0'];
             }
 
-            $data = M_ListbanData::with([
-                'customer:CUST_CODE,NAME,INS_ADDRESS,INS_KECAMATAN,INS_KELURAHAN,PHONE_HOUSE,PHONE_PERSONAL,OCCUPATION',
-                'deploy:ID,LOAN_NUMBER,STATUS'
-            ])
-                ->whereIn('CYCLE_AWAL', $cycles)
-                ->whereDoesntHave('deploy', function ($q) {
-                    $q->where('STATUS', 'AKTIF')
-                        ->whereColumn('cl_deploy.LOAN_NUMBER', 'listban_data.NO_KONTRAK');
-                });
+            $query = DB::table('listban_data as a')
+                ->select(
+                    'a.*',
+                    'c.NAME',
+                    'c.INS_ADDRESS',
+                    'c.INS_KECAMATAN',
+                    'c.INS_KELURAHAN',
+                    'c.PHONE_HOUSE',
+                    'c.PHONE_PERSONAL',
+                    'c.OCCUPATION',
+                    'd.ID as DEPLOY_ID',
+                    'd.LOAN_NUMBER',
+                    'd.STATUS as DEPLOY_STATUS'
+                )
+                ->leftJoin('customer as c', 'c.CUST_CODE', '=', 'a.CUST_CODE')
+                ->leftJoin('cl_deploy as d', function ($join) {
+                    $join->on('d.LOAN_NUMBER', '=', 'a.NO_KONTRAK')
+                        ->where('d.STATUS', '=', 'AKTIF');
+                })
+                ->whereIn('a.CYCLE_AWAL', $cycles)
+                ->whereNull('d.LOAN_NUMBER');
 
             if ($currentPosition != 'HO') {
-                $data->where('BRANCH_ID', $currentBranch);
+                $query->where('a.BRANCH_ID', $currentBranch);
             }
 
-            $data = $data->get();
-
+            $data = $query->get();
 
             $dto = R_TagihanDetail::collection($data);
 
