@@ -249,6 +249,7 @@ class C_Tagihan extends Controller
                 ->leftJoinSub($logSubQuery, 'e', function ($join) {
                     $join->on('e.REFERENCE_ID', '=', 'a.NO_SURAT');
                 })
+                ->whereRaw('a.ANGSURAN > COALESCE(d.total_bayar, 0)')
                 ->where('a.USER_ID', $pic)
                 ->where(function ($query) {
                     $query->whereNull('c.LKP_NUMBER')
@@ -268,7 +269,7 @@ class C_Tagihan extends Controller
                     'a.MCF',
                     'a.ANGSURAN_KE',
                     'a.ANGSURAN',
-                    'd.total_bayar',
+                    DB::raw('COALESCE(d.total_bayar, 0) AS total_bayar'),
                     'e.DESCRIPTION',
                     'd.NAME as NAMA_CUST',
                     'd.ADDRESS as ALAMAT',
