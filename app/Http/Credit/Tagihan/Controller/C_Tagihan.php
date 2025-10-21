@@ -4,6 +4,7 @@ namespace App\Http\Credit\Tagihan\Controller;
 
 use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
+use App\Http\Credit\Tagihan\Model\M_Tagihan;
 use App\Http\Credit\Tagihan\Service\S_Tagihan;
 use App\Http\Resources\R_TagihanDetail;
 use App\Http\Resources\Rs_CollectorList;
@@ -153,6 +154,28 @@ class C_Tagihan extends Controller
 
             return response()->json($dto, 200);
         } catch (\Exception $e) {
+            return $this->log->logError($e, $request);
+        }
+    }
+
+    public function cl_deploy_update(Request $request, $id)
+    {
+        DB::beginTransaction();
+        try {
+            $check = M_Tagihan::where('ID', $id)->first();
+
+            if (!$check) {
+                $check->update([
+                    'USER_ID' => $request->user_id ?? "",
+                    'UPDATED_BY' => $request->user()->id ?? null,
+                    'UPDATED_AT' => Carbon::now('Asia/Jakarta'),
+                ]);
+            }
+
+            DB::commit();
+            return response()->json(['message' => 'Cabang updated successfully'], 200);
+        } catch (\Exception $e) {
+            DB::rollback();
             return $this->log->logError($e, $request);
         }
     }
