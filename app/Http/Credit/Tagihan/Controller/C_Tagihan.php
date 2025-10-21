@@ -235,7 +235,7 @@ class C_Tagihan extends Controller
                 ->groupBy('p.LOAN_NUM');
 
             $logSubQuery = DB::table('cl_survey_logs')
-                ->select('REFERENCE_ID', 'DESCRIPTION')
+                ->select('REFERENCE_ID', 'DESCRIPTION', 'CONFIRM_DATE')
                 ->orderBy('CREATED_AT', 'desc')
                 ->limit(1);
 
