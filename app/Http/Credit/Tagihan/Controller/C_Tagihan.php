@@ -43,9 +43,7 @@ class C_Tagihan extends Controller
     {
         try {
             // $data = $this->service->getListTagihan($request);
-            $data = M_ListbanData::with(['customer'])
-                ->orderBy('NO_KONTRAK', 'DESC')
-                ->get();
+            $data = M_ListbanData::with(['customer'])->get();
 
             $dto = R_TagihanDetail::collection($data);
 
