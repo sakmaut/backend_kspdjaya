@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Http\Credit\Tagihan\Model\M_Tagihan;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
@@ -78,5 +79,10 @@ class M_ListbanData extends Model
     public function customer()
     {
         return $this->hasOne(M_Customer::class, 'CUST_CODE', 'CUST_CODE');
+    }
+
+    public function deploy()
+    {
+        return $this->hasOne(M_Tagihan::class, 'LOAN_NUMBER', 'NO_KONTRAK');
     }
 }

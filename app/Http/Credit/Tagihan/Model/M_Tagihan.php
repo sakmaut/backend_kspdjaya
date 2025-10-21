@@ -30,7 +30,7 @@ class M_Tagihan extends Model
         'ANGSURAN_KE',
         'ANGSURAN',
         'BAYAR',
-        'TGL_EXP',
+        'STATUS',
         'CREATED_BY',
         'CREATED_AT',
         'UPDATED_BY',
