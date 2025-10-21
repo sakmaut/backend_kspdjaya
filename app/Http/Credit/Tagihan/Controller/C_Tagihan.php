@@ -207,8 +207,7 @@ class C_Tagihan extends Controller
                         $fail($attribute . ' harus berupa string atau angka.');
                     }
                 },
-            ],
-            'list_tagihan.*.TGL BOOKING' => 'required|date',
+            ]
         ]);
 
         if ($validator->fails()) {
