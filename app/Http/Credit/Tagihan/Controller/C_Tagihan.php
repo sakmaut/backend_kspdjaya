@@ -240,12 +240,31 @@ class C_Tagihan extends Controller
                     $join->on('e.REFERENCE_ID', '=', 'a.NO_SURAT');
                 })
                 ->where('a.USER_ID', $pic)
-                // ->where('d.total_bayar', '<', 'a.ANGSURAN')
                 ->where(function ($query) {
                     $query->whereNull('c.LKP_NUMBER')
                         ->orWhere('c.LKP_NUMBER', '');
                 })
-                ->select('a.*', 'c.*', 'd.total_bayar', 'e.DESCRIPTION', 'd.NAME as NAMA_CUST', 'd.ADDRESS as ALAMAT', 'd.KECAMATAN as KEC', 'd.KELURAHAN as DESA')
+                ->select(
+                    'a.ID',
+                    'a.NO_SURAT',
+                    'a.USER_ID',
+                    'a.BRANCH_ID',
+                    'a.CREDIT_ID',
+                    'a.LOAN_NUMBER',
+                    'a.CUST_CODE',
+                    'a.TGL_JTH_TEMPO',
+                    'a.CYCLE_AWAL',
+                    'a.N_BOT',
+                    'a.MCF',
+                    'a.ANGSURAN_KE',
+                    'a.ANGSURAN',
+                    'd.total_bayar',
+                    'e.DESCRIPTION',
+                    'd.NAME as NAMA_CUST',
+                    'd.ADDRESS as ALAMAT',
+                    'd.KECAMATAN as KEC',
+                    'd.KELURAHAN as DESA'
+                )
                 ->orderBy('d.total_bayar', 'asc')
                 ->get();
 
