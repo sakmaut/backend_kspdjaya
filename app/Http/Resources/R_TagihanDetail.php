@@ -17,10 +17,24 @@ class R_TagihanDetail extends JsonResource
     public function toArray(Request $request): array
     {
 
-        $getUsers = User::find($this->SURVEYOR);
-
         $cleanDate = trim($this->LAST_PAY);
         $cleanDate = preg_replace('/[^\d\/\-\.]/', '', $cleanDate);
+
+        $userCheck = User::where('id', $this->SURVEYOR_ID)->first() ?? "";
+
+        $nbot = (
+            $userCheck
+            && $userCheck->keterangan === 'AKTIF'
+            && in_array($this->LAST_INST, [1, 2, 3])
+            && in_array($this->CYCLE_AWAL, ['CM', 'C5', 'C4', 'C3', 'C2', 'C1', 'C0'])
+        ) || (
+            $userCheck
+            && $userCheck->keterangan === 'RESIGN'
+            && in_array($this->LAST_INST, [1, 2, 3])
+            && in_array($this->CYCLE_AWAL, ['CM', 'C0', 'C1', 'C2'])
+        )
+            ? 'Y'
+            : 'N';
 
         return [
             "KODE CABANG" => $this->KODE ?? '',
@@ -30,8 +44,6 @@ class R_TagihanDetail extends JsonResource
             "NO KONTRAK" => is_numeric($this->NO_KONTRAK) ? (int) $this->NO_KONTRAK ?? '' : $this->NO_KONTRAK ?? '',
             "NAMA PELANGGAN" => $this->customer->NAME ?? '',
             "TGL BOOKING" => isset($this->TGL_BOOKING) && !empty($this->TGL_BOOKING) ?  Carbon::parse($this->TGL_BOOKING)->format('m/d/Y') : '',
-            "UB" => $this->UB ?? '',
-            "PLATFORM" => $this->PLATFORM ?? '',
             "ALAMAT TAGIH" => $this->customer->INS_ADDRESS ?? '',
             "KECAMATAN" => $this->customer->INS_KECAMATAN ?? '',
             "KELURAHAN" => $this->customer->INS_KELURAHAN ?? '',
@@ -40,8 +52,8 @@ class R_TagihanDetail extends JsonResource
             "NO HP2" => $this->customer->PHONE_PERSONAL ?? '',
             "PEKERJAAN" => $this->customer->OCCUPATION ?? '',
             "SUPPLIER" => $this->supplier ?? '',
-            "SURVEYOR" => $getUsers ? $getUsers->fullname ?? '' : $this->SURVEYOR ?? '',
-            "SURVEYOR STATUS" => $this->SURVEYOR_STATUS ?? '',
+            "SURVEYOR" => $userCheck->fullname ?? $this->SURVEYOR ?? '',
+            "SURVEYOR STATUS" => $userCheck->keterangan ?? '',
             "CATT SURVEY" => $this->CATT_SURVEY ?? '',
             "PKK HUTANG" => (int) $this->PKK_HUTANG ?? 0,
             "JML ANGS" => $this->JUMLAH_ANGSURAN ?? '',
@@ -87,7 +99,7 @@ class R_TagihanDetail extends JsonResource
             "CUST_ID" => is_numeric($this->CUST_CODE) ? (int) $this->CUST_CODE ?? '' : $this->CUST_CODE ?? '',
             "NO SURAT" => $this->NO_SURAT ?? '',
             "PIC" => $this->username ?? '',
-            "NBOT" => $this->nbot ?? ''
+            "NBOT" => $nbot ?? ''
         ];
     }
 }

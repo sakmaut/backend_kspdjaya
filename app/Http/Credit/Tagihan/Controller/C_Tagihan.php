@@ -42,8 +42,22 @@ class C_Tagihan extends Controller
     public function index(Request $request)
     {
         try {
-            // $data = $this->service->getListTagihan($request);
-            $data = M_ListbanData::with(['customer'])->get();
+            $currentBranch = $request->user()->branch_id;
+            $currentPosition = $request->user()->position;
+
+            if ($currentPosition != 'HO') {
+                $cycles = ['CM', 'C8', 'C7', 'C6', 'C5', 'C4', 'C3', 'C2', 'C1', 'C0'];
+            } else {
+                $cycles = ['CM', 'CX', 'C8', 'C7', 'C6', 'C5', 'C4', 'C3', 'C2', 'C1', 'C0'];
+            }
+
+            $data = M_ListbanData::with('customer')->whereIn('CYCLE_AWAL', $cycles);
+
+            if ($currentPosition != 'HO') {
+                $data->where('BRANCH_ID', $currentBranch);
+            }
+
+            $data = $data->get();
 
             $dto = R_TagihanDetail::collection($data);
 
