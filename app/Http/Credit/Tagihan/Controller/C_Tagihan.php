@@ -240,6 +240,7 @@ class C_Tagihan extends Controller
                     $join->on('e.REFERENCE_ID', '=', 'a.NO_SURAT');
                 })
                 ->where('a.USER_ID', $pic)
+                ->where('a.ANGSURAN', '<', 'd.total_bayar')
                 ->where(function ($query) {
                     $query->whereNull('c.LKP_NUMBER')
                         ->orWhere('c.LKP_NUMBER', '');
