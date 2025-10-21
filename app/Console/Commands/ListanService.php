@@ -23,15 +23,14 @@ class ListanService extends Command
      */
     protected $description = 'Command description';
 
-    /**
-     * Execute the console command.
-     */
     public function handle()
     {
         $dateFrom = date('mY', strtotime(now()));
 
         $sql = "SELECT	CONCAT(b.CODE, '-', b.CODE_NUMBER) AS KODE,
+                                b.ID AS BRANCH_ID,
                                 b.NAME AS NAMA_CABANG,
+                                cl.ID AS CREDIT_ID,
                                 cl.LOAN_NUMBER AS NO_KONTRAK,
                                 cl.CUST_CODE AS CUST_CODE,
                                 cl.CREATED_AT AS TGL_BOOKING,
@@ -118,15 +117,6 @@ class ListanService extends Command
                                     or (cl.STATUS_REC = 'RP' and cl.mod_user <> 'exclude jaminan' and cast(cl.LOAN_NUMBER as char) not in (select cast(pp.LOAN_NUM as char) from payment pp where pp.ACC_KEY = 'JUAL UNIT'))
                                     or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char) from temp_lis_02C )))";
 
-        DB::select("  SELECT
-                                            CASE
-                                                WHEN (SELECT MAX(p.ENTRY_DATE) FROM payment p) >= (SELECT coalesce(MAX(temp_lis_02C.last_pay),(SELECT MAX(p.ENTRY_DATE) FROM payment p)) FROM temp_lis_02C)
-                                                    AND job_status = 0 THEN 'run'
-                                                ELSE 'skip'
-                                            END AS execute_sp
-                                            FROM job_on_progress
-                                            WHERE job_name = 'LISBAN'");
-
         DB::select('CALL lisban_berjalan(?,?,?)', [$dateFrom, "CRON_JOB", "%"]);
 
         $sql .= " ORDER BY COALESCE(u.fullname, cl.mcf_id),cl.LOAN_NUMBER ASC";
@@ -139,8 +129,10 @@ class ListanService extends Command
 
             foreach ($results as $row) {
                 M_ListbanData::create([
+                    'BRANCH_ID' => $row->BRANCH_ID ?? null,
                     'KODE' => $row->KODE ?? null,
                     'NAMA_CABANG' => $row->NAMA_CABANG ?? null,
+                    'CREDIT_ID' => $row->CREDIT_ID ?? null,
                     'NO_KONTRAK' => $row->NO_KONTRAK ?? null,
                     'CUST_CODE' => $row->CUST_CODE ?? null,
                     'SUPPLIER' => $row->SUPPLIER ?? null,
