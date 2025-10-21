@@ -51,7 +51,10 @@ class C_Tagihan extends Controller
                 $cycles = ['CM', 'CX', 'C8', 'C7', 'C6', 'C5', 'C4', 'C3', 'C2', 'C1', 'C0'];
             }
 
-            $data = M_ListbanData::with(['customer', 'deploy'])
+            $data = M_ListbanData::with([
+                'customer:CUST_CODE,NAME,INS_ADDRESS,INS_KECAMATAN,INS_KELURAHAN,PHONE_HOUSE,PHONE_PERSONAL,OCCUPATION',
+                'deploy:ID,LOAN_NUMBER,STATUS'
+            ])
                 ->whereIn('CYCLE_AWAL', $cycles)
                 ->whereDoesntHave('deploy', function ($q) {
                     $q->where('STATUS', 'AKTIF')
