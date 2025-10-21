@@ -12,8 +12,10 @@ class M_ListbanData extends Model
     protected $table = 'listban_data';
     protected $fillable = [
         'ID',
+        'BRANCH_ID',
         'KODE',
         'NAMA_CABANG',
+        'CREDIT_ID',
         'NO_KONTRAK',
         'CUST_CODE',
         'SUPPLIER',
