@@ -23,13 +23,11 @@ class R_TagihanDetail extends JsonResource
         $userCheck = User::where('id', $this->SURVEYOR_ID)->first() ?? "";
 
         $nbot = (
-            $userCheck
-            && $userCheck->keterangan === 'AKTIF'
+            $this->SURVEYOR_STATUS === 'AKTIF'
             && in_array($this->LAST_INST, [1, 2, 3])
             && in_array($this->CYCLE_AWAL, ['CM', 'C5', 'C4', 'C3', 'C2', 'C1', 'C0'])
         ) || (
-            $userCheck
-            && $userCheck->keterangan === 'RESIGN'
+            $this->SURVEYOR_STATUS === 'RESIGN'
             && in_array($this->LAST_INST, [1, 2, 3])
             && in_array($this->CYCLE_AWAL, ['CM', 'C0', 'C1', 'C2'])
         )
@@ -53,7 +51,7 @@ class R_TagihanDetail extends JsonResource
             "PEKERJAAN" => $this->OCCUPATION ?? '',
             "SUPPLIER" => $this->supplier ?? '',
             "SURVEYOR" => $userCheck->fullname ?? $this->SURVEYOR_ID ?? '',
-            "SURVEYOR STATUS" => $userCheck->keterangan ?? '',
+            "SURVEYOR STATUS" => $this->SURVEYOR_STATUS ?? '',
             "CATT SURVEY" => $this->CATT_SURVEY ?? '',
             "PKK HUTANG" => (int) $this->PKK_HUTANG ?? 0,
             "JML ANGS" => $this->JUMLAH_ANGSURAN ?? '',
