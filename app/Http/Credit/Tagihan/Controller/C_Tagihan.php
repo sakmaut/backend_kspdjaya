@@ -53,9 +53,9 @@ class C_Tagihan extends Controller
 
             $data = M_ListbanData::with(['customer', 'deploy'])
                 ->whereIn('CYCLE_AWAL', $cycles)
-                ->whereHas('deploy', function ($q) {
+                ->whereDoesntHave('deploy', function ($q) {
                     $q->where('STATUS', 'AKTIF')
-                        ->whereColumn('deploy.LOAN_NUMBER', '!=', 'listban_data.LOAN_NUMBER');
+                        ->whereColumn('cl_deploy.LOAN_NUMBER', 'listban_data.NO_KONTRAK');
                 });
 
             if ($currentPosition != 'HO') {
@@ -63,6 +63,7 @@ class C_Tagihan extends Controller
             }
 
             $data = $data->get();
+
 
             $dto = R_TagihanDetail::collection($data);
 
