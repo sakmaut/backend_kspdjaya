@@ -119,8 +119,18 @@ class C_Tagihan extends Controller
                 ->leftJoinSub($logSubQuery, 'e', function ($join) {
                     $join->on('e.REFERENCE_ID', '=', 'a.NO_SURAT');
                 })
+                ->leftJoin('customer as f', 'f.CUST_CODE', '=', 'a.CUST_CODE')
                 ->where('a.USER_ID', $userId)
-                ->select('a.*', 'c.*', 'd.total_bayar', 'e.DESCRIPTION')
+                ->select(
+                    'a.*',
+                    'c.*',
+                    'd.total_bayar',
+                    'e.DESCRIPTION',
+                    'f.NAME',
+                    'f.INS_ADDRESS',
+                    'f.INS_KECAMATAN',
+                    'f.INS_KELURAHAN'
+                )
                 ->orderByRaw('c.LKP_NUMBER IS NOT NULL DESC')
                 ->get();
 
