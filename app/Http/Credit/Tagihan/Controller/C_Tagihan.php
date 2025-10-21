@@ -164,12 +164,30 @@ class C_Tagihan extends Controller
         try {
             $check = M_Tagihan::where('ID', $id)->first();
 
-            if (!$check) {
+            if ($check) {
                 $check->update([
                     'USER_ID' => $request->user_id ?? "",
                     'UPDATED_BY' => $request->user()->id ?? null,
                     'UPDATED_AT' => Carbon::now('Asia/Jakarta'),
                 ]);
+            }
+
+            DB::commit();
+            return response()->json(['message' => 'Cabang updated successfully'], 200);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return $this->log->logError($e, $request);
+        }
+    }
+
+    public function cl_deploy_delete(Request $request, $id)
+    {
+        DB::beginTransaction();
+        try {
+            $check = M_Tagihan::where('ID', $id)->first();
+
+            if ($check) {
+                $check->delete();
             }
 
             DB::commit();
