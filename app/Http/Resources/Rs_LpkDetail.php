@@ -23,7 +23,7 @@ class Rs_LpkDetail extends JsonResource
             ->first();
 
         $log = DB::table('cl_survey_logs')
-            ->select('DESCRIPTION')
+            ->select('DESCRIPTION', 'CONFIRM_DATE')
             ->where('REFERENCE_ID', $this->NO_SURAT)
             ->orderBy('CREATED_AT', 'desc')
             ->first();
