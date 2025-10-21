@@ -74,7 +74,7 @@ class R_TagihanDetail extends JsonResource
             "OVERDUE AKHIR" => (int) $this->OVERDUE_AKHIR ?? 0,
             "ANGSURAN" => (int) $this->INSTALLMENT ?? 0,
             "ANGS KE" => (int) $this->LAST_INST ?? '',
-            "TIPE ANGSURAN" => $this->pola_bayar === 'bunga_menurun' ? str_replace('_', ' ', $this->pola_bayar) : $this->pola_bayar ?? '',
+            "TIPE ANGSURAN" => $this->POLA_BAYAR === 'bunga_menurun' ? str_replace('_', ' ', $this->POLA_BAYAR) : $this->POLA_BAYAR ?? '',
             "JTH TEMPO AWAL" => $this->F_ARR_CR_SCHEDL == '0' || $this->F_ARR_CR_SCHEDL == '' || $this->F_ARR_CR_SCHEDL == 'null' ? '' :  Carbon::parse($this->F_ARR_CR_SCHEDL)->format('m/d/Y'),
             "JTH TEMPO AKHIR" => $this->curr_arr == '0' || $this->curr_arr == '' || $this->curr_arr == 'null' ? '' : Carbon::parse($this->curr_arr)->format('m/d/Y'),
             "TGL BAYAR" => $this->LAST_PAY == '0' || $this->LAST_PAY == '' || $this->LAST_PAY == 'null' ? '' : Carbon::parse($cleanDate)->format('m/d/Y'),
