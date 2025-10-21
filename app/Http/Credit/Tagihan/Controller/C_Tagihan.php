@@ -14,6 +14,7 @@ use App\Http\Resources\Rs_LkpPicList;
 use App\Http\Resources\Rs_SurveyLogs;
 use App\Http\Resources\Rs_TagihanByUserId;
 use App\Models\M_ClSurveyLogs;
+use App\Models\M_ListbanData;
 use App\Models\M_Lkp;
 use Carbon\Carbon;
 use Exception;
@@ -41,7 +42,10 @@ class C_Tagihan extends Controller
     public function index(Request $request)
     {
         try {
-            $data = $this->service->getListTagihan($request);
+            // $data = $this->service->getListTagihan($request);
+            $data = M_ListbanData::with('customer')
+                ->orderBy('NO_KONTRAK', 'DESC')
+                ->get();
 
             $dto = R_TagihanDetail::collection($data);
 

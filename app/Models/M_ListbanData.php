@@ -57,7 +57,7 @@ class M_ListbanData extends Model
         'CREATED_BY',
         'CREATED_AT',
     ];
-    
+
     protected $guarded = [];
     public $incrementing = false;
     protected $keyType = 'string';
@@ -71,5 +71,10 @@ class M_ListbanData extends Model
                 $model->setAttribute($model->getKeyName(), Str::uuid()->toString());
             }
         });
+    }
+
+    public function customer()
+    {
+        return $this->hasOne(M_Customer::class, 'CUST_CODE', 'CUST_CODE');
     }
 }
