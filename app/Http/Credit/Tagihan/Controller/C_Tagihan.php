@@ -55,7 +55,7 @@ class C_Tagihan extends Controller
                 ->whereIn('CYCLE_AWAL', $cycles)
                 ->whereDoesntHave('deploy', function ($q) {
                     $q->where('STATUS', 'AKTIF')
-                        ->whereColumn('cl_deploy.LOAN_NUMBER', '!=', 'listban_data.NO_KONTRAK');
+                        ->whereColumn('cl_deploy.LOAN_NUMBER', 'listban_data.NO_KONTRAK');
                 });
 
             if ($currentPosition != 'HO') {
