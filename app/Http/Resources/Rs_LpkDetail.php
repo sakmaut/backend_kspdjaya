@@ -36,6 +36,7 @@ class Rs_LpkDetail extends JsonResource
             'desa' => $this->DESA ?? "",
             'kec' => $this->KEC ?? "",
             'tgl_jatuh_tempo' => $this->DUE_DATE ?? "",
+            'tgl_jb' => $log->CONFIRM_DATE ?? "",
             'cycle_awal' => $this->CYCLE ?? "",
             'angusran_ke' => $this->INST_COUNT ?? "",
             'angsuran' => (int)($this->INSTALLMENT ?? 0),
