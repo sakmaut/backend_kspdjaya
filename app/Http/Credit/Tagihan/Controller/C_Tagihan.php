@@ -51,13 +51,15 @@ class C_Tagihan extends Controller
                 $cycles = ['CM', 'CX', 'C8', 'C7', 'C6', 'C5', 'C4', 'C3', 'C2', 'C1', 'C0'];
             }
 
-            $data = M_ListbanData::with('customer:CUST_CODE,NAME,INS_ADDRESS,INS_KECAMATAN,INS_KELURAHAN,PHONE_HOUSE,PHONE_PERSONAL,OCCUPATION')
-                ->leftJoin('cl_deploy', function ($join) {
-                    $join->on('cl_deploy.LOAN_NUMBER', '=', 'listban_data.NO_KONTRAK')
-                        ->where('cl_deploy.STATUS', '=', 'AKTIF');
-                })
-                ->whereNull('cl_deploy.LOAN_NUMBER')
-                ->whereIn('listban_data.CYCLE_AWAL', $cycles);
+            $data = M_ListbanData::with([
+                'customer:CUST_CODE,NAME,INS_ADDRESS,INS_KECAMATAN,INS_KELURAHAN,PHONE_HOUSE,PHONE_PERSONAL,OCCUPATION',
+                'deploy:ID,LOAN_NUMBER,STATUS'
+            ])
+                ->whereIn('CYCLE_AWAL', $cycles)
+                ->whereDoesntHave('deploy', function ($q) {
+                    $q->where('STATUS', 'AKTIF')
+                        ->whereColumn('cl_deploy.LOAN_NUMBER', 'listban_data.NO_KONTRAK');
+                });
 
             if ($currentPosition != 'HO') {
                 $data->where('BRANCH_ID', $currentBranch);
