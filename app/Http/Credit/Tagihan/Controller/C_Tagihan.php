@@ -242,7 +242,10 @@ class C_Tagihan extends Controller
             // Query utama
             $data = DB::table('cl_deploy as a')
                 ->leftJoin('cl_lkp_detail as b', 'b.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
-                ->leftJoin('cl_lkp as c', 'c.ID', '=', 'b.LKP_ID')
+                ->leftJoin('cl_lkp as c', function ($join) {
+                    $join->on('c.ID', '=', 'b.LKP_ID')
+                        ->where('c.STATUS', '=', 'Active');
+                })
                 ->leftJoin('customer as d', 'd.CUST_CODE', '=', 'a.CUST_CODE')
                 ->leftJoinSub($subQuery, 'd', function ($join) {
                     $join->on('d.LOAN_NUM', '=', 'a.LOAN_NUMBER');
@@ -256,7 +259,6 @@ class C_Tagihan extends Controller
                     $query->whereNull('c.LKP_NUMBER')
                         ->orWhere('c.LKP_NUMBER', '');
                 })
-                ->where('c.STATUS', 'Active')
                 ->select(
                     'a.ID',
                     'a.NO_SURAT',
