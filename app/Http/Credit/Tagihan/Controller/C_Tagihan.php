@@ -256,6 +256,7 @@ class C_Tagihan extends Controller
                     $query->whereNull('c.LKP_NUMBER')
                         ->orWhere('c.LKP_NUMBER', '');
                 })
+                ->where('c.STATUS', 'Active')
                 ->select(
                     'a.ID',
                     'a.NO_SURAT',
