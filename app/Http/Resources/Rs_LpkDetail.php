@@ -25,6 +25,7 @@ class Rs_LpkDetail extends JsonResource
         $log = DB::table('cl_survey_logs')
             ->select('DESCRIPTION', 'CONFIRM_DATE')
             ->where('REFERENCE_ID', $this->NO_SURAT)
+            ->whereDate('CREATED_AT', now()->toDateString())
             ->orderBy('CREATED_AT', 'desc')
             ->first();
 
