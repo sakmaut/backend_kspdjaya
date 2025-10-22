@@ -35,6 +35,8 @@ class Rs_CollectorList extends JsonResource
             'no_polisi' => $this->POLICE_NUMBER ?? "",
             'tahun_motor' => $this->PRODUCTION_YEAR ?? "",
             'denda' => $this->total_denda ?? "",
+            'tenor' => $this->TENOR ?? "",
+            'catatan_survey' => $this->CATT_SURVEY ?? "",
         ];
     }
 }

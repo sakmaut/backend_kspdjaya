@@ -25,6 +25,8 @@ class M_Tagihan extends Model
         'TGL_JTH_TEMPO',
         'CYCLE_AWAL',
         'N_BOT',
+        'TENOR',
+        'CATT_SURVEY',
         'ALAMAT',
         'MCF',
         'ANGSURAN_KE',

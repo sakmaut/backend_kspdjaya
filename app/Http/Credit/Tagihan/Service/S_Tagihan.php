@@ -115,6 +115,8 @@ class S_Tagihan extends R_Tagihan
                 'TGL_JTH_TEMPO' => Carbon::parse($item['JTH TEMPO AWAL'])->format('Y-m-d') ?? null,
                 'CYCLE_AWAL'    => $item['CYCLE AWAL'] ?? null,
                 'N_BOT'         => $item['NBOT'] ?? null,
+                'TENOR'         => $item['PERIOD'] ?? null,
+                'CATT_SURVEY'   => $item['CATT_SURVEY'] ?? null,
                 'MCF'           => $item['SURVEYOR'] ?? null,
                 'ANGSURAN_KE'   => $item['ANGS KE'] ?? 0,
                 'ANGSURAN'      => $item['ANGSURAN'] ?? 0,
