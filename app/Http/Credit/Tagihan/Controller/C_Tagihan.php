@@ -111,6 +111,11 @@ class C_Tagihan extends Controller
                 ->orderBy('CREATED_AT', 'desc')
                 ->limit(1);
 
+            $totalDenda = DB::table('arrears')
+                ->where('STATUS_REC', 'A')
+                ->selectRaw('LOAN_NUMBER,(SUM(PAST_DUE_PENALTY) - SUM(PAID_PENALTY)) AS total_denda')
+                ->value('total_denda');
+
             $data = DB::table('cl_deploy as a')
                 ->leftJoin('cl_lkp_detail as b', 'b.NO_SURAT', '=', 'a.NO_SURAT')
                 ->leftJoin('cl_lkp as c', function ($join) {
@@ -122,6 +127,9 @@ class C_Tagihan extends Controller
                 })
                 ->leftJoinSub($logSubQuery, 'e', function ($join) {
                     $join->on('e.REFERENCE_ID', '=', 'a.NO_SURAT');
+                })
+                ->leftJoinSub($totalDenda, 'g', function ($join) {
+                    $join->on('g.LOAN_NUMBER', '=', 'a.LOAN_NUMBER');
                 })
                 ->leftJoin('customer as f', 'f.CUST_CODE', '=', 'a.CUST_CODE')
                 ->leftJoin('cr_collateral as cc', 'cc.CR_CREDIT_ID', '=', 'a.CREDIT_ID')
@@ -136,6 +144,7 @@ class C_Tagihan extends Controller
                     'f.INS_ADDRESS',
                     'f.INS_KECAMATAN',
                     'f.INS_KELURAHAN',
+                    'g.total_denda',
                     DB::raw("CONCAT(cc.BRAND, ' - ', cc.TYPE, ' - ', cc.COLOR) AS unit"),
                     'cc.POLICE_NUMBER',
                     'cc.PRODUCTION_YEAR'
