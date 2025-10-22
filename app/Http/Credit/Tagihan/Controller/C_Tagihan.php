@@ -144,6 +144,8 @@ class C_Tagihan extends Controller
                     'f.INS_ADDRESS',
                     'f.INS_KECAMATAN',
                     'f.INS_KELURAHAN',
+                    'f.PHONE_HOUSE',
+                    'f.PHONE_PERSONAl',
                     'g.total_denda',
                     DB::raw("CONCAT(cc.BRAND, ' - ', cc.TYPE, ' - ', cc.COLOR) AS unit"),
                     'cc.POLICE_NUMBER',
