@@ -237,30 +237,34 @@ class C_Tagihan extends Controller
                 ->selectRaw('SUM(pd.ORIGINAL_AMOUNT) AS total_bayar, p.LOAN_NUM')
                 ->groupBy('p.LOAN_NUM');
 
+            // Subquery log survei
             $logSubQuery = DB::table('cl_survey_logs')
                 ->select('REFERENCE_ID', 'DESCRIPTION', 'CONFIRM_DATE')
                 ->orderBy('CREATED_AT', 'desc')
                 ->limit(1);
 
+            $lkpSubQuery = DB::table('cl_lkp_detail as b')
+                ->leftJoin('cl_lkp as c', 'c.ID', '=', 'b.LKP_ID')
+                ->where('c.STATUS', 'Active')
+                ->select('b.*', 'c.LKP_NUMBER');
+
             // Query utama
             $data = DB::table('cl_deploy as a')
-                ->leftJoin('cl_lkp_detail as b', 'b.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
-                ->leftJoin('cl_lkp as c', function ($join) {
-                    $join->on('c.ID', '=', 'b.LKP_ID')
-                        ->where('c.STATUS', '=', 'Active');
+                ->leftJoinSub($lkpSubQuery, 'bc', function ($join) {
+                    $join->on('bc.LOAN_NUMBER', '=', 'a.LOAN_NUMBER');
                 })
-                ->leftJoin('customer as d', 'd.CUST_CODE', '=', 'a.CUST_CODE')
-                ->leftJoinSub($subQuery, 'd', function ($join) {
-                    $join->on('d.LOAN_NUM', '=', 'a.LOAN_NUMBER');
+                ->leftJoin('customer as cust', 'cust.CUST_CODE', '=', 'a.CUST_CODE')
+                ->leftJoinSub($subQuery, 'pay', function ($join) {
+                    $join->on('pay.LOAN_NUM', '=', 'a.LOAN_NUMBER');
                 })
                 ->leftJoinSub($logSubQuery, 'e', function ($join) {
                     $join->on('e.REFERENCE_ID', '=', 'a.NO_SURAT');
                 })
-                ->whereRaw('a.ANGSURAN > COALESCE(d.total_bayar, 0)')
                 ->where('a.USER_ID', $pic)
+                ->whereRaw('a.ANGSURAN > COALESCE(pay.total_bayar, 0)')
                 ->where(function ($query) {
-                    $query->whereNull('c.LKP_NUMBER')
-                        ->orWhere('c.LKP_NUMBER', '');
+                    $query->whereNull('bc.LKP_NUMBER')
+                        ->orWhere('bc.LKP_NUMBER', '');
                 })
                 ->select(
                     'a.ID',
@@ -276,15 +280,15 @@ class C_Tagihan extends Controller
                     'a.MCF',
                     'a.ANGSURAN_KE',
                     'a.ANGSURAN',
-                    DB::raw('COALESCE(d.total_bayar, 0) AS total_bayar'),
+                    DB::raw('COALESCE(pay.total_bayar, 0) AS total_bayar'),
                     'e.DESCRIPTION',
                     'e.CONFIRM_DATE',
-                    'd.NAME as NAMA_CUST',
-                    'd.ADDRESS as ALAMAT',
-                    'd.KECAMATAN as KEC',
-                    'd.KELURAHAN as DESA'
+                    'cust.NAME AS NAMA_CUST',
+                    'cust.ADDRESS AS ALAMAT',
+                    'cust.KECAMATAN AS KEC',
+                    'cust.KELURAHAN AS DESA'
                 )
-                ->orderBy('d.total_bayar', 'asc')
+                ->orderBy('pay.total_bayar', 'asc')
                 ->get();
 
             $dto = Rs_LkpPicList::collection($data);
