@@ -113,8 +113,8 @@ class C_Tagihan extends Controller
 
             $totalDenda = DB::table('arrears')
                 ->where('STATUS_REC', 'A')
-                ->selectRaw('LOAN_NUMBER,(SUM(PAST_DUE_PENALTY) - SUM(PAID_PENALTY)) AS total_denda')
-                ->value('total_denda');
+                ->selectRaw('LOAN_NUMBER, (SUM(PAST_DUE_PENALTY) - SUM(PAID_PENALTY)) AS total_denda')
+                ->groupBy('LOAN_NUMBER'); // ✅ tambahkan groupBy agar valid untuk subquery
 
             $data = DB::table('cl_deploy as a')
                 ->leftJoin('cl_lkp_detail as b', 'b.NO_SURAT', '=', 'a.NO_SURAT')
