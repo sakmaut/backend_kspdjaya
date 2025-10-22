@@ -124,7 +124,7 @@ class C_Tagihan extends Controller
                     $join->on('e.REFERENCE_ID', '=', 'a.NO_SURAT');
                 })
                 ->leftJoin('customer as f', 'f.CUST_CODE', '=', 'a.CUST_CODE')
-                ->leftJoin('cr_collateral cc', 'cc.CR_CREDIT_ID', '=', 'a.CREDIT_ID')
+                ->leftJoin('cr_collateral as cc', 'cc.CR_CREDIT_ID', '=', 'a.CREDIT_ID')
                 ->where('a.USER_ID', $userId)
                 ->select(
                     'a.*',
