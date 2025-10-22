@@ -107,6 +107,7 @@ class C_Tagihan extends Controller
 
             $logSubQuery = DB::table('cl_survey_logs')
                 ->select('REFERENCE_ID', 'DESCRIPTION', 'CONFIRM_DATE')
+                ->whereDate('CREATED_AT', now()->toDateString())
                 ->orderBy('CREATED_AT', 'desc')
                 ->limit(1);
 
@@ -123,6 +124,7 @@ class C_Tagihan extends Controller
                     $join->on('e.REFERENCE_ID', '=', 'a.NO_SURAT');
                 })
                 ->leftJoin('customer as f', 'f.CUST_CODE', '=', 'a.CUST_CODE')
+                ->leftJoin('cr_collateral cc', 'cc.CR_CREDIT_ID', '=', 'a.CREDIT_ID')
                 ->where('a.USER_ID', $userId)
                 ->select(
                     'a.*',
@@ -133,7 +135,10 @@ class C_Tagihan extends Controller
                     'f.NAME',
                     'f.INS_ADDRESS',
                     'f.INS_KECAMATAN',
-                    'f.INS_KELURAHAN'
+                    'f.INS_KELURAHAN',
+                    'concat(cc.BRAND, ' - ', cc.TYPE, ' - ', cc.COLOR) as unit',
+                    'cc.POLICE_NUMBER',
+                    'cc.PRODUCTION_YEAR'
                 )
                 ->orderByRaw('c.LKP_NUMBER IS NOT NULL DESC')
                 ->get();

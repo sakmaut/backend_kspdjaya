@@ -24,12 +24,16 @@ class Rs_CollectorList extends JsonResource
             'alamat' => $this->ALAMAT ?? $this->INS_ADDRESS ?? "",
             'desa' => $this->DESA ?? $this->INS_KELURAHAN ?? "",
             'kec' => $this->KEC ?? $this->INS_KECAMATAN ?? "",
+            'no_hp' => $this->PHONE_PERSONAL ?? "",
             'mcf' => $this->MCF ?? "",
             'angusran_ke' => $this->ANGSURAN_KE ?? 0,
             'tgl_jatuh_tempo' => $this->TGL_JTH_TEMPO ?? "",
             'angsuran' => $this->ANGSURAN ?? 0,
             'bayar' => $this->total_bayar ?? 0,
             'hasil_kunjungan' => $this->DESCRIPTION ?? "",
+            'unit' => $this->unit ?? "",
+            'no_polisi' => $this->POLICE_NUMBER ?? "",
+            'tahun_motor' => $this->PRODUCTION_YEAR ?? "",
         ];
     }
 }
