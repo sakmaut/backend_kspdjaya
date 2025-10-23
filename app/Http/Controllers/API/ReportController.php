@@ -596,7 +596,7 @@ class ReportController extends Controller
                 }
             } else {
 
-                $data = DB::select("CALL inquiry_details_bunga_menurun(?)", [$id]);
+                $data = DB::select("CALL inquiry_details(?)", [$id]);
 
                 if (empty($data)) {
                     return $schedule;
