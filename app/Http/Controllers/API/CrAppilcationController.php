@@ -1508,7 +1508,8 @@ class CrAppilcationController extends Controller
         $loan_number = $request->loan_number;
         $atas_nama = $request->atas_nama;
         $cabang = $request->cabang;
-        $periode = $request->periode;
+        $dari = $request->dari;
+        $sampai = $request->sampai;
 
         $query = M_Credit::select(
             'credit.ID',
@@ -1539,11 +1540,8 @@ class CrAppilcationController extends Controller
             $query->where('branch.CODE', $cabang);
         }
 
-        if (!empty($periode) && count($periode) === 2) {
-            $tanggal_awal = $periode[0];
-            $tanggal_akhir = $periode[1];
-
-            $query->whereBetween(DB::raw('DATE(credit.CREATED_AT)'), [$tanggal_awal, $tanggal_akhir]);
+        if (!empty($dari) && !empty($sampai)) {
+            $query->whereBetween(DB::raw('DATE(credit.CREATED_AT)'), [$dari, $sampai]);
         } else {
             $today = date('Y-m-d');
             $query->whereDate('credit.CREATED_AT', $today);
