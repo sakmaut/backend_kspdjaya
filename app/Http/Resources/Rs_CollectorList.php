@@ -34,7 +34,7 @@ class Rs_CollectorList extends JsonResource
             'unit' => $this->unit ?? "",
             'no_polisi' => $this->POLICE_NUMBER ?? "",
             'tahun_motor' => $this->PRODUCTION_YEAR ?? "",
-            'denda' => $this->total_denda ?? "",
+            'denda' => number_format($this->total_denda ?? 0, 0, ',', '.'),
             'tenor' => $this->TENOR ?? "",
             'catatan_survey' => $this->CATT_SURVEY ?? "",
         ];
