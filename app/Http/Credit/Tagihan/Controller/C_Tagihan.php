@@ -311,7 +311,7 @@ class C_Tagihan extends Controller
                     'cust.KECAMATAN AS KEC',
                     'cust.KELURAHAN AS DESA'
                 )
-                ->orderBy('pay.total_bayar', 'asc')
+                ->orderBy('a.TGL_JTH_TEMPO', 'asc')
                 ->get();
 
             $dto = Rs_LkpPicList::collection($data);
