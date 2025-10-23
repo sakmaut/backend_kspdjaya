@@ -122,8 +122,8 @@ class C_Tagihan extends Controller
                 ->select('b.*', 'c.LKP_NUMBER');
 
             $data = DB::table('cl_deploy as a')
-                ->leftJoinSub($lkpSubQuery, 'bc', function ($join) {
-                    $join->on('bc.LOAN_NUMBER', '=', 'a.LOAN_NUMBER');
+                ->leftJoinSub($lkpSubQuery, 'b', function ($join) {
+                    $join->on('b.LOAN_NUMBER', '=', 'a.LOAN_NUMBER');
                 })
                 ->leftJoin('cl_lkp as c', function ($join) {
                     $join->on('c.ID', '=', 'b.LKP_ID')
