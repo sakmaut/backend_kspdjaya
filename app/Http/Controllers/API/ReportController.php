@@ -669,7 +669,7 @@ class ReportController extends Controller
                         'Jt.Tempo' => $displayTglTempo,
                         'Pokok' => $pokokTampil > 0 ? number_format($pokokTampil, 0) : 0,
                         'Bunga' => number_format($interest, 0),
-                        'Denda' => 0,
+                        'Denda' => $res->PENALTY ?? 0,
                         'Tgl Bayar' => $tglBayarFormatted,
                         'Byr Pokok' => $byrPokok > 0 ? number_format($byrPokok, 0) : 0,
                         'Byr Bunga' => $byrBunga > 0 ? number_format($byrBunga, 0) : 0,
