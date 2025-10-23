@@ -412,12 +412,21 @@ class C_Tagihan extends Controller
     public function cl_lkp_list(Request $request)
     {
         try {
-            $data = M_Lkp::join('users', 'cl_lkp.USER_ID', '=', 'users.username')
+
+            $currentBranch = $request->user()->branch_id;
+            $currentPosition = $request->user()->position;
+
+            $query = M_Lkp::join('users', 'cl_lkp.USER_ID', '=', 'users.username')
                 ->with('user')
                 ->where('cl_lkp.STATUS', 'Active')
                 ->orderBy('users.fullname', 'ASC')
-                ->select('cl_lkp.*')
-                ->get();
+                ->select('cl_lkp.*');
+
+            if ($currentPosition !== 'HO') {
+                $query->where('cl_lkp.BRANCH_ID', $currentBranch);
+            }
+
+            $data = $query->get();
 
             $dto = Rs_LkpList::collection($data);
 
