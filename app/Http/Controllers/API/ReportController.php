@@ -523,10 +523,9 @@ class ReportController extends Controller
                 'total' => []
             ];
 
-            $credit = M_Credit::where([
-                'LOAN_NUMBER' => $id,
-                'CREDIT_TYPE' => 'bunga_menurun'
-            ])->first();
+            $credit = M_Credit::where('LOAN_NUMBER', $id)
+                ->whereIn('CREDIT_TYPE', ['bunga_menurun', 'angsuran'])
+                ->first();
 
             $checkExist = [];
             $previousSisaAngs = 0;
@@ -537,7 +536,7 @@ class ReportController extends Controller
             $ttlBayarDenda  = 0;
             $sisaAngss = 0;
 
-            if (!$credit) {
+            if ($credit) {
                 $data = DB::select("CALL inquiry_details(?)", [$id]);
 
                 if (empty($data)) {
@@ -596,7 +595,7 @@ class ReportController extends Controller
                 }
             } else {
 
-                $data = DB::select("CALL inquiry_details(?)", [$id]);
+                $data = DB::select("CALL inquiry_details_bunga_menurun(?)", [$id]);
 
                 if (empty($data)) {
                     return $schedule;
