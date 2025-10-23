@@ -43,9 +43,9 @@ class CrAppilcationController extends Controller
 
     public function __construct(
         AdminFeeController $admin_fee,
-        ExceptionHandling $log, 
-        Validation $validation)
-    {
+        ExceptionHandling $log,
+        Validation $validation
+    ) {
         $this->adminfee = $admin_fee;
         $this->log = $log;
         $this->validation = $validation;
@@ -205,7 +205,7 @@ class CrAppilcationController extends Controller
 
             DB::commit();
             return response()->json(['message' => 'Application created successfully', "status" => 200], 200);
-        }  catch (\Exception $e) {
+        } catch (\Exception $e) {
             DB::rollback();
             return $this->log->logError($e, $request);
         }
@@ -380,7 +380,7 @@ class CrAppilcationController extends Controller
                         }
                     } catch (\Exception $e) {
                         DB::rollback();
-        
+
                         return $this->log->logError($e, $request);
                     }
                 }
@@ -407,7 +407,7 @@ class CrAppilcationController extends Controller
                         }
                     } catch (\Exception $e) {
                         DB::rollback();
-        
+
                         return $this->log->logError($e, $request);
                     }
                 }
@@ -1508,6 +1508,7 @@ class CrAppilcationController extends Controller
         $loan_number = $request->loan_number;
         $atas_nama = $request->atas_nama;
         $cabang = $request->cabang;
+        $periode = $request->periode;
 
         $query = M_Credit::select(
             'credit.ID',
@@ -1536,6 +1537,16 @@ class CrAppilcationController extends Controller
 
         if (!empty($cabang) && $cabang != 'undefined') {
             $query->where('branch.CODE', $cabang);
+        }
+
+        if (!empty($periode) && count($periode) === 2) {
+            $tanggal_awal = $periode[0];
+            $tanggal_akhir = $periode[1];
+
+            $query->whereBetween(DB::raw('DATE(credit.CREATED_AT)'), [$tanggal_awal, $tanggal_akhir]);
+        } else {
+            $today = date('Y-m-d');
+            $query->whereDate('credit.CREATED_AT', $today);
         }
 
         $query->limit(15);
