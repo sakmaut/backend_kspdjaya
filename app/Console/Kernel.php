@@ -16,11 +16,8 @@ class Kernel extends ConsoleKernel
 
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('demo:cron')->dailyAt('16:52');
-        // $schedule->command('demo:cron')->dailyAt('00:30');
         $schedule->command('demo:cron')->dailyAt('00:05');
-        // $schedule->command('demo:cron')->dailyAt('10:12');
-        // $schedule->command('app:send-telegram-messages')->everyMinute();
+        $schedule->command('app:saving-services')->dailyAt('22:30');
     }
 
     /**
