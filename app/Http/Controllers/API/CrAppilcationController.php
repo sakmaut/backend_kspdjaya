@@ -1547,8 +1547,6 @@ class CrAppilcationController extends Controller
             $query->whereDate('credit.CREATED_AT', $today);
         }
 
-        $query->limit(50);
-
         $credit = $query->get();
 
 
