@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\M_CrCollateralDocument;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -11,6 +12,7 @@ class Rs_CollectorList extends JsonResource
     public function toArray(Request $request): array
     {
         $userName = User::where('username', $this->USER_ID)->first();
+        $collateral_doc = M_CrCollateralDocument::where('COLLATERAL_ID', $this->COLLATERAL_ID)->get();
 
         return [
             'id' => $this->ID,
@@ -37,6 +39,13 @@ class Rs_CollectorList extends JsonResource
             'denda' => number_format($this->total_denda ?? 0, 0, ',', '.'),
             'tenor' => $this->TENOR ?? "",
             'catatan_survey' => $this->CATT_SURVEY ?? "",
+            'no_rangka' => optional($collateral_doc->firstWhere('TYPE', 'no_rangka'))->PATH ?? '',
+            'no_mesin' => optional($collateral_doc->firstWhere('TYPE', 'no_mesin'))->PATH ?? '',
+            'stnk' => optional($collateral_doc->firstWhere('TYPE', 'stnk'))->PATH ?? '',
+            'depan' => optional($collateral_doc->firstWhere('TYPE', 'depan'))->PATH ?? '',
+            'belakang' => optional($collateral_doc->firstWhere('TYPE', 'belakang'))->PATH ?? '',
+            'kanan' => optional($collateral_doc->firstWhere('TYPE', 'kanan'))->PATH ?? '',
+            'kiri' => optional($collateral_doc->firstWhere('TYPE', 'kiri'))->PATH ?? '',
         ];
     }
 }

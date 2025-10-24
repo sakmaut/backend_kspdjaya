@@ -155,6 +155,7 @@ class C_Tagihan extends Controller
                     'f.PHONE_PERSONAl',
                     'g.total_denda',
                     DB::raw("CONCAT(cc.BRAND, ' - ', cc.TYPE, ' - ', cc.COLOR) AS unit"),
+                    'cc.ID as COLLATERAL_ID',
                     'cc.POLICE_NUMBER',
                     'cc.PRODUCTION_YEAR'
                 )
