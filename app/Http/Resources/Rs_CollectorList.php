@@ -39,7 +39,7 @@ class Rs_CollectorList extends JsonResource
             'denda' => number_format($this->total_denda ?? 0, 0, ',', '.'),
             'tenor' => $this->TENOR ?? "",
             'catatan_survey' => $this->CATT_SURVEY ?? "",
-            "col_path" => $collateral_doc,
+            "col_path" => $collateral_doc->PATH,
         ];
     }
 }
