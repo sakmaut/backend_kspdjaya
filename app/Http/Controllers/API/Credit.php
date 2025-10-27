@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Repositories\CrCollateralMovingLog\CrCollateralMovingLogRepository;
+use App\Http\Resources\CreditDetail;
 use App\Http\Resources\R_CreditCancelLog;
 use App\Models\M_ApplicationApproval;
 use App\Models\M_ApplicationApprovalLog;
@@ -62,6 +63,23 @@ class Credit extends Controller
 
             DB::commit();
             return response()->json($execute, 200);
+        } catch (\Exception $e) {
+            DB::rollback();
+            ActivityLogger::logActivity($request, $e->getMessage(), 500);
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+        }
+    }
+
+    public function listCredit(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $data = M_Credit::with('customer')->get();
+
+            $dto = CreditDetail::collection($data);
+
+            DB::commit();
+            return response()->json($dto, 200);
         } catch (\Exception $e) {
             DB::rollback();
             ActivityLogger::logActivity($request, $e->getMessage(), 500);
