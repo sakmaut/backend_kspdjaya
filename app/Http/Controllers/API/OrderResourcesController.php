@@ -131,4 +131,24 @@ class OrderResourcesController extends Controller
             return $this->log->logError($e, $request);
         }
     }
+
+    public function statusUpdate(Request $request, $id)
+    {
+        DB::beginTransaction();
+        try {
+            $resource = M_OrderResources::findOrFail($id);
+
+            $resource->update([
+                'STATUS' => $request->status ?? $resource->STATUS ?? "Aktif",
+                'UPDATED_BY' => $request->user()->id ?? null,
+                'UPDATED_AT' => Carbon::now('Asia/Jakarta'),
+            ]);
+
+            DB::commit();
+            return response()->json(['message' => 'updated successfully'], 200);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return $this->log->logError($e, $request);
+        }
+    }
 }
