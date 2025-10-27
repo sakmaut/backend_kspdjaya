@@ -92,6 +92,8 @@ class C_Tagihan extends Controller
     {
         try {
             $userId = $request->user()->username ?? null;
+            $currentBranch = $request->user()->branch_id;
+            $currentPosition = strtoupper($request->user()->position);
 
             if (!$userId) {
                 throw new \Exception("User ID not found.", 500);
@@ -121,7 +123,7 @@ class C_Tagihan extends Controller
                 ->where('c.STATUS', 'Active')
                 ->select('b.*', 'c.LKP_NUMBER');
 
-            $data = DB::table('cl_deploy as a')
+            $query = DB::table('cl_deploy as a')
                 ->leftJoinSub($lkpSubQuery, 'b', function ($join) {
                     $join->on('b.LOAN_NUMBER', '=', 'a.LOAN_NUMBER');
                 })
@@ -140,10 +142,21 @@ class C_Tagihan extends Controller
                 })
                 ->leftJoin('customer as f', 'f.CUST_CODE', '=', 'a.CUST_CODE')
                 ->leftJoin('cr_collateral as cc', 'cc.CR_CREDIT_ID', '=', 'a.CREDIT_ID')
-                ->where('a.USER_ID', $userId)
                 ->select(
-                    'a.*',
-                    'c.*',
+                    'a.ID',
+                    'a.NO_SURAT',
+                    'a.USER_ID',
+                    'a.BRANCH_ID',
+                    'a.CREDIT_ID',
+                    'a.LOAN_NUMBER',
+                    'a.CUST_CODE',
+                    'a.TGL_JTH_TEMPO',
+                    'a.CYCLE_AWAL',
+                    'a.N_BOT',
+                    'a.MCF',
+                    'a.ANGSURAN_KE',
+                    'a.ANGSURAN',
+                    'c.LKP_NUMBER',
                     'd.total_bayar',
                     'e.DESCRIPTION',
                     'e.CONFIRM_DATE',
@@ -152,16 +165,27 @@ class C_Tagihan extends Controller
                     'f.INS_KECAMATAN',
                     'f.INS_KELURAHAN',
                     'f.PHONE_HOUSE',
-                    'f.PHONE_PERSONAl',
+                    'f.PHONE_PERSONAL',
                     'g.total_denda',
                     DB::raw("CONCAT(cc.BRAND, ' - ', cc.TYPE, ' - ', cc.COLOR) AS unit"),
                     'cc.ID as COLLATERAL_ID',
                     'cc.POLICE_NUMBER',
                     'cc.PRODUCTION_YEAR'
                 )
-                ->orderByRaw('c.LKP_NUMBER IS NOT NULL DESC')
-                ->get();
+                ->orderByRaw('c.LKP_NUMBER IS NOT NULL DESC');
 
+            switch ($currentPosition) {
+                case 'KAPOS':
+                    $query->where('a.BRANCH_ID', $currentBranch);
+                    break;
+
+                case 'MCF':
+                case 'KOLEKTOR':
+                    $query->where('a.USER_ID', $userId);
+                    break;
+            }
+
+            $data = $query->get();
             $dto = Rs_CollectorList::collection($data);
 
             return response()->json($dto, 200);
@@ -169,6 +193,7 @@ class C_Tagihan extends Controller
             return $this->log->logError($e, $request);
         }
     }
+
 
     public function listTagihanByUserId(Request $request)
     {
