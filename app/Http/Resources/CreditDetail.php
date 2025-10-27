@@ -17,7 +17,7 @@ class CreditDetail extends JsonResource
         return [
             "no_loan" => $this->LOAN_NUMBER ?? "",
             "loan_holder" => $this->customer->NAME ?? "",
-            "angsuran" => $this->INSTALLMENT ?? 0,
+            "angsuran" => number_format($this->INSTALLMENT ?? 0, 0, ',', '.'),
             "tenor" => $this->PERIOD ?? 0,
             "alamat" => $this->customer->ADDRESS ?? "",
             "tipe_kredit" => $this->CREDIT_TYPE ?? ""
