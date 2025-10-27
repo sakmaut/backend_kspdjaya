@@ -40,6 +40,7 @@ class Rs_CollectorList extends JsonResource
             'tenor' => $this->TENOR ?? "",
             'catatan_survey' => $this->CATT_SURVEY ?? "",
             "col_path" => $collateral_doc->pluck('PATH')->toArray(),
+            'cabang' => $this->nama_cabang ?? "",
         ];
     }
 }

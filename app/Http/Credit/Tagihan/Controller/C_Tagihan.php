@@ -142,6 +142,8 @@ class C_Tagihan extends Controller
                 })
                 ->leftJoin('customer as f', 'f.CUST_CODE', '=', 'a.CUST_CODE')
                 ->leftJoin('cr_collateral as cc', 'cc.CR_CREDIT_ID', '=', 'a.CREDIT_ID')
+                ->leftJoin('users as u', 'u.username', '=', 'a.USER_ID')
+                ->leftJoin('branch as br', 'br.ID', '=', 'u.branch_id')
                 ->select(
                     'a.ID',
                     'a.NO_SURAT',
@@ -170,13 +172,14 @@ class C_Tagihan extends Controller
                     DB::raw("CONCAT(cc.BRAND, ' - ', cc.TYPE, ' - ', cc.COLOR) AS unit"),
                     'cc.ID as COLLATERAL_ID',
                     'cc.POLICE_NUMBER',
-                    'cc.PRODUCTION_YEAR'
+                    'cc.PRODUCTION_YEAR',
+                    'br.NAME as nama_cabang'
                 )
                 ->orderByRaw('c.LKP_NUMBER IS NOT NULL DESC');
 
             switch ($currentPosition) {
                 case 'KAPOS':
-                    $query->where('a.BRANCH_ID', $currentBranch);
+                    $query->where('u.branch_id', $currentBranch);
                     break;
 
                 case 'MCF':
