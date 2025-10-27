@@ -132,10 +132,12 @@ class OrderResourcesController extends Controller
         }
     }
 
-    public function statusUpdate(Request $request, $id)
+    public function statusUpdate(Request $request)
     {
         DB::beginTransaction();
         try {
+            $id = $request->id ?? $request->ID;
+
             $resource = M_OrderResources::findOrFail($id);
 
             $resource->update([

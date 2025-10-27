@@ -208,7 +208,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::post('listBanTest', [ListBanController::class, 'listBanTest']);
 
     Route::resource('order_resources', OrderResourcesController::class);
-    Route::post('order_resources_status/{id}', [OrderResourcesController::class, 'statusUpdate']);
+    Route::post('order_resources_status', [OrderResourcesController::class, 'statusUpdate']);
 });
 
 
