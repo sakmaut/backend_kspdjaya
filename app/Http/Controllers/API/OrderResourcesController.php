@@ -24,7 +24,11 @@ class OrderResourcesController extends Controller
             $resources = M_OrderResources::whereNull('DELETED_BY')
                 ->orWhere('DELETED_BY', '')
                 ->orderBy('CREATED_AT', 'desc')
-                ->get();
+                ->get()
+                ->map(function ($item) {
+                    $item->STATUS = $item->STATUS ?: 'Aktif';
+                    return $item;
+                });;
 
             return response()->json($resources, 200);
         } catch (\Exception $e) {
@@ -62,7 +66,7 @@ class OrderResourcesController extends Controller
                 'NAMA' => $request->nama ?? "",
                 'NO_HP' => $request->no_hp ?? "",
                 'KETERANGAN' => $request->keterangan ?? "",
-                'STATUS' => $request->status ?? "",
+                'STATUS' => $request->status ?? "Aktif",
                 'CREATED_BY'  => $request->user()->id ?? null,
                 'CREATED_AT' => Carbon::now('Asia/Jakarta'),
             ];
