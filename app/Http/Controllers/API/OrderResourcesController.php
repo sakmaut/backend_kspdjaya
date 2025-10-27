@@ -62,6 +62,7 @@ class OrderResourcesController extends Controller
                 'NAMA' => $request->nama ?? "",
                 'NO_HP' => $request->no_hp ?? "",
                 'KETERANGAN' => $request->keterangan ?? "",
+                'STATUS' => $request->status ?? "",
                 'CREATED_BY'  => $request->user()->id ?? null,
                 'CREATED_AT' => Carbon::now('Asia/Jakarta'),
             ];
@@ -95,6 +96,7 @@ class OrderResourcesController extends Controller
                 'NAMA' => $request->nama ?? $resource->nama,
                 'NO_HP' => $request->no_hp ?? $resource->NO_HP,
                 'KETERANGAN' => $request->keterangan ?? $resource->KETERANGAN,
+                'STATUS' => $request->status ?? $resource->STATUS,
                 'UPDATED_BY' => $request->user()->id ?? null,
                 'UPDATED_AT' => Carbon::now('Asia/Jakarta'),
             ]);

@@ -16,6 +16,7 @@ class M_OrderResources extends Model
         'NAMA',
         'NO_HP',
         'KETERANGAN',
+        'STATUS',
         'CREATED_BY',
         'CREATED_AT',
         'DELETED_BY',
