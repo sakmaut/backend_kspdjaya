@@ -19,7 +19,8 @@ class Kernel extends ConsoleKernel
         $schedule->command('demo:cron')->dailyAt('00:05');
         $schedule->command('app:last-monthly-credit-insert')->hourly();
         $schedule->command('app:lkp-service')->dailyAt('05:00');
-        $schedule->command('app:listan-service')->monthlyOn(1, '05:00');
+        $schedule->command('app:listan-service')->dailyAt('09:44');
+        // $schedule->command('app:listan-service')->monthlyOn(1, '05:00');
     }
 
     protected function commands(): void
