@@ -68,11 +68,16 @@ class Welcome extends Controller
         // }
 
         $data = [
-            'now' => now(), // Waktu default (biasanya UTC)
-            'asia_jakarta' => Carbon::now('Asia/Jakarta')->format('Y-m-d H:i:s'), // Waktu di Asia/Jakarta
+            'now_utc' => now()->format('Y-m-d H:i:s'), // waktu default (biasanya UTC)
+            'asia_jakarta' => now('Asia/Jakarta')->format('Y-m-d H:i:s'), // waktu di Asia/Jakarta
+            'timezone_info' => [
+                'utc_offset' => now('Asia/Jakarta')->format('P'), // +07:00
+                'timezone' => 'Asia/Jakarta'
+            ]
         ];
 
         return response()->json($data);
+
 
         // $data = M_CrApplication::where('ORDER_NUMBER', $request->order_number)->first();
 
