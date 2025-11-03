@@ -4,6 +4,8 @@ namespace App\Console\Commands;
 
 use App\Models\M_ListbanData;
 use Carbon\Carbon;
+use DateTime;
+use DateTimeZone;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
@@ -25,7 +27,8 @@ class ListanService extends Command
 
     public function handle()
     {
-        $dateFrom = date('mY', strtotime(now()));
+        $jakartaTime = new DateTime('now', new DateTimeZone('Asia/Jakarta'));
+        $dateFrom = $jakartaTime->format('mY');
 
         $sql = "SELECT	CONCAT(b.CODE, '-', b.CODE_NUMBER) AS KODE,
                                 b.ID AS BRANCH_ID,
