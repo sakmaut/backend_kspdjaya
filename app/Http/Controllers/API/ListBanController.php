@@ -165,7 +165,11 @@ class ListBanController extends Controller
                                 c.PHONE_PERSONAL AS NO_HP,
                                 c.PHONE_PERSONAL AS NO_HP2,
                                 c.OCCUPATION AS PEKERJAAN,
-                                CONCAT(co.REF_PELANGGAN, ' ', co.REF_PELANGGAN_OTHER) AS supplier,
+                                CONCAT(
+                                    COALESCE(co.REF_PELANGGAN, ''),
+                                    ' ',
+                                    COALESCE(co.REF_PELANGGAN_OTHER, '')
+                                ) AS supplier,
                                 coalesce(u.fullname,cl.mcf_id) AS SURVEYOR,
                                 -- cs.survey_note AS CATT_SURVEY,
                                 coalesce(cs.survey_note,osn.SURVEY_NOTE) AS CATT_SURVEY,
@@ -274,7 +278,12 @@ class ListBanController extends Controller
                                 c.PHONE_PERSONAL AS NO_HP,
                                 c.PHONE_PERSONAL AS NO_HP2,
                                 c.OCCUPATION AS PEKERJAAN,
-                                CONCAT(co.REF_PELANGGAN, ' ', co.REF_PELANGGAN_OTHER) AS supplier,
+                                -- CONCAT(co.REF_PELANGGAN, ' ', co.REF_PELANGGAN_OTHER) AS supplier,
+                                CONCAT(
+                                    COALESCE(co.REF_PELANGGAN, ''),
+                                    ' ',
+                                    COALESCE(co.REF_PELANGGAN_OTHER, '')
+                                ) AS supplier,
                                 coalesce(u.fullname,cl.mcf_id) AS SURVEYOR,
                                 -- cs.survey_note AS CATT_SURVEY,
                                 coalesce(cs.survey_note,osn.SURVEY_NOTE) AS CATT_SURVEY,
