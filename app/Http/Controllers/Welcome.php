@@ -67,7 +67,12 @@ class Welcome extends Controller
         //     }
         // }
 
-        return response()->json("Welcome to MOTHER FUCKER API");
+        $data = [
+            'now' => Carbon::now(), // Waktu default (biasanya UTC)
+            'asia_jakarta' => Carbon::now('Asia/Jakarta'), // Waktu di Asia/Jakarta
+        ];
+
+        return response()->json($data);
 
         // $data = M_CrApplication::where('ORDER_NUMBER', $request->order_number)->first();
 
