@@ -73,7 +73,8 @@ class Welcome extends Controller
             'timezone_info' => [
                 'utc_offset' => now('Asia/Jakarta')->format('P'), // +07:00
                 'timezone' => 'Asia/Jakarta'
-            ]
+            ],
+            'listban_time' => date('mY', strtotime(now()))
         ];
 
         return response()->json($data);
