@@ -69,7 +69,7 @@ class Welcome extends Controller
 
         $data = [
             'now' => now(), // Waktu default (biasanya UTC)
-            'asia_jakarta' => Carbon::now('Asia/Jakarta'), // Waktu di Asia/Jakarta
+            'asia_jakarta' => Carbon::now('Asia/Jakarta')->format('Y-m-d H:i:s'), // Waktu di Asia/Jakarta
         ];
 
         return response()->json($data);
