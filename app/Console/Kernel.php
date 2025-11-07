@@ -18,7 +18,7 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->command('demo:cron')->dailyAt('00:05');
         $schedule->command('app:saving-services')->dailyAt('22:30');
-        $schedule->command('demo:cron')->dailyAt('09:50');
+        $schedule->command('demo:cron')->dailyAt('09:56');
     }
 
     /**
