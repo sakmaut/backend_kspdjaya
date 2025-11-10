@@ -324,6 +324,11 @@ class R_Tagihan
         return  $this->model::with(['customer'])->where('BRANCH_ID', $currentBranch)->where('STATUS', "Aktif")->get();
     }
 
+    protected function listAllTagihan()
+    {
+        return  $this->model::with(['customer'])->where('STATUS', "Aktif")->get();
+    }
+
     protected function cl_deploy_by_pic($pic)
     {
         return  $this->model::where('USER_ID', $pic)->get();
