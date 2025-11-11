@@ -28,6 +28,7 @@ class Rs_LkpPicList extends JsonResource
             'tgl_jatuh_tempo' => $this->TGL_JTH_TEMPO ?? "",
             'tgl_jb' => $this->CONFIRM_DATE ?? "",
             'angsuran' => $this->ANGSURAN ?? 0,
+            'total_angsuran' => $this->AMBC_TOTAL_AWAL ?? 0,
             'bayar' => (float) $this->total_bayar ?? 0,
             'hasil_kunjungan' => $this->DESCRIPTION ?? "",
         ];

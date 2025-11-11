@@ -332,6 +332,7 @@ class C_Tagihan extends Controller
                     'a.MCF',
                     'a.ANGSURAN_KE',
                     'a.ANGSURAN',
+                    'a.AMBC_TOTAL_AWAL',
                     DB::raw('COALESCE(pay.total_bayar, 0) AS total_bayar'),
                     'e.DESCRIPTION',
                     'e.CONFIRM_DATE',
