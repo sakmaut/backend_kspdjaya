@@ -313,7 +313,7 @@ class C_Tagihan extends Controller
                     $join->on('e.REFERENCE_ID', '=', 'a.NO_SURAT');
                 })
                 ->where('a.USER_ID', $pic)
-                // ->whereRaw('a.ANGSURAN > COALESCE(pay.total_bayar, 0)')
+                ->whereRaw('a.AMBC_TOTAL_AWAL > COALESCE(pay.total_bayar, 0)')
                 ->where(function ($query) {
                     $query->whereNull('bc.LKP_NUMBER')
                         ->orWhere('bc.LKP_NUMBER', '');

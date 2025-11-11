@@ -31,6 +31,7 @@ class M_Tagihan extends Model
         'MCF',
         'ANGSURAN_KE',
         'ANGSURAN',
+        'AMBC_TOTAL_AWAL',
         'BAYAR',
         'STATUS',
         'CREATED_BY',
