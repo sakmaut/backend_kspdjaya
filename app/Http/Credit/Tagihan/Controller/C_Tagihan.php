@@ -306,6 +306,7 @@ class C_Tagihan extends Controller
                     $join->on('bc.LOAN_NUMBER', '=', 'a.LOAN_NUMBER');
                 })
                 ->leftJoin('customer as cust', 'cust.CUST_CODE', '=', 'a.CUST_CODE')
+                ->leftJoin('credit as cr', 'cr.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
                 ->leftJoinSub($subQuery, 'pay', function ($join) {
                     $join->on('pay.LOAN_NUM', '=', 'a.LOAN_NUMBER');
                 })
@@ -314,6 +315,7 @@ class C_Tagihan extends Controller
                 })
                 ->where('a.USER_ID', $pic)
                 ->whereRaw('a.AMBC_TOTAL_AWAL > COALESCE(pay.total_bayar, 0)')
+                ->where('cr.STATUS_REC', 'AC')
                 ->where(function ($query) {
                     $query->whereNull('bc.LKP_NUMBER')
                         ->orWhere('bc.LKP_NUMBER', '');
