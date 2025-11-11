@@ -125,6 +125,7 @@ class S_Tagihan extends R_Tagihan
                 'MCF'           => $item['SURVEYOR'] ?? null,
                 'ANGSURAN_KE'   => $item['ANGS KE'] ?? 0,
                 'ANGSURAN'      => $item['ANGSURAN'] ?? 0,
+                'AMBC_TOTAL_AWAL' => $item['AMBC TOTAL AWAL'] ?? 0,
                 'STATUS'        => "Aktif",
                 'CREATED_BY'    => $request->user()->id ?? null,
                 'CREATED_AT' => Carbon::now('Asia/Jakarta'),
