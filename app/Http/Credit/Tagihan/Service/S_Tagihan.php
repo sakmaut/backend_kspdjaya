@@ -179,22 +179,24 @@ class S_Tagihan extends R_Tagihan
                 throw new Exception("NO KONTRAK is required.");
             }
 
-            if ((int) $item['bayar'] < (int) $item['angsuran']) {
-                M_LkpDetail::create([
-                    'NO_SURAT'      => $item['no_surat'] ?? null,
-                    'LKP_ID'      => $saved->ID ?? null,
-                    'LOAN_NUMBER' => $loanNumber,
-                    'LOAN_HOLDER' => $item['nama_customer'] ?? null,
-                    'ADDRESS'    => $item['alamat'] ?? null,
-                    'DESA'          => $item['desa'] ?? null,
-                    'KEC'       => $item['kec'] ?? null,
-                    'CYCLE'      => $item['cycle_awal'] ?? null,
-                    'CREATED_BY' => $request->user()->id ?? null,
-                    'DUE_DATE'   => $item['tgl_jatuh_tempo'] ?? null,
-                    'INSTALLMENT'  => $item['angsuran'] ?? 0,
-                    'INST_COUNT' => $item['angsuran_ke'] ?? 0,
-                ]);
-            }
+            // if ((int) $item['bayar'] < (int) $item['angsuran']) {
+
+            // }
+
+            M_LkpDetail::create([
+                'NO_SURAT'      => $item['no_surat'] ?? null,
+                'LKP_ID'      => $saved->ID ?? null,
+                'LOAN_NUMBER' => $loanNumber,
+                'LOAN_HOLDER' => $item['nama_customer'] ?? null,
+                'ADDRESS'    => $item['alamat'] ?? null,
+                'DESA'          => $item['desa'] ?? null,
+                'KEC'       => $item['kec'] ?? null,
+                'CYCLE'      => $item['cycle_awal'] ?? null,
+                'CREATED_BY' => $request->user()->id ?? null,
+                'DUE_DATE'   => $item['tgl_jatuh_tempo'] ?? null,
+                'INSTALLMENT'  => $item['angsuran'] ?? 0,
+                'INST_COUNT' => $item['angsuran_ke'] ?? 0,
+            ]);
 
             // M_TagihanLog::create([
             //     'LOAN_NUMBER' => $loanNumber,
