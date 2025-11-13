@@ -17,6 +17,7 @@ use App\Models\M_CrCollateralSertification;
 use App\Models\M_Credit;
 use App\Models\M_CreditCancelLog;
 use App\Models\M_CreditSchedule;
+use App\Models\M_CreditTransaction;
 use App\Models\M_CrGuaranteSertification;
 use App\Models\M_CrGuaranteVehicle;
 use App\Models\M_CrOrder;
@@ -89,7 +90,6 @@ class Credit extends Controller
 
     function queryKapos($branchID)
     {
-
         $result = DB::table('users as a')
             ->select(
                 'a.fullname',
@@ -347,6 +347,16 @@ class Credit extends Controller
             }
 
             $this->insert_credit($SET_UUID, $request, $data, $loan_number, $installment_count, $cust_code);
+
+            if (strtolower($data->INSTALLMENT_TYPE) == 'rekening_koran') {
+                M_CreditTransaction::create([
+                    'ID' => Uuid::uuid7()->toString(),
+                    'ACC_KEYS' => AccKeys::PENCAIRAN,
+                    'AMOUNT' => $data->POKOK_PEMBAYARAN ?? 0,
+                    'CREATED_BY' => $request->user()->id,
+                    'CREATED_AT' => Carbon::now('Asia/Jakarta'),
+                ]);
+            }
 
             $no = 1;
             foreach ($data_credit_schedule as $list) {
