@@ -362,34 +362,33 @@ class Credit extends Controller
 
             $no = 1;
             foreach ($data_credit_schedule as $list) {
+
+                $credit_schedule = [
+                    'ID' => Uuid::uuid7()->toString(),
+                    'LOAN_NUMBER' => $loan_number,
+                    'INSTALLMENT_COUNT' => $no++,
+                    'PAYMENT_DATE' => parseDatetoYMD($list['tgl_angsuran']),
+                ];
+
                 if ($rek_koran) {
-                    $credit_schedule =
-                        [
-                            'ID' => Uuid::uuid7()->toString(),
-                            'LOAN_NUMBER' => $loan_number,
-                            'INSTALLMENT_COUNT' => $no++,
-                            'PAYMENT_DATE' => parseDatetoYMD($list['tgl_angsuran']),
-                            'PRINCIPAL' => 0,
-                            'INTEREST' => 0,
-                            'INSTALLMENT' => 0,
-                            'PRINCIPAL_REMAINS' => 0
-                        ];
+                    $credit_schedule += [
+                        'PRINCIPAL' => 0,
+                        'INTEREST' => 0,
+                        'INSTALLMENT' => 0,
+                        'PRINCIPAL_REMAINS' => 0,
+                    ];
                 } else {
-                    $credit_schedule =
-                        [
-                            'ID' => Uuid::uuid7()->toString(),
-                            'LOAN_NUMBER' => $loan_number,
-                            'INSTALLMENT_COUNT' => $no++,
-                            'PAYMENT_DATE' => parseDatetoYMD($list['tgl_angsuran']),
-                            'PRINCIPAL' => $list['pokok'],
-                            'INTEREST' => $list['bunga'],
-                            'INSTALLMENT' => $list['total_angsuran'],
-                            'PRINCIPAL_REMAINS' => $list['baki_debet']
-                        ];
+                    $credit_schedule += [
+                        'PRINCIPAL' => $list['pokok'],
+                        'INTEREST' => $list['bunga'],
+                        'INSTALLMENT' => $list['total_angsuran'],
+                        'PRINCIPAL_REMAINS' => $list['baki_debet'],
+                    ];
                 }
 
                 M_CreditSchedule::create($credit_schedule);
             }
+
 
             $this->insert_customer($request, $data, $cust_code);
             $this->insert_customer_xtra($data, $cust_code);
@@ -423,7 +422,9 @@ class Credit extends Controller
             'INSTALLMENT_DATE'  => $setDate ?? null,
             'END_DATE'  => add_months($setDate, $data->PERIOD) ?? null,
             'PCPL_ORI'  => $data->POKOK_PEMBAYARAN ?? 0,
-            'INTRST_ORI' => $data->TOTAL_INTEREST ?? 0,
+            'INTRST_ORI' => ($data->INSTALLMENT_TYPE === 'rekening_koran')
+                ? 0
+                : ($data->TOTAL_INTEREST ?? 0),
             'PAID_PRINCIPAL'  => 0,
             'PAID_INTEREST'  => 0,
             'PAID_PENALTY'  => 0,
