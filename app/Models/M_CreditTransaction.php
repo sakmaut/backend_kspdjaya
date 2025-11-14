@@ -12,6 +12,7 @@ class M_CreditTransaction extends Model
     protected $table = 'credit_transaction';
     protected $fillable = [
         'ID',
+        'LOAN_NUMBER',
         'ACC_KEYS',
         'AMOUNT',
         'CREATED_BY',

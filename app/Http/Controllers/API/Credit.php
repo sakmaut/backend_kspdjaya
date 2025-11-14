@@ -342,6 +342,7 @@ class Credit extends Controller
             if ($isRekeningKoran) {
                 M_CreditTransaction::create([
                     'ID' => Uuid::uuid7()->toString(),
+                    'LOAN_NUMBER' => $loan_number,
                     'ACC_KEYS' => AccKeys::PENCAIRAN,
                     'AMOUNT' => $data->POKOK_PEMBAYARAN ?? 0,
                     'CREATED_BY' => $request->user()->id,
