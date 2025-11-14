@@ -119,9 +119,9 @@ class Credit extends Controller
         $set_tgl_awal = $request->tgl_awal;
         $principal = $data->POKOK_PEMBAYARAN;
         $angsuran = $data->INSTALLMENT;
-        $creditType = strtolower($data->INSTALLMENT_TYPE) == 'rekening_koran';
+        $isRekeningKoran = strtolower($data->INSTALLMENT_TYPE) == 'rekening_koran';
 
-        $data_credit_schedule = $this->generateAmortizationSchedule($set_tgl_awal, $data, $creditType);
+        $data_credit_schedule = $this->generateAmortizationSchedule($set_tgl_awal, $data, $isRekeningKoran);
         $installment_count = count($data_credit_schedule);
 
         $schedule = [];
@@ -339,7 +339,7 @@ class Credit extends Controller
 
             $this->insert_credit($SET_UUID, $request, $data, $loan_number, $installment_count, $cust_code);
 
-            if ($creditType) {
+            if ($isRekeningKoran) {
                 M_CreditTransaction::create([
                     'ID' => Uuid::uuid7()->toString(),
                     'ACC_KEYS' => AccKeys::PENCAIRAN,
@@ -359,7 +359,7 @@ class Credit extends Controller
                     'PAYMENT_DATE' => parseDatetoYMD($list['tgl_angsuran']),
                 ];
 
-                if ($creditType) {
+                if ($isRekeningKoran) {
                     $credit_schedule += [
                         'PRINCIPAL' => 0,
                         'INTEREST' => 0,
@@ -783,7 +783,7 @@ class Credit extends Controller
             ->get();
     }
 
-    private function generateAmortizationSchedule($setDate, $data, $creditType)
+    private function generateAmortizationSchedule($setDate, $data, $isRekeningKoran)
     {
         $schedule = [];
         $remainingBalance = $data->POKOK_PEMBAYARAN;
@@ -810,7 +810,7 @@ class Credit extends Controller
                 $remainingBalance = 0.00;
             }
 
-            if ($creditType === 'rekening_koran') {
+            if ($isRekeningKoran) {
                 $schedule[] = [
                     'angsuran_ke'      => $i,
                     'tgl_angsuran'     => setPaymentDate($setDate, $i),
