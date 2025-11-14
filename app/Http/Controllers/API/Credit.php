@@ -121,17 +121,9 @@ class Credit extends Controller
         $angsuran = $data->INSTALLMENT;
         $loanTerm = $data->TENOR;
 
-        $type = $data->INSTALLMENT_TYPE;
+        $data_credit_schedule = $this->generateAmortizationSchedule($set_tgl_awal, $data);
 
-        if (strtolower($type) == 'bulanan') {
-            $data_credit_schedule = $this->generateAmortizationSchedule($set_tgl_awal, $data);
-
-            $installment_count = count($data_credit_schedule);
-        } else {
-            $data_credit_schedule = $this->generateAmortizationScheduleMusiman($set_tgl_awal, $data);
-
-            $installment_count = count($data_credit_schedule);
-        }
+        $installment_count = count($data_credit_schedule);
 
         $schedule = [];
 
