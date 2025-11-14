@@ -348,7 +348,9 @@ class Credit extends Controller
 
             $this->insert_credit($SET_UUID, $request, $data, $loan_number, $installment_count, $cust_code);
 
-            if (strtolower($data->INSTALLMENT_TYPE) == 'rekening_koran') {
+            $rek_koran = strtolower($data->INSTALLMENT_TYPE) == 'rekening_koran';
+
+            if ($rek_koran) {
                 M_CreditTransaction::create([
                     'ID' => Uuid::uuid7()->toString(),
                     'ACC_KEYS' => AccKeys::PENCAIRAN,
@@ -360,17 +362,31 @@ class Credit extends Controller
 
             $no = 1;
             foreach ($data_credit_schedule as $list) {
-                $credit_schedule =
-                    [
-                        'ID' => Uuid::uuid7()->toString(),
-                        'LOAN_NUMBER' => $loan_number,
-                        'INSTALLMENT_COUNT' => $no++,
-                        'PAYMENT_DATE' => parseDatetoYMD($list['tgl_angsuran']),
-                        'PRINCIPAL' => $list['pokok'],
-                        'INTEREST' => $list['bunga'],
-                        'INSTALLMENT' => $list['total_angsuran'],
-                        'PRINCIPAL_REMAINS' => $list['baki_debet']
-                    ];
+                if ($rek_koran) {
+                    $credit_schedule =
+                        [
+                            'ID' => Uuid::uuid7()->toString(),
+                            'LOAN_NUMBER' => $loan_number,
+                            'INSTALLMENT_COUNT' => $no++,
+                            'PAYMENT_DATE' => parseDatetoYMD($list['tgl_angsuran']),
+                            'PRINCIPAL' => 0,
+                            'INTEREST' => 0,
+                            'INSTALLMENT' => 0,
+                            'PRINCIPAL_REMAINS' => 0
+                        ];
+                } else {
+                    $credit_schedule =
+                        [
+                            'ID' => Uuid::uuid7()->toString(),
+                            'LOAN_NUMBER' => $loan_number,
+                            'INSTALLMENT_COUNT' => $no++,
+                            'PAYMENT_DATE' => parseDatetoYMD($list['tgl_angsuran']),
+                            'PRINCIPAL' => $list['pokok'],
+                            'INTEREST' => $list['bunga'],
+                            'INSTALLMENT' => $list['total_angsuran'],
+                            'PRINCIPAL_REMAINS' => $list['baki_debet']
+                        ];
+                }
 
                 M_CreditSchedule::create($credit_schedule);
             }
