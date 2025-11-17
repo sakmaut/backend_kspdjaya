@@ -408,11 +408,11 @@ class CustomerController extends Controller
             $query = DB::table('credit as a')
                 ->select([
                     'a.STATUS',
-                    'a.LOAN_NUMBER',
+                    'a.LOAN_NUMBER as loan_number',
                     'a.ORDER_NUMBER',
                     'c.NAME as nama',
                     'c.ALIAS',
-                    'c.PCPL_ORI as nilai_pinjaman',
+                    'a.PCPL_ORI as nilai_pinjaman',
                     'c.ADDRESS',
                     'b.POLICE_NUMBER',
                     '0 as tunggakan'
