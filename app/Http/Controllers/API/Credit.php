@@ -321,15 +321,15 @@ class Credit extends Controller
 
         if (!$check_exist && $check_count <= 1 && $request->flag == 'yes') {
 
-            $checkCreditMaxLoan = DB::table('credit as a')
-                ->join('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
-                ->where('a.STATUS', 'A')
-                ->where('b.ID_NUMBER', $cr_personal->ID_NUMBER)
-                ->count();
+            // $checkCreditMaxLoan = DB::table('credit as a')
+            //     ->join('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
+            //     ->where('a.STATUS', 'A')
+            //     ->where('b.ID_NUMBER', $cr_personal->ID_NUMBER)
+            //     ->count();
 
-            if ($checkCreditMaxLoan > 2) {
-                throw new Exception("Loan Number Active Is 2", 500);
-            }
+            // if ($checkCreditMaxLoan > 2) {
+            //     throw new Exception("Loan Number Active Is 2", 500);
+            // }
 
             $checkLoanNumberExist = M_Credit::where('LOAN_NUMBER', $loan_number)->first();
 
