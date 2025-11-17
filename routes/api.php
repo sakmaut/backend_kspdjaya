@@ -174,6 +174,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::get('credit/', [Credit::class, 'listCredit']);
 
     Route::post('search_customer_rekening_koran', [CustomerController::class, 'searchCustomerRekeningKoran']);
+    Route::post('rekening_koran', [CustomerController::class, 'listRekeningKoran']);
 });
 
 
