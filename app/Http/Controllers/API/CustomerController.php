@@ -348,4 +348,56 @@ class CustomerController extends Controller
 
         return $documents;
     }
+
+    public function searchCustomerRekeningKoran(Request $request)
+    {
+        try {
+
+            if (empty($request->nama) && empty($request->no_kontrak) && empty($request->no_polisi)) {
+                return collect([]);
+            }
+
+            $query = DB::table('credit as a')
+                ->select([
+                    'a.STATUS',
+                    'a.LOAN_NUMBER',
+                    'a.ORDER_NUMBER',
+                    'c.NAME',
+                    'c.ALIAS',
+                    'c.ADDRESS',
+                    'b.POLICE_NUMBER',
+                    'a.INSTALLMENT'
+                ])
+                ->leftJoin('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
+                ->leftJoin('customer as c', 'c.CUST_CODE', '=', 'a.CUST_CODE')
+                ->where('a.STATUS', 'A')
+                ->where('a.CREDIT_TYPE', 'rekening_koran');
+
+            if (!empty($request->nama)) {
+                $query->when($request->nama, function ($query, $nama) {
+                    return $query->where("c.NAME", 'LIKE', "%{$nama}%");
+                });
+            }
+
+            if (!empty($request->no_kontrak)) {
+                $query->when($request->no_kontrak, function ($query, $no_kontrak) {
+                    return $query->where('a.LOAN_NUMBER', 'LIKE', "%{$no_kontrak}%");
+                });
+            }
+
+            if (!empty($request->no_polisi)) {
+                $query->when($request->no_polisi, function ($query, $no_polisi) {
+                    return $query->where('b.POLICE_NUMBER', 'LIKE', "%{$no_polisi}%");
+                });
+            }
+
+            $results = $query->get();
+
+            $dto = R_CustomerSearch::collection($results);
+
+            return response()->json($dto, 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+        }
+    }
 }

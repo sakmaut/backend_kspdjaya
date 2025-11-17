@@ -172,6 +172,8 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::get('transaction_by_acc/{id}', [C_SavingTransactionLog::class, 'findTrxByAcc']);
 
     Route::get('credit/', [Credit::class, 'listCredit']);
+
+    Route::post('search_customer_rekening_koran', [CustomerController::class, 'searchCustomerRekeningKoran']);
 });
 
 
