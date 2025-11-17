@@ -410,11 +410,12 @@ class CustomerController extends Controller
                     'a.STATUS',
                     'a.LOAN_NUMBER',
                     'a.ORDER_NUMBER',
-                    'c.NAME',
+                    'c.NAME as nama',
                     'c.ALIAS',
+                    'c.PCPL_ORI as nilai_pinjaman',
                     'c.ADDRESS',
                     'b.POLICE_NUMBER',
-                    'a.INSTALLMENT'
+                    '0 as tunggakan'
                 ])
                 ->leftJoin('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
                 ->leftJoin('customer as c', 'c.CUST_CODE', '=', 'a.CUST_CODE')
