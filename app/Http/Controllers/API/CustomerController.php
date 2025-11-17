@@ -405,10 +405,6 @@ class CustomerController extends Controller
     {
         try {
 
-            if (empty($request->nama) && empty($request->no_kontrak) && empty($request->no_polisi)) {
-                return collect([]);
-            }
-
             $query = DB::table('credit as a')
                 ->select([
                     'a.STATUS',
@@ -422,7 +418,7 @@ class CustomerController extends Controller
                 ])
                 ->leftJoin('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
                 ->leftJoin('customer as c', 'c.CUST_CODE', '=', 'a.CUST_CODE')
-                ->where('a.STATUS', 'A')
+                ->where('a.STATUS_REC', 'AC')
                 ->where('a.CREDIT_TYPE', 'rekening_koran');
 
             if (!empty($request->nama)) {
