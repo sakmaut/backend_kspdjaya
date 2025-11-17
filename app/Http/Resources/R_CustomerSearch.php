@@ -16,12 +16,12 @@ class R_CustomerSearch extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            "loan_number" => $this->LOAN_NUMBER??null,
-            "no_kontrak" => $this->ORDER_NUMBER??null,
-            "nama" => $this->NAME??null,
-            "no_polisi" => $this->POLICE_NUMBER?? null,
+            "loan_number" => $this->LOAN_NUMBER ?? null,
+            "no_kontrak" => $this->ORDER_NUMBER ?? null,
+            "nama" => $this->NAME ?? null,
             "alamat" => $this->ADDRESS,
-            "angsuran" => intval($this->INSTALLMENT??null)
+            "nilai_pinjaman" => intval($this->PCPL_ORI ?? 0),
+            "tunggakan" => intval(0)
         ];
     }
 }

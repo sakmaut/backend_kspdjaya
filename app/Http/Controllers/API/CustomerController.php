@@ -408,11 +408,11 @@ class CustomerController extends Controller
             $query = DB::table('credit as a')
                 ->select([
                     'a.STATUS',
-                    'a.LOAN_NUMBER as loan_number',
+                    'a.LOAN_NUMBER',
                     'a.ORDER_NUMBER',
-                    'c.NAME as nama',
+                    'c.NAME',
                     'c.ALIAS',
-                    'a.PCPL_ORI as nilai_pinjaman',
+                    'a.PCPL_ORI',
                     'c.ADDRESS',
                     'b.POLICE_NUMBER'
                 ])
@@ -420,24 +420,6 @@ class CustomerController extends Controller
                 ->leftJoin('customer as c', 'c.CUST_CODE', '=', 'a.CUST_CODE')
                 ->where('a.STATUS_REC', 'AC')
                 ->where('a.CREDIT_TYPE', 'rekening_koran');
-
-            if (!empty($request->nama)) {
-                $query->when($request->nama, function ($query, $nama) {
-                    return $query->where("c.NAME", 'LIKE', "%{$nama}%");
-                });
-            }
-
-            if (!empty($request->no_kontrak)) {
-                $query->when($request->no_kontrak, function ($query, $no_kontrak) {
-                    return $query->where('a.LOAN_NUMBER', 'LIKE', "%{$no_kontrak}%");
-                });
-            }
-
-            if (!empty($request->no_polisi)) {
-                $query->when($request->no_polisi, function ($query, $no_polisi) {
-                    return $query->where('b.POLICE_NUMBER', 'LIKE', "%{$no_polisi}%");
-                });
-            }
 
             $results = $query->get();
 
