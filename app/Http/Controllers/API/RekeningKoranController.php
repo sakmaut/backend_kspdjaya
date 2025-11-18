@@ -92,7 +92,8 @@ class RekeningKoranController extends Controller
                     "KELURAHAN" => $detail_customer->KELURAHAN,
                     "JUMLAH_UANG" => $request->NOMINAL,
                     "KETERANGAN" => $request->KETERANGAN,
-                    "CREATED_BY" => $request->user()->id
+                    "CREATED_BY" => $request->user()->id,
+                    "CREATED_AT" => Carbon::now('Asia/Jakarta')
                 ];
 
                 M_Kwitansi::create($data);
@@ -545,7 +546,8 @@ class RekeningKoranController extends Controller
             "JUMLAH_UANG" => $request->UANG_PELANGGAN,
             "NAMA_BANK" => $request->NAMA_BANK,
             "NO_REKENING" => $request->NO_REKENING,
-            "CREATED_BY" => $request->user()->id
+            "CREATED_BY" => $request->user()->id,
+            "CREATED_AT" => Carbon::now('Asia/Jakarta')
         ];
 
         M_Kwitansi::create($data);
