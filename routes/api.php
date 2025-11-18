@@ -178,6 +178,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::get('rekening_koran', [CustomerController::class, 'listRekeningKoran']);
     Route::post('payment_rekening_koran', [RekeningKoranController::class, 'processPayment']);
     Route::post('top_up', [RekeningKoranController::class, 'checkTopUp']);
+    Route::post('process_top_up', [RekeningKoranController::class, 'processTopUp']);
 });
 
 

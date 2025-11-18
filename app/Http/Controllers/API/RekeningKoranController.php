@@ -61,6 +61,79 @@ class RekeningKoranController extends Controller
         }
     }
 
+    public function processTopUp(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $loan_number = $request->LOAN_NUMBER;
+
+            $no_inv = generateCodeKwitansi($request, 'kwitansi', 'NO_TRANSAKSI', 'INV');
+
+            $credit = M_Credit::where('LOAN_NUMBER', $loan_number)->firstOrFail();
+
+            $detail_customer = M_Customer::where('CUST_CODE', $credit->CUST_CODE)->firstOrFail();
+
+            if (!M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->exists()) {
+                $data = [
+                    "PAYMENT_TYPE" => 'top_up',
+                    "STTS_PAYMENT" => 'PAID',
+                    "NO_TRANSAKSI" => $no_inv,
+                    "LOAN_NUMBER" => $request->LOAN_NUMBER,
+                    "TGL_TRANSAKSI" => Carbon::now(),
+                    "CUST_CODE" => $detail_customer->CUST_CODE,
+                    "BRANCH_CODE" => $request->user()->branch_id,
+                    "NAMA" => $detail_customer->NAME,
+                    "ALAMAT" => $detail_customer->ADDRESS,
+                    "RT" => $detail_customer->RT,
+                    "RW" => $detail_customer->RW,
+                    "PROVINSI" => $detail_customer->PROVINCE,
+                    "KOTA" => $detail_customer->CITY,
+                    "KECAMATAN" => $detail_customer->KECAMATAN,
+                    "KELURAHAN" => $detail_customer->KELURAHAN,
+                    "JUMLAH_UANG" => $request->NOMINAL,
+                    "KETERANGAN" => $request->KETERANGAN,
+                    "CREATED_BY" => $request->user()->id
+                ];
+
+                M_Kwitansi::create($data);
+
+                $credit = M_Credit::where('LOAN_NUMBER', $request->LOAN_NUMBER)->first();
+
+                if ($credit) {
+                    $oldMaxPrincipal = $credit->PAID_PRINCIPAL ?? 0;
+
+                    $newMaxPrincipal = $oldMaxPrincipal - $request->NOMINAL ?? 0;
+
+                    $credit->update([
+                        "MAX_PRINCIPAL" => $newMaxPrincipal,
+                        "PAID_PRINCIPAL" => $newMaxPrincipal
+                    ]);
+                }
+
+                if ($request->NOMINAL > 0) {
+                    M_CreditTransaction::create([
+                        'ID'          => Uuid::uuid7()->toString(),
+                        'LOAN_NUMBER' => $request->LOAN_NUMBER,
+                        'ACC_KEYS'    => AccKeys::TOP_UP,
+                        'AMOUNT'      => $request->NOMINAL,
+                        'CREATED_BY'  => $request->user()->id,
+                        'CREATED_AT'  => Carbon::now('Asia/Jakarta'),
+                    ]);
+                }
+            }
+
+            $data = M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->first();
+
+            $dto = new R_KwitansiPelunasan($data);
+
+            DB::commit();
+            return response()->json($dto, 200);
+        } catch (Exception $e) {
+            DB::rollback();
+            return $this->log->logError($e, $request);
+        }
+    }
+
     public function processPayment(Request $request)
     {
         DB::beginTransaction();
