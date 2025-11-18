@@ -33,6 +33,29 @@ class RekeningKoranController extends Controller
         $this->log = $log;
     }
 
+    public function checkTopUp(Request $request)
+    {
+        try {
+            $loan_number = $request->loan_number;
+
+            $allQuery = "SELECT PAID_PRINCIPAL
+                        FROM credit 
+                        WHERE LOAN_NUMBER = '{$loan_number}' ";
+
+            $result = DB::select($allQuery);
+
+            $processedResults = array_map(function ($item) {
+                return [
+                    'SISA_POKOK' => round(floatval($item->PAID_PRINCIPAL), 2)
+                ];
+            }, $result);
+
+            return response()->json($processedResults, 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+        }
+    }
+
     public function processPayment(Request $request)
     {
         DB::beginTransaction();
