@@ -40,7 +40,7 @@ class RekeningKoranController extends Controller
 
             $allQuery = "SELECT PCPL_ORI,
                                 PAID_PRINCIPAL,
-                                (a.PCPL_ORI - COALESCE(a.PAID_PRINCIPAL, 0)) AS SISA_POKOK
+                                (PCPL_ORI - COALESCE(PAID_PRINCIPAL, 0)) AS SISA_POKOK
                         FROM credit 
                         WHERE LOAN_NUMBER = '{$loan_number}' ";
 
