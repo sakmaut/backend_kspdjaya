@@ -23,21 +23,21 @@ class R_KwitansiPelunasan extends JsonResource
     public function toArray(Request $request): array
     {
         $details = M_KwitansiDetailPelunasan::select(
-                                                    'no_invoice',
-                                                    'loan_number',
-                                                    'angsuran_ke',
-                                                    'tgl_angsuran',
-                                                    'bayar_pokok',
-                                                    'bayar_bunga',
-                                                    'bayar_denda',
-                                                    'diskon_pokok',
-                                                    'diskon_bunga',
-                                                    'diskon_denda'  
-                                                )
-                                                ->where('no_invoice', $this->NO_TRANSAKSI)
-                                                ->orderByRaw('CAST(angsuran_ke AS SIGNED) ASC')
-                                                ->get();
-        
+            'no_invoice',
+            'loan_number',
+            'angsuran_ke',
+            'tgl_angsuran',
+            'bayar_pokok',
+            'bayar_bunga',
+            'bayar_denda',
+            'diskon_pokok',
+            'diskon_bunga',
+            'diskon_denda'
+        )
+            ->where('no_invoice', $this->NO_TRANSAKSI)
+            ->orderByRaw('CAST(angsuran_ke AS SIGNED) ASC')
+            ->get();
+
 
         $branch = M_Branch::where('ID', $this->BRANCH_CODE)->first();
         $attachment = M_PaymentAttachment::where('payment_id', $this->PAYMENT_ID)->value('file_attach') ?? null;
@@ -71,10 +71,10 @@ class R_KwitansiPelunasan extends JsonResource
             "terbilang" => bilangan($this->TOTAL_BAYAR) ?? null,
             'attachment' => $attachment,
             'struktur' => $details,
+            'keterangan' => $this->KETERANGAN ?? "",
             "STATUS" => $this->STTS_PAYMENT ?? null,
             "created_by" => $this->CREATED_BY,
-            "print_ke" =>  intval($logPrint->COUNT??0),
+            "print_ke" =>  intval($logPrint->COUNT ?? 0),
         ];
     }
-
 }

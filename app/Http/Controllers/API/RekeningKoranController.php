@@ -79,7 +79,7 @@ class RekeningKoranController extends Controller
                     "STTS_PAYMENT" => 'PAID',
                     "NO_TRANSAKSI" => $no_inv,
                     "LOAN_NUMBER" => $request->LOAN_NUMBER,
-                    "TGL_TRANSAKSI" => Carbon::now(),
+                    "TGL_TRANSAKSI" => Carbon::now('Asia/Jakarta'),
                     "CUST_CODE" => $detail_customer->CUST_CODE,
                     "BRANCH_CODE" => $request->user()->branch_id,
                     "NAMA" => $detail_customer->NAME,
@@ -278,14 +278,14 @@ class RekeningKoranController extends Controller
             'INVOICE' => $no_inv,
             'BRANCH' =>  $getCodeBranch->CODE_NUMBER ?? M_Branch::find($request->user()->branch_id)->CODE_NUMBER,
             'LOAN_NUM' => $res['loan_number'] ?? '',
-            'ENTRY_DATE' => Carbon::now(),
+            'ENTRY_DATE' => Carbon::now('Asia/Jakarta'),
             'TITLE' => 'Angsuran Ke-' . ($res['angsuran_ke'] ?? ''),
             'ORIGINAL_AMOUNT' => $originalAmount,
             'START_DATE' => $res['tgl_angsuran'] ?? '',
-            'END_DATE' => Carbon::now(),
+            'END_DATE' => Carbon::now('Asia/Jakarta'),
             'USER_ID' => $user_id ?? $request->user()->id,
             'AUTH_BY' => $request->user()->fullname ?? '',
-            'AUTH_DATE' => Carbon::now()
+            'AUTH_DATE' => Carbon::now('Asia/Jakarta')
         ]);
     }
 
@@ -308,13 +308,13 @@ class RekeningKoranController extends Controller
                 'INVOICE' => $no_inv,
                 'BRANCH' =>  $getCodeBranch->CODE_NUMBER ?? M_Branch::find($request->user()->branch_id)->CODE_NUMBER,
                 'LOAN_NUM' => $loan_number ?? '',
-                'ENTRY_DATE' => Carbon::now(),
+                'ENTRY_DATE' => Carbon::now('Asia/Jakarta'),
                 'TITLE' => 'Bayar Pelunasan Pinalty',
                 'ORIGINAL_AMOUNT' => $kwitansi->PINALTY_PELUNASAN ?? 0,
-                'END_DATE' => Carbon::now(),
+                'END_DATE' => Carbon::now('Asia/Jakarta'),
                 'USER_ID' => $user_id ?? $request->user()->id,
                 'AUTH_BY' => $request->user()->fullname ?? '',
-                'AUTH_DATE' => Carbon::now()
+                'AUTH_DATE' => Carbon::now('Asia/Jakarta')
             ]);
 
             if ($kwitansi->PINALTY_PELUNASAN != 0) {
@@ -415,14 +415,14 @@ class RekeningKoranController extends Controller
             $ttlDiscPenalty = floatval($getArrears->WOFF_PENALTY) + floatval($res['diskon_denda'] ?? 0);
 
             $getArrears->update([
-                'END_DATE' => Carbon::now()->format('Y-m-d') ?? null,
+                'END_DATE' => Carbon::now('Asia/Jakarta')->format('Y-m-d') ?? null,
                 'PAID_PCPL' => $ttlPrincipal ?? 0,
                 'PAID_INT' => $ttlInterest ?? 0,
                 'PAID_PENALTY' => $ttlPenalty ?? 0,
                 'WOFF_PCPL' => $ttlDiscPrincipal ?? 0,
                 'WOFF_INT' => $ttlDiscInterest ?? 0,
                 'WOFF_PENALTY' => $ttlDiscPenalty ?? 0,
-                'UPDATED_AT' => Carbon::now(),
+                'UPDATED_AT' => Carbon::now('Asia/Jakarta'),
             ]);
 
             $checkDiscountArrears = ($ttlDiscPrincipal + $ttlDiscInterest + $ttlDiscPenalty) == 0;
@@ -456,7 +456,7 @@ class RekeningKoranController extends Controller
             $ttlDiscPenalty = max($ttlDiscPenalty, 0);
 
             $getArrears->update([
-                'END_DATE' => Carbon::now()->format('Y-m-d'),
+                'END_DATE' => Carbon::now('Asia/Jakarta')->format('Y-m-d'),
                 'PAID_PCPL' => $ttlPrincipal,
                 'PAID_INT' => $ttlInterest,
                 'PAID_PENALTY' => $ttlPenalty,
@@ -464,7 +464,7 @@ class RekeningKoranController extends Controller
                 'WOFF_INT' => $ttlDiscInterest,
                 'WOFF_PENALTY' => $ttlDiscPenalty,
                 'STATUS_REC' => 'A',
-                'UPDATED_AT' => Carbon::now(),
+                'UPDATED_AT' => Carbon::now('Asia/Jakarta'),
             ]);
         }
     }
@@ -524,7 +524,7 @@ class RekeningKoranController extends Controller
             "STTS_PAYMENT" => $checkPaymentMethod ? 'PAID' : 'PENDING',
             "NO_TRANSAKSI" => $no_inv,
             "LOAN_NUMBER" => $request->LOAN_NUMBER,
-            "TGL_TRANSAKSI" => Carbon::now(),
+            "TGL_TRANSAKSI" => Carbon::now('Asia/Jakarta'),
             "CUST_CODE" => $customer->CUST_CODE,
             "BRANCH_CODE" => $request->user()->branch_id,
             "NAMA" => $customer->NAME,
