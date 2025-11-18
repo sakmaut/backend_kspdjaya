@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Repositories\TasksLogging\TasksRepository;
+use App\Http\Resources\R_Kwitansi;
 use App\Http\Resources\R_KwitansiPelunasan;
 use App\Http\Resources\R_Pelunasan;
 use App\Models\M_Arrears;
@@ -31,6 +32,32 @@ class RekeningKoranController extends Controller
     public function __construct(ExceptionHandling $log)
     {
         $this->log = $log;
+    }
+
+    public function kwitansiRekeningKoran(Request $request)
+    {
+        try {
+            $results = M_Kwitansi::where('PAYMENT_TYPE', 'pelunasan_rekening_koran')->orderBy('CREATED_AT', 'DESC')->get();
+
+            $dto = R_Kwitansi::collection($results);
+
+            return response()->json($dto, 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+        }
+    }
+
+    public function kwitansiTopUp(Request $request)
+    {
+        try {
+            $results = M_Kwitansi::where('PAYMENT_TYPE', 'top_up')->orderBy('CREATED_AT', 'DESC')->get();
+
+            $dto = R_Kwitansi::collection($results);
+
+            return response()->json($dto, 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+        }
     }
 
     public function checkTopUp(Request $request)
