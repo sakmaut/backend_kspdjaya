@@ -50,7 +50,8 @@ class RekeningKoranController extends Controller
                 return [
                     'NILAI_PINJAMAN' => round(floatval($item->PCPL_ORI), 2),
                     'NILAI_PEMBAYARAN' => round(floatval($item->PAID_PRINCIPAL), 2),
-                    'SISA_POKOK' => round(floatval($item->SISA_POKOK), 2)
+                    'SISA_POKOK' => round(floatval($item->SISA_POKOK), 2),
+                    'TUNGGAKKAN' => 0
                 ];
             }, $result);
 
