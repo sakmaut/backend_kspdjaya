@@ -38,7 +38,9 @@ class RekeningKoranController extends Controller
         try {
             $loan_number = $request->loan_number;
 
-            $allQuery = "SELECT PAID_PRINCIPAL
+            $allQuery = "SELECT PCPL_ORI,
+                                PAID_PRINCIPAL,
+                                (a.PCPL_ORI - COALESCE(a.PAID_PRINCIPAL, 0)) AS SISA_POKOK,
                         FROM credit 
                         WHERE LOAN_NUMBER = '{$loan_number}' ";
 
@@ -46,7 +48,9 @@ class RekeningKoranController extends Controller
 
             $processedResults = array_map(function ($item) {
                 return [
-                    'SISA_POKOK' => round(floatval($item->PAID_PRINCIPAL), 2)
+                    'NILAI_PINJAMAN' => round(floatval($item->PCPL_ORI), 2),
+                    'NILAI_PEMBAYARAN' => round(floatval($item->PAID_PRINCIPAL), 2),
+                    'SISA_POKOK' => round(floatval($item->SISA_POKOK), 2)
                 ];
             }, $result);
 
