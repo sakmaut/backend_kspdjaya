@@ -21,7 +21,8 @@ class R_CustomerSearch extends JsonResource
             "nama" => $this->NAME ?? null,
             "alamat" => $this->ADDRESS,
             "nilai_pinjaman" => intval($this->PCPL_ORI ?? 0),
-            "tunggakan" => intval(0)
+            "tunggakan" => intval(0),
+            "sisa_pokok" => (int) $this->PAID_PRINCIPAL ?? 0,
         ];
     }
 }

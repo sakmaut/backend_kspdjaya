@@ -404,7 +404,6 @@ class CustomerController extends Controller
     public function listRekeningKoran(Request $request)
     {
         try {
-
             $query = DB::table('credit as a')
                 ->select([
                     'a.STATUS',
@@ -413,6 +412,7 @@ class CustomerController extends Controller
                     'c.NAME',
                     'c.ALIAS',
                     'a.PCPL_ORI',
+                    'a.PAID_PRINCIPAL',
                     'c.ADDRESS',
                     'b.POLICE_NUMBER'
                 ])
