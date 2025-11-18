@@ -26,6 +26,7 @@ class M_Credit extends Model
         'INSTALLMENT_DATE',
         'PCPL_ORI',
         'INTRST_ORI',
+        'MAX_PRINCIPAL',
         'PAID_PRINCIPAL',
         'PAID_INTEREST',
         'PAID_PENALTY',
