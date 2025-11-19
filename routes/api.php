@@ -43,9 +43,6 @@ Route::post('auth/login', [AuthController::class, 'login'])->middleware('time.ac
 Route::get('auth/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 
 Route::get('welcome', [Welcome::class, 'index']);
-// Route::get('jobArrears', [Welcome::class, 'job']);
-// Route::post('botpel', [PelunasanController2::class, 'getDetail']);
-// Route::post('propel', [PelunasanController2::class, 'propel']);
 
 Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::resource('users', UsersController::class)->only(['index']);
@@ -66,7 +63,6 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
 
     // Route Group Branch
     Route::resource('cabang', BranchController::class);
-    // Route::get('collateral_count', [BpkbController::class, 'countAll']);
 
     // Route Group Cr Application
     Route::resource('cr_application', CrAppilcationController::class)->except(['index']);
@@ -161,7 +157,6 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
 
     Route::post('lap_pembayaran', [ReportController::class, 'lapPembayaran']);
 
-
     //Saving
     Route::resource('account', C_Account::class);
     Route::get('account_by_custcode/{id}', [C_Account::class, 'getByCustCode']);
@@ -181,6 +176,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::post('process_top_up', [RekeningKoranController::class, 'processTopUp']);
     Route::get('kwitansi_rekening_koran', [RekeningKoranController::class, 'kwitansiRekeningKoran']);
     Route::get('kwitansi_top_up', [RekeningKoranController::class, 'kwitansiTopUp']);
+    Route::get('lap_credit', [ReportController::class, 'lapCredit']);
 });
 
 

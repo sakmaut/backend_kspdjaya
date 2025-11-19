@@ -22,6 +22,17 @@ use Illuminate\Support\Facades\DB;
 class ReportController extends Controller
 {
 
+    public function lapCredit(Request $request)
+    {
+        try {
+            $query = DB::table('credit_2025')->get();
+
+            return response()->json($query, 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+        }
+    }
+
     public function inquiryList(Request $request)
     {
         try {
@@ -82,7 +93,6 @@ class ReportController extends Controller
 
             return response()->json($mapping, 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
@@ -165,7 +175,6 @@ class ReportController extends Controller
 
             return response()->json($buildArray, 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
@@ -251,7 +260,6 @@ class ReportController extends Controller
 
             return response()->json($results, 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
@@ -308,7 +316,6 @@ class ReportController extends Controller
 
             return response()->json($collaterals, 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
@@ -374,7 +381,6 @@ class ReportController extends Controller
 
             return response()->json($allData, 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
@@ -417,7 +423,6 @@ class ReportController extends Controller
 
             return response()->json($allData, 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
@@ -446,7 +451,6 @@ class ReportController extends Controller
 
             return response()->json($allData, 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
@@ -632,7 +636,6 @@ class ReportController extends Controller
 
             return response()->json($schedule, 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage()], 500);
         }
     }
@@ -704,7 +707,6 @@ class ReportController extends Controller
 
             return response()->json($allData, 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
@@ -766,7 +768,6 @@ class ReportController extends Controller
 
             return response()->json($results, 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
@@ -799,7 +800,6 @@ class ReportController extends Controller
 
             return response()->json($dto, 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request, $e->getMessage(), 500);
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
