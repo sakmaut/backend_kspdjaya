@@ -290,10 +290,17 @@ class C_Tagihan extends Controller
                 ->groupBy('p.LOAN_NUM');
 
             // Subquery log survei
-            $logSubQuery = DB::table('cl_survey_logs')
-                ->select('REFERENCE_ID', 'DESCRIPTION', 'CONFIRM_DATE')
-                ->orderBy('CREATED_AT', 'desc')
-                ->limit(1);
+            $logSubQuery = DB::table('cl_survey_logs as t')
+                ->join(
+                    DB::raw('(SELECT REFERENCE_ID, MAX(CREATED_AT) AS max_created 
+                  FROM cl_survey_logs 
+                  GROUP BY REFERENCE_ID) x'),
+                    function ($join) {
+                        $join->on('x.REFERENCE_ID', '=', 't.REFERENCE_ID')
+                            ->on('x.max_created', '=', 't.CREATED_AT');
+                    }
+                )
+                ->select('t.REFERENCE_ID', 't.DESCRIPTION', 't.CONFIRM_DATE');
 
             $lkpSubQuery = DB::table('cl_lkp_detail as b')
                 ->leftJoin('cl_lkp as c', 'c.ID', '=', 'b.LKP_ID')
