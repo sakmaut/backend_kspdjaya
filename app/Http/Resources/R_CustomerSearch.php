@@ -23,6 +23,7 @@ class R_CustomerSearch extends JsonResource
             "nilai_pinjaman" => intval($this->PCPL_ORI ?? 0),
             "tunggakan" => intval(0),
             "sisa_pokok" => (int) ($this->PAID_PRINCIPAL ?? 0),
+            "angsuran" => (int) ($this->INSTALLMENT ?? 0),
         ];
     }
 }
