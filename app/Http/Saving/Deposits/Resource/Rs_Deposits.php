@@ -26,7 +26,7 @@ class Rs_Deposits extends JsonResource
             "alamat" => "",
             "nominal" => (int) ($this->deposit_value ?? 0),
             "bunga" => (int) ($this->int_rate ?? 0),
-            "pajak" => $bunga_kotor / 100,
+            "pajak" => ($bunga_kotor / 100) * 0.2,
             "bunga_pajak" => $bunga_bersih / 100,
             "periode" => $this->period,
         ];
