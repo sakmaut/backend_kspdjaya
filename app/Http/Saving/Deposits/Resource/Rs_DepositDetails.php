@@ -10,6 +10,12 @@ class Rs_DepositDetails extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        $current_date = Carbon::now();
+        $day_calc = $current_date->diffInDays($this->created_at);
+        $bunga_kotor = $this->deposit_value * ($this->int_rate / 100) * ($day_calc / 365);
+        $pajak = $bunga_kotor * 0.20;
+        $bunga_bersih = $bunga_kotor - $pajak;
+
         return [
             "id" => $this->id,
             "no_rekening" => $this->acc_destination,
@@ -19,6 +25,12 @@ class Rs_DepositDetails extends JsonResource
                 $this->customer->KELURAHAN . ', ' . $this->customer->KECAMATAN . ', ' .
                 $this->customer->CITY . ', ' . $this->customer->PROVINCE . ' ' . $this->customer->ZIP_CODE,
             "suku_bunga" => (float) $this->int_rate,
+            "nilai_bunga" => (int) $bunga_kotor,
+            "pajak" => (int) $pajak,
+            "bunga_pajak" => (int) $bunga_bersih,
+            "hari_aktif" => $day_calc,
+            "status" => $this->status,
+            "tgl_mulai" => $this->created_at,
             "jangka_waktu" => $this->deposit_holder,
             "tanggal_valuta" => Carbon::parse($this->entry_date)->format('d-m-Y'),
             "tanggal_jth_tmpo" => Carbon::parse($this->mature_date)->format('d-m-Y'),
