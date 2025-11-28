@@ -34,6 +34,8 @@ class Rs_Deposits extends JsonResource
             "hari_aktif" => $day_calc,
             "periode" => $this->period,
             "status" => $this->status,
+            "tgl_mulai" => $this->created_at,
+            "kalkulasi_tgl" => $this->day_calc,
         ];
     }
 }
