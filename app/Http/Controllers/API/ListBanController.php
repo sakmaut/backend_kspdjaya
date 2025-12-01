@@ -138,12 +138,12 @@ class ListBanController extends Controller
 
             $jobName = $checkConditionDate ? 'LISBAN' : 'LISBAN_BELOM_MOVEON';
 
-            $checkQueue = DB::table('job_on_progress')->where('JOB_NAME', $jobName)->first();
+            // $checkQueue = DB::table('job_on_progress')->where('JOB_NAME', $jobName)->first();
 
-            $lastCallTime = Carbon::parse($checkQueue->LAST_CALL)->setTimezone('Asia/Jakarta');
-            $now = Carbon::now('Asia/Jakarta');
+            // $lastCallTime = Carbon::parse($checkQueue->LAST_CALL)->setTimezone('Asia/Jakarta');
+            // $now = Carbon::now('Asia/Jakarta');
 
-            $diffInMinutes = $lastCallTime->diffInMinutes($now);
+            // $diffInMinutes = $lastCallTime->diffInMinutes($now);
 
             // if ($checkQueue->JOB_STATUS == 1) {
 
@@ -377,8 +377,6 @@ class ListBanController extends Controller
                                     or (cl.STATUS_REC = 'RP' and coalesce(cl.mod_user,'') <> 'exclude jaminan' and cast(cl.LOAN_NUMBER as char) not in (select cast(pp.LOAN_NUM as char) from payment pp where pp.ACC_KEY = 'JUAL UNIT'))
                                     or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char) from temp_lis_02C )))";
 
-
-
             if ($checkConditionDate) {
 
                 $checkRunSp = DB::select("  SELECT
@@ -389,15 +387,6 @@ class ListBanController extends Controller
                                             END AS execute_sp
                                             FROM job_on_progress
                                             WHERE job_name = 'LISBAN'");
-
-                // $checkRunSp = DB::select(" SELECT
-                //                                 CASE
-                //                                     WHEN (SELECT MAX(p.ENTRY_DATE) FROM payment p) >= (SELECT MAX(temp_lis_02C.last_pay) FROM temp_lis_02C)
-                //                                         AND job_status = 0 THEN 'run'
-                //                                     ELSE 'skip'
-                //                                 END AS execute_sp
-                //                             FROM job_on_progress
-                //                             WHERE job_name = 'LISBAN'");
 
                 $branchCon = $getBranch == 'semua' ? '%' : $getBranch;
 
