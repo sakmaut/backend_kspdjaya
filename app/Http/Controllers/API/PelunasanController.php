@@ -32,10 +32,10 @@ class PelunasanController extends Controller
     protected $r_pokokSebagian;
 
     public function __construct(
-        ExceptionHandling $log, 
+        ExceptionHandling $log,
         TasksRepository $taskslogging,
-        R_PokokSebagian $r_pokokSebagian)
-    {
+        R_PokokSebagian $r_pokokSebagian
+    ) {
         $this->log = $log;
         $this->taskslogging = $taskslogging;
         $this->r_pokokSebagian = $r_pokokSebagian;
@@ -79,9 +79,9 @@ class PelunasanController extends Controller
             $loan_number = $request->loan_number;
             $setPenaltyRate = 5;
 
-            $checkCreditType = M_Credit::where('LOAN_NUMBER',$loan_number)->first();
+            $checkCreditType = M_Credit::where('LOAN_NUMBER', $loan_number)->first();
 
-            if(strtolower($checkCreditType->CREDIT_TYPE) === 'bunga_menurun'){
+            if (strtolower($checkCreditType->CREDIT_TYPE) === 'bunga_menurun') {
                 return $this->r_pokokSebagian->getAllData($request);
             }
 
@@ -294,7 +294,7 @@ class PelunasanController extends Controller
 
             if (!empty($payment)) {
                 foreach ($payment as $list) {
-                    $list->update(['STTS_PAYMENT' => $status]);
+                    $list->update(['STTS_RCRD' => $status]);
                 }
             }
 
