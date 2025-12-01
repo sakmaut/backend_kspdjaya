@@ -25,11 +25,10 @@ class MonthlyRunSp extends Command
 
     public function handle()
     {
-        $now = Carbon::now();
+        $now = Carbon::now()->format('dmY');
 
         try {
             DB::select('CALL initialListbanOngoing(?, ?)', [$now, "BOTEX_CRON_JOB"]);
-            $this->info("Stored Procedure executed on: " . $now->toDateTimeString());
         } catch (\Exception $e) {
             $this->error("Error executing stored procedure: " . $e->getMessage());
         }
