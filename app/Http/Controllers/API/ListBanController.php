@@ -379,6 +379,8 @@ class ListBanController extends Controller
 
             if ($checkConditionDate) {
 
+                echo "masuk berjalan";
+
                 $checkRunSp = DB::select("  SELECT
                                             CASE
                                                 WHEN (SELECT MAX(p.ENTRY_DATE) FROM payment p) >= (SELECT coalesce(MAX(temp_lis_02C.last_pay),(SELECT MAX(p.ENTRY_DATE) FROM payment p)) FROM temp_lis_02C)
