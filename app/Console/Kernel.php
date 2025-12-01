@@ -24,7 +24,7 @@ class Kernel extends ConsoleKernel
         // $schedule->command('app:monthly-run-sp')->monthlyOn(1, '02:00')->timezone('Asia/Jakarta');
         $schedule->command('app:listan-service')->monthlyOn(1, '05:00')->timezone('Asia/Jakarta');
 
-        $schedule->command('app:monthly-run-sp')->dailyAt('12:57');
+        $schedule->command('app:monthly-run-sp')->dailyAt('12:59');
     }
 
     protected function commands(): void
