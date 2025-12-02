@@ -72,6 +72,8 @@ class C_Tagihan extends Controller
                         ->where('d.STATUS', '=', 'AKTIF');
                 })
                 ->whereIn('a.CYCLE_AWAL', $cycles)
+                ->whereYear('d.created_at', date('Y'))
+                ->whereMonth('d.created_at', date('m'))
                 ->whereNull('d.LOAN_NUMBER');
 
             if ($currentPosition != 'HO') {
