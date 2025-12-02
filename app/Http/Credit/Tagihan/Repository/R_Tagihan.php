@@ -326,8 +326,13 @@ class R_Tagihan
 
     protected function listAllTagihan()
     {
-        return  $this->model::with(['customer'])->where('STATUS', "Aktif")->get();
+        return $this->model::with(['customer'])
+            ->where('STATUS', 'Aktif')
+            ->whereYear('created_at', date('Y'))
+            ->whereMonth('created_at', date('m'))
+            ->get();
     }
+
 
     protected function cl_deploy_by_pic($pic)
     {
