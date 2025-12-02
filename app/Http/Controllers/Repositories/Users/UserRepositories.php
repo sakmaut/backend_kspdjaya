@@ -16,7 +16,8 @@ class UserRepositories implements UsersRepositoryInterface
 
     function getActiveUsers()
     {
-        return $this->userEntity::where('status', 'active')->with('branch')->get();
+        // return $this->userEntity::where('status', 'active')->with('branch')->get();
+        return $this->userEntity::with('branch')->get();
     }
 
     function findUserByid($id)
