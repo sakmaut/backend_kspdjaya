@@ -71,8 +71,8 @@ class C_Tagihan extends Controller
                     $join->on('d.LOAN_NUMBER', '=', 'a.NO_KONTRAK')
                         ->where('d.STATUS', '=', 'AKTIF');
                 })
-                ->whereIn('a.CYCLE_AWAL', $cycles)
-                ->whereNull('d.LOAN_NUMBER');
+                ->whereIn('a.CYCLE_AWAL', $cycles);
+            // ->whereNull('d.LOAN_NUMBER');
 
             if ($currentPosition != 'HO') {
                 $query->where('a.BRANCH_ID', $currentBranch);
