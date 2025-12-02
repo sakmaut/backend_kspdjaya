@@ -156,6 +156,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::post('listBanTest', [ListBanController::class, 'listBanTest']);
 
     Route::post('lap_pembayaran', [ReportController::class, 'lapPembayaran']);
+    Route::post('lap_aging', [ReportController::class, 'lapAging']);
 
     //Saving
     Route::resource('account', C_Account::class);

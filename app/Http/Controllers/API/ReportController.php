@@ -850,4 +850,26 @@ class ReportController extends Controller
 
         return $documents;
     }
+
+    public function lapAging(Request $request)
+    {
+        try {
+            if (!$request->filled('tgl')) {
+                return response()->json([], 200);
+            }
+
+            $tgl = Carbon::parse($request->tgl)->format('Y-m-d');
+
+            $results = DB::table('credit_2025')
+                ->where('back_date', $tgl)
+                ->get();
+
+            return response()->json($results, 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'status'  => 500
+            ], 500);
+        }
+    }
 }
