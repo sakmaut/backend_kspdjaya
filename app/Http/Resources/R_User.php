@@ -27,7 +27,7 @@ class R_User extends JsonResource
             'alamat' => $this->alamat,
             'gender' => $this->gender,
             'no_hp' => $this->mobile_number,
-            'status' => strtolower($this->keterangan),
+            'status' => ucwords(strtolower($this->keterangan)),
             'photo_personal' => M_HrEmployeeDocument::attachment($this->id, 'personal'),
         ];
     }
