@@ -860,11 +860,36 @@ class ReportController extends Controller
 
             $tgl = Carbon::parse($request->tgl)->format('Y-m-d');
 
-            $results = DB::table('credit_2025')
-                ->where('back_date', $tgl)
+            $results = DB::table('credit_2025 as a')
+                ->select(
+                    'a.LOAN_NUMBER',
+                    'b.NAME',
+                    'd.POLICE_NUMBER',
+                    DB::raw('c.PCPL_ORI - c.PAID_PRINCIPAL as os'),
+                    'c.CREATED_AT',
+                    'e.NAME as cabang'
+                )
+                ->leftJoin('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
+                ->leftJoin('credit as c', 'c.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
+                ->leftJoin('cr_collateral as d', 'd.CR_CREDIT_ID', '=', 'c.ID')
+                ->leftJoin('branch as e', 'e.ID', '=', 'a.BRANCH')
+                ->where('a.back_date', $tgl)
                 ->get();
 
-            return response()->json($results, 200);
+            $dataBaru = [];
+
+            foreach ($results as $item) {
+                $dataBaru[] = [
+                    'no_kontrak'    => $item->LOAN_NUMBER ?? "",
+                    'nama_nasabah'  => $item->NAME ?? "",
+                    'no_polisi'     => $item->POLICE_NUMBER ?? "",
+                    'os'            => $item->os ?? 0,
+                    'created_at'    => Carbon::parse($item->created_at ?? "")->format('d-m-Y'),
+                    'cabang'        => $item->cabang ?? "",
+                ];
+            }
+
+            return response()->json($dataBaru, 200);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => $e->getMessage(),
