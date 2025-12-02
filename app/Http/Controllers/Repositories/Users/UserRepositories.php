@@ -43,6 +43,7 @@ class UserRepositories implements UsersRepositoryInterface
             'gender' => $request->gender ?? '',
             'mobile_number' => $request->no_hp ?? '',
             'status' => $request->status == '' ? 'active' : strtolower($request->status),
+            'keterangan' => strtolower($request->status) ?? '',
             'created_by' => $request->user()->id
         ];
 
@@ -51,6 +52,9 @@ class UserRepositories implements UsersRepositoryInterface
 
     function update($request, $userById)
     {
+        $status = ['mutasi pos', 'active', 'mutasi jabatan'];
+        $reqStatus = strtolower($request->status ?? '');
+
         $data = [
             'username' => $request->username ?? '',
             'fullname' => $request->nama ?? '',
@@ -60,9 +64,10 @@ class UserRepositories implements UsersRepositoryInterface
             'alamat' => $request->alamat ?? '',
             'gender' => $request->gender ?? '',
             'mobile_number' => $request->no_hp ?? '',
-            'status' => strtolower($request->status) ?? '',
+            'status' => in_array($reqStatus, $status) ? 'Active' : 'Inactive',
+            'keterangan' => strtoupper($reqStatus),
             'updated_by' => $request->user()->id ?? '',
-            'updated_at' => Carbon::now() ?? null
+            'updated_at' => Carbon::now()
         ];
 
         if (isset($request->password) && !empty($request->password)) {
