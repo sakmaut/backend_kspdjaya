@@ -69,9 +69,7 @@ class C_Tagihan extends Controller
                 ->leftJoin('customer as c', 'c.CUST_CODE', '=', 'a.CUST_CODE')
                 ->leftJoin('cl_deploy as d', function ($join) {
                     $join->on('d.LOAN_NUMBER', '=', 'a.NO_KONTRAK')
-                        ->where('d.STATUS', '=', 'AKTIF')
-                        ->whereYear('d.CREATED_AT', date('Y'))
-                        ->whereMonth('d.CREATED_AT', date('m'));
+                        ->where('d.STATUS', '=', 'AKTIF');
                 })
                 ->whereIn('a.CYCLE_AWAL', $cycles)
                 ->whereNull('d.LOAN_NUMBER');
