@@ -321,7 +321,12 @@ class R_Tagihan
 
     protected function listTagihanByBranchId($currentBranch)
     {
-        return  $this->model::with(['customer'])->where('BRANCH_ID', $currentBranch)->where('STATUS', "Aktif")->get();
+        return  $this->model::with(['customer'])
+            ->where('BRANCH_ID', $currentBranch)
+            ->where('STATUS', "Aktif")
+            ->whereYear('created_at', date('Y'))
+            ->whereMonth('created_at', date('m'))
+            ->get();
     }
 
     protected function listAllTagihan()
