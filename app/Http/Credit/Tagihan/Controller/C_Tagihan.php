@@ -327,6 +327,8 @@ class C_Tagihan extends Controller
                 ->where('a.USER_ID', $pic)
                 ->whereRaw('a.AMBC_TOTAL_AWAL > COALESCE(pay.total_bayar, 0)')
                 ->where('cr.STATUS_REC', 'AC')
+                ->whereMonth('a.CREATED_AT', now()->month)
+                ->whereYear('a.CREATED_AT', now()->year)
                 ->where(function ($query) {
                     $query->whereNull('bc.LKP_NUMBER')
                         ->orWhere('bc.LKP_NUMBER', '');
