@@ -75,8 +75,8 @@ class C_Tagihan extends Controller
                         ->whereYear('d.CREATED_AT', now()->year);
                 })
                 ->leftJoin('users as e', 'e.id', '=', 'a.SURVEYOR_ID')
-                ->whereIn('a.CYCLE_AWAL', $cycles);
-            // ->whereNull('d.LOAN_NUMBER');
+                ->whereIn('a.CYCLE_AWAL', $cycles)
+                ->whereNull('d.LOAN_NUMBER');
 
             if ($currentPosition != 'HO') {
                 $query->where('a.BRANCH_ID', $currentBranch);
