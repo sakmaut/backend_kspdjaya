@@ -460,7 +460,7 @@ class Credit extends Controller
 
         $cr_personal = M_CrPersonal::where('APPLICATION_ID', $data->ID)->first();
         $cr_order = M_CrOrder::where('APPLICATION_ID', $data->ID)->first();
-        $check_customer_ktp = M_Customer::where('ID_NUMBER', $cr_personal->ID_NUMBER)->first();
+        $check_customer_ktp = M_Customer::where('ID_NUMBER', $cr_personal->ID_NUMBER)->where('NAME', $cr_personal->NAME)->first();
 
         $getAttachment = DB::select(
             "   SELECT *
@@ -558,11 +558,10 @@ class Credit extends Controller
 
     private function insert_customer_xtra($data, $cust_code)
     {
-
         $cr_personal = M_CrPersonal::where('APPLICATION_ID', $data->ID)->first();
         $cr_personal_extra = M_CrPersonalExtra::where('APPLICATION_ID', $data->ID)->first();
         $cr_spouse = M_CrApplicationSpouse::where('APPLICATION_ID', $data->ID)->first();
-        $check_customer_ktp = M_Customer::where('ID_NUMBER', $cr_personal->ID_NUMBER)->first();
+        $check_customer_ktp = M_Customer::where('ID_NUMBER', $cr_personal->ID_NUMBER)->where('NAME', $cr_personal->NAME)->first();
         $cr_order = M_CrOrder::where('APPLICATION_ID', $data->ID)->first();
         $update = M_CustomerExtra::where('CUST_CODE', $check_customer_ktp->CUST_CODE)->first();
 
