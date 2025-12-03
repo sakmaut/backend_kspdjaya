@@ -122,6 +122,19 @@ class ListanService extends Command
 
         $sql .= " ORDER BY COALESCE(u.fullname, cl.mcf_id),cl.LOAN_NUMBER ASC";
 
+        $checkRunSp = DB::select("  SELECT
+                                            CASE
+                                                WHEN (SELECT MAX(p.ENTRY_DATE) FROM payment p) >= (SELECT coalesce(MAX(temp_lis_02C.last_pay),(SELECT MAX(p.ENTRY_DATE) FROM payment p)) FROM temp_lis_02C)
+                                                    AND job_status = 0 THEN 'run'
+                                                ELSE 'skip'
+                                            END AS execute_sp
+                                            FROM job_on_progress
+                                            WHERE job_name = 'LISBAN'");
+
+        if (!empty($checkRunSp) && $checkRunSp[0]->execute_sp === 'run') {
+            DB::select('CALL lisban_berjalan(?,?,?)', [$dateFrom, "BOTEX_CRON_JOB", '%']);
+        }
+
         $results = DB::select($sql);
 
         if (!empty($results)) {
