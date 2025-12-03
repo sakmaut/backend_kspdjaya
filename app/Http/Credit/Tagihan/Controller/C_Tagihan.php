@@ -64,7 +64,8 @@ class C_Tagihan extends Controller
                     'c.OCCUPATION',
                     'd.ID as DEPLOY_ID',
                     'd.LOAN_NUMBER',
-                    'd.STATUS as DEPLOY_STATUS'
+                    'd.STATUS as DEPLOY_STATUS',
+                    DB::raw('COALESCE(e.keterangan, "RESIGN") as STATUS_MCF')
                 )
                 ->leftJoin('customer as c', 'c.CUST_CODE', '=', 'a.CUST_CODE')
                 ->leftJoin('cl_deploy as d', function ($join) {
@@ -73,6 +74,7 @@ class C_Tagihan extends Controller
                         ->whereMonth('d.CREATED_AT', now()->month)
                         ->whereYear('d.CREATED_AT', now()->year);
                 })
+                ->leftJoin('users as e', 'e.id', '=', 'a.SURVEYOR_ID')
                 ->whereIn('a.CYCLE_AWAL', $cycles);
             // ->whereNull('d.LOAN_NUMBER');
 
