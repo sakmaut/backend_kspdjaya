@@ -27,7 +27,7 @@ class R_TagihanDetail extends JsonResource
             && in_array($this->LAST_INST, [1, 2, 3])
             && in_array($this->CYCLE_AWAL, ['CM', 'C5', 'C4', 'C3', 'C2', 'C1', 'C0'])
         ) || (
-            $this->STATUS_MCF === 'RESIGN'
+            in_array($this->STATUS_MCF, ['RESIGN', 'MUTASI JABATAN', 'MUTASI POS'])
             && in_array($this->LAST_INST, [1, 2, 3])
             && in_array($this->CYCLE_AWAL, ['CM', 'C0', 'C1', 'C2'])
         )
