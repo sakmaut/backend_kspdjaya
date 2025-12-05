@@ -869,7 +869,7 @@ class ReportController extends Controller
                     'c.CREATED_AT',
                     'e.NAME as cabang',
                     'a.tunggakan',
-                    'a.lama_tunggakan'
+                    'a.hari_tunggakan'
                 )
                 ->leftJoin('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
                 ->leftJoin('credit as c', 'c.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
@@ -889,7 +889,7 @@ class ReportController extends Controller
                     'created_at'    => Carbon::parse($item->created_at ?? "")->format('d-m-Y'),
                     'cabang'        => $item->cabang ?? "",
                     'tunggakan'     => $item->tunggakan ?? 0,
-                    'lama_tunggakan'     => $item->lama_tunggakan ?? 0
+                    'lama_tunggakan'     => $item->hari_tunggakan ?? 0
                 ];
             }
 
