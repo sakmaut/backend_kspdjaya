@@ -148,6 +148,8 @@ class C_Tagihan extends Controller
                 ->leftJoin('cr_collateral as cc', 'cc.CR_CREDIT_ID', '=', 'a.CREDIT_ID')
                 ->leftJoin('users as u', 'u.username', '=', 'a.USER_ID')
                 ->leftJoin('branch as br', 'br.ID', '=', 'u.branch_id')
+                ->whereMonth('a.CREATED_AT', now()->month)
+                ->whereYear('a.CREATED_AT', now()->year)
                 ->select(
                     'a.ID',
                     'a.NO_SURAT',
