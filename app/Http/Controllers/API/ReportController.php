@@ -869,12 +869,20 @@ class ReportController extends Controller
                     'c.CREATED_AT',
                     'e.NAME as cabang',
                     'a.tunggakan',
-                    'a.hari_tunggakan'
+                    'a.hari_tunggakan',
+                    'a.PERIOD',
+                    'a.CREDIT_TYPE',
+                    'a.INSTALLMENT',
+                    'a.PCPL_ORI',
+                    'a.INTRST_ORI',
+                    'f.fullname',
+                    DB::raw('a.INTRST_ORI - a.PAID_INTEREST as sisa_bunga')
                 )
                 ->leftJoin('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
                 ->leftJoin('credit as c', 'c.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
                 ->leftJoin('cr_collateral as d', 'd.CR_CREDIT_ID', '=', 'c.ID')
                 ->leftJoin('branch as e', 'e.ID', '=', 'a.BRANCH')
+                ->leftJoin('users as f', 'f.id', '=', 'a.MCF_ID')
                 ->where('a.back_date', $tgl)
                 ->get();
 
@@ -883,13 +891,19 @@ class ReportController extends Controller
             foreach ($results as $item) {
                 $dataBaru[] = [
                     'no_kontrak'    => $item->LOAN_NUMBER ?? "",
-                    'nama_nasabah'  => $item->NAME ?? "",
+                    'nama_debitur'  => $item->NAME ?? "",
                     'no_polisi'     => $item->POLICE_NUMBER ?? "",
                     'os'            => (int) $item->os ?? 0,
-                    'created_at'    => Carbon::parse($item->created_at ?? null)->format('d-m-Y'),
+                    'tgl_cair'    => Carbon::parse($item->created_at ?? null)->format('d-m-Y'),
                     'cabang'        => $item->cabang ?? "",
                     'tunggakan'     => (int) $item->tunggakan ?? 0,
-                    'lama_tunggakan' => $item->hari_tunggakan ?? 0
+                    'hr_tunggakan' => $item->hari_tunggakan ?? 0,
+                    'marketing' => $item->fullname ?? "",
+                    'plafond' => (int) $item->PCPL_ORI ?? 0,
+                    'tenor' => $item->PERIOD ?? 0,
+                    'bunga' => (int) $item->INTRST_ORI ?? 0,
+                    'angsuran' => (int) $item->INSTALLMENT ?? 0,
+                    'jenis' => $item->CREDIT_TYPE ?? "",
                 ];
             }
 
