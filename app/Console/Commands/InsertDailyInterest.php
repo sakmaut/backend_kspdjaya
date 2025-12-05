@@ -83,7 +83,7 @@ class InsertDailyInterest extends Command
                             ELSE 365
                         END)) *
                     CASE WHEN hari_ke = 0 THEN 0 ELSE 1 END,
-                4) AS DAILY_INTEREST,
+                2) AS DAILY_INTEREST,
                 ROUND(
                     (sisa_pokok * ((INTEREST_RATE * 12) / 100) /
                         (CASE
@@ -93,9 +93,9 @@ class InsertDailyInterest extends Command
                             ELSE 365
                         END)) *
                     CASE WHEN hari_ke = 0 THEN 0 ELSE hari_ke END,
-                4) AS TOTAL_DAILY_INTEREST,
+                2) AS TOTAL_DAILY_INTEREST,
                 'CRON_JOB_SYSTEM',
-                CURDATE()
+                tgl
             FROM tanggal_harian
             WHERE tgl = CURDATE()                        -- hanya hari ini
               AND NOT EXISTS (
