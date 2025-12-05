@@ -885,11 +885,11 @@ class ReportController extends Controller
                     'no_kontrak'    => $item->LOAN_NUMBER ?? "",
                     'nama_nasabah'  => $item->NAME ?? "",
                     'no_polisi'     => $item->POLICE_NUMBER ?? "",
-                    'os'            => $item->os ?? 0,
-                    'created_at'    => Carbon::parse($item->created_at ?? "")->format('d-m-Y'),
+                    'os'            => (int) $item->os ?? 0,
+                    'created_at'    => Carbon::parse($item->created_at ?? null)->format('d-m-Y'),
                     'cabang'        => $item->cabang ?? "",
-                    'tunggakan'     => $item->tunggakan ?? 0,
-                    'lama_tunggakan'     => $item->hari_tunggakan ?? 0
+                    'tunggakan'     => (int) $item->tunggakan ?? 0,
+                    'lama_tunggakan' => $item->hari_tunggakan ?? 0
                 ];
             }
 
