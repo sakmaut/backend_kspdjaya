@@ -868,7 +868,7 @@ class ReportController extends Controller
                     DB::raw('c.PCPL_ORI - c.PAID_PRINCIPAL as os'),
                     'c.CREATED_AT',
                     'e.NAME as cabang',
-                    'a.tunggakkan',
+                    'a.tunggakan',
                     'a.lama_tunggakan'
                 )
                 ->leftJoin('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
