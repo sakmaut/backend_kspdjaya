@@ -888,7 +888,7 @@ class ReportController extends Controller
                     'os'            => $item->os ?? 0,
                     'created_at'    => Carbon::parse($item->created_at ?? "")->format('d-m-Y'),
                     'cabang'        => $item->cabang ?? "",
-                    'tunggakan'     => $item->tunggakkan ?? 0,
+                    'tunggakan'     => $item->tunggakan ?? 0,
                     'lama_tunggakan'     => $item->lama_tunggakan ?? 0
                 ];
             }
