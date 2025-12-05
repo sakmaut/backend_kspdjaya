@@ -867,7 +867,9 @@ class ReportController extends Controller
                     'd.POLICE_NUMBER',
                     DB::raw('c.PCPL_ORI - c.PAID_PRINCIPAL as os'),
                     'c.CREATED_AT',
-                    'e.NAME as cabang'
+                    'e.NAME as cabang',
+                    'a.tunggakkan',
+                    'a.lama_tunggakan'
                 )
                 ->leftJoin('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
                 ->leftJoin('credit as c', 'c.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
@@ -886,6 +888,8 @@ class ReportController extends Controller
                     'os'            => $item->os ?? 0,
                     'created_at'    => Carbon::parse($item->created_at ?? "")->format('d-m-Y'),
                     'cabang'        => $item->cabang ?? "",
+                    'tunggakan'     => $item->tunggakkan ?? 0,
+                    'lama_tunggakan'     => $item->lama_tunggakan ?? 0
                 ];
             }
 
