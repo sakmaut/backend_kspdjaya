@@ -16,7 +16,8 @@ class KwitansiRepository
 
     public function getAllOrdered()
     {
-        return $this->model::orderBy('CREATED_AT', 'DESC');
+        // return $this->model::orderBy('CREATED_AT', 'DESC');
+        return $this->model::orderBy('NO_TRANSAKSI', 'DESC');
     }
 
     public function getPendingForHO()
