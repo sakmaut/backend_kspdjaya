@@ -91,7 +91,7 @@ class UserAccessMenuController extends Controller
                     'master_menu_id' => $value['menu_id'],
                     'users_id'=> $request->users_id,
                     'created_by' => $request->user()->id,
-                    'created_at' => Carbon::now()->format('Y-m-d H:i:s')
+                    'created_at' => Carbon::now('Asia/Jakarta')->format('Y-m-d H:i:s')
                 ];
 
                  M_MasterUserAccessMenu::create($data_insert);
@@ -135,7 +135,7 @@ class UserAccessMenuController extends Controller
                     'master_menu_id' => $value['menu_id'],
                     'users_id'=> $id,
                     'created_by' => $request->user()->id,
-                    'created_at' => Carbon::now()->format('Y-m-d H:i:s')
+                    'created_at' => Carbon::now('Asia/Jakarta')->format('Y-m-d H:i:s')
                 ];
 
                  M_MasterUserAccessMenu::create($data_insert);
@@ -160,7 +160,7 @@ class UserAccessMenuController extends Controller
 
             $update = [
                 'deleted_by' => $req->user()->id,
-                'deleted_at' => Carbon::now()->format('Y-m-d H:i:s')
+                'deleted_at' => Carbon::now('Asia/Jakarta')->format('Y-m-d H:i:s')
             ];
 
             $userAccessMenu->update($update);

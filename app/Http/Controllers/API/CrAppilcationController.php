@@ -226,7 +226,7 @@ class CrAppilcationController extends Controller
             }
 
             $surveyID = $check_application_id->CR_SURVEY_ID;
-            $timenow = Carbon::now();
+            $timenow = Carbon::now('Asia/Jakarta');
 
             $this->insert_cr_application($request, $check_application_id);
             $this->insert_cr_personal($request, $id);
@@ -610,7 +610,7 @@ class CrAppilcationController extends Controller
             'EXT_2' => $request->pekerjaan['ekstra2'] ?? null,
 
             'VERSION' => 1,
-            'CREATE_DATE' => Carbon::now()->format('Y-m-d'),
+            'CREATE_DATE' => Carbon::now('Asia/Jakarta')->format('Y-m-d'),
             'CREATE_USER' => $request->user()->id,
         ];
 
@@ -761,7 +761,7 @@ class CrAppilcationController extends Controller
                 'POSITION' => 'ADMIN',
                 'APPLICATION_APPROVAL_ID' => $applicationId,
                 'ONCHARGE_PERSON' => $request->user()->id,
-                'ONCHARGE_TIME' => Carbon::now(),
+                'ONCHARGE_TIME' => Carbon::now('Asia/Jakarta'),
                 'APPROVAL_RESULT' => 'menunggu kapos'
             ];
 
@@ -773,7 +773,7 @@ class CrAppilcationController extends Controller
                 $data_update_approval = [
                     'CODE' => 'WAKPS',
                     'ONCHARGE_PERSON' => $request->user()->id,
-                    'ONCHARGE_TIME' => Carbon::now(),
+                    'ONCHARGE_TIME' => Carbon::now('Asia/Jakarta'),
                     'APPROVAL_RESULT' => 'menunggu kapos'
                 ];
 
@@ -783,7 +783,7 @@ class CrAppilcationController extends Controller
                     'CODE' => 'WAKPS',
                     'SURVEY_APPROVAL_ID' => $surveyID,
                     'ONCHARGE_PERSON' => $request->user()->id,
-                    'ONCHARGE_TIME' => Carbon::now(),
+                    'ONCHARGE_TIME' => Carbon::now('Asia/Jakarta'),
                     'APPROVAL_RESULT' =>  'menunggu kapos'
                 ];
 
@@ -979,7 +979,7 @@ class CrAppilcationController extends Controller
             'POSITION' => 'ADMIN',
             'APPLICATION_APPROVAL_ID' => $uuid,
             'ONCHARGE_PERSON' => $request->user()->id,
-            'ONCHARGE_TIME' => Carbon::now(),
+            'ONCHARGE_TIME' => Carbon::now('Asia/Jakarta'),
             'ONCHARGE_DESCR' => 'AUTO_APPROVED_BY_SYSTEM',
             'APPROVAL_RESULT' => 'order diproses'
         ];
@@ -991,7 +991,7 @@ class CrAppilcationController extends Controller
         $data_update_approval = [
             'CODE' => 'CROR',
             'ONCHARGE_PERSON' => $request->user()->id,
-            'ONCHARGE_TIME' => Carbon::now(),
+            'ONCHARGE_TIME' => Carbon::now('Asia/Jakarta'),
             'APPROVAL_RESULT' => 'order diproses'
         ];
 
@@ -1001,7 +1001,7 @@ class CrAppilcationController extends Controller
             'CODE' => 'CROR',
             'SURVEY_APPROVAL_ID' => $getSurveyId,
             'ONCHARGE_PERSON' => $request->user()->id,
-            'ONCHARGE_TIME' => Carbon::now(),
+            'ONCHARGE_TIME' => Carbon::now('Asia/Jakarta'),
             'APPROVAL_RESULT' =>  'order diproses'
         ];
 
@@ -1373,7 +1373,7 @@ class CrAppilcationController extends Controller
             $surveyApproval = M_SurveyApproval::where('CR_SURVEY_ID', $checkApplication->CR_SURVEY_ID)->first();
 
             // Prepare common data
-            $currentTime = Carbon::now();
+            $currentTime = Carbon::now('Asia/Jakarta');
             $userId = $request->user()->id;
             $description = $request->keterangan;
             $flag = $request->flag;
@@ -1430,7 +1430,7 @@ class CrAppilcationController extends Controller
             $checkApplication = M_CrApplication::where('ID', $request->cr_application_id)->first();
             $surveyApproval = M_SurveyApproval::where('CR_SURVEY_ID', $checkApplication->CR_SURVEY_ID)->first();
 
-            $currentTime = Carbon::now();
+            $currentTime = Carbon::now('Asia/Jakarta');
             $userId = $request->user()->id;
             $description = $request->keterangan;
             $flag = $request->flag;

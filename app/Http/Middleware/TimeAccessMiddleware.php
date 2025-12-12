@@ -18,7 +18,7 @@ class TimeAccessMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         try {
-            $currentTime = Carbon::now()->format('H');
+            $currentTime = Carbon::now('Asia/Jakarta')->format('H');
 
             $setUrl = "https://api.kspdjaya.id";
             $time1 = 23;

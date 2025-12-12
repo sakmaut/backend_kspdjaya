@@ -383,14 +383,14 @@ class PelunasanController2 extends Controller
             $ttlDiscPenalty = floatval($getArrears->WOFF_PENALTY) + floatval($res['diskon_denda'] ?? 0);
 
             $getArrears->update([
-                'END_DATE' => Carbon::now()->format('Y-m-d') ?? null,
+                'END_DATE' => Carbon::now('Asia/Jakarta')->format('Y-m-d') ?? null,
                 'PAID_PCPL' => $ttlPrincipal ?? 0,
                 'PAID_INT' => $ttlInterest ?? 0,
                 'PAID_PENALTY' => $ttlPenalty ?? 0,
                 'WOFF_PCPL' => $ttlDiscPrincipal ?? 0,
                 'WOFF_INT' => $ttlDiscInterest ?? 0,
                 'WOFF_PENALTY' => $ttlDiscPenalty ?? 0,
-                'UPDATED_AT' => Carbon::now(),
+                'UPDATED_AT' => Carbon::now('Asia/Jakarta'),
             ]);
 
             $checkDiscountArrears = ($ttlDiscPrincipal + $ttlDiscInterest + $ttlDiscPenalty) == 0;

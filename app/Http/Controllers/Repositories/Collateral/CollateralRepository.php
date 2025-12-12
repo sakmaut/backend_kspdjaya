@@ -141,7 +141,7 @@ class CollateralRepository implements CollateralInterface
             'REQUEST_BY' => $request->user()->id ?? '',
             'REQUEST_BRANCH' => $request->user()->branch_id ?? '',
             'REQUEST_POSITION' => $request->user()->position ?? '',
-            'REQUEST_AT' => Carbon::now() ?? '',
+            'REQUEST_AT' => Carbon::now('Asia/Jakarta') ?? '',
         ];
 
         return $this->collateralRequestEntity::create($data);
@@ -189,7 +189,7 @@ class CollateralRepository implements CollateralInterface
                 break;
         }
 
-        $now = Carbon::now();
+        $now = Carbon::now('Asia/Jakarta');
         $userId = $request->user()->id ?? '';
 
         switch ($status) {

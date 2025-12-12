@@ -88,7 +88,7 @@ class KwitansiService
             "STTS_PAYMENT" => $status,
             "NO_TRANSAKSI" => $no_inv,
             "LOAN_NUMBER" => $request->LOAN_NUMBER,
-            "TGL_TRANSAKSI" => Carbon::now(),
+            "TGL_TRANSAKSI" => Carbon::now('Asia/Jakarta'),
             "CUST_CODE" => $customer->CUST_CODE,
             "BRANCH_CODE" => $request->user()->branch_id,
             "NAMA" => $customer->customer['NAME'],

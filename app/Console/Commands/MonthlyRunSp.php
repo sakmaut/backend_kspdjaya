@@ -25,7 +25,7 @@ class MonthlyRunSp extends Command
 
     public function handle()
     {
-        $now = Carbon::now()->format('dmY');
+        $now = Carbon::now('Asia/Jakarta')->format('dmY');
 
         try {
             DB::select('CALL initialListbanOngoing(?, ?)', [$now, "BOTEX_CRON_JOB"]);

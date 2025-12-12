@@ -68,7 +68,7 @@ class UserRepositories implements UsersRepositoryInterface
             'status' => in_array($reqStatus, $status) ? 'Active' : 'Inactive',
             'keterangan' => strtoupper($reqStatus),
             'updated_by' => $request->user()->id ?? '',
-            'updated_at' => Carbon::now()
+            'updated_at' => Carbon::now('Asia/Jakarta')
         ];
 
         if (isset($request->password) && !empty($request->password)) {
@@ -82,7 +82,7 @@ class UserRepositories implements UsersRepositoryInterface
     {
         $data = [
             'deleted_by' => $request->user()->id,
-            'deleted_at' => Carbon::now() ?? null
+            'deleted_at' => Carbon::now('Asia/Jakarta') ?? null
         ];
 
         return $userById->update($data);
@@ -93,7 +93,7 @@ class UserRepositories implements UsersRepositoryInterface
         $data = [
             'password' => bcrypt($request->username),
             'updated_by' => $request->user()->id ?? '',
-            'updated_at' => Carbon::now() ?? null
+            'updated_at' => Carbon::now('Asia/Jakarta') ?? null
         ];
 
         return $userByUsername->update($data);

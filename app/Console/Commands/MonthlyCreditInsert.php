@@ -27,7 +27,7 @@ class MonthlyCreditInsert extends Command
      */
     public function handle()
     {
-        $now = Carbon::now();
+        $now = Carbon::now('Asia/Jakarta');
         $isLastDay = $now->isLastOfMonth() && $now->format('H:i') === '23:00';
 
         if ($isLastDay) {

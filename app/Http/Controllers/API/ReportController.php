@@ -894,7 +894,7 @@ class ReportController extends Controller
             }
 
             if (empty($dari) || $dari === 'null') {
-                $date = Carbon::now()->format('Ymd');
+                $date = Carbon::now('Asia/Jakarta')->format('Ymd');
             } else {
                 $date = Carbon::parse($dari)->format('Ymd');
             }

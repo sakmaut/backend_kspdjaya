@@ -341,7 +341,7 @@ class WelcomeBOT2 extends Controller
             'EXT_1' => $cr_personal->EXT_1 ?? null,
             'EXT_2' => $cr_personal->EXT_2 ?? null,
             'VERSION' => 1,
-            'CREATE_DATE' => Carbon::now(),
+            'CREATE_DATE' => Carbon::now('Asia/Jakarta'),
             'CREATE_USER' => $request->user()->id ?? 'alex',
         ];
 

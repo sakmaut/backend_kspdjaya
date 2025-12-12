@@ -28,7 +28,7 @@ class TelegramBotConfig extends Controller
                 'endpoint' => $this->request->url(),
                 'messages' => json_encode($data),
                 'status' => 'new',
-                "created_at" => Carbon::now()
+                "created_at" => Carbon::now('Asia/Jakarta')
             ]);
 
             DB::commit();

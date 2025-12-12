@@ -15,7 +15,7 @@ class ApprovalLog extends Controller
     public function __construct()
     {
         $this->uuid = Uuid::uuid7()->toString();
-        $this->timeNow = Carbon::now();
+        $this->timeNow = Carbon::now('Asia/Jakarta');
     }
 
     public function surveyApprovalLog($signBy,$approvalID,$result)

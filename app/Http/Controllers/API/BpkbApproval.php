@@ -31,7 +31,7 @@ class BpkbApproval extends Controller
             'BPKB_TRANSACTION_ID' => $trxId,
             'ONCHARGE_APPRVL' => $status,
             'ONCHARGE_PERSON' => $this->request->user()->id,
-            'ONCHARGE_TIME' => Carbon::now(),
+            'ONCHARGE_TIME' => Carbon::now('Asia/Jakarta'),
             'ONCHARGE_DESCR' => $descr,
             'APPROVAL_RESULT' => $status
         ];

@@ -589,7 +589,7 @@ class PaymentController extends Controller
             "STTS_PAYMENT" => $sttsPayment,
             "NO_TRANSAKSI" => $no_inv,
             "LOAN_NUMBER" => $request->no_facility ?? null,
-            "TGL_TRANSAKSI" => Carbon::now()->format('d-m-Y'),
+            "TGL_TRANSAKSI" => Carbon::now('Asia/Jakarta')->format('d-m-Y'),
             'BRANCH_CODE' => $request->user()->branch_id,
             'CUST_CODE' => $getCustomer->customer['CUST_CODE'] ?? '',
             'NAMA' => $getCustomer->customer['NAME'] ?? '',
@@ -610,7 +610,7 @@ class PaymentController extends Controller
             "NAMA_BANK" => $request->nama_bank ?? null,
             "NO_REKENING" => $request->no_rekening ?? null,
             "CREATED_BY" => $request->user()->id,
-            "CREATED_AT" => Carbon::now()
+            "CREATED_AT" => Carbon::now('Asia/Jakarta')
         ];
 
         M_Kwitansi::firstOrCreate(
@@ -731,7 +731,7 @@ class PaymentController extends Controller
                     'create_by' => $req->user()->id ?? '',
                     'create_position' => $req->user()->position ?? '',
                     'create_branch' => $req->user()->branch_id ?? '',
-                    'create_date' => Carbon::now()
+                    'create_date' => Carbon::now('Asia/Jakarta')
                 ];
 
                 $check = M_PaymentAttachment::where('payment_id', $req->uid)->first();
@@ -853,7 +853,7 @@ class PaymentController extends Controller
                             ])->update([
                                 'STATUS_REC'       => 'A',
                                 'PAST_DUE_PENALTY' => $pastDuePenalty,
-                                'UPDATED_AT'       => Carbon::now()
+                                'UPDATED_AT'       => Carbon::now('Asia/Jakarta')
                             ]);
                         }
 
@@ -1055,7 +1055,7 @@ class PaymentController extends Controller
                         'PAID_INTEREST' => floatval($creditCheck->PAID_INTEREST) - floatval($ttlBayarInterest),
                         'PAID_PENALTY' => floatval($creditCheck->PAID_PENALTY) - floatval($ttlBayarDenda),
                         'MOD_USER' => $request->user()->id,
-                        'MOD_DATE' => Carbon::now(),
+                        'MOD_DATE' => Carbon::now('Asia/Jakarta'),
                     ]);
                 }
             }

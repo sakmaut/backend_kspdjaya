@@ -46,7 +46,7 @@ class PhoneBookController extends Controller
                 'CUSTOMER_ID' => $request->customer_id ?? '',
                 'ALIAS' => $request->alias ?? '',
                 'PHONE_NUMBER' => $request->no_hp ?? '',
-                'CREATED_AT' => Carbon::now() ?? null,
+                'CREATED_AT' => Carbon::now('Asia/Jakarta') ?? null,
                 'CREATED_BY' => $request->user()->id ?? '',
             ];
 

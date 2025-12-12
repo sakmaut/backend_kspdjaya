@@ -42,7 +42,7 @@ class CrSurveyController extends Controller
     ) {
         $this->CrSurvey = $CrSurvey;
         $this->uuid = Uuid::uuid7()->toString();
-        $this->timeNow = Carbon::now();
+        $this->timeNow = Carbon::now('Asia/Jakarta');
         $this->SurveyRepository = $SurveyRepository;
         $this->log = $log;
         $this->s_bungaMenurunFee = $s_bungaMenurunFee;
@@ -196,7 +196,7 @@ class CrSurveyController extends Controller
             'SURVEY_APPROVAL_ID' => $approval->ID,
             'ONCHARGE_APPRVL' => 'AUTO_APPROVED_BY_SYSTEM',
             'ONCHARGE_PERSON' => $request->user()->id,
-            'ONCHARGE_TIME' => Carbon::now(),
+            'ONCHARGE_TIME' => Carbon::now('Asia/Jakarta'),
             'ONCHARGE_DESCR' => 'AUTO_APPROVED_BY_SYSTEM',
             'APPROVAL_RESULT' => $data['APPROVAL_RESULT']
         ];
@@ -552,7 +552,7 @@ class CrSurveyController extends Controller
                     'SURVEY_APPROVAL_ID' => $check->ID ? $check->ID : null,
                     'ONCHARGE_APPRVL' => 'AUTO_APPROVED_BY_SYSTEM',
                     'ONCHARGE_PERSON' => $request->user()->id,
-                    'ONCHARGE_TIME' => Carbon::now(),
+                    'ONCHARGE_TIME' => Carbon::now('Asia/Jakarta'),
                     'ONCHARGE_DESCR' => 'AUTO_APPROVED_BY_SYSTEM',
                     'APPROVAL_RESULT' => $data['APPROVAL_RESULT']
                 ];

@@ -171,7 +171,7 @@ class CollateralController extends Controller
                     'COUNTER_ID' => round(microtime(true) * 1000),
                     'PATH' => $url ?? '',
                     'CREATED_BY' => $req->user()->id ?? '',
-                    'CREATED_AT' => Carbon::now() ?? null
+                    'CREATED_AT' => Carbon::now('Asia/Jakarta') ?? null
                 ];
 
                 M_CrCollateralDocumentRelease::create($collateral);

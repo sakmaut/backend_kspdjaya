@@ -129,7 +129,7 @@ class MenuRepository implements MenuRepositoryInterface
         $data = [
             'menu_name' => $request->menu_name,
             'updated_by' => $request->user()->id ?? '',
-            'updated_at' => Carbon::now()
+            'updated_at' => Carbon::now('Asia/Jakarta')
         ];
 
         return $findActiveMenu->update($data);
@@ -145,7 +145,7 @@ class MenuRepository implements MenuRepositoryInterface
 
         $data = [
             'deleted_by' => $request->user()->id,
-            'deleted_at' =>  Carbon::now()
+            'deleted_at' =>  Carbon::now('Asia/Jakarta')
         ];
 
         return $findActiveMenu->update($data);

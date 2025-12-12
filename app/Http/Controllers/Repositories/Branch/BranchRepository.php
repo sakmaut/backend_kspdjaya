@@ -81,7 +81,7 @@ class BranchRepository implements BranchRepositoryInterface
             'PHONE_3' => $request->PHONE_3 ?? '',
             'DESCR' => $request->DESCR ?? '',
             'STATUS' => 'Active',
-            'CREATE_DATE' => Carbon::now()->format('Y-m-d') ?? null,
+            'CREATE_DATE' => Carbon::now('Asia/Jakarta')->format('Y-m-d') ?? null,
             'CREATE_USER' => $request->user()->id ?? '',
         ];
 
@@ -134,7 +134,7 @@ class BranchRepository implements BranchRepositoryInterface
             'PHONE_3' => $request->PHONE_3 ?? '',
             'DESCR' => $request->DESCR ?? '',
             'STATUS' => 'Active',
-            'MOD_DATE' => Carbon::now()->format('Y-m-d') ?? null,
+            'MOD_DATE' => Carbon::now('Asia/Jakarta')->format('Y-m-d') ?? null,
             'MOD_USER' => $request->user()->id ?? '',
         ];
 
@@ -150,7 +150,7 @@ class BranchRepository implements BranchRepositoryInterface
         }
 
         $data = [
-            'DELETED_AT' => Carbon::now()->format('Y-m-d') ?? null,
+            'DELETED_AT' => Carbon::now('Asia/Jakarta')->format('Y-m-d') ?? null,
             'DELETED_BY' => $request->user()->id ?? '',
         ];
 

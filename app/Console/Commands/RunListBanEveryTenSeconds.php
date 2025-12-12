@@ -140,7 +140,7 @@ class RunListBanEveryTenSeconds extends Command
                     }
     
                     if (!empty($build)) {
-                        $filename = storage_path('logs/lisban/listban_' . Carbon::now()->format('Y-m-d') . '.txt');
+                        $filename = storage_path('logs/lisban/listban_' . Carbon::now('Asia/Jakarta')->format('Y-m-d') . '.txt');
             
                         file_put_contents($filename, json_encode($build, JSON_PRETTY_PRINT) . "\n");
                     }

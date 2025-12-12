@@ -22,7 +22,7 @@ class TaksasiController extends Controller
 
     public function __construct(ExceptionHandling $log)
     {
-        $this->timeNow = Carbon::now();
+        $this->timeNow = Carbon::now('Asia/Jakarta');
         $this->log = $log;
     }
 
@@ -242,7 +242,7 @@ class TaksasiController extends Controller
 
             $update = [
                 'deleted_by' => $request->user()->id,
-                'deleted_at' => Carbon::now()->format('Y-m-d H:i:s')
+                'deleted_at' => Carbon::now('Asia/Jakarta')->format('Y-m-d H:i:s')
             ];
 
             $taksasi->update($update);

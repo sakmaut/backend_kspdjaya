@@ -50,7 +50,7 @@ if (!function_exists('compareData')) {
                     'old_value' => $dataOLD[$key],
                     'new_value' => $newValue,
                     'altered_by' => $request->user()->id ?? 0,
-                    'altered_time' => Carbon::now()->format('Y-m-d H:i:s')
+                    'altered_time' => Carbon::now('Asia/Jakarta')->format('Y-m-d H:i:s')
                 ];
 
                 M_TransactionLog::create($dataLog);
@@ -81,7 +81,7 @@ if (!function_exists('generateCode')) {
             ? (int) substr($latestRecord->$column, -5) + 1
             : 1;
 
-        $currentDate = Carbon::now();
+        $currentDate = Carbon::now('Asia/Jakarta');
         $year = $currentDate->format('y');
         $month = $currentDate->format('m');
 

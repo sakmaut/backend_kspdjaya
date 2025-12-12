@@ -166,7 +166,7 @@ class BpkbTransactionController extends Controller
                 'BPKB_TRANSACTION_ID' => $id,
                 'ONCHARGE_APPRVL' => 'sending',
                 'ONCHARGE_PERSON' => $user->id,
-                'ONCHARGE_TIME' => Carbon::now(),
+                'ONCHARGE_TIME' => Carbon::now('Asia/Jakarta'),
                 'ONCHARGE_DESCR' => $request->catatan,
                 'APPROVAL_RESULT' => 'SENDING'
             ];
@@ -230,7 +230,7 @@ class BpkbTransactionController extends Controller
                         'BPKB_TRANSACTION_ID' => $check->BPKB_TRANSACTION_ID ?? '',
                         'ONCHARGE_APPRVL' => strtoupper($request->status),
                         'ONCHARGE_PERSON' => $user->id,
-                        'ONCHARGE_TIME' => Carbon::now(),
+                        'ONCHARGE_TIME' => Carbon::now('Asia/Jakarta'),
                         'ONCHARGE_DESCR' => $request->catatan,
                         'APPROVAL_RESULT' => strtoupper($request->status)
                     ];
@@ -279,7 +279,7 @@ class BpkbTransactionController extends Controller
                             ->update([
                                 'STATUS' => 'NORMAL',
                                 'UPDATED_BY' => $request->user()->id,
-                                'UPDATED_AT' => Carbon::now()
+                                'UPDATED_AT' => Carbon::now('Asia/Jakarta')
                             ]);
 
                         M_BpkbDetail::where('BPKB_TRANSACTION_ID', $transactionId)
@@ -287,7 +287,7 @@ class BpkbTransactionController extends Controller
                             ->update([
                                 'STATUS' => 'REJECTED',
                                 'UPDATED_BY' => $request->user()->id,
-                                'UPDATED_AT' => Carbon::now()
+                                'UPDATED_AT' => Carbon::now('Asia/Jakarta')
                             ]);
 
                         $data = [
@@ -309,7 +309,7 @@ class BpkbTransactionController extends Controller
                             'BPKB_TRANSACTION_ID' => $id,
                             'ONCHARGE_APPRVL' => 'sending',
                             'ONCHARGE_PERSON' => $user->id,
-                            'ONCHARGE_TIME' => Carbon::now(),
+                            'ONCHARGE_TIME' => Carbon::now('Asia/Jakarta'),
                             'ONCHARGE_DESCR' => $request->catatan,
                             'APPROVAL_RESULT' => 'SENDING'
                         ];
@@ -360,7 +360,7 @@ class BpkbTransactionController extends Controller
                             ->update([
                                 'STATUS' => 'NORMAL',
                                 'UPDATED_BY' => $request->user()->id,
-                                'UPDATED_AT' => Carbon::now()
+                                'UPDATED_AT' => Carbon::now('Asia/Jakarta')
                             ]);
 
                         M_BpkbDetail::where('BPKB_TRANSACTION_ID', $transactionId)
@@ -368,7 +368,7 @@ class BpkbTransactionController extends Controller
                             ->update([
                                 'STATUS' => 'REJECTED',
                                 'UPDATED_BY' => $request->user()->id,
-                                'UPDATED_AT' => Carbon::now()
+                                'UPDATED_AT' => Carbon::now('Asia/Jakarta')
                             ]);
 
                         $bpkbDetails = M_BpkbDetail::whereIn('ID', $jaminan)->where('STATUS', 'NORMAL')->select('ID', 'COLLATERAL_ID')->get();
@@ -411,7 +411,7 @@ class BpkbTransactionController extends Controller
                         'BPKB_TRANSACTION_ID' => $check->ID,
                         'ONCHARGE_APPRVL' => $approvalData['code'],
                         'ONCHARGE_PERSON' => $request->user()->id,
-                        'ONCHARGE_TIME' => Carbon::now(),
+                        'ONCHARGE_TIME' => Carbon::now('Asia/Jakarta'),
                         'ONCHARGE_DESCR' => $request->keterangan ?? '',
                         'APPROVAL_RESULT' => $approvalData['result']
                     ];
@@ -499,7 +499,7 @@ class BpkbTransactionController extends Controller
                     'BPKB_TRANSACTION_ID' => $uuid,
                     'ONCHARGE_APPRVL' => strtolower($status),
                     'ONCHARGE_PERSON' => $user->id,
-                    'ONCHARGE_TIME' => Carbon::now(),
+                    'ONCHARGE_TIME' => Carbon::now('Asia/Jakarta'),
                     'ONCHARGE_DESCR' => $request->catatan,
                     'APPROVAL_RESULT' => $status
                 ];
