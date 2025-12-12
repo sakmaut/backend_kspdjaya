@@ -47,7 +47,7 @@ class Credit extends Controller
 
     public function __construct(LocationStatus $locationStatus, Validation $validation)
     {
-        $this->timeNow = Carbon::now();
+        $this->timeNow = Carbon::now('Asia/Jakarta');
         $this->locationStatus = $locationStatus;
         $this->validation = $validation;
     }
@@ -471,7 +471,7 @@ class Credit extends Controller
             'PENALTY_RATE' => '5',
             'VERSION'  => 1,
             'CREATED_BY' => $request->user()->id,
-            'CREATED_AT' => Carbon::now(),
+            'CREATED_AT' => Carbon::now('Asia/Jakarta'),
         ];
 
         if (!$check_customer_ktp) {
@@ -560,7 +560,7 @@ class Credit extends Controller
             'EXT_1' => $cr_personal->EXT_1,
             'EXT_2' => $cr_personal->EXT_2,
             'VERSION' => 1,
-            'CREATE_DATE' => Carbon::now(),
+            'CREATE_DATE' => Carbon::now('Asia/Jakarta'),
             'CREATE_USER' => $request->user()->id,
         ];
 
@@ -1059,7 +1059,7 @@ class Credit extends Controller
             'REQUEST_FLAG' => "CANCEL",
             'REQUEST_BY' => $request->user()->id ?? '',
             'REQUEST_BRANCH' => $request->user()->branch_id ?? '',
-            'REQUEST_DATE' => Carbon::now(),
+            'REQUEST_DATE' => Carbon::now('Asia/Jakarta'),
             'REQUEST_DESCR' => $request->descr ?? '',
         ]);
 
@@ -1081,7 +1081,7 @@ class Credit extends Controller
             $check->update([
                 'STATUS' => 'C',
                 'DELETED_BY' => $request->user()->id,
-                'DELETED_AT' => Carbon::now(),
+                'DELETED_AT' => Carbon::now('Asia/Jakarta'),
             ]);
 
             $checkCreditCancel = M_CreditCancelLog::where('CREDIT_ID', $check->ORDER_NUMBER)->first();
@@ -1090,7 +1090,7 @@ class Credit extends Controller
                 $checkCreditCancel->update([
                     'ONCHARGE_DESCR' => $request->descr_ho ?? '',
                     'ONCHARGE_PERSON' => $request->user()->id,
-                    'ONCHARGE_TIME' => Carbon::now(),
+                    'ONCHARGE_TIME' => Carbon::now('Asia/Jakarta'),
                     'ONCHARGE_FLAG' => $request->flag,
                 ]);
             }
@@ -1111,7 +1111,7 @@ class Credit extends Controller
                     'cr_application_id' => $application->ID ?? null,
                     'application_result' => 'disetujui ho',
                     'cr_application_ho' => $request->user()->id,
-                    'cr_application_ho_time' => Carbon::now()->format('Y-m-d'),
+                    'cr_application_ho_time' => Carbon::now('Asia/Jakarta')->format('Y-m-d'),
                     'cr_application_ho_desc' => $request->descr_ho ?? '',
                 ]);
 
@@ -1120,7 +1120,7 @@ class Credit extends Controller
                     'POSITION' => $request->user()->position ?? null,
                     'APPLICATION_APPROVAL_ID' => $application->ID ?? null,
                     'ONCHARGE_PERSON' => $request->user()->id,
-                    'ONCHARGE_TIME' => Carbon::now(),
+                    'ONCHARGE_TIME' => Carbon::now('Asia/Jakarta'),
                     'APPROVAL_RESULT' => 'request order cancel ditolak ho',
                 ]);
             }
@@ -1131,7 +1131,7 @@ class Credit extends Controller
                     'CODE' => 'APHO',
                     'ONCHARGE_PERSON' => $request->user()->id,
                     'ONCHARGE_DESCR' => $request->descr_ho ?? '',
-                    'ONCHARGE_TIME' => Carbon::now(),
+                    'ONCHARGE_TIME' => Carbon::now('Asia/Jakarta'),
                     'APPROVAL_RESULT' => 'disetujui ho',
                 ]);
 
@@ -1139,7 +1139,7 @@ class Credit extends Controller
                     'CODE' => 'CANCELREQADM',
                     'SURVEY_APPROVAL_ID' => $application->CR_SURVEY_ID,
                     'ONCHARGE_PERSON' => $request->user()->id,
-                    'ONCHARGE_TIME' => Carbon::now(),
+                    'ONCHARGE_TIME' => Carbon::now('Asia/Jakarta'),
                     'APPROVAL_RESULT' => 'request order cancel ditolak ho',
                 ]);
             }
@@ -1158,7 +1158,7 @@ class Credit extends Controller
                 'cr_application_id' => $application->ID ?? null,
                 'application_result' => $descr,
                 'cr_application_ho' => $request->user()->id,
-                'cr_application_ho_time' => Carbon::now()->format('Y-m-d'),
+                'cr_application_ho_time' => Carbon::now('Asia/Jakarta')->format('Y-m-d'),
                 'cr_application_ho_desc' => $request->descr_ho ?? '',
             ]);
 
@@ -1167,7 +1167,7 @@ class Credit extends Controller
                 'POSITION' => $request->user()->position ?? null,
                 'APPLICATION_APPROVAL_ID' => $application->ID ?? null,
                 'ONCHARGE_PERSON' => $request->user()->id,
-                'ONCHARGE_TIME' => Carbon::now(),
+                'ONCHARGE_TIME' => Carbon::now('Asia/Jakarta'),
                 'APPROVAL_RESULT' => $descr,
             ]);
         }
@@ -1181,7 +1181,7 @@ class Credit extends Controller
                 'CODE' => $code,
                 'ONCHARGE_PERSON' => $request->user()->id,
                 'ONCHARGE_DESCR' => $request->descr_ho ?? '',
-                'ONCHARGE_TIME' => Carbon::now(),
+                'ONCHARGE_TIME' => Carbon::now('Asia/Jakarta'),
                 'APPROVAL_RESULT' => $descr,
             ]);
 
@@ -1189,7 +1189,7 @@ class Credit extends Controller
                 'CODE' => $code,
                 'SURVEY_APPROVAL_ID' => $application->CR_SURVEY_ID,
                 'ONCHARGE_PERSON' => $request->user()->id,
-                'ONCHARGE_TIME' => Carbon::now(),
+                'ONCHARGE_TIME' => Carbon::now('Asia/Jakarta'),
                 'APPROVAL_RESULT' => $descr,
             ]);
         }
