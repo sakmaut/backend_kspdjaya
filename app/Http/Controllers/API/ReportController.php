@@ -883,7 +883,7 @@ class ReportController extends Controller
                 ->leftJoin('cr_collateral as d', 'd.CR_CREDIT_ID', '=', 'c.ID')
                 ->leftJoin('branch as e', 'e.ID', '=', 'a.BRANCH')
                 ->leftJoin('users as f', 'f.id', '=', 'a.MCF_ID')
-                ->where('a.back_date', $tgl)
+                ->whereRaw('DATE_FORMAT(a.back_date, "%Y-%m-%d") = ?', [$tgl])
                 ->get();
 
             $dataBaru = [];
