@@ -132,7 +132,8 @@ class ListBanController extends Controller
             $getUserName = $request->user()->fullname;
 
             $getBranchIdUser = $request->user()->branch_id;
-            $getNow = date('mY', strtotime(now()));
+            // $getNow = date('mY', strtotime(now()));
+            $getNow = Carbon::now('Asia/Jakarta')->format('mY');
 
             $checkConditionDate = $getNow == $dateFrom;
 
