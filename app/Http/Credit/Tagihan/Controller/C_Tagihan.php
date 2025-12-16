@@ -111,11 +111,23 @@ class C_Tagihan extends Controller
                 ->selectRaw('SUM(pd.ORIGINAL_AMOUNT) AS total_bayar, p.LOAN_NUM')
                 ->groupBy('p.LOAN_NUM');
 
-            $logSubQuery = DB::table('cl_survey_logs')
-                ->select('REFERENCE_ID', 'DESCRIPTION', 'CONFIRM_DATE')
-                ->whereDate('CREATED_AT', now()->toDateString())
-                ->orderBy('CREATED_AT', 'desc')
-                ->limit(1);
+            // $logSubQuery = DB::table('cl_survey_logs')
+            //     ->select('REFERENCE_ID', 'DESCRIPTION', 'CONFIRM_DATE')
+            //     ->whereDate('CREATED_AT', now()->toDateString())
+            //     ->orderBy('CREATED_AT', 'desc')
+            //     ->limit(1);
+
+            $logSubQuery = DB::table('cl_survey_logs as t')
+                ->join(
+                    DB::raw('(SELECT REFERENCE_ID, MAX(CREATED_AT) AS max_created 
+                  FROM cl_survey_logs 
+                  GROUP BY REFERENCE_ID) x'),
+                    function ($join) {
+                        $join->on('x.REFERENCE_ID', '=', 't.REFERENCE_ID')
+                            ->on('x.max_created', '=', 't.CREATED_AT');
+                    }
+                )
+                ->select('t.REFERENCE_ID', 't.DESCRIPTION', 't.CONFIRM_DATE');
 
             $totalDenda = DB::table('arrears')
                 ->where('STATUS_REC', 'A')
@@ -181,7 +193,8 @@ class C_Tagihan extends Controller
                     'cc.PRODUCTION_YEAR',
                     'br.NAME as nama_cabang'
                 )
-                ->orderByRaw('c.LKP_NUMBER IS NOT NULL DESC');
+                ->orderByRaw('c.LKP_NUMBER IS NOT NULL DESC')->limit(25);
+                
 
             switch ($currentPosition) {
                 case 'KAPOS':
