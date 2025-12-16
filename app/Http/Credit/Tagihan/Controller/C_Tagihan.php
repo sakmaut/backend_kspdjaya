@@ -193,7 +193,7 @@ class C_Tagihan extends Controller
                     'cc.PRODUCTION_YEAR',
                     'br.NAME as nama_cabang'
                 )
-                ->orderByRaw('c.LKP_NUMBER IS NOT NULL DESC')->limit(25);
+                ->orderByRaw('c.LKP_NUMBER IS NOT NULL DESC');
                 
 
             switch ($currentPosition) {
@@ -207,7 +207,7 @@ class C_Tagihan extends Controller
                     break;
             }
 
-            $data = $query->get();
+            $data = $query->limit(25)->get();
             $dto = Rs_CollectorList::collection($data);
 
             return response()->json($dto, 200);
