@@ -207,7 +207,7 @@ class C_Tagihan extends Controller
                     break;
             }
 
-            $data = $query->limit(25)->get();
+            $data = $query->get();
             $dto = Rs_CollectorList::collection($data);
 
             return response()->json($dto, 200);
