@@ -438,6 +438,11 @@ class Credit extends Controller
         $check_customer_ktp = M_Customer::where('ID_NUMBER', $cr_personal->ID_NUMBER)->first();
 
         $tenor = intval($data->TENOR);
+
+        if($tenor == 0){
+            return response()->json(['error' => 'Tenor 0'], 409);
+        }
+
         $ttalPrincipal = $data->SUBMISSION_VALUE + ($data->TOTAL_ADMIN ?? 0);
         $ttalInterest = $data->INSTALLMENT_TYPE === 'bunga_menurun' ? ($ttalPrincipal * 0.03) * $tenor : $data->TOTAL_INTEREST;
 
