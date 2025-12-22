@@ -114,6 +114,9 @@ class ReportController extends Controller
             case 'RP':
                 $statusNoActive = 'REPOSSED (RP)';
                 break;
+            case 'WO':
+                $statusNoActive = 'BLACKLIST KONSUMEN';
+                break;
             default:
                 $statusNoActive = 'AKTIF (AC)';
                 break;
