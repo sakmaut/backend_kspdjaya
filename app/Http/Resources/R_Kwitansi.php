@@ -112,7 +112,7 @@ class R_Kwitansi extends JsonResource
             'bayar_denda' => $details->sum(fn ($item) => (float) $item->bayar_denda) ?: 0,
             "pembulatan" => intval($this->PEMBULATAN ?? 0),
             "kembalian" => intval($this->KEMBALIAN ?? 0),
-            "total_bayar" => intval($this->TOTAL_BAYAR ?? 0),
+            "total_bayar" => $this->PAYMENT_TYPE === 'pelunasan_rekening_koran' ? intval($this->JUMLAH_UANG ?? 0) : intval($this->TOTAL_BAYAR ?? 0),
             "jumlah_uang" => intval($this->JUMLAH_UANG ?? 0),
             "terbilang" => bilangan($this->TOTAL_BAYAR) ?? null,
             'attachment' => $attachment,
