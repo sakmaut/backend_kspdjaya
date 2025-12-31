@@ -133,8 +133,12 @@ class ListBanController extends Controller
 
             $getBranchIdUser = $request->user()->branch_id;
             // $getNow = date('mY', strtotime(now()));
-            $getNow = Carbon::now('Asia/Jakarta')->format('mY');
+            // $getNow = Carbon::now('Asia/Jakarta')->format('mY');
+            $now = Carbon::now('Asia/Jakarta');
 
+            $getNow = $now->format('mY');
+            $currentYear = $now->year;
+            
             $checkConditionDate = $getNow == $dateFrom;
 
             $jobName = $checkConditionDate ? 'LISBAN' : 'LISBAN_BELOM_MOVEON';
@@ -243,7 +247,7 @@ class ListBanController extends Controller
                                 replace(format(cl.PCPL_ORI-cl.TOTAL_ADMIN,0),',','') as NILAI_PINJAMAN,
                                 replace(format(cl.TOTAL_ADMIN,0),',','') as TOTAL_ADMIN,
                                 cl.CUST_CODE
-                        FROM	credit_log_2025 cl
+                        FROM	credit_log_{$currentYear} cl
                                 inner join branch b on cast(b.ID as char) = cast(cl.BRANCH as char)
                                 left join customer c on cast(c.CUST_CODE as char) = cast(cl.CUST_CODE as char)
                                 left join users u on cast(u.ID as char) = cast(cl.MCF_ID as char)

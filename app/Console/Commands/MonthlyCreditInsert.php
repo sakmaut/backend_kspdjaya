@@ -32,7 +32,7 @@ class MonthlyCreditInsert extends Command
 
         if ($isLastDay) {
             try {
-                DB::statement('CALL insert_credit_data_2025()');
+                DB::statement('CALL insert_credit_data()');
                 $this->info("Stored Procedure executed on: " . $now->toDateTimeString());
             } catch (\Exception $e) {
                 $this->error("Error executing stored procedure: " . $e->getMessage());

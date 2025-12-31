@@ -67,17 +67,22 @@ class Welcome extends Controller
         //     }
         // }
 
-        $data = [
-            'now_utc' => now()->format('Y-m-d H:i:s'), // waktu default (biasanya UTC)
-            'asia_jakarta' => now('Asia/Jakarta')->format('Y-m-d H:i:s'), // waktu di Asia/Jakarta
-            'timezone_info' => [
-                'utc_offset' => now('Asia/Jakarta')->format('P'), // +07:00
-                'timezone' => 'Asia/Jakarta'
-            ],
-            'listban_time' => date('mY', strtotime(now()))
-        ];
+        // $data = [
+        //     'now_utc' => now()->format('Y-m-d H:i:s'), // waktu default (biasanya UTC)
+        //     'asia_jakarta' => now('Asia/Jakarta')->format('Y-m-d H:i:s'), // waktu di Asia/Jakarta
+        //     'timezone_info' => [
+        //         'utc_offset' => now('Asia/Jakarta')->format('P'), // +07:00
+        //         'timezone' => 'Asia/Jakarta'
+        //     ],
+        //     'listban_time' => date('mY', strtotime(now()))
+        // ];
 
-        return response()->json($data);
+        $now = Carbon::now('Asia/Jakarta');
+
+        $getNow = $now->format('mY');
+        $currentYear = $now->year; // 2025
+
+        return response()->json($getNow);
 
 
         // $data = M_CrApplication::where('ORDER_NUMBER', $request->order_number)->first();
