@@ -534,8 +534,6 @@ class ListBanController extends Controller
             $checkConditionDate = $getNow == $dateFrom;
             $branchCondition = empty($getBranch) || $getBranch == 'semua';
 
-            return response()->json($branchCondition ? '%' : $getBranch, 200);
-
             if (!$checkConditionDate) {
                 DB::select('CALL lisban_masa_lalu(?,?,?)', [$dateFrom, $getUserName, $branchCondition ? '%' : $getBranch]); 
 
