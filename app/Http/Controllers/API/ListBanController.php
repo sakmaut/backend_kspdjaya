@@ -138,7 +138,16 @@ class ListBanController extends Controller
 
             $getNow = $now->format('mY');
             $currentYear = $now->year;
-            
+
+            $monthFromPayload = (int) substr($dateFrom, 0, 2);
+            $yearFromPayload  = (int) substr($dateFrom, -4);
+
+            if ($monthFromPayload === 12) {
+                $yearUsed = $now->year;
+            } else {
+                $yearUsed = $yearFromPayload;
+            }
+
             $checkConditionDate = $getNow == $dateFrom;
 
             $jobName = $checkConditionDate ? 'LISBAN' : 'LISBAN_BELOM_MOVEON';
@@ -247,7 +256,7 @@ class ListBanController extends Controller
                                 replace(format(cl.PCPL_ORI-cl.TOTAL_ADMIN,0),',','') as NILAI_PINJAMAN,
                                 replace(format(cl.TOTAL_ADMIN,0),',','') as TOTAL_ADMIN,
                                 cl.CUST_CODE
-                        FROM	credit_log_{$currentYear} cl
+                        FROM	credit_log_{$yearUsed} cl
                                 inner join branch b on cast(b.ID as char) = cast(cl.BRANCH as char)
                                 left join customer c on cast(c.CUST_CODE as char) = cast(cl.CUST_CODE as char)
                                 left join users u on cast(u.ID as char) = cast(cl.MCF_ID as char)
