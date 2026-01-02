@@ -139,10 +139,9 @@ class ListBanController extends Controller
             $getNow = $now->format('mY');
             $currentYear = $now->year;
 
-            $monthFromPayload = (int) substr($dateFrom, 0, 2);
             $yearFromPayload  = (int) substr($dateFrom, -4);
 
-            if ($monthFromPayload === 12) {
+            if ($currentYear === $yearFromPayload) {
                 $yearUsed = $now->year;
             } else {
                 $yearUsed = $yearFromPayload;
