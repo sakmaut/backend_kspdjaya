@@ -534,8 +534,11 @@ class ListBanController extends Controller
             $checkConditionDate = $getNow == $dateFrom;
             $branchCondition = empty($getBranch) || $getBranch == 'semua';
 
+            \print_r($branchCondition ? '%' : $getBranch);
+            die;
+
             if (!$checkConditionDate) {
-                DB::select('CALL lisban_masa_lalu(?,?,?)', [$dateFrom, $getUserName, $branchCondition ? '%' : $getBranch]);
+                DB::select('CALL lisban_masa_lalu(?,?,?)', [$dateFrom, $getUserName, $branchCondition ? '%' : $getBranch]); 
 
                 return response()->json(['message' => 'Stored procedure executed successfully'], 200);
             } else {
