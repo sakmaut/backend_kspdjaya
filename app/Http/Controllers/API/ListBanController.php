@@ -143,9 +143,6 @@ class ListBanController extends Controller
             $yearUsed = ($yearFromPayload === (int) $currentYear)
                 ? (int) $currentYear
                 : $yearFromPayload;
-
-            \print_r("credit_log_{$yearUsed}");
-            die;
             
             $checkConditionDate = $getNow == $dateFrom;
 

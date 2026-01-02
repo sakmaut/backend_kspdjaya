@@ -77,12 +77,18 @@ class Welcome extends Controller
         //     'listban_time' => date('mY', strtotime(now()))
         // ];
 
+        $dateFrom = "122025";
+
         $now = Carbon::now('Asia/Jakarta');
 
-        $getNow = $now->format('mY');
-        $currentYear = $now->year; // 2025
+        $currentYear = $now->year;
+        $yearFromPayload = (int) substr($dateFrom, -4);
 
-        return response()->json($getNow);
+        $yearUsed = ($yearFromPayload === (int) $currentYear)
+            ? (int) $currentYear
+            : $yearFromPayload;
+
+        return response()->json("credit_log_{$yearUsed}");
 
 
         // $data = M_CrApplication::where('ORDER_NUMBER', $request->order_number)->first();
