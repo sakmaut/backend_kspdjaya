@@ -19,31 +19,22 @@ class R_PokokSebagian
                         COALESCE(d.DISC_BUNGA, 0) AS DISC_BUNGA
                     FROM credit a
                         LEFT JOIN (
-                            SELECT 
-                                LOAN_NUMBER,
-                                SUM(COALESCE(INTEREST, 0)) - SUM(COALESCE(PAYMENT_VALUE_INTEREST, 0)) AS INT_ARR
-                            FROM 
-                                credit_schedule
-                            WHERE 
-                                LOAN_NUMBER = '{$loan_number}'
-                                AND PAYMENT_DATE <= (
-                                    SELECT 
-                                        CASE 
-                                            WHEN EXISTS (
-                                                SELECT 1 
-                                                FROM credit_schedule 
-                                                WHERE LOAN_NUMBER = '{$loan_number}' 
-                                                AND PAYMENT_DATE = '{$today}'
-                                            ) THEN '{$today}'
-                                            ELSE (
-                                                SELECT MIN(PAYMENT_DATE)
-                                                FROM credit_schedule 
-                                                WHERE LOAN_NUMBER = '{$loan_number}' 
-                                                AND PAYMENT_DATE > '{$today}'
+                            SELECT  LOAN_NUMBER,
+                                    SUM(COALESCE(INTEREST, 0)) - SUM(COALESCE(PAYMENT_VALUE_INTEREST, 0)) AS INT_ARR
+                            FROM credit_schedule cs
+                            WHERE cs.LOAN_NUMBER = 'ANJ250800373'
+                            AND cs.PAYMENT_DATE <= (
+                                    SELECT LAST_DAY(
+                                            DATE_ADD(
+                                                MAX(cs2.PAYMENT_DATE),
+                                                INTERVAL 1 MONTH
                                             )
-                                        END
-                                )
-                            GROUP BY LOAN_NUMBER
+                                        )
+                                    FROM credit_schedule cs2
+                                    WHERE cs2.LOAN_NUMBER = cs.LOAN_NUMBER
+                                    AND cs2.PAYMENT_DATE <= CURDATE()
+                            )
+                            ORDER BY cs.PAYMENT_DATE
                         ) b ON b.LOAN_NUMBER = a.LOAN_NUMBER
                             LEFT JOIN (
                                     SELECT
