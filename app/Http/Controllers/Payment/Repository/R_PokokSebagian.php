@@ -22,7 +22,7 @@ class R_PokokSebagian
                             SELECT  LOAN_NUMBER,
                                     SUM(COALESCE(INTEREST, 0)) - SUM(COALESCE(PAYMENT_VALUE_INTEREST, 0)) AS INT_ARR
                             FROM credit_schedule cs
-                            WHERE cs.LOAN_NUMBER = 'ANJ250800373'
+                            WHERE cs.LOAN_NUMBER = '{$loan_number}'
                             AND cs.PAYMENT_DATE <= (
                                     SELECT LAST_DAY(
                                             DATE_ADD(
