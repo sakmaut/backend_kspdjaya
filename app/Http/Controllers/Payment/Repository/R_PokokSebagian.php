@@ -19,22 +19,15 @@ class R_PokokSebagian
                         COALESCE(d.DISC_BUNGA, 0) AS DISC_BUNGA
                     FROM credit a
                         LEFT JOIN (
-                            SELECT  LOAN_NUMBER,
+                            SELECT LOAN_NUMBER,
                                     SUM(COALESCE(INTEREST, 0)) - SUM(COALESCE(PAYMENT_VALUE_INTEREST, 0)) AS INT_ARR
                             FROM credit_schedule cs
-                            WHERE cs.LOAN_NUMBER = '{$loan_number}'
-                            AND cs.PAYMENT_DATE <= (
-                                    SELECT LAST_DAY(
-                                            DATE_ADD(
-                                                MAX(cs2.PAYMENT_DATE),
-                                                INTERVAL 1 MONTH
-                                            )
-                                        )
-                                    FROM credit_schedule cs2
-                                    WHERE cs2.LOAN_NUMBER = cs.LOAN_NUMBER
-                                    AND cs2.PAYMENT_DATE <= CURDATE()
-                            )
-                            ORDER BY cs.PAYMENT_DATE
+                            WHERE cs.LOAN_NUMBER = 'anj250800373'
+                            AND cs.PAYMENT_DATE <= DATE_ADD(
+                                    CURDATE(),
+                                    INTERVAL 1 MONTH
+                                )
+                            ORDER BY cs.PAYMENT_DATE ASC
                         ) b ON b.LOAN_NUMBER = a.LOAN_NUMBER
                             LEFT JOIN (
                                     SELECT
