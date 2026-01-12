@@ -23,9 +23,13 @@ class R_PokokSebagian
                                     SUM(COALESCE(INTEREST, 0)) - SUM(COALESCE(PAYMENT_VALUE_INTEREST, 0)) AS INT_ARR
                             FROM credit_schedule cs
                             WHERE cs.LOAN_NUMBER = '{$loan_number}'
-                            AND cs.PAYMENT_DATE < DATE_ADD(
-                                    CURDATE(),
-                                    INTERVAL 1 MONTH
+                            -- AND cs.PAYMENT_DATE < DATE_ADD(
+                            --         CURDATE(),
+                            --         INTERVAL 1 MONTH
+                            --     )
+                                AND cs.PAYMENT_DATE < DATE_ADD(
+                                    DATE_ADD(CURDATE(), INTERVAL 1 MONTH),
+                                    INTERVAL 1 DAY
                                 )
                             ORDER BY cs.PAYMENT_DATE ASC
                         ) b ON b.LOAN_NUMBER = a.LOAN_NUMBER
