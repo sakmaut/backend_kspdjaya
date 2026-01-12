@@ -11,6 +11,7 @@ use App\Models\M_Branch;
 use App\Models\M_CrApplication;
 use App\Models\M_CrApplicationGuarantor;
 use App\Models\M_CrApplicationSpouse;
+use App\Models\M_CrBlacklist;
 use App\Models\M_CrCollateral;
 use App\Models\M_CrCollateralDocument;
 use App\Models\M_CrCollateralSertification;
@@ -144,6 +145,27 @@ class Credit extends Controller
 
         return $setDate;
     }
+
+    private function checkBlacklist($ktp, $kk)
+    {
+        if (empty($ktp) || empty($kk)) {
+            throw new Exception("Nomor KTP atau Nomor KK wajib diisi salah satu", 500);
+        }
+
+        $exists = M_CrBlacklist::query()
+            ->when($ktp, function ($q) use ($ktp) {
+                $q->where('KTP', $ktp);
+            })
+            ->when($kk, function ($q) use ($kk) {
+                $q->orWhere('KK', $kk);
+            })
+            ->exists();
+
+        if ($exists) {
+            throw new Exception("Data sudah masuk dalam daftar blacklist", 500);
+        }
+    }
+
 
     private function buildData($request, $data)
     {
@@ -360,6 +382,8 @@ class Credit extends Controller
             if ($checkLoanNumberExist) {
                 throw new Exception("Loan Number Exist", 500);
             }
+
+            $this->checkBlacklist($ktp, $kk);
 
             $this->insert_credit($SET_UUID, $request, $data, $loan_number, $installment_count, $cust_code);
 
