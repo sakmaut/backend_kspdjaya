@@ -13,6 +13,7 @@ use App\Models\M_KwitansiDetailPelunasan;
 use App\Models\M_Payment;
 use App\Models\M_PaymentDetail;
 use App\Services\Kwitansi\KwitansiService;
+use Carbon\Carbon;
 use Exception;
 use Ramsey\Uuid\Uuid;
 
@@ -64,6 +65,7 @@ class S_PokokSebagian
             'BAYAR_POKOK',
             'BAYAR_BUNGA',
             'BAYAR_DENDA',
+            'DENDA',
             'DISKON_POKOK',
             'DISKON_BUNGA',
             'DISKON_DENDA'
@@ -158,13 +160,32 @@ class S_PokokSebagian
     {
         $paymentBunga = $request->BAYAR_BUNGA ?? 0;
         $paymentPokok = $request->BAYAR_POKOK ?? 0;
+        $paymentDenda = $request->BAYAR_DENDA != 0 ? $request->BAYAR_DENDA ?? 0 : $request->DENDA ?? 0;
 
         $currentDate = date('Y-m-d');
 
         $data = [];
         $sisaPaymentBunga = $paymentBunga;
+        $sisaPaymentDenda = $paymentDenda;
 
         foreach ($creditSchedule as $res) {
+
+            $arrears = M_Arrears::where('LOAN_NUMBER', $request->LOAN_NUMBER)
+                ->whereDate('START_DATE', $res->PAYMENT_DATE)
+                ->where('STATUS_REC', 'A')
+                ->first();
+
+            $sisaDendaRow = 0;
+            if ($arrears) {
+                $sisaDendaRow = floatval($arrears->PAST_DUE_PENALTY) - floatval($arrears->PAID_PENALTY);
+            }
+
+            $bayarDenda = 0;
+            if ($sisaPaymentDenda > 0 && $sisaDendaRow > 0) {
+                $bayarDenda = min($sisaPaymentDenda, $sisaDendaRow);
+                $sisaPaymentDenda -= $bayarDenda;
+            }
+
             $paidInterest = floatval($res->PAYMENT_VALUE_INTEREST ?? 0);
 
             if (strtoupper($res->PAID_FLAG) === 'PAID') {
@@ -179,7 +200,8 @@ class S_PokokSebagian
                     'PAYMENT_DATE' => $res->PAYMENT_DATE,
                     'BAYAR_BUNGA' => 0,
                     'DISKON_BUNGA' => 0,
-                    'BAYAR_POKOK' => 0
+                    'BAYAR_POKOK' => 0,
+                    'BAYAR_DENDA' => $bayarDenda,
                 ];
                 continue;
             }
@@ -203,7 +225,8 @@ class S_PokokSebagian
                 'PAYMENT_DATE' => $res->PAYMENT_DATE,
                 'BAYAR_BUNGA' => $paidNow,
                 'DISKON_BUNGA' => max(0, $discount),
-                'BAYAR_POKOK' => 0 // akan diisi nanti
+                'BAYAR_POKOK' => 0 ,
+                'BAYAR_DENDA' => $bayarDenda,
             ];
         }
 
@@ -367,6 +390,38 @@ class S_PokokSebagian
 
         $schedule->update($fields);
 
+        $getArrears = M_Arrears::where([
+            'LOAN_NUMBER' => $loanNumber,
+            'START_DATE' => $detail['tgl_angsuran'],
+            'STATUS_REC' => 'A',
+        ])->orderBy('START_DATE', 'ASC')->first();
+
+        if ($getArrears) {
+            $ttlPrincipal = floatval($getArrears->PAID_PCPL) + floatval($detail['bayar_pokok'] ?? 0);
+            $ttlInterest = floatval($getArrears->PAID_INT) + floatval($detail['bayar_bunga'] ?? 0);
+            $ttlPenalty = floatval($getArrears->PAID_PENALTY) + floatval($detail['bayar_denda'] ?? 0);
+            $ttlDiscPrincipal = floatval($getArrears->WOFF_PCPL) + floatval($detail['diskon_pokok'] ?? 0);
+            $ttlDiscInterest = floatval($getArrears->WOFF_INT) + floatval($detail['diskon_bunga'] ?? 0);
+            $ttlDiscPenalty = floatval($getArrears->WOFF_PENALTY) + floatval($detail['diskon_denda'] ?? 0);
+
+            $getArrears->update([
+                'END_DATE' => Carbon::now('Asia/Jakarta')->format('Y-m-d') ?? null,
+                'PAID_PCPL' => $ttlPrincipal ?? 0,
+                'PAID_INT' => $ttlInterest ?? 0,
+                'PAID_PENALTY' => $ttlPenalty ?? 0,
+                'WOFF_PCPL' => $ttlDiscPrincipal ?? 0,
+                'WOFF_INT' => $ttlDiscInterest ?? 0,
+                'WOFF_PENALTY' => $ttlDiscPenalty ?? 0,
+                'UPDATED_AT' => Carbon::now('Asia/Jakarta'),
+            ]);
+
+            $checkDiscountArrears = ($ttlDiscPrincipal + $ttlDiscInterest + $ttlDiscPenalty) == 0;
+
+            $getArrears->update([
+                'STATUS_REC' => $checkDiscountArrears ? 'S' : 'D',
+            ]);
+        }
+
         $insufficient = ($totalPrincipal + $totalInterest) - $installmentValue;
 
         if ($totalPaid > 0 || $insufficient == 0) {
@@ -439,7 +494,8 @@ class S_PokokSebagian
         $loanNumber = $request->LOAN_NUMBER ?? $kwitansi->LOAN_NUMBER;
         $bayarPokok = floatval($data['bayar_pokok'] ?? 0);
         $bayarBunga = floatval($data['bayar_bunga'] ?? 0);
-        $totalPayment = $bayarPokok + $bayarBunga;
+        $bayarDenda = floatval($data['bayar_denda'] ?? 0);
+        $totalPayment = $bayarPokok + $bayarBunga + $bayarDenda;
 
         $paymentData = [
             'ID' => $uid,
@@ -481,6 +537,14 @@ class S_PokokSebagian
                 'PAYMENT_ID' => $uid,
                 'ACC_KEYS' => 'ANGSURAN_BUNGA',
                 'ORIGINAL_AMOUNT' => $bayarBunga
+            ]);
+        }
+
+        if ($bayarDenda != 0) {
+            M_PaymentDetail::create([
+                'PAYMENT_ID' => $uid,
+                'ACC_KEYS' => 'BAYAR_DENDA',
+                'ORIGINAL_AMOUNT' => $bayarDenda
             ]);
         }
     }

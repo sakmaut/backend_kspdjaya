@@ -324,7 +324,7 @@ class C_Tagihan extends Controller
             $lkpSubQuery = DB::table('cl_lkp_detail as b')
                 ->leftJoin('cl_lkp as c', 'c.ID', '=', 'b.LKP_ID')
                 ->where('c.STATUS', 'Active')
-                ->select('b.*', 'c.LKP_NUMBER');
+                ->select('b.LOAN_NUMBER', 'c.LKP_NUMBER');
 
             // Query utama
             $data = DB::table('cl_deploy as a')
