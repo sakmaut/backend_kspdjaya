@@ -30,7 +30,7 @@ class R_Deposits
 
     public function update($id, $data)
     {
-        $row = $this->model->findOrFail($id);
+        $row = $this->model->where('deposit_number',$id);
         $row->update($data);
         return $row;
     }
