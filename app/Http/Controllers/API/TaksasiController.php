@@ -64,7 +64,7 @@ class TaksasiController extends Controller
             }
 
             // $data = M_Taksasi::select('id', 'code', DB::raw("CONCAT(model, ' - ', descr) AS model"))
-            $data = M_Taksasi::select('id', 'code', DB::raw("CONCAT(' - ', descr) AS model"))
+            $data = M_Taksasi::select('id', 'code', DB::raw("CONCAT(descr) AS model"))
                 ->where('brand', $request->merk)
                 ->distinct()
                 ->get()
