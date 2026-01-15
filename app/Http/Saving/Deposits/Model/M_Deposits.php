@@ -17,6 +17,7 @@ class M_Deposits extends Model
     protected $fillable = [
         'id',
         'status',
+        'method',
         'deposit_number',
         'deposit_holder',
         'deposit_code',

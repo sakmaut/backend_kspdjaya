@@ -51,4 +51,17 @@ class S_Deposits extends R_Deposits
 
         return $this->repository->create($fields);
     }
+
+    public function closedDeposit($request, $id)
+    {
+        $fields = [
+            'status' => "inactive",
+            'method' => $request->metode ?? "",
+            'descr'  => $request->keterangan ?? "",
+        ];
+
+        $deposit = $this->repository->update($id, $fields);
+
+        return $deposit;
+    }
 }

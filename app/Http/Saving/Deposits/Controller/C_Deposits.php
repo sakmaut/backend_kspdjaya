@@ -62,8 +62,18 @@ class C_Deposits extends Controller
 
     public function update(Request $request, $id)
     {
-        // TODO: implement update
+        DB::beginTransaction();
+        try {
+            $this->service->closedDeposit($request, $id);
+
+            DB::commit();
+            return response()->json(["message" => "Data berhasil diupdate"], 200);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return $this->log->logError($e, $request);
+        }
     }
+
 
     public function destroy($id)
     {

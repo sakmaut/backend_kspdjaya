@@ -27,4 +27,11 @@ class R_Deposits
     {
         return $this->model->create($fields);
     }
+
+    public function update($id, $data)
+    {
+        $row = $this->model->findOrFail($id);
+        $row->update($data);
+        return $row;
+    }
 }
