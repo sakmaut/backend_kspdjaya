@@ -85,7 +85,8 @@ class TaksasiController extends Controller
 
             $data = M_Taksasi::select('id')
                 ->where('brand', '=', $request->merk)
-                ->whereRaw('CONCAT(code, " - ", model, " - ", descr) = ?', [$request->tipe])
+                // ->whereRaw('CONCAT(code, " - ", model, " - ", descr) = ?', [$request->tipe])
+                ->whereRaw('CONCAT(code," - ", descr) = ?', [$request->tipe])
                 ->first();
 
             $year = M_TaksasiPrice::distinct()
