@@ -102,7 +102,9 @@ class S_PokokSebagian
         $loanNumber = $request->LOAN_NUMBER;
         $noInv = $kwitansi->NO_TRANSAKSI;
 
-        $creditSchedules = M_CreditSchedule::where('LOAN_NUMBER', $loanNumber)->get();
+        $creditSchedules = M_CreditSchedule::where('LOAN_NUMBER', $loanNumber)
+            ->orderBy('PAYMENT_DATE', 'asc')
+            ->get();
 
         foreach ($creditSchedules as $schedule) {
             $this->s_creditScheduleBefore->created($schedule, $noInv);
