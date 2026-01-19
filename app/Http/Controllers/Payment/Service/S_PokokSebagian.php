@@ -160,7 +160,7 @@ class S_PokokSebagian
     {
         $paymentBunga = $request->BAYAR_BUNGA ?? 0;
         $paymentPokok = $request->BAYAR_POKOK ?? 0;
-        $paymentDenda = $request->BAYAR_DENDA != 0 ? $request->BAYAR_DENDA ?? 0 : $request->DENDA ?? 0;
+        $paymentDenda = $request->BAYAR_DENDA ?? 0;
 
         $currentDate = date('Y-m-d');
 
