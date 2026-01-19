@@ -255,7 +255,7 @@ class CrAppilcationController extends Controller
                             $getTipe = $result['atr']['tipe'];
 
                             $getVehicleType = M_Taksasi::where('brand', $getBrand)
-                                ->whereRaw("CONCAT(code, ' - ', model, ' - ', descr) = ?", $getTipe)
+                                ->whereRaw("CONCAT(code,' - ', descr) = ?", $getTipe)
                                 ->first();
 
                             $data_array_col = [
