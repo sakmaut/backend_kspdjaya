@@ -553,13 +553,28 @@ class S_PokokSebagian
 
     public function cancel($loan_number, $no_inv)
     {
+        // M_Kwitansi::where('LOAN_NUMBER', $loan_number)
+        //     ->where('NO_TRANSAKSI', '>=', $no_inv)
+        //     ->update(['STTS_PAYMENT' => 'CANCEL']);
         M_Kwitansi::where('LOAN_NUMBER', $loan_number)
-            ->where('NO_TRANSAKSI', '>=', $no_inv)
+            ->whereRaw(
+                'CAST(RIGHT(NO_TRANSAKSI, 9) AS UNSIGNED) >= CAST(RIGHT(?, 9) AS UNSIGNED)',
+                [$no_inv]
+            )
             ->update(['STTS_PAYMENT' => 'CANCEL']);
 
+
+        // M_Payment::where('LOAN_NUM', $loan_number)
+        //     ->where('INVOICE', '>=', $no_inv)
+        //     ->update(['STTS_RCRD' => 'CANCEL']);
+
         M_Payment::where('LOAN_NUM', $loan_number)
-            ->where('INVOICE', '>=', $no_inv)
+            ->whereRaw(
+                'CAST(RIGHT(INVOICE, 9) AS UNSIGNED) >= CAST(RIGHT(?, 9) AS UNSIGNED)',
+                [$no_inv]
+            )
             ->update(['STTS_RCRD' => 'CANCEL']);
+
 
         $scheduleBefore = $this->s_creditScheduleBefore->getDataCreditSchedule($loan_number, $no_inv);
         $arrearsBefore = $this->s_arrearsBefore->getDataArrears($no_inv);
