@@ -105,6 +105,7 @@ class KwitansiService
             "DISKON_PINALTY_PELUNASAN" => 0,
             "PEMBULATAN" => $request->PEMBULATAN ?? 0,
             "DISKON" => $request->JUMLAH_DISKON ?? 0,
+            "DISKON_FLAG" => $request->FLAG_DISKON ?? "",
             "KEMBALIAN" => $request->KEMBALIAN ?? 0,
             "JUMLAH_UANG" => $request->UANG_PELANGGAN,
             "NAMA_BANK" => $request->NAMA_BANK,
