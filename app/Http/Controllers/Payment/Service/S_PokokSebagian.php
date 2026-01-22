@@ -172,21 +172,21 @@ class S_PokokSebagian
 
         foreach ($creditSchedule as $res) {
 
-            $arrears = M_Arrears::where('LOAN_NUMBER', $request->LOAN_NUMBER)
-                ->whereDate('START_DATE', $res->PAYMENT_DATE)
-                ->where('STATUS_REC', 'A')
-                ->first();
+            // $arrears = M_Arrears::where('LOAN_NUMBER', $request->LOAN_NUMBER)
+            //     ->whereDate('START_DATE', $res->PAYMENT_DATE)
+            //     ->where('STATUS_REC', 'A')
+            //     ->first();
 
-            $sisaDendaRow = 0;
-            if ($arrears) {
-                $sisaDendaRow = floatval($arrears->PAST_DUE_PENALTY) - floatval($arrears->PAID_PENALTY);
-            }
+            // $sisaDendaRow = 0;
+            // if ($arrears) {
+            //     $sisaDendaRow = floatval($arrears->PAST_DUE_PENALTY) - floatval($arrears->PAID_PENALTY);
+            // }
 
-            $bayarDenda = 0;
-            if ($sisaPaymentDenda > 0 && $sisaDendaRow > 0) {
-                $bayarDenda = min($sisaPaymentDenda, $sisaDendaRow);
-                $sisaPaymentDenda -= $bayarDenda;
-            }
+            // $bayarDenda = 0;
+            // if ($sisaPaymentDenda > 0 && $sisaDendaRow > 0) {
+            //     $bayarDenda = min($sisaPaymentDenda, $sisaDendaRow);
+            //     $sisaPaymentDenda -= $bayarDenda;
+            // }
 
             $paidInterest = floatval($res->PAYMENT_VALUE_INTEREST ?? 0);
 
@@ -203,7 +203,7 @@ class S_PokokSebagian
                     'BAYAR_BUNGA' => 0,
                     'DISKON_BUNGA' => 0,
                     'BAYAR_POKOK' => 0,
-                    'BAYAR_DENDA' => $bayarDenda,
+                    'BAYAR_DENDA' => $bayarDenda ?? 0,
                 ];
                 continue;
             }
@@ -228,7 +228,7 @@ class S_PokokSebagian
                 'BAYAR_BUNGA' => $paidNow,
                 'DISKON_BUNGA' => max(0, $discount),
                 'BAYAR_POKOK' => 0 ,
-                'BAYAR_DENDA' => $bayarDenda,
+                'BAYAR_DENDA' => $bayarDenda ?? 0,
             ];
         }
 
