@@ -79,8 +79,7 @@ class KwitansiService
         }
 
         $no_inv = generateCodeKwitansi($request, 'kwitansi', 'NO_TRANSAKSI', 'INV');
-        // $status = strtolower($request->METODE_PEMBAYARAN) === 'cash' ? "PAID" : 'PENDING';
-        $status = (strtolower($request->METODE_PEMBAYARAN) === 'cash' && !checkPosition($request)) ? "PAID" : 'PENDING';
+        $status = (strtolower($request->METODE_PEMBAYARAN) === 'cash' && !checkPosition($request)) || $request->FLAG_DISKON != true ? "PAID" : 'PENDING';
 
         $data = [
             "PAYMENT_TYPE" => $tipe,
@@ -100,12 +99,10 @@ class KwitansiService
             "KECAMATAN" => $customer->customer['KECAMATAN'],
             "KELURAHAN" => $customer->customer['KELURAHAN'],
             "METODE_PEMBAYARAN" => $request->METODE_PEMBAYARAN,
-            "TOTAL_BAYAR" => $request->TOTAL_BAYAR ?? 0,
-            "PINALTY_PELUNASAN" => 0,
-            "DISKON_PINALTY_PELUNASAN" => 0,
+            "TOTAL_BAYAR" => $request->TOTAL_BAYAR ?? $request->JUMLAH_TAGIHAN ?? 0,
             "PEMBULATAN" => $request->PEMBULATAN ?? 0,
             "DISKON" => $request->JUMLAH_DISKON ?? 0,
-            "DISKON_FLAG" => $request->FLAG_DISKON ?? "",
+            "DISKON_FLAG" => $request->FLAG_DISKON == true ? 'ya':'tidak' ?? "",
             "KEMBALIAN" => $request->KEMBALIAN ?? 0,
             "JUMLAH_UANG" => $request->UANG_PELANGGAN,
             "NAMA_BANK" => $request->NAMA_BANK,
