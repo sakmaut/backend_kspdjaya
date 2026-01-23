@@ -188,9 +188,7 @@ class S_PokokSebagian
                 'bayar_denda'  => $payment['BAYAR_DENDA'] ?? 0,
                 'diskon_pokok' => $payment['DISKON_POKOK'] ?? 0,
                 'diskon_bunga' => $payment['DISKON_BUNGA'] ?? 0,
-                'diskon_denda' => $payment['DISKON_DENDA'] ?? 0,
-                'created_at'   => now(),
-                'updated_at'   => now(),
+                'diskon_denda' => $payment['DISKON_DENDA'] ?? 0
             ];
         }
 
