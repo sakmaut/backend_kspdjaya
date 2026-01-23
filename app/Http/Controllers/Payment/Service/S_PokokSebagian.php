@@ -176,6 +176,7 @@ class S_PokokSebagian
 
         foreach ($payments as $payment) {
             $setDataDetail[] = [
+                'id'   => Uuid::uuid7()->toString(),
                 'no_invoice'   => $noInv,
                 'loan_number'  => $loanNumber,
                 'angsuran_ke'  => $payment['INSTALLMENT_COUNT'] ?? 0,
