@@ -79,7 +79,12 @@ class KwitansiService
         }
 
         $no_inv = generateCodeKwitansi($request, 'kwitansi', 'NO_TRANSAKSI', 'INV');
-        $status = (strtolower($request->METODE_PEMBAYARAN) === 'cash' && !checkPosition($request)) || $request->FLAG_DISKON != true ? "PAID" : 'PENDING';
+        $flagDiskon = filter_var($request->FLAG_DISKON, FILTER_VALIDATE_BOOLEAN);
+        $status = (
+            strtolower($request->METODE_PEMBAYARAN) === 'cash'
+            && !checkPosition($request)
+            && $flagDiskon === false
+        ) ? "PAID" : "PENDING";
 
         $data = [
             "PAYMENT_TYPE" => $tipe,

@@ -154,24 +154,6 @@ class S_PokokSebagian
             $payments = $this->buildPayment($request, $creditSchedules);
         }
 
-        // foreach ($payments as $payment) {
-        //     M_KwitansiDetailPelunasan::create([
-        //         'no_invoice'     => $noInv,
-        //         'loan_number'    => $loanNumber,
-        //         'angsuran_ke'    => $payment['INSTALLMENT_COUNT'] ?? 0,
-        //         'tgl_angsuran'   => $payment['PAYMENT_DATE'] ?? null,
-        //         'principal'   => $payment['PRINCIPAL'] ?? null,
-        //         'interest'   => $payment['INTEREST'] ?? null,
-        //         'installment'    => $payment['PRINCIPAL'] + $payment['INTEREST']  ?? 0,
-        //         'bayar_pokok'    => $payment['BAYAR_POKOK'] ?? 0,
-        //         'bayar_bunga'    => $payment['BAYAR_BUNGA'] ?? 0,
-        //         'bayar_denda'    => $payment['BAYAR_DENDA'] ?? 0,
-        //         'diskon_pokok'   => $payment['DISKON_POKOK'] ?? 0,
-        //         'diskon_bunga'   => $payment['DISKON_BUNGA'] ?? 0,
-        //         'diskon_denda'   => $payment['DISKON_DENDA'] ?? 0,
-        //     ]);
-        // }
-
         $setDataDetail = [];
 
         foreach ($payments as $payment) {
@@ -215,16 +197,17 @@ class S_PokokSebagian
                 $interest = floatval($res->INTEREST);
                 $data[] = [
                     'ID' => $res->ID,
-                    'PRINCIPAL' => $principal,
                     'INSTALLMENT_COUNT' => $res->INSTALLMENT_COUNT,
-                    'INSTALLMENT' => $principal + $interest,
-                    'INTEREST' => $interest,
                     'PAYMENT_DATE' => $res->PAYMENT_DATE,
+                    'PRINCIPAL' => $principal,
+                    'INTEREST' => $interest,
+                    'INSTALLMENT' => $principal + $interest,  
                     'BAYAR_BUNGA' => 0,
-                    'DISKON_BUNGA' => 0,
                     'BAYAR_POKOK' => 0,
-                    'DISKON_POKOK' => 0, 
                     'BAYAR_DENDA' => $bayarDenda ?? 0,
+                    'DISKON_BUNGA' => 0,
+                    'DISKON_POKOK' => 0, 
+                   
                 ];
                 continue;
             }
@@ -241,16 +224,16 @@ class S_PokokSebagian
 
             $data[] = [
                 'ID' => $res->ID,
-                'PRINCIPAL' => floatval($res->PRINCIPAL),
                 'INSTALLMENT_COUNT' => $res->INSTALLMENT_COUNT,
-                'INSTALLMENT' => $installmentRaw,
-                'INTEREST' => $totalInterest,
                 'PAYMENT_DATE' => $res->PAYMENT_DATE,
+                'PRINCIPAL' => floatval($res->PRINCIPAL),
+                'INTEREST' => $totalInterest,
+                'INSTALLMENT' => $installmentRaw,
                 'BAYAR_BUNGA' => $paidNow,
-                'DISKON_BUNGA' => max(0, $discount),
-                'DISKON_POKOK' => 0, // ✅ WAJIB
                 'BAYAR_POKOK' => 0,
-                'BAYAR_DENDA' => $bayarDenda ?? 0
+                'BAYAR_DENDA' => $bayarDenda ?? 0,
+                'DISKON_BUNGA' => max(0, $discount),
+                'DISKON_POKOK' => 0
             ];
         }
 
@@ -347,11 +330,9 @@ class S_PokokSebagian
             $principalAsli = floatval($creditSchedule[$index]->PRINCIPAL ?? 0);
 
             $data[$index]['DISKON_POKOK'] = max(0, $principalAsli - $bayarPokok);
-
-            $data[$index]['PRINCIPAL'] = max(0, $principalAsli - $bayarPokok);
-            $data[$index]['INSTALLMENT'] = $data[$index]['PRINCIPAL'] + $data[$index]['INTEREST'];
+            $data[$index]['PRINCIPAL'] = $principalAsli;
+            $data[$index]['INSTALLMENT'] = $principalAsli + $data[$index]['INTEREST'];
         }
-
 
         return $data;
     }
@@ -535,12 +516,10 @@ class S_PokokSebagian
         }
 
         if($request->FLAG_DISKON == true){
-            $this->updateCreditStatusFlagDiskon($request, $credit, $loanNumber, $details);
+            $this->updateCreditStatusFlagDiskon($request, $credit);
         }else{
             $this->updateCreditStatus($request, $credit, $loanNumber, $details);
         }
-
-       
     }
 
     private function getKwitansi($loanNumber, $noTransaksi)
@@ -670,14 +649,15 @@ class S_PokokSebagian
         ]);
     }
 
-    private function updateCreditStatusFlagDiskon($request, $credit, $loanNumber, $details)
+    private function updateCreditStatusFlagDiskon($request, $credit)
     {
         $credit->update([
             'STATUS_REC' => !empty($request->DISKON_POKOK) && floatval($request->DISKON_POKOK) > 0 ? 'BL' : 'PT',
             'STATUS'     => 'D',
+            'DISCOUNT_PRINCIPAL' => floatval($request->DISKON_POKOK),
+            'DISCOUNT_INTEREST' => floatval($request->DISKON_POKOK),
         ]);
     }
-
 
     // private function updateCreditStatus($request, $credit, $loanNumber)
     // {
