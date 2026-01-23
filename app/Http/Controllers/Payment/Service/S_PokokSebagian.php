@@ -569,15 +569,16 @@ class S_PokokSebagian
         $paidPrincipal       = floatval($detail['bayar_pokok']);
         $paidInterest        = floatval($detail['bayar_bunga']);
         $installmentValue    = floatval($detail['installment']);
+        $paidDiskonPrincipal       = floatval($detail['diskon_pokok']);
+        $paidDiskonInterest        = floatval($detail['diskon_bunga']);
 
         $beforePaidPrincipal = floatval($schedule->PAYMENT_VALUE_PRINCIPAL);
         $beforePaidInterest  = floatval($schedule->PAYMENT_VALUE_INTEREST);
-        $insufficientPayment = floatval($schedule->INSUFFICIENT_PAYMENT);
         $paymentValue        = floatval($schedule->PAYMENT_VALUE);
 
         $totalInterest       = $beforePaidInterest + $paidInterest;
         $totalPrincipal      = $beforePaidPrincipal + $paidPrincipal;
-        $totalPaid           = $paidPrincipal + $paidInterest;
+        $totalPaid           = $paidPrincipal + $paidInterest + $paidDiskonPrincipal + $paidDiskonInterest;
 
         $currentDate = date('Y-m-d');
         $isPastDue   = strtotime($schedule->PAYMENT_DATE) < strtotime($currentDate);
