@@ -32,11 +32,30 @@ class TaskPusher extends Controller
                     'status' => 'PENDING'
                 ])->whereIn('type', ['request_payment'])->get();
             } elseif ($getCurrentPosition == 'HO') {
+                // $data = M_Tasks::where([
+                //     'recipient_id' => $getCurrentPosition,
+                // ])
+                //     ->whereIn('type', ['payment', 'request_discount', 'payment_cancel', 'repayment_cancel', 'repayment'])
+                //     ->whereIn('status', ['WAITING CANCEL', 'PENDING'])
+                //     ->get();
+
                 $data = M_Tasks::where([
                     'recipient_id' => $getCurrentPosition,
                 ])
-                    ->whereIn('type', ['payment', 'request_discount', 'payment_cancel', 'repayment_cancel', 'repayment'])
-                    ->whereIn('status', ['WAITING CANCEL', 'PENDING'])
+                    ->where(function ($query) {
+                        $query->whereIn('type', [
+                            'payment',
+                            'request_discount',
+                            'payment_cancel',
+                            'repayment_cancel',
+                            'repayment'
+                        ])
+                            ->whereIn('status', ['WAITING CANCEL', 'PENDING'])
+                            ->orWhere(function ($q) {
+                                $q->where('type', 'request_payment')
+                                    ->where('created_position', 'ADMIN');
+                            });
+                    })
                     ->get();
             } else {
                 $data = [];
