@@ -24,12 +24,13 @@ class TicketingService extends TicketingRepository
 
         $ticket = self::store([
             'ticket_number' => $ticketNumber,
+            'title'   => $request->title ?? "",
             'category'      => $request->category ?? "",
             'priority'      => $request->priority ?? "",
             'status'        => $request->status ?? "",
-            'description'   => $request->title ?? "",
+            'description'   => $request->keterangan ?? "",
             'created_by'    => $userId,
-            'created_at'    => Carbon::now('Asia/Jakarta'),
+            'created_at'    => Carbon::now('Asia/Jakarta')
         ]);
 
         TicketingAssigmentEntity::create([

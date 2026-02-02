@@ -14,6 +14,7 @@ class TicketingEntity extends Model
     protected $table = 'tic_tickets';
     protected $fillable = [
         'id',
+        'title',
         'ticket_number',
         'category',
         'priority',
