@@ -22,7 +22,7 @@ class R_TagihanDetail extends JsonResource
 
         $userCheck = User::where('id', $this->SURVEYOR_ID)->first() ?? "";
 
-        $nbot = ( in_array($this->STATUS_MCF, ['AKTIF', 'ACTIVE'])
+        $nbot = ( in_array($this->STATUS_MCF, ['AKTIF', 'ACTIVE', 'active'])
             && in_array($this->LAST_INST, [1, 2, 3])
             && in_array($this->CYCLE_AWAL, ['CM', 'C5', 'C4', 'C3', 'C2', 'C1', 'C0'])
         ) || (
