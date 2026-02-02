@@ -11,6 +11,7 @@ use App\Http\Resources\R_KwitansiPelunasan;
 use App\Http\Resources\R_Pelunasan;
 use App\Models\M_Arrears;
 use App\Models\M_Branch;
+use App\Models\M_CrBlacklist;
 use App\Models\M_Credit;
 use App\Models\M_CreditSchedule;
 use App\Models\M_Customer;
@@ -547,7 +548,38 @@ class PelunasanController extends Controller
     {
         $credit = M_Credit::where('LOAN_NUMBER', $loan_number)->first();
 
-        $setStatusRec = floatval($res['diskon_pokok']) > 0 ? 'BL' : 'PT';
+        $diskonPokok = isset($res['diskon_pokok']) ? (float) $res['diskon_pokok'] : 0;
+        $setStatusRec = $diskonPokok > 0 ? 'BL' : 'PT';
+
+        if ($setStatusRec === 'BL' && !empty($credit?->CUST_CODE)) {
+
+            $customerDetail = M_Customer::where('CUST_CODE', $credit->CUST_CODE)->first();
+
+            if (!$customerDetail) {
+                return;
+            }
+
+            $exists = M_CrBlacklist::where('LOAN_NUMBER', $credit->LOAN_NUMBER)
+                ->where('NOTE', 'BL Pelunasan')
+                ->exists();
+
+            if ($exists) {
+                return;
+            }
+
+            M_CrBlacklist::create([
+                'ID'           => Uuid::uuid7()->toString(),
+                'LOAN_NUMBER'  => $credit->LOAN_NUMBER ?? '',
+                'KTP'          => $customerDetail->ID_NUMBER ?? '',
+                'KK'           => $customerDetail->KK_NUMBER ?? '',
+                'COLLATERAL'   => '',
+                'RES_1'        => '',
+                'RES_2'        => '',
+                'PERSON'       => 'SYSTEM',
+                'DATE_ADD'     => now('Asia/Jakarta'),
+                'NOTE'         => 'BL Pelunasan',
+            ]);
+        }
 
         if ($credit) {
             $credit->update([
