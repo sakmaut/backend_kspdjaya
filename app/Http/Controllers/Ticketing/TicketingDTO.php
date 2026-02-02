@@ -23,7 +23,7 @@ class TicketingDTO extends JsonResource
             "category" => $this->category,
             "priority" => $this->priority,
             "status" => $this->status,
-            "keterangan" => $this->description,
+            "description" => $this->description,
             "assignee" => $this->current_assignee_id,
             "created_at" => $this->created_at
         ];

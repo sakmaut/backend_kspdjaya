@@ -28,7 +28,7 @@ class TicketingService extends TicketingRepository
             'category'      => $request->category ?? "",
             'priority'      => $request->priority ?? "",
             'status'        => $request->status ?? "",
-            'description'   => $request->keterangan ?? "",
+            'description'   => $request->description ?? "",
             'created_by'    => $userId,
             'created_at'    => Carbon::now('Asia/Jakarta')
         ]);
