@@ -29,6 +29,7 @@ use App\Http\Controllers\API\{
     Wilayah
 };
 use App\Http\Controllers\Payment\Controller\C_PokokSebagian;
+use App\Http\Controllers\Ticketing\TicketingController;
 use App\Http\Controllers\Welcome;
 use App\Http\Credit\Tagihan\Controller\C_Tagihan;
 use App\Http\Credit\TagihanDocument\Controller\C_TagihanDocument;
@@ -209,6 +210,8 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
 
     Route::resource('order_resources', OrderResourcesController::class);
     Route::post('order_resources_status', [OrderResourcesController::class, 'statusUpdate']);
+
+    Route::resource('ticketing', TicketingController::class);
 });
 
 
