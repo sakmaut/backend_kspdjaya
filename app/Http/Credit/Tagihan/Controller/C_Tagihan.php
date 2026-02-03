@@ -98,6 +98,8 @@ class C_Tagihan extends Controller
             $userId = $request->user()->username ?? null;
             $currentBranch = $request->user()->branch_id;
             $currentPosition = strtoupper($request->user()->position);
+            $startOfMonth = now()->startOfMonth()->toDateString();
+            $endOfMonth = now()->endOfMonth()->toDateString();
 
             if (!$userId) {
                 throw new \Exception("User ID not found.", 500);
@@ -110,12 +112,6 @@ class C_Tagihan extends Controller
                 ->whereYear('p.ENTRY_DATE', now()->year)
                 ->selectRaw('SUM(pd.ORIGINAL_AMOUNT) AS total_bayar, p.LOAN_NUM')
                 ->groupBy('p.LOAN_NUM');
-
-            // $logSubQuery = DB::table('cl_survey_logs')
-            //     ->select('REFERENCE_ID', 'DESCRIPTION', 'CONFIRM_DATE')
-            //     ->whereDate('CREATED_AT', now()->toDateString())
-            //     ->orderBy('CREATED_AT', 'desc')
-            //     ->limit(1);
 
             $logSubQuery = DB::table('cl_survey_logs as t')
                 ->join(
@@ -137,7 +133,7 @@ class C_Tagihan extends Controller
             $lkpSubQuery = DB::table('cl_lkp_detail as b')
                 ->leftJoin('cl_lkp as c', 'c.ID', '=', 'b.LKP_ID')
                 ->where('c.STATUS', 'Active')
-                ->select('b.*', 'c.LKP_NUMBER');
+                ->select('b.LKP_ID', 'b.LOAN_NUMBER', 'c.LKP_NUMBER');
 
             $query = DB::table('cl_deploy as a')
                 ->leftJoinSub($lkpSubQuery, 'b', function ($join) {
@@ -160,8 +156,7 @@ class C_Tagihan extends Controller
                 ->leftJoin('cr_collateral as cc', 'cc.CR_CREDIT_ID', '=', 'a.CREDIT_ID')
                 ->leftJoin('users as u', 'u.username', '=', 'a.USER_ID')
                 ->leftJoin('branch as br', 'br.ID', '=', 'u.branch_id')
-                ->whereMonth('a.CREATED_AT', now()->month)
-                ->whereYear('a.CREATED_AT', now()->year)
+                ->whereBetween('a.CREATED_AT', [$startOfMonth, $endOfMonth])
                 ->select(
                     'a.ID',
                     'a.NO_SURAT',
