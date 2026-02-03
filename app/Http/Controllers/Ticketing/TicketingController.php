@@ -39,7 +39,7 @@ class TicketingController extends Controller
     public function show(Request $request, $id)
     {
         try {
-            $detail = $this->ticketingService->findById($id);
+            $detail = $this->ticketingService->getDetailById($id);
 
             if (!$detail) {
                 throw new Exception("Id Not Found", 404);

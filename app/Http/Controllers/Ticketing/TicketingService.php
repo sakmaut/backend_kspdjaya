@@ -13,9 +13,9 @@ class TicketingService extends TicketingRepository
         return $this->getAll();
     }
 
-    public function findById($id)
+    public function getDetailById($id)
     {
-        return $this->getById($id);
+        return $this->findById($id);
     }
 
     public function create($request)
@@ -60,7 +60,7 @@ class TicketingService extends TicketingRepository
             throw new Exception('User assign tidak boleh kosong');
         }
 
-        $ticket = $this->getById($id);
+        $ticket = $this->findById($id);
 
         if (!$ticket) {
             throw new Exception('Ticket tidak ditemukan');
@@ -73,9 +73,9 @@ class TicketingService extends TicketingRepository
         $ticket->current_assignee_id = $userAssignId;
         $ticket->save();
 
-        TicketingAssigmentEntity::updateOrCreate(
-            ['ticket_id' => $ticket->id],
+        TicketingAssigmentEntity::Create(
             [
+                'ticket_id' => $ticket->id,
                 'assigned_to' => $userAssignId,
                 'status'      => $request->status ?? $ticket->status,
                 'created_by'  => $user->id,
