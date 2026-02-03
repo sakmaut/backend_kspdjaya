@@ -225,87 +225,17 @@ class C_Tagihan extends Controller
                 throw new \Exception("User ID not found.", 500);
             }
 
-            $sql = " SELECT
-                        a.ID,
-                        a.NO_SURAT,
-                        a.USER_ID,
-                        a.BRANCH_ID,
-                        a.CREDIT_ID,
-                        a.LOAN_NUMBER,
-                        a.CUST_CODE,
-                        a.TGL_JTH_TEMPO,
-                        a.CYCLE_AWAL,
-                        a.N_BOT,
-                        a.MCF,
-                        a.ANGSURAN_KE,
-                        a.ANGSURAN,
-                        c.LKP_NUMBER,
-                        d.total_bayar,
-                        e.DESCRIPTION,
-                        e.CONFIRM_DATE,
-                        f.NAME,
-                        f.INS_ADDRESS,
-                        f.INS_KECAMATAN,
-                        f.INS_KELURAHAN,
-                        f.PHONE_HOUSE,
-                        f.PHONE_PERSONAL,
-                        g.total_denda,
-                        CONCAT(cc.BRAND, ' - ', cc.TYPE, ' - ', cc.COLOR) AS unit,
-                        cc.ID AS COLLATERAL_ID,
-                        cc.POLICE_NUMBER,
-                        cc.PRODUCTION_YEAR,
-                        br.NAME AS nama_cabang
-                    FROM cl_deploy AS a
-                    LEFT JOIN (
-                        SELECT b.LKP_ID, b.LOAN_NUMBER, c.LKP_NUMBER
-                        FROM cl_lkp_detail AS b
-                        LEFT JOIN cl_lkp AS c ON c.ID = b.LKP_ID
-                        WHERE c.STATUS = 'Active'
-                    ) AS b ON b.LOAN_NUMBER = a.LOAN_NUMBER
-                    LEFT JOIN cl_lkp AS c ON c.ID = b.LKP_ID AND c.STATUS = 'Active'
-                    LEFT JOIN (
-                        SELECT p.LOAN_NUM, SUM(pd.ORIGINAL_AMOUNT) AS total_bayar
-                        FROM payment AS p
-                        LEFT JOIN payment_detail AS pd ON pd.PAYMENT_ID = p.ID
-                        WHERE pd.ACC_KEYS IN ('BAYAR_POKOK','BAYAR_BUNGA','ANGSURAN_POKOK','ANGSURAN_BUNGA')
-                        AND p.ENTRY_DATE BETWEEN ? AND ?
-                        GROUP BY p.LOAN_NUM
-                    ) AS d ON d.LOAN_NUM = a.LOAN_NUMBER
-                    LEFT JOIN (
-                        SELECT t.REFERENCE_ID, t.DESCRIPTION, t.CONFIRM_DATE
-                        FROM cl_survey_logs AS t
-                        INNER JOIN (
-                            SELECT REFERENCE_ID, MAX(CREATED_AT) AS max_created
-                            FROM cl_survey_logs
-                            GROUP BY REFERENCE_ID
-                        ) AS x ON x.REFERENCE_ID = t.REFERENCE_ID AND x.max_created = t.CREATED_AT
-                    ) AS e ON e.REFERENCE_ID = a.NO_SURAT
-                    LEFT JOIN (
-                        SELECT LOAN_NUMBER, SUM(PAST_DUE_PENALTY) - SUM(PAID_PENALTY) AS total_denda
-                        FROM arrears
-                        WHERE STATUS_REC = 'A'
-                        GROUP BY LOAN_NUMBER
-                    ) AS g ON g.LOAN_NUMBER = a.LOAN_NUMBER
-                    LEFT JOIN customer AS f ON f.CUST_CODE = a.CUST_CODE
-                    LEFT JOIN cr_collateral AS cc ON cc.CR_CREDIT_ID = a.CREDIT_ID
-                    LEFT JOIN users AS u ON u.username = a.USER_ID
-                    LEFT JOIN branch AS br ON br.ID = u.branch_id
-                    WHERE a.CREATED_AT BETWEEN ? AND ?
-                    ";
+            $query = DB::table('vw_tagihan_collector');
 
             if ($currentPosition === 'KAPOS') {
-                $sql .= " AND u.branch_id = ?";
-                $bindings = [$startOfMonth, $endOfMonth, $startOfMonth, $endOfMonth, $currentBranch];
-            } elseif (in_array($currentPosition, ['MCF', 'KOLEKTOR'])) {
-                $sql .= " AND a.USER_ID = ?";
-                $bindings = [$startOfMonth, $endOfMonth, $startOfMonth, $endOfMonth, $userId];
-            } else {
-                $bindings = [$startOfMonth, $endOfMonth, $startOfMonth, $endOfMonth];
+                $query->where('BRANCH_ID', $currentBranch);
             }
 
-            $sql .= " ORDER BY c.LKP_NUMBER IS NOT NULL DESC";
+            if (in_array($currentPosition, ['MCF', 'KOLEKTOR'])) {
+                $query->where('USER_ID', $userId);
+            }
 
-            $data = DB::select($sql, $bindings);
+            $data = $query->get();
 
             $dto = Rs_CollectorList::collection($data);
 
