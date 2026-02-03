@@ -219,16 +219,18 @@ if (!function_exists('generateTicketCode')) {
             throw new \Exception('Kode cabang tidak ditemukan');
         }
 
-        $latest = DB::table($table)
-            ->where($column, 'like', "{$prefix}-{$branchCode}-%")
-            ->orderByRaw("CAST(SUBSTRING_INDEX($column, '-', -1) AS UNSIGNED) DESC")
-            ->value($column);
+        $lastNumber = DB::table($table)
+            ->selectRaw("MAX(CAST(SUBSTRING_INDEX($column, '-', -1) AS UNSIGNED)) AS last_number")
+            ->value('last_number');
 
-        $next = $latest
-            ? (int) substr($latest, -7) + 1
-            : 1;
+        $next = ((int) $lastNumber) + 1;
 
-        return sprintf("%s-%s-%07d", $prefix, $branchCode, $next);
+        return sprintf(
+            '%s-%s-%07d',
+            $prefix,
+            $branchCode,
+            $next
+        );
     }
 }
 
