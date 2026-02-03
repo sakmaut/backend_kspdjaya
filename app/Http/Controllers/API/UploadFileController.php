@@ -46,14 +46,14 @@ class UploadFileController extends Controller
                 $file = $request->file('image');
 
                 if (!$file->isValid()) {
-                    return response()->json(['message' => 'File upload tidak valid'], 400);
+                    return response()->json(['message' => 'File upload tidak valid', "status" => 400], 400);
                 }
 
                 $allowedExt = ['png', 'jpg', 'jpeg', 'gif', 'webp'];
                 $extension  = strtolower($file->getClientOriginalExtension());
 
                 if (!in_array($extension, $allowedExt)) {
-                    return response()->json(['message' => 'Format file tidak didukung'], 400);
+                    return response()->json(['message' => 'Format file tidak didukung', "status" => 400], 400);
                 }
 
                 $fileName = Uuid::uuid7()->toString() . '.' . $extension;
@@ -76,19 +76,13 @@ class UploadFileController extends Controller
 
                 Storage::put("{$storagePath}/{$fileName}", $data);
             }else {
-                return response()->json([
-                    'message' => 'Image harus berupa file upload atau base64'
-                ], 400);
+                return response()->json(['message' => 'Image harus berupa file upload atau base64', "status" => 400], 400);
             }
 
             $url = asset("storage/{$folder}/{$fileName}");
 
             DB::commit();
-            return response()->json([
-                'url'    => $url,
-                'folder' => $folder,
-                'file'   => $fileName
-            ], 200);
+            return response()->json(['message' => 'Image upload successfully', "status" => 200, 'response' => $url], 200);
         } catch (\Exception $e) {
             DB::rollback();
             return $this->log->logError($e, $request);
