@@ -207,7 +207,7 @@ if (!function_exists('generateCodeKwitansi')) {
 
 if (!function_exists('generateTicketCode')) {
     function generateTicketCode(
-        int $branchId,
+        string $branchId,
         string $table,
         string $column,
         string $prefix = 'TCK'
