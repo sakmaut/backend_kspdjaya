@@ -17,12 +17,10 @@ class TicketingAssigmentEntity extends Model
     protected $fillable = [
         'id',
         'ticket_id',
-        'user_id',
-        'assigned_at',
-        'released_at',
-        'assigned_by',
-        'created_at',
-        'updated_at'
+        'assigned_to',
+        'status',
+        'created_by',
+        'created_at'
     ];
 
     public $incrementing = false;

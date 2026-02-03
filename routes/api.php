@@ -26,6 +26,7 @@ use App\Http\Controllers\API\{
     PhoneBookController,
     ReportController,
     TaskPusher,
+    UploadFileController,
     Wilayah
 };
 use App\Http\Controllers\Payment\Controller\C_PokokSebagian;
@@ -33,6 +34,7 @@ use App\Http\Controllers\Ticketing\TicketingController;
 use App\Http\Controllers\Welcome;
 use App\Http\Credit\Tagihan\Controller\C_Tagihan;
 use App\Http\Credit\TagihanDocument\Controller\C_TagihanDocument;
+use GuzzleHttp\Psr7\UploadedFile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -177,7 +179,6 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
 
     // Route::post('listBanTest', [ListBanController::class, 'listBanTest']);
 
-
     Route::post('lap_pembayaran', [ReportController::class, 'lapPembayaran']);
     Route::get('tokenCheckValidation', [AuthController::class, 'tokenCheckValidation']);
 
@@ -212,6 +213,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::post('order_resources_status', [OrderResourcesController::class, 'statusUpdate']);
 
     Route::resource('ticketing', TicketingController::class);
+    Route::resource('uploads', UploadFileController::class);
 });
 
 

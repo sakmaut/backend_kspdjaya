@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Ticketing;
 
+use Exception;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Request;
 
@@ -49,4 +50,38 @@ class TicketingService extends TicketingRepository
         return $ticket;
     }
 
+    public function assignHandler($request, $id)
+    {
+        $user = $request->user();
+        $userAssignId = $request->assign_id;
+
+        if (!$userAssignId) {
+            throw new Exception('User assign tidak boleh kosong');
+        }
+
+        $ticket = $this->getById($id);
+
+        if (!$ticket) {
+            throw new Exception('Ticket tidak ditemukan');
+        }
+
+        if ($ticket->status === 'closed') {
+            throw new Exception('Ticket sudah ditutup dan tidak bisa di-assign');
+        }
+
+        $ticket->current_assignee_id = $userAssignId;
+        $ticket->save();
+
+        TicketingAssigmentEntity::updateOrCreate(
+            ['ticket_id' => $ticket->id],
+            [
+                'assigned_to' => $userAssignId,
+                'status'      => $request->status ?? $ticket->status,
+                'created_by'  => $user->id,
+                'created_at'  => Carbon::now('Asia/Jakarta'),
+            ]
+        );
+
+        return $ticket->fresh();
+    }
 }

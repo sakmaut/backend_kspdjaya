@@ -67,36 +67,18 @@ class TicketingController extends Controller
         }
     }
 
-    // public function update(Request $request, $id)
-    // {
-    //     DB::beginTransaction();
-    //     try {
-    //         $request->validate([
-    //             'CODE' => 'unique:branch,code,' . $id,
-    //             'NAME' => 'unique:branch,name,' . $id
-    //         ]);
+    public function update(Request $request, $id)
+    {
+        DB::beginTransaction();
+        try {
 
-    //         $this->branchRepository->update($request, $id);
+            $this->ticketingService->assignHandler($request, $id);
 
-    //         DB::commit();
-    //         return response()->json(['message' => 'Cabang updated successfully'], 200);
-    //     } catch (\Exception $e) {
-    //         DB::rollback();
-    //         return $this->log->logError($e, $request);
-    //     }
-    // }
-
-    // public function destroy(Request $request, $id)
-    // {
-    //     DB::beginTransaction();
-    //     try {
-    //         $this->branchRepository->delete($request, $id);
-
-    //         DB::commit();
-    //         return response()->json(['message' => 'deleted successfully'], 200);
-    //     } catch (\Exception $e) {
-    //         DB::rollback();
-    //         return $this->log->logError($e, $request);
-    //     }
-    // }
+            DB::commit();
+            return response()->json(['message' => 'updated successfully'], 200);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return $this->log->logError($e, $request);
+        }
+    }
 }
