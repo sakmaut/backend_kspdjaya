@@ -25,7 +25,7 @@ class TicketingDTO extends JsonResource
             "status" => $this->status,
             "description" => $this->description,
             "lampiran" => json_decode($this->path_image),
-            "assignee" => $this->current_assignee_id,
+            "assignee" => optional($this->currentAssignee)->fullname,
             "created_at" => $this->created_at
         ];
     }
