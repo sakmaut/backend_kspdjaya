@@ -20,6 +20,7 @@ class TicketingEntity extends Model
         'priority',
         'status',
         'description',
+        'path_image',
         'current_assignee_id',
         'created_by',
         'created_at'
