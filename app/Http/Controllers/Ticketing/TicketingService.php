@@ -19,7 +19,7 @@ class TicketingService extends TicketingRepository
 
     public function create($request)
     {
-        $ticketNumber = generateTicketCode($request, 'tic_tickets', 'ticket_number');
+        $ticketNumber = generateTicketCode($request->user()->branch_id, 'tic_tickets', 'ticket_number');
         $userId = $request->user()->id;
 
         $ticket = self::store([
