@@ -206,34 +206,29 @@ if (!function_exists('generateCodeKwitansi')) {
 }
 
 if (!function_exists('generateTicketCode')) {
-    function generateTicketCode(Request $request, string $table, string $column, string $prefix = 'TCK')
-    {
-        // ambil kode cabang (misal: HRG)
-        $branchCode = M_Branch::where('id', $request->user()->branch_id)
+    function generateTicketCode(
+        int $branchId,
+        string $table,
+        string $column,
+        string $prefix = 'TCK'
+    ) {
+        $branchCode = M_Branch::where('id', $branchId)
             ->value('CODE_NUMBER');
 
         if (!$branchCode) {
             throw new \Exception('Kode cabang tidak ditemukan');
         }
 
-        // cari ticket terakhir per cabang
         $latest = DB::table($table)
             ->where($column, 'like', "{$prefix}-{$branchCode}-%")
             ->orderByRaw("CAST(SUBSTRING_INDEX($column, '-', -1) AS UNSIGNED) DESC")
             ->value($column);
 
-        // next sequence
         $next = $latest
             ? (int) substr($latest, -7) + 1
             : 1;
 
-        // hasil akhir: TCK-HRG-0000001
-        return sprintf(
-            "%s-%s-%07d",
-            $prefix,
-            $branchCode,
-            $next
-        );
+        return sprintf("%s-%s-%07d", $prefix, $branchCode, $next);
     }
 }
 
