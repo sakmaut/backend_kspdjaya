@@ -92,6 +92,126 @@ class C_Tagihan extends Controller
         }
     }
 
+    // public function list_tagihan_collector(Request $request)
+    // {
+    //     try {
+    //         $userId = $request->user()->username ?? null;
+    //         $currentBranch = $request->user()->branch_id;
+    //         $currentPosition = strtoupper($request->user()->position);
+    //         $startOfMonth = now()->startOfMonth()->toDateString();
+    //         $endOfMonth = now()->endOfMonth()->toDateString();
+
+    //         if (!$userId) {
+    //             throw new \Exception("User ID not found.", 500);
+    //         }
+
+    //         $subQuery = DB::table('payment as p')
+    //             ->leftJoin('payment_detail as pd', 'pd.PAYMENT_ID', '=', 'p.ID')
+    //             ->whereIn('pd.ACC_KEYS', ['BAYAR_POKOK', 'BAYAR_BUNGA', 'ANGSURAN_POKOK', 'ANGSURAN_BUNGA'])
+    //             ->whereMonth('p.ENTRY_DATE', now()->month)
+    //             ->whereYear('p.ENTRY_DATE', now()->year)
+    //             ->selectRaw('SUM(pd.ORIGINAL_AMOUNT) AS total_bayar, p.LOAN_NUM')
+    //             ->groupBy('p.LOAN_NUM');
+
+    //         $logSubQuery = DB::table('cl_survey_logs as t')
+    //             ->join(
+    //                 DB::raw('(SELECT REFERENCE_ID, MAX(CREATED_AT) AS max_created 
+    //               FROM cl_survey_logs 
+    //               GROUP BY REFERENCE_ID) x'),
+    //                 function ($join) {
+    //                     $join->on('x.REFERENCE_ID', '=', 't.REFERENCE_ID')
+    //                         ->on('x.max_created', '=', 't.CREATED_AT');
+    //                 }
+    //             )
+    //             ->select('t.REFERENCE_ID', 't.DESCRIPTION', 't.CONFIRM_DATE');
+
+    //         $totalDenda = DB::table('arrears')
+    //             ->where('STATUS_REC', 'A')
+    //             ->selectRaw('LOAN_NUMBER, (SUM(PAST_DUE_PENALTY) - SUM(PAID_PENALTY)) AS total_denda')
+    //             ->groupBy('LOAN_NUMBER');
+
+    //         $lkpSubQuery = DB::table('cl_lkp_detail as b')
+    //             ->leftJoin('cl_lkp as c', 'c.ID', '=', 'b.LKP_ID')
+    //             ->where('c.STATUS', 'Active')
+    //             ->select('b.LKP_ID', 'b.LOAN_NUMBER', 'c.LKP_NUMBER');
+
+    //         $query = DB::table('cl_deploy as a')
+    //             ->leftJoinSub($lkpSubQuery, 'b', function ($join) {
+    //                 $join->on('b.LOAN_NUMBER', '=', 'a.LOAN_NUMBER');
+    //             })
+    //             ->leftJoin('cl_lkp as c', function ($join) {
+    //                 $join->on('c.ID', '=', 'b.LKP_ID')
+    //                     ->where('c.STATUS', '=', 'Active');
+    //             })
+    //             ->leftJoinSub($subQuery, 'd', function ($join) {
+    //                 $join->on('d.LOAN_NUM', '=', 'a.LOAN_NUMBER');
+    //             })
+    //             ->leftJoinSub($logSubQuery, 'e', function ($join) {
+    //                 $join->on('e.REFERENCE_ID', '=', 'a.NO_SURAT');
+    //             })
+    //             ->leftJoinSub($totalDenda, 'g', function ($join) {
+    //                 $join->on('g.LOAN_NUMBER', '=', 'a.LOAN_NUMBER');
+    //             })
+    //             ->leftJoin('customer as f', 'f.CUST_CODE', '=', 'a.CUST_CODE')
+    //             ->leftJoin('cr_collateral as cc', 'cc.CR_CREDIT_ID', '=', 'a.CREDIT_ID')
+    //             ->leftJoin('users as u', 'u.username', '=', 'a.USER_ID')
+    //             ->leftJoin('branch as br', 'br.ID', '=', 'u.branch_id')
+    //             ->whereBetween('a.CREATED_AT', [$startOfMonth, $endOfMonth])
+    //             ->select(
+    //                 'a.ID',
+    //                 'a.NO_SURAT',
+    //                 'a.USER_ID',
+    //                 'a.BRANCH_ID',
+    //                 'a.CREDIT_ID',
+    //                 'a.LOAN_NUMBER',
+    //                 'a.CUST_CODE',
+    //                 'a.TGL_JTH_TEMPO',
+    //                 'a.CYCLE_AWAL',
+    //                 'a.N_BOT',
+    //                 'a.MCF',
+    //                 'a.ANGSURAN_KE',
+    //                 'a.ANGSURAN',
+    //                 'c.LKP_NUMBER',
+    //                 'd.total_bayar',
+    //                 'e.DESCRIPTION',
+    //                 'e.CONFIRM_DATE',
+    //                 'f.NAME',
+    //                 'f.INS_ADDRESS',
+    //                 'f.INS_KECAMATAN',
+    //                 'f.INS_KELURAHAN',
+    //                 'f.PHONE_HOUSE',
+    //                 'f.PHONE_PERSONAL',
+    //                 'g.total_denda',
+    //                 DB::raw("CONCAT(cc.BRAND, ' - ', cc.TYPE, ' - ', cc.COLOR) AS unit"),
+    //                 'cc.ID as COLLATERAL_ID',
+    //                 'cc.POLICE_NUMBER',
+    //                 'cc.PRODUCTION_YEAR',
+    //                 'br.NAME as nama_cabang'
+    //             )
+    //             ->orderByRaw('c.LKP_NUMBER IS NOT NULL DESC');
+
+
+
+    //             switch ($currentPosition) {
+    //             case 'KAPOS':
+    //                 $query->where('u.branch_id', $currentBranch);
+    //                 break;
+
+    //             case 'MCF':
+    //             case 'KOLEKTOR':
+    //                 $query->where('a.USER_ID', $userId);
+    //                 break;
+    //         }
+
+    //         $data = $query->get();
+    //         $dto = Rs_CollectorList::collection($data);
+
+    //         return response()->json($dto, 200);
+    //     } catch (\Exception $e) {
+    //         return $this->log->logError($e, $request);
+    //     }
+    // }
+
     public function list_tagihan_collector(Request $request)
     {
         try {
@@ -105,104 +225,88 @@ class C_Tagihan extends Controller
                 throw new \Exception("User ID not found.", 500);
             }
 
-            $subQuery = DB::table('payment as p')
-                ->leftJoin('payment_detail as pd', 'pd.PAYMENT_ID', '=', 'p.ID')
-                ->whereIn('pd.ACC_KEYS', ['BAYAR_POKOK', 'BAYAR_BUNGA', 'ANGSURAN_POKOK', 'ANGSURAN_BUNGA'])
-                ->whereMonth('p.ENTRY_DATE', now()->month)
-                ->whereYear('p.ENTRY_DATE', now()->year)
-                ->selectRaw('SUM(pd.ORIGINAL_AMOUNT) AS total_bayar, p.LOAN_NUM')
-                ->groupBy('p.LOAN_NUM');
+            $sql = " SELECT
+                        a.ID,
+                        a.NO_SURAT,
+                        a.USER_ID,
+                        a.BRANCH_ID,
+                        a.CREDIT_ID,
+                        a.LOAN_NUMBER,
+                        a.CUST_CODE,
+                        a.TGL_JTH_TEMPO,
+                        a.CYCLE_AWAL,
+                        a.N_BOT,
+                        a.MCF,
+                        a.ANGSURAN_KE,
+                        a.ANGSURAN,
+                        c.LKP_NUMBER,
+                        d.total_bayar,
+                        e.DESCRIPTION,
+                        e.CONFIRM_DATE,
+                        f.NAME,
+                        f.INS_ADDRESS,
+                        f.INS_KECAMATAN,
+                        f.INS_KELURAHAN,
+                        f.PHONE_HOUSE,
+                        f.PHONE_PERSONAL,
+                        g.total_denda,
+                        CONCAT(cc.BRAND, ' - ', cc.TYPE, ' - ', cc.COLOR) AS unit,
+                        cc.ID AS COLLATERAL_ID,
+                        cc.POLICE_NUMBER,
+                        cc.PRODUCTION_YEAR,
+                        br.NAME AS nama_cabang
+                    FROM cl_deploy AS a
+                    LEFT JOIN (
+                        SELECT b.LKP_ID, b.LOAN_NUMBER, c.LKP_NUMBER
+                        FROM cl_lkp_detail AS b
+                        LEFT JOIN cl_lkp AS c ON c.ID = b.LKP_ID
+                        WHERE c.STATUS = 'Active'
+                    ) AS b ON b.LOAN_NUMBER = a.LOAN_NUMBER
+                    LEFT JOIN cl_lkp AS c ON c.ID = b.LKP_ID AND c.STATUS = 'Active'
+                    LEFT JOIN (
+                        SELECT p.LOAN_NUM, SUM(pd.ORIGINAL_AMOUNT) AS total_bayar
+                        FROM payment AS p
+                        LEFT JOIN payment_detail AS pd ON pd.PAYMENT_ID = p.ID
+                        WHERE pd.ACC_KEYS IN ('BAYAR_POKOK','BAYAR_BUNGA','ANGSURAN_POKOK','ANGSURAN_BUNGA')
+                        AND p.ENTRY_DATE BETWEEN ? AND ?
+                        GROUP BY p.LOAN_NUM
+                    ) AS d ON d.LOAN_NUM = a.LOAN_NUMBER
+                    LEFT JOIN (
+                        SELECT t.REFERENCE_ID, t.DESCRIPTION, t.CONFIRM_DATE
+                        FROM cl_survey_logs AS t
+                        INNER JOIN (
+                            SELECT REFERENCE_ID, MAX(CREATED_AT) AS max_created
+                            FROM cl_survey_logs
+                            GROUP BY REFERENCE_ID
+                        ) AS x ON x.REFERENCE_ID = t.REFERENCE_ID AND x.max_created = t.CREATED_AT
+                    ) AS e ON e.REFERENCE_ID = a.NO_SURAT
+                    LEFT JOIN (
+                        SELECT LOAN_NUMBER, SUM(PAST_DUE_PENALTY) - SUM(PAID_PENALTY) AS total_denda
+                        FROM arrears
+                        WHERE STATUS_REC = 'A'
+                        GROUP BY LOAN_NUMBER
+                    ) AS g ON g.LOAN_NUMBER = a.LOAN_NUMBER
+                    LEFT JOIN customer AS f ON f.CUST_CODE = a.CUST_CODE
+                    LEFT JOIN cr_collateral AS cc ON cc.CR_CREDIT_ID = a.CREDIT_ID
+                    LEFT JOIN users AS u ON u.username = a.USER_ID
+                    LEFT JOIN branch AS br ON br.ID = u.branch_id
+                    WHERE a.CREATED_AT BETWEEN ? AND ?
+                    ";
 
-            $logSubQuery = DB::table('cl_survey_logs as t')
-                ->join(
-                    DB::raw('(SELECT REFERENCE_ID, MAX(CREATED_AT) AS max_created 
-                  FROM cl_survey_logs 
-                  GROUP BY REFERENCE_ID) x'),
-                    function ($join) {
-                        $join->on('x.REFERENCE_ID', '=', 't.REFERENCE_ID')
-                            ->on('x.max_created', '=', 't.CREATED_AT');
-                    }
-                )
-                ->select('t.REFERENCE_ID', 't.DESCRIPTION', 't.CONFIRM_DATE');
-
-            $totalDenda = DB::table('arrears')
-                ->where('STATUS_REC', 'A')
-                ->selectRaw('LOAN_NUMBER, (SUM(PAST_DUE_PENALTY) - SUM(PAID_PENALTY)) AS total_denda')
-                ->groupBy('LOAN_NUMBER');
-
-            $lkpSubQuery = DB::table('cl_lkp_detail as b')
-                ->leftJoin('cl_lkp as c', 'c.ID', '=', 'b.LKP_ID')
-                ->where('c.STATUS', 'Active')
-                ->select('b.LKP_ID', 'b.LOAN_NUMBER', 'c.LKP_NUMBER');
-
-            $query = DB::table('cl_deploy as a')
-                ->leftJoinSub($lkpSubQuery, 'b', function ($join) {
-                    $join->on('b.LOAN_NUMBER', '=', 'a.LOAN_NUMBER');
-                })
-                ->leftJoin('cl_lkp as c', function ($join) {
-                    $join->on('c.ID', '=', 'b.LKP_ID')
-                        ->where('c.STATUS', '=', 'Active');
-                })
-                ->leftJoinSub($subQuery, 'd', function ($join) {
-                    $join->on('d.LOAN_NUM', '=', 'a.LOAN_NUMBER');
-                })
-                ->leftJoinSub($logSubQuery, 'e', function ($join) {
-                    $join->on('e.REFERENCE_ID', '=', 'a.NO_SURAT');
-                })
-                ->leftJoinSub($totalDenda, 'g', function ($join) {
-                    $join->on('g.LOAN_NUMBER', '=', 'a.LOAN_NUMBER');
-                })
-                ->leftJoin('customer as f', 'f.CUST_CODE', '=', 'a.CUST_CODE')
-                ->leftJoin('cr_collateral as cc', 'cc.CR_CREDIT_ID', '=', 'a.CREDIT_ID')
-                ->leftJoin('users as u', 'u.username', '=', 'a.USER_ID')
-                ->leftJoin('branch as br', 'br.ID', '=', 'u.branch_id')
-                ->whereBetween('a.CREATED_AT', [$startOfMonth, $endOfMonth])
-                ->select(
-                    'a.ID',
-                    'a.NO_SURAT',
-                    'a.USER_ID',
-                    'a.BRANCH_ID',
-                    'a.CREDIT_ID',
-                    'a.LOAN_NUMBER',
-                    'a.CUST_CODE',
-                    'a.TGL_JTH_TEMPO',
-                    'a.CYCLE_AWAL',
-                    'a.N_BOT',
-                    'a.MCF',
-                    'a.ANGSURAN_KE',
-                    'a.ANGSURAN',
-                    'c.LKP_NUMBER',
-                    'd.total_bayar',
-                    'e.DESCRIPTION',
-                    'e.CONFIRM_DATE',
-                    'f.NAME',
-                    'f.INS_ADDRESS',
-                    'f.INS_KECAMATAN',
-                    'f.INS_KELURAHAN',
-                    'f.PHONE_HOUSE',
-                    'f.PHONE_PERSONAL',
-                    'g.total_denda',
-                    DB::raw("CONCAT(cc.BRAND, ' - ', cc.TYPE, ' - ', cc.COLOR) AS unit"),
-                    'cc.ID as COLLATERAL_ID',
-                    'cc.POLICE_NUMBER',
-                    'cc.PRODUCTION_YEAR',
-                    'br.NAME as nama_cabang'
-                )
-                ->orderByRaw('c.LKP_NUMBER IS NOT NULL DESC');
-                
-
-            switch ($currentPosition) {
-                case 'KAPOS':
-                    $query->where('u.branch_id', $currentBranch);
-                    break;
-
-                case 'MCF':
-                case 'KOLEKTOR':
-                    $query->where('a.USER_ID', $userId);
-                    break;
+            if ($currentPosition === 'KAPOS') {
+                $sql .= " AND u.branch_id = ?";
+                $bindings = [$startOfMonth, $endOfMonth, $startOfMonth, $endOfMonth, $currentBranch];
+            } elseif (in_array($currentPosition, ['MCF', 'KOLEKTOR'])) {
+                $sql .= " AND a.USER_ID = ?";
+                $bindings = [$startOfMonth, $endOfMonth, $startOfMonth, $endOfMonth, $userId];
+            } else {
+                $bindings = [$startOfMonth, $endOfMonth, $startOfMonth, $endOfMonth];
             }
 
-            $data = $query->get();
+            $sql .= " ORDER BY c.LKP_NUMBER IS NOT NULL DESC";
+
+            $data = DB::select($sql, $bindings);
+
             $dto = Rs_CollectorList::collection($data);
 
             return response()->json($dto, 200);
