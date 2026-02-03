@@ -9,19 +9,19 @@ class TicketingRepository extends TicketingEntity
 {
     public function getAll()
     {
-        return $this->query()
+        return self::query()
             ->orderBy('created_at', 'desc')
             ->get();
     }
 
     public function store(array $data)
     {
-        return $this->create($data);
+        return self::create($data);
     }
 
     public function getById($id)
     {
-        return $this->query()->findOrFail($id);
+        return self::query()->findOrFail($id);
     }
 
     public function updateTicket(string $id, array $data)

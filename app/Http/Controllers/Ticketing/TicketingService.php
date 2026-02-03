@@ -19,11 +19,10 @@ class TicketingService extends TicketingRepository
 
     public function create($request)
     {
-        $branchId = auth()->user()->branch_id;
-        $userId   = auth()->user()->id;
+        $user = $request->user();
 
         $ticketNumber = generateTicketCode(
-            $branchId,
+            $user->branch_id,
             'tic_tickets',
             'ticket_number'
         );
@@ -35,7 +34,7 @@ class TicketingService extends TicketingRepository
             'priority'      => $request->priority ?? "",
             'status'        => $request->status ?? "",
             'description'   => $request->description ?? "",
-            'created_by'    => $userId,
+            'created_by'    => $user->id,
             'created_at'    => Carbon::now('Asia/Jakarta')
         ]);
 
@@ -43,7 +42,7 @@ class TicketingService extends TicketingRepository
             'ticket_id'   => $ticket->id,
             'assigned_to' => null,
             'status'      => $request->status ?? "",
-            'created_by'  => $userId,
+            'created_by'  => $user->id,
             'created_at'  => Carbon::now('Asia/Jakarta'),
         ]);
 
