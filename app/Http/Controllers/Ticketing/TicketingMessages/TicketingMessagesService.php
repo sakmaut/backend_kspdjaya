@@ -36,12 +36,10 @@ class TicketingMessagesService
             'created_at' => Carbon::now('Asia/Jakarta'),
         ]);
 
-        if ($request->IsClosed) {
-            $this->ticketingService->updateToClosedTicket(
-                $request->TicketId,
-                $user->id
-            );
-        }
+        $this->ticketingService->updateToClosedTicket(
+            $request->TicketId,
+            $user->id
+        );
 
         return $messages;
     }
