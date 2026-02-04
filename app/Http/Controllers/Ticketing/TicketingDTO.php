@@ -26,7 +26,7 @@ class TicketingDTO extends JsonResource
             "description" => $this->description,
             "lampiran" => json_decode($this->path_image),
             "assignee" => optional($this->currentAssignee)->fullname,
-            "is_closed" => $this->is_closed,
+            "is_closed" => $this->is_closed == 0 ? false : true,
             "created_at" => $this->created_at
         ];
     }
