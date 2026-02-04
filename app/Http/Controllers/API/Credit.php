@@ -166,6 +166,29 @@ class Credit extends Controller
         }
     }
 
+    private function checkBlacklists($ktp, $kk)
+    {
+        if (empty($ktp) && empty($kk)) {
+            return "Nomor KTP atau Nomor KK wajib diisi salah satu";
+        }
+
+        $exists = M_CrBlacklist::query()
+            ->when($ktp, function ($q) use ($ktp) {
+                $q->where('KTP', $ktp);
+            })
+            ->when($kk, function ($q) use ($kk) {
+                $q->orWhere('KK', $kk);
+            })
+            ->exists();
+
+        if ($exists) {
+            return "Customer masuk dalam daftar blacklist";
+        }
+
+        return null; // aman
+    }
+
+
 
     private function buildData($request, $data)
     {
@@ -270,6 +293,12 @@ class Credit extends Controller
             ]),
             "struktur" => $check_exist != null && !empty($check_exist->LOAN_NUMBER) ? $schedule : $data_credit_schedule ?? null
         ];
+
+        $cekBlacklist = $this->checkBlacklists($ktp, $kk);
+
+        if ($cekBlacklist) {
+            $array_build["order_validation"][] = "Blacklist : " . $cekBlacklist;
+        }
 
         foreach ($guarente_vehicle as $list) {
 
