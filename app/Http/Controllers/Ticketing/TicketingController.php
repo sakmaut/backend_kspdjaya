@@ -78,4 +78,19 @@ class TicketingController extends Controller
             return $this->log->logError($e, $request);
         }
     }
+
+    public function UpdateToClosedTicket(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+
+            $this->ticketingService->updateToClosedTicketByPic($request);
+
+            DB::commit();
+            return response()->json(['message' => 'updated successfully'], 200);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return $this->log->logError($e, $request);
+        }
+    }
 }

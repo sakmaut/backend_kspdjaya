@@ -214,6 +214,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
 
     Route::resource('ticketing', TicketingController::class);
     Route::resource('ticketing_messages', TicketingMessagesController::class);
+    Route::post('ticketing_closed', [TicketingController::class, 'UpdateToClosedTicket']);
     
     Route::resource('uploads', UploadFileController::class);
 });

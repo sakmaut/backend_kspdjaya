@@ -106,4 +106,28 @@ class TicketingService extends TicketingRepository
 
         return $ticket;
     }
+
+    public function updateToClosedTicketByPic($request)
+    {
+        $ticket = $this->findById($request->TicketId);
+
+        if (!$ticket) {
+            throw new \Exception("Ticket tidak ditemukan");
+        }
+
+        $statusText = $request->isClosed ? "Ticket Closed" : "Reject Closed";
+
+        if ($request->isClosed) {
+            $ticket->update(['status' => 'Closed']);
+        }
+
+        TicketingAssigmentEntity::create([
+            'ticket_id'  => $ticket->id,
+            'status'     => $statusText,
+            'created_by' => $request->user()->id,
+            'created_at' => Carbon::now('Asia/Jakarta'),
+        ]);
+
+        return $ticket;
+    }
 }
