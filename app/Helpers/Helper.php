@@ -351,22 +351,49 @@ function add_months($date_str, $months)
 }
 
 
+// if (!function_exists('bilangan')) {
+//     function bilangan($principal, $currency = true)
+//     {
+
+//         if ($currency) {
+//             $formattedNumber = 'Rp. ' . number_format($principal);
+//             $principalInWords = strtoupper(angkaKeKata(round($principal, 2)));
+//         } else {
+//             $formattedNumber = number_format($principal);
+//             $principalInWords = strtoupper(angkaKeKata(round($principal, 2), false));
+//         }
+
+//         $formattedPrincipal = $formattedNumber . ' (' . $principalInWords . ')';
+//         return str_replace(' ( ', ' (', $formattedPrincipal);
+//     }
+// }
+
 if (!function_exists('bilangan')) {
     function bilangan($principal, $currency = true)
     {
+        // Bersihkan jika input string ada Rp, titik, koma, spasi
+        $principal = str_replace(['Rp', '.', ',', ' '], '', $principal);
 
-        if ($currency) {
-            $formattedNumber = 'Rp. ' . number_format($principal);
-            $principalInWords = strtoupper(angkaKeKata(round($principal, 2)));
-        } else {
-            $formattedNumber = number_format($principal);
-            $principalInWords = strtoupper(angkaKeKata(round($principal, 2), false));
+        // Kalau kosong atau bukan angka, set default 0
+        if (!is_numeric($principal)) {
+            $principal = 0;
         }
 
-        $formattedPrincipal = $formattedNumber . ' (' . $principalInWords . ')';
-        return str_replace(' ( ', ' (', $formattedPrincipal);
+        // Paksa jadi float
+        $principal = (float) $principal;
+
+        if ($currency) {
+            $formattedNumber = 'Rp. ' . number_format($principal, 0, ',', '.');
+            $principalInWords = strtoupper(angkaKeKata($principal));
+        } else {
+            $formattedNumber = number_format($principal, 0, ',', '.');
+            $principalInWords = strtoupper(angkaKeKata($principal, false));
+        }
+
+        return $formattedNumber . ' (' . $principalInWords . ')';
     }
 }
+
 
 if (!function_exists('converttodecimal')) {
     function converttodecimal($number)
