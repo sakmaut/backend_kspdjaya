@@ -27,7 +27,7 @@ class TicketingMessagesRepository extends TicketingMessagesEntity
     public function getAll()
     {
         return $this->baseQuery()
-            ->orderByDesc('created_at')
+            ->orderByAsc('created_at')
             ->get();
     }
 
