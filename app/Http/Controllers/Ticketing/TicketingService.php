@@ -55,6 +55,7 @@ class TicketingService extends TicketingRepository
     {
         $user = $request->user();
         $userAssignId = $request->assign_id;
+        $setStatus = 'Open';
 
         if (!$userAssignId) {
             throw new Exception('User assign tidak boleh kosong');
@@ -71,13 +72,14 @@ class TicketingService extends TicketingRepository
         }
 
         $ticket->current_assignee_id = $userAssignId;
+        $ticket->status = $setStatus;
         $ticket->save();
 
         TicketingAssigmentEntity::Create(
             [
                 'ticket_id' => $ticket->id,
                 'assigned_to' => $userAssignId,
-                'status'      => $request->status ?? $ticket->status,
+                'status'      => $setStatus,
                 'created_by'  => $user->id,
                 'created_at'  => Carbon::now('Asia/Jakarta'),
             ]

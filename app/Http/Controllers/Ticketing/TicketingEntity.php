@@ -22,6 +22,7 @@ class TicketingEntity extends Model
         'description',
         'path_image',
         'current_assignee_id',
+        'is_closed',
         'created_by',
         'created_at'
     ];
