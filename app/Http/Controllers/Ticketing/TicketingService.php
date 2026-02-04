@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Ticketing;
 
-use App\Http\Controllers\Ticketing\TicketingMessages\TicketingMessagesRepository;
 use Exception;
 use Illuminate\Support\Carbon;
 
@@ -86,5 +85,25 @@ class TicketingService extends TicketingRepository
         );
 
         return $ticket->fresh();
+    }
+
+    public function updateToClosedTicket(string $ticketId, string $userId)
+    {
+        $ticket = $this->findById($ticketId);
+
+        if (!$ticket) {
+            throw new \Exception("Ticket tidak ditemukan");
+        }
+
+        $ticket->update(['is_closed' => 1]);
+
+        TicketingAssigmentEntity::create([
+            'ticket_id'   => $ticketId,
+            'status'      => "Request Closed",
+            'created_by'  => $userId,
+            'created_at'  => Carbon::now('Asia/Jakarta'),
+        ]);
+
+        return $ticket;
     }
 }
