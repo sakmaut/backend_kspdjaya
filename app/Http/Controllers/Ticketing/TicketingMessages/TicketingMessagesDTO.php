@@ -22,7 +22,7 @@ class TicketingMessagesDTO extends JsonResource
             'Messages' => $this->messages,
             "Attach" => json_decode($this->file_path),
             "CreatedBy" => optional($this->currentUser)->fullname,
-            "CreatedTime " => $this->created_at
+            "CreatedTime" => $this->created_at
         ];
     }
 }
