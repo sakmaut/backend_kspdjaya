@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Ticketing;
 
+use App\Http\Controllers\Ticketing\TicketingMessages\TicketingMessagesRepository;
 use Exception;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Request;
 
 class TicketingService extends TicketingRepository
 {

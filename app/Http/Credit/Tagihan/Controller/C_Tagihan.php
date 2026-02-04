@@ -218,8 +218,6 @@ class C_Tagihan extends Controller
             $userId = $request->user()->username ?? null;
             $currentBranch = $request->user()->branch_id;
             $currentPosition = strtoupper($request->user()->position);
-            $startOfMonth = now()->startOfMonth()->toDateString();
-            $endOfMonth = now()->endOfMonth()->toDateString();
 
             if (!$userId) {
                 throw new \Exception("User ID not found.", 500);

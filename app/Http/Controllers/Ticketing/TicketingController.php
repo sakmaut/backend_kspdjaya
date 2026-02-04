@@ -5,9 +5,6 @@ namespace App\Http\Controllers\Ticketing;
 
 use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
-use App\Http\Controllers\Repositories\Branch\BranchRepository;
-use App\Http\Resources\R_Branch;
-use App\Http\Resources\R_BranchDetail;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;

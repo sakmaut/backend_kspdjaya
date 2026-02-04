@@ -31,10 +31,10 @@ use App\Http\Controllers\API\{
 };
 use App\Http\Controllers\Payment\Controller\C_PokokSebagian;
 use App\Http\Controllers\Ticketing\TicketingController;
+use App\Http\Controllers\Ticketing\TicketingMessages\TicketingMessagesController;
 use App\Http\Controllers\Welcome;
 use App\Http\Credit\Tagihan\Controller\C_Tagihan;
 use App\Http\Credit\TagihanDocument\Controller\C_TagihanDocument;
-use GuzzleHttp\Psr7\UploadedFile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -213,6 +213,8 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::post('order_resources_status', [OrderResourcesController::class, 'statusUpdate']);
 
     Route::resource('ticketing', TicketingController::class);
+    Route::resource('ticketing_messages', TicketingMessagesController::class);
+    
     Route::resource('uploads', UploadFileController::class);
 });
 

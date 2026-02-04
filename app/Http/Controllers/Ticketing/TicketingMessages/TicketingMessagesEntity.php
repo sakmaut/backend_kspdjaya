@@ -1,21 +1,22 @@
 <?php
 
-namespace App\Http\Controllers\Ticketing;
+namespace App\Http\Controllers\Ticketing\TicketingMessages;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
-class TicketingAssigmentEntity extends Model
+class TicketingMessagesEntity extends Model
 {
     use HasFactory;
 
-    protected $table = 'tic_ticket_assigment';
+    protected $table = 'tic_ticket_messages';
     protected $fillable = [
         'id',
         'ticket_id',
-        'assigned_to',
-        'status',
+        'messages',
+        'file_path',
         'created_by',
         'created_at'
     ];
@@ -34,5 +35,10 @@ class TicketingAssigmentEntity extends Model
                 $model->setAttribute($model->getKeyName(), Str::uuid()->toString());
             }
         });
+    }
+
+    public function currentUser()
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 }
