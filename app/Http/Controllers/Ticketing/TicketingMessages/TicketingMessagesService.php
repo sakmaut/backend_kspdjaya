@@ -38,7 +38,8 @@ class TicketingMessagesService
 
         $this->ticketingService->updateToClosedTicket(
             $request->TicketId,
-            $user->id
+            $user->id,
+            $request->IsClosed
         );
 
         return $messages;

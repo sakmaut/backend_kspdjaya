@@ -87,7 +87,7 @@ class TicketingService extends TicketingRepository
         return $ticket->fresh();
     }
 
-    public function updateToClosedTicket(string $ticketId, string $userId)
+    public function updateToClosedTicket(string $ticketId, string $userId, bool $isClosed)
     {
         $ticket = $this->findById($ticketId);
 
@@ -95,7 +95,7 @@ class TicketingService extends TicketingRepository
             throw new \Exception("Ticket tidak ditemukan");
         }
 
-        $ticket->update(['is_closed' => 1]);
+        $ticket->update(['is_closed' => $isClosed]);
 
         TicketingAssigmentEntity::create([
             'ticket_id'   => $ticketId,
