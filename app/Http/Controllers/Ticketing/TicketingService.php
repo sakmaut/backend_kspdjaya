@@ -115,9 +115,9 @@ class TicketingService extends TicketingRepository
             throw new \Exception("Ticket tidak ditemukan");
         }
 
-        $statusText = $request->isClosed ? "Ticket Closed" : "Reject Closed";
+        $statusText = $request->IsClosed ? "Ticket Closed" : "Reject Closed";
 
-        if ($request->isClosed) {
+        if ($request->IsClosed) {
             $ticket->update(['status' => 'Closed']);
         }
 
