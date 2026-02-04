@@ -21,6 +21,7 @@ class TicketingRepository extends TicketingEntity
         'description',
         'path_image',
         'current_assignee_id',
+        'is_closed',
         'created_at',
     ];
 
