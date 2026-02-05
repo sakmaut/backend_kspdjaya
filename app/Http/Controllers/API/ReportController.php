@@ -1125,6 +1125,72 @@ class ReportController extends Controller
                         "amount" => number_format($amount, 2, ',', '.')
                     ];
                 }
+
+                // ============================
+                // 3. GROUP PELUNASAN
+                // ============================
+                if (in_array($item->ACC_KEYS, ['BAYAR_POKOK', 'DISKON_BUNGA'])) {
+
+                    if (!isset($tempPelunasan[$invoice])) {
+
+                        $tempPelunasan[$invoice] = [
+                            "type" => "CASH_IN",
+                            "no_invoice" => $invoice,
+                            "no_kontrak" => $item->LOAN_NUM,
+                            "tgl" => $tgl,
+                            "cabang" => $item->BRANCH_NAME ?? "",
+                            "user" => $user->fullname ?? "",
+                            "position" => $position,
+                            "nama_pelanggan" => $item->NAMA ?? "",
+                            "metode_pembayaran" => $item->PAYMENT_METHOD,
+                            "keterangan" => "BAYAR PELUNASAN ({$invoice})",
+                            "amount" => 0
+                        ];
+                    }
+
+                    // totalin pokok + diskon bunga
+                    $tempPelunasan[$invoice]["amount"] += $amount;
+                }
+
+                // ============================
+                // 4. PINALTY ROW SENDIRI
+                // ============================
+                if ($item->ACC_KEYS === "BAYAR PELUNASAN PINALTY" && $amount > 0) {
+
+                    $result["datas"][] = [
+                        "type" => "CASH_IN",
+                        "no_invoice" => $invoice,
+                        "no_kontrak" => $item->LOAN_NUM,
+                        "tgl" => $tgl,
+                        "cabang" => $item->BRANCH_NAME ?? "",
+                        "user" => $user->fullname ?? "",
+                        "position" => $position,
+                        "nama_pelanggan" => $item->NAMA ?? "",
+                        "metode_pembayaran" => $item->PAYMENT_METHOD,
+                        "keterangan" => "BAYAR PELUNASAN PINALTY ({$invoice})",
+                        "amount" => number_format($amount, 2, ',', '.')
+                    ];
+                }
+
+                // ============================
+                // 5. PEMBULATAN ROW SENDIRI
+                // ============================
+                if ($item->PEMBULATAN > 0) {
+
+                    $result["datas"][] = [
+                        "type" => "CASH_IN",
+                        "no_invoice" => $invoice,
+                        "no_kontrak" => $item->LOAN_NUM,
+                        "tgl" => $tgl,
+                        "cabang" => $item->BRANCH_NAME ?? "",
+                        "user" => $user->fullname ?? "",
+                        "position" => $position,
+                        "nama_pelanggan" => $item->NAMA ?? "",
+                        "metode_pembayaran" => $item->PAYMENT_METHOD,
+                        "keterangan" => "PEMBULATAN ({$invoice})",
+                        "amount" => number_format($item->PEMBULATAN, 2, ',', '.')
+                    ];
+                }
             }
 
             // ============================
