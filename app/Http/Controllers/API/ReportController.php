@@ -1128,7 +1128,7 @@ class ReportController extends Controller
                         "position" => $item->position,
                         "nama_pelanggan" => $item->NAMA ?? "",
                         "metode_pembayaran" => $item->PAYMENT_METHOD,
-                        "keterangan" => "BAYAR DENDA " . strtoupper($item->JENIS) . "({$invoice})",
+                        "keterangan" => "BAYAR DENDA " . strtoupper($item->JENIS) . " ({$invoice})",
                         "amount" => number_format($amount, 2, ',', '.')
                     ];
                 }
