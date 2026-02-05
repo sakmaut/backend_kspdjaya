@@ -351,22 +351,22 @@ function add_months($date_str, $months)
 }
 
 
-// if (!function_exists('bilangan')) {
-//     function bilangan($principal, $currency = true)
-//     {
+if (!function_exists('bilangan')) {
+    function bilanganCreditFormat($principal, $currency = true)
+    {
 
-//         if ($currency) {
-//             $formattedNumber = 'Rp. ' . number_format($principal);
-//             $principalInWords = strtoupper(angkaKeKata(round($principal, 2)));
-//         } else {
-//             $formattedNumber = number_format($principal);
-//             $principalInWords = strtoupper(angkaKeKata(round($principal, 2), false));
-//         }
+        if ($currency) {
+            $formattedNumber = 'Rp. ' . number_format($principal);
+            $principalInWords = strtoupper(angkaKeKata(round($principal, 2)));
+        } else {
+            $formattedNumber = number_format($principal);
+            $principalInWords = strtoupper(angkaKeKata(round($principal, 2), false));
+        }
 
-//         $formattedPrincipal = $formattedNumber . ' (' . $principalInWords . ')';
-//         return str_replace(' ( ', ' (', $formattedPrincipal);
-//     }
-// }
+        $formattedPrincipal = $formattedNumber . ' (' . $principalInWords . ')';
+        return str_replace(' ( ', ' (', $formattedPrincipal);
+    }
+}
 
 if (!function_exists('bilangan')) {
     function bilangan($principal, $currency = true)

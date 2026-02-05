@@ -278,12 +278,12 @@ class Credit extends Controller
                 "tgllahir_pasangan" => $cr_spouse->BIRTHDATE ?? null,
                 "alamat_pasangan" => $cr_spouse->ADDRESS ?? null
             ],
-            "pokok_margin" => bilangan($principal) ?? null,
-            "tenor" => bilangan($data->TENOR, false) ?? null,
+            "pokok_margin" => bilanganCreditFormat($principal) ?? null,
+            "tenor" => bilanganCreditFormat($data->TENOR, false) ?? null,
             "credit_id" => !empty($check_exist) ? $check_exist->ID : null,
             "tgl_awal_pk" => !empty($check_exist) ? $this->setCreatedAt($check_exist->CREATED_AT) : parseDatetoYMD($setDategenerate),
             "tgl_akhir_pk" => !empty($check_exist) ? Carbon::parse($check_exist->END_DATE)->format('Y-m-d') : Carbon::parse($setDategenerate)->addMonths(intval($data->TENOR))->format('Y-m-d') ?? null,
-            "angsuran" => bilangan($angsuran) ?? null,
+            "angsuran" => bilanganCreditFormat($angsuran) ?? null,
             "opt_periode" => $data->OPT_PERIODE ?? null,
             "jaminan" => [],
             "order_validation" =>  $this->validation->checkValidation([
