@@ -1084,10 +1084,10 @@ class ReportController extends Controller
                     : 0;
 
                 /*
-    =========================================
-    1. GROUP ANGSURAN (POKOK + BUNGA)
-    =========================================
-    */
+                =========================================
+                1. GROUP ANGSURAN (POKOK + BUNGA)
+                =========================================
+                */
                 if (in_array($item->ACC_KEYS, ['ANGSURAN_POKOK', 'ANGSURAN_BUNGA'])) {
 
                     if (!isset($tempAngsuran[$invoice])) {
@@ -1112,10 +1112,10 @@ class ReportController extends Controller
                 }
 
                 /*
-    =========================================
-    2. DENDA ROW SENDIRI
-    =========================================
-    */
+                =========================================
+                2. DENDA ROW SENDIRI
+                =========================================
+                */
                 if ($item->ACC_KEYS === "BAYAR_DENDA" && $amount > 0) {
 
                     $result["datas"][] = [
@@ -1134,12 +1134,12 @@ class ReportController extends Controller
                 }
 
                 /*
-    =========================================
-    3. GROUP PELUNASAN TOTAL
-       BAYAR_POKOK + DISKON_BUNGA
-    =========================================
-    */
-                if (in_array($item->ACC_KEYS, ['BAYAR_POKOK', 'DISKON_BUNGA'])) {
+                =========================================
+                3. GROUP PELUNASAN TOTAL
+                BAYAR_POKOK + DISKON_BUNGA
+                =========================================
+                */
+                if (in_array($item->ACC_KEYS, ['BAYAR_POKOK', 'BAYAR_BUNGA'])) {
 
                     if (!isset($tempPelunasan[$invoice])) {
 
@@ -1163,10 +1163,10 @@ class ReportController extends Controller
                 }
 
                 /*
-    =========================================
-    4. PINALTY ROW SENDIRI
-    =========================================
-    */
+                =========================================
+                4. PINALTY ROW SENDIRI
+                =========================================
+                */
                 if ($item->ACC_KEYS === "BAYAR PELUNASAN PINALTY" && $amount > 0) {
 
                     $result["datas"][] = [
@@ -1185,10 +1185,10 @@ class ReportController extends Controller
                 }
 
                 /*
-    =========================================
-    5. PEMBULATAN HANYA SEKALI PER INVOICE
-    =========================================
-    */
+                =========================================
+                5. PEMBULATAN HANYA SEKALI PER INVOICE
+                =========================================
+                */
                 if ($item->PEMBULATAN > 0 && !isset($tempPembulatan[$invoice])) {
 
                     // tandai sudah pernah masuk
@@ -1211,10 +1211,10 @@ class ReportController extends Controller
             }
 
             /*
-=========================================
-6. MASUKKAN HASIL GROUPING ANGSURAN
-=========================================
-*/
+            =========================================
+            6. MASUKKAN HASIL GROUPING ANGSURAN
+            =========================================
+            */
             foreach ($tempAngsuran as $row) {
 
                 $row["amount"] = number_format($row["amount"], 2, ',', '.');
@@ -1222,11 +1222,6 @@ class ReportController extends Controller
                 $result["datas"][] = $row;
             }
 
-            /*
-=========================================
-7. MASUKKAN HASIL GROUPING PELUNASAN
-=========================================
-*/
             foreach ($tempPelunasan as $row) {
 
                 $row["amount"] = number_format($row["amount"], 2, ',', '.');
