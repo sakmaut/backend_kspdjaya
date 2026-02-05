@@ -1208,6 +1208,29 @@ class ReportController extends Controller
                         "amount" => number_format($item->PEMBULATAN, 2, ',', '.')
                     ];
                 }
+
+                if (in_array($item->ACC_KEYS, ['FEE_BUNGA', 'FEE_PROCCESS'])) {
+
+                    if (!isset($tempAngsuran[$invoice])) {
+
+                        $tempAngsuran[$invoice] = [
+                            "type" => "CASH_IN",
+                            "no_invoice" => $invoice,
+                            "no_kontrak" => $item->LOAN_NUM,
+                            "tgl" => $tgl,
+                            "cabang" => $item->BRANCH_NAME ?? "",
+                            "user" => $item->fullname ?? "",
+                            "position" => $item->position,
+                            "nama_pelanggan" => $item->NAMA ?? "",
+                            "metode_pembayaran" => $item->PAYMENT_METHOD,
+                            "keterangan" => "BAYAR FEE BUNGA MENURUN ({$invoice})",
+                            "amount" => 0
+                        ];
+                    }
+
+                    // jumlahkan pokok + bunga
+                    $tempAngsuran[$invoice]["amount"] += $amount;
+                }
             }
 
             /*
