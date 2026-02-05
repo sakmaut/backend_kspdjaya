@@ -1248,9 +1248,14 @@ class ReportController extends Controller
                     "position" => $position,
                     "nama_pelanggan" => $item->CUSTOMER_NAME ?? "",
                     "metode_pembayaran" => "",
-                    "keterangan" =>
-                    "PENCAIRAN BULANAN {$item->CREDIT_TYPE} NO KONTRAK {$item->LOAN_NUM}",
-                    "amount" => number_format($item->ORIGINAL_AMOUNT, 2, ',', '.')
+                    "keterangan" => "PENCAIRAN " . strtoupper($item->CREDIT_TYPE) .
+                        " NO KONTRAK " . $item->LOAN_NUM,
+                    "amount" => number_format(
+                        ($item->ORIGINAL_AMOUNT - $item->TOTAL_ADMIN),
+                        2,
+                        ',',
+                        '.'
+                    )
                 ];
             }
 
