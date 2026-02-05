@@ -1144,7 +1144,7 @@ class ReportController extends Controller
                     if (!isset($tempPelunasan[$invoice])) {
 
                         $tempPelunasan[$invoice] = [
-                            "type" => "CASH_IN",
+                            "type" => "PELUNASAN",
                             "no_invoice" => $invoice,
                             "no_kontrak" => $item->LOAN_NUM,
                             "tgl" => $tgl,
@@ -1170,7 +1170,7 @@ class ReportController extends Controller
                 if ($item->ACC_KEYS === "BAYAR PELUNASAN PINALTY" && $amount > 0) {
 
                     $result["datas"][] = [
-                        "type" => "CASH_IN",
+                        "type" => "PELUNASAN",
                         "no_invoice" => $invoice,
                         "no_kontrak" => $item->LOAN_NUM,
                         "tgl" => $tgl,
