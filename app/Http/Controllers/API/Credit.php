@@ -447,6 +447,7 @@ class Credit extends Controller
                     'ACC_KEY' => 'bunga_menurun_fee',
                     'STTS_RCRD' => 'PAID',
                     'INVOICE' => 'AUTO-PAYMENT',
+                    'ACC_NUM' => $cr_personal->NAME ?? "",
                     'PAYMENT_METHOD' => 'cash',
                     'BRANCH' => $getCodeBranch,
                     'LOAN_NUM' => $loan_number,
