@@ -1102,7 +1102,7 @@ class ReportController extends Controller
                             "position" => $item->position,
                             "nama_pelanggan" => $item->NAMA ?? "",
                             "metode_pembayaran" => $item->PAYMENT_METHOD,
-                            "keterangan" => "BAYAR ANGSURAN ({$invoice})",
+                            "keterangan" => "BAYAR " . strtoupper($item->CREDIT_TYPE) . " ({$invoice})",
                             "amount" => 0
                         ];
                     }
@@ -1128,7 +1128,7 @@ class ReportController extends Controller
                         "position" => $item->position,
                         "nama_pelanggan" => $item->NAMA ?? "",
                         "metode_pembayaran" => $item->PAYMENT_METHOD,
-                        "keterangan" => "BAYAR DENDA ({$invoice})",
+                        "keterangan" => "BAYAR DENDA " . strtoupper($item->CREDIT_TYPE) . "({$invoice})",
                         "amount" => number_format($amount, 2, ',', '.')
                     ];
                 }
