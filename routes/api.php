@@ -149,7 +149,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::resource('position', HrPositionController::class);
     Route::post('checkCollateral', [Credit::class, 'checkCollateral']);
 
-    Route::post('arus_kas', [ListBanController::class, 'index']);
+    // Route::post('arus_kas', [ListBanController::class, 'index']);
     Route::post('listBan', [ListBanController::class, 'listBan']);
 
     //Task
@@ -167,7 +167,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::get('phonebookReport', [ReportController::class, 'phonebookReport']);
     Route::post('credit_jtempo', [ReportController::class, 'kreditJatuhTempo']);
     Route::get('surveyReport', [ReportController::class, 'surveyReport']);
-    Route::post('new_arus_kas', [ReportController::class, 'LkbhReport']);
+    Route::post('arus_kas', [ReportController::class, 'LkbhReport']);
 
     Route::resource('collateral', CollateralController::class);
     Route::get('collateral_approval_list', [CollateralController::class, 'collateralApprovalList']);
