@@ -1035,20 +1035,25 @@ class ReportController extends Controller
 
     public function LkbhReport(Request $request)
     {
-        $datas = [
-            'dari' => $request->dari ?? '',
+        $result = [
+            'dari'   => $request->dari ?? '',
             'sampai' => $request->sampai ?? '',
-            'datas' => []
+            'datas'  => []
         ];
 
         try {
+
             $dari     = $request->dari;
             $sampai   = $request->sampai;
             $cabangId = $request->cabang_id;
 
-            $position = $request->user()->position;
-            $userBranchId = $request->user()->branch_id;
+            $user = $request->user();
+            $position = $user->position;
+            $userBranchId = $user->branch_id;
 
+            // ============================
+            // Branch Filter Logic
+            // ============================
             $branchParam = null;
 
             if ($position !== 'HO') {
@@ -1057,12 +1062,82 @@ class ReportController extends Controller
                 $branchParam = $cabangId ?: null;
             }
 
-            $datas = DB::select(
+            // ============================
+            // Call Stored Procedure
+            // ============================
+            $arusKas = DB::select(
                 "CALL sp_lkbh_report(?, ?, ?)",
                 [$dari, $sampai, $branchParam]
             );
-            
-            return response()->json($datas, 200);
+
+            $tempAngsuran = [];
+
+            foreach ($arusKas as $item) {
+
+                $invoice = $item->INVOICE;
+                $tgl = date('Y-m-d', strtotime($item->ENTRY_DATE));
+
+                $amount = is_numeric($item->ORIGINAL_AMOUNT)
+                    ? floatval($item->ORIGINAL_AMOUNT)
+                    : 0;
+
+                // ============================
+                // 1. GROUP ANGSURAN
+                // ============================
+                if (in_array($item->ACC_KEYS, ['ANGSURAN_POKOK', 'ANGSURAN_BUNGA'])) {
+
+                    if (!isset($tempAngsuran[$invoice])) {
+
+                        $tempAngsuran[$invoice] = [
+                            "type" => "CASH_IN",
+                            "no_invoice" => $invoice,
+                            "no_kontrak" => $item->LOAN_NUM,
+                            "tgl" => $tgl,
+                            "cabang" => "Haurgeulis",
+                            "user" => $user->fullname ?? "",
+                            "position" => $position,
+                            "nama_pelanggan" => $item->NAMA ?? "",
+                            "metode_pembayaran" => $item->PAYMENT_METHOD,
+                            "keterangan" => "BAYAR {$item->JENIS} ({$invoice})",
+                            "amount" => 0
+                        ];
+                    }
+
+                    $tempAngsuran[$invoice]["amount"] += $amount;
+                }
+
+                // ============================
+                // 2. DENDA ROW SENDIRI
+                // ============================
+                if ($item->ACC_KEYS === "BAYAR_DENDA" && $amount > 0) {
+
+                    $result["datas"][] = [
+                        "type" => "CASH_IN",
+                        "no_invoice" => $invoice,
+                        "no_kontrak" => $item->LOAN_NUM,
+                        "tgl" => $tgl,
+                        "cabang" => "Haurgeulis",
+                        "user" => $user->fullname ?? "",
+                        "position" => $position,
+                        "nama_pelanggan" => $item->NAMA ?? "",
+                        "metode_pembayaran" => $item->PAYMENT_METHOD,
+                        "keterangan" => "BAYAR DENDA ({$invoice})",
+                        "amount" => number_format($amount, 2, ',', '.')
+                    ];
+                }
+            }
+
+            // ============================
+            // PUSH GROUPED ANGSURAN
+            // ============================
+            foreach ($tempAngsuran as $row) {
+
+                $row["amount"] = number_format($row["amount"], 2, ',', '.');
+
+                $result["datas"][] = $row;
+            }
+
+            return response()->json($result, 200);
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
         }
