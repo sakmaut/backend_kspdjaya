@@ -1229,6 +1229,30 @@ class ReportController extends Controller
                 $result["datas"][] = $row;
             }
 
+            $pencairan = DB::select(
+                "CALL sp_lkbh_pencairan(?, ?, ?)",
+                [$dari, $sampai, $branchParam]
+            );
+
+            foreach ($pencairan as $item) {
+
+                $tgl = date('Y-m-d', strtotime($item->ENTRY_DATE));
+
+                $result["datas"][] = [
+                    "type" => "CASH_OUT",
+                    "no_invoice" => "",
+                    "no_kontrak" => $item->LOAN_NUM,
+                    "tgl" => $tgl,
+                    "cabang" => $item->BRANCH_NAME ?? "",
+                    "user" => $user->fullname ?? "",
+                    "position" => $position,
+                    "nama_pelanggan" => $item->CUSTOMER_NAME ?? "",
+                    "metode_pembayaran" => "",
+                    "keterangan" =>
+                    "PENCAIRAN BULANAN {$item->CREDIT_TYPE} NO KONTRAK {$item->LOAN_NUM}",
+                    "amount" => number_format($item->ORIGINAL_AMOUNT, 2, ',', '.')
+                ];
+            }
 
             return response()->json($result, 200);
         } catch (\Exception $e) {
