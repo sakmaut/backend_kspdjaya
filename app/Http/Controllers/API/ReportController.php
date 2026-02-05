@@ -1290,24 +1290,39 @@ class ReportController extends Controller
             */
             usort($result["datas"], function ($a, $b) {
 
-                // 1. Sort by position
+                // 1. ENTRY_DATE
+                $dateA = $a["tgl"] ?? "";
+                $dateB = $b["tgl"] ?? "";
+                if ($dateA !== $dateB) {
+                    return strcmp($dateA, $dateB);
+                }
+
+                // 2. POSITION
                 $posA = $a["position"] ?? "";
                 $posB = $b["position"] ?? "";
                 if ($posA !== $posB) {
                     return strcmp($posA, $posB);
                 }
 
-                // 2. Sort by type (CASH_IN dulu, CASH_OUT belakangan)
-                $typeA = $a["type"] ?? "";
-                $typeB = $b["type"] ?? "";
-                if ($typeA !== $typeB) {
-                    return strcmp($typeA, $typeB);
+                // 3. LOAN_NUM
+                $loanA = $a["no_kontrak"] ?? "";
+                $loanB = $b["no_kontrak"] ?? "";
+                if ($loanA !== $loanB) {
+                    return strcmp($loanA, $loanB);
                 }
 
-                // 3. Sort by invoice
+                // 4. NO_INVOICE
                 $invA = $a["no_invoice"] ?? "";
                 $invB = $b["no_invoice"] ?? "";
-                return strcmp($invA, $invB);
+                if ($invA !== $invB) {
+                    return strcmp($invA, $invB);
+                }
+
+                // 5. ANGSURAN_KE (kalau ada)
+                $angA = $a["angsuran_ke"] ?? 0;
+                $angB = $b["angsuran_ke"] ?? 0;
+
+                return $angA <=> $angB;
             });
 
 
