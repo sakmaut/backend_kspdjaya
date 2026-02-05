@@ -1070,20 +1070,24 @@ class ReportController extends Controller
                 [$dari, $sampai, $branchParam]
             );
 
-            $tempAngsuran = [];
+            $tempAngsuran   = [];
+            $tempPelunasan  = [];
+            $tempPembulatan = [];
 
             foreach ($arusKas as $item) {
 
                 $invoice = $item->INVOICE;
-                $tgl = date('Y-m-d', strtotime($item->ENTRY_DATE));
+                $tgl     = date('Y-m-d', strtotime($item->ENTRY_DATE));
 
                 $amount = is_numeric($item->ORIGINAL_AMOUNT)
                     ? floatval($item->ORIGINAL_AMOUNT)
                     : 0;
 
-                // ============================
-                // 1. GROUP ANGSURAN
-                // ============================
+                /*
+    =========================================
+    1. GROUP ANGSURAN (POKOK + BUNGA)
+    =========================================
+    */
                 if (in_array($item->ACC_KEYS, ['ANGSURAN_POKOK', 'ANGSURAN_BUNGA'])) {
 
                     if (!isset($tempAngsuran[$invoice])) {
@@ -1098,17 +1102,20 @@ class ReportController extends Controller
                             "position" => $position,
                             "nama_pelanggan" => $item->NAMA ?? "",
                             "metode_pembayaran" => $item->PAYMENT_METHOD,
-                            "keterangan" => "BAYAR {$item->JENIS} ({$invoice})",
+                            "keterangan" => "BAYAR ANGSURAN ({$invoice})",
                             "amount" => 0
                         ];
                     }
 
+                    // jumlahkan pokok + bunga
                     $tempAngsuran[$invoice]["amount"] += $amount;
                 }
 
-                // ============================
-                // 2. DENDA ROW SENDIRI
-                // ============================
+                /*
+    =========================================
+    2. DENDA ROW SENDIRI
+    =========================================
+    */
                 if ($item->ACC_KEYS === "BAYAR_DENDA" && $amount > 0) {
 
                     $result["datas"][] = [
@@ -1126,9 +1133,12 @@ class ReportController extends Controller
                     ];
                 }
 
-                // ============================
-                // 3. GROUP PELUNASAN
-                // ============================
+                /*
+    =========================================
+    3. GROUP PELUNASAN TOTAL
+       BAYAR_POKOK + DISKON_BUNGA
+    =========================================
+    */
                 if (in_array($item->ACC_KEYS, ['BAYAR_POKOK', 'DISKON_BUNGA'])) {
 
                     if (!isset($tempPelunasan[$invoice])) {
@@ -1148,13 +1158,15 @@ class ReportController extends Controller
                         ];
                     }
 
-                    // totalin pokok + diskon bunga
+                    // jumlahkan semua pelunasan pokok + diskon bunga
                     $tempPelunasan[$invoice]["amount"] += $amount;
                 }
 
-                // ============================
-                // 4. PINALTY ROW SENDIRI
-                // ============================
+                /*
+    =========================================
+    4. PINALTY ROW SENDIRI
+    =========================================
+    */
                 if ($item->ACC_KEYS === "BAYAR PELUNASAN PINALTY" && $amount > 0) {
 
                     $result["datas"][] = [
@@ -1172,10 +1184,15 @@ class ReportController extends Controller
                     ];
                 }
 
-                // ============================
-                // 5. PEMBULATAN ROW SENDIRI
-                // ============================
-                if ($item->PEMBULATAN > 0) {
+                /*
+    =========================================
+    5. PEMBULATAN HANYA SEKALI PER INVOICE
+    =========================================
+    */
+                if ($item->PEMBULATAN > 0 && !isset($tempPembulatan[$invoice])) {
+
+                    // tandai sudah pernah masuk
+                    $tempPembulatan[$invoice] = true;
 
                     $result["datas"][] = [
                         "type" => "CASH_IN",
@@ -1193,15 +1210,30 @@ class ReportController extends Controller
                 }
             }
 
-            // ============================
-            // PUSH GROUPED ANGSURAN
-            // ============================
+            /*
+=========================================
+6. MASUKKAN HASIL GROUPING ANGSURAN
+=========================================
+*/
             foreach ($tempAngsuran as $row) {
 
                 $row["amount"] = number_format($row["amount"], 2, ',', '.');
 
                 $result["datas"][] = $row;
             }
+
+            /*
+=========================================
+7. MASUKKAN HASIL GROUPING PELUNASAN
+=========================================
+*/
+            foreach ($tempPelunasan as $row) {
+
+                $row["amount"] = number_format($row["amount"], 2, ',', '.');
+
+                $result["datas"][] = $row;
+            }
+
 
             return response()->json($result, 200);
         } catch (\Exception $e) {
