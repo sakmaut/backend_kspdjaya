@@ -1032,4 +1032,39 @@ class ReportController extends Controller
             return $this->log->logError($e, $request);
         }
     }
+
+    public function LkbhReport(Request $request)
+    {
+        $datas = [
+            'dari' => $request->dari ?? '',
+            'sampai' => $request->sampai ?? '',
+            'datas' => []
+        ];
+
+        try {
+            $dari     = $request->dari;
+            $sampai   = $request->sampai;
+            $cabangId = $request->cabang_id;
+
+            $position = $request->user()->position;
+            $userBranchId = $request->user()->branch_id;
+
+            $branchParam = null;
+
+            if ($position !== 'HO') {
+                $branchParam = $userBranchId;
+            } else {
+                $branchParam = $cabangId ?: null;
+            }
+
+            $datas = DB::select(
+                "CALL sp_lkbh_report(?, ?, ?)",
+                [$dari, $sampai, $branchParam]
+            );
+            
+            return response()->json($datas, 200);
+        } catch (\Exception $e) {
+            return $this->log->logError($e, $request);
+        }
+    }
 }
