@@ -1282,6 +1282,35 @@ class ReportController extends Controller
                 ];
             }
 
+            /*
+            =========================================
+            7. SORTING FINAL OUTPUT
+            ORDER BY position, type, invoice ASC
+            =========================================
+            */
+            usort($result["datas"], function ($a, $b) {
+
+                // 1. Sort by position
+                $posA = $a["position"] ?? "";
+                $posB = $b["position"] ?? "";
+                if ($posA !== $posB) {
+                    return strcmp($posA, $posB);
+                }
+
+                // 2. Sort by type (CASH_IN dulu, CASH_OUT belakangan)
+                $typeA = $a["type"] ?? "";
+                $typeB = $b["type"] ?? "";
+                if ($typeA !== $typeB) {
+                    return strcmp($typeA, $typeB);
+                }
+
+                // 3. Sort by invoice
+                $invA = $a["no_invoice"] ?? "";
+                $invB = $b["no_invoice"] ?? "";
+                return strcmp($invA, $invB);
+            });
+
+
             return response()->json($result, 200);
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
