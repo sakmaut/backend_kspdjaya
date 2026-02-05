@@ -55,8 +55,6 @@ Route::get('kelurahan', [Wilayah::class, 'kelurahan']);
 Route::get('kode_pos', [Wilayah::class, 'kode_pos']);
 Route::post('cancels', [C_PokokSebagian::class, 'cancel']);
 
-Route::post('new_arus_kas', [ReportController::class, 'LkbhReport']);
-
 Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::resource('users', UsersController::class)->only(['index']);
     // Route Group Master Menu
@@ -169,6 +167,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::get('phonebookReport', [ReportController::class, 'phonebookReport']);
     Route::post('credit_jtempo', [ReportController::class, 'kreditJatuhTempo']);
     Route::get('surveyReport', [ReportController::class, 'surveyReport']);
+    Route::post('new_arus_kas', [ReportController::class, 'LkbhReport']);
 
     Route::resource('collateral', CollateralController::class);
     Route::get('collateral_approval_list', [CollateralController::class, 'collateralApprovalList']);
