@@ -3,7 +3,6 @@
 namespace App\Http\Resources;
 
 use App\Models\M_CrCollateralDocument;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -11,12 +10,9 @@ class Rs_CollectorList extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        $userName = User::where('username', $this->USER_ID)->first();
-        $collateral_doc = M_CrCollateralDocument::where('COLLATERAL_ID', $this->COLLATERAL_ID)->get();
-
         return [
             'id' => $this->ID,
-            'nama_pic' =>  $userName->fullname ?? "",
+            'nama_pic' =>  $this->fullname ?? "",
             'no_surat' => $this->NO_SURAT ?? "",
             'no_lkp' => $this->LKP_NUMBER ?? "",
             'no_kontrak' => $this->LOAN_NUMBER ?? "",
@@ -39,7 +35,7 @@ class Rs_CollectorList extends JsonResource
             'denda' => number_format($this->total_denda ?? 0, 0, ',', '.'),
             'tenor' => $this->TENOR ?? "",
             'catatan_survey' => $this->CATT_SURVEY ?? "",
-            "col_path" => $collateral_doc->pluck('PATH')->toArray(),
+            'col_path' => $this->collateralDocuments->pluck('PATH')->toArray() ?? [],
             'cabang' => $this->nama_cabang ?? "",
         ];
     }

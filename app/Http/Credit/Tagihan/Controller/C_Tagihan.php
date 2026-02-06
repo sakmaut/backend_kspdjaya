@@ -15,8 +15,10 @@ use App\Http\Resources\Rs_LkpPicList;
 use App\Http\Resources\Rs_SurveyLogs;
 use App\Http\Resources\Rs_TagihanByUserId;
 use App\Models\M_ClSurveyLogs;
+use App\Models\M_CollateralView;
 use App\Models\M_ListbanData;
 use App\Models\M_Lkp;
+use App\Models\TableViews\M_ColllectorVisits;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
@@ -215,34 +217,32 @@ class C_Tagihan extends Controller
     public function list_tagihan_collector(Request $request)
     {
         try {
-            $userId = $request->user()->username ?? null;
-            $currentBranch = $request->user()->branch_id;
-            $currentPosition = strtoupper($request->user()->position);
+            $user = $request->user();
 
-            if (!$userId) {
-                throw new \Exception("User ID not found.", 500);
+            $userId   = $user->username;
+            $branchId = $user->branch_id;
+            $position = strtoupper($user->position);
+
+            $query = M_ColllectorVisits::with('collateralDocuments');
+
+            // Filter untuk KAPOS (hanya cabangnya)
+            if ($position === 'KAPOS') {
+                $query->where('BRANCH_ID', $branchId);
             }
 
-            $query = DB::table('vw_tagihan_collector');
-
-            if ($currentPosition === 'KAPOS') {
-                $query->where('BRANCH_ID', $currentBranch);
-            }
-
-            if (in_array($currentPosition, ['MCF', 'KOLEKTOR'])) {
+            // Filter untuk Kolektor & MCF (hanya data sendiri)
+            if (in_array($position, ['MCF', 'KOLEKTOR'])) {
                 $query->where('USER_ID', $userId);
             }
 
-            $data = $query->get();
-
-            $dto = Rs_CollectorList::collection($data);
-
-            return response()->json($dto, 200);
+            return response()->json(
+                Rs_CollectorList::collection($query->get()),
+                200
+            );
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
         }
     }
-
 
     public function listTagihanByUserId(Request $request)
     {
