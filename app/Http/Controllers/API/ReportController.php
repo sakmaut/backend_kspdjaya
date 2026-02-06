@@ -29,7 +29,7 @@ class ReportController extends Controller
         $this->log = $log;
     }
 
-    public function inquiryList(Request $request)
+    public function InquiryList(Request $request)
     {
         try {
             $mapping = [];
@@ -1211,10 +1211,11 @@ class ReportController extends Controller
                 }
 
                 if (in_array($item->ACC_KEYS, ['FEE_BUNGA', 'FEE_PROCCESS'])) {
+                    $key = $invoice . '_' . $item->LOAN_NUM;
 
-                    if (!isset($tempAngsuran[$invoice])) {
+                    if (!isset($tempAngsuran[$key])) {
 
-                        $tempAngsuran[$invoice] = [
+                        $tempAngsuran[$key] = [
                             "type" => "CASH_IN",
                             "no_invoice" => $invoice,
                             "no_kontrak" => $item->LOAN_NUM,
@@ -1229,8 +1230,7 @@ class ReportController extends Controller
                         ];
                     }
 
-                    // jumlahkan pokok + bunga
-                    $tempAngsuran[$invoice]["amount"] += $amount;
+                    $tempAngsuran[$key]["amount"] += $amount;
                 }
             }
 
