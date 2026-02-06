@@ -5,6 +5,7 @@ namespace App\Http\Credit\Tagihan\Model;
 use App\Http\Credit\TagihanDetail\Model\M_TagihanDetail;
 use App\Models\M_CrCollateral;
 use App\Models\M_Customer;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
@@ -58,6 +59,11 @@ class M_Tagihan extends Model
         });
     }
 
+    public function assignUser()
+    {
+        return $this->belongsTo(User::class, 'USER_ID', 'username');
+    }
+    
     public function customer()
     {
         return $this->hasOne(M_Customer::class, 'CUST_CODE', 'CUST_CODE');

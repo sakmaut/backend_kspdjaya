@@ -329,9 +329,38 @@ class R_Tagihan
             ->get();
     }
 
+    // protected function listAllTagihan()
+    // {
+    //     return $this->model::with(['customer'])
+    //         ->where('STATUS', 'Aktif')
+    //         ->whereYear('created_at', date('Y'))
+    //         ->whereMonth('created_at', date('m'))
+    //         ->get();
+    // }
+
     protected function listAllTagihan()
     {
-        return $this->model::with(['customer'])
+        return $this->model::with([
+            'customer:CUST_CODE,NAME,ADDRESS,KELURAHAN,KECAMATAN', 
+            'assignUser:username,fullname'
+        ])
+            ->select([
+                'ID',
+                'USER_ID',
+                'NO_SURAT',
+                'LKP_NUMBER',
+                'LOAN_NUMBER',
+                'CUST_CODE',
+                'CYCLE_AWAL',
+                'N_BOT',
+                'MCF',
+                'ANGSURAN_KE',
+                'TGL_JTH_TEMPO',
+                'ANGSURAN',
+                'BRANCH_ID',
+                'STATUS',
+                'created_at'
+            ])
             ->where('STATUS', 'Aktif')
             ->whereYear('created_at', date('Y'))
             ->whereMonth('created_at', date('m'))
