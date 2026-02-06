@@ -348,7 +348,6 @@ class R_Tagihan
                 'ID',
                 'USER_ID',
                 'NO_SURAT',
-                'LKP_NUMBER',
                 'LOAN_NUMBER',
                 'CUST_CODE',
                 'CYCLE_AWAL',
