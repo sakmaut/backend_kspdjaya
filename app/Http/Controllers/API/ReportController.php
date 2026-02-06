@@ -1078,6 +1078,7 @@ class ReportController extends Controller
 
                 $invoice = $item->INVOICE;
                 $tgl     = date('Y-m-d', strtotime($item->ENTRY_DATE));
+                $pelunasan = strtolower($item->PAYMENT_TYPE) === 'pelunasan' ? "PELUNASAN" : "CASH_IN";
 
                 $amount = is_numeric($item->ORIGINAL_AMOUNT)
                     ? floatval($item->ORIGINAL_AMOUNT)
@@ -1119,7 +1120,7 @@ class ReportController extends Controller
                 if ($item->ACC_KEYS === "BAYAR_DENDA" && $amount > 0) {
 
                     $result["datas"][] = [
-                        "type" => "CASH_IN",
+                        "type" => $pelunasan,
                         "no_invoice" => $invoice,
                         "no_kontrak" => $item->LOAN_NUM,
                         "tgl" => $tgl,
@@ -1195,7 +1196,7 @@ class ReportController extends Controller
                     $tempPembulatan[$invoice] = true;
 
                     $result["datas"][] = [
-                        "type" => "CASH_IN",
+                        "type" => $pelunasan,
                         "no_invoice" => $invoice,
                         "no_kontrak" => $item->LOAN_NUM,
                         "tgl" => $tgl,
