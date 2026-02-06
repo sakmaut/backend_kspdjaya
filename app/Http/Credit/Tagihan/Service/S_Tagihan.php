@@ -72,14 +72,16 @@ class S_Tagihan extends R_Tagihan
 
     public function listTagihanByBranchId($request)
     {
-        $currentBranch   = $request->user()->branch_id ?? null;
-        $currentPosition = $request->user()->position ?? null;
+        $user = $request->user();
 
-        if ($currentPosition === 'HO') {
-            return $this->repository->listAllTagihan();
-        }
+        $currentBranch = $user->branch_id ?? null;
+        $currentPosition = strtoupper($user->position ?? '');
 
-        return $this->repository->listTagihanByBranchId($currentBranch);
+        // Jika HO, tidak filter branch (pass null)
+        // Jika bukan HO, filter by branch
+        $branchId = ($currentPosition === 'HO') ? null : $currentBranch;
+
+        return $this->repository->listTagihan($branchId);
     }
 
     public function cl_deploy_by_pic($pic)

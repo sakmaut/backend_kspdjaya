@@ -319,29 +319,10 @@ class R_Tagihan
         return  $this->model::with(['credit_schedule'])->where('LOAN_NUMBER', $loanNumber)->get();
     }
 
-    protected function listTagihanByBranchId($currentBranch)
+    public function listTagihan($branchId = null)
     {
-        return  $this->model::with(['customer'])
-            ->where('BRANCH_ID', $currentBranch)
-            ->where('STATUS', "Aktif")
-            ->whereYear('created_at', date('Y'))
-            ->whereMonth('created_at', date('m'))
-            ->get();
-    }
-
-    // protected function listAllTagihan()
-    // {
-    //     return $this->model::with(['customer'])
-    //         ->where('STATUS', 'Aktif')
-    //         ->whereYear('created_at', date('Y'))
-    //         ->whereMonth('created_at', date('m'))
-    //         ->get();
-    // }
-
-    protected function listAllTagihan()
-    {
-        return $this->model::with([
-            'customer:CUST_CODE,NAME,ADDRESS,KELURAHAN,KECAMATAN', 
+        $query = $this->model::with([
+            'customer:CUST_CODE,NAME,ADDRESS,KELURAHAN,KECAMATAN',
             'assignUser:username,fullname'
         ])
             ->select([
@@ -362,8 +343,13 @@ class R_Tagihan
             ])
             ->where('STATUS', 'Aktif')
             ->whereYear('created_at', date('Y'))
-            ->whereMonth('created_at', date('m'))
-            ->get();
+            ->whereMonth('created_at', date('m'));
+
+        if ($branchId !== null) {
+            $query->where('BRANCH_ID', $branchId);
+        }
+
+        return $query->get();
     }
 
 
