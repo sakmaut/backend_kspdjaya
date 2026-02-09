@@ -294,6 +294,10 @@ class Credit extends Controller
             "struktur" => $check_exist != null && !empty($check_exist->LOAN_NUMBER) ? $schedule : $data_credit_schedule ?? null
         ];
 
+        if (empty($data->TENOR) || $data->TENOR == 0) {
+            $array_build["order_validation"][] = "Tenor Tidak Boleh Kosong";
+        }
+
         $cekBlacklist = $this->checkBlacklists($ktp, $kk);
 
         if ($cekBlacklist) {
@@ -492,10 +496,6 @@ class Credit extends Controller
         $check_customer_ktp = M_Customer::where('ID_NUMBER', $cr_personal->ID_NUMBER)->first();
 
         $tenor = intval($data->TENOR);
-
-        if($tenor == 0){
-            return response()->json(['error' => 'Tenor 0'], 409);
-        }
 
         $ttalPrincipal = $data->SUBMISSION_VALUE + ($data->TOTAL_ADMIN ?? 0);
         $ttalInterest = $data->INSTALLMENT_TYPE === 'bunga_menurun' ? ($ttalPrincipal * 0.03) * $tenor : $data->TOTAL_INTEREST;
