@@ -1168,7 +1168,7 @@ class ReportController extends Controller
                 4. PINALTY ROW SENDIRI
                 =========================================
                 */
-                if ($item->ACC_KEYS === "BAYAR PELUNASAN DISKON PINALTY" && $amount > 0) {
+                if ($item->ACC_KEYS === "BAYAR PELUNASAN PINALTY" && $amount > 0) {
 
                     $result["datas"][] = [
                         "type" => "PELUNASAN",
