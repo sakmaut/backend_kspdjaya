@@ -23,7 +23,7 @@ class TicketingController extends Controller
     public function index(Request $request)
     {
         try {
-            $data = $this->ticketingService->getAllData();
+            $data = $this->ticketingService->getAllData($request);
 
             $dto = TicketingDTO::collection($data);
 

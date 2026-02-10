@@ -7,9 +7,9 @@ use Illuminate\Support\Carbon;
 
 class TicketingService extends TicketingRepository
 {
-    public function getAllData()
+    public function getAllData($request)
     {
-        return $this->getAll();
+        return $this->getAll($request);
     }
 
     public function getDetailById($id)
