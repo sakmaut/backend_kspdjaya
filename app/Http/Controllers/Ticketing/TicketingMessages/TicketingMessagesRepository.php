@@ -35,6 +35,7 @@ class TicketingMessagesRepository extends TicketingMessagesEntity
     {
         return $this->baseQuery()
             ->where('ticket_id',$id)
+            ->orderByAsc('created_at')
             ->get();
     }
 
