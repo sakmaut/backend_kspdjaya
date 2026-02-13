@@ -67,6 +67,11 @@ class M_Credit extends Model
         });
     }
 
+    public function branch()
+    {
+        return $this->belongsTo(M_Branch::class, 'BRANCH', 'ID');
+    }
+
     public function collateral()
     {
         return $this->hasOne(M_CrCollateral::class, 'CR_CREDIT_ID', 'ID');

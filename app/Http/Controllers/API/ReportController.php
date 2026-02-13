@@ -29,6 +29,76 @@ class ReportController extends Controller
         $this->log = $log;
     }
 
+    // public function InquiryList(Request $request)
+    // {
+    //     try {
+    //         $mapping = [];
+
+    //         if (!isset($request->nama) && !isset($request->no_kontrak) && !isset($request->no_polisi)) {
+    //             return response()->json($mapping, 200);
+    //         } else {
+    //             $query = DB::table('credit as a')
+    //                 ->leftJoin('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
+    //                 ->leftJoin('cr_collateral as c', 'c.CR_CREDIT_ID', '=', 'a.ID')
+    //                 ->leftJoin('branch as d', 'd.ID', '=', 'a.BRANCH')
+    //                 ->select(
+    //                     'a.ID as creditId',
+    //                     'a.LOAN_NUMBER',
+    //                     'a.ORDER_NUMBER',
+    //                     'b.ID as custId',
+    //                     'b.CUST_CODE',
+    //                     'b.NAME as customer_name',
+    //                     'c.POLICE_NUMBER',
+    //                     'a.INSTALLMENT_DATE',
+    //                     'd.NAME as branch_name'
+    //                 );
+
+    //             if (!empty($request->no_kontrak)) {
+    //                 $query->when($request->no_kontrak, function ($query, $no_kontrak) {
+    //                     return $query->where("a.LOAN_NUMBER", $no_kontrak);
+    //                 });
+    //             }
+
+    //             if (!empty($request->nama)) {
+    //                 $query->when($request->nama, function ($query, $nama) {
+    //                     return $query->where("b.NAME", 'LIKE', "%$nama%");
+    //                 });
+    //             }
+
+    //             if (!empty($request->no_polisi)) {
+    //                 $query->when($request->no_polisi, function ($query, $no_polisi) {
+    //                     return $query->where("c.POLICE_NUMBER", 'LIKE', "%$no_polisi%");
+    //                 });
+    //             }
+
+    //             $results = $query->get();
+
+    //             if (empty($results)) {
+    //                 $mapping = [];
+    //             } else {
+    //                 $mapping = [];
+    //                 foreach ($results as $result) {
+    //                     $mapping[] = [
+    //                         'credit_id' => $result->creditId ?? '',
+    //                         'loan_number' => $result->LOAN_NUMBER ?? '',
+    //                         'order_number' => $result->ORDER_NUMBER ?? '',
+    //                         'cust_id' => $result->custId ?? '',
+    //                         'cust_code' => $result->CUST_CODE ?? '',
+    //                         'customer_name' => $result->customer_name ?? '',
+    //                         'police_number' => $result->POLICE_NUMBER ?? '',
+    //                         'entry_date' => date('Y-m-d', strtotime($result->INSTALLMENT_DATE)) ?? '',
+    //                         'branch_name' => $result->branch_name ?? '',
+    //                     ];
+    //                 }
+    //             }
+    //         }
+
+    //         return response()->json($mapping, 200);
+    //     } catch (\Exception $e) {
+    //         return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+    //     }
+    // }
+
     public function InquiryList(Request $request)
     {
         try {
@@ -72,6 +142,65 @@ class ReportController extends Controller
                 }
 
                 $results = $query->get();
+
+                $results = M_Credit::select(
+                                'ID',
+                                'LOAN_NUMBER',
+                                'ORDER_NUMBER',
+                                'CUST_CODE',
+                                'INSTALLMENT_DATE',
+                                'BRANCH'
+                            )
+                    ->with([
+                        'customer:ID,CUST_CODE,NAME',
+                        'collateral:CR_CREDIT_ID,POLICE_NUMBER',
+                        'branch:ID,NAME'
+                    ])
+
+                    ->when(
+                        $request->no_kontrak,
+                        fn($q) =>
+                        $q->where('LOAN_NUMBER', $request->no_kontrak)
+                    )
+
+                    ->when(
+                        $request->nama,
+                        fn($q) =>
+                        $q->whereHas(
+                            'customer',
+                            fn($c) =>
+                            $c->where('NAME', 'LIKE', "%{$request->nama}%")
+                        )
+                    )
+
+                    ->when(
+                        $request->no_polisi,
+                        fn($q) =>
+                        $q->whereHas(
+                            'collateral',
+                            fn($c) =>
+                            $c->where('POLICE_NUMBER', 'LIKE', "%{$request->no_polisi}%")
+                        )
+                    )
+                    ->get();
+
+                $mapping = $results->map(function ($row) {
+                    return [
+                        'credit_id'     => $row->ID,
+                        'loan_number'   => $row->LOAN_NUMBER,
+                        'order_number'  => $row->ORDER_NUMBER,
+                        'cust_code'     => $row->CUST_CODE,
+                        'cust_id'       => $row->customer->ID ?? '',
+                        'customer_name' => $row->customer->NAME ?? '',
+                        'police_number' => $row->collateral->POLICE_NUMBER ?? '',
+                        'entry_date'    => $row->INSTALLMENT_DATE
+                            ? date('Y-m-d', strtotime($row->INSTALLMENT_DATE))
+                            : '',
+                        'branch_name'   => $row->branch->NAME ?? '',
+                    ];
+                })->toArray();
+
+
 
                 if (empty($results)) {
                     $mapping = [];
