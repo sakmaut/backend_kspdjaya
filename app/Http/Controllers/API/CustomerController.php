@@ -21,10 +21,25 @@ use Illuminate\Support\Facades\DB;
 class CustomerController extends Controller
 {
     protected $log;
+    protected $loanSearchService;
 
-    public function __construct(ExceptionHandling $log)
+    public function __construct(
+        ExceptionHandling $log,
+        LoanSearchService $loanSearchService
+    )
     {
         $this->log = $log;
+    }
+
+    private function validateSearchRequest(Request $request): array
+    {
+        $validated = $request->validate([
+            'nama' => 'nullable|string|max:255',
+            'no_kontrak' => 'nullable|string|max:25',
+            'no_polisi' => 'nullable|string|max:20'
+        ]);
+
+        return array_filter($validated);
     }
 
     public function index(Request $request)
@@ -299,60 +314,17 @@ class CustomerController extends Controller
     public function SearchCustReducingBalance(Request $request)
     {
         try {
-            $validated = $request->validate([
-                'nama' => 'nullable|string|max:255',
-                'no_kontrak' => 'nullable|string|max:25',
-                'no_polisi' => 'nullable|string|max:20'
-            ]);
+            $filters = $this->validateSearchRequest($request);
 
-            if (empty(array_filter($validated))) {
+            if (empty($filters)) {
                 return response()->json([], 200);
             }
 
-            $query = M_Credit::query()
-                ->select([
-                    'ID',
-                    'LOAN_NUMBER',
-                    'ORDER_NUMBER',
-                    'CUST_CODE',
-                    'INSTALLMENT',
-                    'INSTALLMENT_DATE',
-                    'BRANCH',
-                    'STATUS'
-                ])
-                ->with([
-                    'customer:ID,CUST_CODE,NAME,ADDRESS',
-                    'collateral:CR_CREDIT_ID,POLICE_NUMBER',
-                    'branch:ID,NAME'
-                ])
-                ->where('STATUS', 'A')
-                ->where('CREDIT_TYPE', 'bunga_menurun')
-                ->when($request->filled('no_kontrak'), function ($query) use ($request) {
-                    $query->where('LOAN_NUMBER', 'LIKE', "%{$request->no_kontrak}%");
-                })
-                ->when($request->filled('nama'), function ($query) use ($request) {
-                    $query->whereHas('customer', function ($q) use ($request) {
-                        $q->where('NAME', 'LIKE', "%{$request->nama}%");
-                    });
-                })
-                ->when($request->filled('no_polisi'), function ($query) use ($request) {
-                    $query->whereHas('collateral', function ($q) use ($request) {
-                        $q->where('POLICE_NUMBER', 'LIKE', "%{$request->no_polisi}%");
-                    });
-                })
-                ->orderBy('LOAN_NUMBER');
+            $loans = $this->loanSearchService->search($filters, [
+                'credit_type' => 'bunga_menurun'
+            ]);
 
-            $loans = $query->lazy(100)->collect();
-
-            return response()->json(
-                Rs_CustomerSearch::collection($loans),
-                200
-            );
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'message' => 'Invalid input',
-                'errors' => $e->errors()
-            ], 422);
+            return response()->json(Rs_CustomerSearch::collection($loans),200);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Failed to search loans',
