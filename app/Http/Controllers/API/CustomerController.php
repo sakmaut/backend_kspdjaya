@@ -29,6 +29,7 @@ class CustomerController extends Controller
     )
     {
         $this->log = $log;
+        $this->loanSearchService = $loanSearchService;
     }
 
     private function validateSearchRequest(Request $request): array

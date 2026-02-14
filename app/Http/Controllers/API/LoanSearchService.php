@@ -4,7 +4,6 @@ namespace App\Http\Controllers\API;
 
 use App\Models\M_Credit;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 
 class LoanSearchService
 {
