@@ -8,6 +8,7 @@ use App\Http\Resources\R_CreditList;
 use App\Http\Resources\R_CustomerDetail;
 use App\Http\Resources\R_CustomerSearch;
 use App\Http\Resources\R_RoDetail;
+use App\Http\Resources\Rs_CustomerSearch;
 use App\Models\M_CrCollateral;
 use App\Models\M_Credit;
 use App\Models\M_Customer;
@@ -243,55 +244,120 @@ class CustomerController extends Controller
         }
     }
 
-    public function searchCustomerBungaMenurun(Request $request)
+    // public function searchCustomerBungaMenurun(Request $request)
+    // {
+    //     try {
+
+    //         if (empty($request->nama) && empty($request->no_kontrak) && empty($request->no_polisi)) {
+    //             return collect([]);
+    //         }
+
+    //         $query = DB::table('credit as a')
+    //             ->select([
+    //                 'a.STATUS',
+    //                 'a.LOAN_NUMBER',
+    //                 'a.ORDER_NUMBER',
+    //                 'c.NAME',
+    //                 'c.ALIAS',
+    //                 'c.ADDRESS',
+    //                 'b.POLICE_NUMBER',
+    //                 'a.INSTALLMENT'
+    //             ])
+    //             ->leftJoin('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
+    //             ->leftJoin('customer as c', 'c.CUST_CODE', '=', 'a.CUST_CODE')
+    //             ->where('a.STATUS', 'A')
+    //             ->where('a.CREDIT_TYPE', 'bunga_menurun');
+
+    //         if (!empty($request->nama)) {
+    //             $query->when($request->nama, function ($query, $nama) {
+    //                 return $query->where("c.NAME", 'LIKE', "%{$nama}%");
+    //             });
+    //         }
+
+    //         if (!empty($request->no_kontrak)) {
+    //             $query->when($request->no_kontrak, function ($query, $no_kontrak) {
+    //                 return $query->where('a.LOAN_NUMBER', 'LIKE', "%{$no_kontrak}%");
+    //             });
+    //         }
+
+    //         if (!empty($request->no_polisi)) {
+    //             $query->when($request->no_polisi, function ($query, $no_polisi) {
+    //                 return $query->where('b.POLICE_NUMBER', 'LIKE', "%{$no_polisi}%");
+    //             });
+    //         }
+
+    //         $results = $query->get();
+
+    //         $dto = R_CustomerSearch::collection($results);
+
+    //         return response()->json($dto, 200);
+    //     } catch (\Exception $e) {
+    //         return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+    //     }
+    // }
+
+    public function SearchCustReducingBalance(Request $request)
     {
         try {
+            $validated = $request->validate([
+                'nama' => 'nullable|string|max:255',
+                'no_kontrak' => 'nullable|string|max:25',
+                'no_polisi' => 'nullable|string|max:20'
+            ]);
 
-            if (empty($request->nama) && empty($request->no_kontrak) && empty($request->no_polisi)) {
-                return collect([]);
+            if (empty(array_filter($validated))) {
+                return response()->json([], 200);
             }
 
-            $query = DB::table('credit as a')
+            $query = M_Credit::query()
                 ->select([
-                    'a.STATUS',
-                    'a.LOAN_NUMBER',
-                    'a.ORDER_NUMBER',
-                    'c.NAME',
-                    'c.ALIAS',
-                    'c.ADDRESS',
-                    'b.POLICE_NUMBER',
-                    'a.INSTALLMENT'
+                    'ID',
+                    'LOAN_NUMBER',
+                    'ORDER_NUMBER',
+                    'CUST_CODE',
+                    'INSTALLMENT',
+                    'INSTALLMENT_DATE',
+                    'BRANCH',
+                    'STATUS'
                 ])
-                ->leftJoin('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
-                ->leftJoin('customer as c', 'c.CUST_CODE', '=', 'a.CUST_CODE')
-                ->where('a.STATUS', 'A')
-                ->where('a.CREDIT_TYPE', 'bunga_menurun');
+                ->with([
+                    'customer:ID,CUST_CODE,NAME,ADDRESS',
+                    'collateral:CR_CREDIT_ID,POLICE_NUMBER',
+                    'branch:ID,NAME'
+                ])
+                ->where('STATUS', 'A')
+                ->where('CREDIT_TYPE', 'bunga_menurun')
+                ->when($request->filled('no_kontrak'), function ($query) use ($request) {
+                    $query->where('LOAN_NUMBER', 'LIKE', "%{$request->no_kontrak}%");
+                })
+                ->when($request->filled('nama'), function ($query) use ($request) {
+                    $query->whereHas('customer', function ($q) use ($request) {
+                        $q->where('NAME', 'LIKE', "%{$request->nama}%");
+                    });
+                })
+                ->when($request->filled('no_polisi'), function ($query) use ($request) {
+                    $query->whereHas('collateral', function ($q) use ($request) {
+                        $q->where('POLICE_NUMBER', 'LIKE', "%{$request->no_polisi}%");
+                    });
+                })
+                ->orderBy('LOAN_NUMBER');
 
-            if (!empty($request->nama)) {
-                $query->when($request->nama, function ($query, $nama) {
-                    return $query->where("c.NAME", 'LIKE', "%{$nama}%");
-                });
-            }
+            $loans = $query->lazy(100)->collect();
 
-            if (!empty($request->no_kontrak)) {
-                $query->when($request->no_kontrak, function ($query, $no_kontrak) {
-                    return $query->where('a.LOAN_NUMBER', 'LIKE', "%{$no_kontrak}%");
-                });
-            }
-
-            if (!empty($request->no_polisi)) {
-                $query->when($request->no_polisi, function ($query, $no_polisi) {
-                    return $query->where('b.POLICE_NUMBER', 'LIKE', "%{$no_polisi}%");
-                });
-            }
-
-            $results = $query->get();
-
-            $dto = R_CustomerSearch::collection($results);
-
-            return response()->json($dto, 200);
+            return response()->json(
+                Rs_CustomerSearch::collection($loans),
+                200
+            );
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'message' => 'Invalid input',
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+            return response()->json([
+                'message' => 'Failed to search loans',
+                'status' => 500
+            ], 500);
         }
     }
 

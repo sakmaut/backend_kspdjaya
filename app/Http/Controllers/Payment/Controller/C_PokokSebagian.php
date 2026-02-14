@@ -24,16 +24,16 @@ class C_PokokSebagian extends Controller
         $this->log = $log;
     }
 
-    public function index(Request $request)
-    {
-        try {
-            $data = $this->service->getAllCreditInstallment($request);
+    // public function index(Request $request)
+    // {
+    //     try {
+    //         $data = $this->service->getAllCreditInstallment($request);
 
-            return response()->json($data, 200);
-        } catch (\Exception $e) {
-            return $this->log->logError($e, $request);
-        }
-    }
+    //         return response()->json($data, 200);
+    //     } catch (\Exception $e) {
+    //         return $this->log->logError($e, $request);
+    //     }
+    // }
 
     public function proccessPayment(Request $request)
     {
@@ -48,18 +48,4 @@ class C_PokokSebagian extends Controller
             return $this->log->logError($e, $request);
         }
     }
-
-    // public function cancel(Request $request)
-    // {
-    //     DB::beginTransaction();
-    //     try {
-    //         $data = $this->service->cancel($request);
-
-    //         DB::commit();
-    //         return response()->json($data, 200);
-    //     } catch (Exception $e) {
-    //         DB::rollback();
-    //         return $this->log->logError($e, $request);
-    //     }
-    // }
 }

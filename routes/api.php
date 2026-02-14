@@ -113,10 +113,11 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::resource('customer', CustomerController::class);
     Route::post('search_customer', [CustomerController::class, 'searchCustomer']);
     Route::post('search_customer_pelunasan', [CustomerController::class, 'searchCustomerPelunasan']);
-    Route::post('search_customer_bunga_menurun', [CustomerController::class, 'searchCustomerBungaMenurun']);
+    Route::post('search_customer_bunga_menurun', [CustomerController::class, 'SearchCustReducingBalance']);
     Route::post('check_ro', [CustomerController::class, 'cekRO']);
     Route::post('kontrak_fasilitas', [CustomerController::class, 'fasilitas']);
     Route::post('struktur_kredit', [CustomerController::class, 'creditStruktur']);
+
     Route::resource('payment', PaymentController::class);
     Route::post('payment_attachment', [PaymentController::class, 'upload']);
     Route::post('payment_approval', [PaymentController::class, 'approval']);
@@ -128,7 +129,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::get('list_pelunasan', [PelunasanController::class, 'index']);
 
     //Pembayaran Pokok Sebagian
-    Route::post('data_pokok_sebagian', [C_PokokSebagian::class, 'index']);
+    // Route::post('data_pokok_sebagian', [C_PokokSebagian::class, 'index']);
     Route::post('payment_bunga_menurun', [C_PokokSebagian::class, 'proccessPayment']);
 
     //Blacklist
