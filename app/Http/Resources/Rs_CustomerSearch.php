@@ -19,7 +19,7 @@ class Rs_CustomerSearch extends JsonResource
             'no_kontrak'  => $this->ORDER_NUMBER,
             'nama' => $this->customer?->NAME ?? null,
             'alamat' => $this->customer?->ADDRESS ?? null,
-            'police_number' => $this->collateral?->POLICE_NUMBER ?? null,
+            'no_polisi' => $this->collateral?->POLICE_NUMBER ?? null,
             'angsuran'   => intval($this->INSTALLMENT ?? 0)
         ];
     }
