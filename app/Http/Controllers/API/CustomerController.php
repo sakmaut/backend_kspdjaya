@@ -153,112 +153,112 @@ class CustomerController extends Controller
         }
     }
 
-    public function searchCustomer(Request $request)
-    {
-        try {
+    // public function searchCustomer(Request $request)
+    // {
+    //     try {
 
-            if (empty($request->nama) && empty($request->no_kontrak) && empty($request->no_polisi)) {
-                return collect([]);
-            }
+    //         if (empty($request->nama) && empty($request->no_kontrak) && empty($request->no_polisi)) {
+    //             return collect([]);
+    //         }
 
-            $query = DB::table('credit as a')
-                ->select([
-                    'a.STATUS',
-                    'a.LOAN_NUMBER',
-                    'a.ORDER_NUMBER',
-                    'c.NAME',
-                    'c.ALIAS',
-                    'c.ADDRESS',
-                    'b.POLICE_NUMBER',
-                    'a.INSTALLMENT'
-                ])
-                ->leftJoin(DB::raw('(   SELECT * FROM cr_collateral 
-                                        WHERE ID IN (
-                                            SELECT MIN(ID) FROM cr_collateral GROUP BY CR_CREDIT_ID
-                                        )
-                                    ) as b'), 'b.CR_CREDIT_ID', '=', 'a.ID')
-                ->leftJoin('customer as c', 'c.CUST_CODE', '=', 'a.CUST_CODE')
-                ->where('a.STATUS', 'A');
+    //         $query = DB::table('credit as a')
+    //             ->select([
+    //                 'a.STATUS',
+    //                 'a.LOAN_NUMBER',
+    //                 'a.ORDER_NUMBER',
+    //                 'c.NAME',
+    //                 'c.ALIAS',
+    //                 'c.ADDRESS',
+    //                 'b.POLICE_NUMBER',
+    //                 'a.INSTALLMENT'
+    //             ])
+    //             ->leftJoin(DB::raw('(   SELECT * FROM cr_collateral 
+    //                                     WHERE ID IN (
+    //                                         SELECT MIN(ID) FROM cr_collateral GROUP BY CR_CREDIT_ID
+    //                                     )
+    //                                 ) as b'), 'b.CR_CREDIT_ID', '=', 'a.ID')
+    //             ->leftJoin('customer as c', 'c.CUST_CODE', '=', 'a.CUST_CODE')
+    //             ->where('a.STATUS', 'A');
 
-            if (!empty($request->nama)) {
-                $query->when($request->nama, function ($query, $nama) {
-                    return $query->where("c.NAME", 'LIKE', "%{$nama}%");
-                });
-            }
+    //         if (!empty($request->nama)) {
+    //             $query->when($request->nama, function ($query, $nama) {
+    //                 return $query->where("c.NAME", 'LIKE', "%{$nama}%");
+    //             });
+    //         }
 
-            if (!empty($request->no_kontrak)) {
-                $query->when($request->no_kontrak, function ($query, $no_kontrak) {
-                    return $query->where('a.LOAN_NUMBER', 'LIKE', "%{$no_kontrak}%");
-                });
-            }
+    //         if (!empty($request->no_kontrak)) {
+    //             $query->when($request->no_kontrak, function ($query, $no_kontrak) {
+    //                 return $query->where('a.LOAN_NUMBER', 'LIKE', "%{$no_kontrak}%");
+    //             });
+    //         }
 
-            if (!empty($request->no_polisi)) {
-                $query->when($request->no_polisi, function ($query, $no_polisi) {
-                    return $query->where('b.POLICE_NUMBER', 'LIKE', "%{$no_polisi}%");
-                });
-            }
+    //         if (!empty($request->no_polisi)) {
+    //             $query->when($request->no_polisi, function ($query, $no_polisi) {
+    //                 return $query->where('b.POLICE_NUMBER', 'LIKE', "%{$no_polisi}%");
+    //             });
+    //         }
 
-            $results = $query->limit(15)->get();
+    //         $results = $query->limit(15)->get();
 
-            $dto = R_CustomerSearch::collection($results);
+    //         $dto = R_CustomerSearch::collection($results);
 
-            return response()->json($dto, 200);
-        } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
-        }
-    }
+    //         return response()->json($dto, 200);
+    //     } catch (\Exception $e) {
+    //         return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+    //     }
+    // }
 
-    public function searchCustomerPelunasan(Request $request)
-    {
-        try {
+    // public function searchCustomerPelunasan(Request $request)
+    // {
+    //     try {
 
-            if (empty($request->nama) && empty($request->no_kontrak) && empty($request->no_polisi)) {
-                return collect([]);
-            }
+    //         if (empty($request->nama) && empty($request->no_kontrak) && empty($request->no_polisi)) {
+    //             return collect([]);
+    //         }
 
-            $query = DB::table('credit as a')
-                ->select([
-                    'a.STATUS',
-                    'a.LOAN_NUMBER',
-                    'a.ORDER_NUMBER',
-                    'c.NAME',
-                    'c.ALIAS',
-                    'c.ADDRESS',
-                    'b.POLICE_NUMBER',
-                    'a.INSTALLMENT'
-                ])
-                ->leftJoin('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
-                ->leftJoin('customer as c', 'c.CUST_CODE', '=', 'a.CUST_CODE')
-                ->where('a.STATUS', 'A')
-                ->whereIn('a.CREDIT_TYPE', ['bulanan', 'musiman']);
+    //         $query = DB::table('credit as a')
+    //             ->select([
+    //                 'a.STATUS',
+    //                 'a.LOAN_NUMBER',
+    //                 'a.ORDER_NUMBER',
+    //                 'c.NAME',
+    //                 'c.ALIAS',
+    //                 'c.ADDRESS',
+    //                 'b.POLICE_NUMBER',
+    //                 'a.INSTALLMENT'
+    //             ])
+    //             ->leftJoin('cr_collateral as b', 'b.CR_CREDIT_ID', '=', 'a.ID')
+    //             ->leftJoin('customer as c', 'c.CUST_CODE', '=', 'a.CUST_CODE')
+    //             ->where('a.STATUS', 'A')
+    //             ->whereIn('a.CREDIT_TYPE', ['bulanan', 'musiman']);
 
-            if (!empty($request->nama)) {
-                $query->when($request->nama, function ($query, $nama) {
-                    return $query->where("c.NAME", 'LIKE', "%{$nama}%");
-                });
-            }
+    //         if (!empty($request->nama)) {
+    //             $query->when($request->nama, function ($query, $nama) {
+    //                 return $query->where("c.NAME", 'LIKE', "%{$nama}%");
+    //             });
+    //         }
 
-            if (!empty($request->no_kontrak)) {
-                $query->when($request->no_kontrak, function ($query, $no_kontrak) {
-                    return $query->where('a.LOAN_NUMBER', 'LIKE', "%{$no_kontrak}%");
-                });
-            }
+    //         if (!empty($request->no_kontrak)) {
+    //             $query->when($request->no_kontrak, function ($query, $no_kontrak) {
+    //                 return $query->where('a.LOAN_NUMBER', 'LIKE', "%{$no_kontrak}%");
+    //             });
+    //         }
 
-            if (!empty($request->no_polisi)) {
-                $query->when($request->no_polisi, function ($query, $no_polisi) {
-                    return $query->where('b.POLICE_NUMBER', 'LIKE', "%{$no_polisi}%");
-                });
-            }
+    //         if (!empty($request->no_polisi)) {
+    //             $query->when($request->no_polisi, function ($query, $no_polisi) {
+    //                 return $query->where('b.POLICE_NUMBER', 'LIKE', "%{$no_polisi}%");
+    //             });
+    //         }
 
-            $results = $query->get();
+    //         $results = $query->get();
 
-            $dto = R_CustomerSearch::collection($results);
+    //         $dto = R_CustomerSearch::collection($results);
 
-            return response()->json($dto, 200);
-        } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
-        }
-    }
+    //         return response()->json($dto, 200);
+    //     } catch (\Exception $e) {
+    //         return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
+    //     }
+    // }
 
     // public function searchCustomerBungaMenurun(Request $request)
     // {
@@ -312,6 +312,48 @@ class CustomerController extends Controller
     //     }
     // }
 
+    public function SearchCustInstallment(Request $request)
+    {
+        try {
+            $filters = $this->validateSearchRequest($request);
+
+            if (empty($filters)) {
+                return response()->json([], 200);
+            }
+
+            $loans = $this->loanSearchService->search($filters);
+
+            return response()->json(Rs_CustomerSearch::collection($loans), 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to search loans',
+                'status' => 500
+            ], 500);
+        }
+    }
+
+    public function SearchCustSettelment(Request $request)
+    {
+        try {
+            $filters = $this->validateSearchRequest($request);
+
+            if (empty($filters)) {
+                return response()->json([], 200);
+            }
+
+            $loans = $this->loanSearchService->search($filters, [
+                'credit_types' => ['bulanan', 'musiman']
+            ]);
+
+            return response()->json(Rs_CustomerSearch::collection($loans), 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to search loans',
+                'status' => 500
+            ], 500);
+        }
+    }
+
     public function SearchCustReducingBalance(Request $request)
     {
         try {
@@ -322,7 +364,7 @@ class CustomerController extends Controller
             }
 
             $loans = $this->loanSearchService->search($filters, [
-                'credit_type' => 'bunga_menurun'
+                'credit_types' => 'bunga_menurun'
             ]);
 
             return response()->json(Rs_CustomerSearch::collection($loans),200);

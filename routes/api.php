@@ -111,8 +111,8 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::get('taksasi_download', [TaksasiController::class, 'download']);
 
     Route::resource('customer', CustomerController::class);
-    Route::post('search_customer', [CustomerController::class, 'searchCustomer']);
-    Route::post('search_customer_pelunasan', [CustomerController::class, 'searchCustomerPelunasan']);
+    Route::post('search_customer', [CustomerController::class, 'SearchCustInstallment']);
+    Route::post('search_customer_pelunasan', [CustomerController::class, 'SearchCustSettelment']);
     Route::post('search_customer_bunga_menurun', [CustomerController::class, 'SearchCustReducingBalance']);
     Route::post('check_ro', [CustomerController::class, 'cekRO']);
     Route::post('kontrak_fasilitas', [CustomerController::class, 'fasilitas']);
