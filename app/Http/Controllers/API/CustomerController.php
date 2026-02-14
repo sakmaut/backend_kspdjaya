@@ -364,7 +364,7 @@ class CustomerController extends Controller
             }
 
             $loans = $this->loanSearchService->search($filters, [
-                'credit_types' => 'bunga_menurun'
+                'credit_types' => ['bunga_menurun']
             ]);
 
             return response()->json(Rs_CustomerSearch::collection($loans),200);
