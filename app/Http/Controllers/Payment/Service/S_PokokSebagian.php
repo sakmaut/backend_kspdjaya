@@ -78,13 +78,22 @@ class S_PokokSebagian
         $kwitansi = $this->kwitansiService->create($request, 'pokok_sebagian');
         $this->proccessKwitansiDetail($request, $kwitansi);
 
-        if (checkPosition($request)) {
-            $userName = $request->user()->fullname ?? '';
+        $metode = trim($kwitansi->METODE_PEMBAYARAN ?? '');
+
+        if ($metode === '') {
+            throw new Exception("METODE PEMBAYARAN KOSONG!!");
+        }
+
+        $PaymentMethod = strtolower($metode) === 'cash';
+        $userName = $request->user()->fullname ?? '';
+        $noTrans  = $kwitansi->NO_TRANSAKSI ?? '';
+
+        if (checkPosition($request) && $PaymentMethod === true) {
             $this->taskslogging->create(
                 $request,
                 "Pembayaran Cash Bunga Menurun $userName",
                 'request_payment',
-                $kwitansi->NO_TRANSAKSI ?? '',
+                $noTrans,
                 'PENDING',
                 'Pembayaran Cash Bunga Menurun'
             );
@@ -95,7 +104,7 @@ class S_PokokSebagian
                 $request,
                 "Diskon Pembayaran Cash Bunga Menurun",
                 'request_payment',
-                $kwitansi->NO_TRANSAKSI ?? '',
+                $noTrans,
                 'PENDING',
                 'Diskon Pembayaran Cash Bunga Menurun'
             );
