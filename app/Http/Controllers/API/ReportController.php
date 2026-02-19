@@ -620,18 +620,24 @@ class ReportController extends Controller
                     if (in_array($uniqKey, $usedAngsuranTempo)) {
                         $displayAngs = '';
                         $displayTglTempo = '';
+                        $displayPokok = '';
+                        $displayBunga = '';
+                        $displayDenda = '';
                     } else {
                         $displayAngs = $angs;
                         $displayTglTempo = $tglTempoFormatted;
+                        $displayPokok = number_format($res->PRINCIPAL ?? 0, 0);
+                        $displayBunga = number_format($interest, 0);
+                        $displayDenda = number_format($res->PENALTY ?? 0, 0);
                         $usedAngsuranTempo[] = $uniqKey;
                     }
 
                     $data_credit[] = [
                         'Angs' => $displayAngs,
                         'Jt.Tempo' => $displayTglTempo,
-                        'Pokok' => number_format($res->PRINCIPAL ?? 0, 0),
-                        'Bunga' => number_format($interest, 0),
-                        'Denda' => $res->PENALTY ?? 0,
+                        'Pokok' => $displayPokok,
+                        'Bunga' => $displayBunga,
+                        'Denda' => $displayDenda,
                         'Tgl Bayar' => $tglBayarFormatted,
                         'Byr Pokok' => $byrPokok > 0 ? number_format($byrPokok, 0) : 0,
                         'Byr Bunga' => $byrBunga > 0 ? number_format($byrBunga, 0) : 0,
