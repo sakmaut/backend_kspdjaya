@@ -632,7 +632,7 @@ class ReportController extends Controller
                         $usedAngsuranTempo[] = $uniqKey;
                     }
 
-                    if($byrPokok != 0 && $byrBunga != 0 & $byrDenda != 0){
+                    if ($byrPokok != 0 || $byrBunga != 0 || $byrDenda != 0) {
                         $data_credit[] = [
                             'Angs' => $displayAngs,
                             'Jt.Tempo' => $displayTglTempo,
