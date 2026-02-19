@@ -552,8 +552,8 @@ class ReportController extends Controller
                         $usedTempoAngs[] = $uniqKey;
 
                         $schedule['data_credit'][] = [
-                            'Jt.Tempo'   => $displayTempo,
                             'Angs'       => $displayAngs,
+                            'Jt.Tempo'   => $displayTempo,
                             'Seq'        => $res->INST_COUNT_INCREMENT ?? 0,
                             'Amt Angs'   => $displayAmtAngs,
                             'Denda'      => $displayDenda,
@@ -570,8 +570,8 @@ class ReportController extends Controller
                         if ($amtBayar != 0 || $byrDenda != 0) {
 
                             $schedule['data_credit'][] = [
-                                'Jt.Tempo'   => '',
                                 'Angs'       => '',
+                                'Jt.Tempo'   => '',
                                 'Seq'        => '',
                                 'Amt Angs'   => '',
                                 'Denda'      => '',
@@ -585,7 +585,7 @@ class ReportController extends Controller
                             ];
                         }
                     }
-                    
+
                     $ttlAmtBayar   += $amtBayar;
                     $ttlBayarDenda += $byrDenda;
                 }
