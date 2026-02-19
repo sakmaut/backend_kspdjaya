@@ -642,27 +642,27 @@ class ReportController extends Controller
                 $schedule['data_credit'] = $data_credit;
             }
 
-            $schedule['total'] = [
-                '',
-                '',
-                5000000,
-                200000,
-                56000,
-                '',
-                500000,
-                5000000,
-                200000,
-                56000,
-                23
-            ];
-
             // $schedule['total'] = [
-            //     'ttlAmtAngs' => $ttlAmtAngs ?? '0',
-            //     'ttlAmtBayar' => $ttlAmtBayar ?? '0',
-            //     'ttlSisaAngs' => $ttlAmtAngs - $ttlAmtBayar ?? '0',
-            //     'ttlDenda' => $ttlDenda ?? '0',
-            //     'ttlBayarDenda' => $ttlBayarDenda ?? '0',
+            //     '',
+            //     '',
+            //     5000000,
+            //     200000,
+            //     56000,
+            //     '',
+            //     500000,
+            //     5000000,
+            //     200000,
+            //     56000,
+            //     23
             // ];
+
+            $schedule['total'] = [
+                'ttlAmtAngs' => $ttlAmtAngs ?? '0',
+                'ttlAmtBayar' => $ttlAmtBayar ?? '0',
+                'ttlSisaAngs' => $ttlAmtAngs - $ttlAmtBayar ?? '0',
+                'ttlDenda' => $ttlDenda ?? '0',
+                'ttlBayarDenda' => $ttlBayarDenda ?? '0',
+            ];
 
             $creditDetail = M_Credit::with(['customer' => function ($query) {
                 $query->select('CUST_CODE', 'NAME');
