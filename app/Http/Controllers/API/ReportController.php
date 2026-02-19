@@ -496,12 +496,8 @@ class ReportController extends Controller
 
             $checkExist = [];
             $previousSisaAngs = 0;
-            $setSisaDenda = 0;
-            $ttlAmtAngs = 0;
-            $ttlAmtBayar  = 0;
-            $ttlDenda  = 0;
-            $ttlBayarDenda  = 0;
             $sisaAngss = 0;
+            $SetTotal =[];
 
             if (!$credit) {
                 $data = DB::select("CALL inquiry_details(?)", [$id]);
@@ -509,6 +505,11 @@ class ReportController extends Controller
                 if (empty($data)) {
                     return $schedule;
                 }
+
+                $ttlAmtAngs    = 0;
+                $ttlAmtBayar   = 0;
+                $ttlDenda      = 0;
+                $ttlBayarDenda = 0;
 
                 foreach ($data as $res) {
                     $currentJtTempo = isset($res->PAYMENT_DATE) ? Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y') : '';
@@ -521,16 +522,11 @@ class ReportController extends Controller
                         $currentAngs = '';
                         $amtAngs = $sisaAngss;
                         $sisaAngs = max($previousSisaAngs - floatval($res->angsuran ?? 0), 0);
-
-                        $setPinalty = floatval($setSisaDenda ?? 0);
-
                         $previousSisaAngs = $sisaAngs;
                     } else {
                         $sisaAngs = max(floatval($res->INSTALLMENT ?? 0) - floatval($res->angsuran ?? 0), 0);
                         $previousSisaAngs = $sisaAngs;
                         $amtAngs = $res->INSTALLMENT;
-                        $setPinalty = floatval($res->PAST_DUE_PENALTY ?? 0);
-                        $setSisaDenda = floatval($res->PAST_DUE_PENALTY ?? 0) -  floatval($res->denda ?? 0);
                         array_push($checkExist, $uniqArr);
 
                         $ttlAmtAngs += $res->INSTALLMENT;
@@ -560,6 +556,22 @@ class ReportController extends Controller
                         'Ovd' => $res->OD ?? 0
                     ];
                 }
+
+                $SetTotal[] = [
+                    '',
+                    '',
+                    '',
+                    number_format($ttlAmtAngs ?? 0),
+                    '',
+                    '',
+                    '',
+                    number_format($ttlAmtBayar ?? 0),
+                    number_format($ttlAmtAngs - $ttlAmtBayar),
+                    number_format($ttlDenda),
+                    number_format($ttlBayarDenda),
+                    '',
+                    '',
+                ];
             } else {
                 $data = DB::select("CALL inquiry_details_bunga_menurun(?)", [$id]);
 
@@ -580,11 +592,17 @@ class ReportController extends Controller
                 });
 
                 $sisaPokok = $totalPrincipal;
-
                 $usedAngsuranTempo = [];
                 $bungaDibayarPerKey = [];
-
                 $data_credit = [];
+
+                $ttlPokok = 0;
+                $ttlBunga  = 0;
+                $ttlDenda  = 0;
+                $ttlByrPokok = 0;
+                $ttlByrBunga  = 0;
+                $ttlByrDenda  = 0;
+                $ttlBayarDenda  = 0;
 
                 foreach ($data as $res) {
                     $angs = $res->INSTALLMENT_COUNT ?? 0;
@@ -596,6 +614,10 @@ class ReportController extends Controller
                     $byrBunga = floatval($res->bayar_bunga ?? 0);
                     $byrDenda = floatval($res->bayar_denda ?? 0);
                     $interest = floatval($res->INTEREST ?? 0);
+
+                    $ttlByrPokok += $byrPokok;
+                    $ttlByrBunga += $byrBunga;
+                    $ttlByrDenda += $byrDenda;
 
                     $uniqKey = $angs . '-' . $tglTempoFormatted;
 
@@ -620,6 +642,11 @@ class ReportController extends Controller
                         $displayPokok = number_format($res->PRINCIPAL ?? 0, 0);
                         $displayBunga = number_format($interest, 0);
                         $displayDenda = number_format($res->PENALTY ?? 0, 0);
+
+                        $ttlPokok += floatval($res->PRINCIPAL ?? 0);
+                        $ttlBunga += $interest;
+                        $ttlDenda += floatval($res->PENALTY ?? 0);
+
                         $usedAngsuranTempo[] = $uniqKey;
                     }
 
@@ -639,30 +666,31 @@ class ReportController extends Controller
                     }
                 }
 
+                $SetTotal[] = [
+                    '',
+                    '',
+                    $ttlPokok,
+                    $ttlBunga,
+                    $ttlDenda,
+                    '',
+                    $ttlByrPokok,
+                    $ttlByrBunga,
+                    $ttlByrDenda,
+                    '',
+                ];
+
                 $schedule['data_credit'] = $data_credit;
             }
 
-            // $schedule['total'] = [
-            //     '',
-            //     '',
-            //     5000000,
-            //     200000,
-            //     56000,
-            //     '',
-            //     500000,
-            //     5000000,
-            //     200000,
-            //     56000,
-            //     23
-            // ];
+            $schedule['total'] = $SetTotal;
 
-            $schedule['total'] = [
-                'ttlAmtAngs' => $ttlAmtAngs ?? '0',
-                'ttlAmtBayar' => $ttlAmtBayar ?? '0',
-                'ttlSisaAngs' => $ttlAmtAngs - $ttlAmtBayar ?? '0',
-                'ttlDenda' => $ttlDenda ?? '0',
-                'ttlBayarDenda' => $ttlBayarDenda ?? '0',
-            ];
+            // $schedule['total'] = [
+            //     'ttlAmtAngs' => $ttlAmtAngs ?? '0',
+            //     'ttlAmtBayar' => $ttlAmtBayar ?? '0',
+            //     'ttlSisaAngs' => $ttlAmtAngs - $ttlAmtBayar ?? '0',
+            //     'ttlDenda' => $ttlDenda ?? '0',
+            //     'ttlBayarDenda' => $ttlBayarDenda ?? '0',
+            // ];
 
             $creditDetail = M_Credit::with(['customer' => function ($query) {
                 $query->select('CUST_CODE', 'NAME');
