@@ -511,52 +511,131 @@ class ReportController extends Controller
                 $ttlDenda      = 0;
                 $ttlBayarDenda = 0;
 
+                $usedTempoAngs = [];
+
                 foreach ($data as $res) {
-                    $currentJtTempo = isset($res->PAYMENT_DATE) ? Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y') : '';
-                    $currentAngs = isset($res->INSTALLMENT_COUNT) ? $res->INSTALLMENT_COUNT : '';
 
-                    $uniqArr = $currentJtTempo . '-' . $currentAngs;
+                    $angs = $res->INSTALLMENT_COUNT ?? 0;
+                    $tglTempo = $res->PAYMENT_DATE ?? '';
+                    $tglTempoFormatted = $tglTempo
+                        ? Carbon::parse($tglTempo)->format('d-m-Y')
+                        : '';
 
-                    if (in_array($uniqArr, $checkExist)) {
-                        $currentJtTempo = '';
-                        $currentAngs = '';
-                        $amtAngs = $sisaAngss;
-                        $sisaAngs = max($previousSisaAngs - floatval($res->angsuran ?? 0), 0);
-                        $previousSisaAngs = $sisaAngs;
-                        $displayDenda = '';
+                    $tglBayarFormatted = $res->ENTRY_DATE
+                        ? Carbon::parse($res->ENTRY_DATE)->format('d-m-Y')
+                        : '';
+
+                    $amtAngs  = floatval($res->INSTALLMENT ?? 0);
+                    $amtBayar = floatval($res->angsuran ?? 0);
+                    $byrDenda = floatval($res->denda ?? 0);
+
+                    $sisaAngs = max($amtAngs - $amtBayar, 0);
+
+                    $uniqKey = $angs . '-' . $tglTempoFormatted;
+
+                    // ============================
+                    // FIRST ROW INSTALLMENT
+                    // ============================
+                    $isFirstRow = !in_array($uniqKey, $usedTempoAngs);
+
+                    if ($isFirstRow) {
+
+                        $displayAngs     = $angs;
+                        $displayTempo    = $tglTempoFormatted;
+                        $displayAmtAngs  = number_format($amtAngs, 0);
+                        $displayDenda    = number_format($res->PAST_DUE_PENALTY ?? 0, 0);
+
+                        // Total hanya dihitung sekali
+                        $ttlAmtAngs += $amtAngs;
+                        $ttlDenda   += floatval($res->PAST_DUE_PENALTY ?? 0);
+
+                        $usedTempoAngs[] = $uniqKey;
+
+                        $schedule['data_credit'][] = [
+                            'Jt.Tempo'   => $displayTempo,
+                            'Angs'       => $displayAngs,
+                            'Seq'        => $res->INST_COUNT_INCREMENT ?? 0,
+                            'Amt Angs'   => $displayAmtAngs,
+                            'Denda'      => $displayDenda,
+                            'No Ref'     => $res->INVOICE ?? '',
+                            'Tgl Bayar'  => $tglBayarFormatted,
+                            'Amt Bayar'  => number_format($amtBayar, 0),
+                            'Sisa Angs'  => number_format($sisaAngs, 0),
+                            'Byr Dnda'   => number_format($byrDenda, 0),
+                            'Sisa Tghn'  => "0",
+                            'Ovd'        => $res->OD ?? 0
+                        ];
                     } else {
-                        $sisaAngs = max(floatval($res->INSTALLMENT ?? 0) - floatval($res->angsuran ?? 0), 0);
-                        $previousSisaAngs = $sisaAngs;
-                        $amtAngs = $res->INSTALLMENT;
-                        array_push($checkExist, $uniqArr);
-                        $displayDenda = number_format($res->PAST_DUE_PENALTY ?? 0);
 
-                        $ttlAmtAngs += $res->INSTALLMENT;
-                        $ttlDenda  += $res->PAST_DUE_PENALTY;
+                        if ($amtBayar != 0 || $byrDenda != 0) {
+
+                            $schedule['data_credit'][] = [
+                                'Jt.Tempo'   => '',
+                                'Angs'       => '',
+                                'Seq'        => '',
+                                'Amt Angs'   => '',
+                                'Denda'      => '',
+                                'No Ref'     => $res->INVOICE ?? '',
+                                'Tgl Bayar'  => $tglBayarFormatted,
+                                'Amt Bayar'  => number_format($amtBayar, 0),
+                                'Sisa Angs'  => '',
+                                'Byr Dnda'   => number_format($byrDenda, 0),
+                                'Sisa Tghn'  => '',
+                                'Ovd'        => $res->OD ?? 0
+                            ];
+                        }
                     }
-
-                    $ttlBayarDenda  += $res->denda ?? 0;
-
-                    $amtBayar =  floatval($res->angsuran ?? 0);
-                    $sisaAngss = floatval($amtAngs ?? 0) - floatval($amtBayar ?? 0);
-
-                    $ttlAmtBayar += $amtBayar;
-
-                    $schedule['data_credit'][] = [
-                        'Jt.Tempo' => $currentJtTempo,
-                        'Angs' => $currentAngs,
-                        'Seq' => $res->INST_COUNT_INCREMENT ?? 0,
-                        'Amt Angs' => number_format($amtAngs ?? 0),
-                        'Denda' => $displayDenda,
-                        'No Ref' => $res->INVOICE ?? '',
-                        'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
-                        'Amt Bayar' => number_format($amtBayar ?? 0),
-                        'Sisa Angs' => number_format($sisaAngss),
-                        'Byr Dnda' => number_format($res->denda ?? 0),
-                        'Sisa Tghn' => "0",
-                        'Ovd' => $res->OD ?? 0
-                    ];
+                    
+                    $ttlAmtBayar   += $amtBayar;
+                    $ttlBayarDenda += $byrDenda;
                 }
+
+                // foreach ($data as $res) {
+                //     $currentJtTempo = isset($res->PAYMENT_DATE) ? Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y') : '';
+                //     $currentAngs = isset($res->INSTALLMENT_COUNT) ? $res->INSTALLMENT_COUNT : '';
+
+                //     $uniqArr = $currentJtTempo . '-' . $currentAngs;
+
+                //     if (in_array($uniqArr, $checkExist)) {
+                //         $currentJtTempo = '';
+                //         $currentAngs = '';
+                //         $amtAngs = $sisaAngss;
+                //         $sisaAngs = max($previousSisaAngs - floatval($res->angsuran ?? 0), 0);
+                //         $previousSisaAngs = $sisaAngs;
+                //         $displayDenda = '';
+                //     } else {
+                //         $sisaAngs = max(floatval($res->INSTALLMENT ?? 0) - floatval($res->angsuran ?? 0), 0);
+                //         $previousSisaAngs = $sisaAngs;
+                //         $amtAngs = $res->INSTALLMENT;
+                //         array_push($checkExist, $uniqArr);
+                //         $displayDenda = number_format($res->PAST_DUE_PENALTY ?? 0);
+
+                //         $ttlAmtAngs += $res->INSTALLMENT;
+                //         $ttlDenda  += $res->PAST_DUE_PENALTY;
+                //     }
+
+                //     $ttlBayarDenda  += $res->denda ?? 0;
+
+                //     $amtBayar =  floatval($res->angsuran ?? 0);
+                //     $sisaAngss = floatval($amtAngs ?? 0) - floatval($amtBayar ?? 0);
+
+                //     $ttlAmtBayar += $amtBayar;
+
+                //     $schedule['data_credit'][] = [
+                //         'Jt.Tempo' => $currentJtTempo,
+                //         'Angs' => $currentAngs,
+                //         'Seq' => $res->INST_COUNT_INCREMENT ?? 0,
+                //         'Amt Angs' => number_format($amtAngs ?? 0),
+                //         'Denda' => $displayDenda,
+                //         'No Ref' => $res->INVOICE ?? '',
+                //         'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
+                //         'Amt Bayar' => number_format($amtBayar ?? 0),
+                //         'Sisa Angs' => number_format($sisaAngss),
+                //         'Byr Dnda' => number_format($res->denda ?? 0),
+                //         'Sisa Tghn' => "0",
+                //         'Ovd' => $res->OD ?? 0
+                //     ];
+                // }
 
                 $SetTotal = [
                     '',
