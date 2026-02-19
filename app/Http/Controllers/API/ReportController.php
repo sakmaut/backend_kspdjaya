@@ -557,7 +557,7 @@ class ReportController extends Controller
                     ];
                 }
 
-                $SetTotal[] = [
+                $SetTotal = [
                     '',
                     '',
                     '',
@@ -666,7 +666,7 @@ class ReportController extends Controller
                     }
                 }
 
-                $SetTotal[] = [
+                $SetTotal = [
                     '',
                     '',
                     $ttlPokok,
