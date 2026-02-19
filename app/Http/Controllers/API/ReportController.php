@@ -481,110 +481,6 @@ class ReportController extends Controller
         }
     }
 
-    // public function strukturCredit(Request $request, $id)
-    // {
-    //     try {
-    //         $schedule = [
-    //             'detail' => [],
-    //             'data_credit' => [],
-    //             'total' => []
-    //         ];
-
-    //         $data = DB::select("CALL inquiry_details(?)", [$id]);
-
-    //         if (empty($data)) {
-    //             return $schedule;
-    //         }
-
-    //         $checkExist = [];
-    //         $previousSisaAngs = 0;
-    //         $setPinalty = 0;
-    //         $setSisaDenda = 0;
-    //         $ttlAmtAngs = 0;
-    //         $ttlAmtBayar  = 0;
-    //         $ttlDenda  = 0;
-    //         $ttlBayarDenda  = 0;
-    //         $sisaAngss = 0;
-
-    //         foreach ($data as $res) {
-    //             $currentJtTempo = isset($res->PAYMENT_DATE) ? Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y') : '';
-    //             $currentAngs = isset($res->INSTALLMENT_COUNT) ? $res->INSTALLMENT_COUNT : '';
-
-    //             $uniqArr = $currentJtTempo . '-' . $currentAngs;
-
-    //             if (in_array($uniqArr, $checkExist)) {
-    //                 $currentJtTempo = '';
-    //                 $currentAngs = '';
-    //                 $amtAngs = $sisaAngss;
-    //                 $sisaAngs = max($previousSisaAngs - floatval($res->angsuran ?? 0), 0);
-
-    //                 $setPinalty = floatval($setSisaDenda ?? 0);
-
-    //                 $previousSisaAngs = $sisaAngs;
-    //             } else {
-    //                 $sisaAngs = max(floatval($res->INSTALLMENT ?? 0) - floatval($res->angsuran ?? 0), 0);
-    //                 $previousSisaAngs = $sisaAngs;
-    //                 $amtAngs = $res->INSTALLMENT;
-    //                 $setPinalty = floatval($res->PAST_DUE_PENALTY ?? 0);
-    //                 $setSisaDenda = floatval($res->PAST_DUE_PENALTY ?? 0) -  floatval($res->denda ?? 0);
-    //                 array_push($checkExist, $uniqArr);
-
-    //                 $ttlAmtAngs += $res->INSTALLMENT;
-    //                 $ttlDenda  += $res->PAST_DUE_PENALTY;
-    //             }
-
-    //             $ttlBayarDenda  += $res->denda ?? 0;
-
-    //             $amtBayar =  floatval($res->angsuran ?? 0);
-    //             $sisaAngss = floatval($amtAngs ?? 0) - floatval($amtBayar ?? 0);
-
-    //             $ttlAmtBayar += $amtBayar;
-
-    //             $schedule['data_credit'][] = [
-    //                 'Jt.Tempo' => $currentJtTempo,
-    //                 'Angs' => $currentAngs,
-    //                 'Seq' => $res->INST_COUNT_INCREMENT ?? 0,
-    //                 'Amt Angs' => number_format($amtAngs ?? 0),
-    //                 'No Ref' => $res->INVOICE ?? '',
-    //                 '' =>  '',
-    //                 'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
-    //                 'Amt Bayar' => number_format($amtBayar ?? 0),
-    //                 'Sisa Angs' => number_format($sisaAngss),
-    //                 'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0),
-    //                 'Byr Dnda' => number_format($res->denda ?? 0),
-    //                 'Sisa Tghn' => "0",
-    //                 'Ovd' => $res->OD ?? 0
-    //             ];
-    //         }
-
-    //         $schedule['total'] = [
-    //             'ttlAmtAngs' => $ttlAmtAngs ?? '0',
-    //             'ttlAmtBayar' => $ttlAmtBayar ?? '0',
-    //             'ttlSisaAngs' => $ttlAmtAngs - $ttlAmtBayar ?? '0',
-    //             'ttlDenda' => $ttlDenda ?? '0',
-    //             'ttlBayarDenda' => $ttlBayarDenda ?? '0',
-    //         ];
-
-    //         $creditDetail = M_Credit::with(['customer' => function ($query) {
-    //             $query->select('CUST_CODE', 'NAME');
-    //         }])->where('LOAN_NUMBER', $id)->first();
-
-    //         if ($creditDetail) {
-    //             $schedule['detail'] = [
-    //                 'no_kontrak' => $creditDetail->LOAN_NUMBER ?? '',
-    //                 'tgl_kontrak' => Carbon::parse($creditDetail->CREATED_AT)->format('d-m-Y'),
-    //                 'nama' => $creditDetail->customer->NAME ?? '',
-    //                 'no_pel' => $creditDetail->CUST_CODE ?? '',
-    //                 'status' => ($creditDetail->STATUS ?? '') == 'A' ? 'AKTIF' : 'TIDAK AKTIF / ' . $this->setStatusNoActive($creditDetail->STATUS_REC) ?? ''
-    //             ];
-    //         }
-
-    //         return response()->json($schedule, 200);
-    //     } catch (\Exception $e) {
-    //         return $this->log->logError($e, $request);
-    //     }
-    // }
-
     public function strukturCredit(Request $request, $id)
     {
         try {
@@ -710,22 +606,17 @@ class ReportController extends Controller
                         $bungaDibayarPerKey[$uniqKey] = 0;
                     }
 
-                    // Hitung bunga yang tersisa
                     $interest = max(0, $interest - $bungaDibayarPerKey[$uniqKey]);
                     $bungaDibayarPerKey[$uniqKey] += $byrBunga;
 
-                    // Pokok default = jumlah yang dibayarkan
                     $pokokTampil = $byrPokok;
 
-                    // Jika ini baris terakhir dan tidak ada byrPokok, maka tampilkan sisa pokok
                     if ($index === $lastIndex && $byrPokok == 0 && $sisaPokok > 0) {
                         $pokokTampil = $sisaPokok;
                     }
 
-                    // Update sisa pokok
                     $sisaPokok = max(0, $sisaPokok - $byrPokok);
 
-                    // Jika sudah pernah muncul, kosongkan Angs dan Jt.Tempo
                     if (in_array($uniqKey, $usedAngsuranTempo)) {
                         $displayAngs = '';
                         $displayTglTempo = '';
@@ -738,7 +629,7 @@ class ReportController extends Controller
                     $data_credit[] = [
                         'Angs' => $displayAngs,
                         'Jt.Tempo' => $displayTglTempo,
-                        'Pokok' => $pokokTampil > 0 ? number_format($pokokTampil, 0) : 0,
+                        'Pokok' => number_format($res->PRINCIPAL ?? 0, 0),
                         'Bunga' => number_format($interest, 0),
                         'Denda' => $res->PENALTY ?? 0,
                         'Tgl Bayar' => $tglBayarFormatted,
@@ -748,8 +639,6 @@ class ReportController extends Controller
                         'Hari OD' => $res->OD ?? 0
                     ];
                 }
-
-
 
                 $schedule['data_credit'] = $data_credit;
             }
