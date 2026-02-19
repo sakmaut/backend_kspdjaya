@@ -523,11 +523,13 @@ class ReportController extends Controller
                         $amtAngs = $sisaAngss;
                         $sisaAngs = max($previousSisaAngs - floatval($res->angsuran ?? 0), 0);
                         $previousSisaAngs = $sisaAngs;
+                        $displayDenda = '';
                     } else {
                         $sisaAngs = max(floatval($res->INSTALLMENT ?? 0) - floatval($res->angsuran ?? 0), 0);
                         $previousSisaAngs = $sisaAngs;
                         $amtAngs = $res->INSTALLMENT;
                         array_push($checkExist, $uniqArr);
+                        $displayDenda = number_format($res->PAST_DUE_PENALTY ?? 0);
 
                         $ttlAmtAngs += $res->INSTALLMENT;
                         $ttlDenda  += $res->PAST_DUE_PENALTY;
@@ -545,12 +547,11 @@ class ReportController extends Controller
                         'Angs' => $currentAngs,
                         'Seq' => $res->INST_COUNT_INCREMENT ?? 0,
                         'Amt Angs' => number_format($amtAngs ?? 0),
+                        'Denda' => $displayDenda,
                         'No Ref' => $res->INVOICE ?? '',
-                        '' =>  '',
                         'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
                         'Amt Bayar' => number_format($amtBayar ?? 0),
                         'Sisa Angs' => number_format($sisaAngss),
-                        'Denda' => number_format($res->PAST_DUE_PENALTY ?? 0),
                         'Byr Dnda' => number_format($res->denda ?? 0),
                         'Sisa Tghn' => "0",
                         'Ovd' => $res->OD ?? 0
@@ -562,12 +563,11 @@ class ReportController extends Controller
                     '',
                     '',
                     number_format($ttlAmtAngs ?? 0, 0, ',', '.'),
-                    '',
+                    number_format($ttlDenda, 0, ',', '.'),
                     '',
                     '',
                     number_format($ttlAmtBayar ?? 0, 0, ',', '.'),
                     number_format($ttlAmtAngs - $ttlAmtBayar, 0, ',', '.'),
-                    number_format($ttlDenda, 0, ',', '.'),
                     number_format($ttlBayarDenda, 0, ',', '.'),
                     '',
                     '',
@@ -683,14 +683,6 @@ class ReportController extends Controller
             }
 
             $schedule['total'] = $SetTotal;
-
-            // $schedule['total'] = [
-            //     'ttlAmtAngs' => $ttlAmtAngs ?? '0',
-            //     'ttlAmtBayar' => $ttlAmtBayar ?? '0',
-            //     'ttlSisaAngs' => $ttlAmtAngs - $ttlAmtBayar ?? '0',
-            //     'ttlDenda' => $ttlDenda ?? '0',
-            //     'ttlBayarDenda' => $ttlBayarDenda ?? '0',
-            // ];
 
             $creditDetail = M_Credit::with(['customer' => function ($query) {
                 $query->select('CUST_CODE', 'NAME');
