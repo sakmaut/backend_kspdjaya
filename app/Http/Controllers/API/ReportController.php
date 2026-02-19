@@ -630,15 +630,12 @@ class ReportController extends Controller
 
                     $sisaPokok = max(0, $sisaPokok - $byrPokok);
 
-                    if (in_array($uniqKey, $usedAngsuranTempo)) {
-                        $displayAngs = '';
-                        $displayTglTempo = '';
-                        $displayPokok = '';
-                        $displayBunga = '';
-                        $displayDenda = '';
-                    } else {
-                        $displayAngs = $angs;
+                    $isFirstRow = !in_array($uniqKey, $usedAngsuranTempo);
+
+                    if ($isFirstRow) {
+                        $displayAngs     = $angs;
                         $displayTglTempo = $tglTempoFormatted;
+
                         $displayPokok = number_format($res->PRINCIPAL ?? 0, 0);
                         $displayBunga = number_format($interest, 0);
                         $displayDenda = number_format($res->PENALTY ?? 0, 0);
@@ -648,24 +645,77 @@ class ReportController extends Controller
                         $ttlDenda += floatval($res->PENALTY ?? 0);
 
                         $usedAngsuranTempo[] = $uniqKey;
+
+                        $data_credit[] = [
+                            'Angs'      => $displayAngs,
+                            'Jt.Tempo'  => $displayTglTempo,
+                            'Pokok'     => $displayPokok,
+                            'Bunga'     => $displayBunga,
+                            'Denda'     => $displayDenda,
+                            'Tgl Bayar' => $tglBayarFormatted,
+
+                            'Byr Pokok' => $byrPokok > 0 ? number_format($byrPokok, 0) : 0,
+                            'Byr Bunga' => $byrBunga > 0 ? number_format($byrBunga, 0) : 0,
+                            'Byr Dnda'  => $byrDenda > 0 ? number_format($byrDenda, 0) : 0,
+
+                            'Hari OD'   => $res->OD ?? 0
+                        ];
+                    } else {
+                        if ($byrPokok != 0 || $byrBunga != 0 || $byrDenda != 0) {
+
+                            $data_credit[] = [
+                                'Angs'      => '',
+                                'Jt.Tempo'  => '',
+                                'Pokok'     => '',
+                                'Bunga'     => '',
+                                'Denda'     => '',
+                                'Tgl Bayar' => $tglBayarFormatted,
+
+                                'Byr Pokok' => $byrPokok > 0 ? number_format($byrPokok, 0) : 0,
+                                'Byr Bunga' => $byrBunga > 0 ? number_format($byrBunga, 0) : 0,
+                                'Byr Dnda'  => $byrDenda > 0 ? number_format($byrDenda, 0) : 0,
+
+                                'Hari OD'   => $res->OD ?? 0
+                            ];
+                        }
                     }
 
-                    // if ($byrPokok != 0 || $byrBunga != 0 || $byrDenda != 0) {
+                    // if (in_array($uniqKey, $usedAngsuranTempo)) {
+                    //     $displayAngs = '';
+                    //     $displayTglTempo = '';
+                    //     $displayPokok = '';
+                    //     $displayBunga = '';
+                    //     $displayDenda = '';
+                    // } else {
+                    //     $displayAngs = $angs;
+                    //     $displayTglTempo = $tglTempoFormatted;
+                    //     $displayPokok = number_format($res->PRINCIPAL ?? 0, 0);
+                    //     $displayBunga = number_format($interest, 0);
+                    //     $displayDenda = number_format($res->PENALTY ?? 0, 0);
 
+                    //     $ttlPokok += floatval($res->PRINCIPAL ?? 0);
+                    //     $ttlBunga += $interest;
+                    //     $ttlDenda += floatval($res->PENALTY ?? 0);
+
+                    //     $usedAngsuranTempo[] = $uniqKey;
                     // }
 
-                    $data_credit[] = [
-                        'Angs' => $displayAngs,
-                        'Jt.Tempo' => $displayTglTempo,
-                        'Pokok' => $displayPokok,
-                        'Bunga' => $displayBunga,
-                        'Denda' => $displayDenda,
-                        'Tgl Bayar' => $tglBayarFormatted,
-                        'Byr Pokok' => $byrPokok > 0 ? number_format($byrPokok, 0) : 0,
-                        'Byr Bunga' => $byrBunga > 0 ? number_format($byrBunga, 0) : 0,
-                        'Byr Dnda' => $byrDenda > 0 ? number_format($byrDenda, 0) : 0,
-                        'Hari OD' => $res->OD ?? 0
-                    ];
+                    // // if ($byrPokok != 0 || $byrBunga != 0 || $byrDenda != 0) {
+
+                    // // }
+
+                    // $data_credit[] = [
+                    //     'Angs' => $displayAngs,
+                    //     'Jt.Tempo' => $displayTglTempo,
+                    //     'Pokok' => $displayPokok,
+                    //     'Bunga' => $displayBunga,
+                    //     'Denda' => $displayDenda,
+                    //     'Tgl Bayar' => $tglBayarFormatted,
+                    //     'Byr Pokok' => $byrPokok > 0 ? number_format($byrPokok, 0) : 0,
+                    //     'Byr Bunga' => $byrBunga > 0 ? number_format($byrBunga, 0) : 0,
+                    //     'Byr Dnda' => $byrDenda > 0 ? number_format($byrDenda, 0) : 0,
+                    //     'Hari OD' => $res->OD ?? 0
+                    // ];
                 }
 
                 $SetTotal = [
