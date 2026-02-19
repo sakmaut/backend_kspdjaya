@@ -27,7 +27,6 @@ use Ramsey\Uuid\Uuid;
 
 class PelunasanController extends Controller
 {
-
     protected $log;
     protected $taskslogging;
     protected $r_pokokSebagian;
@@ -395,7 +394,6 @@ class PelunasanController extends Controller
 
     function updateCreditSchedule($loan_number, $res)
     {
-
         $getCreditSchedule = M_CreditSchedule::where(['LOAN_NUMBER' => $loan_number, 'PAYMENT_DATE' => $res['tgl_angsuran']])
             ->orderBy('PAYMENT_DATE', 'ASC')
             ->first();
@@ -650,8 +648,12 @@ class PelunasanController extends Controller
             "DISKON" => $request->JUMLAH_DISKON,
             "KEMBALIAN" => $request->KEMBALIAN,
             "JUMLAH_UANG" => $request->UANG_PELANGGAN,
-            "NAMA_BANK" => $request->NAMA_BANK,
-            "NO_REKENING" => $request->NO_REKENING,
+            "BAYAR_POKOK" => $request->BAYAR_POKOK ?? 0,
+            "DISKON_POKOK" => $request->DISKON_POKOK ?? 0,
+            "BAYAR_BUNGA" => $request->BAYAR_BUNGA ?? 0,
+            "DISKON_BUNGA" => $request->DISKON_BUNGA ?? 0,
+            "BAYAR_DENDA" => $request->BAYAR_DENDA ?? 0,
+            "DISKON_DENDA" => $request->DISKON_DENDA ?? 0,
             "CREATED_BY" => $request->user()->id
         ];
 

@@ -42,23 +42,6 @@ class S_PokokSebagian
         $this->taskslogging = $taskslogging;
     }
 
-    // public function getAllCreditInstallment($request)
-    // {
-    //     $results = $this->repository->getAllData($request);
-
-    //     $data = array_map(function ($item) {
-    //         return [
-    //             'SISA_POKOK' => round(floatval($item->SISA_POKOK), 2),
-    //             'TUNGGAKAN_BUNGA' => round(floatval($item->TUNGGAKAN_BUNGA), 2),
-    //             'TUNGGAKAN_DENDA' => round(floatval($item->TUNGGAKAN_DENDA), 2),
-    //             'DENDA' => round(floatval($item->DENDA), 2),
-    //             'DISC_BUNGA' => round(floatval($item->DISC_BUNGA), 2)
-    //         ];
-    //     }, $results);
-
-    //     return $data;
-    // }
-
     public function processPayment($request)
     {
         $check = $request->only([

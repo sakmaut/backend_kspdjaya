@@ -110,8 +110,12 @@ class KwitansiService
             "DISKON_FLAG" => $request->FLAG_DISKON == true ? 'ya':'tidak' ?? "",
             "KEMBALIAN" => $request->KEMBALIAN ?? 0,
             "JUMLAH_UANG" => $request->UANG_PELANGGAN,
-            "NAMA_BANK" => $request->NAMA_BANK,
-            "NO_REKENING" => $request->NO_REKENING,
+            "BAYAR_POKOK" => $request->BAYAR_POKOK ?? 0,
+            "DISKON_POKOK" => $request->DISKON_POKOK ?? 0,
+            "BAYAR_BUNGA" => $request->BAYAR_BUNGA ?? 0,
+            "DISKON_BUNGA" => $request->DISKON_BUNGA ?? 0,
+            "BAYAR_DENDA" => $request->BAYAR_DENDA ?? 0,
+            "DISKON_DENDA" => $request->DISKON_DENDA ?? 0,
             "CREATED_BY" => $request->user()->id
         ];
 
