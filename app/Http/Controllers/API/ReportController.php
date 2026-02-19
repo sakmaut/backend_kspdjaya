@@ -533,19 +533,16 @@ class ReportController extends Controller
 
                     $uniqKey = $angs . '-' . $tglTempoFormatted;
 
-                    // ============================
-                    // FIRST ROW INSTALLMENT
-                    // ============================
                     $isFirstRow = !in_array($uniqKey, $usedTempoAngs);
+
+                    $displayDenda    = number_format($res->PAST_DUE_PENALTY ?? 0, 0);
 
                     if ($isFirstRow) {
 
                         $displayAngs     = $angs;
                         $displayTempo    = $tglTempoFormatted;
                         $displayAmtAngs  = number_format($amtAngs, 0);
-                        $displayDenda    = number_format($res->PAST_DUE_PENALTY ?? 0, 0);
 
-                        // Total hanya dihitung sekali
                         $ttlAmtAngs += $amtAngs;
                         $ttlDenda   += floatval($res->PAST_DUE_PENALTY ?? 0);
 
@@ -557,7 +554,7 @@ class ReportController extends Controller
                             'Seq'        => $res->INST_COUNT_INCREMENT ?? 0,
                             'Amt Angs'   => $displayAmtAngs,
                             'Denda'      => $displayDenda,
-                            'No Invoice'     => $res->INVOICE ?? '',
+                            'No Invoice' => $res->INVOICE ?? '',
                             'Tgl Bayar'  => $tglBayarFormatted,
                             'Amt Bayar'  => number_format($amtBayar, 0),
                             'Sisa Angs'  => number_format($sisaAngs, 0),
@@ -574,8 +571,8 @@ class ReportController extends Controller
                                 'Jt.Tempo'   => '',
                                 'Seq'        => '',
                                 'Amt Angs'   => '',
-                                'Denda'      => '',
-                                'No Invoice'     => $res->INVOICE ?? '',
+                                'Denda'      => $displayDenda,
+                                'No Invoice' => $res->INVOICE ?? '',
                                 'Tgl Bayar'  => $tglBayarFormatted,
                                 'Amt Bayar'  => number_format($amtBayar, 0),
                                 'Sisa Angs'  => '',
