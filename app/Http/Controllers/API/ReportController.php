@@ -2201,7 +2201,7 @@ class ReportController extends Controller
 
             // Format output akhir
             foreach ($grouped as &$g) {
-                $g["jumlah"] = number_format($g["jumlah"], 2, ',', '.');
+                $g["jumlah"] = "Rp.". number_format($g["jumlah"], 2, ',', '.');
 
                 foreach ($g["data"] as &$row) {
                     $row = [
