@@ -1154,305 +1154,305 @@ class ReportController extends Controller
         }
     }
 
-    public function LkbhReport(Request $request)
-    {
-        $result = [
-            'dari'   => $request->dari ?? '',
-            'sampai' => $request->sampai ?? '',
-            'datas'  => []
-        ];
+    // public function LkbhReport(Request $request)
+    // {
+    //     $result = [
+    //         'dari'   => $request->dari ?? '',
+    //         'sampai' => $request->sampai ?? '',
+    //         'datas'  => []
+    //     ];
 
-        try {
+    //     try {
 
-            $dari     = $request->dari;
-            $sampai   = $request->sampai;
-            $cabangId = $request->cabang_id;
+    //         $dari     = $request->dari;
+    //         $sampai   = $request->sampai;
+    //         $cabangId = $request->cabang_id;
 
-            $user = $request->user();
-            $position = $user->position;
-            $userBranchId = $user->branch_id;
+    //         $user = $request->user();
+    //         $position = $user->position;
+    //         $userBranchId = $user->branch_id;
 
-            // ============================
-            // Branch Filter Logic
-            // ============================
-            $branchParam = null;
+    //         // ============================
+    //         // Branch Filter Logic
+    //         // ============================
+    //         $branchParam = null;
 
-            if ($position !== 'HO') {
-                $branchParam = $userBranchId;
-            } else {
-                $branchParam = $cabangId ?: null;
-            }
+    //         if ($position !== 'HO') {
+    //             $branchParam = $userBranchId;
+    //         } else {
+    //             $branchParam = $cabangId ?: null;
+    //         }
 
-            // ============================
-            // Call Stored Procedure
-            // ============================
-            $arusKas = DB::select(
-                "CALL sp_lkbh_report(?, ?, ?)",
-                [$dari, $sampai, $branchParam]
-            );
+    //         // ============================
+    //         // Call Stored Procedure
+    //         // ============================
+    //         $arusKas = DB::select(
+    //             "CALL sp_lkbh_report(?, ?, ?)",
+    //             [$dari, $sampai, $branchParam]
+    //         );
 
-            $tempAngsuran   = [];
-            $tempPelunasan  = [];
-            $tempPembulatan = [];
+    //         $tempAngsuran   = [];
+    //         $tempPelunasan  = [];
+    //         $tempPembulatan = [];
 
-            foreach ($arusKas as $item) {
+    //         foreach ($arusKas as $item) {
 
-                $invoice = $item->INVOICE;
-                $tgl     = date('Y-m-d', strtotime($item->ENTRY_DATE));
-                $pelunasan = strtolower($item->PAYMENT_TYPE) === 'pelunasan' ? "PELUNASAN" : "CASH_IN";
+    //             $invoice = $item->INVOICE;
+    //             $tgl     = date('Y-m-d', strtotime($item->ENTRY_DATE));
+    //             $pelunasan = strtolower($item->PAYMENT_TYPE) === 'pelunasan' ? "PELUNASAN" : "CASH_IN";
 
-                $amount = is_numeric($item->ORIGINAL_AMOUNT)
-                    ? floatval($item->ORIGINAL_AMOUNT)
-                    : 0;
+    //             $amount = is_numeric($item->ORIGINAL_AMOUNT)
+    //                 ? floatval($item->ORIGINAL_AMOUNT)
+    //                 : 0;
 
-                /*
-                =========================================
-                1. GROUP ANGSURAN (POKOK + BUNGA)
-                =========================================
-                */
-                if (in_array($item->ACC_KEYS, ['ANGSURAN_POKOK', 'ANGSURAN_BUNGA'])) {
+    //             /*
+    //             =========================================
+    //             1. GROUP ANGSURAN (POKOK + BUNGA)
+    //             =========================================
+    //             */
+    //             if (in_array($item->ACC_KEYS, ['ANGSURAN_POKOK', 'ANGSURAN_BUNGA'])) {
 
-                    if (!isset($tempAngsuran[$invoice])) {
+    //                 if (!isset($tempAngsuran[$invoice])) {
 
-                        $tempAngsuran[$invoice] = [
-                            "type" => "CASH_IN",
-                            "no_invoice" => $invoice,
-                            "no_kontrak" => $item->LOAN_NUM,
-                            "tgl" => $tgl,
-                            "cabang" => $item->BRANCH_NAME ?? "",
-                            "user" => $item->fullname ?? "",
-                            "position" => $item->position,
-                            "nama_pelanggan" => $item->NAMA ?? "",
-                            "metode_pembayaran" => $item->PAYMENT_METHOD,
-                            "keterangan" => "BAYAR " . strtoupper($item->JENIS) . " ({$invoice})",
-                            "amount" => 0
-                        ];
-                    }
+    //                     $tempAngsuran[$invoice] = [
+    //                         "type" => "CASH_IN",
+    //                         "no_invoice" => $invoice,
+    //                         "no_kontrak" => $item->LOAN_NUM,
+    //                         "tgl" => $tgl,
+    //                         "cabang" => $item->BRANCH_NAME ?? "",
+    //                         "user" => $item->fullname ?? "",
+    //                         "position" => $item->position,
+    //                         "nama_pelanggan" => $item->NAMA ?? "",
+    //                         "metode_pembayaran" => $item->PAYMENT_METHOD,
+    //                         "keterangan" => "BAYAR " . strtoupper($item->JENIS) . " ({$invoice})",
+    //                         "amount" => 0
+    //                     ];
+    //                 }
 
-                    // jumlahkan pokok + bunga
-                    $tempAngsuran[$invoice]["amount"] += $amount;
-                }
+    //                 // jumlahkan pokok + bunga
+    //                 $tempAngsuran[$invoice]["amount"] += $amount;
+    //             }
 
-                /*
-                =========================================
-                2. DENDA ROW SENDIRI
-                =========================================
-                */
-                if ($item->ACC_KEYS === "BAYAR_DENDA" && $amount > 0) {
+    //             /*
+    //             =========================================
+    //             2. DENDA ROW SENDIRI
+    //             =========================================
+    //             */
+    //             if ($item->ACC_KEYS === "BAYAR_DENDA" && $amount > 0) {
 
-                    $result["datas"][] = [
-                        "type" => $pelunasan,
-                        "no_invoice" => $invoice,
-                        "no_kontrak" => $item->LOAN_NUM,
-                        "tgl" => $tgl,
-                        "cabang" => $item->BRANCH_NAME ?? "",
-                        "user" => $item->fullname ?? "",
-                        "position" => $item->position,
-                        "nama_pelanggan" => $item->NAMA ?? "",
-                        "metode_pembayaran" => $item->PAYMENT_METHOD,
-                        "keterangan" => "BAYAR DENDA " . strtoupper($item->JENIS) . " ({$invoice})",
-                        "amount" => number_format($amount, 2, ',', '.')
-                    ];
-                }
+    //                 $result["datas"][] = [
+    //                     "type" => $pelunasan,
+    //                     "no_invoice" => $invoice,
+    //                     "no_kontrak" => $item->LOAN_NUM,
+    //                     "tgl" => $tgl,
+    //                     "cabang" => $item->BRANCH_NAME ?? "",
+    //                     "user" => $item->fullname ?? "",
+    //                     "position" => $item->position,
+    //                     "nama_pelanggan" => $item->NAMA ?? "",
+    //                     "metode_pembayaran" => $item->PAYMENT_METHOD,
+    //                     "keterangan" => "BAYAR DENDA " . strtoupper($item->JENIS) . " ({$invoice})",
+    //                     "amount" => number_format($amount, 2, ',', '.')
+    //                 ];
+    //             }
 
-                /*
-                =========================================
-                3. GROUP PELUNASAN TOTAL
-                BAYAR_POKOK + DISKON_BUNGA
-                =========================================
-                */
-                if (in_array($item->ACC_KEYS, ['BAYAR_POKOK', 'BAYAR_BUNGA'])) {
+    //             /*
+    //             =========================================
+    //             3. GROUP PELUNASAN TOTAL
+    //             BAYAR_POKOK + DISKON_BUNGA
+    //             =========================================
+    //             */
+    //             if (in_array($item->ACC_KEYS, ['BAYAR_POKOK', 'BAYAR_BUNGA'])) {
 
-                    if (!isset($tempPelunasan[$invoice])) {
+    //                 if (!isset($tempPelunasan[$invoice])) {
 
-                        $tempPelunasan[$invoice] = [
-                            "type" => "PELUNASAN",
-                            "no_invoice" => $invoice,
-                            "no_kontrak" => $item->LOAN_NUM,
-                            "tgl" => $tgl,
-                            "cabang" => $item->BRANCH_NAME ?? "",
-                            "user" => $item->fullname ?? "",
-                            "position" => $item->position,
-                            "nama_pelanggan" => $item->NAMA ?? "",
-                            "metode_pembayaran" => $item->PAYMENT_METHOD,
-                            "keterangan" => "BAYAR PELUNASAN ({$invoice})",
-                            "amount" => 0
-                        ];
-                    }
+    //                     $tempPelunasan[$invoice] = [
+    //                         "type" => "PELUNASAN",
+    //                         "no_invoice" => $invoice,
+    //                         "no_kontrak" => $item->LOAN_NUM,
+    //                         "tgl" => $tgl,
+    //                         "cabang" => $item->BRANCH_NAME ?? "",
+    //                         "user" => $item->fullname ?? "",
+    //                         "position" => $item->position,
+    //                         "nama_pelanggan" => $item->NAMA ?? "",
+    //                         "metode_pembayaran" => $item->PAYMENT_METHOD,
+    //                         "keterangan" => "BAYAR PELUNASAN ({$invoice})",
+    //                         "amount" => 0
+    //                     ];
+    //                 }
 
-                    // jumlahkan semua pelunasan pokok + diskon bunga
-                    $tempPelunasan[$invoice]["amount"] += $amount;
-                }
+    //                 // jumlahkan semua pelunasan pokok + diskon bunga
+    //                 $tempPelunasan[$invoice]["amount"] += $amount;
+    //             }
 
-                /*
-                =========================================
-                4. PINALTY ROW SENDIRI
-                =========================================
-                */
-                if ($item->ACC_KEYS === "BAYAR PELUNASAN PINALTY" && $amount > 0) {
+    //             /*
+    //             =========================================
+    //             4. PINALTY ROW SENDIRI
+    //             =========================================
+    //             */
+    //             if ($item->ACC_KEYS === "BAYAR PELUNASAN PINALTY" && $amount > 0) {
 
-                    $result["datas"][] = [
-                        "type" => "PELUNASAN",
-                        "no_invoice" => $invoice,
-                        "no_kontrak" => $item->LOAN_NUM,
-                        "tgl" => $tgl,
-                        "cabang" => $item->BRANCH_NAME ?? "",
-                        "user" => $item->fullname ?? "",
-                        "position" => $item->position,
-                        "nama_pelanggan" => $item->NAMA ?? "",
-                        "metode_pembayaran" => $item->PAYMENT_METHOD,
-                        "keterangan" => "BAYAR PELUNASAN PINALTY ({$invoice})",
-                        "amount" => number_format($amount, 2, ',', '.')
-                    ];
-                }
+    //                 $result["datas"][] = [
+    //                     "type" => "PELUNASAN",
+    //                     "no_invoice" => $invoice,
+    //                     "no_kontrak" => $item->LOAN_NUM,
+    //                     "tgl" => $tgl,
+    //                     "cabang" => $item->BRANCH_NAME ?? "",
+    //                     "user" => $item->fullname ?? "",
+    //                     "position" => $item->position,
+    //                     "nama_pelanggan" => $item->NAMA ?? "",
+    //                     "metode_pembayaran" => $item->PAYMENT_METHOD,
+    //                     "keterangan" => "BAYAR PELUNASAN PINALTY ({$invoice})",
+    //                     "amount" => number_format($amount, 2, ',', '.')
+    //                 ];
+    //             }
 
-                /*
-                =========================================
-                5. PEMBULATAN HANYA SEKALI PER INVOICE
-                =========================================
-                */
-                if ($item->PEMBULATAN > 0 && !isset($tempPembulatan[$invoice])) {
+    //             /*
+    //             =========================================
+    //             5. PEMBULATAN HANYA SEKALI PER INVOICE
+    //             =========================================
+    //             */
+    //             if ($item->PEMBULATAN > 0 && !isset($tempPembulatan[$invoice])) {
 
-                    // tandai sudah pernah masuk
-                    $tempPembulatan[$invoice] = true;
+    //                 // tandai sudah pernah masuk
+    //                 $tempPembulatan[$invoice] = true;
 
-                    $result["datas"][] = [
-                        "type" => $pelunasan,
-                        "no_invoice" => $invoice,
-                        "no_kontrak" => $item->LOAN_NUM,
-                        "tgl" => $tgl,
-                        "cabang" => $item->BRANCH_NAME ?? "",
-                        "user" => $item->fullname ?? "",
-                        "position" => $item->position,
-                        "nama_pelanggan" => $item->NAMA ?? "",
-                        "metode_pembayaran" => $item->PAYMENT_METHOD,
-                        "keterangan" => "PEMBULATAN ({$invoice})",
-                        "amount" => number_format($item->PEMBULATAN, 2, ',', '.')
-                    ];
-                }
+    //                 $result["datas"][] = [
+    //                     "type" => $pelunasan,
+    //                     "no_invoice" => $invoice,
+    //                     "no_kontrak" => $item->LOAN_NUM,
+    //                     "tgl" => $tgl,
+    //                     "cabang" => $item->BRANCH_NAME ?? "",
+    //                     "user" => $item->fullname ?? "",
+    //                     "position" => $item->position,
+    //                     "nama_pelanggan" => $item->NAMA ?? "",
+    //                     "metode_pembayaran" => $item->PAYMENT_METHOD,
+    //                     "keterangan" => "PEMBULATAN ({$invoice})",
+    //                     "amount" => number_format($item->PEMBULATAN, 2, ',', '.')
+    //                 ];
+    //             }
 
-                if (in_array($item->ACC_KEYS, ['FEE_BUNGA', 'FEE_PROCCESS'])) {
-                    $key = $invoice . '_' . $item->LOAN_NUM;
+    //             if (in_array($item->ACC_KEYS, ['FEE_BUNGA', 'FEE_PROCCESS'])) {
+    //                 $key = $invoice . '_' . $item->LOAN_NUM;
 
-                    if (!isset($tempAngsuran[$key])) {
+    //                 if (!isset($tempAngsuran[$key])) {
 
-                        $tempAngsuran[$key] = [
-                            "type" => "CASH_IN",
-                            "no_invoice" => $invoice,
-                            "no_kontrak" => $item->LOAN_NUM,
-                            "tgl" => $tgl,
-                            "cabang" => $item->BRANCH_NAME ?? "",
-                            "user" => $item->fullname ?? "",
-                            "position" => $item->position,
-                            "nama_pelanggan" => $item->NAMA ?? "",
-                            "metode_pembayaran" => $item->PAYMENT_METHOD,
-                            "keterangan" => "BAYAR FEE BUNGA MENURUN ({$invoice})",
-                            "amount" => 0
-                        ];
-                    }
+    //                     $tempAngsuran[$key] = [
+    //                         "type" => "CASH_IN",
+    //                         "no_invoice" => $invoice,
+    //                         "no_kontrak" => $item->LOAN_NUM,
+    //                         "tgl" => $tgl,
+    //                         "cabang" => $item->BRANCH_NAME ?? "",
+    //                         "user" => $item->fullname ?? "",
+    //                         "position" => $item->position,
+    //                         "nama_pelanggan" => $item->NAMA ?? "",
+    //                         "metode_pembayaran" => $item->PAYMENT_METHOD,
+    //                         "keterangan" => "BAYAR FEE BUNGA MENURUN ({$invoice})",
+    //                         "amount" => 0
+    //                     ];
+    //                 }
 
-                    $tempAngsuran[$key]["amount"] += $amount;
-                }
-            }
+    //                 $tempAngsuran[$key]["amount"] += $amount;
+    //             }
+    //         }
 
-            /*
-            =========================================
-            6. MASUKKAN HASIL GROUPING ANGSURAN
-            =========================================
-            */
-            foreach ($tempAngsuran as $row) {
+    //         /*
+    //         =========================================
+    //         6. MASUKKAN HASIL GROUPING ANGSURAN
+    //         =========================================
+    //         */
+    //         foreach ($tempAngsuran as $row) {
 
-                $row["amount"] = number_format($row["amount"], 2, ',', '.');
+    //             $row["amount"] = number_format($row["amount"], 2, ',', '.');
 
-                $result["datas"][] = $row;
-            }
+    //             $result["datas"][] = $row;
+    //         }
 
-            foreach ($tempPelunasan as $row) {
+    //         foreach ($tempPelunasan as $row) {
 
-                $row["amount"] = number_format($row["amount"], 2, ',', '.');
+    //             $row["amount"] = number_format($row["amount"], 2, ',', '.');
 
-                $result["datas"][] = $row;
-            }
+    //             $result["datas"][] = $row;
+    //         }
 
-            $pencairan = DB::select(
-                "CALL sp_lkbh_pencairan(?, ?, ?)",
-                [$dari, $sampai, $branchParam]
-            );
+    //         $pencairan = DB::select(
+    //             "CALL sp_lkbh_pencairan(?, ?, ?)",
+    //             [$dari, $sampai, $branchParam]
+    //         );
 
-            foreach ($pencairan as $item) {
+    //         foreach ($pencairan as $item) {
 
-                $tgl = date('Y-m-d', strtotime($item->ENTRY_DATE));
+    //             $tgl = date('Y-m-d', strtotime($item->ENTRY_DATE));
 
-                $result["datas"][] = [
-                    "type" => "CASH_OUT",
-                    "no_invoice" => "",
-                    "no_kontrak" => $item->LOAN_NUM,
-                    "tgl" => $tgl,
-                    "cabang" => $item->BRANCH_NAME ?? "",
-                    "user" => $item->fullname ?? "",
-                    "position" => $item->position,
-                    "nama_pelanggan" => $item->CUSTOMER_NAME ?? "",
-                    "metode_pembayaran" => "",
-                    "keterangan" => "PENCAIRAN " . strtoupper($item->CREDIT_TYPE) .
-                        " NO KONTRAK " . $item->LOAN_NUM,
-                    "amount" => number_format(
-                        ($item->ORIGINAL_AMOUNT - $item->TOTAL_ADMIN),
-                        2,
-                        ',',
-                        '.'
-                    )
-                ];
-            }
+    //             $result["datas"][] = [
+    //                 "type" => "CASH_OUT",
+    //                 "no_invoice" => "",
+    //                 "no_kontrak" => $item->LOAN_NUM,
+    //                 "tgl" => $tgl,
+    //                 "cabang" => $item->BRANCH_NAME ?? "",
+    //                 "user" => $item->fullname ?? "",
+    //                 "position" => $item->position,
+    //                 "nama_pelanggan" => $item->CUSTOMER_NAME ?? "",
+    //                 "metode_pembayaran" => "",
+    //                 "keterangan" => "PENCAIRAN " . strtoupper($item->CREDIT_TYPE) .
+    //                     " NO KONTRAK " . $item->LOAN_NUM,
+    //                 "amount" => number_format(
+    //                     ($item->ORIGINAL_AMOUNT - $item->TOTAL_ADMIN),
+    //                     2,
+    //                     ',',
+    //                     '.'
+    //                 )
+    //             ];
+    //         }
 
-            /*
-            =========================================
-            7. SORTING FINAL OUTPUT
-            ORDER BY position, type, invoice ASC
-            =========================================
-            */
-            usort($result["datas"], function ($a, $b) {
+    //         /*
+    //         =========================================
+    //         7. SORTING FINAL OUTPUT
+    //         ORDER BY position, type, invoice ASC
+    //         =========================================
+    //         */
+    //         usort($result["datas"], function ($a, $b) {
 
-                // 1. ENTRY_DATE
-                $dateA = $a["tgl"] ?? "";
-                $dateB = $b["tgl"] ?? "";
-                if ($dateA !== $dateB) {
-                    return strcmp($dateA, $dateB);
-                }
+    //             // 1. ENTRY_DATE
+    //             $dateA = $a["tgl"] ?? "";
+    //             $dateB = $b["tgl"] ?? "";
+    //             if ($dateA !== $dateB) {
+    //                 return strcmp($dateA, $dateB);
+    //             }
 
-                // 2. POSITION
-                $posA = $a["position"] ?? "";
-                $posB = $b["position"] ?? "";
-                if ($posA !== $posB) {
-                    return strcmp($posA, $posB);
-                }
+    //             // 2. POSITION
+    //             $posA = $a["position"] ?? "";
+    //             $posB = $b["position"] ?? "";
+    //             if ($posA !== $posB) {
+    //                 return strcmp($posA, $posB);
+    //             }
 
-                // 3. LOAN_NUM
-                $loanA = $a["no_kontrak"] ?? "";
-                $loanB = $b["no_kontrak"] ?? "";
-                if ($loanA !== $loanB) {
-                    return strcmp($loanA, $loanB);
-                }
+    //             // 3. LOAN_NUM
+    //             $loanA = $a["no_kontrak"] ?? "";
+    //             $loanB = $b["no_kontrak"] ?? "";
+    //             if ($loanA !== $loanB) {
+    //                 return strcmp($loanA, $loanB);
+    //             }
 
-                // 4. NO_INVOICE
-                $invA = $a["no_invoice"] ?? "";
-                $invB = $b["no_invoice"] ?? "";
-                if ($invA !== $invB) {
-                    return strcmp($invA, $invB);
-                }
+    //             // 4. NO_INVOICE
+    //             $invA = $a["no_invoice"] ?? "";
+    //             $invB = $b["no_invoice"] ?? "";
+    //             if ($invA !== $invB) {
+    //                 return strcmp($invA, $invB);
+    //             }
 
-                // 5. ANGSURAN_KE (kalau ada)
-                $angA = $a["angsuran_ke"] ?? 0;
-                $angB = $b["angsuran_ke"] ?? 0;
+    //             // 5. ANGSURAN_KE (kalau ada)
+    //             $angA = $a["angsuran_ke"] ?? 0;
+    //             $angB = $b["angsuran_ke"] ?? 0;
 
-                return $angA <=> $angB;
-            });
+    //             return $angA <=> $angB;
+    //         });
 
 
-            return response()->json($result, 200);
-        } catch (\Exception $e) {
-            return $this->log->logError($e, $request);
-        }
-    }
+    //         return response()->json($result, 200);
+    //     } catch (\Exception $e) {
+    //         return $this->log->logError($e, $request);
+    //     }
+    // }
 
     public function LkbhReports(Request $request)
     {
@@ -1490,10 +1490,6 @@ class ReportController extends Controller
                 ],
             ];
 
-            /* ==========================
-           🔹 ARUS KAS
-        ========================== */
-
             $arusKas = DB::select(
                 "CALL sp_lkbh_report(?, ?, ?)",
                 [$dari, $sampai, $branchParam]
@@ -1510,12 +1506,9 @@ class ReportController extends Controller
                     ? "PELUNASAN"
                     : "CASH_IN";
 
-                /* ===== ANGSURAN (digabung per invoice) ===== */
                 if (in_array($item->ACC_KEYS, [
                     'ANGSURAN_POKOK',
-                    'ANGSURAN_BUNGA',
-                    'FEE_BUNGA',
-                    'FEE_PROCCESS'
+                    'ANGSURAN_BUNGA'
                 ])) {
 
                     if (!isset($rows[$invoice])) {
@@ -1529,7 +1522,7 @@ class ReportController extends Controller
                             "position" => $item->position,
                             "nama_pelanggan" => $item->NAMA ?? "",
                             "metode_pembayaran" => $item->PAYMENT_METHOD,
-                            "keterangan" => "BAYAR ({$invoice})",
+                            "keterangan" => "BAYAR " . strtoupper($item->JENIS) . " ({$invoice})",
                             "amount" => 0
                         ];
                     }
@@ -1537,7 +1530,6 @@ class ReportController extends Controller
                     $rows[$invoice]["amount"] += $amount;
                 }
 
-                /* ===== DENDA ===== */
                 if ($item->ACC_KEYS === "BAYAR_DENDA" && $amount > 0) {
 
                     $rows[] = [
@@ -1550,12 +1542,11 @@ class ReportController extends Controller
                         "position" => $item->position,
                         "nama_pelanggan" => $item->NAMA ?? "",
                         "metode_pembayaran" => $item->PAYMENT_METHOD,
-                        "keterangan" => "BAYAR DENDA ({$invoice})",
+                        "keterangan" => "BAYAR DENDA " . strtoupper($item->JENIS) . " ({$invoice})",
                         "amount" => $amount
                     ];
                 }
 
-                /* ===== PELUNASAN ===== */
                 if (in_array($item->ACC_KEYS, ['BAYAR_POKOK', 'BAYAR_BUNGA'])) {
 
                     $rows[] = [
@@ -1573,7 +1564,23 @@ class ReportController extends Controller
                     ];
                 }
 
-                /* ===== PEMBULATAN ===== */
+                if ($item->ACC_KEYS === "BAYAR PELUNASAN PINALTY" && $amount > 0) {
+
+                    $result["datas"][] = [
+                        "type" => "PELUNASAN",
+                        "no_invoice" => $invoice,
+                        "no_kontrak" => $item->LOAN_NUM,
+                        "tgl" => $tgl,
+                        "cabang" => $item->BRANCH_NAME ?? "",
+                        "user" => $item->fullname ?? "",
+                        "position" => $item->position,
+                        "nama_pelanggan" => $item->NAMA ?? "",
+                        "metode_pembayaran" => $item->PAYMENT_METHOD,
+                        "keterangan" => "BAYAR PELUNASAN PINALTY ({$invoice})",
+                        "amount" => number_format($amount, 2, ',', '.')
+                    ];
+                }
+
                 if (!empty($item->PEMBULATAN) && $item->PEMBULATAN > 0) {
 
                     $rows[] = [
@@ -1590,11 +1597,30 @@ class ReportController extends Controller
                         "amount" => (float) $item->PEMBULATAN
                     ];
                 }
-            }
 
-            /* ==========================
-           🔹 PENCAIRAN
-        ========================== */
+                if (in_array($item->ACC_KEYS, ['FEE_BUNGA', 'FEE_PROCCESS'])) {
+                    $key = $invoice . '_' . $item->LOAN_NUM;
+
+                    if (!isset($tempAngsuran[$key])) {
+
+                        $tempAngsuran[$key] = [
+                            "type" => "CASH_IN",
+                            "no_invoice" => $invoice,
+                            "no_kontrak" => $item->LOAN_NUM,
+                            "tgl" => $tgl,
+                            "cabang" => $item->BRANCH_NAME ?? "",
+                            "user" => $item->fullname ?? "",
+                            "position" => $item->position,
+                            "nama_pelanggan" => $item->NAMA ?? "",
+                            "metode_pembayaran" => $item->PAYMENT_METHOD,
+                            "keterangan" => "BAYAR FEE BUNGA MENURUN ({$invoice})",
+                            "amount" => 0
+                        ];
+                    }
+
+                    $tempAngsuran[$key]["amount"] += $amount;
+                }
+            }
 
             $pencairan = DB::select(
                 "CALL sp_lkbh_pencairan(?, ?, ?)",
@@ -1618,23 +1644,13 @@ class ReportController extends Controller
                 ];
             }
 
-            /* ==========================
-           🔹 RESET INDEX
-        ========================== */
             $rows = array_values($rows);
 
-            /* ==========================
-           🔹 SORT
-        ========================== */
             usort($rows, function ($a, $b) {
                 return [$a["tgl"], $a["position"], $a["no_kontrak"], $a["no_invoice"]]
                     <=>
                     [$b["tgl"], $b["position"], $b["no_kontrak"], $b["no_invoice"]];
             });
-
-            /* ==========================
-           🔹 GROUPING
-        ========================== */
 
             $grouped = [
                 ["title" => "UANG MASUK ( TUNAI )", "data" => [], "jumlah" => 0,"colspan" => 9 ],
@@ -1663,10 +1679,6 @@ class ReportController extends Controller
                     }
                 }
             }
-
-            /* ==========================
-           🔹 FORMAT OUTPUT FINAL
-        ========================== */
 
             foreach ($grouped as &$g) {
 
