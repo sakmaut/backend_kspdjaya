@@ -1510,25 +1510,26 @@ class ReportController extends Controller
                     ? "PELUNASAN"
                     : "CASH_IN";
 
-                /* ===== ANGSURAN ===== */
+                /* ===== ANGSURAN (digabung per invoice) ===== */
                 if (in_array($item->ACC_KEYS, ['ANGSURAN_POKOK', 'ANGSURAN_BUNGA', 'FEE_BUNGA', 'FEE_PROCCESS'])) {
 
-                    $rows[$invoice]['amount'] =
-                        ($rows[$invoice]['amount'] ?? 0) + $amount;
+                    if (!isset($rows[$invoice])) {
+                        $rows[$invoice] = [
+                            "type" => "CASH_IN",
+                            "no_invoice" => $invoice,
+                            "no_kontrak" => $item->LOAN_NUM,
+                            "tgl" => $tgl,
+                            "cabang" => $item->BRANCH_NAME ?? "",
+                            "user" => $item->fullname ?? "",
+                            "position" => $item->position,
+                            "nama_pelanggan" => $item->NAMA ?? "",
+                            "metode_pembayaran" => $item->PAYMENT_METHOD,
+                            "keterangan" => "BAYAR ({$invoice})",
+                            "amount" => 0
+                        ];
+                    }
 
-                    $rows[$invoice] = [
-                        "type" => "CASH_IN",
-                        "no_invoice" => $invoice,
-                        "no_kontrak" => $item->LOAN_NUM,
-                        "tgl" => $tgl,
-                        "cabang" => $item->BRANCH_NAME ?? "",
-                        "user" => $item->fullname ?? "",
-                        "position" => $item->position,
-                        "nama_pelanggan" => $item->NAMA ?? "",
-                        "metode_pembayaran" => $item->PAYMENT_METHOD,
-                        "keterangan" => "BAYAR ({$invoice})",
-                        "amount" => $rows[$invoice]['amount']
-                    ];
+                    $rows[$invoice]["amount"] += $amount;
                 }
 
                 /* ===== DENDA ===== */
@@ -1587,7 +1588,7 @@ class ReportController extends Controller
             }
 
             /* ==========================
-           🔹 PENCAIRAN (CASH OUT)
+           🔹 PENCAIRAN
         ========================== */
 
             $pencairan = DB::select(
@@ -1613,6 +1614,12 @@ class ReportController extends Controller
             }
 
             /* ==========================
+           🔹 RESET INDEX (karena ada key invoice)
+        ========================== */
+
+            $rows = array_values($rows);
+
+            /* ==========================
            🔹 SORT
         ========================== */
 
@@ -1623,14 +1630,14 @@ class ReportController extends Controller
             });
 
             /* ==========================
-           🔹 GROUPING
+           🔹 GROUPING (ARRAY NUMERIC)
         ========================== */
 
             $grouped = [
-                "UANG_MASUK_TUNAI" => ["title" => "UANG MASUK ( TUNAI )", "data" => [], "jumlah" => 0],
-                "PELUNASAN" => ["title" => "PELUNASAN", "data" => [], "jumlah" => 0],
-                "UANG_MASUK_TRANSFER" => ["title" => "UANG MASUK ( TRANSFER )", "data" => [], "jumlah" => 0],
-                "UANG_KELUAR" => ["title" => "UANG KELUAR ( PENCAIRAN )", "data" => [], "jumlah" => 0],
+                ["title" => "UANG MASUK ( TUNAI )", "data" => [], "jumlah" => 0],
+                ["title" => "PELUNASAN", "data" => [], "jumlah" => 0],
+                ["title" => "UANG MASUK ( TRANSFER )", "data" => [], "jumlah" => 0],
+                ["title" => "UANG KELUAR ( PENCAIRAN )", "data" => [], "jumlah" => 0],
             ];
 
             foreach ($rows as $row) {
@@ -1638,24 +1645,24 @@ class ReportController extends Controller
                 $nominal = $row["amount"];
 
                 if ($row["type"] === "CASH_OUT") {
-                    $grouped["UANG_KELUAR"]["data"][] = $row;
-                    $grouped["UANG_KELUAR"]["jumlah"] += $nominal;
+                    $grouped[3]["data"][] = $row;
+                    $grouped[3]["jumlah"] += $nominal;
                 } elseif ($row["type"] === "PELUNASAN") {
-                    $grouped["PELUNASAN"]["data"][] = $row;
-                    $grouped["PELUNASAN"]["jumlah"] += $nominal;
+                    $grouped[1]["data"][] = $row;
+                    $grouped[1]["jumlah"] += $nominal;
                 } elseif ($row["type"] === "CASH_IN") {
                     if (strtolower($row["metode_pembayaran"]) === "cash") {
-                        $grouped["UANG_MASUK_TUNAI"]["data"][] = $row;
-                        $grouped["UANG_MASUK_TUNAI"]["jumlah"] += $nominal;
+                        $grouped[0]["data"][] = $row;
+                        $grouped[0]["jumlah"] += $nominal;
                     } else {
-                        $grouped["UANG_MASUK_TRANSFER"]["data"][] = $row;
-                        $grouped["UANG_MASUK_TRANSFER"]["jumlah"] += $nominal;
+                        $grouped[2]["data"][] = $row;
+                        $grouped[2]["jumlah"] += $nominal;
                     }
                 }
             }
 
             /* ==========================
-           🔹 FORMAT JUMLAH
+           🔹 FORMAT
         ========================== */
 
             foreach ($grouped as &$g) {
