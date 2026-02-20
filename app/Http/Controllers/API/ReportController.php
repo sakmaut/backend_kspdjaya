@@ -1840,7 +1840,7 @@ class ReportController extends Controller
 
                     if (!isset($tempAngsuran[$key])) {
                         $tempAngsuran[$key] = [
-                            "type"             => "CASH_IN",
+                            "type"             => "FEE_BUNGA",
                             "no_invoice"       => $invoice,
                             "no_kontrak"       => $item->LOAN_NUM,
                             "tgl"              => $tgl,
@@ -1905,6 +1905,7 @@ class ReportController extends Controller
                 ["title" => "UANG MASUK ( TUNAI )",      "data" => [], "jumlah" => 0, "colspan" => 9],
                 ["title" => "PELUNASAN",                  "data" => [], "jumlah" => 0, "colspan" => 9],
                 ["title" => "UANG MASUK ( TRANSFER )",   "data" => [], "jumlah" => 0, "colspan" => 9],
+                ["title" => "UANG MASUK ( FEE BUNGA MENURUN )", "data" => [], "jumlah" => 0, "colspan" => 9],
                 ["title" => "UANG KELUAR ( PENCAIRAN )", "data" => [], "jumlah" => 0, "colspan" => 9],
             ];
 
@@ -1914,9 +1915,15 @@ class ReportController extends Controller
                 if ($row["type"] === "CASH_OUT") {
                     $grouped[3]["data"][]   = $row;
                     $grouped[3]["jumlah"]  += $nominal;
+
                 } elseif ($row["type"] === "PELUNASAN") {
                     $grouped[1]["data"][]   = $row;
                     $grouped[1]["jumlah"]  += $nominal;
+
+                } elseif ($row["type"] === "FEE_BUNGA") { 
+                    $grouped[3]["data"][]  = $row;
+                    $grouped[3]["jumlah"] += $nominal;
+                    
                 } elseif ($row["type"] === "CASH_IN") {
                     if (strtolower($row["metode_pembayaran"]) === "cash") {
                         $grouped[0]["data"][]   = $row;
