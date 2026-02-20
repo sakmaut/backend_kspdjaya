@@ -2157,9 +2157,9 @@ class ReportController extends Controller
             // ✅ Grouping pakai key nama bukan index angka agar tidak ngaco
             $grouped = [
                 "TUNAI"      => ["title" => "UANG MASUK ( TUNAI )",             "data" => [], "jumlah" => 0, "colspan" => 9],
-                "PELUNASAN"  => ["title" => "PELUNASAN",                         "data" => [], "jumlah" => 0, "colspan" => 9],
-                "TRANSFER"   => ["title" => "UANG MASUK ( TRANSFER )",          "data" => [], "jumlah" => 0, "colspan" => 9],
                 "FEE_BUNGA"  => ["title" => "UANG MASUK ( FEE BUNGA MENURUN )", "data" => [], "jumlah" => 0, "colspan" => 9],
+                "PELUNASAN"  => ["title" => "UANG MASUK ( PELUNASAN )",         "data" => [], "jumlah" => 0, "colspan" => 9],
+                "TRANSFER"   => ["title" => "UANG MASUK ( TRANSFER )",          "data" => [], "jumlah" => 0, "colspan" => 9],
                 "CASH_OUT"   => ["title" => "UANG KELUAR ( PENCAIRAN )",        "data" => [], "jumlah" => 0, "colspan" => 9],
             ];
 
