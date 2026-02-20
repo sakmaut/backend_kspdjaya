@@ -1672,6 +1672,26 @@ class ReportController extends Controller
                 }
             }
 
+            foreach ($grouped as &$g) {
+
+                foreach ($g["data"] as &$row) {
+
+                    $row = [
+                        $row["cabang"],
+                        $row["tgl"],
+                        $row["user"],
+                        $row["position"],
+                        $row["no_kontrak"],
+                        $row["nama_pelanggan"],
+                        $row["keterangan"],
+                        $row["metode_pembayaran"],
+                        number_format($row["amount"], 2, ',', '.')
+                    ];
+                }
+
+                $g["jumlah"] = number_format($g["jumlah"], 2, ',', '.');
+            }
+
             $result["Result"] = $grouped;
 
             return response()->json($result, 200);
