@@ -2047,7 +2047,7 @@ class ReportController extends Controller
                 }
 
                 // BAYAR_PELUNASAN_PINALTY
-                if ($item->ACC_KEYS === "BAYAR_PELUNASAN_PINALTY" && $amount > 0) {
+                if ($item->ACC_KEYS === "BAYAR PELUNASAN PINALTY" && $amount > 0) {
                     $rows[] = [
                         "type"              => "PELUNASAN",
                         "no_invoice"        => $invoice,
