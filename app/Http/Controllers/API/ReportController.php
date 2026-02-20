@@ -2140,7 +2140,6 @@ class ReportController extends Controller
                 ];
             }
 
-            // Reset numeric index
             $rows = array_values($rows);
 
             // Sort
@@ -2158,7 +2157,6 @@ class ReportController extends Controller
                 ];
             });
 
-            // ✅ Grouping pakai key nama bukan index angka agar tidak ngaco
             $grouped = [
                 "TUNAI"      => ["title" => "UANG MASUK ( TUNAI )",             "data" => [], "jumlah" => 0, "colspan" => 9],
                 "FEE_BUNGA"  => ["title" => "UANG MASUK ( FEE BUNGA MENURUN )", "data" => [], "jumlah" => 0, "colspan" => 9],
@@ -2167,7 +2165,6 @@ class ReportController extends Controller
                 "CASH_OUT"   => ["title" => "UANG KELUAR ( PENCAIRAN )",        "data" => [], "jumlah" => 0, "colspan" => 9],
             ];
 
-            // ✅ Grouping pakai key nama, tidak ada lagi salah index
             foreach ($rows as $row) {
                 $nominal = $row["amount"];
 
@@ -2201,9 +2198,20 @@ class ReportController extends Controller
 
             // Format output akhir
             foreach ($grouped as &$g) {
-                $g["jumlah"] = "Rp.". number_format($g["jumlah"], 2, ',', '.');
+                if (fmod($g["jumlah"], 1) == 0) {
+                    $g["jumlah"] = "Rp." . number_format($g["jumlah"], 0, ',', '.');
+                } else {
+                    $g["jumlah"] = "Rp." . number_format($g["jumlah"], 2, ',', '.');
+                }
 
                 foreach ($g["data"] as &$row) {
+
+                    if (fmod($row["amount"], 1) == 0) {
+                        $amountFormatted = number_format($row["amount"], 0, ',', '.');
+                    } else {
+                        $amountFormatted = number_format($row["amount"], 2, ',', '.');
+                    }
+
                     $row = [
                         $row["cabang"],
                         $row["tgl"],
@@ -2213,14 +2221,14 @@ class ReportController extends Controller
                         $row["nama_pelanggan"],
                         $row["keterangan"],
                         $row["metode_pembayaran"],
-                        number_format($row["amount"], 2, ',', '.')
+                        $amountFormatted
                     ];
                 }
+
                 unset($row);
             }
             unset($g);
 
-            // ✅ Reset ke array biasa (buang key string) agar output JSON tetap array
             $result["Result"] = array_values($grouped);
 
             return response()->json($result, 200);
