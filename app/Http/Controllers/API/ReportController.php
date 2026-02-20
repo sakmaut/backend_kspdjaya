@@ -1456,27 +1456,6 @@ class ReportController extends Controller
 
     public function LkbhReports(Request $request)
     {
-        $result = [
-            'dari'   => $request->dari ?? '',
-            'sampai' => $request->sampai ?? '',
-            'HeaderTitle'  => [
-                "Title" => "LAPORAN KEUANGAN BERBASIS HARIAN (LKBH)",
-                "Tanggal" => "Tanggal ". $request->dari ." - ". $request->sampai ?? ''
-            ],
-            'HeaderTable'  => [
-                "Cabang",
-                "Tanggal Transaksi",
-                "Petugas",
-                "Jabatan",
-                "Nomor Kontrak",
-                "Diterima Dari",
-                "Keterangan",
-                "Metode Pembayaran",
-                "Nominal"
-            ],
-            'Result'  => []
-        ];
-
         try {
 
             $dari     = $request->dari;
@@ -1487,58 +1466,75 @@ class ReportController extends Controller
             $position = $user->position;
             $userBranchId = $user->branch_id;
 
-            $branchParam = null;
+            $branchParam = $position !== 'HO'
+                ? $userBranchId
+                : ($cabangId ?: null);
 
-            if ($position !== 'HO') {
-                $branchParam = $userBranchId;
-            } else {
-                $branchParam = $cabangId ?: null;
-            }
+            $result = [
+                'dari'   => $dari ?? '',
+                'sampai' => $sampai ?? '',
+                'HeaderTitle'  => [
+                    "Title" => "LAPORAN KEUANGAN BERBASIS HARIAN (LKBH)",
+                    "Tanggal" => "Tanggal " . ($dari ?? '') . " - " . ($sampai ?? '')
+                ],
+                'HeaderTable'  => [
+                    "Cabang",
+                    "Tanggal Transaksi",
+                    "Petugas",
+                    "Jabatan",
+                    "Nomor Kontrak",
+                    "Diterima Dari",
+                    "Keterangan",
+                    "Metode Pembayaran",
+                    "Nominal"
+                ],
+            ];
+
+            /* ==========================
+           🔹 ARUS KAS
+        ========================== */
 
             $arusKas = DB::select(
                 "CALL sp_lkbh_report(?, ?, ?)",
                 [$dari, $sampai, $branchParam]
             );
 
-            $tempAngsuran   = [];
-            $tempPelunasan  = [];
-            $tempPembulatan = [];
+            $rows = [];
 
             foreach ($arusKas as $item) {
 
                 $invoice = $item->INVOICE;
                 $tgl     = date('Y-m-d', strtotime($item->ENTRY_DATE));
-                $pelunasan = strtolower($item->PAYMENT_TYPE) === 'pelunasan' ? "PELUNASAN" : "CASH_IN";
+                $amount  = (float) $item->ORIGINAL_AMOUNT;
+                $pelunasan = strtolower($item->PAYMENT_TYPE) === 'pelunasan'
+                    ? "PELUNASAN"
+                    : "CASH_IN";
 
-                $amount = is_numeric($item->ORIGINAL_AMOUNT)
-                    ? floatval($item->ORIGINAL_AMOUNT)
-                    : 0;
+                /* ===== ANGSURAN ===== */
+                if (in_array($item->ACC_KEYS, ['ANGSURAN_POKOK', 'ANGSURAN_BUNGA', 'FEE_BUNGA', 'FEE_PROCCESS'])) {
 
-                if (in_array($item->ACC_KEYS, ['ANGSURAN_POKOK', 'ANGSURAN_BUNGA'])) {
+                    $rows[$invoice]['amount'] =
+                        ($rows[$invoice]['amount'] ?? 0) + $amount;
 
-                    if (!isset($tempAngsuran[$invoice])) {
-
-                        $tempAngsuran[$invoice] = [
-                            "type" => "CASH_IN",
-                            "no_invoice" => $invoice,
-                            "no_kontrak" => $item->LOAN_NUM,
-                            "tgl" => $tgl,
-                            "cabang" => $item->BRANCH_NAME ?? "",
-                            "user" => $item->fullname ?? "",
-                            "position" => $item->position,
-                            "nama_pelanggan" => $item->NAMA ?? "",
-                            "metode_pembayaran" => $item->PAYMENT_METHOD,
-                            "keterangan" => "BAYAR " . strtoupper($item->JENIS) . " ({$invoice})",
-                            "amount" => 0
-                        ];
-                    }
-
-                    $tempAngsuran[$invoice]["amount"] += $amount;
+                    $rows[$invoice] = [
+                        "type" => "CASH_IN",
+                        "no_invoice" => $invoice,
+                        "no_kontrak" => $item->LOAN_NUM,
+                        "tgl" => $tgl,
+                        "cabang" => $item->BRANCH_NAME ?? "",
+                        "user" => $item->fullname ?? "",
+                        "position" => $item->position,
+                        "nama_pelanggan" => $item->NAMA ?? "",
+                        "metode_pembayaran" => $item->PAYMENT_METHOD,
+                        "keterangan" => "BAYAR ({$invoice})",
+                        "amount" => $rows[$invoice]['amount']
+                    ];
                 }
 
+                /* ===== DENDA ===== */
                 if ($item->ACC_KEYS === "BAYAR_DENDA" && $amount > 0) {
 
-                    $result["Result"][] = [
+                    $rows[] = [
                         "type" => $pelunasan,
                         "no_invoice" => $invoice,
                         "no_kontrak" => $item->LOAN_NUM,
@@ -1548,36 +1544,15 @@ class ReportController extends Controller
                         "position" => $item->position,
                         "nama_pelanggan" => $item->NAMA ?? "",
                         "metode_pembayaran" => $item->PAYMENT_METHOD,
-                        "keterangan" => "BAYAR DENDA " . strtoupper($item->JENIS) . " ({$invoice})",
-                        "amount" => number_format($amount, 2, ',', '.')
+                        "keterangan" => "BAYAR DENDA ({$invoice})",
+                        "amount" => $amount
                     ];
                 }
 
+                /* ===== PELUNASAN ===== */
                 if (in_array($item->ACC_KEYS, ['BAYAR_POKOK', 'BAYAR_BUNGA'])) {
 
-                    if (!isset($tempPelunasan[$invoice])) {
-
-                        $tempPelunasan[$invoice] = [
-                            "type" => "PELUNASAN",
-                            "no_invoice" => $invoice,
-                            "no_kontrak" => $item->LOAN_NUM,
-                            "tgl" => $tgl,
-                            "cabang" => $item->BRANCH_NAME ?? "",
-                            "user" => $item->fullname ?? "",
-                            "position" => $item->position,
-                            "nama_pelanggan" => $item->NAMA ?? "",
-                            "metode_pembayaran" => $item->PAYMENT_METHOD,
-                            "keterangan" => "BAYAR PELUNASAN ({$invoice})",
-                            "amount" => 0
-                        ];
-                    }
-
-                    $tempPelunasan[$invoice]["amount"] += $amount;
-                }
-
-                if ($item->ACC_KEYS === "BAYAR PELUNASAN PINALTY" && $amount > 0) {
-
-                    $result["Result"][] = [
+                    $rows[] = [
                         "type" => "PELUNASAN",
                         "no_invoice" => $invoice,
                         "no_kontrak" => $item->LOAN_NUM,
@@ -1587,15 +1562,15 @@ class ReportController extends Controller
                         "position" => $item->position,
                         "nama_pelanggan" => $item->NAMA ?? "",
                         "metode_pembayaran" => $item->PAYMENT_METHOD,
-                        "keterangan" => "BAYAR PELUNASAN PINALTY ({$invoice})",
-                        "amount" => number_format($amount, 2, ',', '.')
+                        "keterangan" => "BAYAR PELUNASAN ({$invoice})",
+                        "amount" => $amount
                     ];
                 }
 
-                if ($item->PEMBULATAN > 0 && !isset($tempPembulatan[$invoice])) {
-                    $tempPembulatan[$invoice] = true;
+                /* ===== PEMBULATAN ===== */
+                if ($item->PEMBULATAN > 0) {
 
-                    $result["Result"][] = [
+                    $rows[] = [
                         "type" => $pelunasan,
                         "no_invoice" => $invoice,
                         "no_kontrak" => $item->LOAN_NUM,
@@ -1606,47 +1581,14 @@ class ReportController extends Controller
                         "nama_pelanggan" => $item->NAMA ?? "",
                         "metode_pembayaran" => $item->PAYMENT_METHOD,
                         "keterangan" => "PEMBULATAN ({$invoice})",
-                        "amount" => number_format($item->PEMBULATAN, 2, ',', '.')
+                        "amount" => (float) $item->PEMBULATAN
                     ];
                 }
-
-                if (in_array($item->ACC_KEYS, ['FEE_BUNGA', 'FEE_PROCCESS'])) {
-                    $key = $invoice . '_' . $item->LOAN_NUM;
-
-                    if (!isset($tempAngsuran[$key])) {
-
-                        $tempAngsuran[$key] = [
-                            "type" => "CASH_IN",
-                            "no_invoice" => $invoice,
-                            "no_kontrak" => $item->LOAN_NUM,
-                            "tgl" => $tgl,
-                            "cabang" => $item->BRANCH_NAME ?? "",
-                            "user" => $item->fullname ?? "",
-                            "position" => $item->position,
-                            "nama_pelanggan" => $item->NAMA ?? "",
-                            "metode_pembayaran" => $item->PAYMENT_METHOD,
-                            "keterangan" => "BAYAR FEE BUNGA MENURUN ({$invoice})",
-                            "amount" => 0
-                        ];
-                    }
-
-                    $tempAngsuran[$key]["amount"] += $amount;
-                }
             }
 
-            foreach ($tempAngsuran as $row) {
-
-                $row["amount"] = number_format($row["amount"], 2, ',', '.');
-
-                $result["Result"][] = $row;
-            }
-
-            foreach ($tempPelunasan as $row) {
-
-                $row["amount"] = number_format($row["amount"], 2, ',', '.');
-
-                $result["Result"][] = $row;
-            }
+            /* ==========================
+           🔹 PENCAIRAN (CASH OUT)
+        ========================== */
 
             $pencairan = DB::select(
                 "CALL sp_lkbh_pencairan(?, ?, ?)",
@@ -1655,122 +1597,75 @@ class ReportController extends Controller
 
             foreach ($pencairan as $item) {
 
-                $tgl = date('Y-m-d', strtotime($item->ENTRY_DATE));
-
-                $result["Result"][] = [
+                $rows[] = [
                     "type" => "CASH_OUT",
                     "no_invoice" => "",
                     "no_kontrak" => $item->LOAN_NUM,
-                    "tgl" => $tgl,
+                    "tgl" => date('Y-m-d', strtotime($item->ENTRY_DATE)),
                     "cabang" => $item->BRANCH_NAME ?? "",
                     "user" => $item->fullname ?? "",
                     "position" => $item->position,
                     "nama_pelanggan" => $item->CUSTOMER_NAME ?? "",
                     "metode_pembayaran" => "",
-                    "keterangan" => "PENCAIRAN " . strtoupper($item->CREDIT_TYPE) .
-                        " NO KONTRAK " . $item->LOAN_NUM,
-                    "amount" => number_format(
-                        ($item->ORIGINAL_AMOUNT - $item->TOTAL_ADMIN),
-                        2,
-                        ',',
-                        '.'
-                    )
+                    "keterangan" => "PENCAIRAN NO KONTRAK {$item->LOAN_NUM}",
+                    "amount" => (float) ($item->ORIGINAL_AMOUNT - $item->TOTAL_ADMIN)
                 ];
             }
 
-            usort($result["Result"], function ($a, $b) {
+            /* ==========================
+           🔹 SORT
+        ========================== */
 
-                // 1. ENTRY_DATE
-                $dateA = $a["tgl"] ?? "";
-                $dateB = $b["tgl"] ?? "";
-                if ($dateA !== $dateB) {
-                    return strcmp($dateA, $dateB);
-                }
-
-                // 2. POSITION
-                $posA = $a["position"] ?? "";
-                $posB = $b["position"] ?? "";
-                if ($posA !== $posB) {
-                    return strcmp($posA, $posB);
-                }
-
-                // 3. LOAN_NUM
-                $loanA = $a["no_kontrak"] ?? "";
-                $loanB = $b["no_kontrak"] ?? "";
-                if ($loanA !== $loanB) {
-                    return strcmp($loanA, $loanB);
-                }
-
-                // 4. NO_INVOICE
-                $invA = $a["no_invoice"] ?? "";
-                $invB = $b["no_invoice"] ?? "";
-                if ($invA !== $invB) {
-                    return strcmp($invA, $invB);
-                }
-
-                // 5. ANGSURAN_KE (kalau ada)
-                $angA = $a["angsuran_ke"] ?? 0;
-                $angB = $b["angsuran_ke"] ?? 0;
-
-                return $angA <=> $angB;
+            usort($rows, function ($a, $b) {
+                return [$a["tgl"], $a["position"], $a["no_kontrak"], $a["no_invoice"]]
+                    <=>
+                    [$b["tgl"], $b["position"], $b["no_kontrak"], $b["no_invoice"]];
             });
 
+            /* ==========================
+           🔹 GROUPING
+        ========================== */
+
             $grouped = [
-                "UANG_MASUK_TUNAI" => [
-                    "title" => "UANG MASUK ( TUNAI )",
-                    "data" => [],
-                    "jumlah" => 0
-                ],
-                "PELUNASAN" => [
-                    "title" => "PELUNASAN",
-                    "data" => [],
-                    "jumlah" => 0
-                ],
-                "UANG_MASUK_TRANSFER" => [
-                    "title" => "UANG MASUK ( TRANSFER )",
-                    "data" => [],
-                    "jumlah" => 0
-                ],
-                "UANG_KELUAR" => [
-                    "title" => "UANG KELUAR ( PENCAIRAN )",
-                    "data" => [],
-                    "jumlah" => 0
-                ]
+                "UANG_MASUK_TUNAI" => ["title" => "UANG MASUK ( TUNAI )", "data" => [], "jumlah" => 0],
+                "PELUNASAN" => ["title" => "PELUNASAN", "data" => [], "jumlah" => 0],
+                "UANG_MASUK_TRANSFER" => ["title" => "UANG MASUK ( TRANSFER )", "data" => [], "jumlah" => 0],
+                "UANG_KELUAR" => ["title" => "UANG KELUAR ( PENCAIRAN )", "data" => [], "jumlah" => 0],
             ];
 
-            foreach ($result["Result"] as $row) {
+            foreach ($rows as $row) {
 
-                // ubah nominal ke float dulu
-                $nominal = floatval(str_replace(['.', ','], ['', '.'], $row["amount"]));
+                $nominal = $row["amount"];
 
-                // 1️⃣ CASH OUT
                 if ($row["type"] === "CASH_OUT") {
-
                     $grouped["UANG_KELUAR"]["data"][] = $row;
                     $grouped["UANG_KELUAR"]["jumlah"] += $nominal;
-                }
-
-                // 2️⃣ PELUNASAN
-                elseif ($row["type"] === "PELUNASAN") {
-
+                } elseif ($row["type"] === "PELUNASAN") {
                     $grouped["PELUNASAN"]["data"][] = $row;
                     $grouped["PELUNASAN"]["jumlah"] += $nominal;
-                }
-
-                // 3️⃣ CASH IN
-                elseif ($row["type"] === "CASH_IN") {
-
+                } elseif ($row["type"] === "CASH_IN") {
                     if (strtolower($row["metode_pembayaran"]) === "cash") {
-
                         $grouped["UANG_MASUK_TUNAI"]["data"][] = $row;
                         $grouped["UANG_MASUK_TUNAI"]["jumlah"] += $nominal;
                     } else {
-
                         $grouped["UANG_MASUK_TRANSFER"]["data"][] = $row;
                         $grouped["UANG_MASUK_TRANSFER"]["jumlah"] += $nominal;
                     }
                 }
             }
+
+            /* ==========================
+           🔹 FORMAT JUMLAH
+        ========================== */
+
+            foreach ($grouped as &$g) {
+                $g["jumlah"] = number_format($g["jumlah"], 2, ',', '.');
+                foreach ($g["data"] as &$d) {
+                    $d["amount"] = number_format($d["amount"], 2, ',', '.');
+                }
+            }
+
+            $result["Result"] = $grouped;
 
             return response()->json($result, 200);
         } catch (\Exception $e) {
