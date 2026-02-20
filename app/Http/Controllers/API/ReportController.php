@@ -1715,6 +1715,63 @@ class ReportController extends Controller
                 return $angA <=> $angB;
             });
 
+            $grouped = [
+                "UANG_MASUK_TUNAI" => [
+                    "title" => "UANG MASUK ( TUNAI )",
+                    "data" => [],
+                    "jumlah" => 0
+                ],
+                "PELUNASAN" => [
+                    "title" => "PELUNASAN",
+                    "data" => [],
+                    "jumlah" => 0
+                ],
+                "UANG_MASUK_TRANSFER" => [
+                    "title" => "UANG MASUK ( TRANSFER )",
+                    "data" => [],
+                    "jumlah" => 0
+                ],
+                "UANG_KELUAR" => [
+                    "title" => "UANG KELUAR ( PENCAIRAN )",
+                    "data" => [],
+                    "jumlah" => 0
+                ]
+            ];
+
+            foreach ($result["Result"] as $row) {
+
+                // ubah nominal ke float dulu
+                $nominal = floatval(str_replace(['.', ','], ['', '.'], $row["amount"]));
+
+                // 1️⃣ CASH OUT
+                if ($row["type"] === "CASH_OUT") {
+
+                    $grouped["UANG_KELUAR"]["data"][] = $row;
+                    $grouped["UANG_KELUAR"]["jumlah"] += $nominal;
+                }
+
+                // 2️⃣ PELUNASAN
+                elseif ($row["type"] === "PELUNASAN") {
+
+                    $grouped["PELUNASAN"]["data"][] = $row;
+                    $grouped["PELUNASAN"]["jumlah"] += $nominal;
+                }
+
+                // 3️⃣ CASH IN
+                elseif ($row["type"] === "CASH_IN") {
+
+                    if (strtolower($row["metode_pembayaran"]) === "cash") {
+
+                        $grouped["UANG_MASUK_TUNAI"]["data"][] = $row;
+                        $grouped["UANG_MASUK_TUNAI"]["jumlah"] += $nominal;
+                    } else {
+
+                        $grouped["UANG_MASUK_TRANSFER"]["data"][] = $row;
+                        $grouped["UANG_MASUK_TRANSFER"]["jumlah"] += $nominal;
+                    }
+                }
+            }
+
             return response()->json($result, 200);
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
