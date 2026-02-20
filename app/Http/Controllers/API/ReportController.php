@@ -1474,7 +1474,7 @@ class ReportController extends Controller
                 'dari'   => $dari ?? '',
                 'sampai' => $sampai ?? '',
                 'HeaderTitle'  => [
-                    "Title" => "LAPORAN KEUANGAN BERBASIS HARIAN (LKBH)",
+                    "Title"   => "LAPORAN KEUANGAN BERBASIS HARIAN (LKBH)",
                     "Tanggal" => "Tanggal " . ($dari ?? '') . " - " . ($sampai ?? '')
                 ],
                 'HeaderTable'  => [
@@ -1511,7 +1511,12 @@ class ReportController extends Controller
                     : "CASH_IN";
 
                 /* ===== ANGSURAN (digabung per invoice) ===== */
-                if (in_array($item->ACC_KEYS, ['ANGSURAN_POKOK', 'ANGSURAN_BUNGA', 'FEE_BUNGA', 'FEE_PROCCESS'])) {
+                if (in_array($item->ACC_KEYS, [
+                    'ANGSURAN_POKOK',
+                    'ANGSURAN_BUNGA',
+                    'FEE_BUNGA',
+                    'FEE_PROCCESS'
+                ])) {
 
                     if (!isset($rows[$invoice])) {
                         $rows[$invoice] = [
@@ -1569,7 +1574,7 @@ class ReportController extends Controller
                 }
 
                 /* ===== PEMBULATAN ===== */
-                if ($item->PEMBULATAN > 0) {
+                if (!empty($item->PEMBULATAN) && $item->PEMBULATAN > 0) {
 
                     $rows[] = [
                         "type" => $pelunasan,
@@ -1614,15 +1619,13 @@ class ReportController extends Controller
             }
 
             /* ==========================
-           🔹 RESET INDEX (karena ada key invoice)
+           🔹 RESET INDEX
         ========================== */
-
             $rows = array_values($rows);
 
             /* ==========================
            🔹 SORT
         ========================== */
-
             usort($rows, function ($a, $b) {
                 return [$a["tgl"], $a["position"], $a["no_kontrak"], $a["no_invoice"]]
                     <=>
@@ -1630,7 +1633,7 @@ class ReportController extends Controller
             });
 
             /* ==========================
-           🔹 GROUPING (ARRAY NUMERIC)
+           🔹 GROUPING
         ========================== */
 
             $grouped = [
@@ -1662,20 +1665,14 @@ class ReportController extends Controller
             }
 
             /* ==========================
-           🔹 FORMAT
+           🔹 FORMAT OUTPUT FINAL
         ========================== */
 
             foreach ($grouped as &$g) {
-                $g["jumlah"] = number_format($g["jumlah"], 2, ',', '.');
-                foreach ($g["data"] as &$d) {
-                    $d["amount"] = number_format($d["amount"], 2, ',', '.');
-                }
-            }
 
-            foreach ($grouped as &$g) {
+                $g["jumlah"] = number_format($g["jumlah"], 2, ',', '.');
 
                 foreach ($g["data"] as &$row) {
-
                     $row = [
                         $row["cabang"],
                         $row["tgl"],
@@ -1688,8 +1685,6 @@ class ReportController extends Controller
                         number_format($row["amount"], 2, ',', '.')
                     ];
                 }
-
-                $g["jumlah"] = number_format($g["jumlah"], 2, ',', '.');
             }
 
             $result["Result"] = $grouped;
