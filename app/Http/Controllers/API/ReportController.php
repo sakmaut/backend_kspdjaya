@@ -494,9 +494,6 @@ class ReportController extends Controller
                 ->whereIn('CREDIT_TYPE', ['bunga_menurun'])
                 ->first();
 
-            $checkExist = [];
-            $previousSisaAngs = 0;
-            $sisaAngss = 0;
             $SetTotal =[];
 
             if (!$credit) {
@@ -533,9 +530,6 @@ class ReportController extends Controller
 
                     $uniqKey = $angs . '-' . $tglTempoFormatted;
 
-                    // ============================
-                    // FIRST ROW INSTALLMENT
-                    // ============================
                     $isFirstRow = !in_array($uniqKey, $usedTempoAngs);
 
                     if ($isFirstRow) {
@@ -562,7 +556,6 @@ class ReportController extends Controller
                             'Amt Bayar'  => number_format($amtBayar, 0),
                             'Sisa Angs'  => number_format($sisaAngs, 0),
                             'Byr Dnda'   => number_format($byrDenda, 0),
-                            'Sisa Tghn'  => "0",
                             'Ovd'        => $res->OD ?? 0
                         ];
                     } else {
@@ -580,7 +573,6 @@ class ReportController extends Controller
                                 'Amt Bayar'  => number_format($amtBayar, 0),
                                 'Sisa Angs'  => '',
                                 'Byr Dnda'   => number_format($byrDenda, 0),
-                                'Sisa Tghn'  => '',
                                 'Ovd'        => $res->OD ?? 0
                             ];
                         }
@@ -648,7 +640,6 @@ class ReportController extends Controller
                     number_format($ttlAmtBayar ?? 0, 0, ',', '.'),
                     number_format($ttlAmtAngs - $ttlAmtBayar, 0, ',', '.'),
                     number_format($ttlBayarDenda, 0, ',', '.'),
-                    '',
                     '',
                 ];
             } else {
