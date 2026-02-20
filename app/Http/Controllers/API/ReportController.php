@@ -1637,10 +1637,10 @@ class ReportController extends Controller
         ========================== */
 
             $grouped = [
-                ["title" => "UANG MASUK ( TUNAI )", "data" => [], "jumlah" => 0],
-                ["title" => "PELUNASAN", "data" => [], "jumlah" => 0],
-                ["title" => "UANG MASUK ( TRANSFER )", "data" => [], "jumlah" => 0],
-                ["title" => "UANG KELUAR ( PENCAIRAN )", "data" => [], "jumlah" => 0],
+                ["title" => "UANG MASUK ( TUNAI )", "data" => [], "jumlah" => 0,"colspan" => 9 ],
+                ["title" => "PELUNASAN", "data" => [], "jumlah" => 0, "colspan" => 9],
+                ["title" => "UANG MASUK ( TRANSFER )", "data" => [], "jumlah" => 0, "colspan" => 9],
+                ["title" => "UANG KELUAR ( PENCAIRAN )", "data" => [], "jumlah" => 0, "colspan" => 9],
             ];
 
             foreach ($rows as $row) {
