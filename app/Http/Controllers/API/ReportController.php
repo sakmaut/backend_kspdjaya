@@ -1993,6 +1993,7 @@ class ReportController extends Controller
 
             $rows         = [];
             $tempAngsuran = [];
+            $tempPembulatan = [];
 
             foreach ($arusKas as $item) {
                 $invoice   = $item->INVOICE;
@@ -2072,7 +2073,10 @@ class ReportController extends Controller
                 }
 
                 // PEMBULATAN
-                if (!empty($item->PEMBULATAN) && (float) $item->PEMBULATAN > 0) {
+                if (!empty($item->PEMBULATAN) && (float) $item->PEMBULATAN > 0 && !isset($tempPembulatan[$invoice])) {
+
+                    $tempPembulatan[$invoice] = true;
+
                     $rows[] = [
                         "type"              => $pelunasan,
                         "no_invoice"        => $invoice,
