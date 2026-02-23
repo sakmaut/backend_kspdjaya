@@ -1548,10 +1548,15 @@ class CrAppilcationController extends Controller
             )
             ->when(
                 $request->filled('dari') && $request->filled('sampai'),
-                fn($q) =>
-                $q->whereBetween(DB::raw('DATE(CREATED_AT)'), [$dari, $sampai]),
-                fn($q) =>
-                $q->whereDate('CREATED_AT', date('Y-m-d'))
+                function ($q) use ($dari, $sampai) {
+                    $q->whereBetween('CREATED_AT', [
+                        Carbon::parse($dari)->startOfDay(),
+                        Carbon::parse($sampai)->endOfDay()
+                    ]);
+                },
+                function ($q) {
+                    $q->whereDate('CREATED_AT', now());
+                }
             )
             ->get();
 
