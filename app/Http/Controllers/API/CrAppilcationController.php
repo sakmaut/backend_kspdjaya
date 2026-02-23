@@ -1505,9 +1505,9 @@ class CrAppilcationController extends Controller
 
     public function check_order_document(Request $request)
     {
-        $loan_number = $request->loan_number;
-        $atas_nama = $request->atas_nama;
-        $cabang = $request->cabang;
+        $loan_number = $request->loan_number === 'undefined' ? null : $request->loan_number;
+        $atas_nama   = $request->atas_nama === 'undefined' ? null : $request->atas_nama;
+        $cabang      = $request->cabang === 'undefined' ? null : $request->cabang;
         $dari = $request->dari;
         $sampai = $request->sampai;
 
@@ -1529,18 +1529,18 @@ class CrAppilcationController extends Controller
             ])
             ->orderByDesc('CREATED_AT')
             ->when(
-                $request->filled('no_kontrak'),
+                !empty($loan_number),
                 fn($q) => $q->where('LOAN_NUMBER', $loan_number)
             )
             ->when(
-                $request->filled('nama'),
+                !empty($atas_nama),
                 fn($q) =>
                 $q->whereHas('customer', function ($c) use ($atas_nama) {
                     $c->where('NAME', 'LIKE', "%{$atas_nama}%");
                 })
             )
             ->when(
-                $request->filled('cabang'),
+                !empty($cabang),
                 fn($q) =>
                 $q->whereHas('branch', function ($b) use ($cabang) {
                     $b->where('CODE', $cabang);
