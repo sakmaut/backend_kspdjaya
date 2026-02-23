@@ -1553,6 +1553,7 @@ class CrAppilcationController extends Controller
             //     fn($q) =>
             //     $q->whereDate('CREATED_AT', date('Y-m-d'))
             // )
+            ->limit(15)
             ->get();
 
         // $query = M_Credit::select(
