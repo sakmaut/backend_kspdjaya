@@ -21,20 +21,16 @@ class R_DetailDocument extends JsonResource
             "no_kontrak"     => $this->LOAN_NUMBER,
             "atas_nama"      => $this->customer->NAME ?? '',
             "nama_cabang"      => $this->branch->NAME ?? '',
-
-            // // Dokumen customer
-            // "ktp"            => $customer_doc->get('ktp')['PATH'] ?? '',
-            // "kk"             => $customer_doc->get('kk')['PATH'] ?? '',
-            // "ktp_pasangan"   => $customer_doc->get('ktp_pasangan')['PATH'] ?? '',
-
-            // // Dokumen collateral
-            // "no_rangka"      => $collateral_doc->get('no_rangka')['PATH'] ?? '',
-            // "no_mesin"       => $collateral_doc->get('no_mesin')['PATH'] ?? '',
-            // "stnk"           => $collateral_doc->get('stnk')['PATH'] ?? '',
-            // "depan"          => $collateral_doc->get('depan')['PATH'] ?? '',
-            // "belakang"       => $collateral_doc->get('belakang')['PATH'] ?? '',
-            // "kanan"          => $collateral_doc->get('kanan')['PATH'] ?? '',
-            // "kiri"           => $collateral_doc->get('kiri')['PATH'] ?? '',
+            "ktp"            => $customer_doc->get('ktp')['PATH'] ?? '',
+            "kk"             => $customer_doc->get('kk')['PATH'] ?? '',
+            "ktp_pasangan"   => $customer_doc->get('ktp_pasangan')['PATH'] ?? '',
+            "no_rangka"      => $collateral_doc->get('no_rangka')['PATH'] ?? '',
+            "no_mesin"       => $collateral_doc->get('no_mesin')['PATH'] ?? '',
+            "stnk"           => $collateral_doc->get('stnk')['PATH'] ?? '',
+            "depan"          => $collateral_doc->get('depan')['PATH'] ?? '',
+            "belakang"       => $collateral_doc->get('belakang')['PATH'] ?? '',
+            "kanan"          => $collateral_doc->get('kanan')['PATH'] ?? '',
+            "kiri"           => $collateral_doc->get('kiri')['PATH'] ?? '',
         ];
     }
 }
