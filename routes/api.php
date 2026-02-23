@@ -33,6 +33,7 @@ use App\Http\Controllers\Payment\Controller\C_PokokSebagian;
 use App\Http\Controllers\Ticketing\TicketingController;
 use App\Http\Controllers\Ticketing\TicketingMessages\TicketingMessagesController;
 use App\Http\Controllers\Welcome;
+use App\Http\Credit\Blacklist\BlacklistController;
 use App\Http\Credit\Tagihan\Controller\C_Tagihan;
 use App\Http\Credit\TagihanDocument\Controller\C_TagihanDocument;
 use Illuminate\Http\Request;
@@ -135,6 +136,8 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     //Blacklist
     Route::resource('blacklist', CrBlacklistController::class);
     Route::post('blacklist_detail', [CrBlacklistController::class, 'check']);
+
+    Route::resource('CrBlacklist', BlacklistController::class);
 
     Route::resource('jaminan', BpkbController::class);
     Route::resource('jaminan_transaction', BpkbTransactionController::class);
