@@ -1546,13 +1546,13 @@ class CrAppilcationController extends Controller
                     $b->where('CODE', $cabang);
                 })
             )
-            ->when(
-                $request->filled('dari') && $request->filled('sampai'),
-                fn($q) =>
-                $q->whereBetween(DB::raw('DATE(CREATED_AT)'), [$dari, $sampai]),
-                fn($q) =>
-                $q->whereDate('CREATED_AT', date('Y-m-d'))
-            )
+            // ->when(
+            //     $request->filled('dari') && $request->filled('sampai'),
+            //     fn($q) =>
+            //     $q->whereBetween(DB::raw('DATE(CREATED_AT)'), [$dari, $sampai]),
+            //     fn($q) =>
+            //     $q->whereDate('CREATED_AT', date('Y-m-d'))
+            // )
             ->get();
 
         // $query = M_Credit::select(
