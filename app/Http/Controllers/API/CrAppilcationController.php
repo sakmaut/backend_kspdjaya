@@ -1511,46 +1511,90 @@ class CrAppilcationController extends Controller
         $dari = $request->dari;
         $sampai = $request->sampai;
 
-        $query = M_Credit::select(
-            'credit.ID',
-            'credit.LOAN_NUMBER',
-            'credit.CUST_CODE',
-            'customer.NAME',
-            'branch.NAME as nama_cabang'
-        )
-            ->join('customer', 'credit.CUST_CODE', '=', 'customer.CUST_CODE')
-            ->join('branch', 'credit.BRANCH', '=', 'branch.ID')
+        $results = M_Credit::select([
+            'ID',
+            'LOAN_NUMBER',
+            'ORDER_NUMBER',
+            'CUST_CODE',
+            'INSTALLMENT_DATE',
+            'BRANCH',
+            'CREATED_AT'
+        ])
             ->with([
                 'customer:ID,CUST_CODE,NAME',
                 'customer.customer_document',
-                'collateral:ID,CR_CREDIT_ID',
-                'collateral.documents'
+                'collateral:ID,CR_CREDIT_ID,POLICE_NUMBER',
+                'collateral.documents',
+                'branch:ID,NAME'
             ])
-            ->orderByDesc('credit.CREATED_AT');
+            ->orderByDesc('CREATED_AT')
+            ->when(
+                $request->filled('no_kontrak'),
+                fn($q) => $q->where('LOAN_NUMBER', $loan_number)
+            )
+            ->when(
+                $request->filled('nama'),
+                fn($q) =>
+                $q->whereHas('customer', function ($c) use ($atas_nama) {
+                    $c->where('NAME', 'LIKE', "%{$atas_nama}%");
+                })
+            )
+            ->when(
+                $request->filled('cabang'),
+                fn($q) =>
+                $q->whereHas('branch', function ($b) use ($cabang) {
+                    $b->where('CODE', $cabang);
+                })
+            )
+            ->when(
+                $request->filled('dari') && $request->filled('sampai'),
+                fn($q) =>
+                $q->whereBetween(DB::raw('DATE(CREATED_AT)'), [$dari, $sampai]),
+                fn($q) =>
+                $q->whereDate('CREATED_AT', date('Y-m-d'))
+            )
+            ->get();
 
-        if (!empty($loan_number) && $loan_number != 'undefined') {
-            $query->where('credit.LOAN_NUMBER', $loan_number);
-        }
+        // $query = M_Credit::select(
+        //     'credit.ID',
+        //     'credit.LOAN_NUMBER',
+        //     'credit.CUST_CODE',
+        //     'customer.NAME',
+        //     'branch.NAME as nama_cabang'
+        // )
+        //     ->join('customer', 'credit.CUST_CODE', '=', 'customer.CUST_CODE')
+        //     ->join('branch', 'credit.BRANCH', '=', 'branch.ID')
+        //     ->with([
+        //         'customer:ID,CUST_CODE,NAME',
+        //         'customer.customer_document',
+        //         'collateral:ID,CR_CREDIT_ID',
+        //         'collateral.documents'
+        //     ])
+        //     ->orderByDesc('credit.CREATED_AT');
 
-        if (!empty($atas_nama) && $atas_nama != 'undefined') {
-            $query->where('customer.NAME', 'like', "%$atas_nama%");
-        }
+        // if (!empty($loan_number) && $loan_number != 'undefined') {
+        //     $query->where('credit.LOAN_NUMBER', $loan_number);
+        // }
 
-        if (!empty($cabang) && $cabang != 'undefined') {
-            $query->where('branch.CODE', $cabang);
-        }
+        // if (!empty($atas_nama) && $atas_nama != 'undefined') {
+        //     $query->where('customer.NAME', 'like', "%$atas_nama%");
+        // }
 
-        if (!empty($dari) && !empty($sampai)) {
-            $query->whereBetween(DB::raw('DATE(credit.CREATED_AT)'), [$dari, $sampai]);
-        } else {
-            $today = date('Y-m-d');
-            $query->whereDate('credit.CREATED_AT', $today);
-        }
+        // if (!empty($cabang) && $cabang != 'undefined') {
+        //     $query->where('branch.CODE', $cabang);
+        // }
 
-        $credit = $query->get();
+        // if (!empty($dari) && !empty($sampai)) {
+        //     $query->whereBetween(DB::raw('DATE(credit.CREATED_AT)'), [$dari, $sampai]);
+        // } else {
+        //     $today = date('Y-m-d');
+        //     $query->whereDate('credit.CREATED_AT', $today);
+        // }
+
+        // $credit = $query->get();
 
 
-        $dto = R_DetailDocument::collection($credit);
+        $dto = R_DetailDocument::collection($results);
 
         return response()->json($dto);
     }
