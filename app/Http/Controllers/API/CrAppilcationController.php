@@ -1595,8 +1595,8 @@ class CrAppilcationController extends Controller
         // $credit = $query->get();
 
 
-        // $dto = R_DetailDocument::collection($results);
+        $dto = R_DetailDocument::collection($results);
 
-        return response()->json($results);
+        return response()->json($dto);
     }
 }
