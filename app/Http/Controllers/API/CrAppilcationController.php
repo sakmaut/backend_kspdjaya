@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\API\Service\OrderValidationService;
 use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Enum\UserPosition\UserPositionEnum;
 use App\Http\Controllers\Validation\Validation;
 use App\Http\Resources\R_CrApplicationDetail;
 use App\Http\Resources\R_CrProspect;
@@ -67,7 +68,10 @@ class CrAppilcationController extends Controller
     public function showAdmins(Request $request)
     {
         try {
-            $branchId = $request->user()->branch_id;
+            $user = $request->user();
+            $branchId = $user->branch_id;
+            $isHO = strtoupper($user->position) === UserPositionEnum::HO;
+
             $no_order = $request->query('no_order');
             $nama = $request->query('nama');
             $tgl_order = $request->query('tgl_order');
@@ -89,10 +93,13 @@ class CrAppilcationController extends Controller
                 ->leftJoin('survey_approval', 'survey_approval.CR_SURVEY_ID', '=', 'cr_survey.id')
                 ->leftJoin('cr_application', 'cr_application.CR_SURVEY_ID', '=', 'cr_survey.id')
                 ->leftJoin('cr_personal', 'cr_personal.APPLICATION_ID', '=', 'cr_application.ID')
-                ->where('cr_survey.branch_id', $branchId)
                 ->where('survey_approval.CODE', '!=', 'DRSVY')
                 ->whereNull('cr_survey.deleted_at')
                 ->orderBy('cr_survey.created_at', 'desc');
+
+            if (!$isHO) {
+                $data->where('cr_survey.branch_id', $branchId);
+            }
 
             if (!empty($no_order)) {
                 $data->where('cr_application.ORDER_NUMBER', 'like', '%' . $no_order . '%');
