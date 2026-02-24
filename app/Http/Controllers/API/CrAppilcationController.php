@@ -1182,12 +1182,7 @@ class CrAppilcationController extends Controller
                 'kapos' => $approval->cr_application_kapos_desc ?? null,
                 'ho' => $approval->cr_application_ho_desc ?? null
             ],
-            "order_validation" => $this->validation->checkValidation([
-                "order_number" => $orderNumber,
-                "ktp" => $ktp,
-                "kk" => $kk
-            ]),
-            "OrderWarnings" => $this->validationService->validate(
+            "order_validation" => $this->validationService->validate(
                 [
                     "OrderNumber" => $orderNumber,
                     "KTP"          => $ktp,
