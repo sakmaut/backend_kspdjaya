@@ -65,7 +65,7 @@ class OrderValidationService
             $errors[] = "No KTP {$ktp} sudah terdaftar pada kredit yang masih aktif";
         }
 
-        if (!empty($kk) && $activeCount('KK_NUMBER', $kk) > 2) {
+        if (!empty($kk) && $activeCount('KK_NUMBER', $kk) >= 2) {
             $errors[] = "No KK {$kk} telah melebihi batas maksimal 2 kredit aktif";
         }
     }
