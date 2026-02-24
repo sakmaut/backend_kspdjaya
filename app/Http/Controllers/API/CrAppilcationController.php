@@ -98,7 +98,6 @@ class CrAppilcationController extends Controller
                 ->orderBy('cr_survey.created_at', 'desc');
 
             if (!$isHO) {
-                return "HO";
                 $data->where('cr_survey.branch_id', $branchId);
             }
 
