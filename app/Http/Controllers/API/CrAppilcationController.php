@@ -1192,27 +1192,6 @@ class CrAppilcationController extends Controller
             )
         ];
 
-        // foreach ($guarente_vehicle as $list) {
-
-        //     if ($list->CHASIS_NUMBER == '' && $list->ENGINE_NUMBER == '') {
-        //         $arrayList["order_validation"][] =
-        //             "Jaminan : Jaminan No Mesin dan No Rangka Tidak Boleh Kosong";
-        //     } else {
-        //         $result = DB::table('cr_collateral as a')
-        //             ->leftJoin('credit as b', 'b.ID', '=', 'a.CR_CREDIT_ID')
-        //             ->select('b.ORDER_NUMBER', 'a.STATUS', 'b.CREATED_AT')
-        //             ->where('a.STATUS', '!=', 'RILIS')
-        //             ->where('a.CHASIS_NUMBER', $list->CHASIS_NUMBER)
-        //             ->where('a.ENGINE_NUMBER', $list->CHASIS_NUMBER)
-        //             ->where('b.ORDER_NUMBER', '!=', $application->ORDER_NUMBER)
-        //             ->get();
-
-        //         if ($result->isNotEmpty()) {
-        //             $array_build["order_validation"][] = "Jaminan : Jaminan No Mesin {$list->ENGINE_NUMBER} dan No Rangka {$list->CHASIS_NUMBER} Masih Belum DiRilis";
-        //         }
-        //     }
-        // }
-
         $arrayList['info_bank'] = M_CrApplicationBank::where('APPLICATION_ID', $application->ID)
             ->get()
             ->map(function ($list) {
