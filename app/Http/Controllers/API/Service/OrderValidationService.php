@@ -42,7 +42,7 @@ class OrderValidationService
                 !empty($kk)  && $blacklist->KK  === $kk  => "KK {$kk}",
             };
 
-            $errors[] = "Atas nama {$blacklist->NAME} teridentifikasi dalam daftar blacklist berdasarkan {$matchedBy}";
+            $errors[] = "Atas nama {$blacklist->NAME} teridentifikasi dalam daftar BLACKLIST berdasarkan {$matchedBy}";
         }
     }
 
@@ -62,11 +62,11 @@ class OrderValidationService
             ->count();
 
         if (!empty($ktp) && $activeCount('ID_NUMBER', $ktp) > 0) {
-            $errors[] = "No KTP {$ktp} sudah terdaftar pada kredit yang masih aktif";
+            $errors[] = "No KTP {$ktp} sudah terdaftar pada kredit yang masih AKTIF";
         }
 
         if (!empty($kk) && $activeCount('KK_NUMBER', $kk) >= 2) {
-            $errors[] = "No KK {$kk} telah melebihi batas maksimal 2 kredit aktif";
+            $errors[] = "No KK {$kk} telah melebihi batas maksimal 2 kredit AKTIF";
         }
     }
 
@@ -110,7 +110,7 @@ class OrderValidationService
             };
 
             if ($matched) {
-                $errors[] = "Jaminan {$matched} masih belum dirilis";
+                $errors[] = "Jaminan {$matched} masih belum DIRILIS";
             }
         });
     }
