@@ -172,28 +172,6 @@ class Credit extends Controller
         }
     }
 
-    // private function checkBlacklists($ktp, $kk)
-    // {
-    //     if (empty($ktp) && empty($kk)) {
-    //         return "Nomor KTP atau Nomor KK wajib diisi salah satu";
-    //     }
-
-    //     $exists = M_CrBlacklist::query()
-    //         ->when($ktp, function ($q) use ($ktp) {
-    //             $q->where('KTP', $ktp);
-    //         })
-    //         ->when($kk, function ($q) use ($kk) {
-    //             $q->orWhere('KK', $kk);
-    //         })
-    //         ->exists();
-
-    //     if ($exists) {
-    //         return "Customer masuk dalam daftar blacklist";
-    //     }
-
-    //     return null; // aman
-    // }
-
     private function buildData($request, $data)
     {
         $cr_personal = M_CrPersonal::where('APPLICATION_ID', $data->ID)->first();
@@ -290,11 +268,6 @@ class Credit extends Controller
             "angsuran" => bilanganCreditFormat($angsuran) ?? null,
             "opt_periode" => $data->OPT_PERIODE ?? null,
             "jaminan" => [],
-            // "order_validation" =>  $this->validation->checkValidation([
-            //     "order_number" => $orderNumber,
-            //     "ktp" => $ktp,
-            //     "kk" => $kk
-            // ]),
             "order_validation" => $this->validationService->validate(
                 [
                     "OrderNumber" => $orderNumber,
@@ -309,33 +282,6 @@ class Credit extends Controller
         if (empty($data->TENOR) || $data->TENOR == 0) {
             $array_build["order_validation"][] = "Tenor Tidak Boleh Kosong";
         }
-
-        // $cekBlacklist = $this->checkBlacklists($ktp, $kk);
-
-        // if ($cekBlacklist) {
-        //     $array_build["order_validation"][] = "Blacklist : " . $cekBlacklist;
-        // }
-
-        // foreach ($guarente_vehicle as $list) {
-
-        //     if ($list->CHASIS_NUMBER == '' && $list->ENGINE_NUMBER == '') {
-        //         $arrayList["order_validation"][] =
-        //             "Jaminan : Jaminan No Mesin dan No Rangka Tidak Boleh Kosong";
-        //     } else {
-        //         $result = DB::table('cr_collateral as a')
-        //             ->leftJoin('credit as b', 'b.ID', '=', 'a.CR_CREDIT_ID')
-        //             ->select('b.ORDER_NUMBER', 'a.STATUS', 'b.CREATED_AT')
-        //             ->where('a.STATUS', '!=', 'RILIS')
-        //             ->where('a.CHASIS_NUMBER', $list->CHASIS_NUMBER)
-        //             ->where('a.ENGINE_NUMBER', $list->CHASIS_NUMBER)
-        //             ->where('b.ORDER_NUMBER', '!=', $request->order_number)
-        //             ->get();
-
-        //         if ($result->isNotEmpty()) {
-        //             $array_build["order_validation"][] = "Jaminan : Jaminan No Mesin {$list->ENGINE_NUMBER} dan No Rangka {$list->CHASIS_NUMBER} Masih Belum DiRilis";
-        //         }
-        //     }
-        // }
 
         if ($check_exist) {
 
