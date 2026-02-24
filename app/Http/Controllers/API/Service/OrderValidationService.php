@@ -16,7 +16,7 @@ class OrderValidationService
 
         $this->validateBlacklist($errors, $ktp, $kk);
         $this->validateActiveCredit($errors, $orderNumber, $ktp, $kk);
-        $this->validateCollateral($errors, $guaranteeVehicles);
+        $this->validateCollateral($errors, $orderNumber, $guaranteeVehicles);
 
         return $errors;
     }
@@ -72,6 +72,7 @@ class OrderValidationService
 
     private function validateCollateral(
         array &$errors,
+        ?string $orderNumber,
         iterable $guaranteeVehicles
     ): void {
         $vehicles = collect($guaranteeVehicles);
@@ -94,6 +95,7 @@ class OrderValidationService
                 $q->whereIn('a.CHASIS_NUMBER', $valid->pluck('CHASIS_NUMBER')->all())
                     ->orWhereIn('a.ENGINE_NUMBER', $valid->pluck('ENGINE_NUMBER')->all());
             })
+            ->where('b.ORDER_NUMBER', '!=', $orderNumber)
             ->get();
 
         if ($collaterals->isEmpty()) return;
