@@ -16,7 +16,7 @@ class OrderValidationService
 
         $this->validateBlacklist($errors, $ktp, $kk);
         $this->validateActiveCredit($errors, $orderNumber, $ktp, $kk);
-        $this->validateCollateral($errors, $orderNumber, $guaranteeVehicles);
+        $this->validateCollateral($errors, $guaranteeVehicles);
 
         return $errors;
     }
@@ -72,7 +72,6 @@ class OrderValidationService
 
     private function validateCollateral(
         array &$errors,
-        ?string $orderNumber,
         iterable $guaranteeVehicles
     ): void {
         $vehicles = collect($guaranteeVehicles);
@@ -85,23 +84,34 @@ class OrderValidationService
         // Ambil kendaraan yang valid
         $valid = $vehicles->filter(fn($v) => !empty($v->CHASIS_NUMBER) || !empty($v->ENGINE_NUMBER));
 
-        // Cek satu query ke DB, ambil yang belum dirilis
+        // Cek salah satu (CHASIS atau ENGINE) yang belum dirilis
         $unreleased = DB::table('cr_collateral as a')
             ->leftJoin('credit as b', 'b.ID', '=', 'a.CR_CREDIT_ID')
             ->selectRaw('a.CHASIS_NUMBER, a.ENGINE_NUMBER')
+            ->where(function ($q) use ($valid) {
+                $q->whereIn('a.CHASIS_NUMBER', $valid->pluck('CHASIS_NUMBER')->all())
+                    ->orWhereIn('a.ENGINE_NUMBER', $valid->pluck('ENGINE_NUMBER')->all());
+            })
             ->where('a.STATUS', '!=', 'RILIS')
-            ->whereIn('a.CHASIS_NUMBER', $valid->pluck('CHASIS_NUMBER')->all())
-            ->whereIn('a.ENGINE_NUMBER', $valid->pluck('ENGINE_NUMBER')->all())
-            ->where('b.ORDER_NUMBER', '!=', $orderNumber)
             ->get()
             ->keyBy(fn($row) => "{$row->CHASIS_NUMBER}_{$row->ENGINE_NUMBER}");
 
-        // Bandingkan hasil DB dengan kendaraan valid, tambahkan error jika ditemukan
-        $valid
-            ->filter(fn($v) => $unreleased->has("{$v->CHASIS_NUMBER}_{$v->ENGINE_NUMBER}"))
-            ->each(
-                fn($v) => $errors[] =
-                    "Jaminan No Mesin {$v->ENGINE_NUMBER} dan No Rangka {$v->CHASIS_NUMBER} masih belum dirilis"
-            );
+        // Cek per kendaraan, keterangan spesifik mana yang belum dirilis
+        $valid->each(function ($v) use ($unreleased, &$errors) {
+            $byChasis = $unreleased->has("{$v->CHASIS_NUMBER}_");
+            $byEngine = $unreleased->has("_{$v->ENGINE_NUMBER}");
+            $byBoth   = $unreleased->has("{$v->CHASIS_NUMBER}_{$v->ENGINE_NUMBER}");
+
+            $matched = match (true) {
+                $byBoth   => "No Rangka {$v->CHASIS_NUMBER} dan No Mesin {$v->ENGINE_NUMBER}",
+                $byChasis => "No Rangka {$v->CHASIS_NUMBER}",
+                $byEngine => "No Mesin {$v->ENGINE_NUMBER}",
+                default   => null
+            };
+
+            if ($matched) {
+                $errors[] = "Jaminan {$matched} masih belum dirilis";
+            }
+        });
     }
 }
