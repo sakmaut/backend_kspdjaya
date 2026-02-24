@@ -36,7 +36,13 @@ class OrderValidationService
             ->first();
 
         if ($blacklist) {
-            $errors[] = "Atas nama {$blacklist->NAME} teridentifikasi dalam daftar blacklist";
+            $matchedBy = match (true) {
+                !empty($ktp) && $blacklist->KTP === $ktp && !empty($kk) && $blacklist->KK === $kk => "KTP {$ktp} dan KK {$kk}",
+                !empty($ktp) && $blacklist->KTP === $ktp => "KTP {$ktp}",
+                !empty($kk)  && $blacklist->KK  === $kk  => "KK {$kk}",
+            };
+
+            $errors[] = "Atas nama {$blacklist->NAME} teridentifikasi dalam daftar blacklist berdasarkan {$matchedBy}";
         }
     }
 
