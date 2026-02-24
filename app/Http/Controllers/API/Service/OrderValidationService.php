@@ -61,11 +61,11 @@ class OrderValidationService
             ->count();
 
         if (!empty($ktp) && $activeCount('ID_NUMBER', $ktp) > 0) {
-            $errors[] = "KTP {$ktp} masih memiliki kredit aktif";
+            $errors[] = "No KTP {$ktp} masih memiliki kredit aktif";
         }
 
         if (!empty($kk) && $activeCount('KK_NUMBER', $kk) > 2) {
-            $errors[] = "KK {$kk} memiliki lebih dari 2 kredit aktif";
+            $errors[] = "No KK {$kk} memiliki lebih dari 2 kredit aktif";
         }
     }
 
