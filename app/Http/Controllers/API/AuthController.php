@@ -25,33 +25,67 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        try {
-            $request->validate([
-                'username' => 'required|string|regex:/^[a-zA-Z0-9]*$/',
-                'password' => 'required|string|regex:/^[a-zA-Z0-9]*$/'
-            ]);
+        $request->validate([
+            'username' => 'required|string|regex:/^[a-zA-Z0-9]*$/',
+            'password' => 'required|string|regex:/^[a-zA-Z0-9]*$/'
+        ]);
 
-            $messageError = 'Validation failed';
+        $credentials = $request->only('username', 'password');
 
-            $credentials = $request->only('username', 'password');
-
-            if (!Auth::attempt($credentials)) {
-                return response()->json(['error' => $messageError], 401);
-            }
-
-            $user = $request->user();
-
-            if (strtolower($user->status) !== 'active') {
-                return response()->json(['error' => $messageError], 401);
-            }
-
-            $token = $this->generateToken($user);
-
-            return response()->json(['token' => $token], 200);
-        } catch (Exception $e) {
-            return $this->log->logError($e, $request);
+        if (!Auth::attempt($credentials)) {
+            return response()->json([
+                'message' => false,
+                'error' => 'Invalid username or password'
+            ], 401);
         }
+
+        $user = Auth::user();
+
+        if (strtolower($user->status) !== 'active') {
+            Auth::logout();
+
+            return response()->json([
+                'message' => false,
+                'error' => 'User is not active'
+            ], 403);
+        }
+
+        $token = $this->generateToken($user);
+
+        return response()->json([
+            'token' => $token
+        ], 200);
     }
+
+    // public function login(Request $request)
+    // {
+    //     try {
+    //         $request->validate([
+    //             'username' => 'required|string|regex:/^[a-zA-Z0-9]*$/',
+    //             'password' => 'required|string|regex:/^[a-zA-Z0-9]*$/'
+    //         ]);
+
+    //         $messageError = 'Validation failed';
+
+    //         $credentials = $request->only('username', 'password');
+
+    //         if (!Auth::attempt($credentials)) {
+    //             return response()->json(['error' => $messageError], 401);
+    //         }
+
+    //         $user = $request->user();
+
+    //         if (strtolower($user->status) !== 'active') {
+    //             return response()->json(['error' => $messageError], 401);
+    //         }
+
+    //         $token = $this->generateToken($user);
+
+    //         return response()->json(['token' => $token], 200);
+    //     } catch (Exception $e) {
+    //         return $this->log->logError($e, $request);
+    //     }
+    // }
 
     private function generateToken(User $user)
     {

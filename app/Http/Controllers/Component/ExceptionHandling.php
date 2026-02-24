@@ -15,7 +15,7 @@ class ExceptionHandling
         Log::error($errorUuid, [
             'exception' => $e->getMessage(),
             'url' => $request->fullUrl(),
-            'user' => $request->user()->username,
+            'user' => $request->user()->username ?? "",
             'fullname' => $request->user()->fullname,
             'position' => $request->user()->position
         ]);
