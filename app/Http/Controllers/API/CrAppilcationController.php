@@ -93,12 +93,13 @@ class CrAppilcationController extends Controller
                 ->leftJoin('survey_approval', 'survey_approval.CR_SURVEY_ID', '=', 'cr_survey.id')
                 ->leftJoin('cr_application', 'cr_application.CR_SURVEY_ID', '=', 'cr_survey.id')
                 ->leftJoin('cr_personal', 'cr_personal.APPLICATION_ID', '=', 'cr_application.ID')
-                ->where('survey_approval.CODE', '!=', 'DRSVY')
+              
                 ->whereNull('cr_survey.deleted_at')
                 ->orderBy('cr_survey.created_at', 'desc');
 
             if (!$isHO) {
                 $data->where('cr_survey.branch_id', $branchId);
+                $data->where('survey_approval.CODE', '!=', 'DRSVY');
             }
 
             if (!empty($no_order)) {
