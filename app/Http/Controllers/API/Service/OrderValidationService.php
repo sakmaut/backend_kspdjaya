@@ -1,6 +1,5 @@
 <?php
-
-namespace App\Services\Validation;
+namespace App\Http\Controllers\API\Service;
 
 use App\Models\M_CrBlacklist;
 use Illuminate\Support\Facades\DB;

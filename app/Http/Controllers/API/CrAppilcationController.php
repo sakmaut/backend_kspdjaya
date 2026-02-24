@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\API\Service\OrderValidationService;
 use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Validation\Validation;
@@ -28,10 +29,8 @@ use App\Models\M_SurveyApproval;
 use App\Models\M_SurveyApprovalLog;
 use App\Models\M_Taksasi;
 use App\Models\User;
-use App\Services\Validation\OrderValidationService;
 use Carbon\Carbon;
 use Exception;
-use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Ramsey\Uuid\Uuid;
