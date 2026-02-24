@@ -28,20 +28,15 @@ class OrderValidationService
             return;
         }
 
-        $exists = M_CrBlacklist::query()
+        $blacklist = M_CrBlacklist::query()
             ->where(function ($q) use ($ktp, $kk) {
-                if (!empty($ktp)) {
-                    $q->orWhere('KTP', $ktp);
-                }
-
-                if (!empty($kk)) {
-                    $q->orWhere('KK', $kk);
-                }
+                $q->when(!empty($ktp), fn($q) => $q->orWhere('KTP', $ktp))
+                    ->when(!empty($kk),  fn($q) => $q->orWhere('KK', $kk));
             })
-            ->exists();
+            ->first();
 
-        if ($exists) {
-            $errors[] = "Customer masuk dalam daftar blacklist";
+        if ($blacklist) {
+            $errors[] = "Atas nama {$blacklist->NAMA} teridentifikasi dalam daftar blacklist";
         }
     }
 
