@@ -99,9 +99,6 @@ class CrAppilcationController extends Controller
 
             if (!$isHO) {
                 $data->where('cr_survey.branch_id', $branchId);
-                return "BUKAN HO";
-            }else{
-                return "HO";
             }
 
             if (!empty($no_order)) {
