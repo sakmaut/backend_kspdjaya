@@ -28,6 +28,7 @@ use App\Models\M_SurveyApproval;
 use App\Models\M_SurveyApprovalLog;
 use App\Models\M_Taksasi;
 use App\Models\User;
+use App\Services\Validation\OrderValidationService;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\QueryException;
@@ -40,15 +41,18 @@ class CrAppilcationController extends Controller
     protected $adminfee;
     protected $log;
     protected $validation;
+    protected $validationService;
 
     public function __construct(
         AdminFeeController $admin_fee,
         ExceptionHandling $log,
-        Validation $validation
+        Validation $validation,
+        OrderValidationService $validationService
     ) {
         $this->adminfee = $admin_fee;
         $this->log = $log;
         $this->validation = $validation;
+        $this->validationService = $validationService;
     }
 
     public function index(Request $request)
@@ -1183,29 +1187,37 @@ class CrAppilcationController extends Controller
                 "order_number" => $orderNumber,
                 "ktp" => $ktp,
                 "kk" => $kk
-            ])
+            ]),
+            "OrderWarnings" => $this->validationService->validate(
+                [
+                    "OrderNumber" => $orderNumber,
+                    "KTP"          => $ktp,
+                    "KK"           => $kk,
+                ],
+                $guarente_vehicle
+            )
         ];
 
-        foreach ($guarente_vehicle as $list) {
+        // foreach ($guarente_vehicle as $list) {
 
-            if ($list->CHASIS_NUMBER == '' && $list->ENGINE_NUMBER == '') {
-                $arrayList["order_validation"][] =
-                    "Jaminan : Jaminan No Mesin dan No Rangka Tidak Boleh Kosong";
-            } else {
-                $result = DB::table('cr_collateral as a')
-                    ->leftJoin('credit as b', 'b.ID', '=', 'a.CR_CREDIT_ID')
-                    ->select('b.ORDER_NUMBER', 'a.STATUS', 'b.CREATED_AT')
-                    ->where('a.STATUS', '!=', 'RILIS')
-                    ->where('a.CHASIS_NUMBER', $list->CHASIS_NUMBER)
-                    ->where('a.ENGINE_NUMBER', $list->CHASIS_NUMBER)
-                    ->where('b.ORDER_NUMBER', '!=', $application->ORDER_NUMBER)
-                    ->get();
+        //     if ($list->CHASIS_NUMBER == '' && $list->ENGINE_NUMBER == '') {
+        //         $arrayList["order_validation"][] =
+        //             "Jaminan : Jaminan No Mesin dan No Rangka Tidak Boleh Kosong";
+        //     } else {
+        //         $result = DB::table('cr_collateral as a')
+        //             ->leftJoin('credit as b', 'b.ID', '=', 'a.CR_CREDIT_ID')
+        //             ->select('b.ORDER_NUMBER', 'a.STATUS', 'b.CREATED_AT')
+        //             ->where('a.STATUS', '!=', 'RILIS')
+        //             ->where('a.CHASIS_NUMBER', $list->CHASIS_NUMBER)
+        //             ->where('a.ENGINE_NUMBER', $list->CHASIS_NUMBER)
+        //             ->where('b.ORDER_NUMBER', '!=', $application->ORDER_NUMBER)
+        //             ->get();
 
-                if ($result->isNotEmpty()) {
-                    $array_build["order_validation"][] = "Jaminan : Jaminan No Mesin {$list->ENGINE_NUMBER} dan No Rangka {$list->CHASIS_NUMBER} Masih Belum DiRilis";
-                }
-            }
-        }
+        //         if ($result->isNotEmpty()) {
+        //             $array_build["order_validation"][] = "Jaminan : Jaminan No Mesin {$list->ENGINE_NUMBER} dan No Rangka {$list->CHASIS_NUMBER} Masih Belum DiRilis";
+        //         }
+        //     }
+        // }
 
         $arrayList['info_bank'] = M_CrApplicationBank::where('APPLICATION_ID', $application->ID)
             ->get()
