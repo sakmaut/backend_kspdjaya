@@ -36,7 +36,7 @@ class OrderValidationService
             ->first();
 
         if ($blacklist) {
-            $errors[] = "Atas nama {$blacklist->NAMA} teridentifikasi dalam daftar blacklist";
+            $errors[] = "Atas nama {$blacklist->NAME} teridentifikasi dalam daftar blacklist";
         }
     }
 
