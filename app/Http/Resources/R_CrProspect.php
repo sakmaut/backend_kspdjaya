@@ -108,7 +108,7 @@ class R_CrProspect extends JsonResource
             'nama_debitur' => $application?->cr_personal?->NAME ?? $this->nama,
             'alamat' => $this->alamat,
             'hp' => $this->hp,
-            'plafond' => $application?->SUBMISSION_VALUE ?? $this->plafond,
+            'plafond' => (int) $application?->SUBMISSION_VALUE ?? $this->plafond,
             'status' => $approval?->APPROVAL_RESULT ?? '',
             'status_code' => $approval?->CODE ?? '',
             'attachment' =>  $this->cr_survey_document
