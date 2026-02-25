@@ -113,7 +113,6 @@ class S_PokokSebagian
             $this->s_creditScheduleBefore->created($schedule, $noInv);
         }
 
-        // Backup Arrears
         $arrearsList = M_Arrears::where('LOAN_NUMBER', $loanNumber)->get();
         foreach ($arrearsList as $arrear) {
             $this->s_arrearsBefore->created($arrear, $noInv);
@@ -141,7 +140,7 @@ class S_PokokSebagian
         $this->s_creditBefore->created($credit, $noInv);
 
         if($request->FLAG_DISKON){
-            $payments = $this->buildPaymentFlagDiscount($request, $creditSchedules);
+            $payments = $this->buildPaymentFlagDiscount($request, $creditSchedules,$arrearsList);
         }else{
             $payments = $this->buildPayment($request, $creditSchedules);
         }
@@ -170,10 +169,15 @@ class S_PokokSebagian
         M_KwitansiDetailPelunasan::insert($setDataDetail);
     }
 
-    private function buildPaymentFlagDiscount($request, $creditSchedule)
+    private function buildPaymentFlagDiscount($request, $creditSchedule, $arrearsList)
     {
         $paymentBunga = floatval($request->BAYAR_BUNGA ?? 0);
         $paymentPokok = floatval($request->BAYAR_POKOK ?? 0);
+        $paymentDenda = floatval($request->BAYAR_DENDA ?? 0);
+        $discountDenda = floatval($request->DISKON_DENDA ?? 0);
+
+        $sisaBayarDenda = $paymentDenda;
+        $sisaDiskonDenda = $discountDenda;
 
         $currentDate = date('Y-m-d');
 
@@ -193,13 +197,14 @@ class S_PokokSebagian
                     'PAYMENT_DATE' => $res->PAYMENT_DATE,
                     'PRINCIPAL' => $principal,
                     'INTEREST' => $interest,
-                    'INSTALLMENT' => $principal + $interest,  
+                    'INSTALLMENT' => $principal + $interest,
                     'BAYAR_BUNGA' => 0,
                     'BAYAR_POKOK' => 0,
-                    'BAYAR_DENDA' => $bayarDenda ?? 0,
+                    'BAYAR_DENDA' => 0,
                     'DISKON_BUNGA' => 0,
-                    'DISKON_POKOK' => 0, 
-                   
+                    'DISKON_POKOK' => 0,
+                    'DISKON_DENDA' => 0,
+
                 ];
                 continue;
             }
@@ -223,9 +228,10 @@ class S_PokokSebagian
                 'INSTALLMENT' => $installmentRaw,
                 'BAYAR_BUNGA' => $paidNow,
                 'BAYAR_POKOK' => 0,
-                'BAYAR_DENDA' => $bayarDenda ?? 0,
+                'BAYAR_DENDA' => 0,
                 'DISKON_BUNGA' => max(0, $discount),
-                'DISKON_POKOK' => 0
+                'DISKON_POKOK' => 0,
+                'DISKON_DENDA' => 0,
             ];
         }
 
@@ -324,6 +330,49 @@ class S_PokokSebagian
             $data[$index]['DISKON_POKOK'] = max(0, $principalAsli - $bayarPokok);
             $data[$index]['PRINCIPAL'] = $principalAsli;
             $data[$index]['INSTALLMENT'] = $principalAsli + $data[$index]['INTEREST'];
+        }
+
+        foreach ($arrearsList as $arrear) {
+            if (in_array(strtoupper($arrear->STATUS_REC ?? ''), ['S', 'D'])) {
+                continue;
+            }
+
+            $pastDuePenalty = floatval($arrear->PAST_DUE_PENALTY ?? 0);
+            $paidPenalty    = floatval($arrear->PAID_PENALTY ?? 0);
+            $woffPenalty    = floatval($arrear->WOFF_PENALTY ?? 0);
+
+            $sisaPenalty = $pastDuePenalty - $paidPenalty - $woffPenalty;
+
+            if ($sisaPenalty <= 0) {
+                continue;
+            }
+
+            $bayarNow = min($sisaBayarDenda, $sisaPenalty);
+            $sisaBayarDenda -= $bayarNow;
+            $sisaPenalty -= $bayarNow;
+
+            $diskonNow = min($sisaDiskonDenda, $sisaPenalty);
+            $sisaDiskonDenda -= $diskonNow;
+
+            $arrearsDate = date('Y-m-d', strtotime($arrear->START_DATE));
+            foreach ($data as $i => $row) {
+
+                $scheduleDate = date('Y-m-d', strtotime($row['PAYMENT_DATE']));
+
+                if (
+                    $scheduleDate == $arrearsDate &&
+                    strtoupper($creditSchedule[$i]->PAID_FLAG ?? '') !== 'PAID'
+                ) {
+
+                    $data[$i]['BAYAR_DENDA']  += $bayarNow;
+                    $data[$i]['DISKON_DENDA'] += $diskonNow;
+                    break;
+                }
+            }
+
+            if ($sisaBayarDenda <= 0 && $sisaDiskonDenda <= 0) {
+                break;
+            }
         }
 
         return $data;
