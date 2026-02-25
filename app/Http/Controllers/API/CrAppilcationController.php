@@ -141,7 +141,7 @@ class CrAppilcationController extends Controller
             $query = M_CrSurvey::with([
                 'cr_application:ID,CR_SURVEY_ID,INSTALLMENT_TYPE,ORDER_NUMBER,SUBMISSION_VALUE',
                 'cr_application.cr_personal:ID,APPLICATION_ID,NAME',
-                'cr_application.credit:ID,LOAN_NUMBER',
+                'cr_application.credit:ID,ORDER_NUMBER,LOAN_NUMBER',
                 'survey_approval:ID,CR_SURVEY_ID,CODE,APPROVAL_RESULT,ONCHARGE_TIME'
             ])
                 ->whereHas('survey_approval', function ($q) {
