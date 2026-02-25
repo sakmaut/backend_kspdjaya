@@ -61,7 +61,7 @@ class OrderValidationService
             ->where('a.ORDER_NUMBER', '!=', $orderNumber)
             ->count();
 
-        if (!empty($ktp) && $activeCount('ID_NUMBER', $ktp) > 0) {
+        if (!empty($ktp) && $activeCount('ID_NUMBER', $ktp) >= 2) {
             $errors[] = "No KTP {$ktp} sudah terdaftar pada kredit yang masih AKTIF";
         }
 
