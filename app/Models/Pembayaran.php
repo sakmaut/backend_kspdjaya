@@ -16,7 +16,9 @@ class Pembayaran extends Model
         'order_id',
         'amount',
         'status',
-        'gateway_response'
+        'gateway_response',
+        'created_at',
+        'updated_at'
     ];
 
     protected $guarded = [];
