@@ -127,7 +127,7 @@ class CrAppilcationController extends Controller
     //     }
     // }
 
-    public function showAdmins(Request $request)
+    public function ShowOrders(Request $request)
     {
         try {
             $user = $request->user();

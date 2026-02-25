@@ -66,7 +66,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::resource('user_access_menu', UserAccessMenuController::class);
 
     // Route::resource('cr_application', CrAppilcationController::class)->only(['index']);
-    Route::get('kunjungan_admin', [CrAppilcationController::class, 'showAdmins']);
+    Route::get('kunjungan_admin', [CrAppilcationController::class, 'ShowOrders']);
 
     // Route Group Users
     Route::resource('users', UsersController::class)->except(['index']);
