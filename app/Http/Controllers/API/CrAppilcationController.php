@@ -65,68 +65,6 @@ class CrAppilcationController extends Controller
         }
     }
 
-    // public function showAdmins(Request $request)
-    // {
-    //     try {
-    //         $user = $request->user();
-    //         $branchId = $user->branch_id;
-    //         $isHO = strtoupper($user->position) === UserPositionEnum::HO;
-
-    //         $no_order = $request->query('no_order');
-    //         $nama = $request->query('nama');
-    //         $tgl_order = $request->query('tgl_order');
-
-    //         $data = M_CrSurvey::select(
-    //             'cr_survey.id as id',
-    //             'cr_survey.jenis_angsuran',
-    //             'cr_application.INSTALLMENT_TYPE',
-    //             'cr_application.ORDER_NUMBER as order_number',
-    //             'cr_survey.visit_date',
-    //             DB::raw("COALESCE(cr_personal.NAME, cr_survey.nama) as nama_debitur"),
-    //             'cr_survey.alamat',
-    //             'cr_survey.hp',
-    //             'survey_approval.CODE',
-    //             'survey_approval.APPROVAL_RESULT',
-    //             'survey_approval.ONCHARGE_TIME',
-    //             DB::raw("COALESCE(cr_application.SUBMISSION_VALUE, cr_survey.plafond) as plafond")
-    //         )
-    //             ->leftJoin('survey_approval', 'survey_approval.CR_SURVEY_ID', '=', 'cr_survey.id')
-    //             ->leftJoin('cr_application', 'cr_application.CR_SURVEY_ID', '=', 'cr_survey.id')
-    //             ->leftJoin('cr_personal', 'cr_personal.APPLICATION_ID', '=', 'cr_application.ID')
-    //             ->where('survey_approval.CODE', '!=', 'DRSVY')
-    //             ->whereNull('cr_survey.deleted_at')
-    //             ->orderBy('cr_survey.created_at', 'desc');
-
-    //         if (!$isHO) {
-    //             $data->where('cr_survey.branch_id', $branchId);
-    //         }
-
-    //         if (!empty($no_order)) {
-    //             $data->where('cr_application.ORDER_NUMBER', 'like', '%' . $no_order . '%');
-    //         }
-
-    //         if (!empty($nama)) {
-    //             $data->where(DB::raw("COALESCE(cr_personal.NAME, cr_survey.nama)"), 'like', '%' . $nama . '%');
-    //         }
-
-    //         if (!empty($tgl_order)) {
-    //             $data->whereRaw("DATE_FORMAT(cr_survey.visit_date, '%Y-%m-%d') = ?", [$tgl_order]);
-    //         }
-
-    //         if (empty($no_order) && empty($nama) && empty($tgl_order)) {
-    //             $data->whereRaw("DATE_FORMAT(cr_survey.visit_date, '%Y%m%d') = ?", [Carbon::now()->format('Ymd')]);
-    //         }
-
-    //         $results = $data->get();
-
-    //         $dto = R_CrProspect::collection($results);
-
-    //         return response()->json(['message' => true, "status" => 200, 'response' => $dto], 200);
-    //     } catch (Exception $e) {
-    //         return $this->log->logError($e, $request);
-    //     }
-    // }
-
     public function ShowOrders(Request $request)
     {
         try {
@@ -138,52 +76,48 @@ class CrAppilcationController extends Controller
             $nama = $request->query('nama');
             $tgl_order = $request->query('tgl_order');
 
-            $query = M_CrSurvey::with([
-                'cr_application:ID,CR_SURVEY_ID,INSTALLMENT_TYPE,ORDER_NUMBER,SUBMISSION_VALUE',
-                'cr_application.cr_personal:ID,APPLICATION_ID,NAME',
-                'cr_application.credit:ID,LOAN_NUMBER',
-                'survey_approval:ID,CR_SURVEY_ID,CODE,APPROVAL_RESULT,ONCHARGE_TIME'
-            ])
-                ->whereHas('survey_approval', function ($q) {
-                    $q->where('CODE', '!=', 'DRSVY');
-                })
-                ->whereNull('deleted_at')
-                ->orderByDesc('created_at');
+            $data = M_CrSurvey::select(
+                'cr_survey.id as id',
+                'cr_survey.jenis_angsuran',
+                'cr_application.INSTALLMENT_TYPE',
+                'cr_application.ORDER_NUMBER as order_number',
+                'cr_survey.visit_date',
+                DB::raw("COALESCE(cr_personal.NAME, cr_survey.nama) as nama_debitur"),
+                'cr_survey.alamat',
+                'cr_survey.hp',
+                'survey_approval.CODE',
+                'survey_approval.APPROVAL_RESULT',
+                'survey_approval.ONCHARGE_TIME',
+                DB::raw("COALESCE(cr_application.SUBMISSION_VALUE, cr_survey.plafond) as plafond")
+            )
+                ->leftJoin('survey_approval', 'survey_approval.CR_SURVEY_ID', '=', 'cr_survey.id')
+                ->leftJoin('cr_application', 'cr_application.CR_SURVEY_ID', '=', 'cr_survey.id')
+                ->leftJoin('cr_personal', 'cr_personal.APPLICATION_ID', '=', 'cr_application.ID')
+                ->where('survey_approval.CODE', '!=', 'DRSVY')
+                ->whereNull('cr_survey.deleted_at')
+                ->orderBy('cr_survey.created_at', 'desc');
 
-
-            // ✅ Filter HO
             if (!$isHO) {
-                $query->where('branch_id', $branchId);
+                $data->where('cr_survey.branch_id', $branchId);
             }
 
-            // ✅ Filter no_order
             if (!empty($no_order)) {
-                $query->whereHas('cr_application', function ($q) use ($no_order) {
-                    $q->where('ORDER_NUMBER', 'like', "%{$no_order}%");
-                });
+                $data->where('cr_application.ORDER_NUMBER', 'like', '%' . $no_order . '%');
             }
 
-            // ✅ Filter nama
             if (!empty($nama)) {
-                $query->where(function ($q) use ($nama) {
-                    $q->where('nama', 'like', "%{$nama}%")
-                        ->orWhereHas('cr_application.cr_personal', function ($q2) use ($nama) {
-                            $q2->where('NAME', 'like', "%{$nama}%");
-                        });
-                });
+                $data->where(DB::raw("COALESCE(cr_personal.NAME, cr_survey.nama)"), 'like', '%' . $nama . '%');
             }
 
-            // ✅ Filter tanggal
             if (!empty($tgl_order)) {
-                $query->whereDate('visit_date', $tgl_order);
+                $data->whereRaw("DATE_FORMAT(cr_survey.visit_date, '%Y-%m-%d') = ?", [$tgl_order]);
             }
 
-            // ✅ Default hari ini
             if (empty($no_order) && empty($nama) && empty($tgl_order)) {
-                $query->whereDate('visit_date', now()->toDateString());
+                $data->whereRaw("DATE_FORMAT(cr_survey.visit_date, '%Y%m%d') = ?", [Carbon::now()->format('Ymd')]);
             }
 
-            $results = $query->get();
+            $results = $data->get();
 
             $dto = R_CrProspect::collection($results);
 
@@ -192,6 +126,72 @@ class CrAppilcationController extends Controller
             return $this->log->logError($e, $request);
         }
     }
+
+    // public function ShowOrders(Request $request)
+    // {
+    //     try {
+    //         $user = $request->user();
+    //         $branchId = $user->branch_id;
+    //         $isHO = strtoupper($user->position) === UserPositionEnum::HO;
+
+    //         $no_order = $request->query('no_order');
+    //         $nama = $request->query('nama');
+    //         $tgl_order = $request->query('tgl_order');
+
+    //         $query = M_CrSurvey::with([
+    //             'cr_application:ID,CR_SURVEY_ID,INSTALLMENT_TYPE,ORDER_NUMBER,SUBMISSION_VALUE',
+    //             'cr_application.cr_personal:ID,APPLICATION_ID,NAME',
+    //             'cr_application.credit:ID,LOAN_NUMBER',
+    //             'survey_approval:ID,CR_SURVEY_ID,CODE,APPROVAL_RESULT,ONCHARGE_TIME'
+    //         ])
+    //             ->whereHas('survey_approval', function ($q) {
+    //                 $q->where('CODE', '!=', 'DRSVY');
+    //             })
+    //             ->whereNull('deleted_at')
+    //             ->orderByDesc('created_at');
+
+
+    //         // ✅ Filter HO
+    //         if (!$isHO) {
+    //             $query->where('branch_id', $branchId);
+    //         }
+
+    //         // ✅ Filter no_order
+    //         if (!empty($no_order)) {
+    //             $query->whereHas('cr_application', function ($q) use ($no_order) {
+    //                 $q->where('ORDER_NUMBER', 'like', "%{$no_order}%");
+    //             });
+    //         }
+
+    //         // ✅ Filter nama
+    //         if (!empty($nama)) {
+    //             $query->where(function ($q) use ($nama) {
+    //                 $q->where('nama', 'like', "%{$nama}%")
+    //                     ->orWhereHas('cr_application.cr_personal', function ($q2) use ($nama) {
+    //                         $q2->where('NAME', 'like', "%{$nama}%");
+    //                     });
+    //             });
+    //         }
+
+    //         // ✅ Filter tanggal
+    //         if (!empty($tgl_order)) {
+    //             $query->whereDate('visit_date', $tgl_order);
+    //         }
+
+    //         // ✅ Default hari ini
+    //         if (empty($no_order) && empty($nama) && empty($tgl_order)) {
+    //             $query->whereDate('visit_date', now()->toDateString());
+    //         }
+
+    //         $results = $query->get();
+
+    //         $dto = R_CrProspect::collection($results);
+
+    //         return response()->json(['message' => true, "status" => 200, 'response' => $dto], 200);
+    //     } catch (Exception $e) {
+    //         return $this->log->logError($e, $request);
+    //     }
+    // }
 
     public function showKapos(Request $request)
     {
