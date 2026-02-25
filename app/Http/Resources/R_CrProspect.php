@@ -97,14 +97,19 @@ class R_CrProspect extends JsonResource
         ];
     }
 
-    private function latestAttachments()
+    public function latestAttachments()
     {
-        return $this->cr_survey_document
+        return $this->cr_survey_document()
             ->whereIn('TYPE', ['sp', 'pk', 'dok'])
-            ->sortByDesc('TIMEMILISECOND')
-            ->groupBy('TYPE')
-            ->map(fn($docs) => $docs->first())
-            ->values();
+            ->whereIn(DB::raw('(TYPE, TIMEMILISECOND)'), function ($query) {
+                $query->selectRaw('TYPE, MAX(TIMEMILISECOND)')
+                    ->from('cr_survey_document')
+                    ->whereColumn('CR_SURVEY_ID', 'cr_survey.CR_SURVEY_ID')
+                    ->whereIn('TYPE', ['sp', 'pk', 'dok'])
+                    ->groupBy('TYPE');
+            })
+            ->orderByDesc('TIMEMILISECOND')
+            ->get();
     }
 
     // public function attachment($survey_id, $data)
