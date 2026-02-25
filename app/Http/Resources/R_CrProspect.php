@@ -93,40 +93,40 @@ class R_CrProspect extends JsonResource
             'plafond' => $application?->SUBMISSION_VALUE ?? $this->plafond,
             'status' => $approval?->APPROVAL_RESULT ?? '',
             'status_code' => $approval?->CODE ?? '',
-            'attachment' => $this->latestAttachments(),
+            'attachment' =>  $this->attachment($this->id, "'sp', 'pk', 'dok'"),
         ];
     }
 
-    public function latestAttachments()
-    {
-        return $this->cr_survey_document()
-            ->whereIn('TYPE', ['sp', 'pk', 'dok'])
-            ->whereIn(DB::raw('(TYPE, TIMEMILISECOND)'), function ($query) {
-                $query->selectRaw('TYPE, MAX(TIMEMILISECOND)')
-                    ->from('cr_survey_document')
-                    ->whereColumn('CR_SURVEY_ID', 'cr_survey.CR_SURVEY_ID')
-                    ->whereIn('TYPE', ['sp', 'pk', 'dok'])
-                    ->groupBy('TYPE');
-            })
-            ->orderByDesc('TIMEMILISECOND')
-            ->get();
-    }
-
-    // public function attachment($survey_id, $data)
+    // public function latestAttachments()
     // {
-    //     $documents = DB::select(
-    //         "   SELECT *
-    //             FROM cr_survey_document AS csd
-    //             WHERE (TYPE, TIMEMILISECOND) IN (
-    //                 SELECT TYPE, MAX(TIMEMILISECOND)
-    //                 FROM cr_survey_document
-    //                 WHERE TYPE IN ($data)
-    //                     AND CR_SURVEY_ID = '$survey_id'
-    //                 GROUP BY TYPE
-    //             )
-    //             ORDER BY TIMEMILISECOND DESC"
-    //     );
-
-    //     return $documents;
+    //     return $this->cr_survey_document()
+    //         ->whereIn('TYPE', ['sp', 'pk', 'dok'])
+    //         ->whereIn(DB::raw('(TYPE, TIMEMILISECOND)'), function ($query) {
+    //             $query->selectRaw('TYPE, MAX(TIMEMILISECOND)')
+    //                 ->from('cr_survey_document')
+    //                 ->whereColumn('CR_SURVEY_ID', 'cr_survey.CR_SURVEY_ID')
+    //                 ->whereIn('TYPE', ['sp', 'pk', 'dok'])
+    //                 ->groupBy('TYPE');
+    //         })
+    //         ->orderByDesc('TIMEMILISECOND')
+    //         ->get();
     // }
+
+    public function attachment($survey_id, $data)
+    {
+        $documents = DB::select(
+            "   SELECT *
+                FROM cr_survey_document AS csd
+                WHERE (TYPE, TIMEMILISECOND) IN (
+                    SELECT TYPE, MAX(TIMEMILISECOND)
+                    FROM cr_survey_document
+                    WHERE TYPE IN ($data)
+                        AND CR_SURVEY_ID = '$survey_id'
+                    GROUP BY TYPE
+                )
+                ORDER BY TIMEMILISECOND DESC"
+        );
+
+        return $documents;
+    }
 }
