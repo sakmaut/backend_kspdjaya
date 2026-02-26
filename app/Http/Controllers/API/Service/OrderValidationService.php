@@ -57,17 +57,13 @@ class OrderValidationService
             fn($v) => !empty($v->CHASIS_NUMBER) || !empty($v->ENGINE_NUMBER)
         );
 
-        /**
-         * Ambil semua kredit aktif milik KTP/KK ini (selain order sekarang),
-         * sekaligus collateral-nya sekalian dalam satu query.
-         */
+        $newChasis  = $vehicles->pluck('CHASIS_NUMBER')->filter()->unique();
+        $newEngines = $vehicles->pluck('ENGINE_NUMBER')->filter()->unique();
+
         $getActiveCreditsWithCollateral = function (string $field, string $value) use ($orderNumber) {
             return DB::table('credit as a')
                 ->join('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
-                ->leftJoin('cr_collateral as c', function ($join) {
-                    $join->on('c.CR_CREDIT_ID', '=', 'a.ID')
-                        ->where('c.STATUS', 'RILIS'); // hanya collateral yang sudah RILIS
-                })
+                ->leftJoin('cr_collateral as c', 'c.CR_CREDIT_ID', '=', 'a.ID')
                 ->select(
                     'a.ORDER_NUMBER',
                     'c.CHASIS_NUMBER',
@@ -80,62 +76,61 @@ class OrderValidationService
                 ->get();
         };
 
-        // ---------------------------------------------------------------
-        // Validasi KTP
-        // ---------------------------------------------------------------
+        $checkLimit = function (
+            string $identifier,
+            string $labelPrefix,
+            string $field
+        ) use (
+            $getActiveCreditsWithCollateral,
+            $newChasis,
+            $newEngines,
+            &$errors
+        ): void {
+            $activeRows       = $getActiveCreditsWithCollateral($field, $identifier);
+            $activeOrderCount = $activeRows->pluck('ORDER_NUMBER')->unique()->count();
+
+            if ($activeOrderCount === 0) return;
+
+            // Cek apakah ada jaminan yang belum RILIS
+            $hasUnreleased = $activeRows->some(
+                fn($r) => !empty($r->CHASIS_NUMBER) || !empty($r->ENGINE_NUMBER)
+                    && $r->COLLATERAL_STATUS !== 'RILIS'
+            );
+
+            // Cek apakah ada overlap jaminan dengan order baru
+            $existingChasis  = $activeRows->pluck('CHASIS_NUMBER')->filter()->unique();
+            $existingEngines = $activeRows->pluck('ENGINE_NUMBER')->filter()->unique();
+
+            $hasOverlap = $newChasis->intersect($existingChasis)->isNotEmpty()
+                || $newEngines->intersect($existingEngines)->isNotEmpty();
+
+            // Jika ada jaminan sama ATAU belum rilis → max 1
+            if ($hasUnreleased || $hasOverlap) {
+                if ($activeOrderCount >= 1) {
+                    $reason = match (true) {
+                        $hasOverlap && $hasUnreleased => "jaminan sama dan belum dirilis",
+                        $hasOverlap                  => "jaminan sama",
+                        default                      => "jaminan belum dirilis",
+                    };
+                    $errors[] = "{$labelPrefix} {$identifier} sudah terdaftar pada kredit AKTIF dengan {$reason}";
+                }
+                return;
+            }
+
+            // Jika semua jaminan berbeda dan sudah RILIS → max 2
+            if ($activeOrderCount >= 2) {
+                $errors[] = "{$labelPrefix} {$identifier} telah melebihi batas maksimal 2 kredit AKTIF";
+            }
+        };
+
         if (!empty($ktp)) {
-            $activeRows = $getActiveCreditsWithCollateral('ID_NUMBER', $ktp);
-            $activeOrderCount = $activeRows->pluck('ORDER_NUMBER')->unique()->count();
-
-            if ($activeOrderCount >= 2) {
-                // Cek apakah SEMUA collateral pada kredit aktif tersebut sudah RILIS
-                // DAN tidak ada overlap kendaraan dengan order baru ini
-                $existingChasis  = $activeRows->pluck('CHASIS_NUMBER')->filter()->unique();
-                $existingEngines = $activeRows->pluck('ENGINE_NUMBER')->filter()->unique();
-
-                $hasReleasedCollateral = $activeRows->every(
-                    fn($r) => $r->COLLATERAL_STATUS === 'RILIS'
-                );
-
-                $hasOverlap = $vehicles->some(
-                    fn($v) => $existingChasis->contains($v->CHASIS_NUMBER)
-                        || $existingEngines->contains($v->ENGINE_NUMBER)
-                );
-
-                if (!$hasReleasedCollateral || $hasOverlap) {
-                    $errors[] = "No KTP {$ktp} sudah terdaftar pada 2 kredit AKTIF "
-                        . "dengan jaminan yang belum dirilis atau jaminan sama";
-                }
-            }
+            $checkLimit($ktp, 'No KTP', 'ID_NUMBER');
         }
 
-        // ---------------------------------------------------------------
-        // Validasi KK
-        // ---------------------------------------------------------------
         if (!empty($kk)) {
-            $activeRows = $getActiveCreditsWithCollateral('KK_NUMBER', $kk);
-            $activeOrderCount = $activeRows->pluck('ORDER_NUMBER')->unique()->count();
-
-            if ($activeOrderCount >= 2) {
-                $existingChasis  = $activeRows->pluck('CHASIS_NUMBER')->filter()->unique();
-                $existingEngines = $activeRows->pluck('ENGINE_NUMBER')->filter()->unique();
-
-                $hasReleasedCollateral = $activeRows->every(
-                    fn($r) => $r->COLLATERAL_STATUS === 'RILIS'
-                );
-
-                $hasOverlap = $vehicles->some(
-                    fn($v) => $existingChasis->contains($v->CHASIS_NUMBER)
-                        || $existingEngines->contains($v->ENGINE_NUMBER)
-                );
-
-                if (!$hasReleasedCollateral || $hasOverlap) {
-                    $errors[] = "No KK {$kk} telah melebihi batas maksimal 2 kredit AKTIF "
-                        . "dengan jaminan yang belum dirilis atau jaminan sama";
-                }
-            }
+            $checkLimit($kk, 'No KK', 'KK_NUMBER');
         }
-    }
+        }
 
     // private function validateActiveCredit(
     //     array &$errors,
