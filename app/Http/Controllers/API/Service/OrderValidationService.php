@@ -6,10 +6,7 @@ use Illuminate\Support\Facades\DB;
 
 class OrderValidationService
 {
-    public function validate(
-        array $request,
-        iterable $guaranteeVehicles
-    ): array {
+    public function validate(array $request,iterable $guaranteeVehicles): array {
 
         $ktp         = $request['KTP'] ?? null;
         $kk          = $request['KK'] ?? null;
@@ -46,41 +43,33 @@ class OrderValidationService
             return $errors;
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | 2️⃣ CEK LIMIT 2 KREDIT AKTIF PER NASABAH
-        |--------------------------------------------------------------------------
-        */
         $activeCreditCount = DB::table('credit as a')
-            ->join('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
-            ->where('a.STATUS_REC', 'AC')
-            ->when($orderNumber, function ($q) use ($orderNumber) {
-                $q->where('a.ORDER_NUMBER', '!=', $orderNumber);
-            })
-            ->where(function ($q) use ($ktp, $kk) {
+                            ->join('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
+                            ->where('a.STATUS_REC', 'AC')
+                            ->when($orderNumber, function ($q) use ($orderNumber) {
+                                $q->where('a.ORDER_NUMBER', '!=', $orderNumber);
+                            })
+                            ->where(function ($q) use ($ktp, $kk) {
 
-                if (!empty($ktp) && !empty($kk)) {
-                    $q->where(function ($sub) use ($ktp, $kk) {
-                        $sub->where('b.ID_NUMBER', $ktp)
-                            ->orWhere('b.KK_NUMBER', $kk);
-                    });
-                } elseif (!empty($ktp)) {
-                    $q->where('b.ID_NUMBER', $ktp);
-                } elseif (!empty($kk)) {
-                    $q->where('b.KK_NUMBER', $kk);
-                }
-            })
-            ->count();
+                                if (!empty($ktp) && !empty($kk)) {
+                                    $q->where(function ($sub) use ($ktp, $kk) {
+                                        $sub->where('b.ID_NUMBER', $ktp)
+                                            ->orWhere('b.KK_NUMBER', $kk);
+                                    });
+                                } elseif (!empty($ktp)) {
+                                    $q->where('b.ID_NUMBER', $ktp);
+                                } elseif (!empty($kk)) {
+                                    $q->where('b.KK_NUMBER', $kk);
+                                }
+                            })
+            ->get();
+
+        dd($activeCreditCount->count(), $activeCreditCount);
 
         if ($activeCreditCount >= 2) {
             $errors[] = "Nasabah telah memiliki 2 kredit aktif (maksimal 2)";
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | 3️⃣ CEK LIMIT 2 KREDIT AKTIF PER JAMINAN (OPTIMAL SQL GROUP BY)
-        |--------------------------------------------------------------------------
-        */
         $chasisNumbers = $vehicles->pluck('CHASIS_NUMBER')->unique()->values();
         $engineNumbers = $vehicles->pluck('ENGINE_NUMBER')->unique()->values();
 
