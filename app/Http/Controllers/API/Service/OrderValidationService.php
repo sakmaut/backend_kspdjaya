@@ -133,7 +133,7 @@ class OrderValidationService
             if ($activeOrderCount >= 2) {
                 // Kumpulkan semua no kontrak aktif untuk keterangan
                 $activeOrders = $collaterals
-                    ->pluck('LOAN_NUMBER')
+                    ->pluck('CREDIT_ORDER_NUMBER')
                     ->unique()
                     ->filter()
                     ->join(', ');
@@ -163,7 +163,7 @@ class OrderValidationService
             $vehicleInfo = implode(', ', $parts);
             $status      = $r->COLLATERAL_STATUS !== 'RILIS' ? 'Belum Rilis' : 'Rilis';
 
-            return "No Kontrak {$r->CREDIT_ORDER_NUMBER} [{$vehicleInfo}, Status Jaminan: {$status}]";
+            return "No Kontrak {$r->LOAN_NUMBER} [{$vehicleInfo}, Status Jaminan: {$status}]";
         })->join(' | ');
 
         $reason = $hasUnreleased
