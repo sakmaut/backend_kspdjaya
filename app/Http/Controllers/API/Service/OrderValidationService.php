@@ -53,14 +53,8 @@ class OrderValidationService
         ?string  $kk,
         iterable $guaranteeVehicles
     ): void {
-        $vehicles = collect($guaranteeVehicles)->filter(
-            fn($v) => !empty($v->CHASIS_NUMBER) || !empty($v->ENGINE_NUMBER)
-        );
 
-        $newChasis  = $vehicles->pluck('CHASIS_NUMBER')->filter()->unique();
-        $newEngines = $vehicles->pluck('ENGINE_NUMBER')->filter()->unique();
-
-        $getActiveCreditsWithCollateral = function (string $field, string $value) use ($orderNumber) {
+        $getActiveCredits = function (string $field, string $value) use ($orderNumber) {
             return DB::table('credit as a')
                 ->join('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
                 ->leftJoin('cr_collateral as c', 'c.CR_CREDIT_ID', '=', 'a.ID')
@@ -72,7 +66,9 @@ class OrderValidationService
                 )
                 ->where('a.STATUS', 'A')
                 ->where("b.$field", $value)
-                ->where('a.ORDER_NUMBER', '!=', $orderNumber)
+                ->when($orderNumber, function ($q) use ($orderNumber) {
+                    $q->where('a.ORDER_NUMBER', '!=', $orderNumber);
+                })
                 ->get();
         };
 
@@ -81,45 +77,30 @@ class OrderValidationService
             string $labelPrefix,
             string $field
         ) use (
-            $getActiveCreditsWithCollateral,
-            $newChasis,
-            $newEngines,
+            $getActiveCredits,
             &$errors
         ): void {
-            $activeRows       = $getActiveCreditsWithCollateral($field, $identifier);
-            $activeOrderCount = $activeRows->pluck('ORDER_NUMBER')->unique()->count();
 
-            if ($activeOrderCount === 0) return;
+            $activeRows = $getActiveCredits($field, $identifier);
 
-            // Cek apakah ada jaminan yang belum RILIS
-            $hasUnreleased = $activeRows->some(
-                fn($r) => !empty($r->CHASIS_NUMBER) || !empty($r->ENGINE_NUMBER)
-                    && $r->COLLATERAL_STATUS !== 'RILIS'
-            );
+            $activeOrderCount = $activeRows
+                ->pluck('ORDER_NUMBER')
+                ->unique()
+                ->count();
 
-            // Cek apakah ada overlap jaminan dengan order baru
-            $existingChasis  = $activeRows->pluck('CHASIS_NUMBER')->filter()->unique();
-            $existingEngines = $activeRows->pluck('ENGINE_NUMBER')->filter()->unique();
+            // 🚫 Jika masih ada 1 saja kredit ACTIVE → langsung tolak
+            if ($activeOrderCount >= 1) {
 
-            $hasOverlap = $newChasis->intersect($existingChasis)->isNotEmpty()
-                || $newEngines->intersect($existingEngines)->isNotEmpty();
+                $hasUnreleased = $activeRows->contains(function ($r) {
+                    return (!empty($r->CHASIS_NUMBER) || !empty($r->ENGINE_NUMBER))
+                        && $r->COLLATERAL_STATUS !== 'RILIS';
+                });
 
-            // Jika ada jaminan sama ATAU belum rilis → max 1
-            if ($hasUnreleased || $hasOverlap) {
-                if ($activeOrderCount >= 1) {
-                    $reason = match (true) {
-                        $hasOverlap && $hasUnreleased => "jaminan sama dan belum dirilis",
-                        $hasOverlap                  => "jaminan sama",
-                        default                      => "jaminan belum dirilis",
-                    };
-                    $errors[] = "{$labelPrefix} {$identifier} sudah terdaftar pada kredit AKTIF dengan {$reason}";
-                }
-                return;
-            }
+                $reason = $hasUnreleased
+                    ? 'dan jaminan belum dirilis'
+                    : 'meskipun jaminan sudah dirilis';
 
-            // Jika semua jaminan berbeda dan sudah RILIS → max 2
-            if ($activeOrderCount >= 2) {
-                $errors[] = "{$labelPrefix} {$identifier} telah melebihi batas maksimal 2 kredit AKTIF";
+                $errors[] = "{$labelPrefix} {$identifier} sudah memiliki kredit AKTIF {$reason}. Maksimal 1 kredit AKTIF diperbolehkan.";
             }
         };
 
@@ -130,7 +111,7 @@ class OrderValidationService
         if (!empty($kk)) {
             $checkLimit($kk, 'No KK', 'KK_NUMBER');
         }
-        }
+    }
 
     // private function validateActiveCredit(
     //     array &$errors,
