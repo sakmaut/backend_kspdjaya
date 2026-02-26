@@ -144,9 +144,6 @@ class CrAppilcationController extends Controller
                 'cr_application.credit:ID,ORDER_NUMBER,LOAN_NUMBER',
                 'survey_approval:ID,CR_SURVEY_ID,CODE,APPROVAL_RESULT,ONCHARGE_TIME'
             ])
-                ->whereHas('survey_approval', function ($q) {
-                    $q->where('CODE', '!=', 'DRSVY');
-                })
                 ->whereNull('deleted_at')
                 ->orderByDesc('created_at');
 
@@ -154,6 +151,24 @@ class CrAppilcationController extends Controller
             // ✅ Filter HO
             if (!$isHO) {
                 $query->where('branch_id', $branchId);
+                $query->whereHas('survey_approval', function ($q) {
+                    $q->where('CODE', '!=', 'DRSVY');
+                });
+            }else{
+                $allowedCodes = [
+                    'APKPS',
+                    'WAKPS',
+                    'WAHO',
+                    'APHO',
+                    'REORHO',
+                    'CLHO',
+                    'REORKPS',
+                    'CLKPS'
+                ];
+
+                $query->whereHas('survey_approval', function ($q) use ($allowedCodes) {
+                    $q->whereIn('CODE', $allowedCodes);
+                });
             }
 
             // ✅ Filter no_order
