@@ -55,7 +55,7 @@ class ProcessPaymentJob implements ShouldQueue
                 'gateway_response' => $e->getMessage()
             ]);
 
-            throw $e; // supaya masuk failed_jobs
+           return;
         }
     }
 }
