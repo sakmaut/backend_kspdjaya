@@ -44,7 +44,7 @@ class UserRepositories implements UsersRepositoryInterface
             'gender' => $request->gender ?? '',
             'mobile_number' => $request->no_hp ?? '',
             'status' => $request->status == '' ? 'active' : strtolower($request->status),
-            'keterangan' => strtolower($request->status) ?? '',
+            'keterangan' => 'AKTIF',
             'created_by' => $request->user()->id
         ];
 
@@ -66,7 +66,7 @@ class UserRepositories implements UsersRepositoryInterface
             'gender' => $request->gender ?? '',
             'mobile_number' => $request->no_hp ?? '',
             'status' => in_array($reqStatus, $status) ? 'Active' : 'Inactive',
-            'keterangan' => strtoupper($reqStatus),
+            'keterangan' => in_array($reqStatus, $status) ? 'AKTIF' : 'RESIGN',
             'updated_by' => $request->user()->id ?? '',
             'updated_at' => Carbon::now('Asia/Jakarta')
         ];
