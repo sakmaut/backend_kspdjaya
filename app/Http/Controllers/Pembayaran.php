@@ -11,27 +11,23 @@ class Pembayaran extends Controller
 {
     public function store(Request $request)
     {
-        // Validasi
         $request->validate([
-            'amount' => 'required|numeric|min:1000'
+            'amount' => 'required' // hanya required
         ]);
 
-        // Generate UUID
         $paymentId = (string) Str::uuid();
         $orderId   = (string) Str::uuid();
 
-        // Simpan ke database
         $payment = ModelsPembayaran::create([
             'id' => $paymentId,
             'order_id' => $orderId,
-            'amount' => $request->amount,
+            'amount' => $request->amount, // bisa string
             'status' => 'PENDING',
             'gateway_response' => null,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
 
-        // Dispatch ke Job (Queue)
         ProcessPaymentJob::dispatch($payment->id);
 
         return response()->json([

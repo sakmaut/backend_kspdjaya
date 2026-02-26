@@ -32,6 +32,16 @@ class ProcessPaymentJob implements ShouldQueue
         ]);
 
         try {
+
+            // VALIDASI TYPE STRICT
+            if (!is_int($payment->amount)) {
+                throw new \Exception("Amount must be integer, string detected.");
+            }
+
+            if ($payment->amount < 1000) {
+                throw new \Exception("Minimum amount is 1000.");
+            }
+
             sleep(3);
 
             $payment->update([
@@ -45,7 +55,7 @@ class ProcessPaymentJob implements ShouldQueue
                 'gateway_response' => $e->getMessage()
             ]);
 
-            throw $e;
+            throw $e; // supaya masuk failed_jobs
         }
     }
 }
