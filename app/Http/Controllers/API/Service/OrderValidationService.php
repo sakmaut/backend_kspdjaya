@@ -6,6 +6,13 @@ use Illuminate\Support\Facades\DB;
 
 class OrderValidationService
 {
+
+// KTP sama, pengajuan ke-2:
+// ├── Jaminan BERBEDA → ✅ BOLEH (tidak peduli STATUS collateral existing)
+// └── Jaminan SAMA
+//     ├── Kredit TUTUP dan jaminan RILIS → ✅ BOLEH
+//     └── Kredit AKTIF atau jaminan belum RILIS → ❌ TOLAK
+
     public function validate(array $request, iterable $guaranteeVehicles): array
     {
         $ktp         = $request['KTP'] ?? null;
@@ -53,23 +60,45 @@ class OrderValidationService
         ?string  $kk,
         iterable $guaranteeVehicles
     ): void {
+        $vehicles = collect($guaranteeVehicles)->filter(
+            fn($v) => !empty($v->CHASIS_NUMBER) || !empty($v->ENGINE_NUMBER)
+        );
 
-        $getActiveCredits = function (string $field, string $value) use ($orderNumber) {
-            return DB::table('credit as a')
-                ->join('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
-                ->leftJoin('cr_collateral as c', 'c.CR_CREDIT_ID', '=', 'a.ID')
-                ->select(
-                    'a.ORDER_NUMBER',
-                    'c.CHASIS_NUMBER',
-                    'c.ENGINE_NUMBER',
-                    'c.STATUS as COLLATERAL_STATUS'
-                )
-                ->where('a.STATUS', 'A')
-                ->where("b.$field", $value)
-                ->when($orderNumber, function ($q) use ($orderNumber) {
-                    $q->where('a.ORDER_NUMBER', '!=', $orderNumber);
-                })
-                ->get();
+        $newChasis  = $vehicles->pluck('CHASIS_NUMBER')->filter()->unique();
+        $newEngines = $vehicles->pluck('ENGINE_NUMBER')->filter()->unique();
+
+        $getActiveCredits = function (string $field, string $value) use ($orderNumber): array {
+            // Query 1: ambil kredit aktif (unik, tanpa duplikat)
+            $activeCredits = DB::select("
+            SELECT a.ID, a.ORDER_NUMBER
+            FROM credit a
+            JOIN customer b ON b.CUST_CODE = a.CUST_CODE
+            WHERE a.STATUS = 'A'
+              AND b.{$field} = ?
+              AND a.ORDER_NUMBER != ?
+        ", [$value, $orderNumber ?? '']);
+
+            if (empty($activeCredits)) {
+                return [
+                    'order_count' => 0,
+                    'collaterals' => collect(),
+                ];
+            }
+
+            $creditIds    = collect($activeCredits)->pluck('ID')->all();
+            $placeholders = implode(',', array_fill(0, count($creditIds), '?'));
+
+            // Query 2: ambil collateral dari kredit aktif tersebut
+            $collaterals = DB::select("
+            SELECT CR_CREDIT_ID, CHASIS_NUMBER, ENGINE_NUMBER, STATUS as COLLATERAL_STATUS
+            FROM cr_collateral
+            WHERE CR_CREDIT_ID IN ({$placeholders})
+        ", $creditIds);
+
+            return [
+                'order_count' => count($activeCredits),
+                'collaterals' => collect($collaterals),
+            ];
         };
 
         $checkLimit = function (
@@ -78,30 +107,41 @@ class OrderValidationService
             string $field
         ) use (
             $getActiveCredits,
+            $newChasis,
+            $newEngines,
             &$errors
         ): void {
+            $result           = $getActiveCredits($field, $identifier);
+            $activeOrderCount = $result['order_count'];
+            $collaterals      = $result['collaterals'];
 
-            $activeRows = $getActiveCredits($field, $identifier);
+            if ($activeOrderCount === 0) return;
 
-            $activeOrderCount = $activeRows
-                ->pluck('ORDER_NUMBER')
-                ->unique()
-                ->count();
+            // Ambil hanya collateral yang overlap dengan jaminan baru
+            $overlappingCollaterals = $collaterals->filter(
+                fn($r) => (!empty($r->CHASIS_NUMBER) && $newChasis->contains($r->CHASIS_NUMBER))
+                    || (!empty($r->ENGINE_NUMBER) && $newEngines->contains($r->ENGINE_NUMBER))
+            );
 
-            // 🚫 Jika masih ada 1 saja kredit ACTIVE → langsung tolak
-            if ($activeOrderCount >= 1) {
-
-                $hasUnreleased = $activeRows->contains(function ($r) {
-                    return (!empty($r->CHASIS_NUMBER) || !empty($r->ENGINE_NUMBER))
-                        && $r->COLLATERAL_STATUS !== 'RILIS';
-                });
-
-                $reason = $hasUnreleased
-                    ? 'dan jaminan belum dirilis'
-                    : 'meskipun jaminan sudah dirilis';
-
-                $errors[] = "{$labelPrefix} {$identifier} sudah memiliki kredit AKTIF {$reason}. Maksimal 1 kredit AKTIF diperbolehkan.";
+            // Jaminan berbeda semua → tidak peduli STATUS, cukup cek max 2
+            if ($overlappingCollaterals->isEmpty()) {
+                if ($activeOrderCount >= 2) {
+                    $errors[] = "{$labelPrefix} {$identifier} telah melebihi batas maksimal 2 kredit AKTIF";
+                }
+                return;
             }
+
+            // Ada jaminan sama → wajib kredit TUTUP dan jaminan RILIS
+            // Karena query sudah filter STATUS='A', overlap di sini = pasti masih aktif
+            $hasUnreleased = $overlappingCollaterals->some(
+                fn($r) => $r->COLLATERAL_STATUS !== 'RILIS'
+            );
+
+            $reason = $hasUnreleased
+                ? "jaminan sama masih aktif dan belum dirilis"
+                : "jaminan sama masih terdaftar pada kredit aktif";
+
+            $errors[] = "{$labelPrefix} {$identifier} tidak dapat diproses, {$reason}";
         };
 
         if (!empty($ktp)) {
