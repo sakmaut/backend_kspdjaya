@@ -16,10 +16,13 @@ class Pembayaran extends Controller
             'amount' => 'required|numeric|min:1000'
         ]);
 
+        // Generate UUID
+        $paymentId = (string) Str::uuid();
         $orderId   = (string) Str::uuid();
 
         // Simpan ke database
         $payment = ModelsPembayaran::create([
+            'id' => $paymentId,
             'order_id' => $orderId,
             'amount' => $request->amount,
             'status' => 'PENDING',
