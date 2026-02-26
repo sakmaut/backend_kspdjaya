@@ -17,12 +17,15 @@ class OrderValidationService
 
         $errors = [];
 
-        if (empty($ktp)) {
-            $errors[] = "Nomor KTP wajib diisi";
-        }
+        $fields = [
+            'KTP' => $ktp,
+            'KK'  => $kk,
+        ];
 
-        if (empty($kk)) {
-            $errors[] = "Nomor KK wajib diisi";
+        foreach ($fields as $label => $value) {
+            if (empty($value)) {
+                $errors[] = "Nomor {$label} wajib diisi";
+            }
         }
 
         $vehicles = collect($guaranteeVehicles);
