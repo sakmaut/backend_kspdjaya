@@ -22,7 +22,7 @@ class OrderValidationService
         | 1️⃣ VALIDASI DASAR
         |--------------------------------------------------------------------------
         */
-        if (empty($ktp) && empty($kk)) {
+        if (empty($ktp) || empty($kk)) {
             $errors[] = "Nomor KTP atau Nomor KK wajib diisi salah satu";
         }
 
