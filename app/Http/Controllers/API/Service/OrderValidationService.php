@@ -61,10 +61,7 @@ class OrderValidationService
                                 } elseif (!empty($kk)) {
                                     $q->where('b.KK_NUMBER', $kk);
                                 }
-                            })
-            ->get();
-
-        dd($activeCreditCount->count(), $activeCreditCount);
+                            })->count();
 
         if ($activeCreditCount >= 2) {
             $errors[] = "Nasabah telah memiliki 2 kredit aktif (maksimal 2)";
