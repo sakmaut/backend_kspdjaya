@@ -43,6 +43,8 @@ class OrderValidationService
             return $errors;
         }
 
+        $this->validateBlacklist($errors, $ktp, $kk);
+
         $activeCreditCount = DB::table('credit as a')
                             ->join('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
                             ->where('a.STATUS_REC', 'AC')
@@ -109,6 +111,31 @@ class OrderValidationService
 
         return $errors;
     }
+
+    private function validateBlacklist(array &$errors, ?string $ktp, ?string $kk): void
+    {
+        if (empty($ktp) && empty($kk)) {
+            $errors[] = "Nomor KTP atau Nomor KK wajib diisi salah satu";
+            return;
+        }
+
+        $blacklist = M_CrBlacklist::query()
+            ->where(function ($q) use ($ktp, $kk) {
+                $q->when(!empty($ktp), fn($q) => $q->orWhere('KTP', $ktp))
+                    ->when(!empty($kk),  fn($q) => $q->orWhere('KK', $kk));
+            })
+            ->first();
+
+        if ($blacklist) {
+            $matchedBy = match (true) {
+                !empty($ktp) && $blacklist->KTP === $ktp && !empty($kk) && $blacklist->KK === $kk => "KTP {$ktp} dan KK {$kk}",
+                !empty($ktp) && $blacklist->KTP === $ktp => "KTP {$ktp}",
+                !empty($kk)  && $blacklist->KK  === $kk  => "KK {$kk}",
+            };
+
+            $errors[] = "Atas nama {$blacklist->NAME} teridentifikasi dalam daftar BLACKLIST berdasarkan {$matchedBy}";
+        }
+    }
 }
 
 // class OrderValidationService
@@ -135,30 +162,7 @@ class OrderValidationService
 //         return $errors;
 //     }
 
-//     private function validateBlacklist(array &$errors, ?string $ktp, ?string $kk): void
-//     {
-//         if (empty($ktp) && empty($kk)) {
-//             $errors[] = "Nomor KTP atau Nomor KK wajib diisi salah satu";
-//             return;
-//         }
 
-//         $blacklist = M_CrBlacklist::query()
-//             ->where(function ($q) use ($ktp, $kk) {
-//                 $q->when(!empty($ktp), fn($q) => $q->orWhere('KTP', $ktp))
-//                     ->when(!empty($kk),  fn($q) => $q->orWhere('KK', $kk));
-//             })
-//             ->first();
-
-//         if ($blacklist) {
-//             $matchedBy = match (true) {
-//                 !empty($ktp) && $blacklist->KTP === $ktp && !empty($kk) && $blacklist->KK === $kk => "KTP {$ktp} dan KK {$kk}",
-//                 !empty($ktp) && $blacklist->KTP === $ktp => "KTP {$ktp}",
-//                 !empty($kk)  && $blacklist->KK  === $kk  => "KK {$kk}",
-//             };
-
-//             $errors[] = "Atas nama {$blacklist->NAME} teridentifikasi dalam daftar BLACKLIST berdasarkan {$matchedBy}";
-//         }
-//     }
 
 //     private function validateActiveCredit(array &$errors,?string  $orderNumber,?string $ktp,?string $kk,iterable $guaranteeVehicles): void {
 //         $allVehicles = collect($guaranteeVehicles);
