@@ -15,7 +15,7 @@ class OrderValidationService
         $errors = [];
 
         $this->validateBlacklist($errors, $ktp, $kk);
-        $this->validateActiveCredit($errors, $orderNumber, $ktp, $kk);
+        $this->validateActiveCredit($errors, $orderNumber, $ktp, $kk, $guaranteeVehicles);
         $this->validateCollateral($errors, $orderNumber, $guaranteeVehicles);
 
         return $errors;
@@ -47,28 +47,119 @@ class OrderValidationService
     }
 
     private function validateActiveCredit(
-        array &$errors,
-        ?string $orderNumber,
-        ?string $ktp,
-        ?string $kk
+        array    &$errors,
+        ?string  $orderNumber,
+        ?string  $ktp,
+        ?string  $kk,
+        iterable $guaranteeVehicles
     ): void {
+        $vehicles = collect($guaranteeVehicles)->filter(
+            fn($v) => !empty($v->CHASIS_NUMBER) || !empty($v->ENGINE_NUMBER)
+        );
 
-        $activeCount = fn(string $field, string $value) => DB::table('credit as a')
-            ->join('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
-            ->selectRaw('1')
-            ->where('a.STATUS', 'A')
-            ->where("b.$field", $value)
-            ->where('a.ORDER_NUMBER', '!=', $orderNumber)
-            ->count();
+        /**
+         * Ambil semua kredit aktif milik KTP/KK ini (selain order sekarang),
+         * sekaligus collateral-nya sekalian dalam satu query.
+         */
+        $getActiveCreditsWithCollateral = function (string $field, string $value) use ($orderNumber) {
+            return DB::table('credit as a')
+                ->join('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
+                ->leftJoin('cr_collateral as c', function ($join) {
+                    $join->on('c.CR_CREDIT_ID', '=', 'a.ID')
+                        ->where('c.STATUS', 'RILIS'); // hanya collateral yang sudah RILIS
+                })
+                ->select(
+                    'a.ORDER_NUMBER',
+                    'c.CHASIS_NUMBER',
+                    'c.ENGINE_NUMBER',
+                    'c.STATUS as COLLATERAL_STATUS'
+                )
+                ->where('a.STATUS', 'A')
+                ->where("b.$field", $value)
+                ->where('a.ORDER_NUMBER', '!=', $orderNumber)
+                ->get();
+        };
 
-        if (!empty($ktp) && $activeCount('ID_NUMBER', $ktp) >= 2) {
-            $errors[] = "No KTP {$ktp} sudah terdaftar pada kredit yang masih AKTIF";
+        // ---------------------------------------------------------------
+        // Validasi KTP
+        // ---------------------------------------------------------------
+        if (!empty($ktp)) {
+            $activeRows = $getActiveCreditsWithCollateral('ID_NUMBER', $ktp);
+            $activeOrderCount = $activeRows->pluck('ORDER_NUMBER')->unique()->count();
+
+            if ($activeOrderCount >= 2) {
+                // Cek apakah SEMUA collateral pada kredit aktif tersebut sudah RILIS
+                // DAN tidak ada overlap kendaraan dengan order baru ini
+                $existingChasis  = $activeRows->pluck('CHASIS_NUMBER')->filter()->unique();
+                $existingEngines = $activeRows->pluck('ENGINE_NUMBER')->filter()->unique();
+
+                $hasReleasedCollateral = $activeRows->every(
+                    fn($r) => $r->COLLATERAL_STATUS === 'RILIS'
+                );
+
+                $hasOverlap = $vehicles->some(
+                    fn($v) => $existingChasis->contains($v->CHASIS_NUMBER)
+                        || $existingEngines->contains($v->ENGINE_NUMBER)
+                );
+
+                if (!$hasReleasedCollateral || $hasOverlap) {
+                    $errors[] = "No KTP {$ktp} sudah terdaftar pada 2 kredit AKTIF "
+                        . "dengan jaminan yang belum dirilis atau jaminan sama";
+                }
+            }
         }
 
-        if (!empty($kk) && $activeCount('KK_NUMBER', $kk) >= 2) {
-            $errors[] = "No KK {$kk} telah melebihi batas maksimal 2 kredit AKTIF";
+        // ---------------------------------------------------------------
+        // Validasi KK
+        // ---------------------------------------------------------------
+        if (!empty($kk)) {
+            $activeRows = $getActiveCreditsWithCollateral('KK_NUMBER', $kk);
+            $activeOrderCount = $activeRows->pluck('ORDER_NUMBER')->unique()->count();
+
+            if ($activeOrderCount >= 2) {
+                $existingChasis  = $activeRows->pluck('CHASIS_NUMBER')->filter()->unique();
+                $existingEngines = $activeRows->pluck('ENGINE_NUMBER')->filter()->unique();
+
+                $hasReleasedCollateral = $activeRows->every(
+                    fn($r) => $r->COLLATERAL_STATUS === 'RILIS'
+                );
+
+                $hasOverlap = $vehicles->some(
+                    fn($v) => $existingChasis->contains($v->CHASIS_NUMBER)
+                        || $existingEngines->contains($v->ENGINE_NUMBER)
+                );
+
+                if (!$hasReleasedCollateral || $hasOverlap) {
+                    $errors[] = "No KK {$kk} telah melebihi batas maksimal 2 kredit AKTIF "
+                        . "dengan jaminan yang belum dirilis atau jaminan sama";
+                }
+            }
         }
     }
+
+    // private function validateActiveCredit(
+    //     array &$errors,
+    //     ?string $orderNumber,
+    //     ?string $ktp,
+    //     ?string $kk
+    // ): void {
+
+    //     $activeCount = fn(string $field, string $value) => DB::table('credit as a')
+    //         ->join('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
+    //         ->selectRaw('1')
+    //         ->where('a.STATUS', 'A')
+    //         ->where("b.$field", $value)
+    //         ->where('a.ORDER_NUMBER', '!=', $orderNumber)
+    //         ->count();
+
+    //     if (!empty($ktp) && $activeCount('ID_NUMBER', $ktp) >= 2) {
+    //         $errors[] = "No KTP {$ktp} sudah terdaftar pada kredit yang masih AKTIF";
+    //     }
+
+    //     if (!empty($kk) && $activeCount('KK_NUMBER', $kk) >= 2) {
+    //         $errors[] = "No KK {$kk} telah melebihi batas maksimal 2 kredit AKTIF";
+    //     }
+    // }
 
     // private function validateCollateral(
     //     array &$errors,
