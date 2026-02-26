@@ -94,7 +94,8 @@ class OrderValidationService
                 c.CHASIS_NUMBER,
                 c.ENGINE_NUMBER,
                 c.STATUS        AS COLLATERAL_STATUS,
-                a.ORDER_NUMBER  AS CREDIT_ORDER_NUMBER
+                a.ORDER_NUMBER  AS CREDIT_ORDER_NUMBER,
+                a.LOAN_NUMBER
             FROM cr_collateral c
             JOIN credit a ON a.ID = c.CR_CREDIT_ID
             WHERE c.CR_CREDIT_ID IN ({$placeholders})
@@ -128,12 +129,11 @@ class OrderValidationService
                    || (!empty($r->ENGINE_NUMBER)  && $newEngines->contains($r->ENGINE_NUMBER))
         );
 
-        // Jaminan berbeda semua → cek max 2
         if ($overlappingCollaterals->isEmpty()) {
             if ($activeOrderCount >= 2) {
                 // Kumpulkan semua no kontrak aktif untuk keterangan
                 $activeOrders = $collaterals
-                    ->pluck('CREDIT_ORDER_NUMBER')
+                    ->pluck('LOAN_NUMBER')
                     ->unique()
                     ->filter()
                     ->join(', ');
