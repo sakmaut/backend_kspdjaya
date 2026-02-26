@@ -30,6 +30,7 @@ use App\Http\Controllers\API\{
     Wilayah
 };
 use App\Http\Controllers\Payment\Controller\C_PokokSebagian;
+use App\Http\Controllers\Pembayaran;
 use App\Http\Controllers\Ticketing\TicketingController;
 use App\Http\Controllers\Ticketing\TicketingMessages\TicketingMessagesController;
 use App\Http\Controllers\Welcome;
@@ -47,6 +48,8 @@ Route::get('welcome', [Welcome::class, 'index']);
 // Route::get('jobArrears', [Welcome::class, 'job']);
 // Route::post('botpel', [PelunasanController2::class, 'getDetail']);
 // Route::post('propel', [PelunasanController2::class, 'propel']);
+
+Route::post('pembayaran', [Pembayaran::class, 'store']);
 
 //Wilayah
 Route::get('provinsi', [Wilayah::class, 'provinsi']);
