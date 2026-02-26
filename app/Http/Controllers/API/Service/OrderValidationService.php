@@ -70,27 +70,95 @@ class OrderValidationService
         }
     }
 
+    // private function validateCollateral(
+    //     array &$errors,
+    //     ?string $orderNumber,
+    //     iterable $guaranteeVehicles
+    // ): void {
+    //     $vehicles = collect($guaranteeVehicles);
+
+    //     // Cek kendaraan yang kosong
+    //     if ($vehicles->some(fn($v) => empty($v->CHASIS_NUMBER) && empty($v->ENGINE_NUMBER))) {
+    //         $errors[] = "Jaminan: No Mesin dan No Rangka tidak boleh kosong";
+    //     }
+
+    //     // Ambil kendaraan yang valid
+    //     $valid = $vehicles->filter(fn($v) => !empty($v->CHASIS_NUMBER) || !empty($v->ENGINE_NUMBER));
+
+    //     if ($valid->isEmpty()) return;
+
+    //     // Satu query ambil semua collateral yang cocok
+    //     $collaterals = DB::table('cr_collateral as a')
+    //         ->leftJoin('credit as b', 'b.ID', '=', 'a.CR_CREDIT_ID')
+    //         ->selectRaw('a.CHASIS_NUMBER, a.ENGINE_NUMBER, a.STATUS, b.STATUS_REC')
+    //         ->where(function ($q) use ($valid) {
+    //             $q->whereIn('a.CHASIS_NUMBER', $valid->pluck('CHASIS_NUMBER')->all())
+    //                 ->orWhereIn('a.ENGINE_NUMBER', $valid->pluck('ENGINE_NUMBER')->all());
+    //         })
+    //         ->where('b.ORDER_NUMBER', '!=', $orderNumber)
+    //         ->get();
+
+    //     if ($collaterals->isEmpty()) return;
+
+    //     $valid->each(function ($v) use ($collaterals, &$errors) {
+    //         $matchFn = fn($r) => $r->CHASIS_NUMBER === $v->CHASIS_NUMBER
+    //             || $r->ENGINE_NUMBER === $v->ENGINE_NUMBER;
+
+    //         // Cari yang belum dirilis
+    //         $unreleased = $collaterals->first(fn($r) => $matchFn($r) && $r->STATUS !== 'RILIS');
+
+    //         // Cari yang masih aktif (tidak peduli STATUS)
+    //         $active = $collaterals->first(fn($r) => $matchFn($r) && $r->STATUS_REC === 'AC');
+
+    //         if (!$unreleased && !$active) return;
+
+    //         // Ambil row untuk info keterangan
+    //         $row  = $unreleased ?? $active;
+    //         $info = match (true) {
+    //             $row->CHASIS_NUMBER === $v->CHASIS_NUMBER && $row->ENGINE_NUMBER === $v->ENGINE_NUMBER
+    //             => "No Rangka {$v->CHASIS_NUMBER} dan No Mesin {$v->ENGINE_NUMBER}",
+    //             $row->CHASIS_NUMBER === $v->CHASIS_NUMBER
+    //             => "No Rangka {$v->CHASIS_NUMBER}",
+    //             default
+    //             => "No Mesin {$v->ENGINE_NUMBER}",
+    //         };
+
+    //         if ($unreleased) {
+    //             $errors[] = "Jaminan {$info} masih belum dirilis";
+    //         }
+
+    //         if ($active) {
+    //             $errors[] = "Jaminan {$info} masih terdaftar pada kredit yang aktif";
+    //         }
+    //     });
+    // }
+
     private function validateCollateral(
         array &$errors,
         ?string $orderNumber,
         iterable $guaranteeVehicles
     ): void {
+
         $vehicles = collect($guaranteeVehicles);
 
-        // Cek kendaraan yang kosong
         if ($vehicles->some(fn($v) => empty($v->CHASIS_NUMBER) && empty($v->ENGINE_NUMBER))) {
             $errors[] = "Jaminan: No Mesin dan No Rangka tidak boleh kosong";
         }
 
-        // Ambil kendaraan yang valid
-        $valid = $vehicles->filter(fn($v) => !empty($v->CHASIS_NUMBER) || !empty($v->ENGINE_NUMBER));
+        $valid = $vehicles->filter(
+            fn($v) => !empty($v->CHASIS_NUMBER) || !empty($v->ENGINE_NUMBER)
+        );
 
         if ($valid->isEmpty()) return;
 
-        // Satu query ambil semua collateral yang cocok
         $collaterals = DB::table('cr_collateral as a')
             ->leftJoin('credit as b', 'b.ID', '=', 'a.CR_CREDIT_ID')
-            ->selectRaw('a.CHASIS_NUMBER, a.ENGINE_NUMBER, a.STATUS, b.STATUS_REC')
+            ->selectRaw('
+            a.CHASIS_NUMBER,
+            a.ENGINE_NUMBER,
+            a.STATUS,
+            b.STATUS_REC
+        ')
             ->where(function ($q) use ($valid) {
                 $q->whereIn('a.CHASIS_NUMBER', $valid->pluck('CHASIS_NUMBER')->all())
                     ->orWhereIn('a.ENGINE_NUMBER', $valid->pluck('ENGINE_NUMBER')->all());
@@ -100,36 +168,36 @@ class OrderValidationService
 
         if ($collaterals->isEmpty()) return;
 
-        $valid->each(function ($v) use ($collaterals, &$errors) {
-            $matchFn = fn($r) => $r->CHASIS_NUMBER === $v->CHASIS_NUMBER
-                || $r->ENGINE_NUMBER === $v->ENGINE_NUMBER;
+        foreach ($valid as $v) {
 
-            // Cari yang belum dirilis
-            $unreleased = $collaterals->first(fn($r) => $matchFn($r) && $r->STATUS !== 'RILIS');
+            $match = $collaterals->first(function ($r) use ($v) {
+                return $r->CHASIS_NUMBER === $v->CHASIS_NUMBER
+                    || $r->ENGINE_NUMBER === $v->ENGINE_NUMBER;
+            });
 
-            // Cari yang masih aktif (tidak peduli STATUS)
-            $active = $collaterals->first(fn($r) => $matchFn($r) && $r->STATUS_REC === 'AC');
+            if (!$match) continue;
 
-            if (!$unreleased && !$active) return;
-
-            // Ambil row untuk info keterangan
-            $row  = $unreleased ?? $active;
             $info = match (true) {
-                $row->CHASIS_NUMBER === $v->CHASIS_NUMBER && $row->ENGINE_NUMBER === $v->ENGINE_NUMBER
+                $match->CHASIS_NUMBER === $v->CHASIS_NUMBER
+                    && $match->ENGINE_NUMBER === $v->ENGINE_NUMBER
                 => "No Rangka {$v->CHASIS_NUMBER} dan No Mesin {$v->ENGINE_NUMBER}",
-                $row->CHASIS_NUMBER === $v->CHASIS_NUMBER
+
+                $match->CHASIS_NUMBER === $v->CHASIS_NUMBER
                 => "No Rangka {$v->CHASIS_NUMBER}",
+
                 default
                 => "No Mesin {$v->ENGINE_NUMBER}",
             };
 
-            if ($unreleased) {
-                $errors[] = "Jaminan {$info} masih belum dirilis";
+            // 🔴 Rule utama
+            if ($match->STATUS !== 'RILIS') {
+                $errors[] = "Jaminan {$info} belum dirilis";
+                continue;
             }
 
-            if ($active) {
-                $errors[] = "Jaminan {$info} masih terdaftar pada kredit yang aktif";
+            if ($match->STATUS_REC === 'AC') {
+                $errors[] = "Jaminan {$info} masih terdaftar pada kredit aktif";
             }
-        });
+        }
     }
 }
