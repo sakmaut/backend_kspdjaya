@@ -54,17 +54,20 @@ class OrderValidationService
         $activeCreditCount = DB::table('credit as a')
             ->join('customer as b', 'b.CUST_CODE', '=', 'a.CUST_CODE')
             ->where('a.STATUS_REC', 'AC')
-            ->when(
-                $orderNumber,
-                fn($q) =>
-                $q->where('a.ORDER_NUMBER', '!=', $orderNumber)
-            )
+            ->when($orderNumber, function ($q) use ($orderNumber) {
+                $q->where('a.ORDER_NUMBER', '!=', $orderNumber);
+            })
             ->where(function ($q) use ($ktp, $kk) {
-                if (!empty($ktp)) {
-                    $q->orWhere('b.ID_NUMBER', $ktp);
-                }
-                if (!empty($kk)) {
-                    $q->orWhere('b.KK_NUMBER', $kk);
+
+                if (!empty($ktp) && !empty($kk)) {
+                    $q->where(function ($sub) use ($ktp, $kk) {
+                        $sub->where('b.ID_NUMBER', $ktp)
+                            ->orWhere('b.KK_NUMBER', $kk);
+                    });
+                } elseif (!empty($ktp)) {
+                    $q->where('b.ID_NUMBER', $ktp);
+                } elseif (!empty($kk)) {
+                    $q->where('b.KK_NUMBER', $kk);
                 }
             })
             ->count();
