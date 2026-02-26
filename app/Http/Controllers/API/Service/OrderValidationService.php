@@ -17,13 +17,12 @@ class OrderValidationService
 
         $errors = [];
 
-        /*
-        |--------------------------------------------------------------------------
-        | 1️⃣ VALIDASI DASAR
-        |--------------------------------------------------------------------------
-        */
-        if (empty($ktp) || empty($kk)) {
-            $errors[] = "Nomor KTP atau Nomor KK wajib diisi salah satu";
+        if (empty($ktp)) {
+            $errors[] = "Nomor KTP wajib diisi";
+        }
+
+        if (empty($kk)) {
+            $errors[] = "Nomor KK wajib diisi";
         }
 
         $vehicles = collect($guaranteeVehicles);
