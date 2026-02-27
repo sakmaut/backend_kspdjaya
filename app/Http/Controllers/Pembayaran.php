@@ -16,7 +16,7 @@ class Pembayaran extends Controller
         ]);
 
         $paymentId = (string) Str::uuid();
-        $orderId   = (string) Str::uuid();
+        $orderId   = $request->loan;
 
         $payment = ModelsPembayaran::create([
             'id' => $paymentId,
