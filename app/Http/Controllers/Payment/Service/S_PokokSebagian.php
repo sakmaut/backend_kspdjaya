@@ -446,7 +446,8 @@ class S_PokokSebagian
                 'INTEREST' => $totalInterest,
                 'PAYMENT_DATE' => $res->PAYMENT_DATE,
                 'BAYAR_BUNGA' => $paidNow,
-                'DISKON_BUNGA' => max(0, $discount),
+                // 'DISKON_BUNGA' => max(0, $discount),
+                'DISKON_BUNGA' => 0,
                 'BAYAR_POKOK' => 0 ,
                 'BAYAR_DENDA' => $bayarDenda ?? 0,
             ];
@@ -531,7 +532,7 @@ class S_PokokSebagian
                     $sisaPaymentBunga -= $paidNow;
 
                     $data[$index]['BAYAR_BUNGA'] = $paidNow;
-                    // $data[$index]['DISKON_BUNGA'] = max(0, $data[$index]['INTEREST'] - $paidNow);
+                    $data[$index]['DISKON_BUNGA'] = max(0, $data[$index]['INTEREST'] - $paidNow);
                 }
             }
         }
