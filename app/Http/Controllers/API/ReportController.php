@@ -102,7 +102,7 @@ class ReportController extends Controller
     public function InquiryList(Request $request)
     {
         try {
-            if (!$request->hasAny(['nama', 'no_kontrak', 'no_polisi'])) {
+            if (!$request->hasAny(['nama', 'no_kontrak', 'no_polisi','cust_code'])) {
                 return response()->json([], 200);
             }
 
@@ -123,6 +123,11 @@ class ReportController extends Controller
                     $request->filled('no_kontrak'),
                     fn($q) =>
                     $q->where('LOAN_NUMBER', $request->no_kontrak)
+                )
+                ->when(
+                    $request->filled('cust_code'),
+                    fn($q) =>
+                    $q->where('CUST_CODE', $request->cust_code)
                 )
                 ->when(
                     $request->filled('nama'),
