@@ -23,7 +23,7 @@ class ProcessPaymentJob implements ShouldQueue
      */
     public function handle(): void
     {
-        $payment = Pembayaran::find($this->paymentId);
+        $payment = Pembayaran::where('order_id',$this->paymentId);
 
         if (!$payment) {
             return;

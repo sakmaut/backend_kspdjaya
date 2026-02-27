@@ -15,11 +15,11 @@ class Pembayaran extends Controller
             'amount' => 'required' // hanya required
         ]);
 
-        $paymentId =  $request->id_trx;
-        $orderId   = $request->loan;
+        $orderId   = $request->idtrx;
+        $loan = $request->loan;
 
         $payment = ModelsPembayaran::create([
-            'id' => $paymentId,
+            'loan' => $loan,
             'order_id' => $orderId,
             'amount' => $request->amount,
             'status' => 'PENDING',
@@ -28,7 +28,7 @@ class Pembayaran extends Controller
             'updated_at' => now(),
         ]);
 
-        ProcessPaymentJob::dispatch($payment->id);
+        ProcessPaymentJob::dispatch($orderId);
 
         return response()->json([
             'message' => 'Payment created successfully',
