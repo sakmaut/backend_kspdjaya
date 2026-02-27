@@ -392,6 +392,10 @@ class S_PokokSebagian
 
         foreach ($creditSchedule as $res) {
 
+            // ===============================
+            // HANDLE DENDA
+            // ===============================
+
             $arrears = M_Arrears::where('LOAN_NUMBER', $request->LOAN_NUMBER)
                 ->whereDate('START_DATE', $res->PAYMENT_DATE)
                 ->where('STATUS_REC', 'A')
@@ -408,19 +412,18 @@ class S_PokokSebagian
                 $sisaPaymentDenda -= $bayarDenda;
             }
 
-            $paidInterest = floatval($res->PAYMENT_VALUE_INTEREST ?? 0);
+            // ===============================
+            // HANDLE ROW YANG SUDAH PAID
+            // ===============================
 
             if (strtoupper($res->PAID_FLAG) === 'PAID') {
 
-                $principal = floatval($res->PRINCIPAL);
-                $interest  = floatval($res->INTEREST);
-
                 $data[] = [
                     'ID' => $res->ID,
-                    'PRINCIPAL' => $principal,
+                    'PRINCIPAL' => floatval($res->PRINCIPAL),
                     'INSTALLMENT_COUNT' => $res->INSTALLMENT_COUNT,
-                    'INSTALLMENT' => $principal + $interest,
-                    'INTEREST' => $interest,
+                    'INSTALLMENT' => floatval($res->INSTALLMENT),
+                    'INTEREST' => floatval($res->INTEREST),
                     'PAYMENT_DATE' => $res->PAYMENT_DATE,
                     'BAYAR_BUNGA' => 0,
                     'DISKON_BUNGA' => 0,
@@ -430,28 +433,32 @@ class S_PokokSebagian
                 continue;
             }
 
+            // ===============================
+            // HANDLE BUNGA (TIDAK DIUBAH)
+            // ===============================
+
             $totalInterest = floatval($res->INTEREST);
-            $installmentRaw = floatval($res->INSTALLMENT);
+            $paidInterestBefore = floatval($res->PAYMENT_VALUE_INTEREST ?? 0);
 
-            $maxBayarBunga = max(0, $totalInterest - $paidInterest);
+            $sisaInterest = max(0, $totalInterest - $paidInterestBefore);
 
-            $paidNow = min($sisaPaymentBunga, $maxBayarBunga);
+            $paidNow = min($sisaPaymentBunga, $sisaInterest);
             $sisaPaymentBunga -= $paidNow;
 
-            // ❗ Diskon hanya boleh jika principal sudah 0
+            // ❗ Diskon hanya kalau principal memang 0
             $principalNow = floatval($res->PRINCIPAL);
 
             $discount = 0;
             if ($principalNow <= 0) {
-                $discount = max(0, $totalInterest - $paidNow);
+                $discount = max(0, $sisaInterest - $paidNow);
             }
 
             $data[] = [
                 'ID' => $res->ID,
                 'PRINCIPAL' => $principalNow,
                 'INSTALLMENT_COUNT' => $res->INSTALLMENT_COUNT,
-                'INSTALLMENT' => $installmentRaw,
-                'INTEREST' => $totalInterest,
+                'INSTALLMENT' => floatval($res->INSTALLMENT), // ❗ tidak diubah
+                'INTEREST' => $totalInterest,                 // ❗ tidak diubah
                 'PAYMENT_DATE' => $res->PAYMENT_DATE,
                 'BAYAR_BUNGA' => $paidNow,
                 'DISKON_BUNGA' => $discount,
@@ -466,10 +473,10 @@ class S_PokokSebagian
 
         if ($paymentPokok > 0 && count($data) > 0) {
 
-            // cari angsuran terakhir
+            // Cari angsuran terakhir
             $maxIndex = array_key_last($data);
 
-            // tambah pokok ke angsuran aktif (bulan berjalan)
+            // Cari angsuran aktif (tanggal >= hari ini)
             $currentIndex = 0;
 
             foreach ($data as $i => $row) {
@@ -479,7 +486,7 @@ class S_PokokSebagian
                 }
             }
 
-            // Tambahkan pembayaran pokok ke angsuran aktif
+            // Tambah pokok ke angsuran aktif
             $data[$currentIndex]['PRINCIPAL'] += $paymentPokok;
             $data[$currentIndex]['BAYAR_POKOK'] = $paymentPokok;
 
@@ -490,44 +497,8 @@ class S_PokokSebagian
                 $data[$maxIndex]['PRINCIPAL'] = 0;
             }
 
-            // ===============================
-            // RECALCULATE BUNGA FUTURE
-            // ===============================
-
-            $sisaPokok = floatval($data[$maxIndex]['PRINCIPAL']);
-
-            if ($sisaPokok > 0) {
-
-                $value = round($sisaPokok * 0.03, 2);
-                $calc = ceil($value / 1000) * 1000;
-
-                foreach ($data as $i => $row) {
-
-                    if ($i <= $currentIndex) {
-                        continue;
-                    }
-
-                    if ($row['PRINCIPAL'] > 0) {
-                        $data[$i]['INTEREST'] = $calc;
-                        $data[$i]['INSTALLMENT'] = $calc + $data[$i]['PRINCIPAL'];
-                    } else {
-                        // ❗ Jangan buat bunga kalau principal sudah 0
-                        $data[$i]['INTEREST'] = 0;
-                        $data[$i]['INSTALLMENT'] = 0;
-                        $data[$i]['DISKON_BUNGA'] = 0;
-                    }
-                }
-            } else {
-
-                // ❗ Kalau pokok sudah habis → semua future bunga = 0
-                foreach ($data as $i => $row) {
-                    if ($i > $currentIndex) {
-                        $data[$i]['INTEREST'] = 0;
-                        $data[$i]['INSTALLMENT'] = 0;
-                        $data[$i]['DISKON_BUNGA'] = 0;
-                    }
-                }
-            }
+            // ❗ TIDAK ADA RECALC BUNGA
+            // ❗ TIDAK ADA UBAH INSTALLMENT
         }
 
         return $data;
