@@ -23,13 +23,13 @@ class ProcessPaymentJob implements ShouldQueue
      */
     public function handle(): void
     {
-        $payment = Pembayaran::where('order_id',$this->paymentId)->first();
+        $payment = Pembayaran::find($this->paymentId);
 
         if (!$payment) {
             return;
         }
 
-        // ✅ VALIDASI STATUS DI SINI
+        // Hanya boleh PENDING / FAILED
         if (!in_array($payment->status, ['PENDING', 'FAILED'])) {
             return;
         }
