@@ -73,8 +73,17 @@ class CrBlacklistController extends Controller
 
             $data = M_CrBlacklist::findOrFail($id);
 
+            $oldNote = $data->NOTE ?? '';
+            $newNote = $request->note ?? '';
+
+            $combinedNote = $oldNote;
+
+            if (!empty($newNote)) {
+                $combinedNote = trim($oldNote . "\n" . now()->format('Y-m-d H:i:s') . ' - ' . $newNote);
+            }
+
             $data->update([
-                'NOTE'       => $request->note ?? $data->NOTE,
+                'NOTE'       => $combinedNote,
                 'STATUS'     => 'INACTIVE',
                 'UPDATED_BY' => $request->user()->id ?? '',
                 'UPDATED_AT' => now()
