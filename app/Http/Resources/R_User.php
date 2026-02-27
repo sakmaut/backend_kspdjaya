@@ -16,6 +16,10 @@ class R_User extends JsonResource
      */
     public function toArray(Request $request): array
     {
+
+        $descr = ['MUTASI JABATAN', 'MUTASI POS', 'AKTIF'];
+        $isActive = in_array(strtoupper($this->keterangan), $descr);
+
         return [
             'id' => $this->id,
             'username' => $this->username,
@@ -27,7 +31,7 @@ class R_User extends JsonResource
             'alamat' => $this->alamat,
             'gender' => $this->gender,
             'no_hp' => $this->mobile_number,
-            'status' => ucwords(strtolower($this->keterangan)),
+            'status' => $isActive ? 'Aktif' : 'Tidak Aktif',
             'photo_personal' => M_HrEmployeeDocument::attachment($this->id, 'personal'),
         ];
     }

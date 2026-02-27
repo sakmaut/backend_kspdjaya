@@ -225,6 +225,9 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::post('ticketing_closed', [TicketingController::class, 'UpdateToClosedTicket']);
     
     Route::resource('uploads', UploadFileController::class);
+
+    //New Payment
+    
 });
 
 
