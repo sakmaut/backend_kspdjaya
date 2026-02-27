@@ -28,7 +28,7 @@ class Pembayaran extends Controller
             'updated_at' => now(),
         ]);
 
-        ProcessPaymentJob::dispatch($orderId);
+        ProcessPaymentJob::dispatch($payment->id);
 
         return response()->json([
             'message' => 'Payment created successfully',
