@@ -120,6 +120,7 @@ class OrderValidationService
         }
 
         $blacklist = M_CrBlacklist::query()
+            ->where('STATUS', 'ACTIVE')
             ->where(function ($q) use ($ktp, $kk) {
                 $q->when(!empty($ktp), fn($q) => $q->orWhere('KTP', $ktp))
                     ->when(!empty($kk),  fn($q) => $q->orWhere('KK', $kk));
