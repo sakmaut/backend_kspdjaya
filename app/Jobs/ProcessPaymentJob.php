@@ -29,11 +29,17 @@ class ProcessPaymentJob implements ShouldQueue
             return;
         }
 
-        // ✅ VALIDASI STATUS DI SINI
-        if (!in_array($payment->status, ['PENDING', 'FAILED'])) {
+        // ❌ Jika masih diproses, jangan lanjut
+        if ($payment->status === 'PROCESSING') {
             return;
         }
 
+        // ❌ Kalau status selain PENDING / FAILED / SUCCESS jangan proses
+        if (!in_array($payment->status, ['PENDING', 'FAILED', 'SUCCESS'])) {
+            return;
+        }
+
+        // Set ke PROCESSING dulu
         $payment->update([
             'status' => 'PROCESSING'
         ]);
