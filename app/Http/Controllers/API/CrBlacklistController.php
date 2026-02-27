@@ -59,15 +59,34 @@ class CrBlacklistController extends Controller
             M_CrBlacklist::create($arrayData);
 
             DB::commit();
-            ActivityLogger::logActivity($request,"Success",200);
             return response()->json(['message' => 'Data Created successfully'], 200);
-        }catch (QueryException $e) {
-            DB::rollback();
-            ActivityLogger::logActivity($request,$e->getMessage(),409);
-            return response()->json(['message' => $e->getMessage()], 409);
         } catch (\Exception $e) {
             DB::rollback();
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function update(Request $request, $id)
+    {
+        DB::beginTransaction();
+        try {
+
+            $data = M_CrBlacklist::findOrFail($id);
+
+            $data->update([
+                'NOTE'       => $request->note ?? $data->NOTE,
+                'STATUS'     => 'INACTIVE',
+                'UPDATED_BY' => $request->user()->id ?? '',
+                'UPDATED_AT' => now()
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Updated successfully'
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollback();
             return response()->json(['message' => $e->getMessage()], 500);
         }
     }

@@ -18,8 +18,11 @@ class M_CrBlacklist extends Model
        'COLLATERAL',
        'RES_1',
        'RES_2',
+       'STATUS',
        'PERSON',
        'DATE_ADD',
+       'UPDATED_BY',
+       'UPDATED_AT',
        'NOTE'
     ];
     protected $guarded = [];
