@@ -25,7 +25,14 @@ class ProcessPaymentJob implements ShouldQueue
     {
         $payment = Pembayaran::find($this->paymentId);
 
-        if (!$payment) return;
+        if (!$payment) {
+            return;
+        }
+
+        // ✅ VALIDASI STATUS DI SINI
+        if (!in_array($payment->status, ['PENDING', 'FAILED'])) {
+            return;
+        }
 
         $payment->update([
             'status' => 'PROCESSING'
@@ -33,7 +40,6 @@ class ProcessPaymentJob implements ShouldQueue
 
         try {
 
-            // Simulasi hit payment gateway
             sleep(3);
 
             $payment->update([
