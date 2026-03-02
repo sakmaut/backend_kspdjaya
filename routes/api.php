@@ -42,7 +42,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 //Login Authenticate
-Route::post('auth/login', [AuthController::class, 'login'])->middleware(['time.access', 'throttle:5,1'])->name('login');
+Route::post('auth/login', [AuthController::class, 'login'])->middleware(['time.access'])->name('login');
 Route::get('auth/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 
 Route::get('welcome', [Welcome::class, 'index']);
