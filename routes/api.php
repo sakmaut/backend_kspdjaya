@@ -33,6 +33,7 @@ use App\Http\Controllers\Payment\Controller\C_PokokSebagian;
 use App\Http\Controllers\Pembayaran;
 use App\Http\Controllers\Ticketing\TicketingController;
 use App\Http\Controllers\Ticketing\TicketingMessages\TicketingMessagesController;
+use App\Http\Controllers\Transaction\TransactionController;
 use App\Http\Controllers\Welcome;
 use App\Http\Credit\Blacklist\BlacklistController;
 use App\Http\Credit\Tagihan\Controller\C_Tagihan;
@@ -227,7 +228,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::resource('uploads', UploadFileController::class);
 
     //New Payment
-    
+    // Route::resource('transaction', TransactionController::class);
 });
 
 
