@@ -9,6 +9,7 @@ class TicketingRepository extends TicketingEntity
 {
     protected array $withRelations = [
         'currentAssignee:id,fullname',
+        'createdBy:id,fullname',
     ];
 
     protected array $columns = [

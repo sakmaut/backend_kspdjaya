@@ -48,6 +48,11 @@ class TicketingEntity extends Model
         return $this->belongsTo(User::class, 'current_assignee_id');
     }
 
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
     public function assignments()
     {
         return $this->hasMany(TicketingAssigmentEntity::class, 'ticket_id');
