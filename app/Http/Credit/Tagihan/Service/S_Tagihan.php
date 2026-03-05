@@ -96,9 +96,7 @@ class S_Tagihan extends R_Tagihan
 
         $currentBranch = $user->branch_id ?? null;
         $currentPosition = strtoupper($user->position ?? '');
-
-        // Jika HO, tidak filter branch (pass null)
-        // Jika bukan HO, filter by branch
+        
         $branchId = ($currentPosition === 'HO') ? null : $currentBranch;
 
         return $this->repository->listTagihan($branchId);

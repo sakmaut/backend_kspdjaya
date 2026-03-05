@@ -3,6 +3,7 @@
 namespace App\Http\Credit\Tagihan\Model;
 
 use App\Http\Credit\TagihanDetail\Model\M_TagihanDetail;
+use App\Models\M_Branch;
 use App\Models\M_CrCollateral;
 use App\Models\M_Customer;
 use App\Models\User;
@@ -57,6 +58,11 @@ class M_Tagihan extends Model
                 $model->setAttribute($model->getKeyName(), Str::uuid()->toString());
             }
         });
+    }
+
+    public function branch()
+    {
+        return $this->hasOne(M_Branch::class, 'ID', 'BRANCH_ID');
     }
 
     public function assignUser()

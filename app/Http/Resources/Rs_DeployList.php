@@ -27,7 +27,8 @@ class Rs_DeployList extends JsonResource
             'mcf' => $this->MCF ?? "",
             'angusran_ke' => $this->ANGSURAN_KE ?? 0,
             'tgl_jatuh_tempo' => $this->TGL_JTH_TEMPO ?? "",
-            'angsuran' => $this->ANGSURAN ?? 0
+            'angsuran' => $this->ANGSURAN ?? 0,
+            'cabang' => $this->branch->NAME ?? "",
         ];
     }
 }

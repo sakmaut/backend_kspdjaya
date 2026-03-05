@@ -323,7 +323,8 @@ class R_Tagihan
     {
         $query = $this->model::with([
             'customer:CUST_CODE,NAME,ADDRESS,KELURAHAN,KECAMATAN',
-            'assignUser:username,fullname'
+            'assignUser:username,fullname',
+            'branch:ID,NAME'
         ])
             ->select([
                 'ID',
@@ -351,7 +352,6 @@ class R_Tagihan
 
         return $query->get();
     }
-
 
     protected function cl_deploy_by_pic($pic)
     {
