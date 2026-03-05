@@ -19,6 +19,7 @@ class Rs_CollectorList extends JsonResource
             'no_kontrak' => $this->LOAN_NUMBER ?? "",
             'nama_customer' => $this->NAMA_CUST ?? $this->NAME ?? "",
             'cycle_awal' => $this->CYCLE_AWAL ?? "",
+            'cycle_akhir' => $this->CYCLE_AKHIR ?? "",
             'nbot' => $this->N_BOT ?? "",
             'alamat' => $this->ALAMAT ?? $this->INS_ADDRESS ?? "",
             'desa' => $this->DESA ?? $this->INS_KELURAHAN ?? "",
