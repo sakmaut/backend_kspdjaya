@@ -54,27 +54,21 @@ class S_Tagihan extends R_Tagihan
 
     private function createAutoCodeMonthlyReset($request, $table, $field, $prefix)
     {
-        $yearMonth     = date("ym");
-        $yearMonthDay  = date("ymd");
+        $yearMonth    = date("ym");   
+        $today        = date("ymd");
 
         $branchId = $request->user()->branch_id;
         $branch   = M_Branch::find($branchId);
 
         $searchPrefix = $prefix . $branch->CODE_NUMBER . $yearMonth;
 
-        $lastCode = $table::where($field, 'like', $searchPrefix . '%')
-            ->orderBy($field, 'desc')
-            ->value($field);
+        $lastNumber = $table::where($field, 'like', $searchPrefix . '%')
+            ->selectRaw("MAX(CAST(RIGHT($field,3) AS UNSIGNED)) as max_counter")
+            ->value('max_counter');
 
-        $noUrut = 1;
+        $noUrut = $lastNumber ? $lastNumber + 1 : 1;
 
-        if (!empty($lastCode)) {
-            $lastNumber = (int) substr($lastCode, -3);
-
-            $noUrut = $lastNumber + 1;
-        }
-
-        $finalPrefix = $prefix . $branch->CODE_NUMBER . $yearMonthDay;
+        $finalPrefix = $prefix . $branch->CODE_NUMBER . $today;
 
         return $finalPrefix . sprintf("%03d", $noUrut);
     }
