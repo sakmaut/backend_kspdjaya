@@ -389,7 +389,8 @@ class C_Tagihan extends Controller
                     'cl_lkp.USER_ID',
                     'cl_lkp.CREATED_AT',
                     'cl_lkp.NOA',
-                    'cl_lkp.BRANCH_ID'
+                    'cl_lkp.BRANCH_ID',
+                    'users.fullname'
                 ]);
 
             if ($currentPosition !== 'HO') {
