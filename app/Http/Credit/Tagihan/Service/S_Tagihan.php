@@ -52,6 +52,32 @@ class S_Tagihan extends R_Tagihan
         return $generateCode;
     }
 
+    private function createAutoCodeMonthlyReset($request, $table, $field, $prefix)
+    {
+        $yearMonth     = date("ym");
+        $yearMonthDay  = date("ymd");
+
+        $branchId = $request->user()->branch_id;
+        $branch   = M_Branch::find($branchId);
+
+        $searchPrefix = $prefix . $branch->CODE_NUMBER . $yearMonth;
+
+        $lastCode = $table::where($field, 'like', $searchPrefix . '%')
+            ->orderBy($field, 'desc')
+            ->value($field);
+
+        $noUrut = 1;
+
+        if (!empty($lastCode)) {
+            $lastNumber = (int) substr($lastCode, -3);
+
+            $noUrut = $lastNumber + 1;
+        }
+
+        $finalPrefix = $prefix . $branch->CODE_NUMBER . $yearMonthDay;
+
+        return $finalPrefix . sprintf("%03d", $noUrut);
+    }
 
     public function listTagihanByUserId($request)
     {
@@ -163,7 +189,7 @@ class S_Tagihan extends R_Tagihan
         $countNoa = count($list_lkp);
 
         $detailData = [
-            'LKP_NUMBER' => $this->createAutoCode($request, M_Lkp::class, 'LKP_NUMBER', 'LKP'),
+            'LKP_NUMBER' => $this->createAutoCodeMonthlyReset($request, M_Lkp::class, 'LKP_NUMBER', 'LKP'),
             'USER_ID'    => $request['user_id'] ?? null,
             'BRANCH_ID'  => $request->user()->branch_id ?? null,
             'NOA'        => $countNoa,
