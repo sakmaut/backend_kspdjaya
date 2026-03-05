@@ -30,6 +30,7 @@ use App\Http\Controllers\API\{
     Wilayah
 };
 use App\Http\Controllers\Payment\Controller\C_PokokSebagian;
+use App\Http\Controllers\Payment\ResetPrintKwitansi\ResetPrintKwitansiController;
 use App\Http\Controllers\Pembayaran;
 use App\Http\Controllers\Ticketing\TicketingController;
 use App\Http\Controllers\Ticketing\TicketingMessages\TicketingMessagesController;
@@ -226,6 +227,8 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::post('ticketing_closed', [TicketingController::class, 'UpdateToClosedTicket']);
     
     Route::resource('uploads', UploadFileController::class);
+
+    Route::resource('ResetPrintKwitansi', ResetPrintKwitansiController::class);
 
     //New Payment
     // Route::resource('transaction', TransactionController::class);

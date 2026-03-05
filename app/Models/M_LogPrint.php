@@ -10,14 +10,18 @@ class M_LogPrint extends Model
 {
     use HasFactory;
     protected $table = 'log_print';
+    
     protected $fillable = [
         'ID',
         'COUNT',
         'PRINT_BRANCH',
         'PRINT_POSITION',
         'PRINT_BY',
-        'PRINT_DATE'
+        'PRINT_DATE',
+        'RESETTER_BY',
+        'RESETTER_AT'
     ];
+
     protected $guarded = [];
     public $incrementing = false;
     protected $keyType = 'string';
