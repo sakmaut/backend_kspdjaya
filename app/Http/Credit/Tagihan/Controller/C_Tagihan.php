@@ -381,7 +381,8 @@ class C_Tagihan extends Controller
                 ->join('users', 'users.username', '=', 'cl_lkp.USER_ID')
                 ->whereMonth('cl_lkp.CREATED_AT', Carbon::now()->month)
                 ->whereYear('cl_lkp.CREATED_AT', Carbon::now()->year)
-                ->orderByRaw('cl_lkp.LKP_NUMBER ASC,users.fullname ASC, cl_lkp.CREATED_AT DESC')
+                ->orderBy('cl_lkp.CREATED_AT', 'DESC')
+                ->orderBy('users.fullname', 'ASC')
                 ->select([
                     'cl_lkp.ID',
                     'cl_lkp.LKP_NUMBER',
