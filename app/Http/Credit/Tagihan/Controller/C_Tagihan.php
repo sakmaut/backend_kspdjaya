@@ -379,7 +379,8 @@ class C_Tagihan extends Controller
 
             $query = M_Lkp::with(['user:username,fullname'])
                 ->join('users', 'users.username', '=', 'cl_lkp.USER_ID')
-                ->where('cl_lkp.STATUS', 'Active')
+                ->whereMonth('cl_lkp.CREATED_AT', Carbon::now()->month)
+                ->whereYear('cl_lkp.CREATED_AT', Carbon::now()->year)
                 ->orderBy('users.fullname')
                 ->select([
                     'cl_lkp.ID',
