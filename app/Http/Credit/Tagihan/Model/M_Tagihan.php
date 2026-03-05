@@ -26,6 +26,7 @@ class M_Tagihan extends Model
         'CUST_CODE',
         'TGL_JTH_TEMPO',
         'CYCLE_AWAL',
+        'CYCLE_AKHIR',
         'N_BOT',
         'TENOR',
         'CATT_SURVEY',

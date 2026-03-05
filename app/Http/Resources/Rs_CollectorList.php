@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\M_CrCollateralDocument;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -29,6 +30,7 @@ class Rs_CollectorList extends JsonResource
             'angsuran' => $this->ANGSURAN ?? 0,
             'bayar' => $this->total_bayar ?? 0,
             'hasil_kunjungan' => $this->DESCRIPTION ?? "",
+            'tgl_kunjungan' => Carbon::parse($this->CONFIRM_DATE)->format('Y-m-d') ?? "",
             'unit' => $this->unit ?? "",
             'no_polisi' => $this->POLICE_NUMBER ?? "",
             'tahun_motor' => $this->PRODUCTION_YEAR ?? "",
@@ -37,6 +39,7 @@ class Rs_CollectorList extends JsonResource
             'catatan_survey' => $this->CATT_SURVEY ?? "",
             'col_path' => $this->collateralDocuments->pluck('PATH')->toArray() ?? [],
             'cabang' => $this->nama_cabang ?? "",
+            'tgl_jb' => $this->CONFIRM_DATE ?? null,
         ];
     }
 }

@@ -105,20 +105,15 @@ class C_Tagihan extends Controller
 
             $query = M_ColllectorVisits::with('collateralDocuments');
 
-            // Filter untuk KAPOS (hanya cabangnya)
             if ($position === 'KAPOS') {
                 $query->where('BRANCH_ID', $branchId);
             }
 
-            // Filter untuk Kolektor & MCF (hanya data sendiri)
             if (in_array($position, ['MCF', 'KOLEKTOR'])) {
                 $query->where('USER_ID', $userId);
             }
 
-            return response()->json(
-                Rs_CollectorList::collection($query->get()),
-                200
-            );
+            return response()->json(Rs_CollectorList::collection($query->get()),200);
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
         }

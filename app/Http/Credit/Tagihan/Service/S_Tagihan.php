@@ -139,6 +139,7 @@ class S_Tagihan extends R_Tagihan
                 'CUST_CODE'     => $item['CUST_CODE'] ?? null,
                 'TGL_JTH_TEMPO' => Carbon::parse($item['JTH TEMPO AWAL'])->format('Y-m-d') ?? null,
                 'CYCLE_AWAL'    => $item['CYCLE AWAL'] ?? null,
+                'CYCLE_AKHIR'   => $item['CYCLE_AKHIR'] ?? null,
                 'N_BOT'         => $item['NBOT'] ?? null,
                 'TENOR'         => $item['PERIOD'] ?? null,
                 'CATT_SURVEY'   => $item['CATT_SURVEY'] ?? null,
