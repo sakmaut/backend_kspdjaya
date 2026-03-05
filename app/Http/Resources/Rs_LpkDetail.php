@@ -44,7 +44,7 @@ class Rs_LpkDetail extends JsonResource
             'mcf' => $this->petugas ?? "",
             'bayar' => $totalBayarRow->total_bayar ?? 0,
             'hasil_kunjungan' => $log->DESCRIPTION ?? "",
-            'ambc_total_awal' => (int)($this->deploy->AMBC_TOTAL_AWAL ?? 0),
+            'ambc_total' => (int)($this->deploy->AMBC_TOTAL_AWAL ?? 0),
         ];
     }
 }
