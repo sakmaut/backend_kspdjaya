@@ -41,6 +41,7 @@ class Rs_LpkDetail extends JsonResource
             'cycle_awal' => $this->CYCLE ?? "",
             'angusran_ke' => $this->INST_COUNT ?? "",
             'angsuran' => (int)($this->INSTALLMENT ?? 0),
+            'mcf' => $this->petugas ?? "",
             'bayar' => $totalBayarRow->total_bayar ?? 0,
             'hasil_kunjungan' => $log->DESCRIPTION ?? "",
         ];
