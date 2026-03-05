@@ -406,7 +406,9 @@ class C_Tagihan extends Controller
     public function cl_lkp_detail(Request $request, $id)
     {
         try {
-            $data = M_Lkp::with(['detail', 'user:username,fullname'])
+            $data = M_Lkp::with([
+                'detail.deploy',
+                'user:username,fullname'])
                 ->where('LKP_NUMBER', $id)
                 ->first();
 

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Http\Credit\Tagihan\Model\M_Tagihan;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
@@ -48,5 +49,10 @@ class M_LkpDetail extends Model
                 $model->setAttribute($model->getKeyName(), Str::uuid()->toString());
             }
         });
+    }
+
+    public function deploy()
+    {
+        return $this->hasOne(M_Tagihan::class, 'NO_SURAT', 'NO_SURAT');
     }
 }
