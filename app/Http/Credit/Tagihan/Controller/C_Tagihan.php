@@ -393,7 +393,7 @@ class C_Tagihan extends Controller
                 ]);
 
             if ($currentPosition !== 'HO') {
-                $query->where('BRANCH_ID', $currentBranch);
+                $query->where('cl_lkp.BRANCH_ID', $currentBranch);
             }
 
             $data = $query->get();
