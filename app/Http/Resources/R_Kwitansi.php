@@ -213,7 +213,17 @@ class R_Kwitansi extends JsonResource
                 })
                 ->orderByRaw('CAST(angsuran_ke AS SIGNED) ASC')
                 ->get();
-        } else {
+
+            $details = $details->map(function ($item) {
+                $item->bayar_pokok = (float) $item->bayar_pokok;
+                $item->bayar_bunga = (float) $item->bayar_bunga;
+                $item->bayar_denda = (float) $item->bayar_denda;
+                $item->diskon_pokok = (float) $item->diskon_pokok;
+                $item->diskon_bunga = (float) $item->diskon_bunga;
+                $item->diskon_denda = (float) $item->diskon_denda;
+                return $item;
+            });
+            } else {
 
             $query = M_KwitansiStructurDetail::select(
                 'id',
