@@ -1598,7 +1598,8 @@ class CrAppilcationController extends Controller
                 'customer.customer_document',
                 'collateral:ID,CR_CREDIT_ID,POLICE_NUMBER',
                 'collateral.documents',
-                'branch:ID,NAME'
+                'branch:ID,NAME',
+                'cr_application.cr_survey.cr_survey_document'
             ])
             ->orderByDesc('CREATED_AT')
             ->when(

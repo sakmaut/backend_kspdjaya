@@ -67,6 +67,11 @@ class M_Credit extends Model
         });
     }
 
+    public function cr_application()
+    {
+        return $this->hasOne(M_CrApplication::class, 'ORDER_NUMBER', 'ORDER_NUMBER');
+    }
+
     public function branch()
     {
         return $this->belongsTo(M_Branch::class, 'BRANCH', 'ID');

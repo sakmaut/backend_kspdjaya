@@ -71,6 +71,11 @@ class M_CrApplication extends Model
         });
     }
 
+    public function cr_survey()
+    {
+        return $this->hasOne(M_CrSurvey::class, 'CR_SURVEY_ID');
+    }
+
     public function cr_personal()
     {
         return $this->hasOne(M_CrPersonal::class, 'APPLICATION_ID');
