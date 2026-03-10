@@ -211,7 +211,7 @@ class ListBanController extends Controller
                                                 when st.arr_count > 8 then 'X'
                                                 else st.arr_count end) AS CYCLE_AWAL,
                                 cl.STATUS_REC,
-                                cl.STATUS_REC as STATUS_BEBAN,
+                                kjg.kunj_terakhir as STATUS_BEBAN,
                                 -- case when (cl.PERIOD/cl.INSTALLMENT_COUNT)=1 then 'REGULER' else 'MUSIMAN' end as pola_bayar,
                                 case when cl.CREDIT_TYPE = 'bulanan' then 'reguler' else cl.CREDIT_TYPE end as pola_bayar, 
                                 replace(format(coalesce(en.init_pcpl,0),0),',','') OS_PKK_AKHIR,
@@ -272,7 +272,18 @@ class ListBanController extends Controller
                                     and en.type=date_format(date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day),'%d%m%Y')
                                 left join temp_lis_02 py on cast(py.loan_num as char) = cast(cl.LOAN_NUMBER as char)
                                 left join old_survey_note osn on cast(osn.loan_number as char) = cast(cl.LOAN_NUMBER as char)
-                              WHERE	date_format(cl.BACK_DATE,'%d%m%Y')=date_format(date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day),'%d%m%Y')
+                                left join ( select	cd.CREDIT_ID, group_concat(distinct csl.DESCRIPTION) as kunj_terakhir
+                                            from	cl_survey_logs csl 
+                                                    inner join cl_deploy cd on cd.NO_SURAT = csl.REFERENCE_ID
+                                            where	(cd.CREDIT_ID, csl.CREATED_AT) in
+                                                        (	select	cd.CREDIT_ID, max(csl.CREATED_AT)
+                                                            from	cl_survey_logs csl 
+                                                                    inner join cl_deploy cd on cd.NO_SURAT = csl.REFERENCE_ID
+                                                            group	by cd.CREDIT_ID )
+                                                    and csl.CREATED_AT <= date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day)
+                                            group	by cd.CREDIT_ID) kjg on kjg.CREDIT_ID = cl.ID
+
+                        WHERE	date_format(cl.BACK_DATE,'%d%m%Y')=date_format(date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day),'%d%m%Y')
                                 and (cl.STATUS = 'A' or (cl.STATUS_REC = 'RP' and coalesce(cl.mod_user,'') <> 'exclude jaminan' and cast(cl.LOAN_NUMBER as char) not in (select cast(pp.LOAN_NUM as char) from payment pp where pp.ACC_KEY = 'JUAL UNIT'
                                             and pp.ENTRY_DATE <= date_format(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),'%Y-%m-%d')))
                                         or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char)from temp_lis_02 )))";
@@ -325,7 +336,7 @@ class ListBanController extends Controller
                                                 when st.arr_count > 8 then 'X'
                                                 else st.arr_count end) AS CYCLE_AWAL,
                                 cl.STATUS_REC,
-                                cl.STATUS_REC as STATUS_BEBAN,
+                                kjg.kunj_terakhir as STATUS_BEBAN,
                                 -- case when (cl.PERIOD/cl.INSTALLMENT_COUNT)=1 then 'REGULER' else 'MUSIMAN' end as pola_bayar,
                                 case when cl.CREDIT_TYPE = 'bulanan' then 'reguler' else cl.CREDIT_TYPE end as pola_bayar,
                                 replace(format(coalesce(en.init_pcpl,0),0),',','') OS_PKK_AKHIR,
@@ -386,6 +397,17 @@ class ListBanController extends Controller
                                     and en.type=date_format(now(),'%d%m%Y')
                                 left join temp_lis_02C py on cast(py.loan_num as char) = cast(cl.LOAN_NUMBER as char)
                                 left join old_survey_note osn on cast(osn.loan_number as char) = cast(cl.LOAN_NUMBER as char)
+                                
+                                left join ( select	cd.CREDIT_ID, group_concat(distinct csl.DESCRIPTION) as kunj_terakhir
+                                            from	cl_survey_logs csl 
+                                                    inner join cl_deploy cd on cd.NO_SURAT = csl.REFERENCE_ID
+                                            where	(cd.CREDIT_ID, csl.CREATED_AT) in
+                                                        (	select	cd.CREDIT_ID, max(csl.CREATED_AT)
+                                                            from	cl_survey_logs csl 
+                                                                    inner join cl_deploy cd on cd.NO_SURAT = csl.REFERENCE_ID
+                                                            group	by cd.CREDIT_ID )
+                                            group	by cd.CREDIT_ID) kjg on kjg.CREDIT_ID = cl.ID
+                                
                         WHERE	(cl.STATUS = 'A'  
                                     or (cl.STATUS_REC = 'RP' and coalesce(cl.mod_user,'') <> 'exclude jaminan' and cast(cl.LOAN_NUMBER as char) not in (select cast(pp.LOAN_NUM as char) from payment pp where pp.ACC_KEY = 'JUAL UNIT'))
                                     or (cast(cl.LOAN_NUMBER as char) in (select cast(loan_num as char) from temp_lis_02C )))";
