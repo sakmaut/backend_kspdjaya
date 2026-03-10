@@ -506,7 +506,7 @@ class ListBanController extends Controller
                     "AMBC TOTAL AWAL" => (int) $result->AMBC_TOTAL_AWAL,
                     "CYCLE AWAL" => $result->CYCLE_AWAL ?? '',
                     "STS KONTRAK" => $result->STATUS_REC ?? '',
-                    "STS BEBAN" => $result->STATUS_BEBAN ?? '',
+                    "KUNJUNGAN TERAKHIR" => $result->STATUS_BEBAN ?? '',
                     "POLA BYR AWAL" => '',
                     "OUTS PKK AKHIR" => (int) $result->OS_PKK_AKHIR ?? 0,
                     "OUTS BNG AKHIR" => (int) $result->OS_BNG_AKHIR ?? 0,
