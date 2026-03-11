@@ -73,7 +73,7 @@ class M_CrApplication extends Model
 
     public function cr_survey()
     {
-        return $this->hasOne(M_CrSurvey::class, 'CR_SURVEY_ID', 'id');
+        return $this->belongsTo(M_CrSurvey::class, 'CR_SURVEY_ID', 'id');
     }
 
     public function cr_personal()
