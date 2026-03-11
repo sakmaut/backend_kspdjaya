@@ -1585,13 +1585,13 @@ class CrAppilcationController extends Controller
         $sampai = $request->sampai;
 
         $results = M_Credit::select([
-            'ID',
-            'LOAN_NUMBER',
-            'ORDER_NUMBER',
-            'CUST_CODE',
-            'INSTALLMENT_DATE',
-            'BRANCH',
-            'CREATED_AT'
+            'credit.ID',
+            'credit.LOAN_NUMBER',
+            'credit.ORDER_NUMBER',
+            'credit.CUST_CODE',
+            'credit.INSTALLMENT_DATE',
+            'credit.BRANCH',
+            'credit.CREATED_AT'
         ])
             ->leftJoin('cr_application as ca', 'ca.ORDER_NUMBER', '=', 'credit.ORDER_NUMBER')
             ->leftJoin('cr_survey as cs', 'cs.CR_SURVEY_ID', '=', 'ca.CR_SURVEY_ID')
