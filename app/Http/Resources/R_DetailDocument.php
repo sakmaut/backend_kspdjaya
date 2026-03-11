@@ -25,15 +25,15 @@ class R_DetailDocument extends JsonResource
             $this->cr_application->cr_survey->cr_survey_document ?? []
         )->keyBy('TYPE');
 
-        if (!$ktp) {
+        if (empty($ktp)) {
             $ktp = $survey_docs->get('ktp')['PATH'] ?? '';
         }
 
-        if (!$kk) {
+        if (empty($kk)) {
             $kk = $survey_docs->get('kk')['PATH'] ?? '';
         }
 
-        if (!$ktp_pasangan) {
+        if (empty($ktp_pasangan)) {
             $ktp_pasangan = $survey_docs->get('ktp_pasangan')['PATH'] ?? '';
         }
 
