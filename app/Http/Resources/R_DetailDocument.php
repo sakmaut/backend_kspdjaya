@@ -17,32 +17,36 @@ class R_DetailDocument extends JsonResource
         $customer_doc = collect($this->customer->customer_document ?? [])->keyBy('TYPE');
         $collateral_doc = collect($this->collateral->documents ?? [])->keyBy('TYPE');
 
-        $ktp = $customer_doc->get('ktp')['PATH'] ?? null;
-        $kk  = $customer_doc->get('kk')['PATH'] ?? null;
-        $ktp_pasangan  = $customer_doc->get('ktp_pasangan')['PATH'] ?? null;
+        // $ktp = $customer_doc->get('ktp')['PATH'] ?? null;
+        // $kk  = $customer_doc->get('kk')['PATH'] ?? null;
+        // $ktp_pasangan  = $customer_doc->get('ktp_pasangan')['PATH'] ?? null;
 
         $survey_docs = collect(
             $this->cr_application->cr_survey->cr_survey_document ?? []
         )->keyBy('TYPE');
 
-        if (!$ktp) {
-            $ktp = $survey_docs->get('ktp')['PATH'] ?? '';
-        }
+        // if (!$ktp) {
+        //     $ktp = $survey_docs->get('ktp')['PATH'] ?? '';
+        // }
 
-        if (!$kk) {
-            $kk = $survey_docs->get('kk')['PATH'] ?? '';
-        }
+        // if (!$kk) {
+        //     $kk = $survey_docs->get('kk')['PATH'] ?? '';
+        // }
 
-        if (!$ktp_pasangan) {
-            $ktp_pasangan = $survey_docs->get('ktp_pasangan')['PATH'] ?? '';
-        }
+        // if (!$ktp_pasangan) {
+        //     $ktp_pasangan = $survey_docs->get('ktp_pasangan')['PATH'] ?? '';
+        // }
+
+        $ktp = $survey_docs->get('ktp')['PATH'] ?? '';
+        $kk = $survey_docs->get('kk')['PATH'] ?? '';
+        $ktp_pasangan = $survey_docs->get('ktp_pasangan')['PATH'] ?? '';
 
         return [
             "no_kontrak"     => $this->LOAN_NUMBER,
             "atas_nama"      => $this->customer->NAME ?? '',
-            "nama_cabang"      => $this->branch->NAME ?? '',
-            "ktp"               => $ktp,
-            "kk"                => $kk,
+            "nama_cabang"    => $this->branch->NAME ?? '',
+            "ktp"            => $ktp,
+            "kk"             => $kk,
             "ktp_pasangan"   => $ktp_pasangan,
             "no_rangka"      => $collateral_doc->get('no_rangka')['PATH'] ?? '',
             "no_mesin"       => $collateral_doc->get('no_mesin')['PATH'] ?? '',
