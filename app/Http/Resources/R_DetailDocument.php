@@ -26,15 +26,15 @@ class R_DetailDocument extends JsonResource
         )->keyBy('TYPE');
 
         if (!$ktp) {
-            $ktp = $survey_docs->get('ktp')->PATH ?? '';
+            $ktp = $survey_docs->get('ktp')['PATH'] ?? '';
         }
 
         if (!$kk) {
-            $kk = $survey_docs->get('kk')->PATH ?? '';
+            $kk = $survey_docs->get('kk')['PATH'] ?? '';
         }
 
         if (!$ktp_pasangan) {
-            $ktp_pasangan = $survey_docs->get('ktp_pasangan')->PATH ?? '';
+            $ktp_pasangan = $survey_docs->get('ktp_pasangan')['PATH'] ?? '';
         }
 
         return [
