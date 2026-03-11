@@ -1585,17 +1585,14 @@ class CrAppilcationController extends Controller
         $sampai = $request->sampai;
 
         $results = M_Credit::select([
-            'credit.ID',
-            'credit.LOAN_NUMBER',
-            'credit.ORDER_NUMBER',
-            'credit.CUST_CODE',
-            'credit.INSTALLMENT_DATE',
-            'credit.BRANCH',
-            'credit.CREATED_AT'
+            'ID',
+            'LOAN_NUMBER',
+            'ORDER_NUMBER',
+            'CUST_CODE',
+            'INSTALLMENT_DATE',
+            'BRANCH',
+            'CREATED_AT'
         ])
-            ->leftJoin('cr_application as ca', 'ca.ORDER_NUMBER', '=', 'credit.ORDER_NUMBER')
-            ->leftJoin('cr_survey as cs', 'cs.CR_SURVEY_ID', '=', 'ca.CR_SURVEY_ID')
-            ->leftJoin('cr_survey_document as csd', 'csd.CR_SURVEY_ID', '=', 'cs.id')
             ->with([
                 'customer:ID,CUST_CODE,NAME',
                 'customer.customer_document',
@@ -1639,6 +1636,6 @@ class CrAppilcationController extends Controller
 
         $dto = R_DetailDocument::collection($results);
 
-        return response()->json($dto);
+        return response()->json($results);
     }
 }
