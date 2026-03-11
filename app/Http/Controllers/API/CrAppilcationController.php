@@ -1593,6 +1593,9 @@ class CrAppilcationController extends Controller
             'BRANCH',
             'CREATED_AT'
         ])
+            ->leftJoin('cr_application as ca', 'ca.ORDER_NUMBER', '=', 'credit.ORDER_NUMBER')
+            ->leftJoin('cr_survey as cs', 'cs.CR_SURVEY_ID', '=', 'ca.CR_SURVEY_ID')
+            ->leftJoin('cr_survey_document as csd', 'csd.CR_SURVEY_ID', '=', 'cs.id')
             ->with([
                 'customer:ID,CUST_CODE,NAME',
                 'customer.customer_document',
@@ -1636,6 +1639,6 @@ class CrAppilcationController extends Controller
 
         $dto = R_DetailDocument::collection($results);
 
-        return response()->json($dto);
+        return response()->json($results);
     }
 }
