@@ -23,7 +23,7 @@ class R_DetailDocument extends JsonResource
 
         $survey_docs = collect(
             $this->cr_application->cr_survey->cr_survey_document ?? []
-        )->keyBy('DOCUMENT_TYPE');
+        )->keyBy('TYPE');
 
         if (!$ktp) {
             $ktp = $survey_docs->get('ktp')->PATH ?? '';
