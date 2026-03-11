@@ -1634,8 +1634,8 @@ class CrAppilcationController extends Controller
             )
             ->get();
 
-        $dto = R_DetailDocument::collection($results);
+        // $dto = R_DetailDocument::collection($results);
 
-        return response()->json($dto);
+        return response()->json($results);
     }
 }
