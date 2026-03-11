@@ -430,12 +430,19 @@ class S_PokokSebagian
                 continue;
             }
 
+            // $totalInterest = floatval($res->INTEREST);
+            // $installmentRaw = floatval($res->INSTALLMENT);
+            // $installmentAdjusted = max(0, $installmentRaw - $paidInterest);
+            // $maxBayarBunga = min($installmentAdjusted, $totalInterest - $paidInterest);
+
+            // $paidNow = min($sisaPaymentBunga, $maxBayarBunga);
+            // $sisaPaymentBunga -= $paidNow;
+
             $totalInterest = floatval($res->INTEREST);
             $installmentRaw = floatval($res->INSTALLMENT);
-            $installmentAdjusted = max(0, $installmentRaw - $paidInterest);
-            $maxBayarBunga = min($installmentAdjusted, $totalInterest - $paidInterest);
-
-            $paidNow = min($sisaPaymentBunga, $maxBayarBunga);
+            $paidInterest = floatval($res->PAYMENT_VALUE_INTEREST ?? 0);
+            $sisaBunga = max(0, $totalInterest - $paidInterest);
+            $paidNow = min($sisaPaymentBunga, $sisaBunga);
             $sisaPaymentBunga -= $paidNow;
 
             $data[] = [
@@ -525,12 +532,18 @@ class S_PokokSebagian
                         $data[$index]['INSTALLMENT'] = $calc + $data[$index]['PRINCIPAL'];
                     }
 
-                    $maxBayarBunga = min($data[$index]['INTEREST'], $row['INTEREST']);
+                    // $maxBayarBunga = min($data[$index]['INTEREST'], $row['INTEREST']);
+                    $totalInterest = floatval($row['INTEREST']);
+                    $paidInterest  = floatval($creditSchedule[$index]->PAYMENT_VALUE_INTEREST ?? 0);
+
+                    $sisaBunga = max(0, $totalInterest - $paidInterest);
+
+                    $maxBayarBunga = min($data[$index]['INTEREST'], $sisaBunga);
                     $paidNow = min($sisaPaymentBunga, $maxBayarBunga);
                     $sisaPaymentBunga -= $paidNow;
 
                     $data[$index]['BAYAR_BUNGA'] = $paidNow;
-                    $data[$index]['DISKON_BUNGA'] = 0; // ✅ dimatikan total
+                    $data[$index]['DISKON_BUNGA'] = 0;
                 }
             }
         }
