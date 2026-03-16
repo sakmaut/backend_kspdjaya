@@ -578,7 +578,7 @@ class ReportController extends Controller
                                 'Amt Bayar'  => number_format($amtBayar, 0),
                                 'Sisa Angs'  => '',
                                 'Byr Dnda'   => number_format($byrDenda, 0),
-                                'Ovd'        => $res->OD ?? 0
+                                'Ovd'        => $res->OD2 ?? 0
                             ];
                         }
                     }
