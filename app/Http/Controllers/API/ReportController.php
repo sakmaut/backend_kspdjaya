@@ -1553,7 +1553,7 @@ class ReportController extends Controller
             ];
 
             foreach ($rows as $row) {
-                $nominal = $row["amount"];
+                $nominal = round($row["amount"]);
 
                 switch ($row["type"]) {
                     case "CASH_OUT":
