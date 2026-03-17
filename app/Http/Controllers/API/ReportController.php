@@ -1363,6 +1363,7 @@ class ReportController extends Controller
             $tempAngsuran = [];
             $tempPembulatan = [];
             $tempPelunasan   = [];
+            $tempDenda = [];
 
             foreach ($arusKas as $item) {
                 $invoice   = $item->INVOICE;
@@ -1392,19 +1393,25 @@ class ReportController extends Controller
 
                 // BAYAR_DENDA
                 if ($item->ACC_KEYS === "BAYAR_DENDA" && $amount > 0) {
-                    $rows[] = [
-                        "type"              => $pelunasan,
-                        "no_invoice"        => $invoice,
-                        "no_kontrak"        => $item->LOAN_NUM,
-                        "tgl"               => $tgl,
-                        "cabang"            => $item->BRANCH_NAME ?? "",
-                        "user"              => $item->fullname ?? "",
-                        "position"          => $item->position,
-                        "nama_pelanggan"    => $item->NAMA ?? "",
-                        "metode_pembayaran" => $item->PAYMENT_METHOD,
-                        "keterangan"        => "BAYAR DENDA " . strtoupper($item->JENIS) . " ({$invoice})",
-                        "amount"            => $amount
-                    ];
+                    $key = $invoice;
+
+                    if (!isset($tempDenda[$key])) {
+                        $tempDenda[$key] = [
+                            "type"              => $pelunasan,
+                            "no_invoice"        => $invoice,
+                            "no_kontrak"        => $item->LOAN_NUM,
+                            "tgl"               => $tgl,
+                            "cabang"            => $item->BRANCH_NAME ?? "",
+                            "user"              => $item->fullname ?? "",
+                            "position"          => $item->position,
+                            "nama_pelanggan"    => $item->NAMA ?? "",
+                            "metode_pembayaran" => $item->PAYMENT_METHOD,
+                            "keterangan"        => "BAYAR DENDA (" . $invoice . ")",
+                            "amount"            => 0
+                        ];
+                    }
+
+                    $tempDenda[$key]["amount"] += $amount;
                 }
 
                 if (in_array($item->ACC_KEYS, ['BAYAR_POKOK', 'BAYAR_BUNGA'])) {
@@ -1449,9 +1456,7 @@ class ReportController extends Controller
 
                 // PEMBULATAN
                 if (!empty($item->PEMBULATAN) && (float) $item->PEMBULATAN > 0 && !isset($tempPembulatan[$invoice])) {
-
                     $tempPembulatan[$invoice] = true;
-
                     $rows[] = [
                         "type"              => $pelunasan,
                         "no_invoice"        => $invoice,
@@ -1495,7 +1500,10 @@ class ReportController extends Controller
                 $rows[] = $rowPelunasan;
             }
 
-            // Merge tempAngsuran ke rows setelah loop selesai
+            foreach ($tempDenda as $rowDenda) {
+                $rows[] = $rowDenda;
+            }
+
             foreach ($tempAngsuran as $feeRow) {
                 $rows[] = $feeRow;
             }
