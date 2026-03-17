@@ -1554,6 +1554,13 @@ class ReportController extends Controller
 
             foreach ($rows as $row) {
                 $nominal = round($row["amount"]);
+                $isTransfer = strtolower($row["metode_pembayaran"]) === "transfer";
+
+                if ($isTransfer && $row["type"] !== "CASH_OUT") {
+                    $grouped["TRANSFER"]["data"][]  = $row;
+                    $grouped["TRANSFER"]["jumlah"] += $nominal;
+                    continue;
+                }
 
                 switch ($row["type"]) {
                     case "CASH_OUT":
