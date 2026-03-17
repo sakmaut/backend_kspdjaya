@@ -1362,6 +1362,7 @@ class ReportController extends Controller
             $rows         = [];
             $tempAngsuran = [];
             $tempPembulatan = [];
+            $tempPelunasan   = [];
 
             foreach ($arusKas as $item) {
                 $invoice   = $item->INVOICE;
@@ -1406,21 +1407,27 @@ class ReportController extends Controller
                     ];
                 }
 
-                // BAYAR_POKOK & BAYAR_BUNGA (Pelunasan)
                 if (in_array($item->ACC_KEYS, ['BAYAR_POKOK', 'BAYAR_BUNGA'])) {
-                    $rows[] = [
-                        "type"              => "PELUNASAN",
-                        "no_invoice"        => $invoice,
-                        "no_kontrak"        => $item->LOAN_NUM,
-                        "tgl"               => $tgl,
-                        "cabang"            => $item->BRANCH_NAME ?? "",
-                        "user"              => $item->fullname ?? "",
-                        "position"          => $item->position,
-                        "nama_pelanggan"    => $item->NAMA ?? "",
-                        "metode_pembayaran" => $item->PAYMENT_METHOD,
-                        "keterangan"        => "BAYAR PELUNASAN ({$invoice})",
-                        "amount"            => $amount
-                    ];
+
+                    $key = $invoice;
+
+                    if (!isset($tempPelunasan[$key])) {
+                        $tempPelunasan[$key] = [
+                            "type"              => "PELUNASAN",
+                            "no_invoice"        => $invoice,
+                            "no_kontrak"        => $item->LOAN_NUM,
+                            "tgl"               => $tgl,
+                            "cabang"            => $item->BRANCH_NAME ?? "",
+                            "user"              => $item->fullname ?? "",
+                            "position"          => $item->position,
+                            "nama_pelanggan"    => $item->NAMA ?? "",
+                            "metode_pembayaran" => $item->PAYMENT_METHOD,
+                            "keterangan"        => "BAYAR PELUNASAN ({$invoice})",
+                            "amount"            => 0
+                        ];
+                    }
+
+                    $tempPelunasan[$key]["amount"] += $amount;
                 }
 
                 // BAYAR_PELUNASAN_PINALTY
@@ -1482,6 +1489,10 @@ class ReportController extends Controller
 
                     $tempAngsuran[$key]["amount"] += $amount;
                 }
+            }
+
+            foreach ($tempPelunasan as $rowPelunasan) {
+                $rows[] = $rowPelunasan;
             }
 
             // Merge tempAngsuran ke rows setelah loop selesai
