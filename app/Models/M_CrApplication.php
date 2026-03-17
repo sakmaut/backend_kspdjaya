@@ -120,7 +120,7 @@ class M_CrApplication extends Model
             ->join('cr_survey as t2', 't2.id', '=', 't1.CR_SURVEY_ID')
             ->join('branch as t3', 't3.ID', '=', 't1.BRANCH')
             ->join('users as t4', 't4.id', '=', 't2.created_by')
-            ->join('application_approval as t6', 't6.cr_application_id', '=', 't1.ID')
+            // ->join('application_approval as t6', 't6.cr_application_id', '=', 't1.ID')
             ->join('cr_personal as t7', 't7.APPLICATION_ID', '=', 't1.ID')
             ->join('survey_approval as t8', 't8.CR_SURVEY_ID', '=', 't2.id');
 
@@ -145,8 +145,8 @@ class M_CrApplication extends Model
             DB::raw('COALESCE(t7.NAME, t2.nama)'),
             DB::raw('COALESCE(t1.SUBMISSION_VALUE, t2.plafond)'),
             DB::raw('COALESCE(t1.tenor, t2.tenor)'),
-            't6.application_result',
-            't6.code',
+            't8.APPROVAL_RESULT',
+            't8.CODE',
             't1.CREATE_DATE'
         )
             ->orderBy('t1.CREATE_DATE', 'desc')
@@ -165,8 +165,8 @@ class M_CrApplication extends Model
             DB::raw('COALESCE(t7.NAME, t2.nama) as nama_debitur'),
                 DB::raw('COALESCE(t1.SUBMISSION_VALUE, t2.plafond) as plafond'),
                 DB::raw('COALESCE(t1.tenor, t2.tenor) as tenor'),
-                't6.application_result as status',
-                't6.code as status_code'
+                't8.APPROVAL_RESULT as status',
+                't8.CODE as status_code'
             );
 
         return $query->get();
