@@ -270,16 +270,6 @@ class R_Kwitansi extends JsonResource
 
         $bayarDenda = $details->sum(fn($item) => (float) ($item->bayar_denda ?? 0));
 
-        // $branchName = M_Branch::where('ID', $this->BRANCH_CODE)->value('NAME');
-
-        $attachment = M_PaymentAttachment::where('payment_id', $this->PAYMENT_ID)
-            ->value('file_attach');
-
-        $printCount = M_LogPrint::where('ID', $this->NO_TRANSAKSI)
-            ->value('COUNT');
-
-        // $user = User::find($this->CREATED_BY);
-
         $paymentMethod = $this->METODE_PEMBAYARAN;
         $statusPayment = $this->STTS_PAYMENT;
 
@@ -289,7 +279,6 @@ class R_Kwitansi extends JsonResource
             "payment_type" => $this->PAYMENT_TYPE ?? '',
             "no_transaksi" => $this->NO_TRANSAKSI,
             "no_fasilitas" => $this->LOAN_NUMBER,
-            // "cabang" => $branchName,
             "cabang" => $this->branch->NAME ?? null,
             "cust_code" => $this->CUST_CODE,
             "nama" => $this->NAMA,
@@ -314,16 +303,12 @@ class R_Kwitansi extends JsonResource
             "total_bayar" => in_array($this->PAYMENT_TYPE, ['pokok_sebagian', 'pelunasan']) ? (int) ($this->JUMLAH_UANG ?? 0) : (int) ($this->TOTAL_BAYAR ?? 0),
             "jumlah_uang" => (int) ($this->JUMLAH_UANG ?? 0),
             "terbilang" => bilangan($this->TOTAL_BAYAR) ?? null,
-            "attachment" => $attachment,
+            "attachment" => $this->attachment->file_attach ?? null,
             "struktur" => $details,
             "STATUS" => $statusPayment,
-            // "created_by" => $user ? ($user->fullname ?? $user->username) : $this->CREATED_BY,
-            // "position" => $user->position ?? '',
             "created_by" => $this->users->fullname ?? null,
             "position" => $this->users->position ?? null,
-            
-
-            "print_ke" => (int) ($printCount ?? 0),
+            "print_ke" => (int) ($this->print_log->COUNT ?? 0),
         ];
     }
 }

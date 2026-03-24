@@ -69,6 +69,21 @@ class M_Kwitansi extends Model
         return $this->belongsTo(User::class, 'CREATED_BY', 'id');
     }
 
+    public function branch()
+    {
+        return $this->hasOne(M_Branch::class, 'ID', 'BRANCH_CODE');
+    }
+
+    public function print_log()
+    {
+        return $this->hasOne(M_LogPrint::class, 'ID', 'NO_TRANSAKSI');
+    }
+
+    public function attachment()
+    {
+        return $this->hasOne(M_PaymentAttachment::class, 'payment_id', 'PAYMENT_ID');
+    }
+
     public function kwitansi_structur_detail()
     {
         return $this->hasMany(M_KwitansiStructurDetail::class, 'no_invoice', 'NO_TRANSAKSI');
@@ -77,10 +92,5 @@ class M_Kwitansi extends Model
     public function kwitansi_pelunasan_detail()
     {
         return $this->hasMany(M_KwitansiDetailPelunasan::class, 'no_invoice', 'NO_TRANSAKSI')->orderBy('angsuran_ke', 'asc');
-    }
-
-    public function branch()
-    {
-        return $this->hasOne(M_Branch::class, 'ID', 'BRANCH_CODE');
     }
 }

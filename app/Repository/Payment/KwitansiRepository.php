@@ -18,7 +18,9 @@ class KwitansiRepository
     {
         return $this->model::with([
             'branch:ID,NAME',
-            'users:id,fullname,username,position'
+            'users:id,fullname,username,position',
+            'attachment:payment_id,file_attach',
+            'print_log:ID,COUNT'
         ])->orderByRaw("CAST(SUBSTRING_INDEX(NO_TRANSAKSI, '-', -1) AS UNSIGNED) DESC");
     }
 
