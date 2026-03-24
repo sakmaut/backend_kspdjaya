@@ -945,7 +945,7 @@ class PaymentController extends Controller
             if ($check->PAYMENT_TYPE === 'pelunasan') {
                 $this->pelunasan->proccessCancel($check->LOAN_NUMBER, $request->no_invoice, 'CANCEL');
             } elseif ($check->PAYMENT_TYPE === 'pokok_sebagian') {
-                $this->s_PokokSebagian->cancel($getLoanNumber, $getNoInvoice);
+                return $this->s_PokokSebagian->cancel($getLoanNumber, $getNoInvoice);
             } else {
                 $check->update([
                     'STTS_PAYMENT' => 'CANCEL'
