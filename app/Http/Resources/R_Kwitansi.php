@@ -270,7 +270,7 @@ class R_Kwitansi extends JsonResource
 
         $bayarDenda = $details->sum(fn($item) => (float) ($item->bayar_denda ?? 0));
 
-        $branchName = M_Branch::where('ID', $this->BRANCH_CODE)->value('NAME');
+        // $branchName = M_Branch::where('ID', $this->BRANCH_CODE)->value('NAME');
 
         $attachment = M_PaymentAttachment::where('payment_id', $this->PAYMENT_ID)
             ->value('file_attach');
@@ -278,7 +278,7 @@ class R_Kwitansi extends JsonResource
         $printCount = M_LogPrint::where('ID', $this->NO_TRANSAKSI)
             ->value('COUNT');
 
-        $user = User::find($this->CREATED_BY);
+        // $user = User::find($this->CREATED_BY);
 
         $paymentMethod = $this->METODE_PEMBAYARAN;
         $statusPayment = $this->STTS_PAYMENT;
@@ -289,9 +289,8 @@ class R_Kwitansi extends JsonResource
             "payment_type" => $this->PAYMENT_TYPE ?? '',
             "no_transaksi" => $this->NO_TRANSAKSI,
             "no_fasilitas" => $this->LOAN_NUMBER,
-
-            "cabang" => $branchName,
-
+            // "cabang" => $branchName,
+            "cabang" => $this->branch->NAME ?? null,
             "cust_code" => $this->CUST_CODE,
             "nama" => $this->NAMA,
             "alamat" => $this->ALAMAT,
@@ -301,41 +300,28 @@ class R_Kwitansi extends JsonResource
             "kota" => $this->KOTA,
             "kelurahan" => $this->KELURAHAN,
             "kecamatan" => $this->KECAMATAN,
-
-            "tgl_transaksi" => Carbon::parse($this->CREATED_AT)
-                ->timezone('Asia/Jakarta')
-                ->format('d-m-Y H:i:s'),
-
+            "tgl_transaksi" => Carbon::parse($this->CREATED_AT)->timezone('Asia/Jakarta')->format('d-m-Y H:i:s'),
             "payment_method" => $paymentMethod,
             "nama_bank" => $this->NAMA_BANK,
             "no_rekening" => $this->NO_REKENING,
             "bukti_transfer" => $this->BUKTI_TRANSFER,
-
             "installment" => $details->pluck('angsuran_ke')->implode(','),
-
             "bayar_angsuran" => $bayarAngsuran,
             "bayar_denda" => $bayarDenda,
-
             "pembulatan" => (int) ($this->PEMBULATAN ?? 0),
             "pinalti" => (int) ($this->PINALTY_PELUNASAN ?? 0),
             "kembalian" => (int) ($this->KEMBALIAN ?? 0),
-
-            "total_bayar" => in_array($this->PAYMENT_TYPE, ['pokok_sebagian', 'pelunasan'])
-                ? (int) ($this->JUMLAH_UANG ?? 0)
-                : (int) ($this->TOTAL_BAYAR ?? 0),
-
+            "total_bayar" => in_array($this->PAYMENT_TYPE, ['pokok_sebagian', 'pelunasan']) ? (int) ($this->JUMLAH_UANG ?? 0) : (int) ($this->TOTAL_BAYAR ?? 0),
             "jumlah_uang" => (int) ($this->JUMLAH_UANG ?? 0),
-
             "terbilang" => bilangan($this->TOTAL_BAYAR) ?? null,
-
             "attachment" => $attachment,
-
             "struktur" => $details,
-
             "STATUS" => $statusPayment,
-
-            "created_by" => $user ? ($user->fullname ?? $user->username) : $this->CREATED_BY,
-            "position" => $user->position ?? '',
+            // "created_by" => $user ? ($user->fullname ?? $user->username) : $this->CREATED_BY,
+            // "position" => $user->position ?? '',
+            "created_by" => $this->users->fullname ?? null,
+            "position" => $this->users->position ?? null,
+            
 
             "print_ke" => (int) ($printCount ?? 0),
         ];

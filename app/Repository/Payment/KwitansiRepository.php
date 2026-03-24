@@ -16,7 +16,10 @@ class KwitansiRepository
 
     public function getAllOrdered()
     {
-        return $this->model::orderByRaw("CAST(SUBSTRING_INDEX(NO_TRANSAKSI, '-', -1) AS UNSIGNED) DESC");
+        return $this->model::with([
+            'branch:ID,NAME',
+            'users:id,fullname,username,position'
+        ])->orderByRaw("CAST(SUBSTRING_INDEX(NO_TRANSAKSI, '-', -1) AS UNSIGNED) DESC");
     }
 
     public function getPendingForHO()
