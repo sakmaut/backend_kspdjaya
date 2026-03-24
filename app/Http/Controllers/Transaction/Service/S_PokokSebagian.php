@@ -948,13 +948,6 @@ class S_PokokSebagian
 
     public function cancel($loan_number, $no_inv)
     {
-        $checkPayment = M_Payment::where('LOAN_NUM', $loan_number)
-            ->whereRaw("INVOICE LIKE 'INV-%'")
-            ->whereRaw('RIGHT(INVOICE, 9) >= RIGHT(?, 9)', [$no_inv])
-            ->get();
-
-        return $checkPayment->pluck('INVOICE');
-
         // M_Kwitansi::where('LOAN_NUMBER', $loan_number)
         //     ->where('NO_TRANSAKSI', '>=', $no_inv)
         //     ->update(['STTS_PAYMENT' => 'CANCEL']);
