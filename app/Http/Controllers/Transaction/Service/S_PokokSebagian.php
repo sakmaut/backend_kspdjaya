@@ -963,11 +963,16 @@ class S_PokokSebagian
         //     ->where('INVOICE', '>=', $no_inv)
         //     ->update(['STTS_RCRD' => 'CANCEL']);
 
+        // M_Payment::where('LOAN_NUM', $loan_number)
+        //     ->whereRaw(
+        //         'CAST(RIGHT(INVOICE, 9) AS UNSIGNED) >= CAST(RIGHT(?, 9) AS UNSIGNED)',
+        //         [$no_inv]
+        //     )
+        //     ->update(['STTS_RCRD' => 'CANCEL']);
+
         M_Payment::where('LOAN_NUM', $loan_number)
-            ->whereRaw(
-                'CAST(RIGHT(INVOICE, 9) AS UNSIGNED) >= CAST(RIGHT(?, 9) AS UNSIGNED)',
-                [$no_inv]
-            )
+            ->whereRaw("INVOICE LIKE 'INV-%'")
+            ->whereRaw('RIGHT(INVOICE, 9) >= RIGHT(?, 9)', [$no_inv])
             ->update(['STTS_RCRD' => 'CANCEL']);
 
 
