@@ -951,23 +951,33 @@ class S_PokokSebagian
         // M_Kwitansi::where('LOAN_NUMBER', $loan_number)
         //     ->where('NO_TRANSAKSI', '>=', $no_inv)
         //     ->update(['STTS_PAYMENT' => 'CANCEL']);
-        M_Kwitansi::where('LOAN_NUMBER', $loan_number)
-            ->whereRaw(
-                'CAST(RIGHT(NO_TRANSAKSI, 9) AS UNSIGNED) >= CAST(RIGHT(?, 9) AS UNSIGNED)',
-                [$no_inv]
-            )
-            ->update(['STTS_PAYMENT' => 'CANCEL']);
+        // M_Kwitansi::where('LOAN_NUMBER', $loan_number)
+        //     ->whereRaw(
+        //         'CAST(RIGHT(NO_TRANSAKSI, 9) AS UNSIGNED) >= CAST(RIGHT(?, 9) AS UNSIGNED)',
+        //         [$no_inv]
+        //     )
+        //     ->update(['STTS_PAYMENT' => 'CANCEL']);
 
 
         // M_Payment::where('LOAN_NUM', $loan_number)
         //     ->where('INVOICE', '>=', $no_inv)
         //     ->update(['STTS_RCRD' => 'CANCEL']);
 
+        // M_Payment::where('LOAN_NUM', $loan_number)
+        //     ->whereRaw(
+        //         'CAST(RIGHT(INVOICE, 9) AS UNSIGNED) >= CAST(RIGHT(?, 9) AS UNSIGNED)',
+        //         [$no_inv]
+        //     )
+        //     ->update(['STTS_RCRD' => 'CANCEL']);
+
+        M_Kwitansi::where('LOAN_NUMBER', $loan_number)
+            ->whereRaw("NO_TRANSAKSI LIKE 'INV-%'")
+            ->whereRaw('RIGHT(NO_TRANSAKSI, 9) >= RIGHT(?, 9)', [$no_inv])
+            ->update(['STTS_PAYMENT' => 'CANCEL']);
+
         M_Payment::where('LOAN_NUM', $loan_number)
-            ->whereRaw(
-                'CAST(RIGHT(INVOICE, 9) AS UNSIGNED) >= CAST(RIGHT(?, 9) AS UNSIGNED)',
-                [$no_inv]
-            )
+            ->whereRaw("INVOICE LIKE 'INV-%'")
+            ->whereRaw('RIGHT(INVOICE, 9) >= RIGHT(?, 9)', [$no_inv])
             ->update(['STTS_RCRD' => 'CANCEL']);
 
 
