@@ -17,9 +17,9 @@ class R_VisitReports extends JsonResource
 
         $path = null;
 
-        if (!empty($this->PATH)) {
+        if ($this->PATH) {
             $decoded = json_decode($this->PATH, true);
-            $path = is_array($decoded) ? $decoded[0] : $this->PATH;
+            $path = $decoded[0] ?? $this->PATH;
         }
 
         return [
