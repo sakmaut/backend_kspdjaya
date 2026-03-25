@@ -93,22 +93,23 @@ class CrAppilcationController extends Controller
                 $query->whereHas('survey_approval', function ($q) {
                     $q->where('CODE', '!=', 'DRSVY');
                 });
-            }else{
-                $allowedCodes = [
-                    'APKPS',
-                    'WAKPS',
-                    'WAHO',
-                    'APHO',
-                    'REORHO',
-                    'CLHO',
-                    'REORKPS',
-                    'CLKPS'
-                ];
-
-                $query->whereHas('survey_approval', function ($q) use ($allowedCodes) {
-                    $q->whereIn('CODE', $allowedCodes);
-                });
             }
+            // else{
+            //     $allowedCodes = [
+            //         'APKPS',
+            //         'WAKPS',
+            //         'WAHO',
+            //         'APHO',
+            //         'REORHO',
+            //         'CLHO',
+            //         'REORKPS',
+            //         'CLKPS'
+            //     ];
+
+            //     $query->whereHas('survey_approval', function ($q) use ($allowedCodes) {
+            //         $q->whereIn('CODE', $allowedCodes);
+            //     });
+            // }
 
             // ✅ Filter no_order
             if (!empty($no_order)) {
