@@ -1670,7 +1670,6 @@ class ReportController extends Controller
                 ->leftJoin('customer as g', 'g.CUST_CODE', '=', 'b.CUST_CODE')
                 ->leftJoin('cr_order as h', 'h.APPLICATION_ID', '=', 'c.ID')
                 ->leftJoin('branch as i', 'i.ID', '=', 'a.BRANCH_ID')
-                ->whereNull('v.NO_SURAT')
                 // ->whereDate('e.CREATED_AT', '>=', $dari)
                 // ->whereDate('e.CREATED_AT', '<=', $sampai)
                 ->orderByDesc('e.CREATED_AT')
