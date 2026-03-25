@@ -1670,8 +1670,8 @@ class ReportController extends Controller
                 ->leftJoin('cr_order as h', 'h.APPLICATION_ID', '=', 'c.ID')
                 ->leftJoin('vw_tagihan_collector as v', 'v.NO_SURAT', '=', 'a.NO_SURAT')
                 ->whereNull('v.NO_SURAT')
-                ->whereDate('e.CREATED_AT', '>=', $dari)
-                ->whereDate('e.CREATED_AT', '<=', $sampai)
+                // ->whereDate('e.CREATED_AT', '>=', $dari)
+                // ->whereDate('e.CREATED_AT', '<=', $sampai)
                 ->orderByDesc('e.CREATED_AT')
                 ->get();
 
