@@ -15,13 +15,15 @@ class R_VisitReports extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'NoKontrak' => $this->LOAN_NUMBER ?? null,
-            'NamaNasabah' => $this->NAME ?? null,
-            'Alamat' => $this->INS_ADDRESS ?? null,
-            'TglVisit' => $this->SURVEY_DATE ?? null,
+            'TglVisit' => $this->CREATED_AT ?? null,
             'NamaMcf' => $this->fullname ?? null,
-            'TglJb' => $this->CONFIRM_DATE ?? null,
+            'NamaNasabah'          => $this->NAME ?? null,
+            'AlamatNasabah'        => $this->INS_ADDRESS ?? null,
+            'TeleponNasabah'       => $this->PHONE_PERSONAL ?? null,
+            'StatusNasabah'       => $this->category ?? "Baru",
+            'SumberOrder'       => $this->REF_PELANGGAN,
             'Keterangan' => $this->DESCRIPTION ?? null,
+            'PathFile' => $this->PATH ?? null,
         ];
     }
 }

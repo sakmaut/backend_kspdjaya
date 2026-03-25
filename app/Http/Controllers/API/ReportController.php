@@ -1637,8 +1637,6 @@ class ReportController extends Controller
     public function VisitReports(Request $request)
     {
         try {
-            $dari   = $request->dari ?? now()->toDateString();
-            $sampai = $request->sampai ?? now()->toDateString();
             // $cabangId     = $request->cabang_id;
             // $user         = $request->user();
             // $position     = $user->position;
@@ -1646,9 +1644,35 @@ class ReportController extends Controller
 
             // $branchParam = $position !== 'HO' ? $userBranchId : ($cabangId ?: null);
 
-            $results = M_ColllectorVisits::query()
-                ->whereDate('SURVEY_DATE', '>=', $dari)
-                ->whereDate('SURVEY_DATE', '<=', $sampai)
+            $dari   = $request->dari ?? now()->toDateString();
+            $sampai = $request->sampai ?? now()->toDateString();
+
+            $results = DB::table('cl_deploy as a')
+                ->select(
+                    'e.CREATED_AT',
+                    'e.PATH',
+                    'e.CONFIRM_DATE',
+                    'e.DESCRIPTION',
+                    'f.fullname',
+                    'g.NAME',
+                    'g.INS_ADDRESS',
+                    'g.PHONE_PERSONAL',
+                    'd.category',
+                    'h.REF_PELANGGAN',
+                    'h.REF_PELANGGAN_OTHER'
+                )
+                ->leftJoin('credit as b', 'b.ID', '=', 'a.CREDIT_ID')
+                ->leftJoin('cr_application as c', 'c.ORDER_NUMBER', '=', 'b.ORDER_NUMBER')
+                ->leftJoin('cr_survey as d', 'd.id', '=', 'c.CR_SURVEY_ID')
+                ->join('cl_survey_logs as e', 'e.REFERENCE_ID', '=', 'a.NO_SURAT')
+                ->leftJoin('users as f', 'f.id', '=', 'e.CREATED_BY')
+                ->leftJoin('customer as g', 'g.CUST_CODE', '=', 'b.CUST_CODE')
+                ->leftJoin('cr_order as h', 'h.APPLICATION_ID', '=', 'c.ID')
+                ->leftJoin('vw_tagihan_collector as v', 'v.NO_SURAT', '=', 'a.NO_SURAT')
+                ->whereNull('v.NO_SURAT')
+                ->whereDate('e.CREATED_AT', '>=', $dari)
+                ->whereDate('e.CREATED_AT', '<=', $sampai)
+                ->orderByDesc('e.CREATED_AT')
                 ->get();
 
             $dto = R_VisitReports::collection($results);
