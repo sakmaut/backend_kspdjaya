@@ -64,6 +64,11 @@ class M_CrSurvey extends Model
         });
     }
 
+    public function branch()
+    {
+        return $this->belongsTo(M_Branch::class, 'branch_id', 'ID');
+    }
+
     public function cr_application()
     {
         return $this->hasOne(M_CrApplication::class, 'CR_SURVEY_ID');
