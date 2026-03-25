@@ -1637,15 +1637,9 @@ class ReportController extends Controller
     public function VisitReports(Request $request)
     {
         try {
-            // $cabangId     = $request->cabang_id;
-            // $user         = $request->user();
-            // $position     = $user->position;
-            // $userBranchId = $user->branch_id;
-
-            // $branchParam = $position !== 'HO' ? $userBranchId : ($cabangId ?: null);
-
-            $dari   = $request->dari ?? now()->toDateString();
-            $sampai = $request->sampai ?? now()->toDateString();
+            $cabangId = $request->cabang_id;
+            $dari     = $request->dari ?? now()->toDateString();
+            $sampai   = $request->sampai ?? now()->toDateString();
 
             $results = DB::table('cl_deploy as a')
                 ->select(
@@ -1670,8 +1664,10 @@ class ReportController extends Controller
                 ->leftJoin('customer as g', 'g.CUST_CODE', '=', 'b.CUST_CODE')
                 ->leftJoin('cr_order as h', 'h.APPLICATION_ID', '=', 'c.ID')
                 ->leftJoin('branch as i', 'i.ID', '=', 'a.BRANCH_ID')
-                // ->whereDate('e.CREATED_AT', '>=', $dari)
-                // ->whereDate('e.CREATED_AT', '<=', $sampai)
+                ->when($cabangId && $cabangId !== 'SEMUA CABANG', function ($query) use ($cabangId) {
+                    $query->where('a.BRANCH_ID', $cabangId);
+                })
+                ->whereBetween(DB::raw('DATE(e.CREATED_AT)'), [$dari, $sampai])
                 ->orderByDesc('e.CREATED_AT')
                 ->get();
 

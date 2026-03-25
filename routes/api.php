@@ -177,7 +177,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::post('credit_jtempo', [ReportController::class, 'kreditJatuhTempo']);
     Route::get('surveyReport', [ReportController::class, 'surveyReport']);
     Route::post('LkbhReport', [ReportController::class, 'LkbhReports']);
-    Route::get('VisitReports', [ReportController::class, 'VisitReports']);
+    Route::post('VisitReports', [ReportController::class, 'VisitReports']);
 
     Route::resource('collateral', CollateralController::class);
     Route::get('collateral_approval_list', [CollateralController::class, 'collateralApprovalList']);
