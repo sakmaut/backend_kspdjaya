@@ -16,6 +16,7 @@ class R_VisitReports extends JsonResource
     {
         return [
             'TglVisit' => $this->CREATED_AT ?? null,
+            'Cabang' => $this->Cabang ?? null,
             'NamaMcf' => $this->fullname ?? null,
             'NamaNasabah'          => $this->NAME ?? null,
             'AlamatNasabah'        => $this->INS_ADDRESS ?? null,

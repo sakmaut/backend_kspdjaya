@@ -1659,7 +1659,8 @@ class ReportController extends Controller
                     'g.PHONE_PERSONAL',
                     'd.category',
                     'h.REF_PELANGGAN',
-                    'h.REF_PELANGGAN_OTHER'
+                    'h.REF_PELANGGAN_OTHER',
+                    'i.NAME as Cabang'
                 )
                 ->leftJoin('credit as b', 'b.ID', '=', 'a.CREDIT_ID')
                 ->leftJoin('cr_application as c', 'c.ORDER_NUMBER', '=', 'b.ORDER_NUMBER')
@@ -1668,7 +1669,7 @@ class ReportController extends Controller
                 ->leftJoin('users as f', 'f.id', '=', 'e.CREATED_BY')
                 ->leftJoin('customer as g', 'g.CUST_CODE', '=', 'b.CUST_CODE')
                 ->leftJoin('cr_order as h', 'h.APPLICATION_ID', '=', 'c.ID')
-                ->leftJoin('vw_tagihan_collector as v', 'v.NO_SURAT', '=', 'a.NO_SURAT')
+                ->leftJoin('cabang as i', 'i.ID', '=', 'a.BRANCH_ID')
                 ->whereNull('v.NO_SURAT')
                 // ->whereDate('e.CREATED_AT', '>=', $dari)
                 // ->whereDate('e.CREATED_AT', '<=', $sampai)
