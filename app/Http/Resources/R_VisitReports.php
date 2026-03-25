@@ -14,6 +14,14 @@ class R_VisitReports extends JsonResource
      */
     public function toArray(Request $request): array
     {
+
+        $path = null;
+
+        if (!empty($this->PATH)) {
+            $decoded = json_decode($this->PATH, true);
+            $path = is_array($decoded) ? $decoded[0] : $this->PATH;
+        }
+
         return [
             'TglVisit' => $this->CREATED_AT ?? null,
             'Cabang' => $this->Cabang ?? null,
@@ -24,7 +32,7 @@ class R_VisitReports extends JsonResource
             'StatusNasabah'       => $this->category ?? "Baru",
             'SumberOrder'       => $this->REF_PELANGGAN,
             'Keterangan' => $this->DESCRIPTION ?? null,
-            'PathFile' => $this->PATH ?? null,
+            'PathFile' => $path,
         ];
     }
 }
