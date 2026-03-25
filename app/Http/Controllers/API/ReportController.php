@@ -6,14 +6,17 @@ use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\R_DebiturReportAR;
 use App\Http\Resources\R_Kwitansi;
+use App\Http\Resources\R_VisitReports;
 use App\Models\M_Arrears;
 use App\Models\M_Branch;
+use App\Models\M_ClSurveyLogs;
 use App\Models\M_CrCollateral;
 use App\Models\M_CrCollateralSertification;
 use App\Models\M_Credit;
 use App\Models\M_CreditSchedule;
 use App\Models\M_Customer;
 use App\Models\M_Kwitansi;
+use App\Models\TableViews\M_ColllectorVisits;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -1626,6 +1629,31 @@ class ReportController extends Controller
             $result["Result"] = array_values($grouped);
 
             return response()->json($result, 200);
+        } catch (\Exception $e) {
+            return $this->log->logError($e, $request);
+        }
+    }
+
+    public function VisitReports(Request $request)
+    {
+        try {
+            $dari   = $request->dari ?? now()->toDateString();
+            $sampai = $request->sampai ?? now()->toDateString();
+            // $cabangId     = $request->cabang_id;
+            // $user         = $request->user();
+            // $position     = $user->position;
+            // $userBranchId = $user->branch_id;
+
+            // $branchParam = $position !== 'HO' ? $userBranchId : ($cabangId ?: null);
+
+            $results = M_ColllectorVisits::query()
+                ->whereDate('SURVEY_DATE', '>=', $dari)
+                ->whereDate('SURVEY_DATE', '<=', $sampai)
+                ->get();
+
+            $dto = R_VisitReports::collection($results);
+
+            return response()->json($dto, 200);
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
         }

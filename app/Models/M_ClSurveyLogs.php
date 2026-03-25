@@ -19,6 +19,7 @@ class M_ClSurveyLogs extends Model
         'CREATED_BY',
         'CREATED_AT'
     ];
+    
     protected $guarded = [];
     public $incrementing = false;
     protected $keyType = 'string';
@@ -32,5 +33,10 @@ class M_ClSurveyLogs extends Model
                 $model->setAttribute($model->getKeyName(), Str::uuid()->toString());
             }
         });
+    }
+
+    public function user()
+    {
+        return $this->hasOne(User::class, 'id', 'CREATED_BY');
     }
 }
