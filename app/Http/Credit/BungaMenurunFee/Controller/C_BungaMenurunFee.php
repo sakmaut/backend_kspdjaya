@@ -60,7 +60,7 @@ class C_BungaMenurunFee extends Controller
                 'Plafond' => 'required'
             ]);
 
-           $exceute = $this->service->createOrUpdate($request);
+           $exceute = $this->service->create($request);
 
             DB::commit();
             return response()->json($exceute, 200);
@@ -72,6 +72,47 @@ class C_BungaMenurunFee extends Controller
 
     public function update(Request $request, $id)
     {
-        // TODO: implement update
+        DB::beginTransaction();
+        try {
+
+            $request->validate([
+                'Plafond' => 'required|numeric'
+            ]);
+
+            $result = $this->service->update($request, $id);
+
+            if (!$result) {
+                throw new Exception("Id Not Found", 404);
+            }
+
+            DB::commit();
+
+            return response()->json($result, 200);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return $this->log->logError($e, $request);
+        }
+    }
+
+    public function destroy(Request $request, $id)
+    {
+        DB::beginTransaction();
+        try {
+
+            $result = $this->service->delete($request, $id);
+
+            if (!$result) {
+                throw new Exception("Id Not Found", 404);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Data Deleted Successfully'
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return $this->log->logError($e, $request);
+        }
     }
 }

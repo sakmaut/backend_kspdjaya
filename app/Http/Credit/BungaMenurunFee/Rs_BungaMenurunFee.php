@@ -17,7 +17,6 @@ class Rs_BungaMenurunFee extends JsonResource
             'BiayaAdmin' => $this->ADMIN_FEE ?? 0,
             'BiayaBunga' => $this->INTEREST_FEE ?? 0,
             'BiayaProses' => $this->PROCCESS_FEE ?? 0,
-            'Status' => $this->STATUS ?? 0,
             'Dibuat' => $this->CREATED_BY ?? 0,
             'TglBuat' => $this->CREATED_AT ?? 0
         ];
