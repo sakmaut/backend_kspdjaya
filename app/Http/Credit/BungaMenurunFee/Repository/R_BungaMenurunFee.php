@@ -27,7 +27,7 @@ class R_BungaMenurunFee
 
     public function findFeeByLoanAmount($loanAmount)
     {
-        return $this->model->where('LOAN_AMOUNT', $loanAmount)->first();
+        return $this->model->where('LOAN_AMOUNT', $loanAmount)->whereNull('DELETED_AT')->first();
     }
 
     public function create($data)
