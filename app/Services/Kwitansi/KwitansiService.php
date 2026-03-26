@@ -33,7 +33,7 @@ class KwitansiService
         $user = $request->user();
 
         if ($user->position === 'HO') {
-            return $this->kwitansiRepository->getPendingForHO();
+            return $this->kwitansiRepository->getPendingForHO($request);
         }
 
         $tipe = $request->query('tipe');

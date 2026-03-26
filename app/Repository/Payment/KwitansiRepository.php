@@ -24,9 +24,11 @@ class KwitansiRepository
         ])->orderByRaw("CAST(SUBSTRING_INDEX(NO_TRANSAKSI, '-', -1) AS UNSIGNED) DESC");
     }
 
-    public function getPendingForHO()
+    public function getPendingForHO($request)
     {
-        return $this->getAllOrdered()
+        $cabang = $request->query('cabang');
+
+        $query = $this->getAllOrdered()
             ->where('STTS_PAYMENT', 'PENDING')
             ->where(function ($q) {
                 $q->where(function ($sub) {
@@ -36,7 +38,13 @@ class KwitansiRepository
                     $sub->where('METODE_PEMBAYARAN', 'cash')
                         ->whereIn('PAYMENT_TYPE', ['pelunasan', 'pokok_sebagian']);
                 });
-            })->get();
+            });
+
+        if (!empty($cabang) && $cabang !== 'SEMUA CABANG') {
+            $query->where('BRANCH_CODE', $cabang);
+        }
+
+        return $query->get();
     }
 
     public function getFilteredForBranch($branchCode, $filters = [], $date = null)
