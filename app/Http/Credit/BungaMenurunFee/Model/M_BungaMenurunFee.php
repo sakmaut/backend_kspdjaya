@@ -19,6 +19,7 @@ class M_BungaMenurunFee extends Model
         'ADMIN_FEE',
         'INTEREST_FEE',
         'PROCCESS_FEE',
+        'STATUS',
         'CREATED_BY',
         'CREATED_AT',
         'UPDATED_BY',

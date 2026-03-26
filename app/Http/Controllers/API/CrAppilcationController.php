@@ -75,6 +75,7 @@ class CrAppilcationController extends Controller
             $no_order = $request->query('no_order');
             $nama = $request->query('nama');
             $tgl_order = $request->query('tgl_order');
+            $cabang = $request->query('cabang');
 
             $query = M_CrSurvey::with([
                 'branch:ID,NAME',
@@ -105,6 +106,11 @@ class CrAppilcationController extends Controller
                     'CLKPS'
                 ];
 
+
+                if ($cabang !== 'SEMUA CABANG') {
+                    $query->where('branch_id', $cabang);
+                }
+                
                 $query->whereHas('survey_approval', function ($q) use ($allowedCodes) {
                     $q->whereIn('CODE', $allowedCodes);
                 });

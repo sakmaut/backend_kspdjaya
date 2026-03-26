@@ -37,6 +37,7 @@ use App\Http\Controllers\Ticketing\TicketingMessages\TicketingMessagesController
 use App\Http\Controllers\Transaction\TransactionController;
 use App\Http\Controllers\Welcome;
 use App\Http\Credit\Blacklist\BlacklistController;
+use App\Http\Credit\BungaMenurunFee\Controller\C_BungaMenurunFee;
 use App\Http\Credit\Tagihan\Controller\C_Tagihan;
 use App\Http\Credit\TagihanDocument\Controller\C_TagihanDocument;
 use Illuminate\Http\Request;
@@ -230,6 +231,8 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::resource('uploads', UploadFileController::class);
 
     Route::resource('ResetPrintKwitansi', ResetPrintKwitansiController::class);
+
+    Route::resource('BungaMenurunFee', C_BungaMenurunFee::class);
 
     //New Payment
     // Route::resource('transaction', TransactionController::class);
