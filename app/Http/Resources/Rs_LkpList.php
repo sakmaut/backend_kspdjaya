@@ -14,9 +14,13 @@ class Rs_LkpList extends JsonResource
         return [
             'id' => $this->ID,
             'no_lkp' => $this->LKP_NUMBER ?? "",
-            'petugas' => $this->user->fullname ?? "",
+            'petugas' => $this->fullname ?? "",
+            'cabang' => $this->branch_name ?? "",
             'tanggal' => Carbon::parse($this->CREATED_AT)->format('Y-m-d') ?? "",
-            'jml_surat_tgh' => $this->NOA ?? 0,
+            'jml_surat_tgh' => $this->total_noa ?? 0,
+            'jml_kunjungan' => $this->total_survey ?? 0,
+            'presentase' => $this->presentase ?? 0,
+            "status" => $this->status_survey ?? "",
         ];
     }
 }
