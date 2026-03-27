@@ -196,6 +196,30 @@ class C_Tagihan extends Controller
         }
     }
 
+    public function deleteBatch(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+
+            if (empty($request->id) || count($request->id) == 0) {
+                return response()->json([
+                    'message' => 'ID tidak boleh kosong'
+                ], 400);
+            }
+
+            M_Tagihan::whereIn('ID', $request->id)->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Batch delete success'
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return $this->log->logError($e, $request);
+        }
+    }
+
     public function cl_deploy_delete(Request $request, $id)
     {
         DB::beginTransaction();
