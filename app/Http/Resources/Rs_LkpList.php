@@ -17,9 +17,9 @@ class Rs_LkpList extends JsonResource
             'petugas' => $this->fullname ?? "",
             'cabang' => $this->branch_name ?? "",
             'tanggal' => Carbon::parse($this->CREATED_AT)->format('Y-m-d') ?? "",
-            'jml_surat_tgh' => $this->total_noa ?? 0,
-            'jml_kunjungan' => $this->total_survey ?? 0,
-            'presentase' => $this->presentase ?? 0,
+            'jml_surat_tgh' => (int) $this->total_noa ?? 0,
+            'jml_kunjungan' => (int) $this->total_survey ?? 0,
+            'presentase' => (float) $this->presentase ?? 0,
             "status" => $this->status_survey ?? "",
         ];
     }
