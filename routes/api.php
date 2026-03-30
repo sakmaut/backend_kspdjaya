@@ -167,7 +167,6 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::resource('task_pusher', TaskPusher::class);
 
     //Report
-    Route::post('inquiryList', [ReportController::class, 'inquiryList']);
     Route::get('creditReport/{id}', [ReportController::class, 'pinjaman']);
     Route::get('strukturCredit/{id}', [ReportController::class, 'strukturCredit']);
     Route::get('customerReport/{id}', [ReportController::class, 'debitur']);
