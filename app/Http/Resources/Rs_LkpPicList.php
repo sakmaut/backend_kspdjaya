@@ -31,6 +31,7 @@ class Rs_LkpPicList extends JsonResource
             'total_angsuran' => $this->AMBC_TOTAL_AWAL ?? 0,
             'bayar' => (float) $this->total_bayar ?? 0,
             'hasil_kunjungan' => $this->DESCRIPTION ?? "",
+            'IsActive' => false
         ];
     }
 }
