@@ -783,6 +783,8 @@ class S_PokokSebagian
             'INSTALLMENT'             => $installmentValue,
             'PAYMENT_VALUE_PRINCIPAL' => $totalPrincipal,
             'PAYMENT_VALUE_INTEREST'  => $totalInterest,
+            'DISCOUNT_PRINCIPAL'  => $paidDiskonPrincipal,
+            'DISCOUNT_INTEREST'  => $paidDiskonInterest,
         ];
 
         if (!$isPastDue) {
@@ -823,7 +825,7 @@ class S_PokokSebagian
             ]);
         }
 
-        $insufficient = ($totalPrincipal + $totalInterest) - $installmentValue;
+        $insufficient = ($totalPrincipal + $totalInterest + $paidDiskonPrincipal + $paidDiskonInterest) - $installmentValue;
 
         if ($totalPaid > 0 || $insufficient == 0) {
             $schedule->update([
