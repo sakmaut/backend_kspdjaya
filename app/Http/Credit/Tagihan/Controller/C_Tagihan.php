@@ -283,12 +283,6 @@ class C_Tagihan extends Controller
                 ->where('STATUS', 'Active')
                 ->count();
 
-            if ($checkValidate >= 3) {
-                return response()->json([
-                    'IsActive' => true
-                ], 200);
-            }
-
             $subQuery = DB::table('payment as p')
                 ->leftJoin('payment_detail as pd', 'pd.PAYMENT_ID', '=', 'p.ID')
                 ->whereIn('pd.ACC_KEYS', ['BAYAR_POKOK', 'BAYAR_BUNGA', 'ANGSURAN_POKOK', 'ANGSURAN_BUNGA'])
@@ -297,7 +291,6 @@ class C_Tagihan extends Controller
                 ->selectRaw('SUM(pd.ORIGINAL_AMOUNT) AS total_bayar, p.LOAN_NUM')
                 ->groupBy('p.LOAN_NUM');
 
-            // Subquery log survei
             $logSubQuery = DB::table('cl_survey_logs as t')
                 ->join(
                     DB::raw('(SELECT REFERENCE_ID, MAX(CREATED_AT) AS max_created 
@@ -365,7 +358,7 @@ class C_Tagihan extends Controller
 
             $dto = Rs_LkpPicList::collection($data);
 
-            return response()->json($dto, 200);
+            return response()->json(["AddLkp" => $checkValidate >= 3 ? false : true,"list" => $dto], 200);
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
         }
