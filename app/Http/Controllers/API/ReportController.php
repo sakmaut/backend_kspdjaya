@@ -116,7 +116,8 @@ class ReportController extends Controller
                 'ORDER_NUMBER',
                 'CUST_CODE',
                 'INSTALLMENT_DATE',
-                'BRANCH'
+                'BRANCH',
+                'CREATED_AT',
             ])
                 ->with([
                     'customer:ID,CUST_CODE,NAME',
@@ -166,6 +167,7 @@ class ReportController extends Controller
                     ? date('Y-m-d', strtotime($row->INSTALLMENT_DATE))
                     : '',
                 'branch_name'   => $row->branch?->NAME ?? '',
+                'created_at'   => Carbon::parse($row->CREATED_AT)->format("Y-m-d") ?? null,
             ])->values();
 
             return response()->json($mapping, 200);
