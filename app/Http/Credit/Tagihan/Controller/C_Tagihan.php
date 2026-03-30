@@ -286,7 +286,7 @@ class C_Tagihan extends Controller
             if ($checkValidate >= 3) {
                 return response()->json([
                     'IsActive' => true
-                ], 400);
+                ], 200);
             }
 
             $subQuery = DB::table('payment as p')
