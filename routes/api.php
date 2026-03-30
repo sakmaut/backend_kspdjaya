@@ -103,6 +103,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::post('pk', [Credit::class, 'index']);
     Route::post('pk_cancel', [Credit::class, 'pkCancel']);
     Route::get('pk_cancel_list', [Credit::class, 'pkCancelList']);
+    Route::post('CreditCancel', [Credit::class, 'CreditCancel']);
     Route::resource('admin_fee', AdminFeeController::class);
     Route::post('fee_survey', [AdminFeeController::class, 'fee_survey']);
     Route::post('fee', [AdminFeeController::class, 'fee']);

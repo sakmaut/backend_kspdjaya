@@ -1233,4 +1233,50 @@ class Credit extends Controller
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
+
+    public function CreditCancel(Request $request)
+    {
+        try {
+
+            $request->validate([
+                'LoanNumber' => 'required|string'
+            ]);
+
+            $loanNumber = $request->LoanNumber;
+
+            $credit = M_Credit::where('LOAN_NUMBER', $loanNumber)
+                ->where('STATUS', 'A')
+                ->whereDate('CREATED_AT', now()->toDateString())
+                ->first();
+
+            if (!$credit) {
+                return response()->json([
+                    'message' => 'Loan Number Not Exist',
+                    'status'  => 404
+                ], 404);
+            }
+
+            $credit->update([
+                'STTS_RCRD' => 'CANCEL',
+                'STATUS'    => 'D',
+                'DELETED_BY' => $request->user()->id,
+                'STATUS'    => now(),
+            ]);
+
+            M_CreditSchedule::where('LOAN_NUMBER', $loanNumber)
+                ->update([
+                    'PAID_FLAG' => 'PAID'
+                ]);
+
+            return response()->json([
+                'message' => 'Credit successfully cancelled',
+                'status'  => 200
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'status'  => 500
+            ], 500);
+        }
+    }
 }
