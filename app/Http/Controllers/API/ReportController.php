@@ -112,6 +112,7 @@ class ReportController extends Controller
             $results = M_Credit::select([
                 'ID',
                 'LOAN_NUMBER',
+                'STATUS',
                 'ORDER_NUMBER',
                 'CUST_CODE',
                 'INSTALLMENT_DATE',
@@ -154,6 +155,7 @@ class ReportController extends Controller
 
             $mapping = $results->map(fn($row) => [
                 'credit_id'     => $row->ID,
+                'status'     => $row->STATUS,
                 'loan_number'   => $row->LOAN_NUMBER,
                 'order_number'  => $row->ORDER_NUMBER,
                 'cust_code'     => $row->CUST_CODE,

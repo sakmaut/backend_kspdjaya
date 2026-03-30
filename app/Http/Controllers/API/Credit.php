@@ -1246,7 +1246,6 @@ class Credit extends Controller
 
             $credit = M_Credit::where('LOAN_NUMBER', $loanNumber)
                 ->where('STATUS', 'A')
-                // ->whereDate('CREATED_AT', now()->toDateString())
                 ->first();
 
             if (!$credit) {
