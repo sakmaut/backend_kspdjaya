@@ -30,23 +30,17 @@ class S_Tagihan extends R_Tagihan
         $branchId = $request->user()->branch_id;
         $branch = M_Branch::find($branchId);
 
-        // Susun bagian awal kode: PREFIX + BRANCH_CODE + YM
         $codeStart = $prefix . $branch->CODE_NUMBER . $_trans;
 
-        // Cari kode terakhir yang punya pola awal yang sama
-        $lastCode = $table::where($field, 'like', $codeStart . '%')
-            ->max($field);
+        $lastCode = $table::where($field, 'like', $codeStart . '%')->max($field);
 
-        // Default nomor urut
         $noUrut = 1;
 
         if (!empty($lastCode)) {
-            // Ambil 5 digit terakhir sebagai nomor urut
             $lastNumber = (int) substr($lastCode, -5);
             $noUrut = $lastNumber + 1;
         }
 
-        // Buat kode baru
         $generateCode = $codeStart . sprintf("%05d", $noUrut);
 
         return $generateCode;
@@ -186,7 +180,7 @@ class S_Tagihan extends R_Tagihan
             'USER_ID'    => $request['user_id'] ?? null,
             'BRANCH_ID'  => $request->user()->branch_id ?? null,
             'NOA'        => $countNoa,
-            'STATUS'     => 'Active',
+            'STATUS' => $request->has('IsDraf') ? ($request->IsDraf ? 'DRAFT' : 'Active') : 'Active',
             'CREATED_BY' => $request->user()->id ?? null,
             'CREATED_AT' => Carbon::now('Asia/Jakarta'),
         ];
@@ -199,10 +193,6 @@ class S_Tagihan extends R_Tagihan
             if (empty($loanNumber)) {
                 throw new Exception("NO KONTRAK is required.");
             }
-
-            // if ((int) $item['bayar'] < (int) $item['angsuran']) {
-
-            // }
 
             M_LkpDetail::create([
                 'NO_SURAT'      => $item['no_surat'] ?? null,

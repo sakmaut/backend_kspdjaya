@@ -318,7 +318,7 @@ class C_Tagihan extends Controller
                 })
                 ->where('a.USER_ID', $pic)
                 ->whereRaw('a.AMBC_TOTAL_AWAL > COALESCE(pay.total_bayar, 0)')
-                ->where('cr.STATUS_REC', 'AC')
+                // ->where('cr.STATUS_REC', 'AC') AKTIFKAN LAGI SETELAH DEVELOPMENT
                 ->whereMonth('a.CREATED_AT', now()->month)
                 ->whereYear('a.CREATED_AT', now()->year)
                 ->where(function ($query) {
@@ -509,13 +509,13 @@ class C_Tagihan extends Controller
                         ROUND(
                             (COUNT(DISTINCT c.REFERENCE_ID) / NULLIF(COUNT(DISTINCT b.NO_SURAT), 0)) * 100,
                             2
-                        )                                                   AS presentase,
+                        ) AS presentase,
                         a.STATUS,
                         CASE
                             WHEN COUNT(DISTINCT b.NO_SURAT) = COUNT(DISTINCT c.REFERENCE_ID)
                             THEN 'CLOSED'
                             ELSE 'OPEN'
-                        END                                                 AS status_survey
+                        END AS status_survey
                     FROM cl_lkp a
                     LEFT JOIN cl_lkp_detail b
                         ON b.LKP_ID = a.ID
