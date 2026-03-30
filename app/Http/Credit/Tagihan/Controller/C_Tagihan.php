@@ -512,7 +512,7 @@ class C_Tagihan extends Controller
                         ) AS presentase,
                         a.STATUS,
                          CASE 
-                            WHEN a.STATUS = 'Draft' THEN 'Draft'
+                            WHEN a.STATUS = 'Draft' THEN 'DRAFT'
                             WHEN COUNT(b.NO_SURAT) = COUNT(c.REFERENCE_ID) THEN 'CLOSED'
                             ELSE 'OPEN'
                         END AS status_survey
