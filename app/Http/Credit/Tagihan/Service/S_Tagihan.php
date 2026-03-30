@@ -180,7 +180,7 @@ class S_Tagihan extends R_Tagihan
             'USER_ID'    => $request['user_id'] ?? null,
             'BRANCH_ID'  => $request->user()->branch_id ?? null,
             'NOA'        => $countNoa,
-            'STATUS' => $request->has('IsDraf') ? ($request->IsDraf ? 'DRAFT' : 'Active') : 'Active',
+            'STATUS' => $request->IsDraf ? 'Draft' : 'Active',
             'CREATED_BY' => $request->user()->id ?? null,
             'CREATED_AT' => Carbon::now('Asia/Jakarta'),
         ];
