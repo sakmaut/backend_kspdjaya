@@ -1256,10 +1256,10 @@ class Credit extends Controller
             }
 
             $credit->update([
-                'STTS_RCRD' => 'CANCEL',
+                'STATUS_REC' => 'CANCEL',
                 'STATUS'    => 'D',
                 'DELETED_BY' => $request->user()->id,
-                'STATUS'    => now(),
+                'DELETED_AT'    => now(),
             ]);
 
             M_CreditSchedule::where('LOAN_NUMBER', $loanNumber)
