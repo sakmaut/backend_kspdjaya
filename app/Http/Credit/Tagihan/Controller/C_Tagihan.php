@@ -511,9 +511,9 @@ class C_Tagihan extends Controller
                             2
                         ) AS presentase,
                         a.STATUS,
-                        CASE
-                            WHEN COUNT(DISTINCT b.NO_SURAT) = COUNT(DISTINCT c.REFERENCE_ID)
-                            THEN 'CLOSED'
+                         CASE 
+                            WHEN a.STATUS = 'Draft' THEN 'Draft'
+                            WHEN COUNT(b.NO_SURAT) = COUNT(c.REFERENCE_ID) THEN 'CLOSED'
                             ELSE 'OPEN'
                         END AS status_survey
                     FROM cl_lkp a
