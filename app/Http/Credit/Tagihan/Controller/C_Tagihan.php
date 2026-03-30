@@ -446,6 +446,32 @@ class C_Tagihan extends Controller
         }
     }
 
+    public function cl_lkp_edit(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $validator = Validator::make($request->all(), [
+                'user_id' => 'required|exists:users,username',
+                'LkpId' => 'required|string'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $data = $this->service->updateLkp($request);
+
+            DB::commit();
+            return response()->json($data, 200);
+        } catch (Exception $e) {
+            DB::rollback();
+            return $this->log->logError($e, $request);
+        }
+    }
+
     // public function cl_lkp_list(Request $request)
     // {
     //     try {

@@ -221,58 +221,52 @@ class S_Tagihan extends R_Tagihan
         return $saved;
     }
 
-    // public function createLkp($request)
-    // {
-    //     $savedData = [];
+    public function updateLkp($request)
+    {
+        $list_lkp = is_array($request['list_lkp']) ? $request['list_lkp'] : [];
+        $countNoa = count($list_lkp);
 
-    //     $list_lkp = is_array($request['list_lkp']) ? $request['list_lkp'] : [];
-    //     $countNoa = count($list_lkp);
+        $lkp = M_Lkp::where('ID', $request->LkpId)->first();
 
-    //     $detailData = [
-    //         'LKP_NUMBER' => $this->createAutoCode(M_Lkp::class, 'LKP_NUMBER', 'LKP'),
-    //         'USER_ID'    => $request['user_id'] ?? null,
-    //         'BRANCH_ID'  => $request->user()->branch_id ?? null,
-    //         'NOA'        => $countNoa,
-    //         'CREATED_BY' => $request->user()->id ?? null,
-    //     ];
+        if (!$lkp) {
+            throw new Exception("LKP tidak ditemukan.");
+        }
 
-    //     $saved = M_Lkp::create($detailData);
+        $lkp->update([
+            'USER_ID'    => $request['user_id'] ?? null,
+            'BRANCH_ID'  => $request->user()->branch_id ?? null,
+            'NOA'        => $countNoa,
+            'STATUS'     => $request->IsDraf ? 'Draft' : 'Active',
+            'UPDATED_BY' => $request->user()->id ?? null,
+            'UPDATED_AT' => Carbon::now('Asia/Jakarta'),
+        ]);
 
-    //     foreach ($list_lkp as $item) {
-    //         $loanNumber = $item['no_kontrak'] ?? "";
+        M_LkpDetail::where('LKP_ID', $lkp->ID)->delete();
 
-    //         if (empty($loanNumber)) {
-    //             throw new Exception("NO KONTRAK is required.");
-    //         }
+        foreach ($list_lkp as $item) {
 
-    //         $result = DB::select('CALL get_credit_schedule(?)', [$loanNumber]);
+            $loanNumber = $item['no_kontrak'] ?? "";
 
-    //         if (!empty($result)) {
-    //             foreach ($result as $res) {
-    //                 M_LkpDetail::create([
-    //                     'LKP_ID'      => $saved->ID ?? null,
-    //                     'LOAN_NUMBER' => $loanNumber,
-    //                     'LOAN_HOLDER' => $item['nama_customer'] ?? null,
-    //                     'ADDRESS'    => $item['alamat'] ?? null,
-    //                     'CYCLE'      => $item['cycle_awal'] ?? null,
-    //                     'CREATED_BY' => $request->user()->id ?? null,
-    //                     'DUE_DATE'   => $res->PAYMENT_DATE ?? null,
-    //                     'PRINCIPAL'  => $res->PRINCIPAL ?? null,
-    //                     'INTEREST'   => $res->INTEREST ?? null,
-    //                     'INST_COUNT' => $res->INSTALLMENT_COUNT ?? null,
-    //                 ]);
-    //             }
-    //         }
+            if (empty($loanNumber)) {
+                throw new Exception("NO KONTRAK is required.");
+            }
 
-    //         M_TagihanLog::create([
-    //             'LOAN_NUMBER' => $loanNumber,
-    //             'LKP_ID'      => $saved->ID ?? null,
-    //             'DESCRIPTION' => 'LKP created with LOAN_NUMBER: ' . $loanNumber,
-    //             'STATUS'      => 'CREATE_LKP',
-    //             'CREATED_BY'  => $request->user()->id ?? null,
-    //         ]);
-    //     }
+            M_LkpDetail::create([
+                'NO_SURAT'    => $item['no_surat'] ?? null,
+                'LKP_ID'      => $lkp->ID,
+                'LOAN_NUMBER' => $loanNumber,
+                'LOAN_HOLDER' => $item['nama_customer'] ?? null,
+                'ADDRESS'     => $item['alamat'] ?? null,
+                'DESA'        => $item['desa'] ?? null,
+                'KEC'         => $item['kec'] ?? null,
+                'CYCLE'       => $item['cycle_awal'] ?? null,
+                'CREATED_BY'  => $request->user()->id ?? null,
+                'DUE_DATE'    => $item['tgl_jatuh_tempo'] ?? null,
+                'INSTALLMENT' => $item['angsuran'] ?? 0,
+                'INST_COUNT'  => $item['angsuran_ke'] ?? 0,
+            ]);
+        }
 
-    //     return $saved;
-    // }
+        return $lkp;
+    }
 }

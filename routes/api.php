@@ -209,6 +209,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::delete('cl_deploy_delete/bulk', [C_Tagihan::class, 'deleteBatch']);
 
     Route::post('cl_lkp_add',  [C_Tagihan::class, 'cl_lkp_add']);
+    Route::post('cl_lkp_edit',  [C_Tagihan::class, 'cl_lkp_edit']);
     Route::get('cl_lkp_list',  [C_Tagihan::class, 'cl_lkp_list']);
     Route::get('cl_lkp_detail/{id}',  [C_Tagihan::class, 'cl_lkp_detail']);
     Route::get('cl_logs/{id}',  [C_Tagihan::class, 'cl_logs']);
