@@ -41,6 +41,7 @@ class Rs_CollectorList extends JsonResource
             'col_path' => $this->collateralDocuments->pluck('PATH')->toArray() ?? [],
             'cabang' => $this->nama_cabang ?? "",
             'tgl_jb' => $this->CONFIRM_DATE ?? null,
+            'status' => $this->status_survey ?? null,
         ];
     }
 }

@@ -43,7 +43,8 @@ class M_ColllectorVisits extends Model
        'POLICE_NUMBER',
        'PRODUCTION_YEAR',
        'nama_cabang',
-       'fullname'
+       'fullname',
+       'status_survey'
     ];
     protected $guarded = [];
     public $incrementing = false;
