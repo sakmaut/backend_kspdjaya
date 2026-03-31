@@ -105,7 +105,7 @@ class C_Tagihan extends Controller
 
             $query = M_ColllectorVisits::with('collateralDocuments');
 
-            if ($position === 'KAPOS') {
+            if (in_array($position, ['KAPOS', 'ADMIN'])) {
                 $query->where('BRANCH_ID', $branchId);
             }
 
