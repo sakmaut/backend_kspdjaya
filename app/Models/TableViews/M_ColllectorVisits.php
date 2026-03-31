@@ -10,7 +10,7 @@ use Illuminate\Support\Str;
 class M_ColllectorVisits extends Model
 {
     use HasFactory;
-    protected $table = 'vw_tagihan_collector';
+    protected $table = 'vw_tagihan_collectors';
     protected $fillable = [
        'ID',
        'NO_SURAT',
