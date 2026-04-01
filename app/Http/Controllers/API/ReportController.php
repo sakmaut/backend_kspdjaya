@@ -105,10 +105,13 @@ class ReportController extends Controller
     public function InquiryList(Request $request)
     {
         try {
-            if (!$request->hasAny(['nama', 'no_kontrak', 'no_polisi','cust_code'])) {
+            if (!collect($request->only(['nama', 'no_kontrak', 'no_polisi', 'cust_code']))
+                ->filter(fn($v) => !is_null($v) && $v !== '')
+                ->count()) {
+
                 return response()->json([], 200);
             }
-
+            
             $results = M_Credit::select([
                 'ID',
                 'LOAN_NUMBER',
