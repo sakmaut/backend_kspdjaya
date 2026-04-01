@@ -28,22 +28,15 @@ class MonthlyCreditInsert extends Command
     public function handle()
     {
         $now = Carbon::now('Asia/Jakarta');
-        // $isLastDay = $now->isLastOfMonth() && $now->format('H:i') === '23:00';
+        $isLastDay = $now->isLastOfMonth() && $now->format('H:i') === '23:00';
 
-        // if ($isLastDay) {
-        //     try {
-        //         DB::statement('CALL insert_credit_data()');
-        //         $this->info("Stored Procedure executed on: " . $now->toDateTimeString());
-        //     } catch (\Exception $e) {
-        //         $this->error("Error executing stored procedure: " . $e->getMessage());
-        //     }
-        // }
-
-        try {
-            DB::statement('CALL insert_credit_data()');
-            $this->info("Stored Procedure executed on: " . $now->toDateTimeString());
-        } catch (\Exception $e) {
-            $this->error("Error executing stored procedure: " . $e->getMessage());
+        if ($isLastDay) {
+            try {
+                DB::statement('CALL insert_credit_data()');
+                $this->info("Stored Procedure executed on: " . $now->toDateTimeString());
+            } catch (\Exception $e) {
+                $this->error("Error executing stored procedure: " . $e->getMessage());
+            }
         }
     }
 }
