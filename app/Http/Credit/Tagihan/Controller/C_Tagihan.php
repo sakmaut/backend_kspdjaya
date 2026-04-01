@@ -67,6 +67,7 @@ class C_Tagihan extends Controller
                     'd.ID as DEPLOY_ID',
                     'd.LOAN_NUMBER',
                     'd.STATUS as DEPLOY_STATUS',
+                    'e.POSITION',
                     DB::raw('COALESCE(e.keterangan, "RESIGN") as STATUS_MCF')
                 )
                 ->leftJoin('customer as c', 'c.CUST_CODE', '=', 'a.CUST_CODE')
