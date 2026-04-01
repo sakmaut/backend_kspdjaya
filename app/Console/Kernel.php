@@ -21,7 +21,7 @@ class Kernel extends ConsoleKernel
         // Running On First Month ListBan
         $schedule->command('app:last-monthly-credit-insert')->hourly();
         $schedule->command('app:monthly-run-sp')->monthlyOn(1, '03:00')->timezone('Asia/Jakarta');
-        // $schedule->command('app:listan-service')->monthlyOn(1, '05:00')->timezone('Asia/Jakarta');
+        $schedule->command('app:listan-service')->monthlyOn(1, '05:00')->timezone('Asia/Jakarta');
 
         // Running On First Month ListBan
         // $schedule->command('app:last-monthly-credit-insert')->dailyAt('08:37')->timezone('Asia/Jakarta');
