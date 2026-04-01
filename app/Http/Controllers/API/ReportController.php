@@ -1724,11 +1724,14 @@ class ReportController extends Controller
     {
         try {
             $cabangId = $request->cabang_id;
+            $no_kontrak = $request->no_kontrak;
+            $nama = $request->nama;
             $dari     = $request->dari ?? now()->toDateString();
             $sampai   = $request->sampai ?? now()->toDateString();
 
             $results = DB::table('cl_deploy as a')
                 ->select(
+                    'a.LOAN_NUMBER',
                     'e.CREATED_AT',
                     'e.PATH',
                     'e.CONFIRM_DATE',
@@ -1752,6 +1755,13 @@ class ReportController extends Controller
                 ->leftJoin('branch as i', 'i.ID', '=', 'a.BRANCH_ID')
                 ->when($cabangId && $cabangId !== 'SEMUA CABANG', function ($query) use ($cabangId) {
                     $query->where('a.BRANCH_ID', $cabangId);
+                })
+                ->when($no_kontrak, function ($query) use ($no_kontrak) {
+                    $query->where('a.LOAN_NUMBER', 'LIKE', "%$no_kontrak%");
+                })
+
+                ->when($nama, function ($query) use ($nama) {
+                    $query->where('g.NAME', 'LIKE', "%$nama%");
                 })
                 ->whereBetween(DB::raw('DATE(e.CREATED_AT)'), [$dari, $sampai])
                 ->orderByDesc('e.CREATED_AT')
