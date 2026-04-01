@@ -17,13 +17,20 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         $schedule->command('demo:cron')->dailyAt('00:05');
-        $schedule->command('app:last-monthly-credit-insert')->hourly();
-        $schedule->command('app:lkp-service')->dailyAt('05:00')->timezone('Asia/Jakarta');
 
-        // Running On First Month
-        $schedule->command('app:monthly-run-sp')->monthlyOn(1, '03:00')->timezone('Asia/Jakarta');
-        $schedule->command('app:listan-service')->monthlyOn(1, '05:00')->timezone('Asia/Jakarta');
+        // // Running On First Month ListBan
+        // $schedule->command('app:last-monthly-credit-insert')->hourly();
+        // $schedule->command('app:monthly-run-sp')->monthlyOn(1, '03:00')->timezone('Asia/Jakarta');
+        // $schedule->command('app:listan-service')->monthlyOn(1, '05:00')->timezone('Asia/Jakarta');
+
+        // Running On First Month ListBan
+        $schedule->command('app:last-monthly-credit-insert')->dailyAt('08:37')->timezone('Asia/Jakarta');
+        $schedule->command('app:monthly-run-sp')->dailyAt('08:37')->timezone('Asia/Jakarta');
+        // $schedule->command('app:listan-service')->monthlyOn(1, '05:00')->timezone('Asia/Jakarta');
+
+
         // $schedule->command('app:listan-service')->dailyAt('15:28');
+        // $schedule->command('app:lkp-service')->dailyAt('05:00')->timezone('Asia/Jakarta');
     }
 
     protected function commands(): void
