@@ -111,7 +111,7 @@ class ReportController extends Controller
 
                 return response()->json([], 200);
             }
-            
+
             $results = M_Credit::select([
                 'ID',
                 'LOAN_NUMBER',
@@ -169,6 +169,85 @@ class ReportController extends Controller
                 'entry_date'    => $row->INSTALLMENT_DATE
                     ? date('Y-m-d', strtotime($row->INSTALLMENT_DATE))
                     : '',
+                'branch_name'   => $row->branch?->NAME ?? '',
+                'created_at'   => Carbon::parse($row->CREATED_AT)->format("Y-m-d") ?? null,
+            ])->values();
+
+            return response()->json($mapping, 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'status' => 500
+            ], 500);
+        }
+    }
+
+    public function CancelCredit(Request $request)
+    {
+        try {
+            if (!collect($request->only(['nama', 'no_kontrak', 'no_polisi', 'cust_code']))
+                ->filter(fn($v) => !is_null($v) && $v !== '')
+                ->count()) {
+
+                return response()->json([], 200);
+            }
+
+            $results = M_Credit::select([
+                'ID',
+                'LOAN_NUMBER',
+                'STATUS',
+                'ORDER_NUMBER',
+                'CUST_CODE',
+                'INSTALLMENT_DATE',
+                'BRANCH',
+                'CREATED_AT',
+            ])
+                ->with([
+                    'customer:ID,CUST_CODE,NAME',
+                    'collateral:CR_CREDIT_ID,POLICE_NUMBER',
+                    'branch:ID,NAME'
+                ])
+                ->where('STATUS', 'A')
+                ->when(
+                    $request->filled('no_kontrak'),
+                    fn($q) =>
+                    $q->where('LOAN_NUMBER', $request->no_kontrak)
+                )
+                ->when(
+                    $request->filled('cust_code'),
+                    fn($q) =>
+                    $q->where('CUST_CODE', $request->cust_code)
+                )
+                ->when(
+                    $request->filled('nama'),
+                    fn($q) =>
+                    $q->whereHas(
+                        'customer',
+                        fn($c) =>
+                        $c->where('NAME', 'LIKE', "%{$request->nama}%")
+                    )
+                )
+                ->when(
+                    $request->filled('no_polisi'),
+                    fn($q) =>
+                    $q->whereHas(
+                        'collateral',
+                        fn($c) =>
+                        $c->where('POLICE_NUMBER', 'LIKE', "%{$request->no_polisi}%")
+                    )
+                )
+                ->get();
+
+            $mapping = $results->map(fn($row) => [
+                'credit_id'     => $row->ID,
+                'status'     => $row->STATUS,
+                'loan_number'   => $row->LOAN_NUMBER,
+                'order_number'  => $row->ORDER_NUMBER,
+                'cust_code'     => $row->CUST_CODE,
+                'cust_id'       => $row->customer?->ID ?? '',
+                'customer_name' => $row->customer?->NAME ?? '',
+                'police_number' => $row->collateral?->POLICE_NUMBER ?? '',
+                'entry_date'    => Carbon::parse($row->CREATED_AT)->format("Y-m-d") ?? null,
                 'branch_name'   => $row->branch?->NAME ?? '',
                 'created_at'   => Carbon::parse($row->CREATED_AT)->format("Y-m-d") ?? null,
             ])->values();

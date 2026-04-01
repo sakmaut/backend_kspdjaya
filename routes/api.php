@@ -188,6 +188,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::post('collateral_attachment', [CollateralController::class, 'uploadImage']);
     Route::post('collateral_attachment_rilis', [CollateralController::class, 'uploadImageRelease']);
     Route::post('inquiryList', [ReportController::class, 'InquiryList']);
+    Route::post('CancelCreditList', [ReportController::class, 'CancelCredit']);
     Route::resource('log_print', LogPrintController::class);
 
     // Route::post('listBanTest', [ListBanController::class, 'listBanTest']);
