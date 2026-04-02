@@ -617,6 +617,7 @@ class C_Tagihan extends Controller
 
             $data = M_ClSurveyLogs::create([
                 'REFERENCE_ID' => $request->no_surat ?? "",
+                "LKP_NUMBER" => $request->lkp_number ?? "",
                 'DESCRIPTION' => $request->keterangan,
                 'CONFIRM_DATE' => $request->tgl_jb
                     ? Carbon::createFromTimestamp($request->tgl_jb / 1000)->format('Y-m-d')

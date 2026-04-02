@@ -12,6 +12,7 @@ class M_ClSurveyLogs extends Model
     protected $table = 'cl_survey_logs';
     protected $fillable = [
         'ID',
+        'LKP_NUMBER',
         'REFERENCE_ID',
         'DESCRIPTION',
         'CONFIRM_DATE',
