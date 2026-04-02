@@ -294,15 +294,21 @@ class C_Tagihan extends Controller
 
             $logSubQuery = DB::table('cl_survey_logs as t')
                 ->join(
-                    DB::raw('(SELECT REFERENCE_ID, MAX(CREATED_AT) AS max_created 
+                    DB::raw('(SELECT REFERENCE_ID, LKP_NUMBER, MAX(CREATED_AT) AS max_created 
                   FROM cl_survey_logs 
-                  GROUP BY REFERENCE_ID) x'),
+                  GROUP BY REFERENCE_ID, LKP_NUMBER) x'),
                     function ($join) {
                         $join->on('x.REFERENCE_ID', '=', 't.REFERENCE_ID')
+                            ->on('x.LKP_NUMBER', '=', 't.LKP_NUMBER')
                             ->on('x.max_created', '=', 't.CREATED_AT');
                     }
                 )
-                ->select('t.REFERENCE_ID', 't.DESCRIPTION', 't.CONFIRM_DATE');
+                ->select(
+                    't.REFERENCE_ID',
+                    't.LKP_NUMBER',
+                    't.DESCRIPTION',
+                    't.CONFIRM_DATE'
+                );
 
             $lkpSubQuery = DB::table('cl_lkp_detail as b')
                 ->leftJoin('cl_lkp as c', 'c.ID', '=', 'b.LKP_ID')
@@ -320,7 +326,8 @@ class C_Tagihan extends Controller
                     $join->on('pay.LOAN_NUM', '=', 'a.LOAN_NUMBER');
                 })
                 ->leftJoinSub($logSubQuery, 'e', function ($join) {
-                    $join->on('e.REFERENCE_ID', '=', 'a.NO_SURAT');
+                    $join->on('e.REFERENCE_ID', '=', 'a.NO_SURAT')
+                        ->on('e.LKP_NUMBER', '=', 'bc.LKP_NUMBER');
                 })
                 ->where('a.USER_ID', $pic)
                 ->whereRaw('a.AMBC_TOTAL_AWAL > COALESCE(pay.total_bayar, 0)')
