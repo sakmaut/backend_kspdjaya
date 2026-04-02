@@ -557,8 +557,8 @@ class C_Tagihan extends Controller
                         INNER JOIN (
                             SELECT REFERENCE_ID, MAX(CREATED_AT) AS max_created
                             FROM cl_survey_logs
-                             WHERE MONTH(CREATED_AT) = ?
-                                AND YEAR(CREATED_AT)  = ?
+                            WHERE MONTH(CREATED_AT) = MONTH(CURDATE())
+                                AND YEAR(CREATED_AT)  = YEAR(CURDATE())
                             GROUP BY REFERENCE_ID
                         ) s2
                             ON s1.REFERENCE_ID = s2.REFERENCE_ID
