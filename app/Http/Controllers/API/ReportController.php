@@ -1642,7 +1642,7 @@ class ReportController extends Controller
             ];
 
             foreach ($rows as $row) {
-                $nominal = round($row["amount"]);
+                $nominal = $row["amount"];
                 $isTransfer = strtolower($row["metode_pembayaran"]) === "transfer";
 
                 if ($isTransfer && $row["type"] !== "CASH_OUT") {
@@ -1658,6 +1658,7 @@ class ReportController extends Controller
                         break;
 
                     case "PELUNASAN":
+                        $nominal = round($row["amount"]);
                         $grouped["PELUNASAN"]["data"][]  = $row;
                         $grouped["PELUNASAN"]["jumlah"] += $nominal;
                         break;
