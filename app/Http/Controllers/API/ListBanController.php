@@ -296,7 +296,8 @@ class ListBanController extends Controller
                                 CASE
                                     WHEN tcoc.OD_PREV IS NULL OR tcoc.OD_PREV = '' THEN 'NEW'
                                     WHEN tcoc.OD_PREV <= 15 THEN 'RO1'
-                                ELSE 'RO2' AS UB,
+                                ELSE 'RO2' END 
+                                AS UB,
                                 NULL AS PLATFORM,
                                 CONCAT(c.INS_ADDRESS,' RT/', c.INS_RT, ' RW/', c.INS_RW, ' ', c.INS_CITY, ' ', c.INS_PROVINCE) AS ALAMAT_TAGIH,
                                 c.INS_KECAMATAN AS KODE_POST,
