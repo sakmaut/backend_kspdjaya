@@ -1728,8 +1728,14 @@ class ReportController extends Controller
             $cabangId = $request->cabang_id;
             $no_kontrak = $request->no_kontrak;
             $nama = $request->nama;
-            $dari     = $request->dari ?? now()->toDateString();
-            $sampai   = $request->sampai ?? now()->toDateString();
+
+            $dari   = $request->dari;
+            $sampai = $request->sampai;
+
+            if (empty($dari) && empty($sampai)) {
+                $dari   = now()->startOfMonth()->toDateString();
+                $sampai = now()->endOfMonth()->toDateString();
+            }
 
             $results = DB::table('cl_deploy as a')
                 ->select(
@@ -1765,7 +1771,10 @@ class ReportController extends Controller
                 ->when($nama, function ($query) use ($nama) {
                     $query->where('g.NAME', 'LIKE', "%$nama%");
                 })
-                ->whereBetween(DB::raw('DATE(e.CREATED_AT)'), [$dari, $sampai])
+                ->whereBetween('e.CREATED_AT', [
+                    $dari . ' 00:00:00',
+                    $sampai . ' 23:59:59'
+                ])
                 ->orderByDesc('e.CREATED_AT')
                 ->get();
 
