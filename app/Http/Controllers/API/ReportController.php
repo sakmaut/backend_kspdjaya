@@ -1732,10 +1732,15 @@ class ReportController extends Controller
             $dari   = $request->dari;
             $sampai = $request->sampai;
 
-            // if (empty($dari) && empty($sampai)) {
-            //     $dari   = now()->startOfMonth()->toDateString();
-            //     $sampai = now()->endOfMonth()->toDateString();
-            // }
+            if (
+                empty($no_kontrak) &&
+                empty($nama) &&
+                empty($dari) &&
+                empty($sampai)
+            ) {
+                $dari   = now()->startOfMonth()->toDateString();
+                $sampai = now()->endOfMonth()->toDateString();
+            }
 
             $results = DB::table('cl_deploy as a')
                 ->select(
