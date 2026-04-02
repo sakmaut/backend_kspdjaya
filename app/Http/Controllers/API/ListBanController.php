@@ -293,7 +293,10 @@ class ListBanController extends Controller
                                 cl.LOAN_NUMBER AS NO_KONTRAK,
                                 c.NAME AS NAMA_PELANGGAN,
                                 cl.CREATED_AT AS TGL_BOOKING,
-                                tcoc.OD_PREV AS UB,
+                                CASE
+                                    WHEN tcoc.OD_PREV IS NULL OR tcoc.OD_PREV = '' THEN 'NEW'
+                                    WHEN tcoc.OD_PREV <= 15 THEN 'RO1'
+                                ELSE 'RO2' AS UB,
                                 NULL AS PLATFORM,
                                 CONCAT(c.INS_ADDRESS,' RT/', c.INS_RT, ' RW/', c.INS_RW, ' ', c.INS_CITY, ' ', c.INS_PROVINCE) AS ALAMAT_TAGIH,
                                 c.INS_KECAMATAN AS KODE_POST,
