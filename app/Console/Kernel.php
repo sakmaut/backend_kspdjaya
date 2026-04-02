@@ -18,6 +18,7 @@ class Kernel extends ConsoleKernel
     {
         $schedule->command('demo:cron')->dailyAt('00:05')->timezone('Asia/Jakarta');
         $schedule->command('app:run-update-credit-o-d')->dailyAt('02:00')->timezone('Asia/Jakarta');
+        $schedule->command('app:run-e-o-d')->dailyAt('04:00')->timezone('Asia/Jakarta');
 
         // Running On First Month ListBan
         $schedule->command('app:last-monthly-credit-insert')->hourly();
