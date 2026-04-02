@@ -293,7 +293,7 @@ class ListBanController extends Controller
                                 cl.LOAN_NUMBER AS NO_KONTRAK,
                                 c.NAME AS NAMA_PELANGGAN,
                                 cl.CREATED_AT AS TGL_BOOKING,
-                                NULL AS UB,
+                                tcoc.OD_PREV AS UB,
                                 NULL AS PLATFORM,
                                 CONCAT(c.INS_ADDRESS,' RT/', c.INS_RT, ' RW/', c.INS_RW, ' ', c.INS_CITY, ' ', c.INS_PROVINCE) AS ALAMAT_TAGIH,
                                 c.INS_KECAMATAN AS KODE_POST,
@@ -407,6 +407,7 @@ class ListBanController extends Controller
                                                                     inner join cl_deploy cd on cd.NO_SURAT = csl.REFERENCE_ID
                                                             group	by cd.CREDIT_ID )
                                             group	by cd.CREDIT_ID) kjg on kjg.CREDIT_ID = cl.ID
+                                left join temp_credit_od_curr tcoc on tcoc.loan_number = cl.loan_number
                                 
                         WHERE	(cl.STATUS = 'A'  
                                     or (cl.STATUS_REC = 'RP' and coalesce(cl.mod_user,'') <> 'exclude jaminan' and cast(cl.LOAN_NUMBER as char) not in (select cast(pp.LOAN_NUM as char) from payment pp where pp.ACC_KEY = 'JUAL UNIT'))

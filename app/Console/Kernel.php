@@ -17,7 +17,6 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         $schedule->command('demo:cron')->dailyAt('00:05')->timezone('Asia/Jakarta');
-        $schedule->command('app:run-update-credit-o-d')->dailyAt('02:00')->timezone('Asia/Jakarta');
         $schedule->command('app:run-e-o-d')->dailyAt('04:00')->timezone('Asia/Jakarta');
 
         // Running On First Month ListBan
