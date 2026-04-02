@@ -1658,7 +1658,6 @@ class ReportController extends Controller
                         break;
 
                     case "PELUNASAN":
-                        $nominal = round($row["amount"]);
                         $grouped["PELUNASAN"]["data"][]  = $row;
                         $grouped["PELUNASAN"]["jumlah"] += $nominal;
                         break;
@@ -1682,6 +1681,8 @@ class ReportController extends Controller
 
             // Format output akhir
             foreach ($grouped as &$g) {
+                $g["jumlah"] = round($g["jumlah"]);
+                
                 if (fmod($g["jumlah"], 1) == 0) {
                     $g["jumlah"] = "Rp." . number_format($g["jumlah"], 0, ',', '.');
                 } else {
