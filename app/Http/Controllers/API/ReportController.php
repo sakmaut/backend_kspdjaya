@@ -1771,10 +1771,12 @@ class ReportController extends Controller
                 ->when($nama, function ($query) use ($nama) {
                     $query->where('g.NAME', 'LIKE', "%$nama%");
                 })
-                ->whereBetween('e.CREATED_AT', [
-                    $dari . ' 00:00:00',
-                    $sampai . ' 23:59:59'
-                ])
+                ->when($dari && $sampai, function ($query) use ($dari, $sampai) {
+                    $query->whereBetween('e.CREATED_AT', [
+                        $dari . ' 00:00:00',
+                        $sampai . ' 23:59:59'
+                    ]);
+                })
                 ->orderByDesc('e.CREATED_AT')
                 ->get();
 
