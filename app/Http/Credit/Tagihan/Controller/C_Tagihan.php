@@ -543,11 +543,13 @@ class C_Tagihan extends Controller
                             2
                         ) AS presentase,
                         a.STATUS,
-                         CASE 
-                            WHEN COUNT(b.NO_SURAT) = COUNT(c.REFERENCE_ID) THEN 'CLOSED'
-                            WHEN a.STATUS = 'Draft' THEN 'DRAFT'
-                            ELSE 'OPEN'
-                        END AS status_survey
+                        CASE
+                            WHEN (`lk`.`STATUS` = 'Draft') THEN 'DRAFT'
+                            ELSE (CASE
+                                WHEN (COUNT(`ld`.`NO_SURAT`) = 0) THEN 'CLOSED'
+                                WHEN (COUNT(`ld`.`NO_SURAT`) > 0) THEN 'OPEN'
+                            END)
+                        END AS `status_survey`
                     FROM cl_lkp a
                     LEFT JOIN cl_lkp_detail b
                         ON b.LKP_ID = a.ID
