@@ -1726,11 +1726,10 @@ class ReportController extends Controller
     {
         try {
             $cabangId = $request->cabang_id;
-            $no_kontrak = $request->no_kontrak;
-            $nama = $request->nama;
-
-            $dari   = $request->dari;
-            $sampai = $request->sampai;
+            $no_kontrak = $request->no_kontrak ?? null;
+            $nama       = $request->nama ?? null;
+            $dari       = $request->dari ?? null;
+            $sampai     = $request->sampai ?? null;
 
             if (
                 empty($no_kontrak) &&
