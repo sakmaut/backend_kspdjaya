@@ -555,16 +555,22 @@ class C_Tagihan extends Controller
                     LEFT JOIN cl_lkp_detail b
                         ON b.LKP_ID = a.ID
                     LEFT JOIN (
-                        SELECT DISTINCT s1.REFERENCE_ID
+                        SELECT DISTINCT 
+                            s1.REFERENCE_ID,
+                            s1.LKP_NUMBER
                         FROM cl_survey_logs s1
                         INNER JOIN (
-                            SELECT REFERENCE_ID, MAX(CREATED_AT) AS max_created
+                            SELECT 
+                                REFERENCE_ID,
+                                LKP_NUMBER,
+                                MAX(CREATED_AT) AS max_created
                             FROM cl_survey_logs
                             WHERE MONTH(CREATED_AT) = MONTH(CURDATE())
-                                AND YEAR(CREATED_AT)  = YEAR(CURDATE())
-                            GROUP BY REFERENCE_ID
+                            AND YEAR(CREATED_AT)  = YEAR(CURDATE())
+                            GROUP BY REFERENCE_ID, LKP_NUMBER
                         ) s2
                             ON s1.REFERENCE_ID = s2.REFERENCE_ID
+                            AND s1.LKP_NUMBER  = s2.LKP_NUMBER
                             AND s1.CREATED_AT  = s2.max_created
                     ) c ON c.REFERENCE_ID = b.NO_SURAT
                     LEFT JOIN users  d ON d.username = a.USER_ID
