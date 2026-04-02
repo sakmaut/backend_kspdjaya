@@ -368,6 +368,42 @@ class C_Tagihan extends Controller
     public function cl_deploy_by_pic(Request $request, $pic)
     {
         try {
+
+            $checkValidate = DB::selectOne("
+                            SELECT COUNT(*) AS total_open
+                            FROM (
+                                SELECT
+                                    a.ID,
+                                    CASE
+                                        WHEN a.STATUS = 'Draft' THEN 'DRAFT'
+                                        WHEN COUNT(DISTINCT b.NO_SURAT) = COUNT(DISTINCT c.REFERENCE_ID)
+                                            AND COUNT(DISTINCT b.NO_SURAT) > 0 THEN 'CLOSED'
+                                        ELSE 'OPEN'
+                                    END AS status_survey
+                                FROM cl_lkp a
+                                LEFT JOIN cl_lkp_detail b
+                                    ON b.LKP_ID = a.ID
+                                LEFT JOIN (
+                                    SELECT DISTINCT s1.REFERENCE_ID, s1.LKP_NUMBER
+                                    FROM cl_survey_logs s1
+                                    INNER JOIN (
+                                        SELECT REFERENCE_ID, LKP_NUMBER, MAX(CREATED_AT) AS max_created
+                                        FROM cl_survey_logs
+                                        GROUP BY REFERENCE_ID, LKP_NUMBER
+                                    ) s2
+                                    ON s1.REFERENCE_ID = s2.REFERENCE_ID
+                                    AND s1.LKP_NUMBER = s2.LKP_NUMBER
+                                    AND s1.CREATED_AT = s2.max_created
+                                ) c ON c.REFERENCE_ID = b.NO_SURAT AND c.LKP_NUMBER = a.LKP_NUMBER
+                                WHERE a.USER_ID = ?
+                                AND a.STATUS != 'Inactive'
+                                AND MONTH(a.CREATED_AT) = MONTH(CURDATE())
+                                AND YEAR(a.CREATED_AT) = YEAR(CURDATE())
+                                GROUP BY a.ID, a.STATUS
+                            ) x
+                            WHERE status_survey = 'OPEN'
+                        ", [$pic]);
+
             $subQuery = DB::table('payment as p')
                 ->leftJoin('payment_detail as pd', 'pd.PAYMENT_ID', '=', 'p.ID')
                 ->whereIn('pd.ACC_KEYS', ['BAYAR_POKOK', 'BAYAR_BUNGA', 'ANGSURAN_POKOK', 'ANGSURAN_BUNGA'])
@@ -458,8 +494,6 @@ class C_Tagihan extends Controller
                 )
                 ->orderBy('a.TGL_JTH_TEMPO', 'asc')
                 ->get();
-
-            $checkValidate = $data->count();
 
             $dto = Rs_LkpPicList::collection($data);
 
