@@ -368,12 +368,6 @@ class C_Tagihan extends Controller
     public function cl_deploy_by_pic(Request $request, $pic)
     {
         try {
-
-            $checkValidate = DB::table('cl_lkp')
-                ->where('USER_ID', $pic)
-                ->where('STATUS', 'Active')
-                ->count();
-
             $subQuery = DB::table('payment as p')
                 ->leftJoin('payment_detail as pd', 'pd.PAYMENT_ID', '=', 'p.ID')
                 ->whereIn('pd.ACC_KEYS', ['BAYAR_POKOK', 'BAYAR_BUNGA', 'ANGSURAN_POKOK', 'ANGSURAN_BUNGA'])
@@ -464,6 +458,8 @@ class C_Tagihan extends Controller
                 )
                 ->orderBy('a.TGL_JTH_TEMPO', 'asc')
                 ->get();
+
+            $checkValidate = $data->count();
 
             $dto = Rs_LkpPicList::collection($data);
 
