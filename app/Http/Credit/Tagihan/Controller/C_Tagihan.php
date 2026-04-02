@@ -681,7 +681,7 @@ class C_Tagihan extends Controller
                             ON s1.REFERENCE_ID = s2.REFERENCE_ID
                             AND s1.LKP_NUMBER  = s2.LKP_NUMBER
                             AND s1.CREATED_AT  = s2.max_created
-                    ) c ON c.REFERENCE_ID = b.NO_SURAT
+                    ) c ON c.REFERENCE_ID = b.NO_SURAT AND c.LKP_NUMBER = a.LKP_NUMBER
                     LEFT JOIN users  d ON d.username = a.USER_ID
                     LEFT JOIN branch e ON e.ID       = a.BRANCH_ID
                     WHERE a.STATUS != 'Inactive'
