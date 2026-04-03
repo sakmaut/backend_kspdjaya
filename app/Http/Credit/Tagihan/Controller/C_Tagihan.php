@@ -371,7 +371,7 @@ class C_Tagihan extends Controller
         try {
 
             $checkValidate = M_LkpProgress::where('USER_ID', $pic)
-                ->where('Status', 'Active')
+                ->where('Status', 'OPEN')
                 ->count();
 
             $subQuery = DB::table('payment as p')
