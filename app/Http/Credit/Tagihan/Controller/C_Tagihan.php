@@ -18,6 +18,7 @@ use App\Models\M_ClSurveyLogs;
 use App\Models\M_CollateralView;
 use App\Models\M_ListbanData;
 use App\Models\M_Lkp;
+use App\Models\M_LkpProgress;
 use App\Models\TableViews\M_ColllectorVisits;
 use Carbon\Carbon;
 use Exception;
@@ -654,81 +655,112 @@ class C_Tagihan extends Controller
     //     }
     // }
 
+    // public function cl_lkp_list(Request $request)
+    // {
+    //     try {
+    //         $currentBranch = $request->user()->branch_id;
+    //         $currentPosition = $request->user()->position;
+
+    //         $month = Carbon::now()->month;
+    //         $year = Carbon::now()->year;
+
+    //         $branchFilter = "";
+    //         $bindings = [$month, $year];
+
+    //         if ($currentPosition !== 'HO') {
+    //             $branchFilter = "AND a.BRANCH_ID = ?";
+    //             $bindings[] = $currentBranch;
+    //         }
+
+    //         $data = DB::select("SELECT
+    //                     a.ID,
+    //                     a.LKP_NUMBER,
+    //                     d.fullname,
+    //                     a.CREATED_AT,
+    //                     e.NAME AS branch_name,
+    //                     COUNT(DISTINCT b.NO_SURAT) AS total_noa,
+    //                     COUNT(DISTINCT c.REFERENCE_ID) AS total_survey,
+    //                     ROUND(
+    //                         (COUNT(DISTINCT c.REFERENCE_ID) / NULLIF(COUNT(DISTINCT b.NO_SURAT), 0)) * 100,
+    //                         2
+    //                     ) AS presentase,
+    //                     a.STATUS,
+    //                     CASE
+    // 						WHEN a.STATUS = 'Draft' THEN 'DRAFT'
+    // 						WHEN COUNT(DISTINCT b.NO_SURAT) = COUNT(DISTINCT c.REFERENCE_ID) 
+    // 							 AND COUNT(DISTINCT b.NO_SURAT) > 0 THEN 'CLOSED'
+    // 						ELSE 'OPEN'
+    // 					END AS status_survey
+    //                 FROM cl_lkp a
+    //                 LEFT JOIN cl_lkp_detail b
+    //                     ON b.LKP_ID = a.ID
+    //                 LEFT JOIN (
+    //                     SELECT DISTINCT 
+    //                         s1.REFERENCE_ID,
+    //                         s1.LKP_NUMBER
+    //                     FROM cl_survey_logs s1
+    //                     INNER JOIN (
+    //                         SELECT 
+    //                             REFERENCE_ID,
+    //                             LKP_NUMBER,
+    //                             MAX(CREATED_AT) AS max_created
+    //                         FROM cl_survey_logs
+    //                         WHERE MONTH(CREATED_AT) = MONTH(CURDATE())
+    //                         AND YEAR(CREATED_AT)  = YEAR(CURDATE())
+    //                         GROUP BY REFERENCE_ID, LKP_NUMBER
+    //                     ) s2
+    //                         ON s1.REFERENCE_ID = s2.REFERENCE_ID
+    //                         AND s1.LKP_NUMBER  = s2.LKP_NUMBER
+    //                         AND s1.CREATED_AT  = s2.max_created
+    //                 ) c ON c.REFERENCE_ID = b.NO_SURAT AND c.LKP_NUMBER = a.LKP_NUMBER
+    //                 LEFT JOIN users  d ON d.username = a.USER_ID
+    //                 LEFT JOIN branch e ON e.ID       = a.BRANCH_ID
+    //                 WHERE a.STATUS != 'Inactive'
+    //                 AND MONTH(a.CREATED_AT) = ?
+    //                 AND YEAR(a.CREATED_AT)  = ?
+    //                 $branchFilter
+    //                 GROUP BY
+    //                     a.ID,
+    //                     a.LKP_NUMBER,
+    //                     d.fullname,
+    //                     e.NAME,
+    //                     a.STATUS,
+    //                     a.CREATED_AT
+    //                 ORDER BY
+    //                     DATE(a.CREATED_AT) DESC,
+    //                     d.fullname          ASC
+    //             ", $bindings);
+
+    //         $dto = Rs_LkpList::collection($data);
+
+    //         return response()->json($dto, 200);
+    //     } catch (\Exception $e) {
+    //         return $this->log->logError($e, $request);
+    //     }
+    // }
+
     public function cl_lkp_list(Request $request)
     {
         try {
+
             $currentBranch = $request->user()->branch_id;
             $currentPosition = $request->user()->position;
 
             $month = Carbon::now()->month;
-            $year = Carbon::now()->year;
+            $year  = Carbon::now()->year;
 
-            $branchFilter = "";
-            $bindings = [$month, $year];
+            $query = M_LkpProgress::query()
+                ->whereMonth('Tanggal', $month)
+                ->whereYear('Tanggal', $year);
 
             if ($currentPosition !== 'HO') {
-                $branchFilter = "AND a.BRANCH_ID = ?";
-                $bindings[] = $currentBranch;
+                $query->where('CABANG_ID', $currentBranch);
             }
 
-            $data = DB::select("SELECT
-                        a.ID,
-                        a.LKP_NUMBER,
-                        d.fullname,
-                        a.CREATED_AT,
-                        e.NAME AS branch_name,
-                        COUNT(DISTINCT b.NO_SURAT) AS total_noa,
-                        COUNT(DISTINCT c.REFERENCE_ID) AS total_survey,
-                        ROUND(
-                            (COUNT(DISTINCT c.REFERENCE_ID) / NULLIF(COUNT(DISTINCT b.NO_SURAT), 0)) * 100,
-                            2
-                        ) AS presentase,
-                        a.STATUS,
-                        CASE
-							WHEN a.STATUS = 'Draft' THEN 'DRAFT'
-							WHEN COUNT(DISTINCT b.NO_SURAT) = COUNT(DISTINCT c.REFERENCE_ID) 
-								 AND COUNT(DISTINCT b.NO_SURAT) > 0 THEN 'CLOSED'
-							ELSE 'OPEN'
-						END AS status_survey
-                    FROM cl_lkp a
-                    LEFT JOIN cl_lkp_detail b
-                        ON b.LKP_ID = a.ID
-                    LEFT JOIN (
-                        SELECT DISTINCT 
-                            s1.REFERENCE_ID,
-                            s1.LKP_NUMBER
-                        FROM cl_survey_logs s1
-                        INNER JOIN (
-                            SELECT 
-                                REFERENCE_ID,
-                                LKP_NUMBER,
-                                MAX(CREATED_AT) AS max_created
-                            FROM cl_survey_logs
-                            WHERE MONTH(CREATED_AT) = MONTH(CURDATE())
-                            AND YEAR(CREATED_AT)  = YEAR(CURDATE())
-                            GROUP BY REFERENCE_ID, LKP_NUMBER
-                        ) s2
-                            ON s1.REFERENCE_ID = s2.REFERENCE_ID
-                            AND s1.LKP_NUMBER  = s2.LKP_NUMBER
-                            AND s1.CREATED_AT  = s2.max_created
-                    ) c ON c.REFERENCE_ID = b.NO_SURAT AND c.LKP_NUMBER = a.LKP_NUMBER
-                    LEFT JOIN users  d ON d.username = a.USER_ID
-                    LEFT JOIN branch e ON e.ID       = a.BRANCH_ID
-                    WHERE a.STATUS != 'Inactive'
-                    AND MONTH(a.CREATED_AT) = ?
-                    AND YEAR(a.CREATED_AT)  = ?
-                    $branchFilter
-                    GROUP BY
-                        a.ID,
-                        a.LKP_NUMBER,
-                        d.fullname,
-                        e.NAME,
-                        a.STATUS,
-                        a.CREATED_AT
-                    ORDER BY
-                        DATE(a.CREATED_AT) DESC,
-                        d.fullname          ASC
-                ", $bindings);
+            $data = $query
+                ->orderByRaw('DATE(Tanggal) DESC')
+                ->orderBy('NamaPetugas', 'ASC')
+                ->get();
 
             $dto = Rs_LkpList::collection($data);
 
