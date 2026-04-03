@@ -468,7 +468,7 @@ class C_Tagihan extends Controller
             $dto = Rs_LkpPicList::collection($data);
 
             return response()->json([
-                "AddLkp" => $checkValidate->total_open >= 3 ? false : true,
+                "AddLkp" => $checkValidate >= 3 ? false : true,
                 "list" => $dto
             ], 200);
         } catch (\Exception $e) {
