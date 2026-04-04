@@ -12,22 +12,27 @@ class Rs_LpkDetail extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        $totalBayarRow = DB::table('payment as p')
-            ->leftJoin('payment_detail as pd', 'pd.PAYMENT_ID', '=', 'p.ID')
-            ->where('LOAN_NUM', $this->LOAN_NUMBER)
-            ->whereIn('pd.ACC_KEYS', ['BAYAR_POKOK', 'BAYAR_BUNGA', 'ANGSURAN_POKOK', 'ANGSURAN_BUNGA'])
-            ->whereMonth('p.ENTRY_DATE', now()->month)
-            ->whereYear('p.ENTRY_DATE', now()->year)
-            ->selectRaw('SUM(pd.ORIGINAL_AMOUNT) AS total_bayar, p.LOAN_NUM')
-            ->groupBy('p.LOAN_NUM')
-            ->first();
-
-        // $log = DB::table('cl_survey_logs')
-        //     ->select('DESCRIPTION', 'CONFIRM_DATE')
-        //     ->where('REFERENCE_ID', $this->NO_SURAT)
-        //     ->whereDate('CREATED_AT', now()->toDateString())
-        //     ->orderBy('CREATED_AT', 'desc')
+        // $totalBayarRow = DB::table('payment as p')
+        //     ->leftJoin('payment_detail as pd', 'pd.PAYMENT_ID', '=', 'p.ID')
+        //     ->where('LOAN_NUM', $this->LOAN_NUMBER)
+        //     ->whereIn('pd.ACC_KEYS', ['BAYAR_POKOK', 'BAYAR_BUNGA', 'ANGSURAN_POKOK', 'ANGSURAN_BUNGA'])
+        //     ->whereMonth('p.ENTRY_DATE', now()->month)
+        //     ->whereYear('p.ENTRY_DATE', now()->year)
+        //     ->selectRaw('SUM(pd.ORIGINAL_AMOUNT) AS total_bayar, p.LOAN_NUM')
+        //     ->groupBy('p.LOAN_NUM')
         //     ->first();
+
+        $totalBayar = $this->payments()
+            ->join('payment_detail as pd', 'pd.PAYMENT_ID', '=', 'payment.ID')
+            ->whereIn('pd.ACC_KEYS', [
+                'BAYAR_POKOK',
+                'BAYAR_BUNGA',
+                'ANGSURAN_POKOK',
+                'ANGSURAN_BUNGA'
+            ])
+            ->whereMonth('payment.ENTRY_DATE', now()->month)
+            ->whereYear('payment.ENTRY_DATE', now()->year)
+            ->sum('pd.ORIGINAL_AMOUNT');
 
         $log = $this->surveyLogs ?? "";
 
@@ -44,7 +49,7 @@ class Rs_LpkDetail extends JsonResource
             'angusran_ke' => $this->INST_COUNT ?? "",
             'angsuran' => (int)($this->INSTALLMENT ?? 0),
             'mcf' => $this->petugas ?? "",
-            'bayar' => $totalBayarRow->total_bayar ?? 0,
+            'bayar' => $totalBayar->total_bayar ?? 0,
             'hasil_kunjungan' => $log->DESCRIPTION ?? "",
             'ambc_total' => (int)($this->deploy->AMBC_TOTAL_AWAL ?? 0),
         ];

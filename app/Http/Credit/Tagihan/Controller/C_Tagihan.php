@@ -539,7 +539,9 @@ class C_Tagihan extends Controller
                 'detail.surveyLogs' => function ($q) use ($id) {
                     $q->where('LKP_NUMBER', $id);
                 },
-                'user:username,fullname'])
+                'user:username,fullname',
+                'detail.payments.details',
+                ])
                 ->where('LKP_NUMBER', $id)
                 ->first();
 

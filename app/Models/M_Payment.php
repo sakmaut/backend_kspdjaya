@@ -54,4 +54,9 @@ class M_Payment extends Model
             }
         });
     }
+
+    public function details()
+    {
+        return $this->hasMany(M_PaymentDetail::class, 'PAYMENT_ID', 'ID');
+    }
 }
