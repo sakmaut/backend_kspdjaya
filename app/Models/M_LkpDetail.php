@@ -55,4 +55,9 @@ class M_LkpDetail extends Model
     {
         return $this->hasOne(M_Tagihan::class, 'NO_SURAT', 'NO_SURAT');
     }
+
+    public function surveyLogs()
+    {
+        return $this->hasOne(M_ClSurveyLogs::class, 'REFERENCE_ID', 'NO_SURAT');
+    }
 }

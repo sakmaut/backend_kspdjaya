@@ -276,96 +276,6 @@ class C_Tagihan extends Controller
         }
     }
 
-    // public function cl_deploy_by_pic(Request $request, $pic)
-    // {
-    //     try {
-
-    //         $checkValidate = DB::table('cl_lkp')
-    //             ->where('USER_ID', $pic)
-    //             ->where('STATUS', 'Active')
-    //             ->count();
-
-    //         $subQuery = DB::table('payment as p')
-    //             ->leftJoin('payment_detail as pd', 'pd.PAYMENT_ID', '=', 'p.ID')
-    //             ->whereIn('pd.ACC_KEYS', ['BAYAR_POKOK', 'BAYAR_BUNGA', 'ANGSURAN_POKOK', 'ANGSURAN_BUNGA'])
-    //             ->whereMonth('p.ENTRY_DATE', now()->month)
-    //             ->whereYear('p.ENTRY_DATE', now()->year)
-    //             ->selectRaw('SUM(pd.ORIGINAL_AMOUNT) AS total_bayar, p.LOAN_NUM')
-    //             ->groupBy('p.LOAN_NUM');
-
-    //         $logSubQuery = DB::table('cl_survey_logs as t')
-    //             ->join(
-    //                 DB::raw('(SELECT REFERENCE_ID, MAX(CREATED_AT) AS max_created 
-    //               FROM cl_survey_logs 
-    //               GROUP BY REFERENCE_ID) x'),
-    //                 function ($join) {
-    //                     $join->on('x.REFERENCE_ID', '=', 't.REFERENCE_ID')
-    //                         ->on('x.max_created', '=', 't.CREATED_AT');
-    //                 }
-    //             )
-    //             ->select('t.REFERENCE_ID', 't.DESCRIPTION', 't.CONFIRM_DATE');
-
-    //         $lkpSubQuery = DB::table('cl_lkp_detail as b')
-    //             ->leftJoin('cl_lkp as c', 'c.ID', '=', 'b.LKP_ID')
-    //             ->where('c.STATUS', 'Active')
-    //             ->select('b.LOAN_NUMBER', 'c.LKP_NUMBER');
-
-    //         // Query utama
-    //         $data = DB::table('cl_deploy as a')
-    //             ->leftJoinSub($lkpSubQuery, 'bc', function ($join) {
-    //                 $join->on('bc.LOAN_NUMBER', '=', 'a.LOAN_NUMBER');
-    //             })
-    //             ->leftJoin('customer as cust', 'cust.CUST_CODE', '=', 'a.CUST_CODE')
-    //             ->leftJoin('credit as cr', 'cr.LOAN_NUMBER', '=', 'a.LOAN_NUMBER')
-    //             ->leftJoinSub($subQuery, 'pay', function ($join) {
-    //                 $join->on('pay.LOAN_NUM', '=', 'a.LOAN_NUMBER');
-    //             })
-    //             ->leftJoinSub($logSubQuery, 'e', function ($join) {
-    //                 $join->on('e.REFERENCE_ID', '=', 'a.NO_SURAT');
-    //             })
-    //             ->where('a.USER_ID', $pic)
-    //             ->whereRaw('a.AMBC_TOTAL_AWAL > COALESCE(pay.total_bayar, 0)')
-    //             ->where('cr.STATUS_REC', 'AC')
-    //             ->whereMonth('a.CREATED_AT', now()->month)
-    //             ->whereYear('a.CREATED_AT', now()->year)
-    //             ->where(function ($query) {
-    //                 $query->whereNull('bc.LKP_NUMBER')
-    //                     ->orWhere('bc.LKP_NUMBER', '');
-    //             })
-    //             ->select(
-    //                 'a.ID',
-    //                 'a.NO_SURAT',
-    //                 'a.USER_ID',
-    //                 'a.BRANCH_ID',
-    //                 'a.CREDIT_ID',
-    //                 'a.LOAN_NUMBER',
-    //                 'a.CUST_CODE',
-    //                 'a.TGL_JTH_TEMPO',
-    //                 'a.CYCLE_AWAL',
-    //                 'a.N_BOT',
-    //                 'a.MCF',
-    //                 'a.ANGSURAN_KE',
-    //                 'a.ANGSURAN',
-    //                 'a.AMBC_TOTAL_AWAL',
-    //                 DB::raw('COALESCE(pay.total_bayar, 0) AS total_bayar'),
-    //                 'e.DESCRIPTION',
-    //                 'e.CONFIRM_DATE',
-    //                 'cust.NAME AS NAMA_CUST',
-    //                 'cust.ADDRESS AS ALAMAT',
-    //                 'cust.KECAMATAN AS KEC',
-    //                 'cust.KELURAHAN AS DESA'
-    //             )
-    //             ->orderBy('a.TGL_JTH_TEMPO', 'asc')
-    //             ->get();
-
-    //         $dto = Rs_LkpPicList::collection($data);
-
-    //         return response()->json(["AddLkp" => $checkValidate >= 3 ? false : true,"list" => $dto], 200);
-    //     } catch (\Exception $e) {
-    //         return $this->log->logError($e, $request);
-    //     }
-    // }
-
     public function cl_deploy_by_pic(Request $request, $pic)
     {
         try {
@@ -590,125 +500,6 @@ class C_Tagihan extends Controller
         }
     }
 
-    // public function cl_lkp_list(Request $request)
-    // {
-    //     try {
-    //         $currentBranch = $request->user()->branch_id;
-    //         $currentPosition = $request->user()->position;
-
-    //         $query = M_Lkp::with(['user:username,fullname'])
-    //             ->join('users', 'users.username', '=', 'cl_lkp.USER_ID')
-    //             ->whereMonth('cl_lkp.CREATED_AT', Carbon::now()->month)
-    //             ->whereYear('cl_lkp.CREATED_AT', Carbon::now()->year)
-    //             ->orderByRaw('DATE(cl_lkp.CREATED_AT) DESC, users.fullname ASC')
-    //             ->select([
-    //                 'cl_lkp.ID',
-    //                 'cl_lkp.LKP_NUMBER',
-    //                 'cl_lkp.USER_ID',
-    //                 'cl_lkp.CREATED_AT',
-    //                 'cl_lkp.NOA',
-    //                 'cl_lkp.BRANCH_ID',
-    //                 'users.fullname'
-    //             ]);
-
-    //         if ($currentPosition !== 'HO') {
-    //             $query->where('cl_lkp.BRANCH_ID', $currentBranch);
-    //         }
-
-    //         $data = $query->get();
-
-    //         $dto = Rs_LkpList::collection($data);
-
-    //         return response()->json($dto, 200);
-    //     } catch (\Exception $e) {
-    //         return $this->log->logError($e, $request);
-    //     }
-    // }
-
-    // public function cl_lkp_list(Request $request)
-    // {
-    //     try {
-    //         $currentBranch = $request->user()->branch_id;
-    //         $currentPosition = $request->user()->position;
-
-    //         $month = Carbon::now()->month;
-    //         $year = Carbon::now()->year;
-
-    //         $branchFilter = "";
-    //         $bindings = [$month, $year];
-
-    //         if ($currentPosition !== 'HO') {
-    //             $branchFilter = "AND a.BRANCH_ID = ?";
-    //             $bindings[] = $currentBranch;
-    //         }
-
-    //         $data = DB::select("SELECT
-    //                     a.ID,
-    //                     a.LKP_NUMBER,
-    //                     d.fullname,
-    //                     a.CREATED_AT,
-    //                     e.NAME AS branch_name,
-    //                     COUNT(DISTINCT b.NO_SURAT) AS total_noa,
-    //                     COUNT(DISTINCT c.REFERENCE_ID) AS total_survey,
-    //                     ROUND(
-    //                         (COUNT(DISTINCT c.REFERENCE_ID) / NULLIF(COUNT(DISTINCT b.NO_SURAT), 0)) * 100,
-    //                         2
-    //                     ) AS presentase,
-    //                     a.STATUS,
-    //                     CASE
-    // 						WHEN a.STATUS = 'Draft' THEN 'DRAFT'
-    // 						WHEN COUNT(DISTINCT b.NO_SURAT) = COUNT(DISTINCT c.REFERENCE_ID) 
-    // 							 AND COUNT(DISTINCT b.NO_SURAT) > 0 THEN 'CLOSED'
-    // 						ELSE 'OPEN'
-    // 					END AS status_survey
-    //                 FROM cl_lkp a
-    //                 LEFT JOIN cl_lkp_detail b
-    //                     ON b.LKP_ID = a.ID
-    //                 LEFT JOIN (
-    //                     SELECT DISTINCT 
-    //                         s1.REFERENCE_ID,
-    //                         s1.LKP_NUMBER
-    //                     FROM cl_survey_logs s1
-    //                     INNER JOIN (
-    //                         SELECT 
-    //                             REFERENCE_ID,
-    //                             LKP_NUMBER,
-    //                             MAX(CREATED_AT) AS max_created
-    //                         FROM cl_survey_logs
-    //                         WHERE MONTH(CREATED_AT) = MONTH(CURDATE())
-    //                         AND YEAR(CREATED_AT)  = YEAR(CURDATE())
-    //                         GROUP BY REFERENCE_ID, LKP_NUMBER
-    //                     ) s2
-    //                         ON s1.REFERENCE_ID = s2.REFERENCE_ID
-    //                         AND s1.LKP_NUMBER  = s2.LKP_NUMBER
-    //                         AND s1.CREATED_AT  = s2.max_created
-    //                 ) c ON c.REFERENCE_ID = b.NO_SURAT AND c.LKP_NUMBER = a.LKP_NUMBER
-    //                 LEFT JOIN users  d ON d.username = a.USER_ID
-    //                 LEFT JOIN branch e ON e.ID       = a.BRANCH_ID
-    //                 WHERE a.STATUS != 'Inactive'
-    //                 AND MONTH(a.CREATED_AT) = ?
-    //                 AND YEAR(a.CREATED_AT)  = ?
-    //                 $branchFilter
-    //                 GROUP BY
-    //                     a.ID,
-    //                     a.LKP_NUMBER,
-    //                     d.fullname,
-    //                     e.NAME,
-    //                     a.STATUS,
-    //                     a.CREATED_AT
-    //                 ORDER BY
-    //                     DATE(a.CREATED_AT) DESC,
-    //                     d.fullname          ASC
-    //             ", $bindings);
-
-    //         $dto = Rs_LkpList::collection($data);
-
-    //         return response()->json($dto, 200);
-    //     } catch (\Exception $e) {
-    //         return $this->log->logError($e, $request);
-    //     }
-    // }
-
     public function cl_lkp_list(Request $request)
     {
         try {
@@ -745,13 +536,14 @@ class C_Tagihan extends Controller
         try {
             $data = M_Lkp::with([
                 'detail.deploy',
+                'detail.surveyLog',
                 'user:username,fullname'])
                 ->where('LKP_NUMBER', $id)
                 ->first();
 
-            $dto = new Rs_LkpDetailList($data);
+            // $dto = new Rs_LkpDetailList($data);
 
-            return response()->json($dto, 200);
+            return response()->json($data, 200);
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
         }
@@ -804,11 +596,9 @@ class C_Tagihan extends Controller
                 $data = substr($req->image, strpos($req->image, ',') + 1);
                 $data = base64_decode($data);
 
-                // Generate a unique filename
-                $extension = strtolower($type[1]); // Get the image extension
+                $extension = strtolower($type[1]);
                 $fileName = Uuid::uuid4()->toString() . '.' . $extension;
 
-                // Store the image
                 $image_path = Storage::put("public/Tagihan/{$fileName}", $data);
                 $image_path = str_replace('public/', '', $image_path);
 
