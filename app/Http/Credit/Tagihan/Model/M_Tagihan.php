@@ -4,8 +4,12 @@ namespace App\Http\Credit\Tagihan\Model;
 
 use App\Http\Credit\TagihanDetail\Model\M_TagihanDetail;
 use App\Models\M_Branch;
+use App\Models\M_ClSurveyLogs;
 use App\Models\M_CrCollateral;
+use App\Models\M_Credit;
 use App\Models\M_Customer;
+use App\Models\M_LkpDetail;
+use App\Models\M_Payment;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -79,5 +83,26 @@ class M_Tagihan extends Model
     public function collateral()
     {
         return $this->hasOne(M_CrCollateral::class, 'CR_CREDIT_ID', 'CREDIT_ID');
+    }
+
+    public function credit()
+    {
+        return $this->hasOne(M_Credit::class, 'LOAN_NUMBER', 'LOAN_NUMBER');
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(M_Payment::class, 'LOAN_NUM', 'LOAN_NUMBER');
+    }
+
+    public function surveyLog()
+    {
+        // Ambil log terbaru per NO_SURAT
+        return $this->hasOne(M_ClSurveyLogs::class, 'REFERENCE_ID', 'NO_SURAT')->latestOfMany('CREATED_AT');
+    }
+
+    public function lkpDetail()
+    {
+        return $this->hasMany(M_LkpDetail::class, 'LOAN_NUMBER', 'LOAN_NUMBER');
     }
 }
