@@ -442,7 +442,7 @@ class C_Tagihan extends Controller
             // Query utama
             $data = M_Tagihan::with([
                 'assignUser:username,fullname',
-                'customer:CUST_CODE,NAME,ADDRESS,KECAMATAN,KELURAHAN',
+                'customer:CUST_CODE,NAME,INS_ADDRESS,INS_KECAMATAN,INS_KELURAHAN',
                 'credit:LOAN_NUMBER,STATUS_REC'
             ])
             ->leftJoinSub($lkpSubQuery, 'bc', function ($join) {
