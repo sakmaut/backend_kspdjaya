@@ -541,9 +541,9 @@ class C_Tagihan extends Controller
                 ->where('LKP_NUMBER', $id)
                 ->first();
 
-            // $dto = new Rs_LkpDetailList($data);
+            $dto = new Rs_LkpDetailList($data);
 
-            return response()->json($data, 200);
+            return response()->json($dto, 200);
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
         }

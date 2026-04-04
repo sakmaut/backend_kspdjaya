@@ -22,12 +22,14 @@ class Rs_LpkDetail extends JsonResource
             ->groupBy('p.LOAN_NUM')
             ->first();
 
-        $log = DB::table('cl_survey_logs')
-            ->select('DESCRIPTION', 'CONFIRM_DATE')
-            ->where('REFERENCE_ID', $this->NO_SURAT)
-            ->whereDate('CREATED_AT', now()->toDateString())
-            ->orderBy('CREATED_AT', 'desc')
-            ->first();
+        // $log = DB::table('cl_survey_logs')
+        //     ->select('DESCRIPTION', 'CONFIRM_DATE')
+        //     ->where('REFERENCE_ID', $this->NO_SURAT)
+        //     ->whereDate('CREATED_AT', now()->toDateString())
+        //     ->orderBy('CREATED_AT', 'desc')
+        //     ->first();
+
+        $log = $this->surveyLogs ?? "";
 
         return [
             'id' => $this->ID,
