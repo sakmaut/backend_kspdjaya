@@ -94,4 +94,9 @@ class M_Tagihan extends Model
     {
         return $this->hasOne(M_ClSurveyLogs::class, 'REFERENCE_ID', 'NO_SURAT')->ofMany('CREATED_AT', 'max');
     }
+
+    public function payments()
+    {
+        return $this->hasMany(M_Payment::class, 'LOAN_NUM', 'LOAN_NUMBER');
+    }
 }

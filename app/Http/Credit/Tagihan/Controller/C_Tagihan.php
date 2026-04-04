@@ -403,18 +403,6 @@ class C_Tagihan extends Controller
                 ->selectRaw('SUM(pd.ORIGINAL_AMOUNT) AS total_bayar, p.LOAN_NUM')
                 ->groupBy('p.LOAN_NUM');
 
-            // $logSubQuery = DB::table('cl_survey_logs as t')
-            //     ->join(
-            //         DB::raw('(SELECT REFERENCE_ID, MAX(CREATED_AT) AS max_created 
-            //       FROM cl_survey_logs 
-            //       GROUP BY REFERENCE_ID) x'),
-            //         function ($join) {
-            //             $join->on('x.REFERENCE_ID', '=', 't.REFERENCE_ID')
-            //                 ->on('x.max_created', '=', 't.CREATED_AT');
-            //         }
-            //     )
-            //     ->select('t.REFERENCE_ID', 't.DESCRIPTION', 't.CONFIRM_DATE');
-
             $lkpSubQuery = DB::table('cl_lkp as c')
                 ->leftJoin('cl_lkp_detail as b', 'b.LKP_ID', '=', 'c.ID')
                 ->leftJoin(DB::raw("
