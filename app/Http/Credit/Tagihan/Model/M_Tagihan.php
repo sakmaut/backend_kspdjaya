@@ -89,20 +89,4 @@ class M_Tagihan extends Model
     {
         return $this->hasOne(M_Credit::class, 'LOAN_NUMBER', 'LOAN_NUMBER');
     }
-
-    public function payments()
-    {
-        return $this->hasMany(M_Payment::class, 'LOAN_NUM', 'LOAN_NUMBER');
-    }
-
-    public function surveyLog()
-    {
-        // Ambil log terbaru per NO_SURAT
-        return $this->hasOne(M_ClSurveyLogs::class, 'REFERENCE_ID', 'NO_SURAT')->latestOfMany('CREATED_AT');
-    }
-
-    public function lkpDetail()
-    {
-        return $this->hasMany(M_LkpDetail::class, 'LOAN_NUMBER', 'LOAN_NUMBER');
-    }
 }
