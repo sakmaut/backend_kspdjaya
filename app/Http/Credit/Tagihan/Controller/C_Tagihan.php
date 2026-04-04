@@ -536,7 +536,9 @@ class C_Tagihan extends Controller
         try {
             $data = M_Lkp::with([
                 'detail.deploy',
-                'detail.surveyLogs',
+                'detail.surveyLogs' => function ($q) use ($id) {
+                    $q->where('LKP_NUMBER', $id);
+                },
                 'user:username,fullname'])
                 ->where('LKP_NUMBER', $id)
                 ->first();
