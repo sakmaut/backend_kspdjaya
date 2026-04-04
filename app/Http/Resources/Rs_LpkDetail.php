@@ -12,27 +12,11 @@ class Rs_LpkDetail extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        // $totalBayarRow = DB::table('payment as p')
-        //     ->leftJoin('payment_detail as pd', 'pd.PAYMENT_ID', '=', 'p.ID')
-        //     ->where('LOAN_NUM', $this->LOAN_NUMBER)
-        //     ->whereIn('pd.ACC_KEYS', ['BAYAR_POKOK', 'BAYAR_BUNGA', 'ANGSURAN_POKOK', 'ANGSURAN_BUNGA'])
-        //     ->whereMonth('p.ENTRY_DATE', now()->month)
-        //     ->whereYear('p.ENTRY_DATE', now()->year)
-        //     ->selectRaw('SUM(pd.ORIGINAL_AMOUNT) AS total_bayar, p.LOAN_NUM')
-        //     ->groupBy('p.LOAN_NUM')
-        //     ->first();
-
-        $totalBayar = $this->payments()
-            ->join('payment_detail as pd', 'pd.PAYMENT_ID', '=', 'payment.ID')
-            ->whereIn('pd.ACC_KEYS', [
-                'BAYAR_POKOK',
-                'BAYAR_BUNGA',
-                'ANGSURAN_POKOK',
-                'ANGSURAN_BUNGA'
-            ])
-            ->whereMonth('payment.ENTRY_DATE', now()->month)
-            ->whereYear('payment.ENTRY_DATE', now()->year)
-            ->sum('pd.ORIGINAL_AMOUNT');
+        $totalBayar = $this->whenLoaded('payments', function () {
+            return $this->payments
+                ->flatMap(fn($payment) => $payment->details)
+                ->sum('ORIGINAL_AMOUNT');
+        }, 0);
 
         $log = $this->surveyLogs ?? "";
 

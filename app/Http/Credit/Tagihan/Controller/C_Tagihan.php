@@ -540,7 +540,18 @@ class C_Tagihan extends Controller
                     $q->where('LKP_NUMBER', $id);
                 },
                 'user:username,fullname',
-                'detail.payments.details',
+                'detail.payments' => function ($q) {
+                    $q->whereMonth('payment.ENTRY_DATE', now()->month)
+                        ->whereYear('payment.ENTRY_DATE', now()->year);
+                },
+                'detail.payments.details' => function ($q) {
+                    $q->whereIn('ACC_KEYS', [
+                        'BAYAR_POKOK',
+                        'BAYAR_BUNGA',
+                        'ANGSURAN_POKOK',
+                        'ANGSURAN_BUNGA',
+                    ]);
+                },
                 ])
                 ->where('LKP_NUMBER', $id)
                 ->first();
