@@ -24,11 +24,11 @@ class Rs_LkpPicList extends JsonResource
             'mcf' => $this->MCF ?? "",
             'angsuran_ke' => $this->ANGSURAN_KE ?? 0,
             'tgl_jatuh_tempo' => $this->TGL_JTH_TEMPO ?? "",
-            'tgl_jb' => $this->CONFIRM_DATE ?? "",
+            'tgl_jb' => $this->surveyLogs->CONFIRM_DATE ?? "",
             'angsuran' => $this->ANGSURAN ?? 0,
             'total_angsuran' => $this->AMBC_TOTAL_AWAL ?? 0,
             'bayar' => (float) ($this->total_bayar ?? 0),
-            'hasil_kunjungan' => $this->DESCRIPTION ?? "",
+            'hasil_kunjungan' => $this->surveyLogs->DESCRIPTION ?? "",
             'IsActive' => false
         ];
     }

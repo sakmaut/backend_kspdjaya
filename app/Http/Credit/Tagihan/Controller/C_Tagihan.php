@@ -443,7 +443,7 @@ class C_Tagihan extends Controller
                 'assignUser:username,fullname',
                 'customer:CUST_CODE,NAME,INS_ADDRESS,INS_KECAMATAN,INS_KELURAHAN',
                 'credit:LOAN_NUMBER,STATUS_REC',
-                'surveyLogs:REFERENCE_ID,DESCRIPTION,CONFIRM_DATE'
+                'surveyLogs:REFERENCE_ID,DESCRIPTION,CONFIRM_DATE,CREATED_AT'
             ])
             ->leftJoinSub($lkpSubQuery, 'bc', function ($join) {
                 $join->on('bc.LOAN_NUMBER', '=', 'cl_deploy.LOAN_NUMBER');
@@ -478,9 +478,7 @@ class C_Tagihan extends Controller
                 'cl_deploy.ANGSURAN_KE',
                 'cl_deploy.ANGSURAN',
                 'cl_deploy.AMBC_TOTAL_AWAL',
-                DB::raw('COALESCE(pay.total_bayar,0) as total_bayar'),
-                'surveyLogs.DESCRIPTION',
-                'surveyLogs.CONFIRM_DATE'
+                DB::raw('COALESCE(pay.total_bayar,0) as total_bayar')
             )
             ->get();
 
