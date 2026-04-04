@@ -455,6 +455,9 @@ class C_Tagihan extends Controller
                 $join->on('e.REFERENCE_ID', '=', 'cl_deploy.NO_SURAT');
             })
             ->where('cl_deploy.USER_ID', $pic)
+            ->whereHas('credit', function ($q) {
+                $q->where('STATUS_REC', 'AC');
+            })
             ->whereRaw('cl_deploy.AMBC_TOTAL_AWAL > COALESCE(pay.total_bayar, 0)')
             ->whereMonth('cl_deploy.CREATED_AT', now()->month)
             ->whereYear('cl_deploy.CREATED_AT', now()->year)
