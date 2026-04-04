@@ -6,6 +6,7 @@ use App\Http\Credit\Tagihan\Model\M_Tagihan;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use App\Models\M_ClSurveyLogs;
 
 class M_LkpDetail extends Model
 {
