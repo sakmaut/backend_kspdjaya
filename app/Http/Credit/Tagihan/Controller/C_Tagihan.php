@@ -481,7 +481,7 @@ class C_Tagihan extends Controller
             $dto = Rs_LkpPicList::collection($data);
 
             $draftLkp = DB::table('cl_lkp')
-                ->selectRaw('(LKP_NUMBER IS NOT NULL) as DRAFTED, ID')
+                ->selectRaw('(LKP_NUMBER IS NOT NULL) as DRAFTED, ID,LKP_NUMBER')
                 ->where('USER_ID', $pic)
                 ->where('STATUS', 'Draft')
                 ->first();
