@@ -457,7 +457,7 @@ class C_Tagihan extends Controller
                 ->whereHas('credit', function ($q) {
                     $q->where('STATUS_REC', 'AC');
                 })
-                ->whereRaw('cl_deploy.AMBC_TOTAL_AWAL > COALESCE(total_bayar,0)')
+                ->havingRaw('cl_deploy.AMBC_TOTAL_AWAL > COALESCE(total_bayar,0)')
                 ->whereMonth('cl_deploy.CREATED_AT', now()->month)
                 ->whereYear('cl_deploy.CREATED_AT', now()->year)
                 ->where(function ($query) {
