@@ -41,7 +41,7 @@ class Rs_CollectorList extends JsonResource
             'tenor' => $this->TENOR ?? "",
             'catatan_survey' => $this->CATT_SURVEY ?? "",
             'col_path' => $this->collateralDocuments->pluck('PATH')->toArray() ?? [],
-            'col_other' => $surveyDocs->where('TYPE', 'OTHER')->pluck('PATH')->toArray(),
+            'other_path' => $surveyDocs->where('TYPE', 'OTHER')->pluck('PATH')->toArray(),
             'cabang' => $this->nama_cabang ?? "",
             'tgl_jb' => $this->CONFIRM_DATE ?? null,
             'status' => $this->status_survey ?? null,
