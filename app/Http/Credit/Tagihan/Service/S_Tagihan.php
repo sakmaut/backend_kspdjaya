@@ -47,12 +47,11 @@ class S_Tagihan extends R_Tagihan
         return $generateCode;
     }
 
-    private function createAutoCodeMonthlyReset($request, $table, $field, $prefix)
+    private function createAutoCodeMonthlyReset($branchId, $table, $field, $prefix)
     {
         $yearMonth    = date("ym");   
         $today        = date("ymd");
 
-        $branchId = $request->user()->branch_id;
         $branch   = M_Branch::find($branchId);
 
         $searchPrefix = $prefix . $branch->CODE_NUMBER . $yearMonth;
@@ -190,7 +189,7 @@ class S_Tagihan extends R_Tagihan
         }
 
         $detailData = [
-            'LKP_NUMBER' => $this->createAutoCodeMonthlyReset($request, M_Lkp::class, 'LKP_NUMBER', 'LKP'),
+            'LKP_NUMBER' => $this->createAutoCodeMonthlyReset($branchId, M_Lkp::class, 'LKP_NUMBER', 'LKP'),
             'USER_ID'    => $request['user_id'] ?? null,
             'BRANCH_ID'  => $branchId,
             'NOA'        => $countNoa,
