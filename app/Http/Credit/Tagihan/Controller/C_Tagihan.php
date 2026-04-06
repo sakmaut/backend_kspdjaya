@@ -108,7 +108,7 @@ class C_Tagihan extends Controller
 
             // $query = M_ColllectorVisits::all();
 
-            $query = M_ColllectorList::all();
+            $query = M_ColllectorList::get();
 
             if (in_array($position, ['KAPOS', 'ADMIN'])) {
                 $query->where('BRANCH_ID', $branchId);
