@@ -395,13 +395,13 @@ class C_Tagihan extends Controller
                 ->where('Status', 'OPEN')
                 ->count();
 
-            // $subQuery = DB::table('payment as p')
-            //     ->leftJoin('payment_detail as pd', 'pd.PAYMENT_ID', '=', 'p.ID')
-            //     ->whereIn('pd.ACC_KEYS', ['BAYAR_POKOK', 'BAYAR_BUNGA', 'ANGSURAN_POKOK', 'ANGSURAN_BUNGA'])
-            //     ->whereMonth('p.ENTRY_DATE', now()->month)
-            //     ->whereYear('p.ENTRY_DATE', now()->year)
-            //     ->selectRaw('SUM(pd.ORIGINAL_AMOUNT) AS total_bayar, p.LOAN_NUM')
-            //     ->groupBy('p.LOAN_NUM');
+            $subQuery = DB::table('payment as p')
+                ->leftJoin('payment_detail as pd', 'pd.PAYMENT_ID', '=', 'p.ID')
+                ->whereIn('pd.ACC_KEYS', ['BAYAR_POKOK', 'BAYAR_BUNGA', 'ANGSURAN_POKOK', 'ANGSURAN_BUNGA'])
+                ->whereMonth('p.ENTRY_DATE', now()->month)
+                ->whereYear('p.ENTRY_DATE', now()->year)
+                ->selectRaw('SUM(pd.ORIGINAL_AMOUNT) AS total_bayar, p.LOAN_NUM')
+                ->groupBy('p.LOAN_NUM');
 
             $lkpSubQuery = DB::table('cl_lkp as c')
                 ->leftJoin('cl_lkp_detail as b', 'b.LKP_ID', '=', 'c.ID')
@@ -428,60 +428,62 @@ class C_Tagihan extends Controller
                 ->select('b.LOAN_NUMBER', 'c.LKP_NUMBER');
 
             $data = M_Tagihan::with([
-                    'assignUser:username,fullname',
-                    'customer:CUST_CODE,NAME,INS_ADDRESS,INS_KECAMATAN,INS_KELURAHAN',
-                    'credit:LOAN_NUMBER,STATUS_REC',
-                    'surveyLogs' => function ($q) {
-                        $q->select(
-                            'cl_survey_logs.REFERENCE_ID',
-                            'cl_survey_logs.DESCRIPTION',
-                            'cl_survey_logs.CONFIRM_DATE',
-                            'cl_survey_logs.CREATED_AT'
-                        );
-                    }
-                ])
-                ->withSum(['paymentDetails as total_bayar' => function ($q) {
-                    $q->whereIn('ACC_KEYS', [
-                        'BAYAR_POKOK',
-                        'BAYAR_BUNGA',
-                        'ANGSURAN_POKOK',
-                        'ANGSURAN_BUNGA'
-                    ])
-                        ->whereMonth('payment.ENTRY_DATE', now()->month)
-                        ->whereYear('payment.ENTRY_DATE', now()->year);
-                }], 'ORIGINAL_AMOUNT')
-                ->leftJoinSub($lkpSubQuery, 'bc', function ($join) {
-                    $join->on('bc.LOAN_NUMBER', '=', 'cl_deploy.LOAN_NUMBER');
-                })
-                ->where('cl_deploy.USER_ID', $pic)
-                ->whereHas('credit', function ($q) {
-                    $q->where('STATUS_REC', 'AC');
-                })
-                ->havingRaw('cl_deploy.AMBC_TOTAL_AWAL > COALESCE(total_bayar,0)')
-                ->whereMonth('cl_deploy.CREATED_AT', now()->month)
-                ->whereYear('cl_deploy.CREATED_AT', now()->year)
-                ->where(function ($query) {
-                    $query->whereNull('bc.LKP_NUMBER')
-                        ->orWhere('bc.LKP_NUMBER', '');
-                })
-                ->orderBy('cl_deploy.TGL_JTH_TEMPO', 'asc')
-                ->select(
-                    'cl_deploy.ID',
-                    'cl_deploy.NO_SURAT',
-                    'cl_deploy.USER_ID',
-                    'cl_deploy.BRANCH_ID',
-                    'cl_deploy.CREDIT_ID',
-                    'cl_deploy.LOAN_NUMBER',
-                    'cl_deploy.CUST_CODE',
-                    'cl_deploy.TGL_JTH_TEMPO',
-                    'cl_deploy.CYCLE_AWAL',
-                    'cl_deploy.N_BOT',
-                    'cl_deploy.MCF',
-                    'cl_deploy.ANGSURAN_KE',
-                    'cl_deploy.ANGSURAN',
-                    'cl_deploy.AMBC_TOTAL_AWAL'
-                )
-                ->get();
+                'assignUser:username,fullname',
+                'customer:CUST_CODE,NAME,INS_ADDRESS,INS_KECAMATAN,INS_KELURAHAN',
+                'credit:LOAN_NUMBER,STATUS_REC',
+                'surveyLogs' => function ($q) {
+                    $q->select(
+                        'cl_survey_logs.REFERENCE_ID',
+                        'cl_survey_logs.DESCRIPTION',
+                        'cl_survey_logs.CONFIRM_DATE',
+                        'cl_survey_logs.CREATED_AT'
+                    );
+                }
+            ])
+            ->withSum(['paymentsThisMonth.details as total_bayar' => function ($q) {
+                $q->whereIn('ACC_KEYS', [
+                    'BAYAR_POKOK',
+                    'BAYAR_BUNGA',
+                    'ANGSURAN_POKOK',
+                    'ANGSURAN_BUNGA'
+                ]);
+            }], 'ORIGINAL_AMOUNT')
+            ->leftJoinSub($lkpSubQuery, 'bc', function ($join) {
+                $join->on('bc.LOAN_NUMBER', '=', 'cl_deploy.LOAN_NUMBER');
+            })
+            ->leftJoinSub($subQuery, 'pay', function ($join) {
+                $join->on('pay.LOAN_NUM', '=', 'cl_deploy.LOAN_NUMBER');
+            })
+            ->where('cl_deploy.USER_ID', $pic)
+            ->whereHas('credit', function ($q) {
+                $q->where('STATUS_REC', 'AC');
+            })
+            ->whereRaw('cl_deploy.AMBC_TOTAL_AWAL > COALESCE(pay.total_bayar, 0)')
+            ->whereMonth('cl_deploy.CREATED_AT', now()->month)
+            ->whereYear('cl_deploy.CREATED_AT', now()->year)
+            ->where(function ($query) {
+                $query->whereNull('bc.LKP_NUMBER')
+                    ->orWhere('bc.LKP_NUMBER', '');
+            })
+            ->orderBy('cl_deploy.TGL_JTH_TEMPO', 'asc')
+            ->select(
+                'cl_deploy.ID',
+                'cl_deploy.NO_SURAT',
+                'cl_deploy.USER_ID',
+                'cl_deploy.BRANCH_ID',
+                'cl_deploy.CREDIT_ID',
+                'cl_deploy.LOAN_NUMBER',
+                'cl_deploy.CUST_CODE',
+                'cl_deploy.TGL_JTH_TEMPO',
+                'cl_deploy.CYCLE_AWAL',
+                'cl_deploy.N_BOT',
+                'cl_deploy.MCF',
+                'cl_deploy.ANGSURAN_KE',
+                'cl_deploy.ANGSURAN',
+                'cl_deploy.AMBC_TOTAL_AWAL',
+                DB::raw('COALESCE(pay.total_bayar,0) as total_bayar')
+            )
+            ->get();
 
             $dto = Rs_LkpPicList::collection($data);
 
