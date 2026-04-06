@@ -105,7 +105,7 @@ class C_Tagihan extends Controller
             $branchId = $user->branch_id;
             $position = strtoupper($user->position);
 
-            $query = M_ColllectorVisits::with('credit');
+            $query = M_ColllectorVisits::with('credit.cr_application');
 
             // if (in_array($position, ['KAPOS', 'ADMIN'])) {
             //     $query->where('BRANCH_ID', $branchId);
