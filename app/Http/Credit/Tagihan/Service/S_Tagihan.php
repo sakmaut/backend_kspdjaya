@@ -10,6 +10,7 @@ use App\Models\M_Branch;
 use App\Models\M_Lkp;
 use App\Models\M_LkpDetail;
 use App\Models\M_TagihanLog;
+use App\Models\User;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\DB;
@@ -175,10 +176,23 @@ class S_Tagihan extends R_Tagihan
         $list_lkp = is_array($request['list_lkp']) ? $request['list_lkp'] : [];
         $countNoa = count($list_lkp);
 
+        $branchId = $request->user()->branch_id;
+
+        // jika posisi HO
+        if ($request->user()->position === 'HO' && !empty($request['user_id'])) {
+            $targetUser = User::select('branch_id')
+                ->where('username', $request['user_id'])
+                ->first();
+
+            if ($targetUser) {
+                $branchId = $targetUser->branch_id;
+            }
+        }
+
         $detailData = [
             'LKP_NUMBER' => $this->createAutoCodeMonthlyReset($request, M_Lkp::class, 'LKP_NUMBER', 'LKP'),
             'USER_ID'    => $request['user_id'] ?? null,
-            'BRANCH_ID'  => $request->user()->branch_id ?? null,
+            'BRANCH_ID'  => $branchId,
             'NOA'        => $countNoa,
             'STATUS' => $request->IsDraf ? 'Draft' : 'Active',
             'CREATED_BY' => $request->user()->id ?? null,
