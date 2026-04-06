@@ -14,6 +14,7 @@ class Rs_LkpList extends JsonResource
         return [
             'id' => $this->LKP_ID,
             'no_lkp' => $this->NoLKP ?? "",
+            'id_petugas' => $this->Petugas ?? "",
             'petugas' => $this->NamaPetugas ?? "",
             'cabang' => $this->Cabang ?? "",
             'tanggal' => Carbon::parse($this->Tanggal)->format('Y-m-d') ?? "",
