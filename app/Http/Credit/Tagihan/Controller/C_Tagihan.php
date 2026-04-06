@@ -106,6 +106,7 @@ class C_Tagihan extends Controller
             $position = strtoupper($user->position);
 
             $query = M_ColllectorVisits::with([
+                'collateralDocuments',
                 'credit.cr_application.cr_survey.cr_survey_document'
             ]);
 
