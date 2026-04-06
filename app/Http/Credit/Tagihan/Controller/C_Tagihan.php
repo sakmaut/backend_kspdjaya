@@ -106,7 +106,7 @@ class C_Tagihan extends Controller
             $position = strtoupper($user->position);
 
             // $query = M_ColllectorVisits::with('collateralDocuments');
-            $query = M_ColllectorVisits::with('credit.cr_application.cr_survey.cr_survey_document')->get();
+            $query = M_ColllectorVisits::with('credit.cr_application.cr_survey.cr_survey_document');
 
             if (in_array($position, ['KAPOS', 'ADMIN'])) {
                 $query->where('BRANCH_ID', $branchId);
