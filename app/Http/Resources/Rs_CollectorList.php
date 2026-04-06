@@ -12,7 +12,6 @@ class Rs_CollectorList extends JsonResource
     public function toArray(Request $request): array
     {
         // $surveyDocs = $this->credit?->cr_application?->cr_survey?->cr_survey_document ?? collect();
-        $collateralDocs = $this->collateralDocuments ?? collect();
 
         return [
             'id' => $this->ID,
@@ -41,7 +40,7 @@ class Rs_CollectorList extends JsonResource
             'denda' => number_format($this->total_denda ?? 0, 0, ',', '.'),
             'tenor' => $this->TENOR ?? "",
             'catatan_survey' => $this->CATT_SURVEY ?? "",
-            'col_path' => $collateralDocs->pluck('PATH')->toArray(),
+            'col_path' => $this->collateralDocuments->pluck('PATH')->toArray() ?? [],
             // 'other_path' => $surveyDocs->where('TYPE', 'OTHER')->pluck('PATH')->toArray(),
             'cabang' => $this->nama_cabang ?? "",
             'tgl_jb' => $this->CONFIRM_DATE ?? null,
