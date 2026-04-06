@@ -19,6 +19,7 @@ use App\Models\M_CollateralView;
 use App\Models\M_ListbanData;
 use App\Models\M_Lkp;
 use App\Models\M_LkpProgress;
+use App\Models\TableViews\M_ColllectorList;
 use App\Models\TableViews\M_ColllectorVisits;
 use Carbon\Carbon;
 use Exception;
@@ -105,9 +106,9 @@ class C_Tagihan extends Controller
             $branchId = $user->branch_id;
             $position = strtoupper($user->position);
 
-            $query = M_ColllectorVisits::all();
+            // $query = M_ColllectorVisits::all();
 
-            // 'credit.cr_application.cr_survey.cr_survey_document'
+            $query = M_ColllectorList::all();
 
             if (in_array($position, ['KAPOS', 'ADMIN'])) {
                 $query->where('BRANCH_ID', $branchId);
