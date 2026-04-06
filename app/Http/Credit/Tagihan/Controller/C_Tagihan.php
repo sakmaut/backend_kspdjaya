@@ -486,11 +486,10 @@ class C_Tagihan extends Controller
                 ->where('STATUS', 'Draft')
                 ->first();
 
-            return response()->json([
-                "AddLkp" => $checkValidate >= 3 ? false : true,
-                "LkpDraft" => $draftLkp,
-                "list" => $dto
-            ], 200);
+            return response()->json(array_merge(
+                ["AddLkp" => $checkValidate >= 3 ? false : true,], 
+                (array) $draftLkp, 
+                ["list" => $dto]), 200);
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
         }
