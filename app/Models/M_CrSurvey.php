@@ -91,7 +91,7 @@ class M_CrSurvey extends Model
 
     public function cr_survey_document()
     {
-        return $this->hasMany(M_CrSurveyDocument::class, 'CR_SURVEY_ID');
+        return $this->hasMany(M_CrSurveyDocument::class, 'CR_SURVEY_ID', 'id');
     }
 
     public static function prospek_jaminan()
