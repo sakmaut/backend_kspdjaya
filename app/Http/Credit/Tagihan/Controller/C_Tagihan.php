@@ -422,7 +422,7 @@ class C_Tagihan extends Controller
                     $join->on('survey.REFERENCE_ID', '=', 'b.NO_SURAT')
                         ->on('survey.LKP_NUMBER', '=', 'c.LKP_NUMBER');
                 })
-                ->where('c.STATUS', '!=', 'Draft')
+                // ->where('c.STATUS', '!=', 'Draft')
                 ->groupBy('b.LOAN_NUMBER', 'c.LKP_NUMBER', 'c.ID')
                 ->havingRaw('COUNT(DISTINCT b.NO_SURAT) > COUNT(DISTINCT survey.REFERENCE_ID)')
                 ->select('b.LOAN_NUMBER', 'c.LKP_NUMBER');
