@@ -97,8 +97,6 @@ class M_Tagihan extends Model
 
     public function paymentsThisMonth()
     {
-        return $this->hasMany(M_Payment::class, 'LOAN_NUM', 'LOAN_NUMBER')
-            ->whereMonth('ENTRY_DATE', now()->month)
-            ->whereYear('ENTRY_DATE', now()->year);
+        return $this->hasMany(M_Payment::class, 'LOAN_NUM', 'LOAN_NUMBER');
     }
 }

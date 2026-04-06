@@ -440,13 +440,15 @@ class C_Tagihan extends Controller
                         );
                     }
                 ])
-                ->withSum(['paymentsThisMonth.details as total_bayar' => function ($q) {
+                ->withSum(['paymentDetails as total_bayar' => function ($q) {
                     $q->whereIn('ACC_KEYS', [
                         'BAYAR_POKOK',
                         'BAYAR_BUNGA',
                         'ANGSURAN_POKOK',
                         'ANGSURAN_BUNGA'
-                    ]);
+                    ])
+                        ->whereMonth('payment.ENTRY_DATE', now()->month)
+                        ->whereYear('payment.ENTRY_DATE', now()->year);
                 }], 'ORIGINAL_AMOUNT')
                 ->leftJoinSub($lkpSubQuery, 'bc', function ($join) {
                     $join->on('bc.LOAN_NUMBER', '=', 'cl_deploy.LOAN_NUMBER');
