@@ -1725,7 +1725,7 @@ class ReportController extends Controller
     public function VisitReports(Request $request)
     {
         try {
-            $cabangId = $request->cabang_id;
+            $cabangId   = $request->user()->position === 'HO'? $request->cabang_id : $request->user()->branch_id;
             $no_kontrak = $request->no_kontrak ?? null;
             $nama       = $request->nama ?? null;
             $dari       = $request->dari ?? null;
