@@ -587,7 +587,7 @@ class C_Tagihan extends Controller
         DB::beginTransaction();
         try {
             $validator = Validator::make($request->all(), [
-                'user_id' => 'required|exists:users,username',
+                'user_id' => 'required|string',
                 'LkpId' => 'required|string'
             ]);
 
