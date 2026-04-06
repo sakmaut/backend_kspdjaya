@@ -484,7 +484,7 @@ class C_Tagihan extends Controller
                 ->selectRaw('(LKP_NUMBER IS NOT NULL) as DRAFTED, LKP_NUMBER')
                 ->where('USER_ID', $pic)
                 ->where('STATUS', 'Draft')
-                ->get();
+                ->first();
 
             return response()->json([
                 "AddLkp" => $checkValidate >= 3 ? false : true,
