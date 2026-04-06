@@ -107,7 +107,7 @@ class C_Tagihan extends Controller
 
             $query = M_ColllectorVisits::with([
                 'collateralDocuments',
-                'credit.cr_application.cr_survey.cr_survey_document'
+                // 'credit.cr_application.cr_survey.cr_survey_document'
             ]);
 
             if (in_array($position, ['KAPOS', 'ADMIN'])) {
