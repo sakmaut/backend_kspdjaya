@@ -473,14 +473,22 @@ class C_Tagihan extends Controller
                 'cl_deploy.ANGSURAN_KE',
                 'cl_deploy.ANGSURAN',
                 'cl_deploy.AMBC_TOTAL_AWAL',
+                'bc.LKP_NUMBER',
                 DB::raw('COALESCE(pay.total_bayar,0) as total_bayar')
             )
             ->get();
 
             $dto = Rs_LkpPicList::collection($data);
 
+            $draftLkp = DB::table('cl_lkp')
+                ->selectRaw('(LKP_NUMBER IS NOT NULL) as DRAFTED, LKP_NUMBER')
+                ->where('USER_ID', $pic)
+                ->where('STATUS', 'Draft')
+                ->get();
+
             return response()->json([
                 "AddLkp" => $checkValidate >= 3 ? false : true,
+                "LkpDraft" => $draftLkp,
                 "list" => $dto
             ], 200);
         } catch (\Exception $e) {
