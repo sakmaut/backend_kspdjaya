@@ -110,16 +110,15 @@ class C_Tagihan extends Controller
                 'credit.cr_application.cr_survey.cr_survey_document'
             ]);
 
-            // if (in_array($position, ['KAPOS', 'ADMIN'])) {
-            //     $query->where('BRANCH_ID', $branchId);
-            // }
+            if (in_array($position, ['KAPOS', 'ADMIN'])) {
+                $query->where('BRANCH_ID', $branchId);
+            }
 
-            // if (in_array($position, ['MCF', 'KOLEKTOR'])) {
-            //     $query->where('USER_ID', $userId);
-            // }
+            if (in_array($position, ['MCF', 'KOLEKTOR'])) {
+                $query->where('USER_ID', $userId);
+            }
 
-            // return response()->json(Rs_CollectorList::collection($query->get()),200);
-            return response()->json($query->get(), 200);
+            return response()->json(Rs_CollectorList::collection($query->get()),200);
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
         }
