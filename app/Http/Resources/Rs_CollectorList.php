@@ -23,7 +23,7 @@ class Rs_CollectorList extends JsonResource
             // 'cycle_awal' => $this->CYCLE_AWAL ?? "",
             // 'cycle_akhir' => $this->CYCLE_AKHIR ?? "",
             // 'nbot' => $this->N_BOT ?? "",
-            // 'alamat' => $this->ALAMAT ?? $this->INS_ADDRESS ?? "",
+            'alamat' => $this->ALAMAT ?? $this->INS_ADDRESS ?? "",
             // 'desa' => $this->DESA ?? $this->INS_KELURAHAN ?? "",
             // 'kec' => $this->KEC ?? $this->INS_KECAMATAN ?? "",
             // 'no_hp' =>  $this->PHONE_HOUSE ?? $this->PHONE_PERSONAL ?? "",
