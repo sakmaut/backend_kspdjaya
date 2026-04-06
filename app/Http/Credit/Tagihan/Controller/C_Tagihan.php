@@ -108,7 +108,7 @@ class C_Tagihan extends Controller
 
             // $query = M_ColllectorVisits::all();
 
-            $query = M_ColllectorList::get();
+            $query = M_ColllectorList::query();
 
             if (in_array($position, ['KAPOS', 'ADMIN'])) {
                 $query->where('BRANCH_ID', $branchId);
@@ -118,7 +118,7 @@ class C_Tagihan extends Controller
                 $query->where('USER_ID', $userId);
             }
 
-            return response()->json(Rs_CollectorList::collection($query), 200);
+            return response()->json(Rs_CollectorList::collection($query->get()), 200);
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
         }
