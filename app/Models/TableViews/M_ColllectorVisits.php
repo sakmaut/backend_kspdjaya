@@ -3,6 +3,7 @@
 namespace App\Models\TableViews;
 
 use App\Models\M_CrCollateralDocument;
+use App\Models\M_Credit;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
@@ -59,6 +60,11 @@ class M_ColllectorVisits extends Model
                 $model->setAttribute($model->getKeyName(), Str::uuid()->toString());
             }
         });
+    }
+
+    public function credit()
+    {
+        return $this->hasOne(M_Credit::class, 'LOAN_NUMBER', 'LOAN_NUMBER');
     }
 
     public function collateralDocuments()
