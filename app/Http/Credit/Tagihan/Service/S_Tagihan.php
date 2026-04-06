@@ -245,9 +245,22 @@ class S_Tagihan extends R_Tagihan
             throw new Exception("LKP tidak ditemukan.");
         }
 
+        $branchId = $request->user()->branch_id;
+
+        // jika posisi HO
+        if ($request->user()->position === 'HO' && !empty($request['user_id'])) {
+            $targetUser = User::select('branch_id')
+                ->where('username', $request['user_id'])
+                ->first();
+
+            if ($targetUser) {
+                $branchId = $targetUser->branch_id;
+            }
+        }
+
         $lkp->update([
             'USER_ID'    => $request['user_id'] ?? null,
-            'BRANCH_ID'  => $request->user()->branch_id ?? null,
+            'BRANCH_ID'  => $branchId ?? null,
             'NOA'        => $countNoa,
             'STATUS'     => $request->IsDraf ? 'Draft' : 'Active',
             'UPDATED_BY' => $request->user()->id ?? null,
