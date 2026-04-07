@@ -73,10 +73,12 @@ class CrSurveyVisumController extends Controller
         DB::beginTransaction();
         try {
             $request->validate([
+                'Id' => 'required|string',
                 'Nama' => 'required|string'
             ]);
 
             $fields =[
+                'id' => $request->Id ?? '',
                 'status_konsumen' => $request->Status ?? '',
                 'nama_konsumen' => $request->Nama ?? '',
                 'alamat_konsumen' => $request->Alamat ?? '',
