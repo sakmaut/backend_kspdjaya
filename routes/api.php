@@ -18,6 +18,7 @@ use App\Http\Controllers\API\{
     UserAccessMenuController,
     UsersController,
     CrBlacklistController,
+    CrSurveyVisumController,
     HrPositionController,
     ListBanController,
     LogPrintController,
@@ -238,9 +239,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::resource('ResetPrintKwitansi', ResetPrintKwitansiController::class);
 
     Route::resource('BungaMenurunFee', C_BungaMenurunFee::class);
-
-    //New Payment
-    // Route::resource('transaction', TransactionController::class);
+    Route::resource('canvasing', CrSurveyVisumController::class);
 });
 
 
