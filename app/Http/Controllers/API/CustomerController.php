@@ -523,10 +523,12 @@ class CustomerController extends Controller
                     "%{$search}%"
                 )
                     ->select(
+                        'ID',
                         'NAME',
                         'ALIAS',
                         'ADDRESS',
-                        'PHONE_PERSONAL'
+                        'PHONE_PERSONAL',
+                        'PHONE_HOUSE'
                     )
                     ->get();
             }
