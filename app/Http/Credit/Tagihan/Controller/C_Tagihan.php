@@ -128,7 +128,7 @@ class C_Tagihan extends Controller
     public function list_tagihan_collector_detail(Request $request, $id)
     {
         try {
-            $query = M_ColllectorVisits::where('ID', $id)->first();
+            $query = M_ColllectorVisits::with(['collateralDocuments', 'credit.cr_application.cr_survey_document'])->where('ID', $id)->first();
 
             if (!$query) {
                 throw new Exception("Data Not Found", 404);

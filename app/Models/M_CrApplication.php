@@ -111,6 +111,11 @@ class M_CrApplication extends Model
         return $this->hasOne(M_Credit::class, 'ORDER_NUMBER', 'ORDER_NUMBER');
     }
 
+    public function cr_survey_document()
+    {
+        return $this->hasMany(M_CrSurveyDocument::class, 'CR_SURVEY_ID', 'CR_SURVEY_ID');
+    }
+
     public static function fpkListData($request, ...$params)
     {
         $getPosition = $request->user()->position;
