@@ -475,28 +475,20 @@ class C_Tagihan extends Controller
 
             $lkpSubQuery = DB::table('v_lkp_progress as v')
                 ->join('cl_lkp_detail as ld', 'ld.LKP_ID', '=', 'v.LKP_ID')
-                ->joinSub(
-                    DB::table('v_lkp_progress as v')
-                        ->join('cl_lkp_detail as ld', 'ld.LKP_ID', '=', 'v.LKP_ID')
-                        ->where('v.STATUS', '!=', 'OPEN')
-                        ->groupBy('ld.LOAN_NUMBER')
-                        ->select(
-                            'ld.LOAN_NUMBER',
-                            DB::raw('MAX(v.NoLkp) as max_lkp')
-                        ),
-                    'x',
-                    function ($join) {
-                        $join->on('x.LOAN_NUMBER', '=', 'ld.LOAN_NUMBER')
-                            ->on('x.max_lkp', '=', 'v.NoLkp');
-                    }
-                )
                 ->where('v.STATUS', '!=', 'OPEN')
+                ->whereNotExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('v_lkp_progress as v2')
+                        ->join('cl_lkp_detail as ld2', 'ld2.LKP_ID', '=', 'v2.LKP_ID')
+                        ->whereColumn('ld2.LOAN_NUMBER', 'ld.LOAN_NUMBER')
+                        ->where('v2.STATUS', 'OPEN');
+                })
                 ->select(
                     'v.NoLkp as LKP_NUMBER',
                     'ld.LOAN_NUMBER',
                     'v.STATUS'
                 );
-
+                
             $data = M_Tagihan::with([
                 'assignUser:username,fullname',
                 'customer:CUST_CODE,NAME,INS_ADDRESS,INS_KECAMATAN,INS_KELURAHAN',
