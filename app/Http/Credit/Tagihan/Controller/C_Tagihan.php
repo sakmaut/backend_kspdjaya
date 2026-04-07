@@ -449,29 +449,38 @@ class C_Tagihan extends Controller
                 ->selectRaw('SUM(pd.ORIGINAL_AMOUNT) AS total_bayar, p.LOAN_NUM')
                 ->groupBy('p.LOAN_NUM');
 
-            $lkpSubQuery = DB::table('cl_lkp as c')
-                ->leftJoin('cl_lkp_detail as b', 'b.LKP_ID', '=', 'c.ID')
-                ->leftJoin(DB::raw("
-                (
-                    SELECT DISTINCT s1.REFERENCE_ID, s1.LKP_NUMBER
-                    FROM cl_survey_logs s1
-                    INNER JOIN (
-                        SELECT REFERENCE_ID, LKP_NUMBER, MAX(CREATED_AT) AS max_created
-                        FROM cl_survey_logs
-                        GROUP BY REFERENCE_ID, LKP_NUMBER
-                    ) s2
-                    ON s1.REFERENCE_ID = s2.REFERENCE_ID
-                    AND s1.LKP_NUMBER = s2.LKP_NUMBER
-                    AND s1.CREATED_AT = s2.max_created
-                ) survey
-            "), function ($join) {
-                    $join->on('survey.REFERENCE_ID', '=', 'b.NO_SURAT')
-                        ->on('survey.LKP_NUMBER', '=', 'c.LKP_NUMBER');
-                })
-                ->where('c.STATUS', '!=', 'Draft')
-                ->groupBy('b.LOAN_NUMBER', 'c.LKP_NUMBER', 'c.ID')
-                ->havingRaw('COUNT(DISTINCT b.NO_SURAT) > COUNT(DISTINCT survey.REFERENCE_ID)')
-                ->select('b.LOAN_NUMBER', 'c.LKP_NUMBER');
+            // $lkpSubQuery = DB::table('cl_lkp as c')
+            //     ->leftJoin('cl_lkp_detail as b', 'b.LKP_ID', '=', 'c.ID')
+            //     ->leftJoin(DB::raw("
+            //     (
+            //         SELECT DISTINCT s1.REFERENCE_ID, s1.LKP_NUMBER
+            //         FROM cl_survey_logs s1
+            //         INNER JOIN (
+            //             SELECT REFERENCE_ID, LKP_NUMBER, MAX(CREATED_AT) AS max_created
+            //             FROM cl_survey_logs
+            //             GROUP BY REFERENCE_ID, LKP_NUMBER
+            //         ) s2
+            //         ON s1.REFERENCE_ID = s2.REFERENCE_ID
+            //         AND s1.LKP_NUMBER = s2.LKP_NUMBER
+            //         AND s1.CREATED_AT = s2.max_created
+            //     ) survey
+            // "), function ($join) {
+            //         $join->on('survey.REFERENCE_ID', '=', 'b.NO_SURAT')
+            //             ->on('survey.LKP_NUMBER', '=', 'c.LKP_NUMBER');
+            //     })
+            //     ->where('c.STATUS', '!=', 'Draft')
+            //     ->groupBy('b.LOAN_NUMBER', 'c.LKP_NUMBER', 'c.ID')
+            //     ->havingRaw('COUNT(DISTINCT b.NO_SURAT) > COUNT(DISTINCT survey.REFERENCE_ID)')
+            //     ->select('b.LOAN_NUMBER', 'c.LKP_NUMBER');
+
+            $lkpSubQuery = DB::table('v_lkp_progress as v')
+                ->join('cl_lkp_detail as ld', 'ld.LKP_ID', '=', 'v.LKP_ID')
+                ->where('v.STATUS', '!=', 'OPEN')
+                ->select(
+                    'v.NoLkp as LKP_NUMBER',
+                    'ld.LOAN_NUMBER',
+                    'v.STATUS'
+                );
 
             $data = M_Tagihan::with([
                 'assignUser:username,fullname',
@@ -499,10 +508,7 @@ class C_Tagihan extends Controller
             ->whereRaw('cl_deploy.AMBC_TOTAL_AWAL > COALESCE(pay.total_bayar, 0)')
             ->whereMonth('cl_deploy.CREATED_AT', now()->month)
             ->whereYear('cl_deploy.CREATED_AT', now()->year)
-            ->where(function ($query) {
-                $query->whereNull('bc.LKP_NUMBER')
-                    ->orWhere('bc.LKP_NUMBER', '');
-            })
+            ->Where('bc.LKP_NUMBER', '!=','OPEN')
             ->orderBy('cl_deploy.TGL_JTH_TEMPO', 'asc')
             ->select(
                 'cl_deploy.ID',
