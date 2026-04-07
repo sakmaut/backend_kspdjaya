@@ -22,7 +22,11 @@ class CrSurveyVisumController extends Controller
     public function index(Request $request)
     {
         try {
-            $data = M_CrSurveyVisum::with('user')->get();
+            $data = M_CrSurveyVisum::with([
+                'user',
+                'branch'
+            ])->get();
+            
             $dto = R_SurveyVisum::collection($data);
 
             return response()->json($dto, 200);
@@ -34,7 +38,10 @@ class CrSurveyVisumController extends Controller
     public function show(Request $request, $id)
     {
         try {
-            $data = M_CrSurveyVisum::with('user')->where('id', $id)->first();
+            $data = M_CrSurveyVisum::with([
+                'user',
+                'branch'
+            ])->where('id', $id)->first();
 
             if (!$data) {
                 throw new Exception("Data Not Found", 404);
@@ -67,6 +74,7 @@ class CrSurveyVisumController extends Controller
                 'keterangan' => $request->Keterangan ?? '',
                 'path' => $request->Path ?? '',
                 'created_by' => $request->user()->id ?? '',
+                'created_branch' => $request->user()->branch_id ?? '',
             ];
 
             M_CrSurveyVisum::create($fields);

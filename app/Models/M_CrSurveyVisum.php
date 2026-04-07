@@ -21,6 +21,7 @@ class M_CrSurveyVisum extends Model
         'keterangan',
         'path',
         'created_by',
+        'created_branch',
         'created_at'
     ];
 
@@ -42,5 +43,10 @@ class M_CrSurveyVisum extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'created_by', 'id');
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(M_Branch::class, 'created_branch', 'ID');
     }
 }
