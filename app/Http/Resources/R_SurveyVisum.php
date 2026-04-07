@@ -27,7 +27,7 @@ class R_SurveyVisum extends JsonResource
             'Keterangan' => $this->keterangan,
             'Path' => $this->path,
             'NamaMcf' => $this->user->fullname ?? null,
-            'Cabang' => $this->branch->name ?? null,
+            'Cabang' => $this->branch->NAME ?? null,
             'TanggalKunjungan' => Carbon::parse($this->created_at)->format('Y-m-d H:i:s') ?? null,
         ];
     }
