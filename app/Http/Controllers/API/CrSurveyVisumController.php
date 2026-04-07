@@ -57,6 +57,7 @@ class CrSurveyVisumController extends Controller
             ]);
 
             $fields =[
+                'status_konsumen' => $request->Status ?? '',
                 'nama_konsumen' => $request->Nama ?? '',
                 'alamat_konsumen' => $request->Alamat ?? '',
                 'no_handphone' => $request->NoHandphone ?? '',
