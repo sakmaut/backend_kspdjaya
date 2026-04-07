@@ -24,7 +24,9 @@ class Rs_CollectorList extends JsonResource
             'angsuran' => $this->ANGSURAN ?? 0,
             'kunjungan_terakhir' => [
                 'hasil_kunjungan' => $this->DESCRIPTION ?? "",
-                'tgl_kunjungan' => Carbon::parse($this->SURVEY_DATE)->format('Y-m-d') ?? "",
+                'tgl_kunjungan' => $this->SURVEY_DATE
+                    ? Carbon::parse($this->SURVEY_DATE)->format('Y-m-d')
+                    : null,
                 'tgl_jb' => $this->CONFIRM_DATE ?? null,
                 'path' => json_decode($this->PATH, true) ?? []
             ]
