@@ -11,7 +11,7 @@ class Rs_CollectorDetail extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        $surveyDocs = $this->credit?->cr_application?->cr_survey?->cr_survey_document ?? collect();
+        $surveyDocs = $this->credit?->cr_application?->cr_survey_document ?? collect();
 
         return [
             'id' => $this->ID,
