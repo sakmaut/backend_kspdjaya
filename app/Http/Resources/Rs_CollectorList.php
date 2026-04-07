@@ -11,6 +11,17 @@ class Rs_CollectorList extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        $path = json_decode($this->PATH, true) ?? [];
+        
+        $kunjunganTerakhir = [
+            'hasil_kunjungan' => $this->DESCRIPTION ?? "",
+            'tgl_kunjungan' => $this->SURVEY_DATE
+                ? Carbon::parse($this->SURVEY_DATE)->format('Y-m-d')
+                : null,
+            'tgl_jb' => $this->CONFIRM_DATE ?? null,
+            'path' => $path
+        ];
+
         return [
             'id' => $this->ID,
             'nama_pic' =>  $this->fullname ?? "",
@@ -22,14 +33,7 @@ class Rs_CollectorList extends JsonResource
             'angusran_ke' => $this->ANGSURAN_KE ?? 0,
             'tgl_jatuh_tempo' => $this->TGL_JTH_TEMPO ?? "",
             'angsuran' => $this->ANGSURAN ?? 0,
-            'kunjungan_terakhir' => [
-                'hasil_kunjungan' => $this->DESCRIPTION ?? "",
-                'tgl_kunjungan' => $this->SURVEY_DATE
-                    ? Carbon::parse($this->SURVEY_DATE)->format('Y-m-d')
-                    : null,
-                'tgl_jb' => $this->CONFIRM_DATE ?? null,
-                'path' => json_decode($this->PATH, true) ?? []
-            ]
+            'kunjungan_terakhir' => collect($kunjunganTerakhir)->filter()->isEmpty() ? null : $kunjunganTerakhir,
         ];
     }
 }
