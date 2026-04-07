@@ -475,6 +475,21 @@ class C_Tagihan extends Controller
 
             $lkpSubQuery = DB::table('v_lkp_progress as v')
                 ->join('cl_lkp_detail as ld', 'ld.LKP_ID', '=', 'v.LKP_ID')
+                ->joinSub(
+                    DB::table('v_lkp_progress as v')
+                        ->join('cl_lkp_detail as ld', 'ld.LKP_ID', '=', 'v.LKP_ID')
+                        ->where('v.STATUS', '!=', 'OPEN')
+                        ->groupBy('ld.LOAN_NUMBER')
+                        ->select(
+                            'ld.LOAN_NUMBER',
+                            DB::raw('MAX(v.NoLkp) as max_lkp')
+                        ),
+                    'x',
+                    function ($join) {
+                        $join->on('x.LOAN_NUMBER', '=', 'ld.LOAN_NUMBER')
+                            ->on('x.max_lkp', '=', 'v.NoLkp');
+                    }
+                )
                 ->where('v.STATUS', '!=', 'OPEN')
                 ->select(
                     'v.NoLkp as LKP_NUMBER',
