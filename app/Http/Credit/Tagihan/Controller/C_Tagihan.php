@@ -134,8 +134,7 @@ class C_Tagihan extends Controller
                 throw new Exception("Data Not Found", 404);
             }
 
-            // return response()->json(new Rs_CollectorDetail($query), 200);
-            return response()->json($query, 200);
+            return response()->json(new Rs_CollectorDetail($query), 200);
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
         }
