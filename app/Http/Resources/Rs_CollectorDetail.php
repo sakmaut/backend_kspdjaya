@@ -46,7 +46,7 @@ class Rs_CollectorDetail extends JsonResource
                 'hasil_kunjungan' => $this->DESCRIPTION ?? "",
                 'tgl_kunjungan' => Carbon::parse($this->CONFIRM_DATE)->format('Y-m-d') ?? "",
                 'tgl_jb' => $this->CONFIRM_DATE ?? null,
-                'path' => $this->PATH ?? []
+                'path' => $this->PATH->toArray() ?? []
             ]
         ];
     }
