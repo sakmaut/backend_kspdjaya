@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Credit\Tagihan\Model\M_Tagihan;
 use App\Http\Credit\Tagihan\Service\S_Tagihan;
 use App\Http\Resources\R_TagihanDetail;
+use App\Http\Resources\Rs_CollectorDetail;
 use App\Http\Resources\Rs_CollectorList;
 use App\Http\Resources\Rs_DeployList;
 use App\Http\Resources\Rs_LkpDetailList;
@@ -119,6 +120,21 @@ class C_Tagihan extends Controller
             }
 
             return response()->json(Rs_CollectorList::collection($query->get()), 200);
+        } catch (\Exception $e) {
+            return $this->log->logError($e, $request);
+        }
+    }
+
+    public function list_tagihan_collector_detail(Request $request, $id)
+    {
+        try {
+            $query = M_ColllectorVisits::where('ID', $id)->first();
+
+            if (!$query) {
+                throw new Exception("Data Not Found", 404);
+            }
+
+            return response()->json(new Rs_CollectorDetail($query), 200);
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
         }

@@ -205,6 +205,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::resource('tagihan', C_Tagihan::class);
     Route::resource('upload_tagihan_document', C_TagihanDocument::class);
     Route::get('list_tagihan_collector',  [C_Tagihan::class, 'list_tagihan_collector']);
+    Route::get('list_tagihan_collector/detail/{id}',  [C_Tagihan::class, 'list_tagihan_collector_detail']);
     Route::get('cl_deploy_list',  [C_Tagihan::class, 'cl_deploy_list']);
     Route::post('cl_deploy_update/{id}',  [C_Tagihan::class, 'cl_deploy_update']);
     Route::post('cl_deploy_delete/{id}',  [C_Tagihan::class, 'cl_deploy_delete']);

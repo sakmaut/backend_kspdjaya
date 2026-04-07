@@ -1,0 +1,50 @@
+<?php
+
+namespace App\Http\Resources;
+
+use App\Models\M_CrCollateralDocument;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
+
+class Rs_CollectorDetail extends JsonResource
+{
+    public function toArray(Request $request): array
+    {
+        $surveyDocs = $this->credit?->cr_application?->cr_survey?->cr_survey_document ?? collect();
+
+        return [
+            'id' => $this->ID,
+            'nama_pic' =>  $this->fullname ?? "",
+            'no_surat' => $this->NO_SURAT ?? "",
+            'no_lkp' => $this->LKP_NUMBER ?? "",
+            'no_kontrak' => $this->LOAN_NUMBER ?? "",
+            'nama_customer' => $this->NAMA_CUST ?? $this->NAME ?? "",
+            'cycle_awal' => $this->CYCLE_AWAL ?? "",
+            'cycle_akhir' => $this->CYCLE_AKHIR ?? "",
+            'nbot' => $this->N_BOT ?? "",
+            'alamat' => $this->ALAMAT ?? $this->INS_ADDRESS ?? "",
+            'desa' => $this->DESA ?? $this->INS_KELURAHAN ?? "",
+            'kec' => $this->KEC ?? $this->INS_KECAMATAN ?? "",
+            'no_hp' =>  $this->PHONE_HOUSE ?? $this->PHONE_PERSONAL ?? "",
+            'mcf' => $this->MCF ?? "",
+            'angusran_ke' => $this->ANGSURAN_KE ?? 0,
+            'tgl_jatuh_tempo' => $this->TGL_JTH_TEMPO ?? "",
+            'angsuran' => $this->ANGSURAN ?? 0,
+            'bayar' => $this->total_bayar ?? 0,
+            'hasil_kunjungan' => $this->DESCRIPTION ?? "",
+            'tgl_kunjungan' => Carbon::parse($this->CONFIRM_DATE)->format('Y-m-d') ?? "",
+            'unit' => $this->unit ?? "",
+            'no_polisi' => $this->POLICE_NUMBER ?? "",
+            'tahun_motor' => $this->PRODUCTION_YEAR ?? "",
+            'denda' => number_format($this->total_denda ?? 0, 0, ',', '.'),
+            'tenor' => $this->TENOR ?? "",
+            'catatan_survey' => $this->CATT_SURVEY ?? "",
+            'col_path' => $this->collateralDocuments->pluck('PATH')->toArray() ?? [],
+            'other_path' => $surveyDocs->where('TYPE', 'OTHER')->pluck('PATH')->toArray(),
+            'cabang' => $this->nama_cabang ?? "",
+            'tgl_jb' => $this->CONFIRM_DATE ?? null,
+            'status' => $this->status_survey ?? null,
+        ];
+    }
+}
