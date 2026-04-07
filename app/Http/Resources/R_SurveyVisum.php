@@ -17,6 +17,7 @@ class R_SurveyVisum extends JsonResource
     {
         return [
             'Id' => $this->id,
+            'Status' => $this->status_konsumen,
             'Nama' => $this->nama_konsumen,
             'Alamat' => $this->alamat_konsumen,
             'NoHandphone' => $this->no_handphone,
