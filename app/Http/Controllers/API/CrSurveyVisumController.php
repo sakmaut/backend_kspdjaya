@@ -22,11 +22,24 @@ class CrSurveyVisumController extends Controller
     public function index(Request $request)
     {
         try {
-            $data = M_CrSurveyVisum::with([
+            $user = $request->user();
+            $userId = $user->id;
+            $branchId = $user->branch_id;
+            $position = $user->position;
+
+            $query = M_CrSurveyVisum::with([
                 'user',
                 'branch'
-            ])->get();
-            
+            ]);
+
+            if (in_array($position, ['KAPOS', 'ADMIN'])) {
+                $query->where('created_branch', $branchId);
+            } elseif (in_array($position, ['MCF', 'KOLEKTOR'])) {
+                $query->where('created_by', $userId);
+            }
+
+            $data = $query->orderBy('created_at', 'desc')->get();
+
             $dto = R_SurveyVisum::collection($data);
 
             return response()->json($dto, 200);
