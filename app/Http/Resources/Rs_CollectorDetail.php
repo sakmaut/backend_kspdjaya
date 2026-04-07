@@ -32,8 +32,6 @@ class Rs_CollectorDetail extends JsonResource
             'tgl_jatuh_tempo' => $this->TGL_JTH_TEMPO ?? "",
             'angsuran' => $this->ANGSURAN ?? 0,
             'bayar' => $this->total_bayar ?? 0,
-            'hasil_kunjungan' => $this->DESCRIPTION ?? "",
-            'tgl_kunjungan' => Carbon::parse($this->CONFIRM_DATE)->format('Y-m-d') ?? "",
             'unit' => $this->unit ?? "",
             'no_polisi' => $this->POLICE_NUMBER ?? "",
             'tahun_motor' => $this->PRODUCTION_YEAR ?? "",
@@ -43,8 +41,13 @@ class Rs_CollectorDetail extends JsonResource
             'col_path' => $this->collateralDocuments->pluck('PATH')->toArray() ?? [],
             'other_path' => $surveyDocs->where('TYPE', 'other')->pluck('PATH')->toArray(),
             'cabang' => $this->nama_cabang ?? "",
-            'tgl_jb' => $this->CONFIRM_DATE ?? null,
             'status' => $this->status_survey ?? null,
+            'kunjungan_terakhir' =>[
+                'hasil_kunjungan' => $this->DESCRIPTION ?? "",
+                'tgl_kunjungan' => Carbon::parse($this->CONFIRM_DATE)->format('Y-m-d') ?? "",
+                'tgl_jb' => $this->CONFIRM_DATE ?? null,
+                'path' => $this->PATH ?? []
+            ]
         ];
     }
 }
