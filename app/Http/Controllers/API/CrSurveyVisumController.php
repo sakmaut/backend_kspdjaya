@@ -29,7 +29,8 @@ class CrSurveyVisumController extends Controller
 
             $query = M_CrSurveyVisum::with([
                 'user',
-                'branch'
+                'branch',
+                'documents'
             ]);
 
             if (in_array($position, ['KAPOS', 'ADMIN'])) {
@@ -53,7 +54,8 @@ class CrSurveyVisumController extends Controller
         try {
             $data = M_CrSurveyVisum::with([
                 'user',
-                'branch'
+                'branch',
+                'documents'
             ])->where('id', $id)->first();
 
             if (!$data) {

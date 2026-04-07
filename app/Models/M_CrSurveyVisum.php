@@ -49,4 +49,9 @@ class M_CrSurveyVisum extends Model
     {
         return $this->belongsTo(M_Branch::class, 'created_branch', 'ID');
     }
+
+    public function documents()
+    {
+        return $this->hasMany(M_CrSurveyDocument::class, 'CR_SURVEY_ID', 'id')->where('TYPE', 'canvasing');
+    }
 }
