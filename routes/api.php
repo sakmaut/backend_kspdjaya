@@ -120,6 +120,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::get('taksasi_download', [TaksasiController::class, 'download']);
 
     Route::resource('customer', CustomerController::class);
+    Route::get('customers', [CustomerController::class, 'allCustomer']);
     Route::post('search_customer', [CustomerController::class, 'SearchCustInstallment']);
     Route::post('search_customer_pelunasan', [CustomerController::class, 'SearchCustSettelment']);
     Route::post('search_customer_bunga_menurun', [CustomerController::class, 'SearchCustReducingBalance']);

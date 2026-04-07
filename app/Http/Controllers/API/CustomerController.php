@@ -507,4 +507,33 @@ class CustomerController extends Controller
 
         return $documents;
     }
+
+    public function allCustomer(Request $request)
+    {
+        try {
+
+            $search = $request->get('search');
+
+            $customers = [];
+
+            if ($search) {
+                $customers = M_Customer::where(
+                    DB::raw("CONCAT(NAME, ' ', ALIAS)"),
+                    'LIKE',
+                    "%{$search}%"
+                )
+                    ->select(
+                        'NAME',
+                        'ALIAS',
+                        'ADDRESS',
+                        'PHONE_PERSONAL'
+                    )
+                    ->get();
+            }
+
+            return response()->json($customers, 200);
+        } catch (Exception $e) {
+            return $this->log->logError($e, $request);
+        }
+    }
 }
