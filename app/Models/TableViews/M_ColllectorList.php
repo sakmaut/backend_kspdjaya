@@ -21,7 +21,11 @@ class M_ColllectorList extends Model
         'BRANCH_ID',
         'ANGSURAN_KE',
         'ANGSURAN',
-        'INS_ADDRESS'
+        'INS_ADDRESS',
+        'DESCRIPTION',
+        'SURVEY_DATE',
+        'CONFIRM_DATE',
+        'PATH'
     ];
     protected $guarded = [];
     public $incrementing = false;
