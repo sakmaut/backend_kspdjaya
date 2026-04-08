@@ -16,7 +16,7 @@ class R_SurveyVisum extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'Id' => $this->id,
+            // 'Id' => $this->id,
             'Status' => $this->status_konsumen,
             'Nama' => $this->nama_konsumen,
             'Alamat' => $this->alamat_konsumen,
