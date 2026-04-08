@@ -488,7 +488,7 @@ class C_Tagihan extends Controller
                     'ld.LOAN_NUMBER',
                     'v.STATUS'
                 );
-                
+
             $data = M_Tagihan::with([
                 'assignUser:username,fullname',
                 'customer:CUST_CODE,NAME,INS_ADDRESS,INS_KECAMATAN,INS_KELURAHAN',
@@ -515,7 +515,6 @@ class C_Tagihan extends Controller
             ->whereRaw('cl_deploy.AMBC_TOTAL_AWAL > COALESCE(pay.total_bayar, 0)')
             ->whereMonth('cl_deploy.CREATED_AT', now()->month)
             ->whereYear('cl_deploy.CREATED_AT', now()->year)
-            ->Where('bc.LKP_NUMBER', '!=','OPEN')
             ->orderBy('cl_deploy.TGL_JTH_TEMPO', 'asc')
             ->select(
                 'cl_deploy.ID',
