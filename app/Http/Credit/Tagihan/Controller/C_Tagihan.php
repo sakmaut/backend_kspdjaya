@@ -475,14 +475,22 @@ class C_Tagihan extends Controller
 
             $lkpSubQuery = DB::table('v_lkp_progress as v')
                 ->join('cl_lkp_detail as ld', 'ld.LKP_ID', '=', 'v.LKP_ID')
-                ->where('v.STATUS', '!=', 'OPEN')
-                ->whereNotExists(function ($query) {
-                    $query->select(DB::raw(1))
-                        ->from('v_lkp_progress as v2')
-                        ->join('cl_lkp_detail as ld2', 'ld2.LKP_ID', '=', 'v2.LKP_ID')
-                        ->whereColumn('ld2.LOAN_NUMBER', 'ld.LOAN_NUMBER')
-                        ->where('v2.STATUS', 'OPEN');
-                })
+                ->joinSub(
+                    DB::table('v_lkp_progress as v')
+                        ->join('cl_lkp_detail as ld', 'ld.LKP_ID', '=', 'v.LKP_ID')
+                        ->where('v.STATUS', 'OPEN')
+                        ->groupBy('ld.LOAN_NUMBER')
+                        ->select(
+                            'ld.LOAN_NUMBER',
+                            DB::raw('MAX(v.NoLkp) AS max_lkp')
+                        ),
+                    'x',
+                    function ($join) {
+                        $join->on('x.LOAN_NUMBER', '=', 'ld.LOAN_NUMBER')
+                            ->on('x.max_lkp', '=', 'v.NoLkp');
+                    }
+                )
+                ->where('v.STATUS', 'OPEN')
                 ->select(
                     'v.NoLkp as LKP_NUMBER',
                     'ld.LOAN_NUMBER',
@@ -515,6 +523,10 @@ class C_Tagihan extends Controller
             ->whereRaw('cl_deploy.AMBC_TOTAL_AWAL > COALESCE(pay.total_bayar, 0)')
             ->whereMonth('cl_deploy.CREATED_AT', now()->month)
             ->whereYear('cl_deploy.CREATED_AT', now()->year)
+            ->where(function ($query) {
+                $query->whereNull('bc.LKP_NUMBER')
+                    ->orWhere('bc.LKP_NUMBER', '');
+            })
             ->orderBy('cl_deploy.TGL_JTH_TEMPO', 'asc')
             ->select(
                 'cl_deploy.ID',
