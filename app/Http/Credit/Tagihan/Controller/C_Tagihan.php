@@ -137,36 +137,7 @@ class C_Tagihan extends Controller
             return $this->log->logError($e, $request);
         }
     }
-
-    // public function list_tagihan_collector(Request $request)
-    // {
-    //     try {
-    //         $user = $request->user();
-
-    //         $userId   = $user->username;
-    //         $branchId = $user->branch_id;
-    //         $position = strtoupper($user->position);
-
-    //         $query = M_ColllectorVisits::with(
-    //             'collateralDocuments'
-    //         );
-                
-    //             // 'credit.cr_application.cr_survey.cr_survey_document'
-
-    //         if (in_array($position, ['KAPOS', 'ADMIN'])) {
-    //             $query->where('BRANCH_ID', $branchId);
-    //         }
-
-    //         if (in_array($position, ['MCF', 'KOLEKTOR'])) {
-    //             $query->where('USER_ID', $userId);
-    //         }
-
-    //         return response()->json(Rs_CollectorList::collection($query->get()),200);
-    //     } catch (\Exception $e) {
-    //         return $this->log->logError($e, $request);
-    //     }
-    // }
-
+    
     public function listTagihanByUserId(Request $request)
     {
         try {
