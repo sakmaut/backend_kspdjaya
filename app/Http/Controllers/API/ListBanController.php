@@ -321,7 +321,18 @@ class ListBanController extends Controller
                                                         and case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'REGULER'  then 'M'
                                                 when st.arr_count > 8 then 'X'
                                                 else st.arr_count end) IN ('CN','CM','C0') AND tcoc.OD_PREV <= 15 THEN 'RO1'
-                                   ELSE 'RO2'
+                                    WHEN concat('C',case when date_format(cl.created_at,'%m%Y')='$dateFrom' then 'N'
+                                                when cl.STATUS_REC = 'RP' and py.ID is null and date_format(col.SITA_AT,'%m%Y')<>'$dateFrom'  then 'L'
+                                                when replace(format(case when date_format(cl.created_at,'%m%Y')='$dateFrom' then (cl.PCPL_ORI+cl.INTRST_ORI)
+			 			                                            else (st.init_pcpl+st.init_int) end,0),',','')=0 then 'L'
+                                                when case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'MUSIMAN'
+                                                        and date_format(st.first_arr,'%m%Y')=date_format(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),'%m%Y') then 'N'
+                                                when st.first_arr>=date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 2 month) then 'N'
+                                                when st.first_arr > date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day)
+                                                        and case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'REGULER'  then 'M'
+                                                when st.arr_count > 8 then 'X'
+                                                else st.arr_count end) IN ('C1','CN','CM','C0') AND tcoc.OD_PREV > 15 THEN 'RO2'
+                                   ELSE ''
                                 END
                                 AS UB,
                                 NULL AS PLATFORM,
