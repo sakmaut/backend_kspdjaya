@@ -11,7 +11,7 @@ class Rs_LkpDetailList extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        $petugas = $this->detail->first()->deploy->MCF ?? "";
+        $petugas = $this->user->fullname ?? "";
 
         return [
             'id' => $this->ID,
