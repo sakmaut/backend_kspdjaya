@@ -1804,7 +1804,7 @@ class ReportController extends Controller
             $sampai   = $request->sampai ?? now()->toDateString();
             $dateFrom = $getNow;
 
-            $results =  M_VwLoanPaidReports::all();
+            $results = M_VwLoanPaidReports::limit(1000)->get();
 
             $build = [];
             foreach ($results as $result) {
