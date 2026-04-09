@@ -70,4 +70,10 @@ class M_VwLoanPaidReports extends Model
         'TOTAL_ADMIN',
         'CUST_CODE'
     ];
+
+    protected $primaryKey = 'NO_KONTRAK';
+
+    public $incrementing = false;
+
+    public $timestamps = false;
 }
