@@ -21,7 +21,10 @@ use App\Models\TableViews\M_ColllectorVisits;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Collections\SheetCollection;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ReportController extends Controller
 {
@@ -1881,10 +1884,13 @@ class ReportController extends Controller
     public function FasilitasLunasReportExport(Request $request)
     {
         try {
+
             $results = M_VwLoanPaidReports::get();
 
             $build = [];
+
             foreach ($results as $result) {
+
                 $cleanDate = trim($result->LAST_PAY);
                 $cleanDate = preg_replace('/[^\d\/\-\.]/', '', $cleanDate);
 
@@ -1951,7 +1957,14 @@ class ReportController extends Controller
                 ];
             }
 
-            return response()->json($build, 200);
+            $collection = new Collection($build);
+
+            return Excel::download(
+                new SheetCollection([
+                    'Report' => $collection
+                ]),
+                'fasilitas_lunas_report.xlsx'
+            );
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
         }
