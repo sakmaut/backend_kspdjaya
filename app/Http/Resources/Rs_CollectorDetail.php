@@ -32,6 +32,7 @@ class Rs_CollectorDetail extends JsonResource
             'tgl_jatuh_tempo' => $this->TGL_JTH_TEMPO ?? "",
             'angsuran' => $this->ANGSURAN ?? 0,
             'bayar' => $this->total_bayar ?? 0,
+            'tgl_bayar' => Carbon::parse($this->ENTRY_DATE ?? null)->format('Y-m-d') ?? null,
             'unit' => $this->unit ?? "",
             'no_polisi' => $this->POLICE_NUMBER ?? "",
             'tahun_motor' => $this->PRODUCTION_YEAR ?? "",

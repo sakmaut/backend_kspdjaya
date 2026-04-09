@@ -29,6 +29,7 @@ class M_ColllectorVisits extends Model
        'ANGSURAN',
        'LKP_NUMBER',
        'total_bayar',
+       'ENTRY_DATE',
        'DESCRIPTION',
        'SURVEY_DATE',
        'CONFIRM_DATE',
