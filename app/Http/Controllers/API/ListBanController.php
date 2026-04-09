@@ -331,7 +331,7 @@ class ListBanController extends Controller
                                                 when st.first_arr > date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day)
                                                         and case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'REGULER'  then 'M'
                                                 when st.arr_count > 8 then 'X'
-                                                else st.arr_count end) IN ('C2','C3','C4','C5','C6','C7','C8') THEN 'NEW'
+                                                else st.arr_count end) IN ('C2','C3','C4','C5','C6','C7','C8') AND tcoc.OD_PREV IS NULL OR tcoc.OD_PREV = '' THEN 'NEW'
                                 END
                                 AS UB,
                                 NULL AS PLATFORM,
