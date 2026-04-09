@@ -1885,7 +1885,7 @@ class ReportController extends Controller
     {
         try {
 
-            $results = M_VwLoanPaidReports::get();
+            $results = M_VwLoanPaidReports::limit(100)->get();
 
             $build = [];
 
