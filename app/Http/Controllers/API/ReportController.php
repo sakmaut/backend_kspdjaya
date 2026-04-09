@@ -1799,13 +1799,13 @@ class ReportController extends Controller
     public function FasilitasLunasReport(Request $request)
     {
         try {
-            $now = Carbon::now('Asia/Jakarta');
-            $getNow = $now->format('mY');
+            // $now = Carbon::now('Asia/Jakarta');
+            // $getNow = $now->format('mY');
 
-            $cabangId = $request->cabang_id;
-            $no_kontrak = $request->no_kontrak;
+            // $cabangId = $request->cabang_id;
+            // $no_kontrak = $request->no_kontrak;
 
-            $results = M_VwLoanPaidReports::limit(100)->get();
+            $results = M_VwLoanPaidReports::get();
 
             $build = [];
             foreach ($results as $result) {
