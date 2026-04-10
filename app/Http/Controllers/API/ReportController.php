@@ -1746,8 +1746,8 @@ class ReportController extends Controller
                 ->whereMonth('p.ENTRY_DATE', now()->month)
                 ->whereYear('p.ENTRY_DATE', now()->year)
                 ->selectRaw('SUM(pd.ORIGINAL_AMOUNT) AS total_bayar, p.LOAN_NUM, DATE_FORMAT(p.ENTRY_DATE, "%Y-%m-%d") as payment_date')
-                ->groupBy('p.LOAN_NUM, DATE_FORMAT(p.ENTRY_DATE, "%Y-%m-%d")');
-
+                ->groupBy('p.LOAN_NUM', DB::raw('DATE_FORMAT(p.ENTRY_DATE, "%Y-%m-%d")'));
+                
             $results = DB::table('cl_deploy as a')
                 ->select(
                     'a.LOAN_NUMBER',
