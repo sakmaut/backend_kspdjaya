@@ -538,9 +538,9 @@ class ListBanController extends Controller
                 }else{
                     if (in_array($cycle, ['C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8'])) {
                         $ub = 'NEW';
-                    } elseif (in_array($cycle, ['CN', 'CM', 'C0']) && $od <= 15) {
+                    } elseif (in_array($cycle, ['CN', 'CM', 'C0']) && $od <= "15") {
                         $ub = 'RO1';
-                    } elseif (in_array($cycle, ['CN', 'CM', 'C0']) && $od > 15) {
+                    } elseif (in_array($cycle, ['CN', 'CM', 'C0']) && $od > "15") {
                         $ub = 'RO2';
                     } elseif ($cycle == 'C1') {
                         $ub = 'RO2';
