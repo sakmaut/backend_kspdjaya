@@ -522,7 +522,13 @@ class ListBanController extends Controller
             $jobName = $checkConditionDate ? 'LISBAN' : 'LISBAN_BELOM_MOVEON';
             DB::select("UPDATE job_on_progress SET job_status = 0, last_user='' WHERE job_name = ?", [$jobName]);
 
-            $build = [];
+            if ($checkConditionDate) {
+                $useUbLogic = true;
+            } else {
+                $useUbLogic = false;
+            }
+
+                $build = [];
             foreach ($results as $result) {
 
                 $getUsers = User::find($result->SURVEYOR);
@@ -530,23 +536,23 @@ class ListBanController extends Controller
                 $cleanDate = trim($result->LAST_PAY);
                 $cleanDate = preg_replace('/[^\d\/\-\.]/', '', $cleanDate);
 
-                $cycle = $result->CYCLE_AWAL;
-                $od = $result->OD ?? 0;
+                if ($useUbLogic) {
+                    $cycle = $result->CYCLE_AWAL;
+                    $od = $result->OD ?? 0;
 
-                if($od == 0){
-                    $ub = '';
-                }else{
                     if (in_array($cycle, ['C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8'])) {
                         $ub = 'NEW';
-                    } elseif (in_array($cycle, ['CN', 'CM', 'C0']) && $od <= "15") {
+                    } elseif (in_array($cycle, ['CN', 'CM', 'C0']) && $od <= 15) {
                         $ub = 'RO1';
-                    } elseif (in_array($cycle, ['CN', 'CM', 'C0']) && $od > "15") {
+                    } elseif (in_array($cycle, ['CN', 'CM', 'C0']) && $od > 15) {
                         $ub = 'RO2';
                     } elseif ($cycle == 'C1') {
                         $ub = 'RO2';
                     } else {
                         $ub = '';
                     }
+                } else {
+                    $ub = '';
                 }
 
                 $build[] = [
@@ -617,7 +623,6 @@ class ListBanController extends Controller
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
-    
 
     public function sp1(Request $request)
     {
