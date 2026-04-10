@@ -9,22 +9,17 @@ use App\Http\Resources\R_Kwitansi;
 use App\Http\Resources\R_VisitReports;
 use App\Models\M_Arrears;
 use App\Models\M_Branch;
-use App\Models\M_ClSurveyLogs;
 use App\Models\M_CrCollateral;
 use App\Models\M_CrCollateralSertification;
 use App\Models\M_Credit;
 use App\Models\M_CreditSchedule;
-use App\Models\M_Customer;
 use App\Models\M_Kwitansi;
 use App\Models\M_VwLoanPaidReports;
-use App\Models\TableViews\M_ColllectorVisits;
 use App\Models\User;
+use Box\Spout\Writer\Common\Creator\WriterEntityFactory;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Maatwebsite\Excel\Collections\SheetCollection;
-use Maatwebsite\Excel\Facades\Excel;
 
 class ReportController extends Controller
 {
@@ -1881,6 +1876,173 @@ class ReportController extends Controller
         }
     }
 
+    // public function FasilitasLunasReportExport(Request $request)
+    // {
+    //     try {
+
+    //         set_time_limit(0);
+    //         ini_set('memory_limit', '-1');
+
+    //         $fileName = 'fasilitas_lunas_report.csv';
+
+    //         $headers = [
+    //             "Content-type" => "text/csv",
+    //             "Content-Disposition" => "attachment; filename={$fileName}",
+    //             "Pragma" => "no-cache",
+    //             "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+    //             "Expires" => "0"
+    //         ];
+
+    //         $callback = function () {
+
+    //             $file = fopen('php://output', 'w');
+
+    //             $columns = [
+    //                 "KODE CABANG",
+    //                 "NAMA CABANG",
+    //                 "NO KONTRAK",
+    //                 "NAMA PELANGGAN",
+    //                 "TGL BOOKING",
+    //                 "UB",
+    //                 "PLATFORM",
+    //                 "ALAMAT TAGIH",
+    //                 "KECAMATAN",
+    //                 "KELURAHAN",
+    //                 "NO TELP",
+    //                 "NO HP1",
+    //                 "NO HP2",
+    //                 "PEKERJAAN",
+    //                 "SUPPLIER",
+    //                 "SURVEYOR",
+    //                 "CATT SURVEY",
+    //                 "PKK HUTANG",
+    //                 "JML ANGS",
+    //                 "JRK ANGS",
+    //                 "PERIOD",
+    //                 "OUT PKK AWAL",
+    //                 "OUT BNG AWAL",
+    //                 "OVERDUE AWAL",
+    //                 "AMBC PKK AWAL",
+    //                 "AMBC BNG AWAL",
+    //                 "AMBC TOTAL AWAL",
+    //                 "CYCLE AWAL",
+    //                 "STS KONTRAK",
+    //                 "KUNJUNGAN TERAKHIR",
+    //                 "POLA BYR AWAL",
+    //                 "OUTS PKK AKHIR",
+    //                 "OUTS BNG AKHIR",
+    //                 "OVERDUE AKHIR",
+    //                 "ANGSURAN",
+    //                 "ANGS KE",
+    //                 "TIPE ANGSURAN",
+    //                 "JTH TEMPO AWAL",
+    //                 "JTH TEMPO AKHIR",
+    //                 "TGL BAYAR",
+    //                 "KOLEKTOR",
+    //                 "CARA BYR",
+    //                 "AMBC PKK_AKHIR",
+    //                 "AMBC BNG_AKHIR",
+    //                 "AMBC TOTAL_AKHIR",
+    //                 "AC PKK",
+    //                 "AC BNG MRG",
+    //                 "AC TOTAL",
+    //                 "CYCLE AKHIR",
+    //                 "POLA BYR AKHIR",
+    //                 "NAMA BRG",
+    //                 "TIPE BRG",
+    //                 "NO POL",
+    //                 "NO MESIN",
+    //                 "NO RANGKA",
+    //                 "TAHUN",
+    //                 "NILAI PINJAMAN",
+    //                 "ADMIN",
+    //                 "CUST_ID"
+    //             ];
+
+    //             fputcsv($file, $columns);
+
+    //             M_VwLoanPaidReports::chunk(5000, function ($results) use ($file) {
+
+    //                 foreach ($results as $result) {
+
+    //                     $cleanDate = trim($result->LAST_PAY);
+    //                     $cleanDate = preg_replace('/[^\d\/\-\.]/', '', $cleanDate);
+
+    //                     $row = [
+    //                         $result->KODE ?? '',
+    //                         $result->NAMA_CABANG ?? '',
+    //                         is_numeric($result->NO_KONTRAK) ? (int)$result->NO_KONTRAK : $result->NO_KONTRAK,
+    //                         $result->NAMA_PELANGGAN ?? '',
+    //                         !empty($result->TGL_BOOKING) ? Carbon::parse($result->TGL_BOOKING)->format('m/d/Y') : '',
+    //                         $result->UB ?? '',
+    //                         $result->PLATFORM ?? '',
+    //                         $result->ALAMAT_TAGIH ?? '',
+    //                         $result->KODE_POST ?? '',
+    //                         $result->SUB_ZIP ?? '',
+    //                         $result->NO_TELP ?? '',
+    //                         $result->NO_HP ?? '',
+    //                         $result->NO_HP2 ?? '',
+    //                         $result->PEKERJAAN ?? '',
+    //                         $result->supplier ?? '',
+    //                         $result->SURVEYOR ?? '',
+    //                         $result->CATT_SURVEY ?? '',
+    //                         (int)$result->PKK_HUTANG,
+    //                         $result->JUMLAH_ANGSURAN ?? '',
+    //                         (int)$result->JARAK_ANGSURAN,
+    //                         $result->PERIOD ?? '',
+    //                         (int)$result->OUTSTANDING,
+    //                         (int)$result->OS_BUNGA,
+    //                         $result->OVERDUE_AWAL ?? 0,
+    //                         (int)$result->AMBC_PKK_AWAL,
+    //                         (int)$result->AMBC_BNG_AWAL,
+    //                         (int)$result->AMBC_TOTAL_AWAL,
+    //                         $result->CYCLE_AWAL ?? '',
+    //                         $result->STATUS_REC ?? '',
+    //                         $result->STATUS_BEBAN ?? '',
+    //                         '',
+    //                         (int)$result->OS_PKK_AKHIR,
+    //                         (int)$result->OS_BNG_AKHIR,
+    //                         (int)$result->OVERDUE_AKHIR,
+    //                         (int)$result->INSTALLMENT,
+    //                         (int)$result->LAST_INST,
+    //                         $result->pola_bayar === 'bunga_menurun' ? str_replace('_', ' ', $result->pola_bayar) : $result->pola_bayar,
+    //                         ($result->F_ARR_CR_SCHEDL == '0' || $result->F_ARR_CR_SCHEDL == '' || $result->F_ARR_CR_SCHEDL == 'null') ? '' : Carbon::parse($result->F_ARR_CR_SCHEDL)->format('m/d/Y'),
+    //                         ($result->curr_arr == '0' || $result->curr_arr == '' || $result->curr_arr == 'null') ? '' : Carbon::parse($result->curr_arr)->format('m/d/Y'),
+    //                         ($result->LAST_PAY == '0' || $result->LAST_PAY == '' || $result->LAST_PAY == 'null') ? '' : Carbon::parse($cleanDate)->format('m/d/Y'),
+    //                         $result->COLLECTOR,
+    //                         $result->cara_bayar,
+    //                         (int)$result->AMBC_PKK_AKHIR,
+    //                         (int)$result->AMBC_BNG_AKHIR,
+    //                         (int)$result->AMBC_TOTAL_AKHIR,
+    //                         (int)$result->AC_PKK,
+    //                         (int)$result->AC_BNG_MRG,
+    //                         (int)$result->AC_TOTAL,
+    //                         $result->CYCLE_AKHIR,
+    //                         '',
+    //                         $result->jenis_jaminan,
+    //                         $result->COLLATERAL ?? '',
+    //                         $result->POLICE_NUMBER ?? '',
+    //                         $result->ENGINE_NUMBER ?? '',
+    //                         $result->CHASIS_NUMBER ?? '',
+    //                         (int)$result->PRODUCTION_YEAR,
+    //                         (int)$result->NILAI_PINJAMAN,
+    //                         (int)$result->TOTAL_ADMIN,
+    //                         is_numeric($result->CUST_CODE) ? (int)$result->CUST_CODE : $result->CUST_CODE
+    //                     ];
+
+    //                     fputcsv($file, $row);
+    //                 }
+    //             });
+
+    //             fclose($file);
+    //         };
+
+    //         return response()->stream($callback, 200, $headers);
+    //     } catch (\Exception $e) {
+    //         return $this->log->logError($e, $request);
+    //     }
+    // }
+
     public function FasilitasLunasReportExport(Request $request)
     {
         try {
@@ -1888,161 +2050,168 @@ class ReportController extends Controller
             set_time_limit(0);
             ini_set('memory_limit', '-1');
 
-            $fileName = 'fasilitas_lunas_report.csv';
+            $fileName = 'fasilitas_lunas_report.xlsx';
+            $filePath = storage_path("app/{$fileName}");
 
-            $headers = [
-                "Content-type" => "text/csv",
-                "Content-Disposition" => "attachment; filename={$fileName}",
-                "Pragma" => "no-cache",
-                "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
-                "Expires" => "0"
+            $writer = WriterEntityFactory::createXLSXWriter();
+            $writer->openToFile($filePath);
+
+            // HEADER
+            $columns = [
+                "KODE CABANG",
+                "NAMA CABANG",
+                "NO KONTRAK",
+                "NAMA PELANGGAN",
+                "TGL BOOKING",
+                "UB",
+                "PLATFORM",
+                "ALAMAT TAGIH",
+                "KECAMATAN",
+                "KELURAHAN",
+                "NO TELP",
+                "NO HP1",
+                "NO HP2",
+                "PEKERJAAN",
+                "SUPPLIER",
+                "SURVEYOR",
+                "CATT SURVEY",
+                "PKK HUTANG",
+                "JML ANGS",
+                "JRK ANGS",
+                "PERIOD",
+                "OUT PKK AWAL",
+                "OUT BNG AWAL",
+                "OVERDUE AWAL",
+                "AMBC PKK AWAL",
+                "AMBC BNG AWAL",
+                "AMBC TOTAL AWAL",
+                "CYCLE AWAL",
+                "STS KONTRAK",
+                "KUNJUNGAN TERAKHIR",
+                "POLA BYR AWAL",
+                "OUTS PKK AKHIR",
+                "OUTS BNG AKHIR",
+                "OVERDUE AKHIR",
+                "ANGSURAN",
+                "ANGS KE",
+                "TIPE ANGSURAN",
+                "JTH TEMPO AWAL",
+                "JTH TEMPO AKHIR",
+                "TGL BAYAR",
+                "KOLEKTOR",
+                "CARA BYR",
+                "AMBC PKK_AKHIR",
+                "AMBC BNG_AKHIR",
+                "AMBC TOTAL_AKHIR",
+                "AC PKK",
+                "AC BNG MRG",
+                "AC TOTAL",
+                "CYCLE AKHIR",
+                "POLA BYR AKHIR",
+                "NAMA BRG",
+                "TIPE BRG",
+                "NO POL",
+                "NO MESIN",
+                "NO RANGKA",
+                "TAHUN",
+                "NILAI PINJAMAN",
+                "ADMIN",
+                "CUST_ID"
             ];
 
-            $callback = function () {
+            $writer->addRow(
+                WriterEntityFactory::createRowFromArray($columns)
+            );
 
-                $file = fopen('php://output', 'w');
+            // DATA (streaming chunk)
+            M_VwLoanPaidReports::chunk(5000, function ($results) use ($writer) {
 
-                $columns = [
-                    "KODE CABANG",
-                    "NAMA CABANG",
-                    "NO KONTRAK",
-                    "NAMA PELANGGAN",
-                    "TGL BOOKING",
-                    "UB",
-                    "PLATFORM",
-                    "ALAMAT TAGIH",
-                    "KECAMATAN",
-                    "KELURAHAN",
-                    "NO TELP",
-                    "NO HP1",
-                    "NO HP2",
-                    "PEKERJAAN",
-                    "SUPPLIER",
-                    "SURVEYOR",
-                    "CATT SURVEY",
-                    "PKK HUTANG",
-                    "JML ANGS",
-                    "JRK ANGS",
-                    "PERIOD",
-                    "OUT PKK AWAL",
-                    "OUT BNG AWAL",
-                    "OVERDUE AWAL",
-                    "AMBC PKK AWAL",
-                    "AMBC BNG AWAL",
-                    "AMBC TOTAL AWAL",
-                    "CYCLE AWAL",
-                    "STS KONTRAK",
-                    "KUNJUNGAN TERAKHIR",
-                    "POLA BYR AWAL",
-                    "OUTS PKK AKHIR",
-                    "OUTS BNG AKHIR",
-                    "OVERDUE AKHIR",
-                    "ANGSURAN",
-                    "ANGS KE",
-                    "TIPE ANGSURAN",
-                    "JTH TEMPO AWAL",
-                    "JTH TEMPO AKHIR",
-                    "TGL BAYAR",
-                    "KOLEKTOR",
-                    "CARA BYR",
-                    "AMBC PKK_AKHIR",
-                    "AMBC BNG_AKHIR",
-                    "AMBC TOTAL_AKHIR",
-                    "AC PKK",
-                    "AC BNG MRG",
-                    "AC TOTAL",
-                    "CYCLE AKHIR",
-                    "POLA BYR AKHIR",
-                    "NAMA BRG",
-                    "TIPE BRG",
-                    "NO POL",
-                    "NO MESIN",
-                    "NO RANGKA",
-                    "TAHUN",
-                    "NILAI PINJAMAN",
-                    "ADMIN",
-                    "CUST_ID"
-                ];
+                foreach ($results as $result) {
 
-                fputcsv($file, $columns);
+                    $cleanDate = trim($result->LAST_PAY);
+                    $cleanDate = preg_replace('/[^\d\/\-\.]/', '', $cleanDate);
 
-                M_VwLoanPaidReports::chunk(5000, function ($results) use ($file) {
+                    $row = [
+                        $result->KODE ?? '',
+                        $result->NAMA_CABANG ?? '',
+                        is_numeric($result->NO_KONTRAK) ? (int)$result->NO_KONTRAK : $result->NO_KONTRAK,
+                        $result->NAMA_PELANGGAN ?? '',
+                        !empty($result->TGL_BOOKING) ? Carbon::parse($result->TGL_BOOKING)->format('m/d/Y') : '',
+                        $result->UB ?? '',
+                        $result->PLATFORM ?? '',
+                        $result->ALAMAT_TAGIH ?? '',
+                        $result->KODE_POST ?? '',
+                        $result->SUB_ZIP ?? '',
+                        $result->NO_TELP ?? '',
+                        $result->NO_HP ?? '',
+                        $result->NO_HP2 ?? '',
+                        $result->PEKERJAAN ?? '',
+                        $result->supplier ?? '',
+                        $result->SURVEYOR ?? '',
+                        $result->CATT_SURVEY ?? '',
+                        (int)$result->PKK_HUTANG,
+                        $result->JUMLAH_ANGSURAN ?? '',
+                        (int)$result->JARAK_ANGSURAN,
+                        $result->PERIOD ?? '',
+                        (int)$result->OUTSTANDING,
+                        (int)$result->OS_BUNGA,
+                        $result->OVERDUE_AWAL ?? 0,
+                        (int)$result->AMBC_PKK_AWAL,
+                        (int)$result->AMBC_BNG_AWAL,
+                        (int)$result->AMBC_TOTAL_AWAL,
+                        $result->CYCLE_AWAL ?? '',
+                        $result->STATUS_REC ?? '',
+                        $result->STATUS_BEBAN ?? '',
+                        '',
+                        (int)$result->OS_PKK_AKHIR,
+                        (int)$result->OS_BNG_AKHIR,
+                        (int)$result->OVERDUE_AKHIR,
+                        (int)$result->INSTALLMENT,
+                        (int)$result->LAST_INST,
+                        $result->pola_bayar === 'bunga_menurun'
+                            ? str_replace('_', ' ', $result->pola_bayar)
+                            : $result->pola_bayar,
+                        ($result->F_ARR_CR_SCHEDL == '0' || $result->F_ARR_CR_SCHEDL == '' || $result->F_ARR_CR_SCHEDL == 'null')
+                            ? ''
+                            : Carbon::parse($result->F_ARR_CR_SCHEDL)->format('m/d/Y'),
+                        ($result->curr_arr == '0' || $result->curr_arr == '' || $result->curr_arr == 'null')
+                            ? ''
+                            : Carbon::parse($result->curr_arr)->format('m/d/Y'),
+                        ($result->LAST_PAY == '0' || $result->LAST_PAY == '' || $result->LAST_PAY == 'null')
+                            ? ''
+                            : Carbon::parse($cleanDate)->format('m/d/Y'),
+                        $result->COLLECTOR,
+                        $result->cara_bayar,
+                        (int)$result->AMBC_PKK_AKHIR,
+                        (int)$result->AMBC_BNG_AKHIR,
+                        (int)$result->AMBC_TOTAL_AKHIR,
+                        (int)$result->AC_PKK,
+                        (int)$result->AC_BNG_MRG,
+                        (int)$result->AC_TOTAL,
+                        $result->CYCLE_AKHIR,
+                        '',
+                        $result->jenis_jaminan,
+                        $result->COLLATERAL ?? '',
+                        $result->POLICE_NUMBER ?? '',
+                        $result->ENGINE_NUMBER ?? '',
+                        $result->CHASIS_NUMBER ?? '',
+                        (int)$result->PRODUCTION_YEAR,
+                        (int)$result->NILAI_PINJAMAN,
+                        (int)$result->TOTAL_ADMIN,
+                        is_numeric($result->CUST_CODE)
+                            ? (int)$result->CUST_CODE
+                            : $result->CUST_CODE
+                    ];
 
-                    foreach ($results as $result) {
+                    $writer->addRow(
+                        WriterEntityFactory::createRowFromArray($row)
+                    );
+                }
+            });
 
-                        $cleanDate = trim($result->LAST_PAY);
-                        $cleanDate = preg_replace('/[^\d\/\-\.]/', '', $cleanDate);
+            $writer->close();
 
-                        $row = [
-                            $result->KODE ?? '',
-                            $result->NAMA_CABANG ?? '',
-                            is_numeric($result->NO_KONTRAK) ? (int)$result->NO_KONTRAK : $result->NO_KONTRAK,
-                            $result->NAMA_PELANGGAN ?? '',
-                            !empty($result->TGL_BOOKING) ? Carbon::parse($result->TGL_BOOKING)->format('m/d/Y') : '',
-                            $result->UB ?? '',
-                            $result->PLATFORM ?? '',
-                            $result->ALAMAT_TAGIH ?? '',
-                            $result->KODE_POST ?? '',
-                            $result->SUB_ZIP ?? '',
-                            $result->NO_TELP ?? '',
-                            $result->NO_HP ?? '',
-                            $result->NO_HP2 ?? '',
-                            $result->PEKERJAAN ?? '',
-                            $result->supplier ?? '',
-                            $result->SURVEYOR ?? '',
-                            $result->CATT_SURVEY ?? '',
-                            (int)$result->PKK_HUTANG,
-                            $result->JUMLAH_ANGSURAN ?? '',
-                            (int)$result->JARAK_ANGSURAN,
-                            $result->PERIOD ?? '',
-                            (int)$result->OUTSTANDING,
-                            (int)$result->OS_BUNGA,
-                            $result->OVERDUE_AWAL ?? 0,
-                            (int)$result->AMBC_PKK_AWAL,
-                            (int)$result->AMBC_BNG_AWAL,
-                            (int)$result->AMBC_TOTAL_AWAL,
-                            $result->CYCLE_AWAL ?? '',
-                            $result->STATUS_REC ?? '',
-                            $result->STATUS_BEBAN ?? '',
-                            '',
-                            (int)$result->OS_PKK_AKHIR,
-                            (int)$result->OS_BNG_AKHIR,
-                            (int)$result->OVERDUE_AKHIR,
-                            (int)$result->INSTALLMENT,
-                            (int)$result->LAST_INST,
-                            $result->pola_bayar === 'bunga_menurun' ? str_replace('_', ' ', $result->pola_bayar) : $result->pola_bayar,
-                            ($result->F_ARR_CR_SCHEDL == '0' || $result->F_ARR_CR_SCHEDL == '' || $result->F_ARR_CR_SCHEDL == 'null') ? '' : Carbon::parse($result->F_ARR_CR_SCHEDL)->format('m/d/Y'),
-                            ($result->curr_arr == '0' || $result->curr_arr == '' || $result->curr_arr == 'null') ? '' : Carbon::parse($result->curr_arr)->format('m/d/Y'),
-                            ($result->LAST_PAY == '0' || $result->LAST_PAY == '' || $result->LAST_PAY == 'null') ? '' : Carbon::parse($cleanDate)->format('m/d/Y'),
-                            $result->COLLECTOR,
-                            $result->cara_bayar,
-                            (int)$result->AMBC_PKK_AKHIR,
-                            (int)$result->AMBC_BNG_AKHIR,
-                            (int)$result->AMBC_TOTAL_AKHIR,
-                            (int)$result->AC_PKK,
-                            (int)$result->AC_BNG_MRG,
-                            (int)$result->AC_TOTAL,
-                            $result->CYCLE_AKHIR,
-                            '',
-                            $result->jenis_jaminan,
-                            $result->COLLATERAL ?? '',
-                            $result->POLICE_NUMBER ?? '',
-                            $result->ENGINE_NUMBER ?? '',
-                            $result->CHASIS_NUMBER ?? '',
-                            (int)$result->PRODUCTION_YEAR,
-                            (int)$result->NILAI_PINJAMAN,
-                            (int)$result->TOTAL_ADMIN,
-                            is_numeric($result->CUST_CODE) ? (int)$result->CUST_CODE : $result->CUST_CODE
-                        ];
-
-                        fputcsv($file, $row);
-                    }
-                });
-
-                fclose($file);
-            };
-
-            return response()->stream($callback, 200, $headers);
+            return response()->download($filePath)->deleteFileAfterSend(true);
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
         }
