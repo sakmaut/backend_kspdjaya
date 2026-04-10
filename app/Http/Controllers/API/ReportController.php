@@ -1752,7 +1752,7 @@ class ReportController extends Controller
                 ->select(
                     'a.LOAN_NUMBER',
                     'a.CYCLE_AWAL',
-                    'a.CYCLE_AWAL',
+                    'a.CYCLE_AKHIR',
                     'a.AMBC_TOTAL_AWAL',
                     'e.CREATED_AT',
                     'e.PATH',
