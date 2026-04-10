@@ -181,8 +181,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::get('surveyReport', [ReportController::class, 'surveyReport']);
     Route::post('LkbhReport', [ReportController::class, 'LkbhReports']);
     Route::post('VisitReports', [ReportController::class, 'VisitReports']);
-    Route::post('FasilitasLunasReport', [ReportController::class, 'FasilitasLunasReportExport']);
-    Route::get('FasilitasLunasReportExport', [ReportController::class, 'FasilitasLunasReportExport']);
+    Route::post('FasilitasLunasReport', [ReportController::class, 'FasilitasLunasReport']);
 
     Route::resource('collateral', CollateralController::class);
     Route::get('collateral_approval_list', [CollateralController::class, 'collateralApprovalList']);

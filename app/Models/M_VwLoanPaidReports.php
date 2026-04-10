@@ -11,6 +11,7 @@ class M_VwLoanPaidReports extends Model
     protected $table = 'vw_loan_paid_reports';
     protected $fillable = [
         'KODE',
+        'ID_CABANG',
         'NAMA_CABANG',
         'NO_KONTRAK',
         'NAMA_PELANGGAN',

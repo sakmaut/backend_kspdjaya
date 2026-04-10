@@ -1752,7 +1752,8 @@ class ReportController extends Controller
                 ->select(
                     'a.LOAN_NUMBER',
                     'a.CYCLE_AWAL',
-                    'a.CYCLE_AKHIR',
+                    'a.CYCLE_AWAL',
+                    'a.AMBC_TOTAL_AWAL',
                     'e.CREATED_AT',
                     'e.PATH',
                     'e.CONFIRM_DATE',
@@ -1808,13 +1809,9 @@ class ReportController extends Controller
     public function FasilitasLunasReport(Request $request)
     {
         try {
-            // $now = Carbon::now('Asia/Jakarta');
-            // $getNow = $now->format('mY');
+            $cabangId = $request->cabang;
 
-            // $cabangId = $request->cabang_id;
-            // $no_kontrak = $request->no_kontrak;
-
-            $results = M_VwLoanPaidReports::get();
+            $results = M_VwLoanPaidReports::where('ID_CABANG', $cabangId)->get();
 
             $build = [];
             foreach ($results as $result) {

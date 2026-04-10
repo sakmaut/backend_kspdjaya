@@ -38,6 +38,7 @@ class R_VisitReports extends JsonResource
             'PathFile' => $path,
             'TanggalBayar' => $this->payment_date ? date('Y-m-d', strtotime($this->payment_date)) : null,
             'Pembayaran' => (int) $this->total_bayar ?? 0,
+            'AmbcTotal' => (int) $this->AMBC_TOTAL_AWAL ?? 0,
         ];
     }
 }
