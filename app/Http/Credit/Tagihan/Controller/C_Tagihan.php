@@ -730,6 +730,25 @@ class C_Tagihan extends Controller
                 'CREATED_AT' => Carbon::now('Asia/Jakarta'),
             ]);
 
+            $userFullname = DB::table('users')->where('id', $data->CREATED_BY)->value('fullname');
+
+            $description =
+                'Kunjungan oleh ' .
+                $userFullname .
+                ($data->CONFIRM_DATE
+                    ? ' JB pada ' . $data->CONFIRM_DATE
+                    : '') .
+                ' KET: ' .
+                $data->DESCRIPTION;
+
+            DB::table('cl_logs')->insert([
+                'idcl_logs'  => Uuid::uuid7()->toString(),
+                'reference'  => $data->REFERENCE_ID,
+                'description' => $description,
+                'create_date' => Carbon::now('Asia/Jakarta'),
+            ]);
+
+
             DB::commit();
             return response()->json($data, 200);
         } catch (Exception $e) {
