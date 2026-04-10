@@ -118,7 +118,6 @@ class S_PokokSebagian
             $this->s_arrearsBefore->created($arrear, $noInv);
         }
 
-        // Backup Credit Info
         $credit = M_Credit::select(
             'ID',
             'LOAN_NUMBER',
@@ -169,17 +168,229 @@ class S_PokokSebagian
         M_KwitansiDetailPelunasan::insert($setDataDetail);
     }
 
+    // private function buildPaymentFlagDiscount($request, $creditSchedule, $arrearsList)
+    // {
+    //     $paymentBunga = floatval($request->BAYAR_BUNGA ?? 0);
+    //     $paymentPokok = floatval($request->BAYAR_POKOK ?? 0);
+    //     $paymentDenda = floatval($request->BAYAR_DENDA ?? 0);
+    //     $discountDenda = floatval($request->DISKON_DENDA ?? 0);
+
+    //     $sisaBayarDenda = $paymentDenda;
+    //     $sisaDiskonDenda = $discountDenda;
+
+    //     $currentDate = date('Y-m-d');
+
+    //     $data = [];
+    //     $sisaPaymentBunga = $paymentBunga;
+
+    //     foreach ($creditSchedule as $res) {
+
+    //         $paidInterest = floatval($res->PAYMENT_VALUE_INTEREST ?? 0);
+
+    //         if (strtoupper($res->PAID_FLAG) === 'PAID') {
+    //             $principal = floatval($res->PRINCIPAL);
+    //             $interest = floatval($res->INTEREST);
+    //             $data[] = [
+    //                 'ID' => $res->ID,
+    //                 'INSTALLMENT_COUNT' => $res->INSTALLMENT_COUNT,
+    //                 'PAYMENT_DATE' => $res->PAYMENT_DATE,
+    //                 'PRINCIPAL' => $principal,
+    //                 'INTEREST' => $interest,
+    //                 'INSTALLMENT' => $principal + $interest,
+    //                 'BAYAR_BUNGA' => 0,
+    //                 'BAYAR_POKOK' => 0,
+    //                 'BAYAR_DENDA' => 0,
+    //                 'DISKON_BUNGA' => 0,
+    //                 'DISKON_POKOK' => 0,
+    //                 'DISKON_DENDA' => 0,
+
+    //             ];
+    //             continue;
+    //         }
+
+    //         $totalInterest = floatval($res->INTEREST);
+    //         $installmentRaw = floatval($res->INSTALLMENT);
+    //         $installmentAdjusted = max(0, $installmentRaw - $paidInterest);
+    //         $maxBayarBunga = min($installmentAdjusted, $totalInterest - $paidInterest);
+
+    //         $paidNow = min($sisaPaymentBunga, $maxBayarBunga);
+    //         $sisaPaymentBunga -= $paidNow;
+
+    //         $discount = $totalInterest - $paidNow;
+
+    //         $data[] = [
+    //             'ID' => $res->ID,
+    //             'INSTALLMENT_COUNT' => $res->INSTALLMENT_COUNT,
+    //             'PAYMENT_DATE' => $res->PAYMENT_DATE,
+    //             'PRINCIPAL' => floatval($res->PRINCIPAL),
+    //             'INTEREST' => $totalInterest,
+    //             'INSTALLMENT' => $installmentRaw,
+    //             'BAYAR_BUNGA' => $paidNow,
+    //             'BAYAR_POKOK' => 0,
+    //             'BAYAR_DENDA' => 0,
+    //             'DISKON_BUNGA' => max(0, $discount),
+    //             'DISKON_POKOK' => 0,
+    //             'DISKON_DENDA' => 0,
+    //         ];
+    //     }
+
+    //     $semuaSudahLewat = true;
+    //     foreach ($data as $row) {
+    //         if ($row['PAYMENT_DATE'] >= $currentDate) {
+    //             $semuaSudahLewat = false;
+    //             break;
+    //         }
+    //     }
+
+    //     if ($paymentPokok > 0) {
+    //         $maxIndex = null;
+
+    //         foreach ($data as $index => $row) {
+    //             if ($maxIndex === null || $row['INSTALLMENT_COUNT'] > $data[$maxIndex]['INSTALLMENT_COUNT']) {
+    //                 $maxIndex = $index;
+    //             }
+    //         }
+
+    //         if ($semuaSudahLewat && $maxIndex !== null) {
+    //             $data[$maxIndex]['INSTALLMENT'] = $res->PRINCIPAL + $totalInterest;
+    //             $data[$maxIndex]['BAYAR_POKOK'] = $paymentPokok;
+    //         } else {
+    //             $currentMonth = date('m');
+    //             $currentYear = date('Y');
+    //             $currentPaymentIndex = null;
+
+    //             foreach ($data as $index => $row) {
+    //                 $rowMonth = date('m', strtotime($row['PAYMENT_DATE']));
+    //                 $rowYear = date('Y', strtotime($row['PAYMENT_DATE']));
+
+    //                 if ($rowMonth == $currentMonth && $rowYear == $currentYear && $currentPaymentIndex === null) {
+    //                     $currentPaymentIndex = $index;
+    //                 }
+    //             }
+
+    //             if ($currentPaymentIndex === null && count($data) > 0) {
+    //                 $currentPaymentIndex = 0;
+    //             }
+
+    //             if ($currentPaymentIndex !== null) {
+    //                 $data[$currentPaymentIndex]['PRINCIPAL'] += $paymentPokok;
+    //                 $data[$currentPaymentIndex]['INSTALLMENT'] = $data[$currentPaymentIndex]['PRINCIPAL'] + $data[$currentPaymentIndex]['INTEREST'];
+    //                 if ($maxIndex !== null) {
+    //                     $data[$maxIndex]['BAYAR_POKOK'] = $paymentPokok;
+    //                 }
+    //             }
+
+    //             $calc = 0;
+    //             if ($maxIndex !== null) {
+    //                 $data[$maxIndex]['PRINCIPAL'] -= $paymentPokok;
+    //                 $sisaPokok = floatval($data[$maxIndex]['PRINCIPAL']);
+    //                 $value = round($sisaPokok * (3 / 100), 2);
+
+    //                 $calc = ceil($value / 1000) * 1000;
+    //             }
+
+    //             $sisaPaymentBunga = $paymentBunga;
+    //             $minCount = isset($currentPaymentIndex) ? $data[$currentPaymentIndex]['INSTALLMENT_COUNT'] : null;
+
+    //             foreach ($data as $index => $row) {
+    //                 if (isset($creditSchedule[$index]) && strtoupper($creditSchedule[$index]->PAID_FLAG) === 'PAID') {
+    //                     continue;
+    //                 }
+
+    //                 $paymentValueInterest = floatval($creditSchedule[$index]->PAYMENT_VALUE_INTEREST ?? 0);
+
+    //                 if (
+    //                     $minCount !== null &&
+    //                     $row['INSTALLMENT_COUNT'] > $minCount &&
+    //                     $paymentValueInterest == 0 &&
+    //                     floatval($row['BAYAR_BUNGA']) == 0
+    //                 ) {
+    //                     $data[$index]['INTEREST'] = $calc;
+    //                     $data[$index]['INSTALLMENT'] = $calc + $data[$index]['PRINCIPAL'];
+    //                 }
+
+    //                 $maxBayarBunga = min($data[$index]['INTEREST'], $row['INTEREST']);
+    //                 $paidNow = min($sisaPaymentBunga, $maxBayarBunga);
+    //                 $sisaPaymentBunga -= $paidNow;
+
+    //                 $data[$index]['BAYAR_BUNGA'] = $paidNow;
+    //                 $data[$index]['DISKON_BUNGA'] = max(0, $data[$index]['INTEREST'] - $paidNow);
+    //             }
+    //         }
+    //     }
+
+    //     foreach ($data as $index => $row) {
+    //         $bayarPokok = floatval($row['BAYAR_POKOK'] ?? 0);
+    //         if ($bayarPokok <= 0) continue;
+
+    //         $principalAsli = floatval($creditSchedule[$index]->PRINCIPAL ?? 0);
+
+    //         $data[$index]['DISKON_POKOK'] = max(0, $principalAsli - $bayarPokok);
+    //         $data[$index]['PRINCIPAL'] = $principalAsli;
+    //         $data[$index]['INSTALLMENT'] = $principalAsli + $data[$index]['INTEREST'];
+    //     }
+
+    //     foreach ($arrearsList as $arrear) {
+    //         if (in_array(strtoupper($arrear->STATUS_REC ?? ''), ['S', 'D'])) {
+    //             continue;
+    //         }
+
+    //         $pastDuePenalty = floatval($arrear->PAST_DUE_PENALTY ?? 0);
+    //         $paidPenalty    = floatval($arrear->PAID_PENALTY ?? 0);
+    //         $woffPenalty    = floatval($arrear->WOFF_PENALTY ?? 0);
+
+    //         $sisaPenalty = $pastDuePenalty - $paidPenalty - $woffPenalty;
+
+    //         if ($sisaPenalty <= 0) {
+    //             continue;
+    //         }
+
+    //         $bayarNow = min($sisaBayarDenda, $sisaPenalty);
+    //         $sisaBayarDenda -= $bayarNow;
+    //         $sisaPenalty -= $bayarNow;
+
+    //         $diskonNow = min($sisaDiskonDenda, $sisaPenalty);
+    //         $sisaDiskonDenda -= $diskonNow;
+
+    //         $arrearsDate = date('Y-m-d', strtotime($arrear->START_DATE));
+    //         foreach ($data as $i => $row) {
+
+    //             $scheduleDate = date('Y-m-d', strtotime($row['PAYMENT_DATE']));
+
+    //             if (
+    //                 $scheduleDate == $arrearsDate &&
+    //                 strtoupper($creditSchedule[$i]->PAID_FLAG ?? '') !== 'PAID'
+    //             ) {
+
+    //                 $data[$i]['BAYAR_DENDA']  += $bayarNow;
+    //                 $data[$i]['DISKON_DENDA'] += $diskonNow;
+    //                 break;
+    //             }
+    //         }
+
+    //         if ($sisaBayarDenda <= 0 && $sisaDiskonDenda <= 0) {
+    //             break;
+    //         }
+    //     }
+
+    //     return $data;
+    // }
+
     private function buildPaymentFlagDiscount($request, $creditSchedule, $arrearsList)
     {
         $paymentBunga = floatval($request->BAYAR_BUNGA ?? 0);
         $paymentPokok = floatval($request->BAYAR_POKOK ?? 0);
         $paymentDenda = floatval($request->BAYAR_DENDA ?? 0);
+
+        $discountPokok = floatval($request->DISKON_POKOK ?? 0);
         $discountDenda = floatval($request->DISKON_DENDA ?? 0);
 
         $sisaBayarDenda = $paymentDenda;
         $sisaDiskonDenda = $discountDenda;
 
         $currentDate = date('Y-m-d');
+        $currentMonth = date('m');
+        $currentYear  = date('Y');
 
         $data = [];
         $sisaPaymentBunga = $paymentBunga;
@@ -189,8 +400,10 @@ class S_PokokSebagian
             $paidInterest = floatval($res->PAYMENT_VALUE_INTEREST ?? 0);
 
             if (strtoupper($res->PAID_FLAG) === 'PAID') {
+
                 $principal = floatval($res->PRINCIPAL);
-                $interest = floatval($res->INTEREST);
+                $interest  = floatval($res->INTEREST);
+
                 $data[] = [
                     'ID' => $res->ID,
                     'INSTALLMENT_COUNT' => $res->INSTALLMENT_COUNT,
@@ -204,17 +417,13 @@ class S_PokokSebagian
                     'DISKON_BUNGA' => 0,
                     'DISKON_POKOK' => 0,
                     'DISKON_DENDA' => 0,
-
                 ];
                 continue;
             }
 
             $totalInterest = floatval($res->INTEREST);
-            $installmentRaw = floatval($res->INSTALLMENT);
-            $installmentAdjusted = max(0, $installmentRaw - $paidInterest);
-            $maxBayarBunga = min($installmentAdjusted, $totalInterest - $paidInterest);
 
-            $paidNow = min($sisaPaymentBunga, $maxBayarBunga);
+            $paidNow = min($sisaPaymentBunga, $totalInterest);
             $sisaPaymentBunga -= $paidNow;
 
             $discount = $totalInterest - $paidNow;
@@ -225,7 +434,7 @@ class S_PokokSebagian
                 'PAYMENT_DATE' => $res->PAYMENT_DATE,
                 'PRINCIPAL' => floatval($res->PRINCIPAL),
                 'INTEREST' => $totalInterest,
-                'INSTALLMENT' => $installmentRaw,
+                'INSTALLMENT' => floatval($res->PRINCIPAL) + $totalInterest,
                 'BAYAR_BUNGA' => $paidNow,
                 'BAYAR_POKOK' => 0,
                 'BAYAR_DENDA' => 0,
@@ -235,104 +444,59 @@ class S_PokokSebagian
             ];
         }
 
-        $semuaSudahLewat = true;
-        foreach ($data as $row) {
-            if ($row['PAYMENT_DATE'] >= $currentDate) {
-                $semuaSudahLewat = false;
+        $currentIndex = null;
+
+        foreach ($data as $index => $row) {
+
+            $rowMonth = date('m', strtotime($row['PAYMENT_DATE']));
+            $rowYear  = date('Y', strtotime($row['PAYMENT_DATE']));
+
+            if ($rowMonth == $currentMonth && $rowYear == $currentYear) {
+                $currentIndex = $index;
                 break;
             }
         }
 
-        if ($paymentPokok > 0) {
-            $maxIndex = null;
+        $maxIndex = null;
 
-            foreach ($data as $index => $row) {
-                if ($maxIndex === null || $row['INSTALLMENT_COUNT'] > $data[$maxIndex]['INSTALLMENT_COUNT']) {
-                    $maxIndex = $index;
-                }
-            }
+        foreach ($data as $index => $row) {
 
-            if ($semuaSudahLewat && $maxIndex !== null) {
-                $data[$maxIndex]['INSTALLMENT'] = $res->PRINCIPAL + $totalInterest;
-                $data[$maxIndex]['BAYAR_POKOK'] = $paymentPokok;
-            } else {
-                // Jalankan proses biasa
-                $currentMonth = date('m');
-                $currentYear = date('Y');
-                $currentPaymentIndex = null;
+            if (
+                $maxIndex === null ||
+                $row['INSTALLMENT_COUNT'] > $data[$maxIndex]['INSTALLMENT_COUNT']
+            ) {
 
-                foreach ($data as $index => $row) {
-                    $rowMonth = date('m', strtotime($row['PAYMENT_DATE']));
-                    $rowYear = date('Y', strtotime($row['PAYMENT_DATE']));
-
-                    if ($rowMonth == $currentMonth && $rowYear == $currentYear && $currentPaymentIndex === null) {
-                        $currentPaymentIndex = $index;
-                    }
-                }
-
-                if ($currentPaymentIndex === null && count($data) > 0) {
-                    $currentPaymentIndex = 0;
-                }
-
-                if ($currentPaymentIndex !== null) {
-                    $data[$currentPaymentIndex]['PRINCIPAL'] += $paymentPokok;
-                    // $data[$currentPaymentIndex]['INSTALLMENT'] += $paymentPokok;
-                    if ($maxIndex !== null) {
-                        $data[$maxIndex]['BAYAR_POKOK'] = $paymentPokok;
-                    }
-                }
-
-                $calc = 0;
-                if ($maxIndex !== null) {
-                    $data[$maxIndex]['PRINCIPAL'] -= $paymentPokok;
-                    $sisaPokok = floatval($data[$maxIndex]['PRINCIPAL']);
-                    $value = round($sisaPokok * (3 / 100), 2);
-
-                    $calc = ceil($value / 1000) * 1000;
-                }
-
-                $sisaPaymentBunga = $paymentBunga;
-                $minCount = isset($currentPaymentIndex) ? $data[$currentPaymentIndex]['INSTALLMENT_COUNT'] : null;
-
-                foreach ($data as $index => $row) {
-                    if (isset($creditSchedule[$index]) && strtoupper($creditSchedule[$index]->PAID_FLAG) === 'PAID') {
-                        continue;
-                    }
-
-                    $paymentValueInterest = floatval($creditSchedule[$index]->PAYMENT_VALUE_INTEREST ?? 0);
-
-                    if (
-                        $minCount !== null &&
-                        $row['INSTALLMENT_COUNT'] > $minCount &&
-                        $paymentValueInterest == 0 &&
-                        floatval($row['BAYAR_BUNGA']) == 0
-                    ) {
-                        $data[$index]['INTEREST'] = $calc;
-                        $data[$index]['INSTALLMENT'] = $calc + $data[$index]['PRINCIPAL'];
-                    }
-
-                    $maxBayarBunga = min($data[$index]['INTEREST'], $row['INTEREST']);
-                    $paidNow = min($sisaPaymentBunga, $maxBayarBunga);
-                    $sisaPaymentBunga -= $paidNow;
-
-                    $data[$index]['BAYAR_BUNGA'] = $paidNow;
-                    $data[$index]['DISKON_BUNGA'] = max(0, $data[$index]['INTEREST'] - $paidNow);
-                }
+                $maxIndex = $index;
             }
         }
 
-        foreach ($data as $index => $row) {
-            $bayarPokok = floatval($row['BAYAR_POKOK'] ?? 0);
-            if ($bayarPokok <= 0) continue;
+        if ($paymentPokok > 0 && $currentIndex !== null) {
 
-            $principalAsli = floatval($creditSchedule[$index]->PRINCIPAL ?? 0);
+            // tambah principal bulan berjalan
+            $data[$currentIndex]['PRINCIPAL'] += $paymentPokok;
 
-            $data[$index]['DISKON_POKOK'] = max(0, $principalAsli - $bayarPokok);
-            $data[$index]['PRINCIPAL'] = $principalAsli;
-            $data[$index]['INSTALLMENT'] = $principalAsli + $data[$index]['INTEREST'];
+            // set bayar pokok
+            $data[$currentIndex]['BAYAR_POKOK'] = $paymentPokok;
+
+            // kurangi principal schedule terakhir
+            if ($maxIndex !== null) {
+
+                $data[$maxIndex]['PRINCIPAL'] =
+                    max(0, $data[$maxIndex]['PRINCIPAL'] - $paymentPokok);
+            }
+        }
+
+        if ($discountPokok > 0 && $maxIndex !== null) {
+
+            $principalLast = floatval($data[$maxIndex]['PRINCIPAL']);
+
+            $diskon = min($discountPokok, $principalLast);
+
+            $data[$maxIndex]['DISKON_POKOK'] = $diskon;
         }
 
         foreach ($arrearsList as $arrear) {
+
             if (in_array(strtoupper($arrear->STATUS_REC ?? ''), ['S', 'D'])) {
                 continue;
             }
@@ -349,30 +513,55 @@ class S_PokokSebagian
 
             $bayarNow = min($sisaBayarDenda, $sisaPenalty);
             $sisaBayarDenda -= $bayarNow;
-            $sisaPenalty -= $bayarNow;
 
-            $diskonNow = min($sisaDiskonDenda, $sisaPenalty);
+            $sisaPenaltyAfterBayar = $sisaPenalty - $bayarNow;
+
+            $diskonNow = min($sisaDiskonDenda, $sisaPenaltyAfterBayar);
             $sisaDiskonDenda -= $diskonNow;
 
             $arrearsDate = date('Y-m-d', strtotime($arrear->START_DATE));
+            $foundIndex  = null;
+
             foreach ($data as $i => $row) {
 
                 $scheduleDate = date('Y-m-d', strtotime($row['PAYMENT_DATE']));
 
-                if (
-                    $scheduleDate == $arrearsDate &&
-                    strtoupper($creditSchedule[$i]->PAID_FLAG ?? '') !== 'PAID'
-                ) {
-
-                    $data[$i]['BAYAR_DENDA']  += $bayarNow;
-                    $data[$i]['DISKON_DENDA'] += $diskonNow;
+                if ($scheduleDate == $arrearsDate) {
+                    $foundIndex = $i;
                     break;
                 }
+            }
+
+            if ($foundIndex === null) {
+
+                foreach ($data as $i => $row) {
+
+                    if (
+                        floatval($row['PRINCIPAL']) > 0 ||
+                        floatval($row['INTEREST']) > 0
+                    ) {
+                        $foundIndex = $i;
+                        break;
+                    }
+                }
+            }
+
+            if ($foundIndex !== null) {
+
+                $data[$foundIndex]['BAYAR_DENDA']  += $bayarNow;
+                $data[$foundIndex]['DISKON_DENDA'] += $diskonNow;
             }
 
             if ($sisaBayarDenda <= 0 && $sisaDiskonDenda <= 0) {
                 break;
             }
+        }
+
+        foreach ($data as $i => $row) {
+
+            $data[$i]['INSTALLMENT'] =
+                floatval($data[$i]['PRINCIPAL']) +
+                floatval($data[$i]['INTEREST']);
         }
 
         return $data;
@@ -453,7 +642,7 @@ class S_PokokSebagian
                 'INTEREST' => $totalInterest,
                 'PAYMENT_DATE' => $res->PAYMENT_DATE,
                 'BAYAR_BUNGA' => $paidNow,
-                'DISKON_BUNGA' => 0, // ✅ dimatikan total
+                'DISKON_BUNGA' => 0,
                 'BAYAR_POKOK' => 0,
                 'BAYAR_DENDA' => $bayarDenda ?? 0,
             ];
@@ -762,9 +951,11 @@ class S_PokokSebagian
         $interestDetail      = floatval($detail['interest']);
         $paidPrincipal       = floatval($detail['bayar_pokok']);
         $paidInterest        = floatval($detail['bayar_bunga']);
+        $paidArrears        = floatval($detail['bayar_denda']);
         $installmentValue    = floatval($detail['installment']);
         $paidDiskonPrincipal       = floatval($detail['diskon_pokok']);
         $paidDiskonInterest        = floatval($detail['diskon_bunga']);
+        $paidDiskonArrears         = floatval($detail['diskon_denda']);
 
         $beforePaidPrincipal = floatval($schedule->PAYMENT_VALUE_PRINCIPAL);
         $beforePaidInterest  = floatval($schedule->PAYMENT_VALUE_INTEREST);
@@ -799,7 +990,7 @@ class S_PokokSebagian
             'STATUS_REC' => 'A',
         ])->orderBy('START_DATE', 'ASC')->first();
 
-        if ($getArrears) {
+        if ($paidArrears && $getArrears) {
             $ttlPrincipal = floatval($getArrears->PAID_PCPL) + floatval($detail['bayar_pokok'] ?? 0);
             $ttlInterest = floatval($getArrears->PAID_INT) + floatval($detail['bayar_bunga'] ?? 0);
             $ttlPenalty = floatval($getArrears->PAID_PENALTY) + floatval($detail['bayar_denda'] ?? 0);
@@ -821,7 +1012,7 @@ class S_PokokSebagian
             $checkDiscountArrears = ($ttlDiscPrincipal + $ttlDiscInterest + $ttlDiscPenalty) == 0;
 
             $getArrears->update([
-                'STATUS_REC' => $checkDiscountArrears ? 'S' : 'D',
+                'STATUS_REC' => $getArrears->PAST_DUE_PENALTY == $ttlPenalty ? 'S' : 'D',
             ]);
         }
 
