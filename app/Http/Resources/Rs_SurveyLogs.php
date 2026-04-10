@@ -15,6 +15,7 @@ class Rs_SurveyLogs extends JsonResource
 
         return [
             'no_surat' => $this->REFERENCE_ID ?? "",
+            'no_lkp' => $this->LKP_NUMBER ?? "",
             'ket' => $this->DESCRIPTION ?? "",
             'tgl_jb' => $this->CONFIRM_DATE ? Carbon::parse($this->CONFIRM_DATE)->format('Y-m-d') : null,
             'file' => json_decode($this->PATH ?? []),
