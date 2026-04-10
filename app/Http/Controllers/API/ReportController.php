@@ -1743,6 +1743,8 @@ class ReportController extends Controller
             $results = DB::table('cl_deploy as a')
                 ->select(
                     'a.LOAN_NUMBER',
+                    'a.CYCLE_AWAL',
+                    'a.CYCLE_AKHIR',
                     'e.CREATED_AT',
                     'e.PATH',
                     'e.CONFIRM_DATE',
