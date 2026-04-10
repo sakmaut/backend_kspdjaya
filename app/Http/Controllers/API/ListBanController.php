@@ -293,59 +293,60 @@ class ListBanController extends Controller
                                 cl.LOAN_NUMBER AS NO_KONTRAK,
                                 c.NAME AS NAMA_PELANGGAN,
                                 cl.CREATED_AT AS TGL_BOOKING,
+                                cl.OD,
                                 -- CASE
                                 --     WHEN tcoc.OD_PREV <= 15 THEN 'RO1'
                                 --     WHEN tcoc.OD_PREV > 15 THEN 'RO2'
                                 --     WHEN tcoc.OD_PREV IS NULL OR tcoc.OD_PREV = '' THEN 'NEW'
                                 -- END
-                                CASE
-                                    WHEN concat('C',case when date_format(cl.created_at,'%m%Y')='$dateFrom' then 'N'
-                                                when cl.STATUS_REC = 'RP' and py.ID is null and date_format(col.SITA_AT,'%m%Y')<>'$dateFrom'  then 'L'
-                                                when replace(format(case when date_format(cl.created_at,'%m%Y')='$dateFrom' then (cl.PCPL_ORI+cl.INTRST_ORI)
-			 			                                            else (st.init_pcpl+st.init_int) end,0),',','')=0 then 'L'
-                                                when case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'MUSIMAN'
-                                                        and date_format(st.first_arr,'%m%Y')=date_format(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),'%m%Y') then 'N'
-                                                when st.first_arr>=date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 2 month) then 'N'
-                                                when st.first_arr > date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day)
-                                                        and case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'REGULER'  then 'M'
-                                                when st.arr_count > 8 then 'X'
-                                                else st.arr_count end) IN ('C2','C3','C4','C5','C6','C7','C8') THEN 'NEW'
-                                    WHEN concat('C',case when date_format(cl.created_at,'%m%Y')='$dateFrom' then 'N'
-                                                when cl.STATUS_REC = 'RP' and py.ID is null and date_format(col.SITA_AT,'%m%Y')<>'$dateFrom'  then 'L'
-                                                when replace(format(case when date_format(cl.created_at,'%m%Y')='$dateFrom' then (cl.PCPL_ORI+cl.INTRST_ORI)
-			 			                                            else (st.init_pcpl+st.init_int) end,0),',','')=0 then 'L'
-                                                when case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'MUSIMAN'
-                                                        and date_format(st.first_arr,'%m%Y')=date_format(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),'%m%Y') then 'N'
-                                                when st.first_arr>=date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 2 month) then 'N'
-                                                when st.first_arr > date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day)
-                                                        and case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'REGULER'  then 'M'
-                                                when st.arr_count > 8 then 'X'
-                                                    else st.arr_count end) IN ('CN','CM','C0') AND cl.OD <= 15 THEN 'RO1'
-                                    WHEN concat('C',case when date_format(cl.created_at,'%m%Y')='$dateFrom' then 'N'
-                                                    when cl.STATUS_REC = 'RP' and py.ID is null and date_format(col.SITA_AT,'%m%Y')<>'$dateFrom'  then 'L'
-                                                    when replace(format(case when date_format(cl.created_at,'%m%Y')='$dateFrom' then (cl.PCPL_ORI+cl.INTRST_ORI)
-                                                                        else (st.init_pcpl+st.init_int) end,0),',','')=0 then 'L'
-                                                    when case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'MUSIMAN'
-                                                            and date_format(st.first_arr,'%m%Y')=date_format(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),'%m%Y') then 'N'
-                                                    when st.first_arr>=date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 2 month) then 'N'
-                                                    when st.first_arr > date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day)
-                                                            and case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'REGULER'  then 'M'
-                                                    when st.arr_count > 8 then 'X'
-                                                    else st.arr_count end) IN ('CN','CM','C0') AND cl.OD > 15 THEN 'RO2'
-                                    WHEN concat('C',case when date_format(cl.created_at,'%m%Y')='$dateFrom' then 'N'
-                                                    when cl.STATUS_REC = 'RP' and py.ID is null and date_format(col.SITA_AT,'%m%Y')<>'$dateFrom'  then 'L'
-                                                    when replace(format(case when date_format(cl.created_at,'%m%Y')='$dateFrom' then (cl.PCPL_ORI+cl.INTRST_ORI)
-                                                                        else (st.init_pcpl+st.init_int) end,0),',','')=0 then 'L'
-                                                    when case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'MUSIMAN'
-                                                            and date_format(st.first_arr,'%m%Y')=date_format(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),'%m%Y') then 'N'
-                                                    when st.first_arr>=date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 2 month) then 'N'
-                                                    when st.first_arr > date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day)
-                                                            and case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'REGULER'  then 'M'
-                                                    when st.arr_count > 8 then 'X'
-                                                    else st.arr_count end) IN ('C1') THEN 'RO2'
-                                   ELSE ''
-                                END
-                                AS UB,
+                                -- CASE
+                                --     WHEN concat('C',case when date_format(cl.created_at,'%m%Y')='$dateFrom' then 'N'
+                                --                 when cl.STATUS_REC = 'RP' and py.ID is null and date_format(col.SITA_AT,'%m%Y')<>'$dateFrom'  then 'L'
+                                --                 when replace(format(case when date_format(cl.created_at,'%m%Y')='$dateFrom' then (cl.PCPL_ORI+cl.INTRST_ORI)
+			 			        --                                     else (st.init_pcpl+st.init_int) end,0),',','')=0 then 'L'
+                                --                 when case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'MUSIMAN'
+                                --                         and date_format(st.first_arr,'%m%Y')=date_format(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),'%m%Y') then 'N'
+                                --                 when st.first_arr>=date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 2 month) then 'N'
+                                --                 when st.first_arr > date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day)
+                                --                         and case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'REGULER'  then 'M'
+                                --                 when st.arr_count > 8 then 'X'
+                                --                 else st.arr_count end) IN ('C2','C3','C4','C5','C6','C7','C8') THEN 'NEW'
+                                --     WHEN concat('C',case when date_format(cl.created_at,'%m%Y')='$dateFrom' then 'N'
+                                --                 when cl.STATUS_REC = 'RP' and py.ID is null and date_format(col.SITA_AT,'%m%Y')<>'$dateFrom'  then 'L'
+                                --                 when replace(format(case when date_format(cl.created_at,'%m%Y')='$dateFrom' then (cl.PCPL_ORI+cl.INTRST_ORI)
+			 			        --                                     else (st.init_pcpl+st.init_int) end,0),',','')=0 then 'L'
+                                --                 when case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'MUSIMAN'
+                                --                         and date_format(st.first_arr,'%m%Y')=date_format(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),'%m%Y') then 'N'
+                                --                 when st.first_arr>=date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 2 month) then 'N'
+                                --                 when st.first_arr > date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day)
+                                --                         and case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'REGULER'  then 'M'
+                                --                 when st.arr_count > 8 then 'X'
+                                --                     else st.arr_count end) IN ('CN','CM','C0') AND cl.OD <= 15 THEN 'RO1'
+                                --     WHEN concat('C',case when date_format(cl.created_at,'%m%Y')='$dateFrom' then 'N'
+                                --                     when cl.STATUS_REC = 'RP' and py.ID is null and date_format(col.SITA_AT,'%m%Y')<>'$dateFrom'  then 'L'
+                                --                     when replace(format(case when date_format(cl.created_at,'%m%Y')='$dateFrom' then (cl.PCPL_ORI+cl.INTRST_ORI)
+                                --                                         else (st.init_pcpl+st.init_int) end,0),',','')=0 then 'L'
+                                --                     when case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'MUSIMAN'
+                                --                             and date_format(st.first_arr,'%m%Y')=date_format(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),'%m%Y') then 'N'
+                                --                     when st.first_arr>=date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 2 month) then 'N'
+                                --                     when st.first_arr > date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day)
+                                --                             and case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'REGULER'  then 'M'
+                                --                     when st.arr_count > 8 then 'X'
+                                --                     else st.arr_count end) IN ('CN','CM','C0') AND cl.OD > 15 THEN 'RO2'
+                                --     WHEN concat('C',case when date_format(cl.created_at,'%m%Y')='$dateFrom' then 'N'
+                                --                     when cl.STATUS_REC = 'RP' and py.ID is null and date_format(col.SITA_AT,'%m%Y')<>'$dateFrom'  then 'L'
+                                --                     when replace(format(case when date_format(cl.created_at,'%m%Y')='$dateFrom' then (cl.PCPL_ORI+cl.INTRST_ORI)
+                                --                                         else (st.init_pcpl+st.init_int) end,0),',','')=0 then 'L'
+                                --                     when case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'MUSIMAN'
+                                --                             and date_format(st.first_arr,'%m%Y')=date_format(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),'%m%Y') then 'N'
+                                --                     when st.first_arr>=date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 2 month) then 'N'
+                                --                     when st.first_arr > date_add(date_add(str_to_date(concat('01','$dateFrom'),'%d%m%Y'),interval 1 month),interval -1 day)
+                                --                             and case when (cl.INSTALLMENT_COUNT/cl.PERIOD)=1 then 'REGULER' else 'MUSIMAN' end = 'REGULER'  then 'M'
+                                --                     when st.arr_count > 8 then 'X'
+                                --                     else st.arr_count end) IN ('C1') THEN 'RO2'
+                                --    ELSE ''
+                                -- END
+                                '' AS UB,
                                 NULL AS PLATFORM,
                                 CONCAT(c.INS_ADDRESS,' RT/', c.INS_RT, ' RW/', c.INS_RW, ' ', c.INS_CITY, ' ', c.INS_PROVINCE) AS ALAMAT_TAGIH,
                                 c.INS_KECAMATAN AS KODE_POST,
@@ -529,13 +530,32 @@ class ListBanController extends Controller
                 $cleanDate = trim($result->LAST_PAY);
                 $cleanDate = preg_replace('/[^\d\/\-\.]/', '', $cleanDate);
 
+                $cycle = $result->CYCLE_AWAL;
+                $od = $result->OD ?? 0;
+
+                if($od == 0){
+                    $ub = '';
+                }else{
+                    if (in_array($cycle, ['C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8'])) {
+                        $ub = 'NEW';
+                    } elseif (in_array($cycle, ['CN', 'CM', 'C0']) && $od <= 15) {
+                        $ub = 'RO1';
+                    } elseif (in_array($cycle, ['CN', 'CM', 'C0']) && $od > 15) {
+                        $ub = 'RO2';
+                    } elseif ($cycle == 'C1') {
+                        $ub = 'RO2';
+                    } else {
+                        $ub = '';
+                    }
+                }
+
                 $build[] = [
                     "KODE CABANG" => $result->KODE ?? '',
                     "NAMA CABANG" => $result->NAMA_CABANG ?? '',
                     "NO KONTRAK" => is_numeric($result->NO_KONTRAK) ? (int) $result->NO_KONTRAK ?? '' : $result->NO_KONTRAK ?? '',
                     "NAMA PELANGGAN" => $result->NAMA_PELANGGAN ?? '',
                     "TGL BOOKING" => isset($result->TGL_BOOKING) && !empty($result->TGL_BOOKING) ?  Carbon::parse($result->TGL_BOOKING)->format('m/d/Y') : '',
-                    "UB" => $result->UB ?? '',
+                    "UB" => $ub ?? '',
                     "PLATFORM" => $result->PLATFORM ?? '',
                     "ALAMAT TAGIH" => $result->ALAMAT_TAGIH ?? '',
                     "KECAMATAN" => $result->KODE_POST ?? '',
@@ -597,6 +617,7 @@ class ListBanController extends Controller
             return response()->json(['message' => $e->getMessage(), "status" => 500], 500);
         }
     }
+    
 
     public function sp1(Request $request)
     {
