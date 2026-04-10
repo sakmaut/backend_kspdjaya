@@ -36,6 +36,8 @@ class R_VisitReports extends JsonResource
             'CycleAwal' => $this->CYCLE_AWAL ?? null,
             'CycleAkhir' => $this->CYCLE_AKHIR ?? null,
             'PathFile' => $path,
+            'TanggalBayar' => $this->payment_date ? date('Y-m-d', strtotime($this->payment_date)) : null,
+            'Pembayaran' => (int) $this->total_bayar ?? 0,
         ];
     }
 }

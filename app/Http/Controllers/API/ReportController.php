@@ -1740,6 +1740,14 @@ class ReportController extends Controller
                 $sampai = now()->endOfMonth()->toDateString();
             }
 
+            $payment = DB::table('payment as p')
+                ->leftJoin('payment_detail as pd', 'pd.PAYMENT_ID', '=', 'p.ID')
+                ->whereIn('pd.ACC_KEYS', ['BAYAR_POKOK', 'BAYAR_BUNGA', 'ANGSURAN_POKOK', 'ANGSURAN_BUNGA'])
+                ->whereMonth('p.ENTRY_DATE', now()->month)
+                ->whereYear('p.ENTRY_DATE', now()->year)
+                ->selectRaw('SUM(pd.ORIGINAL_AMOUNT) AS total_bayar, p.LOAN_NUM, DATE_FORMAT(p.ENTRY_DATE, "%Y-%m-%d") as payment_date')
+                ->groupBy('p.LOAN_NUM, DATE_FORMAT(p.ENTRY_DATE, "%Y-%m-%d")');
+
             $results = DB::table('cl_deploy as a')
                 ->select(
                     'a.LOAN_NUMBER',
@@ -1756,7 +1764,9 @@ class ReportController extends Controller
                     'd.category',
                     'h.REF_PELANGGAN',
                     'h.REF_PELANGGAN_OTHER',
-                    'i.NAME as Cabang'
+                    'i.NAME as Cabang',
+                    'pay.total_bayar',
+                    'pay.payment_date'
                 )
                 ->leftJoin('credit as b', 'b.ID', '=', 'a.CREDIT_ID')
                 ->leftJoin('cr_application as c', 'c.ORDER_NUMBER', '=', 'b.ORDER_NUMBER')
@@ -1766,13 +1776,15 @@ class ReportController extends Controller
                 ->leftJoin('customer as g', 'g.CUST_CODE', '=', 'b.CUST_CODE')
                 ->leftJoin('cr_order as h', 'h.APPLICATION_ID', '=', 'c.ID')
                 ->leftJoin('branch as i', 'i.ID', '=', 'a.BRANCH_ID')
+                ->leftJoinSub($payment, 'pay', function ($join) {
+                    $join->on('pay.LOAN_NUM', '=', 'a.LOAN_NUMBER');
+                })
                 ->when($cabangId && $cabangId !== 'SEMUA CABANG', function ($query) use ($cabangId) {
                     $query->where('a.BRANCH_ID', $cabangId);
                 })
                 ->when($no_kontrak, function ($query) use ($no_kontrak) {
                     $query->where('a.LOAN_NUMBER', 'LIKE', "%$no_kontrak%");
                 })
-
                 ->when($nama, function ($query) use ($nama) {
                     $query->where('g.NAME', 'LIKE', "%$nama%");
                 })
