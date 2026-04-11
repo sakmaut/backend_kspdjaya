@@ -76,7 +76,9 @@ class PaymentController extends Controller
         try {
             $no_inv = generateCodeKwitansi($request, 'kwitansi', 'NO_TRANSAKSI', 'INV');
 
-            $getCodeBranch = M_Branch::findOrFail($request->user()->branch_id);
+            $branchId =$request->cabang ?? $request->user()->branch_id;
+
+            $getCodeBranch = M_Branch::findOrFail($branchId);
 
             $check_method_payment = strtolower($request->payment_method) === 'cash';
 
@@ -110,8 +112,6 @@ class PaymentController extends Controller
                             'diskon_denda' => strtolower($request->bayar_dengan_diskon) == 'ya' ? floatval($res['denda']) - floatval($res['bayar_denda']) : 0
                         ]);
                     }
-
-                    // if ($check_method_payment && strtolower($request->bayar_dengan_diskon) != 'ya') {
 
                     if ($check_method_payment && strtolower($request->bayar_dengan_diskon) != 'ya' && !$checkposition) {
                         $this->processPaymentStructure($res, $request, $getCodeBranch, $no_inv);
@@ -581,7 +581,6 @@ class PaymentController extends Controller
 
         $cekPaymentMethod = $request->payment_method == 'cash' && strtolower($request->bayar_dengan_diskon) != 'ya';
         $sttsPayment = $cekPaymentMethod && !$this->checkPosition($request) ? "PAID" : "PENDING";
-        // $sttsPayment = $cekPaymentMethod ? "PAID" : "PENDING";
 
         $save_kwitansi = [
             "PAYMENT_TYPE" => 'angsuran',
@@ -590,7 +589,7 @@ class PaymentController extends Controller
             "NO_TRANSAKSI" => $no_inv,
             "LOAN_NUMBER" => $request->no_facility ?? null,
             "TGL_TRANSAKSI" => Carbon::now('Asia/Jakarta')->format('d-m-Y'),
-            'BRANCH_CODE' => $request->user()->branch_id,
+            'BRANCH_CODE' => $request->cabang ?? $request->user()->branch_id,
             'CUST_CODE' => $getCustomer->customer['CUST_CODE'] ?? '',
             'NAMA' => $getCustomer->customer['NAME'] ?? '',
             'ALAMAT ' => $getCustomer->customer['ADDRESS'] ?? '',
