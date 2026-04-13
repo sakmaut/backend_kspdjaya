@@ -172,7 +172,7 @@ if (!function_exists('generateCodeJaminan')) {
 if (!function_exists('generateCodeKwitansi')) {
     function generateCodeKwitansi($request, $table, $column, $prefix)
     {
-        $branchId = $request->cabang ?? $request->user()->branch_id;
+        $branchId = $request->input('CABANG', $request->input('cabang')) ?? $request->user()->branch_id;
         $branch = M_Branch::findOrFail($branchId);
         $branchCodeNumber = $branch->CODE_NUMBER;
 
