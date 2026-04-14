@@ -117,19 +117,7 @@ class C_Tagihan extends Controller
                 $query->where('USER_ID', $userId);
             }
 
-            $data = $query->paginate(10);
-
-            return response()->json([
-                'status' => true,
-                'message' => 'Success',
-                'data' => Rs_CollectorList::collection($data->items()),
-                'pagination' => [
-                    'current_page' => $data->currentPage(),
-                    'per_page' => $data->perPage(),
-                    'total' => $data->total(),
-                    'last_page' => $data->lastPage(),
-                ]
-            ], 200);
+            return response()->json(Rs_CollectorList::collection($query->get()), 200);
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
         }
