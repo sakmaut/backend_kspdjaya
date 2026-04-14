@@ -1108,7 +1108,11 @@ class ReportController extends Controller
             }
             $data->where(DB::raw('DATE_FORMAT(CREATED_AT,"%Y%m%d")'), $date);
 
-            if ($getPosition !== 'ho' && !empty($cabang)) {
+            if ($getPosition === 'ho') {
+                if (!empty($cabang)) {
+                    $data->where('BRANCH_CODE', $cabang);
+                }
+            } else {
                 $data->where('BRANCH_CODE', $cabang);
             }
 
