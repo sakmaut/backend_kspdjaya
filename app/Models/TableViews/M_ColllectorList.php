@@ -25,8 +25,15 @@ class M_ColllectorList extends Model
         'DESCRIPTION',
         'SURVEY_DATE',
         'CONFIRM_DATE',
-        'PATH'
+        'PATH',
+        'nama_cabang',
+        'pic',
+        'CYCLE_AWAL',
+        'CYCLE_AKHIR',
+        'ENTRY_DATE',
+        'total_bayar'
     ];
+    
     protected $guarded = [];
     public $incrementing = false;
     protected $keyType = 'string';

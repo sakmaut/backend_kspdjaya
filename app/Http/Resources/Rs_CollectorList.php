@@ -24,7 +24,8 @@ class Rs_CollectorList extends JsonResource
 
         return [
             'id' => $this->ID,
-            'nama_pic' =>  $this->fullname ?? "",
+            'nama_pic' =>  $this->pic ?? "",
+            'cabang' =>  $this->nama_cabang ?? "",
             'no_surat' => $this->NO_SURAT ?? "",
             'no_lkp' => $this->LKP_NUMBER ?? "",
             'no_kontrak' => $this->LOAN_NUMBER ?? "",
@@ -33,7 +34,13 @@ class Rs_CollectorList extends JsonResource
             'angusran_ke' => $this->ANGSURAN_KE ?? 0,
             'tgl_jatuh_tempo' => $this->TGL_JTH_TEMPO ?? "",
             'angsuran' => $this->ANGSURAN ?? 0,
+            'cycle_awal' => $this->CYCLE_AWAL ?? null,
+            'cycle_akhir' => $this->CYCLE_AKHIR ?? null,
             'kunjungan_terakhir' => collect($kunjunganTerakhir)->filter()->isEmpty() ? null : $kunjunganTerakhir,
+            'pembayaran' => [
+                'tgl_bayar' => $this->ENTRY_DATE ? Carbon::parse($this->ENTRY_DATE)->format('Y-m-d') : null,
+                'total_bayar' => $this->total_bayar ?? 0
+            ]
         ];
     }
 }
