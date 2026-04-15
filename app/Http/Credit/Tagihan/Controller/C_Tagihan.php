@@ -126,7 +126,46 @@ class C_Tagihan extends Controller
     public function list_tagihan_collector_detail(Request $request, $id)
     {
         try {
-            $query = M_ColllectorVisits::with(['collateralDocuments', 'credit.cr_application.cr_survey_document'])->where('ID', $id)->first();
+            // $query = M_ColllectorVisits::with(['collateralDocuments', 'credit.cr_application.cr_survey_document'])->where('ID', $id)->first();
+
+            $query = DB::table('vw_tagihan_list as v')
+                    ->select([
+                        'v.*',
+                        'g.total_denda',
+                        DB::raw("CONCAT(cc.BRAND,' - ',cc.TYPE,' - ',cc.COLOR) AS unit"),
+                        'cc.ID as COLLATERAL_ID',
+                        'cc.POLICE_NUMBER',
+                        'cc.PRODUCTION_YEAR',
+                        'f.INS_KECAMATAN',
+                        'f.INS_KELURAHAN',
+                        'f.PHONE_HOUSE',
+                        'f.PHONE_PERSONAL',
+                        DB::raw("(
+                            SELECT JSON_ARRAYAGG(cd.PATH)
+                            FROM cr_collateral_document cd
+                            WHERE cd.COLLATERAL_ID = cc.ID
+                        ) as col_path"),
+                        DB::raw("(
+                            SELECT JSON_ARRAYAGG(sd.PATH)
+                            FROM cr_survey_document sd
+                            JOIN cr_application ca ON ca.CR_SURVEY_ID = sd.CR_SURVEY_ID
+                            JOIN credit c ON c.ORDER_NUMBER = ca.ORDER_NUMBER
+                            WHERE c.ID = v.CREDIT_ID
+                            AND sd.TYPE = 'other'
+                        ) as other_path")
+                        ])
+                        ->leftJoin('customer as f', 'f.CUST_CODE', '=', 'v.CUST_CODE')
+                        ->leftJoin('cr_collateral as cc', 'cc.CR_CREDIT_ID', '=', 'v.CREDIT_ID')
+                        ->leftJoin(
+                        DB::raw("(
+                            SELECT
+                                LOAN_NUMBER,
+                                SUM(PAST_DUE_PENALTY) - SUM(PAID_PENALTY) AS total_denda
+                            FROM arrears
+                            WHERE STATUS_REC = 'A'
+                            GROUP BY LOAN_NUMBER) g"), 'g.LOAN_NUMBER', '=', 'v.LOAN_NUMBER')
+                    ->where('v.ID', $id)
+                    ->first();
 
             if (!$query) {
                 throw new Exception("Data Not Found", 404);
