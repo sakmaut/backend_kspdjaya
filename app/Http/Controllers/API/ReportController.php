@@ -1813,15 +1813,18 @@ class ReportController extends Controller
     public function FasilitasLunasReport(Request $request)
     {
         try {
-            $position = $request->position;
+            $position = $request->user()->position;
 
-            if($position !== 'HO') {
-                $cabangId = $request->user()->branch_id;
-            }else{
-                $cabangId = $request->cabang;
+            $query = M_VwLoanPaidReports::query();
+
+            if ($position !== 'HO') {
+                $query->where('ID_CABANG', $request->user()->branch_id);
+            } else {
+                if ($request->filled('cabang')) {
+                    $query->where('ID_CABANG', $request->cabang);
+                }
             }
-
-            $results = M_VwLoanPaidReports::where('ID_CABANG', $cabangId)->get();
+            $results = $query->get();
 
             $build = [];
             foreach ($results as $result) {
