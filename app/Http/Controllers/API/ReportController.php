@@ -1814,6 +1814,11 @@ class ReportController extends Controller
     {
         try {
             $cabangId = $request->cabang;
+            $position = $request->position;
+
+            if($position !== 'HO') {
+                $cabangId = $request->user()->branch_id;
+            }
 
             $results = M_VwLoanPaidReports::where('ID_CABANG', $cabangId)->get();
 
