@@ -58,7 +58,7 @@ class Rs_CollectorDetail extends JsonResource
     {
         return [
             'id' => $this->ID,
-            'nama_pic' =>  $this->fullname ?? "",
+            'nama_pic' =>  $this->pic ?? "",
             'no_surat' => $this->NO_SURAT ?? "",
             'no_lkp' => $this->LKP_NUMBER ?? "",
             'no_kontrak' => $this->LOAN_NUMBER ?? "",
