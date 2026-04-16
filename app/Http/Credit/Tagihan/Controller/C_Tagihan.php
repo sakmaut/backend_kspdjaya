@@ -823,8 +823,6 @@ class C_Tagihan extends Controller
 
             // Merge semua payments & details menjadi satu
             if ($data && $data->detail) {
-                $lkpDetail = $data->detail; // ganti nama variabel
-
                 $mergedPayment = [
                     'BAYAR_POKOK'    => 0,
                     'BAYAR_BUNGA'    => 0,
@@ -832,17 +830,19 @@ class C_Tagihan extends Controller
                     'ANGSURAN_BUNGA' => 0,
                 ];
 
-                foreach ($lkpDetail->payments as $payment) {
-                    foreach ($payment->details as $paymentDetail) { // ganti nama variabel
-                        if (array_key_exists($paymentDetail->ACC_KEYS, $mergedPayment)) {
-                            $mergedPayment[$paymentDetail->ACC_KEYS] += $paymentDetail->AMOUNT;
+                foreach ($data->detail as $lkpDetail) {               // ← loop detail dulu
+                    foreach ($lkpDetail->payments as $payment) {
+                        foreach ($payment->details as $paymentDetail) {
+                            if (array_key_exists($paymentDetail->ACC_KEYS, $mergedPayment)) {
+                                $mergedPayment[$paymentDetail->ACC_KEYS] += $paymentDetail->AMOUNT;
+                            }
                         }
                     }
                 }
 
                 $data->merged_payment = $mergedPayment;
             }
-
+            
             $dto = new Rs_LkpDetailList($data);
 
             return response()->json($dto, 200);
