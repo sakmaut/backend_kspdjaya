@@ -777,54 +777,27 @@ class C_Tagihan extends Controller
     public function cl_lkp_detail(Request $request, $id)
     {
         try {
-            // $data = M_Lkp::with([
-            //     'detail.deploy',
-            //     'detail.surveyLogs' => function ($q) use ($id) {
-            //         $q->where('LKP_NUMBER', $id);
-            //     },
-            //     'user:username,fullname',
-            //     'detail.payments' => function ($q) {
-            //         $q->whereMonth('payment.ENTRY_DATE', now()->month)
-            //             ->whereYear('payment.ENTRY_DATE', now()->year);
-            //     },
-            //     'detail.payments.details' => function ($q) {
-            //         $q->whereIn('ACC_KEYS', [
-            //             'BAYAR_POKOK',
-            //             'BAYAR_BUNGA',
-            //             'ANGSURAN_POKOK',
-            //             'ANGSURAN_BUNGA',
-            //         ]);
-            //     },
-            //     ])
-            //     ->where('LKP_NUMBER', $id)
-            //     ->first();
-
             $data = M_Lkp::with([
                 'detail.deploy',
-
-                'detail.surveyLogs' => function ($query) use ($id) {
-                    $query->where('LKP_NUMBER', $id);
+                'detail.surveyLogs' => function ($q) use ($id) {
+                    $q->where('LKP_NUMBER', $id);
                 },
-
                 'user:username,fullname',
-
-                'detail.payments' => function ($query) {
-                    $query->whereMonth('ENTRY_DATE', now()->month)
-                        ->whereYear('ENTRY_DATE', now()->year);
-                }
-            ])
-            ->withSum([
-                'detail.payments.details as bayar_total' => function ($query) {
-                    $query->whereIn('ACC_KEYS', [
+                'detail.payments' => function ($q) {
+                    $q->whereMonth('payment.ENTRY_DATE', now()->month)
+                        ->whereYear('payment.ENTRY_DATE', now()->year);
+                },
+                'detail.payments.details' => function ($q) {
+                    $q->whereIn('ACC_KEYS', [
                         'BAYAR_POKOK',
                         'BAYAR_BUNGA',
                         'ANGSURAN_POKOK',
                         'ANGSURAN_BUNGA',
                     ]);
-                }
-            ], 'ORIGINAL_AMOUNT')
-            ->where('LKP_NUMBER', $id)
-            ->first();
+                },
+                ])
+                ->where('LKP_NUMBER', $id)
+                ->first();
 
             $dto = new Rs_LkpDetailList($data);
 
