@@ -107,17 +107,72 @@ class C_Tagihan extends Controller
             $branchId = $user->branch_id;
             $position = strtoupper($user->position);
 
-            $query = M_ColllectorList::query();
+            // $query = M_ColllectorList::query();
 
+            // if (in_array($position, ['KAPOS', 'ADMIN'])) {
+            //     $query->where('BRANCH_ID', $branchId);
+            // }
+
+            // if (in_array($position, ['MCF', 'KOLEKTOR'])) {
+            //     $query->where('USER_ID', $userId);
+            // }
+
+            $query = DB::table('cl_deploy as a')
+                ->select([
+                    'a.ID',
+                    'a.NO_SURAT',
+                    'a.CUST_CODE',
+                    'a.CREDIT_ID',
+                    'a.TENOR',
+                    'f.NAME',
+                    'lkp.LKP_NUMBER',
+                    'a.LOAN_NUMBER',
+                    'a.TGL_JTH_TEMPO',
+                    'a.USER_ID',
+                    'a.BRANCH_ID',
+                    'a.ANGSURAN_KE',
+                    'a.ANGSURAN',
+                    'f.INS_ADDRESS',
+                    'cls.DESCRIPTION',
+                    DB::raw('cls.CREATED_AT as SURVEY_DATE'),
+                    DB::raw('cls.CONFIRM_DATE as CONFIRM_DATE'),
+                    'cls.PATH',
+                    'br.NAME as nama_cabang',
+                    'us.fullname as pic',
+                    'a.CYCLE_AWAL',
+                    'a.CYCLE_AKHIR',
+                    'd.ENTRY_DATE',
+                    'd.total_bayar'
+                ])
+
+                ->leftJoin('customer as f', 'f.CUST_CODE', '=', 'a.CUST_CODE')
+                ->leftJoin('branch as br', 'br.ID', '=', 'a.BRANCH_ID')
+                ->leftJoin('users as us', 'us.USERNAME', '=', 'a.USER_ID')
+                ->leftJoin('vw_lkp as lkp', 'lkp.NO_SURAT', '=', 'a.NO_SURAT')
+
+                ->leftJoin('vw_survey_logs as cls', function ($join) {
+                    $join->on('cls.REFERENCE_ID', '=', 'a.NO_SURAT')
+                        ->on('cls.LKP_NUMBER', '=', 'lkp.LKP_NUMBER');
+                })
+
+                ->leftJoin('vw_payment as d', 'd.LOAN_NUM', '=', 'a.LOAN_NUMBER')
+
+                ->whereRaw("a.CREATED_AT >= DATE_FORMAT(CURDATE(), '%Y-%m-01')")
+                ->whereRaw("a.CREATED_AT < DATE_FORMAT(CURDATE() + INTERVAL 1 MONTH, '%Y-%m-01')");
+
+
+            // filter posisi
             if (in_array($position, ['KAPOS', 'ADMIN'])) {
-                $query->where('BRANCH_ID', $branchId);
+                $query->where('a.BRANCH_ID', $branchId);
             }
 
             if (in_array($position, ['MCF', 'KOLEKTOR'])) {
-                $query->where('USER_ID', $userId);
+                $query->where('a.USER_ID', $userId);
             }
 
-            return response()->json(Rs_CollectorList::collection($query->get()), 200);
+            $result = $query->orderByRaw('(lkp.LKP_NUMBER IS NULL) ASC')->get();
+
+            return response()->json(Rs_CollectorList::collection($result), 200);
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
         }
