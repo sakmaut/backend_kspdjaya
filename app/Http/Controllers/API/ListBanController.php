@@ -540,28 +540,16 @@ class ListBanController extends Controller
                     $cycle = $result->CYCLE_AWAL;
                     $od = $result->OD ?? 0;
 
-                    // if (in_array($cycle, ['C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8'])) {
-                    //     $ub = 'RO3';
-                    // } elseif (in_array($cycle, ['CN', 'CM', 'C0','CL']) && $od <= 15) {
-                    //     $ub = 'RO1';
-                    // } elseif (in_array($cycle, ['CN', 'CM', 'C0']) && $od > 15) {
-                    //     $ub = 'RO2';
-                    // } elseif ($cycle == 'C1') {
-                    //     $ub = 'RO2';
-                    // } elseif ($cycle == 'CL' && $od > 15) {
-                    //     $ub = 'RO2 - RO3';
-                    // } else {
-                    //     $ub = '';
-                    // }
-
                     if (in_array($cycle, ['C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8'])) {
                         $ub = 'RO3';
+                    } elseif (in_array($cycle, ['CN', 'CM', 'C0','CL']) && $od <= 15) {
+                        $ub = 'RO1';
+                    } elseif (in_array($cycle, ['CN', 'CM', 'C0']) && $od > 15) {
+                        $ub = 'RO2';
                     } elseif ($cycle == 'C1') {
                         $ub = 'RO2';
-                    } elseif ($cycle == 'CL') {
-                        $ub = ($od > 15) ? 'RO2 - RO3' : 'RO1';
-                    } elseif (in_array($cycle, ['CN', 'CM', 'C0'])) {
-                        $ub = ($od > 15) ? 'RO2' : 'RO1';
+                    } elseif ($cycle == 'CL' && $od > 15) {
+                        $ub = 'RO2 - RO3';
                     } else {
                         $ub = '';
                     }
