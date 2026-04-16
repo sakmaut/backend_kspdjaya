@@ -777,6 +777,28 @@ class C_Tagihan extends Controller
     public function cl_lkp_detail(Request $request, $id)
     {
         try {
+            // $data = M_Lkp::with([
+            //     'detail.deploy',
+            //     'detail.surveyLogs' => function ($q) use ($id) {
+            //         $q->where('LKP_NUMBER', $id);
+            //     },
+            //     'user:username,fullname',
+            //     'detail.payments' => function ($q) {
+            //         $q->whereMonth('payment.ENTRY_DATE', now()->month)
+            //             ->whereYear('payment.ENTRY_DATE', now()->year);
+            //     },
+            //     'detail.payments.details' => function ($q) {
+            //         $q->whereIn('ACC_KEYS', [
+            //             'BAYAR_POKOK',
+            //             'BAYAR_BUNGA',
+            //             'ANGSURAN_POKOK',
+            //             'ANGSURAN_BUNGA',
+            //         ]);
+            //     },
+            //     ])
+            //     ->where('LKP_NUMBER', $id)
+            //     ->first();
+
             $data = M_Lkp::with([
                 'detail.deploy',
                 'detail.surveyLogs' => function ($q) use ($id) {
@@ -795,9 +817,31 @@ class C_Tagihan extends Controller
                         'ANGSURAN_BUNGA',
                     ]);
                 },
-                ])
+            ])
                 ->where('LKP_NUMBER', $id)
                 ->first();
+
+            // Merge semua payments & details menjadi satu
+            if ($data && $data->detail) {
+                $lkpDetail = $data->detail; // ganti nama variabel
+
+                $mergedPayment = [
+                    'BAYAR_POKOK'    => 0,
+                    'BAYAR_BUNGA'    => 0,
+                    'ANGSURAN_POKOK' => 0,
+                    'ANGSURAN_BUNGA' => 0,
+                ];
+
+                foreach ($lkpDetail->payments as $payment) {
+                    foreach ($payment->details as $paymentDetail) { // ganti nama variabel
+                        if (array_key_exists($paymentDetail->ACC_KEYS, $mergedPayment)) {
+                            $mergedPayment[$paymentDetail->ACC_KEYS] += $paymentDetail->AMOUNT;
+                        }
+                    }
+                }
+
+                $data->merged_payment = $mergedPayment;
+            }
 
             $dto = new Rs_LkpDetailList($data);
 
