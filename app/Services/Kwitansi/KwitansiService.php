@@ -94,7 +94,7 @@ class KwitansiService
             "LOAN_NUMBER" => $request->LOAN_NUMBER,
             "TGL_TRANSAKSI" => Carbon::now('Asia/Jakarta'),
             "CUST_CODE" => $customer->CUST_CODE,
-            "BRANCH_CODE" => $request->cabang ?? $request->user()->branch_id,
+            "BRANCH_CODE" => $request->input('CABANG', $request->input('cabang')) ?? $request->user()->branch_id,
             "NAMA" => $customer->customer['NAME'],
             "ALAMAT" => $customer->customer['ADDRESS'],
             "RT" => $customer->customer['RT'],
