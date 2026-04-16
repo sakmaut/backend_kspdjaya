@@ -810,7 +810,7 @@ class C_Tagihan extends Controller
                         ->whereYear('payment.ENTRY_DATE', now()->year);
                 },
                 'detail.payments.details' => function ($q) {
-                    $q->selectRaw('PAYMENT_ID, ACC_KEYS, SUM(AMOUNT) as TOTAL')
+                    $q->selectRaw('PAYMENT_ID, ACC_KEYS, SUM(ORIGINAL_AMOUNT) as TOTAL')
                         ->whereIn('ACC_KEYS', [
                             'BAYAR_POKOK',
                             'BAYAR_BUNGA',
