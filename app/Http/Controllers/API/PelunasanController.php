@@ -196,6 +196,19 @@ class PelunasanController extends Controller
             if (!M_Kwitansi::where('NO_TRANSAKSI', $no_inv)->exists()) {
                 $this->saveKwitansi($request, $detail_customer, $no_inv, $status);
                 $this->proccessKwitansiDetail($request, $loan_number, $no_inv);
+
+                $checkDiscountPokok = (float) ($request->DISKON_POKOK ?? 0);
+
+                if ($checkDiscountPokok > 0) {
+                    $arrayData = [
+                        'LOAN_NUMBER' => $loan_number ?? null,
+                        'KTP' => $detail_customer->ID_NUMBER ?? null,
+                        'KK' => $detail_customer->KK_NUMBER ?? null,
+                        'NOTE' => "Pelunasan Dengan Diskon Pokok No Transaksi: " . $no_inv ?? null
+                    ];
+
+                    M_CrBlacklist::create($arrayData);
+                }
             }
 
             $creditSchedule = M_CreditSchedule::where('LOAN_NUMBER', $loan_number)

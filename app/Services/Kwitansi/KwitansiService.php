@@ -3,6 +3,7 @@
 namespace App\Services\Kwitansi;
 
 use App\Http\Controllers\Enum\UserPosition\UserPositionEnum;
+use App\Models\M_CrBlacklist;
 use App\Repository\Payment\KwitansiRepository;
 use App\Services\Credit\CreditService;
 use Carbon\Carbon;
@@ -85,6 +86,19 @@ class KwitansiService
             && !checkPosition($request)
             && $flagDiskon === false
         ) ? "PAID" : "PENDING";
+
+        $checkDiscountPokok = (float) ($request->DISKON_POKOK ?? 0);
+
+        if ($checkDiscountPokok > 0) {
+            $arrayData = [
+                'LOAN_NUMBER' => $getLoanNumber ?? null,
+                'KTP' => $customer->customer['ID_NUMBER'] ?? null,
+                'KK' => $customer->customer['KK_NUMBER'] ?? null,
+                'NOTE' => "Pembayaran Sebagian Dengan Diskon Pokok No Transaksi: " . $no_inv ?? null
+            ];
+
+            M_CrBlacklist::create($arrayData);
+        }
 
         $data = [
             "PAYMENT_TYPE" => $tipe,
