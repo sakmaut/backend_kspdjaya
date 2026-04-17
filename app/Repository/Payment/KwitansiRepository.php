@@ -47,9 +47,15 @@ class KwitansiRepository
         return $query->get();
     }
 
-    public function getFilteredForBranch($branchCode, $filters = [], $date = null)
+    public function getFilteredForBranch($request,$branchCode, $filters = [], $date = null)
     {
+        $user = $request->user();
+
         $query = $this->getAllOrdered()->where('BRANCH_CODE', $branchCode);
+
+        if ($user->position === 'KOLEKTOR') {
+            $query->where('CREATED_BY', $user->id);
+        }
 
         foreach ($filters as [$column, $operator, $value]) {
             if ($value && $value !== '%') {

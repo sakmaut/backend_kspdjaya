@@ -67,7 +67,7 @@ class KwitansiService
             $dateFilter = Carbon::today()->toDateString();
         }
 
-        return $this->kwitansiRepository->getFilteredForBranch($user->branch_id, $filters, $dateFilter);
+        return $this->kwitansiRepository->getFilteredForBranch($request,$user->branch_id, $filters, $dateFilter);
     }
 
     public function create($request, $tipe = 'angsuran')
