@@ -49,7 +49,10 @@ class TicketingRepository extends TicketingEntity
             });
         }
 
-        return $query->orderByDesc('created_at')->get();
+        return $query
+            ->orderByRaw("FIELD(status, 'Pending', 'Open', 'Closed')")
+            ->orderByDesc('created_at')
+            ->get();
     }
 
     public function findById($id)
