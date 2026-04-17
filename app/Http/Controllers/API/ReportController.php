@@ -1815,15 +1815,94 @@ class ReportController extends Controller
         try {
             $position = $request->user()->position;
 
-            $query = M_VwLoanPaidReports::query();
+            $query = DB::table('credit as a')
+                    ->selectRaw("
+                        CONCAT(br.CODE, '-', br.CODE_NUMBER) AS KODE,
+                        br.ID AS ID_CABANG,
+                        br.NAME AS NAMA_CABANG,
+                        a.LOAN_NUMBER AS NO_KONTRAK,
+                        a.OD AS OVERDUE,
+                        cus.NAME AS NAMA_PELANGGAN,
+                        a.CREATED_AT AS TGL_BOOKING,
+                        NULL AS UB,
+                        NULL AS PLATFORM,
+                        CONCAT(cus.INS_ADDRESS,' RT/', cus.INS_RT, ' RW/', cus.INS_RW, ' ', cus.INS_CITY, ' ', cus.INS_PROVINCE) AS ALAMAT_TAGIH,
+                        cus.INS_KECAMATAN AS KODE_POST,
+                        cus.INS_KELURAHAN AS SUB_ZIP,
+                        cus.PHONE_HOUSE AS NO_TELP,
+                        cus.PHONE_PERSONAL AS NO_HP,
+                        cus.PHONE_PERSONAL AS NO_HP2,
+                        cus.OCCUPATION AS PEKERJAAN,
+                        CONCAT(COALESCE(co.REF_PELANGGAN, ''),' ',COALESCE(co.REF_PELANGGAN_OTHER, '')) AS supplier,
+                        COALESCE(u.fullname,a.mcf_id) AS SURVEYOR,
+                        COALESCE(cs.survey_note,osn.SURVEY_NOTE) AS CATT_SURVEY,
+                        a.PCPL_ORI AS PKK_HUTANG,
+                        a.PERIOD AS JUMLAH_ANGSURAN,
+                        a.PERIOD/a.INSTALLMENT_COUNT AS JARAK_ANGSURAN,
+                        a.INSTALLMENT_COUNT as PERIOD,
+                        0 AS OUTSTANDING,
+                        0 AS OS_BUNGA,
+                        0 AS OVERDUE_AWAL,
+                        0 AS AMBC_PKK_AWAL,
+                        0 AS AMBC_BNG_AWAL,
+                        0 AS AMBC_TOTAL_AWAL,
+                        'CL' AS CYCLE_AWAL,
+                        a.STATUS_REC,
+                        '' AS STATUS_BEBAN,
+                        CASE WHEN a.CREDIT_TYPE = 'bulanan' THEN 'reguler' ELSE a.CREDIT_TYPE END AS pola_bayar,
+                        0 AS OS_PKK_AKHIR,
+                        0 AS OS_BNG_AKHIR,
+                        0 AS OVERDUE_AKHIR,
+                        a.INSTALLMENT,
+                        0 AS LAST_INST,
+                        a.CREDIT_TYPE AS tipe,
+                        0 AS F_ARR_CR_SCHEDL,
+                        0 AS curr_arr,
+                        0 AS LAST_PAY,
+                        k.kolektor AS COLLECTOR,
+                        '' AS cara_bayar,
+                        0 AS AMBC_PKK_AKHIR,
+                        0 AS AMBC_BNG_AKHIR,
+                        0 AS AMBC_TOTAL_AKHIR,
+                        0 AS AC_PKK,
+                        0 AS AC_BNG_MRG,
+                        0 AS AC_TOTAL,
+                        'CL' AS CYCLE_AKHIR,
+                        0 AS pola_bayar_akhir,
+                        cr.VEHICLE_TYPE as jenis_jaminan,
+                        cr.TYPE as COLLATERAL,
+                        cr.POLICE_NUMBER,
+                        cr.ENGINE_NUMBER,
+                        cr.CHASIS_NUMBER,
+                        cr.PRODUCTION_YEAR,
+                        a.PCPL_ORI-a.TOTAL_ADMIN as NILAI_PINJAMAN,
+                        a.TOTAL_ADMIN,
+                        a.CUST_CODE
+                    ")
+                ->leftJoin('customer as cus', 'cus.CUST_CODE', '=', 'a.CUST_CODE')
+                ->leftJoin('cr_collateral as cr', 'cr.CR_CREDIT_ID', '=', 'a.ID')
+                ->leftJoin('branch as br', 'br.ID', '=', 'a.BRANCH')
+                ->leftJoin('cr_application as ca', 'ca.ORDER_NUMBER', '=', 'a.ORDER_NUMBER')
+                ->leftJoin('cr_order as co', 'co.APPLICATION_ID', '=', 'ca.ID')
+                ->leftJoin('cr_survey as cs', 'cs.ID', '=', 'ca.CR_SURVEY_ID')
+                ->leftJoin('users as u', 'u.ID', '=', 'a.MCF_ID')
+                ->leftJoin('old_survey_note as osn', DB::raw("osn.loan_number COLLATE utf8mb4_unicode_ci"), '=', DB::raw("a.LOAN_NUMBER COLLATE utf8mb4_unicode_ci"))
+                ->leftJoin('kolektor as k', DB::raw("k.loan_number COLLATE utf8mb4_unicode_ci"), '=', DB::raw("a.LOAN_NUMBER COLLATE utf8mb4_unicode_ci"))
+                ->whereNotExists(function ($q) {
+                    $q->select(DB::raw(1))
+                        ->from('credit as c2')
+                        ->whereColumn('c2.CUST_CODE', 'a.CUST_CODE')
+                        ->where('c2.STATUS_REC', 'AC');
+                });
 
             if ($position !== 'HO') {
-                $query->where('ID_CABANG', $request->user()->branch_id);
+                $query->where('br.ID', $request->user()->branch_id);
             } else {
                 if ($request->filled('cabang')) {
-                    $query->where('ID_CABANG', $request->cabang);
+                    $query->where('br.ID', $request->cabang);
                 }
             }
+
             $results = $query->get();
 
             $build = [];
@@ -1831,13 +1910,21 @@ class ReportController extends Controller
                 $cleanDate = trim($result->LAST_PAY);
                 $cleanDate = preg_replace('/[^\d\/\-\.]/', '', $cleanDate);
 
+                $od = (int) ($result->OVERDUE ?? 0);
+
+                if ($od <= 15) {
+                    $ub = 'RO1';
+                } else {
+                    $ub = 'RO2 - RO3';
+                }
+
                 $build[] = [
                     "KODE CABANG" => $result->KODE ?? '',
                     "NAMA CABANG" => $result->NAMA_CABANG ?? '',
                     "NO KONTRAK" => is_numeric($result->NO_KONTRAK) ? (int) $result->NO_KONTRAK ?? '' : $result->NO_KONTRAK ?? '',
                     "NAMA PELANGGAN" => $result->NAMA_PELANGGAN ?? '',
                     "TGL BOOKING" => isset($result->TGL_BOOKING) && !empty($result->TGL_BOOKING) ?  Carbon::parse($result->TGL_BOOKING)->format('m/d/Y') : '',
-                    "UB" => $result->UB ?? '',
+                    "UB" => $ub ?? '',
                     "PLATFORM" => $result->PLATFORM ?? '',
                     "ALAMAT TAGIH" => $result->ALAMAT_TAGIH ?? '',
                     "KECAMATAN" => $result->KODE_POST ?? '',
@@ -1899,173 +1986,6 @@ class ReportController extends Controller
             return $this->log->logError($e, $request);
         }
     }
-
-    // public function FasilitasLunasReportExport(Request $request)
-    // {
-    //     try {
-
-    //         set_time_limit(0);
-    //         ini_set('memory_limit', '-1');
-
-    //         $fileName = 'fasilitas_lunas_report.csv';
-
-    //         $headers = [
-    //             "Content-type" => "text/csv",
-    //             "Content-Disposition" => "attachment; filename={$fileName}",
-    //             "Pragma" => "no-cache",
-    //             "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
-    //             "Expires" => "0"
-    //         ];
-
-    //         $callback = function () {
-
-    //             $file = fopen('php://output', 'w');
-
-    //             $columns = [
-    //                 "KODE CABANG",
-    //                 "NAMA CABANG",
-    //                 "NO KONTRAK",
-    //                 "NAMA PELANGGAN",
-    //                 "TGL BOOKING",
-    //                 "UB",
-    //                 "PLATFORM",
-    //                 "ALAMAT TAGIH",
-    //                 "KECAMATAN",
-    //                 "KELURAHAN",
-    //                 "NO TELP",
-    //                 "NO HP1",
-    //                 "NO HP2",
-    //                 "PEKERJAAN",
-    //                 "SUPPLIER",
-    //                 "SURVEYOR",
-    //                 "CATT SURVEY",
-    //                 "PKK HUTANG",
-    //                 "JML ANGS",
-    //                 "JRK ANGS",
-    //                 "PERIOD",
-    //                 "OUT PKK AWAL",
-    //                 "OUT BNG AWAL",
-    //                 "OVERDUE AWAL",
-    //                 "AMBC PKK AWAL",
-    //                 "AMBC BNG AWAL",
-    //                 "AMBC TOTAL AWAL",
-    //                 "CYCLE AWAL",
-    //                 "STS KONTRAK",
-    //                 "KUNJUNGAN TERAKHIR",
-    //                 "POLA BYR AWAL",
-    //                 "OUTS PKK AKHIR",
-    //                 "OUTS BNG AKHIR",
-    //                 "OVERDUE AKHIR",
-    //                 "ANGSURAN",
-    //                 "ANGS KE",
-    //                 "TIPE ANGSURAN",
-    //                 "JTH TEMPO AWAL",
-    //                 "JTH TEMPO AKHIR",
-    //                 "TGL BAYAR",
-    //                 "KOLEKTOR",
-    //                 "CARA BYR",
-    //                 "AMBC PKK_AKHIR",
-    //                 "AMBC BNG_AKHIR",
-    //                 "AMBC TOTAL_AKHIR",
-    //                 "AC PKK",
-    //                 "AC BNG MRG",
-    //                 "AC TOTAL",
-    //                 "CYCLE AKHIR",
-    //                 "POLA BYR AKHIR",
-    //                 "NAMA BRG",
-    //                 "TIPE BRG",
-    //                 "NO POL",
-    //                 "NO MESIN",
-    //                 "NO RANGKA",
-    //                 "TAHUN",
-    //                 "NILAI PINJAMAN",
-    //                 "ADMIN",
-    //                 "CUST_ID"
-    //             ];
-
-    //             fputcsv($file, $columns);
-
-    //             M_VwLoanPaidReports::chunk(5000, function ($results) use ($file) {
-
-    //                 foreach ($results as $result) {
-
-    //                     $cleanDate = trim($result->LAST_PAY);
-    //                     $cleanDate = preg_replace('/[^\d\/\-\.]/', '', $cleanDate);
-
-    //                     $row = [
-    //                         $result->KODE ?? '',
-    //                         $result->NAMA_CABANG ?? '',
-    //                         is_numeric($result->NO_KONTRAK) ? (int)$result->NO_KONTRAK : $result->NO_KONTRAK,
-    //                         $result->NAMA_PELANGGAN ?? '',
-    //                         !empty($result->TGL_BOOKING) ? Carbon::parse($result->TGL_BOOKING)->format('m/d/Y') : '',
-    //                         $result->UB ?? '',
-    //                         $result->PLATFORM ?? '',
-    //                         $result->ALAMAT_TAGIH ?? '',
-    //                         $result->KODE_POST ?? '',
-    //                         $result->SUB_ZIP ?? '',
-    //                         $result->NO_TELP ?? '',
-    //                         $result->NO_HP ?? '',
-    //                         $result->NO_HP2 ?? '',
-    //                         $result->PEKERJAAN ?? '',
-    //                         $result->supplier ?? '',
-    //                         $result->SURVEYOR ?? '',
-    //                         $result->CATT_SURVEY ?? '',
-    //                         (int)$result->PKK_HUTANG,
-    //                         $result->JUMLAH_ANGSURAN ?? '',
-    //                         (int)$result->JARAK_ANGSURAN,
-    //                         $result->PERIOD ?? '',
-    //                         (int)$result->OUTSTANDING,
-    //                         (int)$result->OS_BUNGA,
-    //                         $result->OVERDUE_AWAL ?? 0,
-    //                         (int)$result->AMBC_PKK_AWAL,
-    //                         (int)$result->AMBC_BNG_AWAL,
-    //                         (int)$result->AMBC_TOTAL_AWAL,
-    //                         $result->CYCLE_AWAL ?? '',
-    //                         $result->STATUS_REC ?? '',
-    //                         $result->STATUS_BEBAN ?? '',
-    //                         '',
-    //                         (int)$result->OS_PKK_AKHIR,
-    //                         (int)$result->OS_BNG_AKHIR,
-    //                         (int)$result->OVERDUE_AKHIR,
-    //                         (int)$result->INSTALLMENT,
-    //                         (int)$result->LAST_INST,
-    //                         $result->pola_bayar === 'bunga_menurun' ? str_replace('_', ' ', $result->pola_bayar) : $result->pola_bayar,
-    //                         ($result->F_ARR_CR_SCHEDL == '0' || $result->F_ARR_CR_SCHEDL == '' || $result->F_ARR_CR_SCHEDL == 'null') ? '' : Carbon::parse($result->F_ARR_CR_SCHEDL)->format('m/d/Y'),
-    //                         ($result->curr_arr == '0' || $result->curr_arr == '' || $result->curr_arr == 'null') ? '' : Carbon::parse($result->curr_arr)->format('m/d/Y'),
-    //                         ($result->LAST_PAY == '0' || $result->LAST_PAY == '' || $result->LAST_PAY == 'null') ? '' : Carbon::parse($cleanDate)->format('m/d/Y'),
-    //                         $result->COLLECTOR,
-    //                         $result->cara_bayar,
-    //                         (int)$result->AMBC_PKK_AKHIR,
-    //                         (int)$result->AMBC_BNG_AKHIR,
-    //                         (int)$result->AMBC_TOTAL_AKHIR,
-    //                         (int)$result->AC_PKK,
-    //                         (int)$result->AC_BNG_MRG,
-    //                         (int)$result->AC_TOTAL,
-    //                         $result->CYCLE_AKHIR,
-    //                         '',
-    //                         $result->jenis_jaminan,
-    //                         $result->COLLATERAL ?? '',
-    //                         $result->POLICE_NUMBER ?? '',
-    //                         $result->ENGINE_NUMBER ?? '',
-    //                         $result->CHASIS_NUMBER ?? '',
-    //                         (int)$result->PRODUCTION_YEAR,
-    //                         (int)$result->NILAI_PINJAMAN,
-    //                         (int)$result->TOTAL_ADMIN,
-    //                         is_numeric($result->CUST_CODE) ? (int)$result->CUST_CODE : $result->CUST_CODE
-    //                     ];
-
-    //                     fputcsv($file, $row);
-    //                 }
-    //             });
-
-    //             fclose($file);
-    //         };
-
-    //         return response()->stream($callback, 200, $headers);
-    //     } catch (\Exception $e) {
-    //         return $this->log->logError($e, $request);
-    //     }
-    // }
 
     public function FasilitasLunasReportExport(Request $request)
     {
