@@ -107,16 +107,6 @@ class C_Tagihan extends Controller
             $branchId = $user->branch_id;
             $position = strtoupper($user->position);
 
-            // $query = M_ColllectorList::query();
-
-            // if (in_array($position, ['KAPOS', 'ADMIN'])) {
-            //     $query->where('BRANCH_ID', $branchId);
-            // }
-
-            // if (in_array($position, ['MCF', 'KOLEKTOR'])) {
-            //     $query->where('USER_ID', $userId);
-            // }
-
             $query = DB::table('cl_deploy as a')
                 ->select([
                     'a.ID',
@@ -144,24 +134,18 @@ class C_Tagihan extends Controller
                     'd.ENTRY_DATE',
                     'd.total_bayar'
                 ])
-
                 ->leftJoin('customer as f', 'f.CUST_CODE', '=', 'a.CUST_CODE')
                 ->leftJoin('branch as br', 'br.ID', '=', 'a.BRANCH_ID')
                 ->leftJoin('users as us', 'us.USERNAME', '=', 'a.USER_ID')
                 ->leftJoin('vw_lkp as lkp', 'lkp.NO_SURAT', '=', 'a.NO_SURAT')
-
                 ->leftJoin('vw_survey_logs as cls', function ($join) {
                     $join->on('cls.REFERENCE_ID', '=', 'a.NO_SURAT')
                         ->on('cls.LKP_NUMBER', '=', 'lkp.LKP_NUMBER');
                 })
-
                 ->leftJoin('vw_payment as d', 'd.LOAN_NUM', '=', 'a.LOAN_NUMBER')
-
                 ->whereRaw("a.CREATED_AT >= DATE_FORMAT(CURDATE(), '%Y-%m-01')")
                 ->whereRaw("a.CREATED_AT < DATE_FORMAT(CURDATE() + INTERVAL 1 MONTH, '%Y-%m-01')");
 
-
-            // filter posisi
             if (in_array($position, ['KAPOS', 'ADMIN'])) {
                 $query->where('a.BRANCH_ID', $branchId);
             }
