@@ -51,10 +51,12 @@ class KwitansiRepository
     {
         $user = $request->user();
 
-        $query = $this->getAllOrdered()->where('BRANCH_CODE', $branchCode);
+        $query = $this->getAllOrdered();
 
         if ($user->position === 'KOLEKTOR') {
             $query->where('CREATED_BY', $user->id);
+        } else {
+            $query->where('BRANCH_CODE', $branchCode);
         }
 
         foreach ($filters as [$column, $operator, $value]) {
