@@ -495,6 +495,7 @@ class C_Tagihan extends Controller
                 ->whereIn('pd.ACC_KEYS', ['BAYAR_POKOK', 'BAYAR_BUNGA', 'ANGSURAN_POKOK', 'ANGSURAN_BUNGA'])
                 ->whereMonth('p.ENTRY_DATE', now()->month)
                 ->whereYear('p.ENTRY_DATE', now()->year)
+                ->where('p.STTS_RCRD','PAID')
                 ->selectRaw('SUM(pd.ORIGINAL_AMOUNT) AS total_bayar, p.LOAN_NUM')
                 ->groupBy('p.LOAN_NUM');
 
