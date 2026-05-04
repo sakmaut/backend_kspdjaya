@@ -621,7 +621,7 @@ class PelunasanController extends Controller
                 'DISCOUNT_PENALTY' => max(floatval($credit->DISCOUNT_PENALTY) - floatval($res['diskon_denda'] ?? 0), 0),
                 'END_DATE' => now(),
                 'STATUS' => 'A',
-                'STATUS_REC' => 'CL'
+                'STATUS_REC' => 'AC'
             ]);
         }
     }
