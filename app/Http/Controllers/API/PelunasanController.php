@@ -620,7 +620,8 @@ class PelunasanController extends Controller
                 'PAID_PENALTY' => max(floatval($credit->PAID_PENALTY) - floatval($res['bayar_denda'] ?? 0), 0),
                 'DISCOUNT_PENALTY' => max(floatval($credit->DISCOUNT_PENALTY) - floatval($res['diskon_denda'] ?? 0), 0),
                 'END_DATE' => now(),
-                'STATUS' => 'A'
+                'STATUS' => 'A',
+                'STATUS_REC' => 'CL'
             ]);
         }
     }
