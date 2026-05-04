@@ -582,6 +582,11 @@ class PaymentController extends Controller
         $cekPaymentMethod = $request->payment_method == 'cash' && strtolower($request->bayar_dengan_diskon) != 'ya';
         $sttsPayment = $cekPaymentMethod && !$this->checkPosition($request) ? "PAID" : "PENDING";
 
+        $totalBayar = $request->total_bayar ?? 0;
+        $jumlahUang = $request->jumlah_uang ?? 0;
+
+        $pembulatan = $jumlahUang - $totalBayar;
+
         $save_kwitansi = [
             "PAYMENT_TYPE" => 'angsuran',
             "PAYMENT_ID" => $request->uid,
@@ -592,18 +597,18 @@ class PaymentController extends Controller
             'BRANCH_CODE' => $request->cabang ?? $request->user()->branch_id,
             'CUST_CODE' => $getCustomer->customer['CUST_CODE'] ?? '',
             'NAMA' => $getCustomer->customer['NAME'] ?? '',
-            'ALAMAT ' => $getCustomer->customer['ADDRESS'] ?? '',
+            'ALAMAT' => $getCustomer->customer['ADDRESS'] ?? '',
             'RT' => $getCustomer->customer['RT'] ?? '',
-            'RW ' => $getCustomer->customer['RW'] ?? '',
+            'RW' => $getCustomer->customer['RW'] ?? '',
             'PROVINSI' => $getCustomer->customer['PROVINCE'] ?? '',
-            'KOTA ' => $getCustomer->customer['CITY'] ?? '',
+            'KOTA' => $getCustomer->customer['CITY'] ?? '',
             'KELURAHAN' => $getCustomer->customer['KELURAHAN'] ?? '',
-            'KECAMATAN ' => $getCustomer->customer['KECAMATAN'] ?? '',
+            'KECAMATAN' => $getCustomer->customer['KECAMATAN'] ?? '',
             "METODE_PEMBAYARAN" => $request->payment_method ?? null,
             "TOTAL_BAYAR" => $request->total_bayar ?? null,
             "DISKON" => $request->diskon_tunggakan ?? null,
             "DISKON_FLAG" => $request->bayar_dengan_diskon ?? null,
-            "PEMBULATAN" => $request->pembulatan ?? null,
+            "PEMBULATAN" => ($pembulatan ?? 0) > 0 ? $pembulatan : $request->pembulatan ?? null,
             "KEMBALIAN" => $request->kembalian ?? null,
             "JUMLAH_UANG" => $request->jumlah_uang ?? null,
             "NAMA_BANK" => $request->nama_bank ?? null,
