@@ -426,7 +426,10 @@ class S_PokokSebagian
             $paidNow = min($sisaPaymentBunga, $totalInterest);
             $sisaPaymentBunga -= $paidNow;
 
-            $discount = $totalInterest - $paidNow;
+            $discount = 0;
+            if ($paymentBunga > 0) {
+                $discount = max(0, $totalInterest - $paidNow);
+            }
 
             $data[] = [
                 'ID' => $res->ID,
@@ -470,21 +473,31 @@ class S_PokokSebagian
             }
         }
 
-        if ($paymentPokok > 0 && $currentIndex !== null) {
+        if ($paymentPokok > 0 && $maxIndex !== null) {
 
-            // tambah principal bulan berjalan
-            $data[$currentIndex]['PRINCIPAL'] += $paymentPokok;
+            // bayar ke schedule terakhir (yang ada pokok)
+            $data[$maxIndex]['BAYAR_POKOK'] = $paymentPokok;
 
-            // set bayar pokok
-            $data[$currentIndex]['BAYAR_POKOK'] = $paymentPokok;
-
-            // kurangi principal schedule terakhir
-            if ($maxIndex !== null) {
-
-                $data[$maxIndex]['PRINCIPAL'] =
-                    max(0, $data[$maxIndex]['PRINCIPAL'] - $paymentPokok);
-            }
+            // optional: kalau mau kurangi principal
+            $data[$maxIndex]['PRINCIPAL'] =
+                max(0, $data[$maxIndex]['PRINCIPAL'] - $paymentPokok);
         }
+
+        // if ($paymentPokok > 0 && $currentIndex !== null) {
+
+        //     // tambah principal bulan berjalan
+        //     $data[$currentIndex]['PRINCIPAL'] += $paymentPokok;
+
+        //     // set bayar pokok
+        //     $data[$currentIndex]['BAYAR_POKOK'] = $paymentPokok;
+
+        //     // kurangi principal schedule terakhir
+        //     if ($maxIndex !== null) {
+
+        //         $data[$maxIndex]['PRINCIPAL'] =
+        //             max(0, $data[$maxIndex]['PRINCIPAL'] - $paymentPokok);
+        //     }
+        // }
 
         if ($discountPokok > 0 && $maxIndex !== null) {
 
@@ -963,7 +976,7 @@ class S_PokokSebagian
 
         $totalInterest       = $beforePaidInterest + $paidInterest;
         $totalPrincipal      = $beforePaidPrincipal + $paidPrincipal;
-        $totalPaid           = $paidPrincipal + $paidInterest + $paidDiskonPrincipal + $paidDiskonInterest;
+        $totalPaid           = $totalPrincipal + $totalInterest + $paidDiskonPrincipal + $paidDiskonInterest;
 
         $currentDate = date('Y-m-d');
         $isPastDue   = strtotime($schedule->PAYMENT_DATE) < strtotime($currentDate);
@@ -1016,12 +1029,17 @@ class S_PokokSebagian
             ]);
         }
 
-        $insufficient = ($totalPrincipal + $totalInterest + $paidDiskonPrincipal + $paidDiskonInterest) - $installmentValue;
+        $insufficient = max(0, $installmentValue - (
+            $totalPrincipal +
+            $totalInterest +
+            $paidDiskonPrincipal +
+            $paidDiskonInterest
+        ));
 
         if ($totalPaid > 0 || $insufficient == 0) {
             $schedule->update([
                 'INSUFFICIENT_PAYMENT' => $insufficient,
-                'PAYMENT_VALUE'        => $paymentValue + $totalPaid,
+                'PAYMENT_VALUE' => $totalPaid,
                 'PAID_FLAG'            => $insufficient == 0 ? "PAID" : "",
             ]);
 
@@ -1066,30 +1084,6 @@ class S_PokokSebagian
             'DISCOUNT_INTEREST' => floatval($request->DISKON_POKOK),
         ]);
     }
-
-    // private function updateCreditStatus($request, $credit, $loanNumber)
-    // {
-    //     $allPaid = M_CreditSchedule::where('LOAN_NUMBER', $loanNumber)
-    //         ->where(function ($query) {
-    //             $query->where('PAID_FLAG', '!=', 'PAID')
-    //                 ->orWhereNull('PAID_FLAG');
-    //         })
-    //         ->count();
-
-    //     $totalInterest = M_CreditSchedule::where('LOAN_NUMBER', $loanNumber)->sum('INTEREST');
-
-    //     $totalOriginal = $credit->PCPL_ORI + $credit->INTRST_ORI;
-    //     $totalPaid = $credit->PAID_PRINCIPAL + $credit->PAID_INTEREST;
-
-    //     $credit->update([
-    //         'INTRST_ORI' => $totalInterest ?? 0,
-    //         'STATUS_REC' => ($totalOriginal == $totalPaid && $credit->arrears->isEmpty() || $allPaid == 0) ? 'PT' : $credit->STATUS_REC,
-    //         'STATUS'     => ($totalOriginal == $totalPaid && $credit->arrears->isEmpty() || $allPaid == 0) ? 'D'  : $credit->STATUS,
-    //         'PAID_PRINCIPAL' => $credit->PAID_PRINCIPAL + $request->BAYAR_POKOK,
-    //         'PAID_INTEREST' => $credit->PAID_INTEREST + $request->BAYAR_BUNGA,
-    //         'PAID_PENALTY' => $credit->PAID_PENALTY + $request->BAYAR_DENDA,
-    //     ]);
-    // }
 
     public function addPayment($request, $kwitansi, $data)
     {
