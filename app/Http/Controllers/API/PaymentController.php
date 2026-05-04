@@ -608,7 +608,7 @@ class PaymentController extends Controller
             "TOTAL_BAYAR" => $request->total_bayar ?? null,
             "DISKON" => $request->diskon_tunggakan ?? null,
             "DISKON_FLAG" => $request->bayar_dengan_diskon ?? null,
-            "PEMBULATAN" => ($pembulatan ?? 0) > 0 ? $pembulatan : $request->pembulatan ?? null,
+            "PEMBULATAN" =>  $request->pembulatan ?? null,
             "KEMBALIAN" => $request->kembalian ?? null,
             "JUMLAH_UANG" => $request->jumlah_uang ?? null,
             "NAMA_BANK" => $request->nama_bank ?? null,
