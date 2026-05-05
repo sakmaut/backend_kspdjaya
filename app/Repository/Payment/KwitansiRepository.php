@@ -97,9 +97,11 @@ class KwitansiRepository
             if (!empty($cabang) && $cabang !== 'SEMUA CABANG') {
                 $query->where('BRANCH_CODE', $cabang);
             }
-        } elseif ($user->position === 'KOLEKTOR') {
-            $query->where('CREATED_BY', $user->id);
-        } else {
+        } 
+        // elseif ($user->position === 'KOLEKTOR') {
+        //     $query->where('CREATED_BY', $user->id);
+        // } 
+        else {
             $query->where('BRANCH_CODE', $user->branch_id);
         }
 
