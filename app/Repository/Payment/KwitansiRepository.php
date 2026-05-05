@@ -78,7 +78,7 @@ class KwitansiRepository
             });
         });
 
-        return $query;
+        return $query->get();
     }
 
     public function getPendingForHO($request)
