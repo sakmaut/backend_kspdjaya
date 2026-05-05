@@ -26,10 +26,17 @@ class KwitansiRepository
 
     public function getPendingForHO($request)
     {
-        $cabang = $request->query('cabang');
+        $cabang     = $request->query('cabang');
+        $dari       = $request->query('dari');
+        $sampai     = $request->query('sampai');
+        $notrx      = $request->query('notrx');
+        $nama       = $request->query('nama');
+        $noKontrak  = $request->query('no_kontrak');
+        $tipe       = $request->query('tipe');
+        $pembayaran = $request->query('pembayaran');
 
         $query = $this->getAllOrdered()
-            // ->where('STTS_PAYMENT', 'PENDING')
+            ->where('STTS_PAYMENT', 'PENDING')
             ->where(function ($q) {
                 $q->where(function ($sub) {
                     $sub->where('METODE_PEMBAYARAN', '!=', 'cash')
@@ -40,6 +47,41 @@ class KwitansiRepository
                 });
             });
 
+        // ✅ Filter tanggal
+        if (!empty($dari)) {
+            $query->whereDate('CREATED_AT', '>=', $dari);
+        }
+
+        if (!empty($sampai)) {
+            $query->whereDate('CREATED_AT', '<=', $sampai);
+        }
+
+        // ✅ Filter No Transaksi
+        if (!empty($notrx)) {
+            $query->where('NO_TRX', 'like', "%$notrx%");
+        }
+
+        // ✅ Filter Nama
+        if (!empty($nama)) {
+            $query->where('NAMA', 'like', "%$nama%");
+        }
+
+        // ✅ Filter No Kontrak
+        if (!empty($noKontrak)) {
+            $query->where('NO_KONTRAK', 'like', "%$noKontrak%");
+        }
+
+        // ✅ Filter Tipe (PAYMENT_TYPE)
+        if (!empty($tipe)) {
+            $query->where('PAYMENT_TYPE', $tipe);
+        }
+
+        // ✅ Filter Metode Pembayaran
+        if (!empty($pembayaran)) {
+            $query->where('METODE_PEMBAYARAN', $pembayaran);
+        }
+
+        // ✅ Filter Cabang
         if (!empty($cabang) && $cabang !== 'SEMUA CABANG') {
             $query->where('BRANCH_CODE', $cabang);
         }
