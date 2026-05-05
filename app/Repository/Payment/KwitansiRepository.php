@@ -29,7 +29,7 @@ class KwitansiRepository
         $cabang = $request->query('cabang');
 
         $query = $this->getAllOrdered()
-            ->where('STTS_PAYMENT', 'PENDING')
+            // ->where('STTS_PAYMENT', 'PENDING')
             ->where(function ($q) {
                 $q->where(function ($sub) {
                     $sub->where('METODE_PEMBAYARAN', '!=', 'cash')
