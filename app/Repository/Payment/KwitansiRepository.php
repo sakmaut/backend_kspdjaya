@@ -24,18 +24,9 @@ class KwitansiRepository
         ])->orderByRaw("CAST(SUBSTRING_INDEX(NO_TRANSAKSI, '-', -1) AS UNSIGNED) DESC");
     }
 
-    public function getPendingForHO($request)
+    public function basePendingHO()
     {
-        $cabang     = $request->query('cabang');
-        $dari       = $request->query('dari');
-        $sampai     = $request->query('sampai');
-        $notrx      = $request->query('notrx');
-        $nama       = $request->query('nama');
-        $noKontrak  = $request->query('no_kontrak');
-        $tipe       = $request->query('tipe');
-        $pembayaran = $request->query('pembayaran');
-
-        $query = $this->getAllOrdered()
+        return $this->getAllOrdered()
             ->where('STTS_PAYMENT', 'PENDING')
             ->where(function ($q) {
                 $q->where(function ($sub) {
@@ -46,47 +37,54 @@ class KwitansiRepository
                         ->whereIn('PAYMENT_TYPE', ['pelunasan', 'pokok_sebagian']);
                 });
             });
+    }
 
-        // ✅ Filter tanggal
-        if (!empty($dari)) {
-            $query->whereDate('CREATED_AT', '>=', $dari);
-        }
+    public function applyFilterPendingHO($query, $request)
+    {
+        $cabang     = $request->query('cabang');
+        $dari       = $request->query('dari');
+        $sampai     = $request->query('sampai');
+        $notrx      = $request->query('notrx');
+        $nama       = $request->query('nama');
+        $noKontrak  = $request->query('no_kontrak');
+        $tipe       = $request->query('tipe');
+        $pembayaran = $request->query('pembayaran');
 
-        if (!empty($sampai)) {
-            $query->whereDate('CREATED_AT', '<=', $sampai);
-        }
+        // ✅ tanggal
+        $query->when($dari, fn($q) => $q->whereDate('created_at', '>=', $dari));
+        $query->when($sampai, fn($q) => $q->whereDate('created_at', '<=', $sampai));
 
-        // ✅ Filter No Transaksi
-        if (!empty($notrx)) {
-            $query->where('NO_TRX', 'like', "%$notrx%");
-        }
+        // ✅ no transaksi (FIX: pakai NO_TRANSAKSI)
+        $query->when($notrx, fn($q) => $q->where('NO_TRANSAKSI', 'like', "%$notrx%"));
 
-        // ✅ Filter Nama
-        if (!empty($nama)) {
-            $query->where('NAMA', 'like', "%$nama%");
-        }
+        // ✅ no kontrak
+        $query->when($noKontrak, fn($q) => $q->where('NO_KONTRAK', 'like', "%$noKontrak%"));
 
-        // ✅ Filter No Kontrak
-        if (!empty($noKontrak)) {
-            $query->where('NO_KONTRAK', 'like', "%$noKontrak%");
-        }
+        // ✅ tipe
+        $query->when($tipe, fn($q) => $q->where('PAYMENT_TYPE', $tipe));
 
-        // ✅ Filter Tipe (PAYMENT_TYPE)
-        if (!empty($tipe)) {
-            $query->where('PAYMENT_TYPE', $tipe);
-        }
+        // ✅ metode pembayaran
+        $query->when($pembayaran, fn($q) => $q->where('METODE_PEMBAYARAN', $pembayaran));
 
-        // ✅ Filter Metode Pembayaran
-        if (!empty($pembayaran)) {
-            $query->where('METODE_PEMBAYARAN', $pembayaran);
-        }
+        // ✅ cabang
+        $query->when($cabang && $cabang !== 'SEMUA CABANG', fn($q) => 
+            $q->where('BRANCH_CODE', $cabang)
+        );
 
-        // ✅ Filter Cabang
-        if (!empty($cabang) && $cabang !== 'SEMUA CABANG') {
-            $query->where('BRANCH_CODE', $cabang);
-        }
+        // ✅ nama (dari relasi users!)
+        $query->when($nama, function ($q) use ($nama) {
+            $q->whereHas('users', function ($sub) use ($nama) {
+                $sub->where('fullname', 'like', "%$nama%");
+            });
+        });
 
-        return $query->get();
+        return $query;
+    }
+
+    public function getPendingForHO($request)
+    {
+        $query = $this->basePendingHO();
+        return $this->applyFilterPendingHO($query, $request);
     }
 
     public function getFilteredForBranch($request,$branchCode, $filters = [], $date = null)
