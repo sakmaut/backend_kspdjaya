@@ -29,13 +29,50 @@ class KwitansiService
         $this->uuid = Uuid::uuid7()->toString();
     }
 
+    // public function getKwitansiPayment($request)
+    // {
+    //     $user = $request->user();
+
+    //     if ($user->position === 'HO') {
+    //         return $this->kwitansiRepository->getPendingForHO($request);
+    //     }
+
+    //     $tipe = $request->query('tipe');
+
+    //     if ($tipe === 'pelunasan') {
+    //         $paymentType = 'pelunasan';
+    //     } elseif ($tipe === 'pelunasan_pokok_sebagian') {
+    //         $paymentType = 'pokok_sebagian';
+    //     } else {
+    //         $paymentType = 'angsuran';
+    //     }
+
+    //     $filters = [
+    //         ['PAYMENT_TYPE', '=', $paymentType],
+    //         ['NO_TRANSAKSI', '=', $request->query('notrx')],
+    //         ['NAMA', 'like', '%' . $request->query('nama') . '%'],
+    //         ['LOAN_NUMBER', '=', $request->query('no_kontrak')],
+    //     ];
+
+    //     $dari = $request->query('dari');
+    //     $dateFilter = null;
+
+    //     if ($dari && $dari !== 'null') {
+    //         $dateFilter = Carbon::parse($dari)->toDateString();
+    //     } elseif (
+    //         blank($request->query('notrx')) &&
+    //         blank($request->query('nama')) &&
+    //         blank($request->query('no_kontrak'))
+    //     ) {
+    //         $dateFilter = Carbon::today()->toDateString();
+    //     }
+
+    //     return $this->kwitansiRepository->getFilteredForBranch($request,$user->branch_id, $filters, $dateFilter);
+    // }
+
     public function getKwitansiPayment($request)
     {
         $user = $request->user();
-
-        if ($user->position === 'HO') {
-            return $this->kwitansiRepository->getPendingForHO($request);
-        }
 
         $tipe = $request->query('tipe');
 
@@ -49,10 +86,12 @@ class KwitansiService
 
         $filters = [
             ['PAYMENT_TYPE', '=', $paymentType],
-            ['NO_TRANSAKSI', '=', $request->query('notrx')],
-            ['NAMA', 'like', '%' . $request->query('nama') . '%'],
-            ['LOAN_NUMBER', '=', $request->query('no_kontrak')],
+            ['NO_TRANSAKSI', 'like', '%' . $request->query('notrx') . '%'],
+            ['LOAN_NUMBER', 'like', '%' . $request->query('no_kontrak') . '%'],
         ];
+
+        $nama = $request->query('nama');
+        $cabang = $request->query('cabang');
 
         $dari = $request->query('dari');
         $dateFilter = null;
@@ -67,7 +106,14 @@ class KwitansiService
             $dateFilter = Carbon::today()->toDateString();
         }
 
-        return $this->kwitansiRepository->getFilteredForBranch($request,$user->branch_id, $filters, $dateFilter);
+        return $this->kwitansiRepository->getFilteredForBranch(
+            $request,
+            $user,
+            $filters,
+            $dateFilter,
+            $nama,
+            $cabang
+        );
     }
 
     public function create($request, $tipe = 'angsuran')

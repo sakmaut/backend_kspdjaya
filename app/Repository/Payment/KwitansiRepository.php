@@ -87,30 +87,68 @@ class KwitansiRepository
         return $this->applyFilterPendingHO($query, $request);
     }
 
-    public function getFilteredForBranch($request,$branchCode, $filters = [], $date = null)
+    public function getFilteredForBranch($request, $user, $filters = [], $date = null, $nama = null, $cabang = null)
     {
-        $user = $request->user();
-
         $query = $this->getAllOrdered();
 
-        if ($user->position === 'KOLEKTOR') {
+        // ✅ ROLE HANDLING
+        if ($user->position === 'HO') {
+            // HO bisa semua cabang
+            if (!empty($cabang) && $cabang !== 'SEMUA CABANG') {
+                $query->where('BRANCH_CODE', $cabang);
+            }
+        } elseif ($user->position === 'KOLEKTOR') {
             $query->where('CREATED_BY', $user->id);
         } else {
-            $query->where('BRANCH_CODE', $branchCode);
+            $query->where('BRANCH_CODE', $user->branch_id);
         }
 
+        // ✅ FILTER UMUM
         foreach ($filters as [$column, $operator, $value]) {
-            if ($value && $value !== '%') {
+            if (!empty($value) && $value !== '%') {
                 $query->where($column, $operator, $value);
             }
         }
 
+        // ✅ FILTER NAMA (relasi users)
+        if (!empty($nama)) {
+            $query->whereHas('users', function ($q) use ($nama) {
+                $q->where('fullname', 'like', "%$nama%");
+            });
+        }
+
+        // ✅ FILTER TANGGAL
         if ($date) {
             $query->whereDate('CREATED_AT', $date);
         }
 
         return $query->get();
     }
+
+    // public function getFilteredForBranch($request,$branchCode, $filters = [], $date = null)
+    // {
+    //     $user = $request->user();
+
+    //     $query = $this->getAllOrdered();
+
+    //     if ($user->position === 'KOLEKTOR') {
+    //         $query->where('CREATED_BY', $user->id);
+    //     } else {
+    //         $query->where('BRANCH_CODE', $branchCode);
+    //     }
+
+    //     foreach ($filters as [$column, $operator, $value]) {
+    //         if ($value && $value !== '%') {
+    //             $query->where($column, $operator, $value);
+    //         }
+    //     }
+
+    //     if ($date) {
+    //         $query->whereDate('CREATED_AT', $date);
+    //     }
+
+    //     return $query->get();
+    // }
 
     public function create($no_inv, $data = [])
     {
