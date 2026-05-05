@@ -541,6 +541,8 @@ class C_Tagihan extends Controller
                     }
                 )
                 ->where('v.STATUS', 'OPEN')
+                ->whereMonth('v.Tanggal', now()->month)
+                ->whereYear('v.Tanggal', now()->year)
                 ->select(
                     'v.NoLkp as LKP_NUMBER',
                     'ld.LOAN_NUMBER',
