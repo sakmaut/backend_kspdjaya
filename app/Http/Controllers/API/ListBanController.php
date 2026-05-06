@@ -267,7 +267,7 @@ class ListBanController extends Controller
                                                 b.fullname
                                             FROM cl_deploy a
                                             LEFT JOIN users b ON b.username = a.USER_ID
-                                            WHERE DATE_FORMAT(a.CREATED_AT, '%m%Y') = '$dateFrom') k on cast(k.loan_number as char) = cast(cl.LOAN_NUMBER as char)
+                                            WHERE DATE_FORMAT(a.CREATED_AT, '%m%Y') = '$dateFrom') k on cast(k.LOAN_NUMBER as char) = cast(cl.LOAN_NUMBER as char)
                                 left join temp_lis_03 col on cast(col.LOAN_NUMBER as char) = cast(cl.LOAN_NUMBER as char)
                                 left join temp_lis_01 st
                                     on cast(st.loan_number as char) = cast(cl.LOAN_NUMBER as char)
@@ -396,7 +396,7 @@ class ListBanController extends Controller
                                                 b.fullname
                                             FROM cl_deploy a
                                             LEFT JOIN users b ON b.username = a.USER_ID
-                                            WHERE DATE_FORMAT(a.CREATED_AT, '%m%Y') = '$dateFrom') k on cast(k.loan_number as char) = cast(cl.LOAN_NUMBER as char)
+                                            WHERE DATE_FORMAT(a.CREATED_AT, '%m%Y') = '$dateFrom') k on cast(k.LOAN_NUMBER as char) = cast(cl.LOAN_NUMBER as char)
                                 left join temp_lis_03C col on cast(col.CR_CREDIT_ID as char) = cast(cl.ID as char)
                                 left join temp_lis_01C st
                                     on cast(st.loan_number as char) = cast(cl.LOAN_NUMBER as char)
