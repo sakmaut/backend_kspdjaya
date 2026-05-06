@@ -44,7 +44,9 @@ class KwitansiRepository
             'branch:ID,NAME',
             'users:id,fullname,username,position',
             'attachment:payment_id,file_attach',
-            'print_log:ID,COUNT'
+            'print_log:ID,COUNT',
+            'kwitansi_structur_detail',
+            'kwitansi_pelunasan_detail'
         ])->orderByRaw("CAST(SUBSTRING_INDEX(NO_TRANSAKSI, '-', -1) AS UNSIGNED) DESC");
     }
 

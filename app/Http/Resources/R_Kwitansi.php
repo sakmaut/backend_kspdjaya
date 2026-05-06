@@ -170,108 +170,240 @@ class R_Kwitansi extends JsonResource
     //     ];
     // }
 
+    // public function toArray(Request $request): array
+    // {
+    //     $details = collect();
+
+    //     if ($this->PAYMENT_TYPE === 'pelunasan') {
+
+    //         $details = M_KwitansiDetailPelunasan::select(
+    //             'no_invoice',
+    //             'loan_number',
+    //             'angsuran_ke',
+    //             'tgl_angsuran',
+    //             'bayar_pokok',
+    //             'bayar_bunga',
+    //             'bayar_denda',
+    //             'diskon_pokok',
+    //             'diskon_bunga',
+    //             'diskon_denda'
+    //         )
+    //             ->where('no_invoice', $this->NO_TRANSAKSI)
+    //             ->orderByRaw('CAST(angsuran_ke AS SIGNED) ASC')
+    //             ->get();
+    //     } elseif ($this->PAYMENT_TYPE === 'pokok_sebagian') {
+
+    //         $details = M_KwitansiDetailPelunasan::select(
+    //             'no_invoice',
+    //             'loan_number',
+    //             'angsuran_ke',
+    //             'tgl_angsuran',
+    //             'bayar_pokok',
+    //             'bayar_bunga',
+    //             'bayar_denda',
+    //             'diskon_pokok',
+    //             'diskon_bunga',
+    //             'diskon_denda'
+    //         )
+    //             ->where('no_invoice', $this->NO_TRANSAKSI)
+    //             ->where(function ($query) {
+    //                 $query->where('bayar_pokok', '!=', 0)
+    //                     ->orWhere('bayar_bunga', '!=', 0)
+    //                     ->orWhere('bayar_denda', '!=', 0);
+    //             })
+    //             ->orderByRaw('CAST(angsuran_ke AS SIGNED) ASC')
+    //             ->get();
+
+    //         $details = $details->map(function ($item) {
+    //             $item->bayar_pokok = (float) $item->bayar_pokok;
+    //             $item->bayar_bunga = (float) $item->bayar_bunga;
+    //             $item->bayar_denda = (float) $item->bayar_denda;
+    //             $item->diskon_pokok = (float) $item->diskon_pokok;
+    //             $item->diskon_bunga = (float) $item->diskon_bunga;
+    //             $item->diskon_denda = (float) $item->diskon_denda;
+    //             return $item;
+    //         });
+    //         } else {
+
+    //         $query = M_KwitansiStructurDetail::select(
+    //             'id',
+    //             'no_invoice',
+    //             'key',
+    //             'angsuran_ke',
+    //             'loan_number',
+    //             'tgl_angsuran',
+    //             'principal',
+    //             'interest',
+    //             'installment',
+    //             'principal_remains',
+    //             'payment',
+    //             'bayar_angsuran',
+    //             DB::raw('CASE WHEN bayar_denda = 0 THEN 0 ELSE COALESCE(bayar_denda,0) END as bayar_denda'),
+    //             'total_bayar',
+    //             'flag',
+    //             'denda',
+    //             'diskon_denda'
+    //         )
+    //             ->where('no_invoice', $this->NO_TRANSAKSI);
+
+    //         if ($this->DISKON_FLAG !== 'ya') {
+    //             $query->where(function ($q) {
+    //                 $q->where('installment', '<>', 0)
+    //                     ->orWhere('bayar_denda', '<>', 0)
+    //                     ->orWhere('diskon_denda', '=', 1);
+    //             });
+    //         }
+
+    //         $details = $query
+    //             ->orderByRaw('CAST(angsuran_ke AS SIGNED) ASC')
+    //             ->get();
+    //     }
+
+    //     $bayarAngsuran = $details->sum(function ($item) {
+
+    //         if (isset($item->bayar_angsuran)) {
+    //             return (float) $item->bayar_angsuran;
+    //         }
+
+    //         return (float) ($item->bayar_pokok ?? 0) + (float) ($item->bayar_bunga ?? 0);
+    //     });
+
+    //     $bayarDenda = $details->sum(fn($item) => (float) ($item->bayar_denda ?? 0));
+
+    //     $paymentMethod = $this->METODE_PEMBAYARAN;
+    //     $statusPayment = $this->STTS_PAYMENT;
+
+    //     return [
+    //         "id" => $this->ID,
+    //         "payment_id" => $this->PAYMENT_ID,
+    //         "payment_type" => $this->PAYMENT_TYPE ?? '',
+    //         "no_transaksi" => $this->NO_TRANSAKSI,
+    //         "no_fasilitas" => $this->LOAN_NUMBER,
+    //         "cabang" => $this->branch->NAME ?? null,
+    //         "cust_code" => $this->CUST_CODE,
+    //         "nama" => $this->NAMA,
+    //         "alamat" => $this->ALAMAT,
+    //         "rt" => $this->RT,
+    //         "rw" => $this->RW,
+    //         "provinsi" => $this->PROVINSI,
+    //         "kota" => $this->KOTA,
+    //         "kelurahan" => $this->KELURAHAN,
+    //         "kecamatan" => $this->KECAMATAN,
+    //         "tgl_transaksi" => Carbon::parse($this->CREATED_AT)->timezone('Asia/Jakarta')->format('d-m-Y H:i:s'),
+    //         "payment_method" => $paymentMethod,
+    //         "nama_bank" => $this->NAMA_BANK,
+    //         "no_rekening" => $this->NO_REKENING,
+    //         "bukti_transfer" => $this->BUKTI_TRANSFER,
+    //         "installment" => $details->pluck('angsuran_ke')->implode(','),
+    //         "bayar_angsuran" => $bayarAngsuran,
+    //         "bayar_denda" => $bayarDenda,
+    //         "pembulatan" => (int) ($this->PEMBULATAN ?? 0),
+    //         "pinalti" => (int) ($this->PINALTY_PELUNASAN ?? 0),
+    //         "kembalian" => (int) ($this->KEMBALIAN ?? 0),
+    //         "total_bayar" => in_array($this->PAYMENT_TYPE, ['pokok_sebagian', 'pelunasan']) ? (int) ($this->JUMLAH_UANG ?? 0) : (int) ($this->TOTAL_BAYAR ?? 0),
+    //         "jumlah_uang" => (int) ($this->JUMLAH_UANG ?? 0),
+    //         "terbilang" => bilangan($this->TOTAL_BAYAR) ?? null,
+    //         "attachment" => $this->attachment->file_attach ?? null,
+    //         "struktur" => $details,
+    //         "STATUS" => $statusPayment,
+    //         "created_by" => $this->users->fullname ?? null,
+    //         "position" => $this->users->position ?? null,
+    //         "print_ke" => (int) ($this->print_log->COUNT ?? 0),
+    //     ];
+    // }
+
     public function toArray(Request $request): array
     {
         $details = collect();
 
         if ($this->PAYMENT_TYPE === 'pelunasan') {
 
-            $details = M_KwitansiDetailPelunasan::select(
-                'no_invoice',
-                'loan_number',
-                'angsuran_ke',
-                'tgl_angsuran',
-                'bayar_pokok',
-                'bayar_bunga',
-                'bayar_denda',
-                'diskon_pokok',
-                'diskon_bunga',
-                'diskon_denda'
-            )
-                ->where('no_invoice', $this->NO_TRANSAKSI)
-                ->orderByRaw('CAST(angsuran_ke AS SIGNED) ASC')
-                ->get();
+            $details = $this->kwitansi_pelunasan_detail
+                ->map(function ($item) {
+                    return [
+                        'no_invoice'     => $item->no_invoice,
+                        'loan_number'    => $item->loan_number,
+                        'angsuran_ke'    => $item->angsuran_ke,
+                        'tgl_angsuran'   => $item->tgl_angsuran,
+                        'bayar_pokok'    => (float) $item->bayar_pokok,
+                        'bayar_bunga'    => (float) $item->bayar_bunga,
+                        'bayar_denda'    => (float) $item->bayar_denda,
+                        'diskon_pokok'   => (float) $item->diskon_pokok,
+                        'diskon_bunga'   => (float) $item->diskon_bunga,
+                        'diskon_denda'   => (float) $item->diskon_denda,
+                    ];
+                })
+                ->sortBy(fn($item) => (int) $item['angsuran_ke'])
+                ->values();
         } elseif ($this->PAYMENT_TYPE === 'pokok_sebagian') {
 
-            $details = M_KwitansiDetailPelunasan::select(
-                'no_invoice',
-                'loan_number',
-                'angsuran_ke',
-                'tgl_angsuran',
-                'bayar_pokok',
-                'bayar_bunga',
-                'bayar_denda',
-                'diskon_pokok',
-                'diskon_bunga',
-                'diskon_denda'
-            )
-                ->where('no_invoice', $this->NO_TRANSAKSI)
-                ->where(function ($query) {
-                    $query->where('bayar_pokok', '!=', 0)
-                        ->orWhere('bayar_bunga', '!=', 0)
-                        ->orWhere('bayar_denda', '!=', 0);
+            $details = $this->kwitansi_pelunasan_detail
+                ->filter(function ($item) {
+                    return $item->bayar_pokok != 0 ||
+                        $item->bayar_bunga != 0 ||
+                        $item->bayar_denda != 0;
                 })
-                ->orderByRaw('CAST(angsuran_ke AS SIGNED) ASC')
-                ->get();
+                ->map(function ($item) {
+                    return [
+                        'no_invoice'     => $item->no_invoice,
+                        'loan_number'    => $item->loan_number,
+                        'angsuran_ke'    => $item->angsuran_ke,
+                        'tgl_angsuran'   => $item->tgl_angsuran,
+                        'bayar_pokok'    => (float) $item->bayar_pokok,
+                        'bayar_bunga'    => (float) $item->bayar_bunga,
+                        'bayar_denda'    => (float) $item->bayar_denda,
+                        'diskon_pokok'   => (float) $item->diskon_pokok,
+                        'diskon_bunga'   => (float) $item->diskon_bunga,
+                        'diskon_denda'   => (float) $item->diskon_denda,
+                    ];
+                })
+                ->sortBy(fn($item) => (int) $item['angsuran_ke'])
+                ->values();
+        } else {
 
-            $details = $details->map(function ($item) {
-                $item->bayar_pokok = (float) $item->bayar_pokok;
-                $item->bayar_bunga = (float) $item->bayar_bunga;
-                $item->bayar_denda = (float) $item->bayar_denda;
-                $item->diskon_pokok = (float) $item->diskon_pokok;
-                $item->diskon_bunga = (float) $item->diskon_bunga;
-                $item->diskon_denda = (float) $item->diskon_denda;
-                return $item;
-            });
-            } else {
-
-            $query = M_KwitansiStructurDetail::select(
-                'id',
-                'no_invoice',
-                'key',
-                'angsuran_ke',
-                'loan_number',
-                'tgl_angsuran',
-                'principal',
-                'interest',
-                'installment',
-                'principal_remains',
-                'payment',
-                'bayar_angsuran',
-                DB::raw('CASE WHEN bayar_denda = 0 THEN 0 ELSE COALESCE(bayar_denda,0) END as bayar_denda'),
-                'total_bayar',
-                'flag',
-                'denda',
-                'diskon_denda'
-            )
-                ->where('no_invoice', $this->NO_TRANSAKSI);
+            $details = $this->kwitansi_structur_detail;
 
             if ($this->DISKON_FLAG !== 'ya') {
-                $query->where(function ($q) {
-                    $q->where('installment', '<>', 0)
-                        ->orWhere('bayar_denda', '<>', 0)
-                        ->orWhere('diskon_denda', '=', 1);
+                $details = $details->filter(function ($item) {
+                    return $item->installment != 0 ||
+                        $item->bayar_denda != 0 ||
+                        $item->diskon_denda == 1;
                 });
             }
 
-            $details = $query
-                ->orderByRaw('CAST(angsuran_ke AS SIGNED) ASC')
-                ->get();
+            $details = $details
+                ->map(function ($item) {
+                    return [
+                        'id'                => $item->id,
+                        'no_invoice'        => $item->no_invoice,
+                        'key'               => $item->key,
+                        'angsuran_ke'       => $item->angsuran_ke,
+                        'loan_number'       => $item->loan_number,
+                        'tgl_angsuran'      => $item->tgl_angsuran,
+                        'principal'         => (float) $item->principal,
+                        'interest'          => (float) $item->interest,
+                        'installment'       => (float) $item->installment,
+                        'principal_remains' => (float) $item->principal_remains,
+                        'payment'           => (float) $item->payment,
+                        'bayar_angsuran'    => (float) $item->bayar_angsuran,
+                        'bayar_denda'       => (float) ($item->bayar_denda ?? 0),
+                        'total_bayar'       => (float) $item->total_bayar,
+                        'flag'              => $item->flag,
+                        'denda'             => (float) $item->denda,
+                        'diskon_denda'      => (float) $item->diskon_denda,
+                    ];
+                })
+                ->sortBy(fn($item) => (int) $item['angsuran_ke'])
+                ->values();
         }
 
         $bayarAngsuran = $details->sum(function ($item) {
-
-            if (isset($item->bayar_angsuran)) {
-                return (float) $item->bayar_angsuran;
-            }
-
-            return (float) ($item->bayar_pokok ?? 0) + (float) ($item->bayar_bunga ?? 0);
+            return isset($item['bayar_angsuran'])
+                ? (float) $item['bayar_angsuran']
+                : (float) ($item['bayar_pokok'] ?? 0) + (float) ($item['bayar_bunga'] ?? 0);
         });
 
-        $bayarDenda = $details->sum(fn($item) => (float) ($item->bayar_denda ?? 0));
-
-        $paymentMethod = $this->METODE_PEMBAYARAN;
-        $statusPayment = $this->STTS_PAYMENT;
+        $bayarDenda = $details->sum(fn($item) => (float) ($item['bayar_denda'] ?? 0));
 
         return [
             "id" => $this->ID,
@@ -289,23 +421,27 @@ class R_Kwitansi extends JsonResource
             "kota" => $this->KOTA,
             "kelurahan" => $this->KELURAHAN,
             "kecamatan" => $this->KECAMATAN,
-            "tgl_transaksi" => Carbon::parse($this->CREATED_AT)->timezone('Asia/Jakarta')->format('d-m-Y H:i:s'),
-            "payment_method" => $paymentMethod,
+            "tgl_transaksi" => Carbon::parse($this->CREATED_AT)
+                ->timezone('Asia/Jakarta')
+                ->format('d-m-Y H:i:s'),
+            "payment_method" => $this->METODE_PEMBAYARAN,
             "nama_bank" => $this->NAMA_BANK,
             "no_rekening" => $this->NO_REKENING,
             "bukti_transfer" => $this->BUKTI_TRANSFER,
-            "installment" => $details->pluck('angsuran_ke')->implode(','),
+            "installment" => collect($details)->pluck('angsuran_ke')->implode(','),
             "bayar_angsuran" => $bayarAngsuran,
             "bayar_denda" => $bayarDenda,
             "pembulatan" => (int) ($this->PEMBULATAN ?? 0),
             "pinalti" => (int) ($this->PINALTY_PELUNASAN ?? 0),
             "kembalian" => (int) ($this->KEMBALIAN ?? 0),
-            "total_bayar" => in_array($this->PAYMENT_TYPE, ['pokok_sebagian', 'pelunasan']) ? (int) ($this->JUMLAH_UANG ?? 0) : (int) ($this->TOTAL_BAYAR ?? 0),
+            "total_bayar" => in_array($this->PAYMENT_TYPE, ['pokok_sebagian', 'pelunasan'])
+                ? (int) ($this->JUMLAH_UANG ?? 0)
+                : (int) ($this->TOTAL_BAYAR ?? 0),
             "jumlah_uang" => (int) ($this->JUMLAH_UANG ?? 0),
             "terbilang" => bilangan($this->TOTAL_BAYAR) ?? null,
             "attachment" => $this->attachment->file_attach ?? null,
             "struktur" => $details,
-            "STATUS" => $statusPayment,
+            "STATUS" => $this->STTS_PAYMENT,
             "created_by" => $this->users->fullname ?? null,
             "position" => $this->users->position ?? null,
             "print_ke" => (int) ($this->print_log->COUNT ?? 0),
