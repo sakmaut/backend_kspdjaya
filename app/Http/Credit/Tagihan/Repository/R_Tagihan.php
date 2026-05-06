@@ -322,7 +322,7 @@ class R_Tagihan
     public function listTagihan($branchId = null)
     {
         $query = $this->model::with([
-            'customer:CUST_CODE,NAME,ADDRESS,KELURAHAN,KECAMATAN',
+            'customer:CUST_CODE,NAME,ADDRESS,KELURAHAN,KECAMATAN,INS_ADDRESS,INS_KELURAHAN,INS_KECAMATAN',
             'assignUser:username,fullname',
             'branch:ID,NAME'
         ])
