@@ -76,6 +76,10 @@ class KwitansiService
 
         $tipe = $request->query('tipe');
 
+        if ($user->position === 'HO') {
+            return $this->kwitansiRepository->getPendingForHO($request);
+        }
+
         if ($tipe === 'pelunasan') {
             $paymentType = 'pelunasan';
         } elseif ($tipe === 'pelunasan_pokok_sebagian') {
