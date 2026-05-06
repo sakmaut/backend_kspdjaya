@@ -29,47 +29,6 @@ class KwitansiService
         $this->uuid = Uuid::uuid7()->toString();
     }
 
-    // public function getKwitansiPayment($request)
-    // {
-    //     $user = $request->user();
-
-    //     if ($user->position === 'HO') {
-    //         return $this->kwitansiRepository->getPendingForHO($request);
-    //     }
-
-    //     $tipe = $request->query('tipe');
-
-    //     if ($tipe === 'pelunasan') {
-    //         $paymentType = 'pelunasan';
-    //     } elseif ($tipe === 'pelunasan_pokok_sebagian') {
-    //         $paymentType = 'pokok_sebagian';
-    //     } else {
-    //         $paymentType = 'angsuran';
-    //     }
-
-    //     $filters = [
-    //         ['PAYMENT_TYPE', '=', $paymentType],
-    //         ['NO_TRANSAKSI', '=', $request->query('notrx')],
-    //         ['NAMA', 'like', '%' . $request->query('nama') . '%'],
-    //         ['LOAN_NUMBER', '=', $request->query('no_kontrak')],
-    //     ];
-
-    //     $dari = $request->query('dari');
-    //     $dateFilter = null;
-
-    //     if ($dari && $dari !== 'null') {
-    //         $dateFilter = Carbon::parse($dari)->toDateString();
-    //     } elseif (
-    //         blank($request->query('notrx')) &&
-    //         blank($request->query('nama')) &&
-    //         blank($request->query('no_kontrak'))
-    //     ) {
-    //         $dateFilter = Carbon::today()->toDateString();
-    //     }
-
-    //     return $this->kwitansiRepository->getFilteredForBranch($request,$user->branch_id, $filters, $dateFilter);
-    // }
-
     public function getKwitansiPayment($request)
     {
         $user = $request->user();
@@ -107,11 +66,7 @@ class KwitansiService
             blank($request->query('nama')) &&
             blank($request->query('no_kontrak'))
         ) {
-            // $dateFilter = Carbon::today()->toDateString();
-
-            $dateFilter = $user->position === 'HO'
-                ? Carbon::now()->subDays(2)->toDateString()
-                : Carbon::today()->toDateString();
+            $dateFilter = Carbon::today()->toDateString();
         }
 
         return $this->kwitansiRepository->getFilteredForBranch(

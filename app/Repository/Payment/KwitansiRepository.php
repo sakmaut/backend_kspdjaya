@@ -39,6 +39,17 @@ class KwitansiRepository
             });
     }
 
+    private function mapPaymentType($tipe)
+    {
+        return match ($tipe) {
+            'pelunasan' => 'pelunasan',
+            'pelunasan_pokok_sebagian' => 'pokok_sebagian',
+            'pokok_sebagian' => 'pokok_sebagian',
+            'angsuran' => 'angsuran',
+            default => null,
+        };
+    }
+
     public function applyFilterPendingHO($query, $request)
     {
         $cabang     = $request->query('cabang');
@@ -47,12 +58,16 @@ class KwitansiRepository
         $notrx      = $request->query('notrx');
         $nama       = $request->query('nama');
         $noKontrak  = $request->query('no_kontrak');
-        $tipe       = $request->query('tipe');
+        $tipe       = $this->mapPaymentType($request->query('tipe'));
         $pembayaran = $request->query('pembayaran');
 
-        // ✅ tanggal
-        $query->when($dari, fn($q) => $q->whereDate('created_at', '>=', $dari));
-        $query->when($sampai, fn($q) => $q->whereDate('created_at', '<=', $sampai));
+        if ($dari && $sampai) {
+            $query->whereBetween('CREATED_AT', [$dari, $sampai]);
+        } elseif ($dari) {
+            $query->whereDate('CREATED_AT', '>=', $dari);
+        } elseif ($sampai) {
+            $query->whereDate('CREATED_AT', '<=', $sampai);
+        }
 
         // ✅ no transaksi (FIX: pakai NO_TRANSAKSI)
         $query->when($notrx, fn($q) => $q->where('NO_TRANSAKSI', 'like', "%$notrx%"));
