@@ -33,8 +33,8 @@ class KwitansiRepository
                     $sub->where('METODE_PEMBAYARAN', '!=', 'cash')
                         ->whereIn('PAYMENT_TYPE', ['angsuran', 'pokok_sebagian']);
                 })->orWhere(function ($sub) {
-                    $sub->where('METODE_PEMBAYARAN', 'cash')
-                        ->whereIn('PAYMENT_TYPE', ['pelunasan', 'pokok_sebagian']);
+                    $sub->whereIn('METODE_PEMBAYARAN', ['cash', 'transfer'])
+                        ->whereIn('PAYMENT_TYPE', ['pelunasan','angsuran', 'pokok_sebagian']);
                 });
             });
     }
