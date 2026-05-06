@@ -267,7 +267,6 @@ class ListBanController extends Controller
                                 left join cr_application ca on cast(ca.ORDER_NUMBER as char) = cast(cl.ORDER_NUMBER as char)
                                 left join cr_order co on cast(co.APPLICATION_ID as char) = cast(ca.ID as char)
                                 left join cr_survey cs on cast(cs.ID as char) = cast(ca.CR_SURVEY_ID as char)
-                                left join    k on cast(k.loan_number as char) = cast(cl.LOAN_NUMBER as char) and date_format(k.created_at,'%m%Y')='$dateFrom'
                                 left join temp_lis_03 col on cast(col.LOAN_NUMBER as char) = cast(cl.LOAN_NUMBER as char)
                                 left join temp_lis_01 st
                                     on cast(st.loan_number as char) = cast(cl.LOAN_NUMBER as char)
