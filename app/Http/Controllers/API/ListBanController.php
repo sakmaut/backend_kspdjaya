@@ -259,7 +259,11 @@ class ListBanController extends Controller
                                 inner join branch b on cast(b.ID as char) = cast(cl.BRANCH as char)
                                 left join customer c on cast(c.CUST_CODE as char) = cast(cl.CUST_CODE as char)
                                 left join users u on cast(u.ID as char) = cast(cl.MCF_ID as char) 
-                                left join kolektor k on cast(k.LOAN_NUMBER as char) = cast(cl.LOAN_NUMBER as char) and date_format(k.BACK_DATE,'%m%Y')='$dateFrom'
+                                LEFT JOIN (
+                                    SELECT LOAN_NUMBER,KOLEKTOR
+                                    FROM kolektor
+                                    WHERE date_format(BACK_DATE,'%m%Y') = '$dateFrom'
+                                ) k on cast(k.LOAN_NUMBER as char) = cast(cl.LOAN_NUMBER as char)
                                 left join cr_application ca on cast(ca.ORDER_NUMBER as char) = cast(cl.ORDER_NUMBER as char)
                                 left join cr_order co on cast(co.APPLICATION_ID as char) = cast(ca.ID as char)
                                 left join cr_survey cs on cast(cs.ID as char) = cast(ca.CR_SURVEY_ID as char)
@@ -387,7 +391,11 @@ class ListBanController extends Controller
                                 left join cr_application ca on cast(ca.ORDER_NUMBER as char) = cast(cl.ORDER_NUMBER as char)
                                 left join cr_order co on cast(co.APPLICATION_ID as char) = cast(ca.ID as char)
                                 left join cr_survey cs on cast(cs.ID as char) = cast(ca.CR_SURVEY_ID as char)
-                                left join kolektor k on cast(k.LOAN_NUMBER as char) = cast(cl.LOAN_NUMBER as char) and date_format(k.BACK_DATE,'%m%Y')='$dateFrom'
+                                 LEFT JOIN (
+                                    SELECT LOAN_NUMBER,KOLEKTOR
+                                    FROM kolektor
+                                    WHERE date_format(BACK_DATE,'%m%Y') = '$dateFrom'
+                                ) k on cast(k.LOAN_NUMBER as char) = cast(cl.LOAN_NUMBER as char)
                                 left join temp_lis_03C col on cast(col.CR_CREDIT_ID as char) = cast(cl.ID as char)
                                 left join temp_lis_01C st
                                     on cast(st.loan_number as char) = cast(cl.LOAN_NUMBER as char)
