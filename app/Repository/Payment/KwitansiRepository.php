@@ -14,6 +14,30 @@ class KwitansiRepository
         $this->model = $model;
     }
 
+    private function mapPaymentType($tipe)
+    {
+        return match ($tipe) {
+            'pelunasan' => 'pelunasan',
+            'pelunasan_pokok_sebagian' => 'pokok_sebagian',
+            'pokok_sebagian' => 'pokok_sebagian',
+            'angsuran' => 'angsuran',
+            default => null,
+        };
+    }
+
+    private function hasFilter($request)
+    {
+        return
+            $request->query('cabang') && $request->query('cabang') !== 'SEMUA CABANG' ||
+            $request->query('dari') ||
+            $request->query('sampai') ||
+            $request->query('notrx') ||
+            $request->query('nama') ||
+            $request->query('no_kontrak') ||
+            $request->query('tipe') ||
+            $request->query('pembayaran');
+    }
+
     public function getAllOrdered()
     {
         return $this->model::with([
@@ -24,30 +48,43 @@ class KwitansiRepository
         ])->orderByRaw("CAST(SUBSTRING_INDEX(NO_TRANSAKSI, '-', -1) AS UNSIGNED) DESC");
     }
 
-    public function basePendingHO()
-    {
-        return $this->getAllOrdered()
-            ->where('STTS_PAYMENT', 'PENDING')
-            ->where(function ($q) {
-                $q->where(function ($sub) {
-                    $sub->where('METODE_PEMBAYARAN', '!=', 'cash')
-                        ->whereIn('PAYMENT_TYPE', ['angsuran', 'pokok_sebagian']);
-                })->orWhere(function ($sub) {
-                    $sub->whereIn('METODE_PEMBAYARAN', ['cash', 'transfer'])
-                        ->whereIn('PAYMENT_TYPE', ['pelunasan','angsuran', 'pokok_sebagian']);
-                });
-            });
-    }
+    // public function basePendingHO()
+    // {
+    //     return $this->getAllOrdered()
+    //         ->where('STTS_PAYMENT', 'PENDING')
+    //         ->where(function ($q) {
+    //             $q->where(function ($sub) {
+    //                 $sub->where('METODE_PEMBAYARAN', '!=', 'cash')
+    //                     ->whereIn('PAYMENT_TYPE', ['angsuran', 'pokok_sebagian']);
+    //             })->orWhere(function ($sub) {
+    //                 $sub->whereIn('METODE_PEMBAYARAN', ['cash', 'transfer'])
+    //                     ->whereIn('PAYMENT_TYPE', ['pelunasan','angsuran', 'pokok_sebagian']);
+    //             });
+    //         });
+    // }
 
-    private function mapPaymentType($tipe)
+    public function basePendingHO($request)
     {
-        return match ($tipe) {
-            'pelunasan' => 'pelunasan',
-            'pelunasan_pokok_sebagian' => 'pokok_sebagian',
-            'pokok_sebagian' => 'pokok_sebagian',
-            'angsuran' => 'angsuran',
-            default => null,
-        };
+        $query = $this->getAllOrdered();
+
+        if (!$this->hasFilter($request)) {
+            $query->where('STTS_PAYMENT', 'PENDING');
+        }
+
+        $query->where(function ($q) {
+
+            $q->where(function ($sub) {
+                $sub->whereIn('METODE_PEMBAYARAN', ['transfer'])
+                    ->whereIn('PAYMENT_TYPE', ['angsuran', 'pokok_sebagian']);
+            })
+
+                ->orWhere(function ($sub) {
+                    $sub->whereIn('METODE_PEMBAYARAN', ['cash', 'transfer'])
+                        ->whereIn('PAYMENT_TYPE', ['pelunasan', 'angsuran', 'pokok_sebagian']);
+                });
+        });
+
+        return $query;
     }
 
     public function applyFilterPendingHO($query, $request)
@@ -98,7 +135,7 @@ class KwitansiRepository
 
     public function getPendingForHO($request)
     {
-        $query = $this->basePendingHO();
+        $query = $this->basePendingHO($request);
         return $this->applyFilterPendingHO($query, $request);
     }
 
