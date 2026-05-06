@@ -50,9 +50,17 @@ class KwitansiRepository
         $tipe       = $request->query('tipe');
         $pembayaran = $request->query('pembayaran');
 
+        if ($dari && $sampai) {
+            $query->whereBetween('CREATED_AT', [$dari, $sampai]);
+        } elseif ($dari) {
+            $query->whereDate('CREATED_AT', '>=', $dari);
+        } elseif ($sampai) {
+            $query->whereDate('CREATED_AT', '<=', $sampai);
+        }
+
         // ✅ tanggal
-        $query->when($dari, fn($q) => $q->whereDate('created_at', '>=', $dari));
-        $query->when($sampai, fn($q) => $q->whereDate('created_at', '<=', $sampai));
+        // $query->when($dari, fn($q) => $q->whereDate('created_at', '>=', $dari));
+        // $query->when($sampai, fn($q) => $q->whereDate('created_at', '<=', $sampai));
 
         // ✅ no transaksi (FIX: pakai NO_TRANSAKSI)
         $query->when($notrx, fn($q) => $q->where('NO_TRANSAKSI', 'like', "%$notrx%"));
