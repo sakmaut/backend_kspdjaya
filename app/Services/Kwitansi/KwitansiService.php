@@ -97,27 +97,17 @@ class KwitansiService
         $dateFilter = null;
 
         if ($dari && $dari !== 'null') {
-            // $dateFilter = Carbon::parse($dari)->toDateString();
-
-            $dateInput = Carbon::parse($dari)->startOfDay();
-
-            if ($user->position === 'HO') {
-                // 🔥 batas maksimal 2 hari ke belakang dari hari ini
-                $minDate = Carbon::now()->subDays(2)->startOfDay();
-
-                // kalau input lebih lama dari batas → pakai batas
-                if ($dateInput->lt($minDate)) {
-                    $dateInput = $minDate;
-                }
-            }
-
-            $dateFilter = $dateInput->toDateString();
+            $dateFilter = Carbon::parse($dari)->toDateString();
         } elseif (
             blank($request->query('notrx')) &&
             blank($request->query('nama')) &&
             blank($request->query('no_kontrak'))
         ) {
-            $dateFilter = Carbon::today()->toDateString();
+            // $dateFilter = Carbon::today()->toDateString();
+
+            $dateFilter = $user->position === 'HO'
+                ? Carbon::now()->subDays(2)->toDateString()
+                : Carbon::today()->toDateString();
         }
 
         return $this->kwitansiRepository->getFilteredForBranch(
