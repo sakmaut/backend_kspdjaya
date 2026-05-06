@@ -256,6 +256,29 @@ class C_Tagihan extends Controller
                 ]);
             }
 
+            $user = DB::table('users')
+                ->where('username', $request->user_id)
+                ->first();
+
+            $kolektor = DB::table('kolektor')
+                ->where('LOAN_NUMBER', $request->loan_number)
+                ->whereRaw("DATE_FORMAT(BACK_DATE, '%Y-%m') = DATE_FORMAT(CURDATE(), '%Y-%m')")
+                ->first();
+
+            if ($kolektor) {
+                DB::table('kolektor')
+                    ->where('id', $kolektor->id)
+                    ->update([
+                        'KOLEKTOR' => $user->fullname
+                    ]);
+            } else {
+                DB::table('kolektor')->insert([
+                    'LOAN_NUMBER' => $request->loan_number,
+                    'KOLEKTOR' => $user->fullname,
+                    'BACK_DATE' => now()
+                ]);
+            }
+
             DB::commit();
             return response()->json(['message' => 'Cabang updated successfully'], 200);
         } catch (\Exception $e) {
