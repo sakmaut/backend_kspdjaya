@@ -87,17 +87,87 @@ class C_Tagihan extends Controller
 
             // $data = $query->get();
 
-            $query = M_ListbanData::with([
-                'customer:CUST_CODE,NAME,INS_ADDRESS,INS_KECAMATAN,INS_KELURAHAN,PHONE_HOUSE,PHONE_PERSONAL,OCCUPATION',
-                'surveyor:id,fullname,position,keterangan',
-                'deploy:ID,LOAN_NUMBER,STATUS,CREATED_AT'
+            $query = M_ListbanData::select([
+                'ID',
+                'BRANCH_ID',
+                'KODE',
+                'NAMA_CABANG',
+                'CREDIT_ID',
+                'NO_KONTRAK',
+                'CUST_CODE',
+                'SURVEYOR_ID',
+                'CATT_SURVEY',
+                'PKK_HUTANG',
+                'JUMLAH_ANGSURAN',
+                'JARAK_ANGSURAN',
+                'PERIOD',
+                'OUTSTANDING',
+                'OS_BUNGA',
+                'OVERDUE_AWAL',
+                'AMBC_PKK_AWAL',
+                'AMBC_BNG_AWAL',
+                'AMBC_TOTAL_AWAL',
+                'CYCLE_AWAL',
+                'STATUS_BEBAN',
+                'POLA_BAYAR',
+                'OS_PKK_AKHIR',
+                'OS_BNG_AKHIR',
+                'OVERDUE_AKHIR',
+                'INSTALLMENT',
+                'LAST_INST',
+                'F_ARR_CR_SCHEDL',
+                'CURR_ARR',
+                'LAST_PAY',
+                'COLLECTOR',
+                'CARA_BAYAR',
+                'CYCLE_AKHIR',
+                'JENIS_JAMINAN',
+                'NO_SURAT',
+                'CREATED_AT'
             ])
-            ->whereIn('CYCLE_AWAL', $cycles)
-            ->whereDoesntHave('deploy', function ($q) {
-                $q->where('STATUS', 'AKTIF')
-                    ->whereMonth('CREATED_AT', now()->month)
-                    ->whereYear('CREATED_AT', now()->year);
-            });
+                ->with([
+
+                    'customer' => function ($q) {
+                        $q->select([
+                            'CUST_CODE',
+                            'NAME',
+                            'INS_ADDRESS',
+                            'INS_KECAMATAN',
+                            'INS_KELURAHAN',
+                            'PHONE_HOUSE',
+                            'PHONE_PERSONAL',
+                            'OCCUPATION'
+                        ]);
+                    },
+
+                    'surveyor' => function ($q) {
+                        $q->select([
+                            'id',
+                            'fullname',
+                            'position',
+                            'keterangan',
+                            'username'
+                        ]);
+                    },
+
+                    'deploy' => function ($q) {
+                        $q->select([
+                            'ID',
+                            'LOAN_NUMBER',
+                            'STATUS',
+                            'CREATED_AT'
+                        ]);
+                    }
+
+                ])
+
+                ->whereIn('CYCLE_AWAL', $cycles)
+
+                ->whereDoesntHave('deploy', function ($q) {
+                    $q->where('STATUS', 'AKTIF')
+                        ->whereMonth('CREATED_AT', now()->month)
+                        ->whereYear('CREATED_AT', now()->year);
+                });
 
             if ($currentPosition != 'HO') {
                 $query->where('BRANCH_ID', $currentBranch);
