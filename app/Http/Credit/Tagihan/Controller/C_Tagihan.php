@@ -276,11 +276,45 @@ class C_Tagihan extends Controller
             }
 
             M_Tagihan::whereIn('ID', $request->id)
-                ->update([
-                    'USER_ID' => $request->user_id,
-                    'UPDATED_BY' => $request->user()->id ?? null,
-                    'UPDATED_AT' => now()
-                ]);
+            ->update([
+                'USER_ID' => $request->user_id,
+                'UPDATED_BY' => $request->user()->id ?? null,
+                'UPDATED_AT' => now()
+            ]);
+
+            $user = DB::table('users')
+                ->where('username', $request->user_id)
+                ->first();
+
+            $loanNumbers = M_Tagihan::whereIn('ID', $request->id)->pluck('LOAN_NUMBER');
+
+            foreach ($loanNumbers as $loanNumber) {
+
+                $kolektor = DB::table('kolektor')
+                    ->where('LOAN_NUMBER', $loanNumber)
+                    ->whereRaw("
+                    DATE_FORMAT(BACK_DATE, '%Y-%m') = DATE_FORMAT(CURDATE(), '%Y-%m')
+                ")->first();
+
+                if ($kolektor) {
+
+                    DB::table('kolektor')
+                        ->where('LOAN_NUMBER', $loanNumber)
+                        ->whereRaw("
+                        DATE_FORMAT(BACK_DATE, '%Y-%m') = DATE_FORMAT(CURDATE(), '%Y-%m')
+                    ")
+                        ->update([
+                            'KOLEKTOR' => $user->fullname
+                        ]);
+                } else {
+
+                    DB::table('kolektor')->insert([
+                        'LOAN_NUMBER' => $loanNumber,
+                        'KOLEKTOR'    => $user->fullname,
+                        'BACK_DATE'   => now()
+                    ]);
+                }
+            }
 
             DB::commit();
 
