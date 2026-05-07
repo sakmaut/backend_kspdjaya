@@ -339,6 +339,35 @@ class C_Tagihan extends Controller
                     'UPDATED_BY' => $request->user()->id ?? null,
                     'UPDATED_AT' => Carbon::now('Asia/Jakarta'),
                 ]);
+
+                $user = DB::table('users')
+                    ->where('username', $request->user_id)
+                    ->first();
+
+                $kolektor = DB::table('kolektor')
+                    ->where('LOAN_NUMBER', $check->LOAN_NUMBER)
+                    ->whereRaw("
+                    DATE_FORMAT(BACK_DATE, '%Y-%m') = DATE_FORMAT(CURDATE(), '%Y-%m')
+                ")->first();
+
+                if ($kolektor) {
+
+                    DB::table('kolektor')
+                        ->where('LOAN_NUMBER', $check->LOAN_NUMBER)
+                        ->whereRaw("
+                        DATE_FORMAT(BACK_DATE, '%Y-%m') = DATE_FORMAT(CURDATE(), '%Y-%m')
+                    ")
+                        ->update([
+                            'KOLEKTOR' => $user->fullname
+                        ]);
+                } else {
+
+                    DB::table('kolektor')->insert([
+                        'LOAN_NUMBER' => $check->LOAN_NUMBER,
+                        'KOLEKTOR'    => $user->fullname,
+                        'BACK_DATE'   => now()
+                    ]);
+                }
             }
 
             DB::commit();
