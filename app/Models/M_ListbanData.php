@@ -83,7 +83,7 @@ class M_ListbanData extends Model
 
     public function deploy()
     {
-        return $this->hasOne(M_Tagihan::class, 'LOAN_NUMBER', 'NO_KONTRAK');
+        return $this->hasOne(M_Tagihan::class, 'LOAN_NUMBER', 'NO_KONTRAK')->where('STATUS', 'AKTIF');
     }
 
     public function surveyor()

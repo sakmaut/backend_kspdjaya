@@ -87,6 +87,9 @@ class C_Tagihan extends Controller
 
             // $data = $query->get();
 
+            $startDate = now()->startOfMonth();
+            $endDate   = now()->endOfMonth();
+
             $query = M_ListbanData::select([
                 'ID',
                 'BRANCH_ID',
@@ -163,10 +166,9 @@ class C_Tagihan extends Controller
 
                 ->whereIn('CYCLE_AWAL', $cycles)
 
-                ->whereDoesntHave('deploy', function ($q) {
+                ->whereDoesntHave('deploy', function ($q) use ($startDate, $endDate) {
                     $q->where('STATUS', 'AKTIF')
-                        ->whereMonth('CREATED_AT', now()->month)
-                        ->whereYear('CREATED_AT', now()->year);
+                        ->whereBetween('CREATED_AT', [$startDate, $endDate]);
                 });
 
             if ($currentPosition != 'HO') {
