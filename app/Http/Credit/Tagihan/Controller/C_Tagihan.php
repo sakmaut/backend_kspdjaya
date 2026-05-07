@@ -103,26 +103,7 @@ class C_Tagihan extends Controller
                 $query->where('BRANCH_ID', $currentBranch);
             }
 
-            $data = $query->get()->map(function ($item) {
-
-                $item->NAME              = $item->customer->NAME ?? '';
-                $item->INS_ADDRESS       = $item->customer->INS_ADDRESS ?? '';
-                $item->INS_KECAMATAN     = $item->customer->INS_KECAMATAN ?? '';
-                $item->INS_KELURAHAN     = $item->customer->INS_KELURAHAN ?? '';
-                $item->PHONE_HOUSE       = $item->customer->PHONE_HOUSE ?? '';
-                $item->PHONE_PERSONAL    = $item->customer->PHONE_PERSONAL ?? '';
-                $item->OCCUPATION        = $item->customer->OCCUPATION ?? '';
-
-                $item->DEPLOY_ID         = $item->deploy->ID ?? null;
-                $item->LOAN_NUMBER       = $item->deploy->LOAN_NUMBER ?? null;
-                $item->DEPLOY_STATUS     = $item->deploy->STATUS ?? null;
-
-                $item->POSITION          = $item->surveyor->position ?? null;
-                $item->STATUS_MCF        = $item->surveyor->keterangan ?? 'RESIGN';
-                $item->SURVEYOR_NAME     = $item->surveyor->fullname ?? '';
-
-                return $item;
-            });
+            $data = $query->get();
 
             $dto = R_TagihanDetail::collection($data);
 
