@@ -89,7 +89,7 @@ class C_Tagihan extends Controller
 
             $query = M_ListbanData::with([
                 'customer:CUST_CODE,NAME,INS_ADDRESS,INS_KECAMATAN,INS_KELURAHAN,PHONE_HOUSE,PHONE_PERSONAL,OCCUPATION',
-                'suvyor:id,fullname,POSITION,keterangan',
+                'surveyor:id,fullname,position,keterangan',
                 'deploy:ID,LOAN_NUMBER,STATUS,CREATED_AT'
             ])
             ->whereIn('CYCLE_AWAL', $cycles)
@@ -117,9 +117,9 @@ class C_Tagihan extends Controller
                 $item->LOAN_NUMBER       = $item->deploy->LOAN_NUMBER ?? null;
                 $item->DEPLOY_STATUS     = $item->deploy->STATUS ?? null;
 
-                $item->POSITION          = $item->suvyor->POSITION ?? null;
-                $item->STATUS_MCF        = $item->suvyor->keterangan ?? 'RESIGN';
-                $item->SURVEYOR_NAME     = $item->suvyor->fullname ?? '';
+                $item->POSITION          = $item->surveyor->position ?? null;
+                $item->STATUS_MCF        = $item->surveyor->keterangan ?? 'RESIGN';
+                $item->SURVEYOR_NAME     = $item->surveyor->fullname ?? '';
 
                 return $item;
             });
