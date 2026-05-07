@@ -122,7 +122,6 @@ class C_Tagihan extends Controller
                 'CARA_BAYAR',
                 'CYCLE_AKHIR',
                 'JENIS_JAMINAN',
-                'NO_SURAT',
                 'CREATED_AT'
             ])
                 ->with([
