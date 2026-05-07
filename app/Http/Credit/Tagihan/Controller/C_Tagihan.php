@@ -153,6 +153,7 @@ class C_Tagihan extends Controller
                     'deploy' => function ($q) {
                         $q->select([
                             'ID',
+                            'NO_SURAT',
                             'LOAN_NUMBER',
                             'STATUS',
                             'CREATED_AT'

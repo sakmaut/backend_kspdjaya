@@ -171,7 +171,7 @@ class R_TagihanDetail extends JsonResource
             "CARA BYR"         => $this->CARA_BAYAR ?? '',
             "CYCLE AKHIR"      => $this->CYCLE_AKHIR ?? '',
             "NAMA BRG"         => $this->JENIS_JAMINAN ?? '',
-            "NO SURAT"         => $this->NO_SURAT ?? '',
+            "NO SURAT"         => $this->deploy->NO_SURAT ?? '',
             "NBOT"             => $nbot
         ];
     }
