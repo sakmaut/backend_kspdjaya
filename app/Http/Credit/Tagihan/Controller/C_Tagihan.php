@@ -16,12 +16,9 @@ use App\Http\Resources\Rs_LkpPicList;
 use App\Http\Resources\Rs_SurveyLogs;
 use App\Http\Resources\Rs_TagihanByUserId;
 use App\Models\M_ClSurveyLogs;
-use App\Models\M_CollateralView;
 use App\Models\M_ListbanData;
 use App\Models\M_Lkp;
 use App\Models\M_LkpProgress;
-use App\Models\TableViews\M_ColllectorList;
-use App\Models\TableViews\M_ColllectorVisits;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
@@ -57,38 +54,75 @@ class C_Tagihan extends Controller
                 $cycles = ['CM', 'CX', 'C8', 'C7', 'C6', 'C5', 'C4', 'C3', 'C2', 'C1', 'C0'];
             }
 
-            $query = DB::table('listban_data as a')
-                ->select(
-                    'a.*',
-                    'c.NAME',
-                    'c.INS_ADDRESS',
-                    'c.INS_KECAMATAN',
-                    'c.INS_KELURAHAN',
-                    'c.PHONE_HOUSE',
-                    'c.PHONE_PERSONAL',
-                    'c.OCCUPATION',
-                    'd.ID as DEPLOY_ID',
-                    'd.LOAN_NUMBER',
-                    'd.STATUS as DEPLOY_STATUS',
-                    'e.POSITION',
-                    DB::raw('COALESCE(e.keterangan, "RESIGN") as STATUS_MCF')
-                )
-                ->leftJoin('customer as c', 'c.CUST_CODE', '=', 'a.CUST_CODE')
-                ->leftJoin('cl_deploy as d', function ($join) {
-                    $join->on('d.LOAN_NUMBER', '=', 'a.NO_KONTRAK')
-                        ->where('d.STATUS', '=', 'AKTIF')
-                        ->whereMonth('d.CREATED_AT', now()->month)
-                        ->whereYear('d.CREATED_AT', now()->year);
-                })
-                ->leftJoin('users as e', 'e.id', '=', 'a.SURVEYOR_ID')
-                ->whereIn('a.CYCLE_AWAL', $cycles)
-                ->whereNull('d.LOAN_NUMBER');
+            // $query = DB::table('listban_data as a')
+            //     ->select(
+            //         'a.*',
+            //         'c.NAME',
+            //         'c.INS_ADDRESS',
+            //         'c.INS_KECAMATAN',
+            //         'c.INS_KELURAHAN',
+            //         'c.PHONE_HOUSE',
+            //         'c.PHONE_PERSONAL',
+            //         'c.OCCUPATION',
+            //         'd.ID as DEPLOY_ID',
+            //         'd.LOAN_NUMBER',
+            //         'd.STATUS as DEPLOY_STATUS',
+            //         'e.POSITION',
+            //         DB::raw('COALESCE(e.keterangan, "RESIGN") as STATUS_MCF')
+            //     )
+            //     ->leftJoin('customer as c', 'c.CUST_CODE', '=', 'a.CUST_CODE')
+            //     ->leftJoin('cl_deploy as d', function ($join) {
+            //         $join->on('d.LOAN_NUMBER', '=', 'a.NO_KONTRAK')
+            //             ->where('d.STATUS', '=', 'AKTIF')
+            //             ->whereMonth('d.CREATED_AT', now()->month)
+            //             ->whereYear('d.CREATED_AT', now()->year);
+            //     })
+            //     ->leftJoin('users as e', 'e.id', '=', 'a.SURVEYOR_ID')
+            //     ->whereIn('a.CYCLE_AWAL', $cycles)
+            //     ->whereNull('d.LOAN_NUMBER');
+
+            // if ($currentPosition != 'HO') {
+            //     $query->where('a.BRANCH_ID', $currentBranch);
+            // }
+
+            // $data = $query->get();
+
+            $query = M_ListbanData::with([
+                'customer:CUST_CODE,NAME,INS_ADDRESS,INS_KECAMATAN,INS_KELURAHAN,PHONE_HOUSE,PHONE_PERSONAL,OCCUPATION',
+                'suvyor:id,fullname,POSITION,keterangan',
+                'deploy:ID,LOAN_NUMBER,STATUS,CREATED_AT'
+            ])
+            ->whereIn('CYCLE_AWAL', $cycles)
+            ->whereDoesntHave('deploy', function ($q) {
+                $q->where('STATUS', 'AKTIF')
+                    ->whereMonth('CREATED_AT', now()->month)
+                    ->whereYear('CREATED_AT', now()->year);
+            });
 
             if ($currentPosition != 'HO') {
-                $query->where('a.BRANCH_ID', $currentBranch);
+                $query->where('BRANCH_ID', $currentBranch);
             }
 
-            $data = $query->get();
+            $data = $query->get()->map(function ($item) {
+
+                $item->NAME              = $item->customer->NAME ?? '';
+                $item->INS_ADDRESS       = $item->customer->INS_ADDRESS ?? '';
+                $item->INS_KECAMATAN     = $item->customer->INS_KECAMATAN ?? '';
+                $item->INS_KELURAHAN     = $item->customer->INS_KELURAHAN ?? '';
+                $item->PHONE_HOUSE       = $item->customer->PHONE_HOUSE ?? '';
+                $item->PHONE_PERSONAL    = $item->customer->PHONE_PERSONAL ?? '';
+                $item->OCCUPATION        = $item->customer->OCCUPATION ?? '';
+
+                $item->DEPLOY_ID         = $item->deploy->ID ?? null;
+                $item->LOAN_NUMBER       = $item->deploy->LOAN_NUMBER ?? null;
+                $item->DEPLOY_STATUS     = $item->deploy->STATUS ?? null;
+
+                $item->POSITION          = $item->suvyor->POSITION ?? null;
+                $item->STATUS_MCF        = $item->suvyor->keterangan ?? 'RESIGN';
+                $item->SURVEYOR_NAME     = $item->suvyor->fullname ?? '';
+
+                return $item;
+            });
 
             $dto = R_TagihanDetail::collection($data);
 

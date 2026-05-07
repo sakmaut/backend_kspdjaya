@@ -85,4 +85,9 @@ class M_ListbanData extends Model
     {
         return $this->hasOne(M_Tagihan::class, 'LOAN_NUMBER', 'NO_KONTRAK');
     }
+
+    public function suveyor()
+    {
+        return $this->hasOne(User::class, 'id', 'SURVEYOR_ID');
+    }
 }
