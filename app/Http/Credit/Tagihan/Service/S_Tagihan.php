@@ -157,14 +157,32 @@ class S_Tagihan extends R_Tagihan
             }
 
             $saved = $this->repository->create($detailData);
-            // M_TagihanLog::create([
-            //     'LOAN_NUMBER' => $loanNumber,
-            //     'LKP_ID' => $saved->ID ?? "",
-            //     'DESCRIPTION' => 'Tagihan created with LOAN_NUMBER: ' . $loanNumber,
-            //     'STATUS'     => 'CREATE_DEPLOY',
-            //     'CREATED_BY' => $request->user()->id ?? null,
-            // ]);
+           
             $savedData[] = $saved;
+
+            $user = DB::table('users')
+                ->where('username', $request['user_id'])
+                ->first();
+
+            $kolektor = DB::table('kolektor')
+                ->where('LOAN_NUMBER', $loanNumber)
+                ->whereRaw("DATE_FORMAT(BACK_DATE, '%Y-%m') = DATE_FORMAT(CURDATE(), '%Y-%m')")
+                ->first();
+
+            if ($kolektor) {
+                DB::table('kolektor')
+                    ->where('LOAN_NUMBER', $loanNumber)
+                    ->where('KOLEKTOR', $user->fullname)
+                    ->update([
+                        'KOLEKTOR' => $user->fullname
+                    ]);
+            } else {
+                DB::table('kolektor')->insert([
+                    'LOAN_NUMBER' => $loanNumber,
+                    'KOLEKTOR' => $user->fullname,
+                    'BACK_DATE' => now()
+                ]);
+            }
         }
 
         return $savedData;
