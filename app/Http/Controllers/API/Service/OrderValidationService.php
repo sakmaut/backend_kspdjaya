@@ -29,7 +29,6 @@ class OrderValidationService
 
         if ($vehicles->isEmpty()) {
             $errors[] = "Minimal 1 jaminan harus diisi";
-            return $errors;
         }
 
         if ($vehicles->some(
@@ -37,10 +36,6 @@ class OrderValidationService
             empty($v->CHASIS_NUMBER) || empty($v->ENGINE_NUMBER)
         )) {
             $errors[] = "No Rangka dan No Mesin tidak boleh kosong";
-        }
-
-        if (!empty($errors)) {
-            return $errors;
         }
 
         $this->validateBlacklist($errors, $ktp, $kk);
@@ -116,7 +111,6 @@ class OrderValidationService
     {
         if (empty($ktp) && empty($kk)) {
             $errors[] = "Nomor KTP atau Nomor KK wajib diisi salah satu";
-            return;
         }
 
         $blacklist = M_CrBlacklist::query()
