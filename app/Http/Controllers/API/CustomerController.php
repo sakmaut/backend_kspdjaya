@@ -493,12 +493,12 @@ class CustomerController extends Controller
                 return response()->json([], 200);
             }
 
-            $errors = [];
-            $this->checkValidation->validateBlacklist($errors, $request->no_ktp, "");
+            // $errors = [];
+            // $this->checkValidation->validateBlacklist($errors, $request->no_ktp, "");
 
-            if (!empty($errors)) {
-                return response()->json(["messages" => $errors], 422);
-            }
+            // if (!empty($errors)) {
+            //     return response()->json(["messages" => $errors], 422);
+            // }
 
             $data = new R_RoDetail($customer);
 
