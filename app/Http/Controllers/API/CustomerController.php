@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\API\Service\OrderValidationService;
 use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\R_CreditList;
@@ -22,14 +23,17 @@ class CustomerController extends Controller
 {
     protected $log;
     protected $loanSearchService;
+    protected $checkValidation;
 
     public function __construct(
         ExceptionHandling $log,
-        LoanSearchService $loanSearchService
+        LoanSearchService $loanSearchService,
+        OrderValidationService $checkValidation
     )
     {
         $this->log = $log;
         $this->loanSearchService = $loanSearchService;
+        $this->checkValidation = $checkValidation;
     }
 
     private function validateSearchRequest(Request $request): array
@@ -488,6 +492,13 @@ class CustomerController extends Controller
 
             if (!$customer) {
                 return response()->json([], 200);
+            }
+
+            $errors = [];
+            $this->checkValidation->validateBlacklist($errors, $request->no_ktp, "");
+
+            if (!empty($errors)) {
+                return response()->json($errors, 422);
             }
 
             $data = new R_RoDetail($customer);

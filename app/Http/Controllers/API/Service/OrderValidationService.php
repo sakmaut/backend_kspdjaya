@@ -107,7 +107,7 @@ class OrderValidationService
         return $errors;
     }
 
-    private function validateBlacklist(array &$errors, ?string $ktp, ?string $kk): void
+    public function validateBlacklist(array &$errors, ?string $ktp, ?string $kk): void
     {
         if (empty($ktp) && empty($kk)) {
             $errors[] = "Nomor KTP atau Nomor KK wajib diisi salah satu";
