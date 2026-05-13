@@ -506,12 +506,11 @@ class CustomerController extends Controller
 
             $this->checkValidation->validateBlacklist($errors, $customer->ID_NUMBER, $customer->KK_NUMBER);
 
-            return response()->json([
+            return response()->json(array_merge([
                 'status'    => true,
                 'blacklist' => !empty($errors),
                 'messages'  => $errors,
-                'data'      => new R_RoDetail($customer)
-            ], 200);
+            ], (new R_RoDetail($customer))->toArray(request())), 200);
         } catch (Exception $e) {
             return $this->log->logError($e, $request);
         }
