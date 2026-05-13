@@ -485,36 +485,59 @@ class CustomerController extends Controller
         }
     }
 
-    public function cekRO(Request $request)
-    {
+    public function cekRo(Request $request){
         try {
-            $errors = [];
-
-            $customer = M_Customer::with(['customer_document'])
-                ->where('ID_NUMBER', $request->no_ktp)
-                ->orderBy('CREATE_DATE', 'desc')
-                ->first();
+            $customer  = M_Customer::with(['customer_document'])->where('ID_NUMBER', $request->no_ktp)->orderBy('CREATE_DATE', 'desc')->first();
 
             if (!$customer) {
-                return response()->json([
-                    'status'   => false,
-                    'message'  => 'Data customer tidak ditemukan',
-                    'blacklist' => !empty($errors),
-                    'errors'   => $errors
-                ], 200);
+                return response()->json([], 200);
             }
 
-            $this->checkValidation->validateBlacklist($errors, $customer->ID_NUMBER, $customer->KK_NUMBER);
+            $errors = [];
+            $this->checkValidation->validateBlacklist($errors, $request->no_ktp, "");
 
-            return response()->json(array_merge([
-                'status'    => true,
-                'blacklist' => !empty($errors),
-                'messages'  => $errors,
-            ], (new R_RoDetail($customer))->toArray(request())), 200);
+            if (!empty($errors)) {
+                return response()->json(["messages" => $errors], 422);
+            }
+
+            $data = new R_RoDetail($customer);
+
+            return response()->json([$data], 200);
         } catch (Exception $e) {
             return $this->log->logError($e, $request);
         }
     }
+
+    // public function cekRO(Request $request)
+    // {
+    //     try {
+    //         $errors = [];
+
+    //         $customer = M_Customer::with(['customer_document'])
+    //             ->where('ID_NUMBER', $request->no_ktp)
+    //             ->orderBy('CREATE_DATE', 'desc')
+    //             ->first();
+
+    //         if (!$customer) {
+    //             return response()->json([
+    //                 'status'   => false,
+    //                 'message'  => 'Data customer tidak ditemukan',
+    //                 'blacklist' => !empty($errors),
+    //                 'errors'   => $errors
+    //             ], 200);
+    //         }
+
+    //         $this->checkValidation->validateBlacklist($errors, $customer->ID_NUMBER, $customer->KK_NUMBER);
+
+    //         return response()->json(array_merge([
+    //             'status'    => true,
+    //             'blacklist' => !empty($errors),
+    //             'messages'  => $errors,
+    //         ], (new R_RoDetail($customer))->toArray(request())), 200);
+    //     } catch (Exception $e) {
+    //         return $this->log->logError($e, $request);
+    //     }
+    // }
 
     public function getCollateralDocument($creditID, $param)
     {
