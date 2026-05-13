@@ -488,18 +488,26 @@ class CustomerController extends Controller
     public function cekRO(Request $request)
     {
         try {
-            $customer  = M_Customer::with(['customer_document'])->where('ID_NUMBER', $request->no_ktp)->orderBy('CREATE_DATE', 'desc')->first();
+            $errors = [];
+
+            $customer = M_Customer::with(['customer_document'])
+                ->where('ID_NUMBER', $request->no_ktp)
+                ->orderBy('CREATE_DATE', 'desc')
+                ->first();
 
             if (!$customer) {
-                return response()->json([], 200);
+                return response()->json([
+                    'status'   => false,
+                    'message'  => 'Data customer tidak ditemukan',
+                    'blacklist' => !empty($errors),
+                    'errors'   => $errors
+                ], 200);
             }
 
-            $data = new R_RoDetail($customer);
-
-            $errors = [];
-            $this->checkValidation->validateBlacklist($errors, $request->no_ktp, "");
+            $this->checkValidation->validateBlacklist($errors, $customer->ID_NUMBER, $customer->KK_NUMBER);
 
             return response()->json([
+                'status'    => true,
                 'blacklist' => !empty($errors),
                 'messages'  => $errors,
                 'data'      => new R_RoDetail($customer)
