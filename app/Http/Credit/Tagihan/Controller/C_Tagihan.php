@@ -404,6 +404,47 @@ class C_Tagihan extends Controller
 
             $loanNumbers = M_Tagihan::whereIn('ID', $request->id)->pluck('LOAN_NUMBER');
 
+            $lkpSubQuery = DB::table('v_lkp_progress as v')
+                ->join('cl_lkp_detail as ld', 'ld.LKP_ID', '=', 'v.LKP_ID')
+                ->joinSub(
+                    DB::table('v_lkp_progress as v')
+                        ->join('cl_lkp_detail as ld', 'ld.LKP_ID', '=', 'v.LKP_ID')
+                        ->where('v.STATUS', 'OPEN')
+                        ->groupBy('ld.LOAN_NUMBER')
+                        ->select(
+                            'ld.LOAN_NUMBER',
+                            DB::raw('MAX(v.NoLkp) as max_lkp')
+                        ),
+                    'x',
+                    function ($join) {
+                        $join->on('x.LOAN_NUMBER', '=', 'ld.LOAN_NUMBER')
+                            ->on('x.max_lkp', '=', 'v.NoLkp');
+                    }
+                )
+                ->where('v.STATUS', 'OPEN')
+                ->whereMonth('v.Tanggal', now()->month)
+                ->whereYear('v.Tanggal', now()->year)
+                ->whereIn('ld.LOAN_NUMBER', $loanNumbers)
+                ->select(
+                    'v.NoLkp as LKP_NUMBER',
+                    'ld.LOAN_NUMBER'
+                )
+                ->get();
+
+            if ($lkpSubQuery->count() > 0) {
+
+                $loanList = $lkpSubQuery
+                    ->pluck('LOAN_NUMBER')
+                    ->implode(', ');
+
+                DB::rollBack();
+
+                return response()->json([
+                    'message' => 'Beberapa loan masih memiliki LKP OPEN',
+                    'loan_number' => $loanList
+                ], 400);
+            }
+
             foreach ($loanNumbers as $loanNumber) {
 
                 $kolektor = DB::table('kolektor')
