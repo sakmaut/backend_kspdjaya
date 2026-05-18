@@ -80,4 +80,13 @@ class M_CrCollateral extends Model
     {
         return $this->hasMany(M_CrCollateralDocument::class, 'COLLATERAL_ID', 'ID');
     }
+
+    public function releaseDocuments()
+    {
+        return $this->hasMany(
+            M_CrCollateralDocumentRelease::class,
+            'COLLATERAL_ID',
+            'ID'
+        );
+    }
 }

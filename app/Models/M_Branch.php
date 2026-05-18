@@ -51,4 +51,11 @@ class M_Branch extends Model
             }
         });
     }
+
+    public function getKapos()
+    {
+        return $this->hasOne(User::class,'branch_id','ID')
+                    ->where('position', 'KAPOS')
+                    ->where('status', 'active');
+    }
 }
