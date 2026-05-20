@@ -915,4 +915,109 @@ class ReportController extends Controller
             ], 500);
         }
     }
+
+    public function lapTunggakan(Request $request)
+    {
+        try {
+            $query = "
+                SELECT 
+                    x.stats,
+                    x.LOAN_NUMBER,
+                    x.TGL_TUNGGAKAN,
+                    x.POKOK,
+                    x.BUNGA,
+                    x.JML_TUNGGAKAN,
+                    c.NAME AS nama_debitur,
+                    d.POLICE_NUMBER,
+                    br.NAME AS cabang,
+                    u.fullname AS marketing,
+                    cr.CREATED_AT AS tgl_cair,
+                    cr.PCPL_ORI AS plafond,
+                    cr.PERIOD AS tenor,
+                    cr.INSTALLMENT AS angsuran,
+                    cr.CREDIT_TYPE AS jenis
+                FROM (
+                    SELECT
+                        'TERLAMBAT' AS stats,
+                        a.LOAN_NUMBER,
+                        MIN(a.PAYMENT_DATE) AS TGL_TUNGGAKAN,
+                        SUM(a.PRINCIPAL - COALESCE(a.PAYMENT_VALUE_PRINCIPAL,0)) AS POKOK,
+                        SUM(a.INTEREST - COALESCE(a.PAYMENT_VALUE_INTEREST,0)) AS BUNGA,
+                        COUNT(a.PAYMENT_DATE) AS JML_TUNGGAKAN
+                    FROM credit_schedule a
+                    INNER JOIN credit b 
+                        ON b.LOAN_NUMBER = a.LOAN_NUMBER
+                    WHERE a.PAYMENT_DATE < NOW()
+                        AND a.PAID_FLAG IS NULL
+                        AND b.STATUS_REC = 'AC'
+                        AND a.PRINCIPAL > 0
+                    GROUP BY a.LOAN_NUMBER
+
+                    UNION ALL
+
+                    SELECT
+                        'AKAN_JATUH_TEMPO' AS stats,
+                        a.LOAN_NUMBER,
+                        MIN(a.PAYMENT_DATE) AS TGL_TUNGGAKAN,
+                        SUM(a.PRINCIPAL - COALESCE(a.PAYMENT_VALUE_PRINCIPAL,0)) AS POKOK,
+                        SUM(a.INTEREST - COALESCE(a.PAYMENT_VALUE_INTEREST,0)) AS BUNGA,
+                        COUNT(a.PAYMENT_DATE) AS JML_TUNGGAKAN
+                    FROM credit_schedule a
+                    INNER JOIN credit b 
+                        ON b.LOAN_NUMBER = a.LOAN_NUMBER
+                    WHERE a.PAYMENT_DATE < DATE_ADD(NOW(), INTERVAL 7 DAY)
+                        AND a.PAID_FLAG <> 'PAID'
+                        AND a.PRINCIPAL > 0
+                    GROUP BY a.LOAN_NUMBER
+                ) x
+                LEFT JOIN credit cr 
+                    ON cr.LOAN_NUMBER = x.LOAN_NUMBER
+                LEFT JOIN customer c 
+                    ON c.CUST_CODE = cr.CUST_CODE
+                LEFT JOIN cr_collateral d 
+                    ON d.CR_CREDIT_ID = cr.ID
+                LEFT JOIN branch br 
+                    ON br.ID = cr.BRANCH
+                LEFT JOIN users u 
+                    ON u.id = cr.MCF_ID
+                ORDER BY x.TGL_TUNGGAKAN ASC
+            ";
+
+            $results = DB::select($query);
+
+            $dataBaru = [];
+
+            foreach ($results as $item) {
+                $dataBaru[] = [
+                    'status'          => $item->stats ?? "",
+                    'no_kontrak'      => $item->LOAN_NUMBER ?? "",
+                    'nama_debitur'    => $item->nama_debitur ?? "",
+                    'no_polisi'       => $item->POLICE_NUMBER ?? "",
+                    'tgl_tunggakan'   => $item->TGL_TUNGGAKAN
+                        ? Carbon::parse($item->TGL_TUNGGAKAN)->format('d-m-Y')
+                        : null,
+                    'pokok'           => (int) $item->POKOK,
+                    'bunga'           => (int) $item->BUNGA,
+                    'jml_tunggakan'   => (int) $item->JML_TUNGGAKAN,
+                    'tgl_cair'        => $item->tgl_cair
+                        ? Carbon::parse($item->tgl_cair)->format('d-m-Y')
+                        : null,
+                    'cabang'          => $item->cabang ?? "",
+                    'marketing'       => $item->marketing ?? "",
+                    'plafond'         => (int) $item->plafond,
+                    'tenor'           => (int) $item->tenor,
+                    'angsuran'        => (int) $item->angsuran,
+                    'jenis'           => $item->jenis ?? "",
+                ];
+            }
+
+            return response()->json($dataBaru, 200);
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'message' => $e->getMessage(),
+                'status'  => 500
+            ], 500);
+        }
+    }
 }

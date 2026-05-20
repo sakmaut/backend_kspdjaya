@@ -157,6 +157,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
 
     Route::post('lap_pembayaran', [ReportController::class, 'lapPembayaran']);
     Route::post('lap_aging', [ReportController::class, 'lapAging']);
+    Route::get('lap_tunggakan', [ReportController::class, 'lapTunggakan']);
 
     //Saving
     Route::resource('account', C_Account::class);
