@@ -545,6 +545,7 @@ class ReportController extends Controller
             $ttlAmtBayar  = 0;
             $ttlDenda  = 0;
             $ttlBayarDenda  = 0;
+            $ttlOvd  = 0;
             $amtAngss = 0;
             $sisaAngss = 0;
 
@@ -574,6 +575,7 @@ class ReportController extends Controller
 
                     $ttlAmtAngs += $res->INSTALLMENT;
                     $ttlDenda  += $res->PAST_DUE_PENALTY;
+                    $ttlOvd  += $res->OD ?? 0;
                 }
 
                 $ttlBayarDenda  += $res->denda ?? 0;
@@ -602,13 +604,13 @@ class ReportController extends Controller
                 ];
             }
 
-
             $schedule['total'] = [
                 'ttlAmtAngs' => $ttlAmtAngs ?? '0',
                 'ttlAmtBayar' => $ttlAmtBayar ?? '0',
                 'ttlSisaAngs' => $ttlAmtAngs - $ttlAmtBayar ?? '0',
                 'ttlDenda' => $ttlDenda ?? '0',
                 'ttlBayarDenda' => $ttlBayarDenda ?? '0',
+                'ttlOvd' => $ttlOvd ?? '0',
             ];
 
             $creditDetail = M_Credit::with(['customer' => function ($query) {
