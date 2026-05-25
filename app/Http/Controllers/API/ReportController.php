@@ -652,6 +652,8 @@ class ReportController extends Controller
                             'Byr Dnda'   => number_format($byrDenda, 0),
                             'Ovd'        => $res->OD2 ?? 0
                         ];
+
+                        $ttlOvd +=  $res->OD2 ?? 0;
                     } else {
 
                         if ($amtBayar != 0 || $byrDenda != 0) {
@@ -674,7 +676,6 @@ class ReportController extends Controller
 
                     $ttlAmtBayar   += $amtBayar;
                     $ttlBayarDenda += $byrDenda;
-                    $ttlOvd +=  $res->OD2 ?? 0;
                 }
 
                 $SetTotal = [
@@ -737,7 +738,6 @@ class ReportController extends Controller
                     $ttlByrPokok += $byrPokok;
                     $ttlByrBunga += $byrBunga;
                     $ttlByrDenda += $byrDenda;
-                    $ttlOvdBungaMenurun +=  $res->OD ?? 0;
 
                     $uniqKey = $angs . '-' . $tglTempoFormatted;
 
@@ -780,6 +780,8 @@ class ReportController extends Controller
 
                             'Hari OD'   => $res->OD ?? 0
                         ];
+
+                        $ttlOvdBungaMenurun +=  $res->OD ?? 0;
                     } else {
                         if ($byrPokok != 0 || $byrBunga != 0 || $byrDenda != 0) {
 
