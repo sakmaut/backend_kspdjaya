@@ -600,6 +600,7 @@ class ReportController extends Controller
                 $ttlAmtBayar   = 0;
                 $ttlDenda      = 0;
                 $ttlBayarDenda = 0;
+                $ttlOvd = 0;
 
                 $usedTempoAngs = [];
 
@@ -632,7 +633,6 @@ class ReportController extends Controller
                         $displayAmtAngs  = number_format($amtAngs, 0);
                         $displayDenda    = number_format($res->PAST_DUE_PENALTY ?? 0, 0);
 
-                        // Total hanya dihitung sekali
                         $ttlAmtAngs += $amtAngs;
                         $ttlDenda   += floatval($res->PAST_DUE_PENALTY ?? 0);
 
@@ -673,54 +673,8 @@ class ReportController extends Controller
 
                     $ttlAmtBayar   += $amtBayar;
                     $ttlBayarDenda += $byrDenda;
+                    $ttlOvd +=  $res->OD2 ?? 0;
                 }
-
-                // foreach ($data as $res) {
-                //     $currentJtTempo = isset($res->PAYMENT_DATE) ? Carbon::parse($res->PAYMENT_DATE)->format('d-m-Y') : '';
-                //     $currentAngs = isset($res->INSTALLMENT_COUNT) ? $res->INSTALLMENT_COUNT : '';
-
-                //     $uniqArr = $currentJtTempo . '-' . $currentAngs;
-
-                //     if (in_array($uniqArr, $checkExist)) {
-                //         $currentJtTempo = '';
-                //         $currentAngs = '';
-                //         $amtAngs = $sisaAngss;
-                //         $sisaAngs = max($previousSisaAngs - floatval($res->angsuran ?? 0), 0);
-                //         $previousSisaAngs = $sisaAngs;
-                //         $displayDenda = '';
-                //     } else {
-                //         $sisaAngs = max(floatval($res->INSTALLMENT ?? 0) - floatval($res->angsuran ?? 0), 0);
-                //         $previousSisaAngs = $sisaAngs;
-                //         $amtAngs = $res->INSTALLMENT;
-                //         array_push($checkExist, $uniqArr);
-                //         $displayDenda = number_format($res->PAST_DUE_PENALTY ?? 0);
-
-                //         $ttlAmtAngs += $res->INSTALLMENT;
-                //         $ttlDenda  += $res->PAST_DUE_PENALTY;
-                //     }
-
-                //     $ttlBayarDenda  += $res->denda ?? 0;
-
-                //     $amtBayar =  floatval($res->angsuran ?? 0);
-                //     $sisaAngss = floatval($amtAngs ?? 0) - floatval($amtBayar ?? 0);
-
-                //     $ttlAmtBayar += $amtBayar;
-
-                //     $schedule['data_credit'][] = [
-                //         'Jt.Tempo' => $currentJtTempo,
-                //         'Angs' => $currentAngs,
-                //         'Seq' => $res->INST_COUNT_INCREMENT ?? 0,
-                //         'Amt Angs' => number_format($amtAngs ?? 0),
-                //         'Denda' => $displayDenda,
-                //         'No Ref' => $res->INVOICE ?? '',
-                //         'Tgl Bayar' => $res->ENTRY_DATE ? Carbon::parse($res->ENTRY_DATE ?? '')->format('d-m-Y') : '',
-                //         'Amt Bayar' => number_format($amtBayar ?? 0),
-                //         'Sisa Angs' => number_format($sisaAngss),
-                //         'Byr Dnda' => number_format($res->denda ?? 0),
-                //         'Sisa Tghn' => "0",
-                //         'Ovd' => $res->OD ?? 0
-                //     ];
-                // }
 
                 $SetTotal = [
                     '',
@@ -733,7 +687,7 @@ class ReportController extends Controller
                     number_format($ttlAmtBayar ?? 0, 0, ',', '.'),
                     number_format($ttlAmtAngs - $ttlAmtBayar, 0, ',', '.'),
                     number_format($ttlBayarDenda, 0, ',', '.'),
-                    '',
+                    number_format($ttlOvd, 0, ',', '.'),
                 ];
             } else {
                 $data = DB::select("CALL inquiry_details_bunga_menurun(?)", [$id]);
@@ -766,6 +720,7 @@ class ReportController extends Controller
                 $ttlByrBunga  = 0;
                 $ttlByrDenda  = 0;
                 $ttlBayarDenda  = 0;
+                $ttlOvd  = 0;
 
                 foreach ($data as $res) {
                     $angs = $res->INSTALLMENT_COUNT ?? 0;
@@ -781,6 +736,7 @@ class ReportController extends Controller
                     $ttlByrPokok += $byrPokok;
                     $ttlByrBunga += $byrBunga;
                     $ttlByrDenda += $byrDenda;
+                    $ttlOvd += $res->OD ?? 0;
 
                     $uniqKey = $angs . '-' . $tglTempoFormatted;
 
@@ -842,43 +798,6 @@ class ReportController extends Controller
                             ];
                         }
                     }
-
-                    // if (in_array($uniqKey, $usedAngsuranTempo)) {
-                    //     $displayAngs = '';
-                    //     $displayTglTempo = '';
-                    //     $displayPokok = '';
-                    //     $displayBunga = '';
-                    //     $displayDenda = '';
-                    // } else {
-                    //     $displayAngs = $angs;
-                    //     $displayTglTempo = $tglTempoFormatted;
-                    //     $displayPokok = number_format($res->PRINCIPAL ?? 0, 0);
-                    //     $displayBunga = number_format($interest, 0);
-                    //     $displayDenda = number_format($res->PENALTY ?? 0, 0);
-
-                    //     $ttlPokok += floatval($res->PRINCIPAL ?? 0);
-                    //     $ttlBunga += $interest;
-                    //     $ttlDenda += floatval($res->PENALTY ?? 0);
-
-                    //     $usedAngsuranTempo[] = $uniqKey;
-                    // }
-
-                    // // if ($byrPokok != 0 || $byrBunga != 0 || $byrDenda != 0) {
-
-                    // // }
-
-                    // $data_credit[] = [
-                    //     'Angs' => $displayAngs,
-                    //     'Jt.Tempo' => $displayTglTempo,
-                    //     'Pokok' => $displayPokok,
-                    //     'Bunga' => $displayBunga,
-                    //     'Denda' => $displayDenda,
-                    //     'Tgl Bayar' => $tglBayarFormatted,
-                    //     'Byr Pokok' => $byrPokok > 0 ? number_format($byrPokok, 0) : 0,
-                    //     'Byr Bunga' => $byrBunga > 0 ? number_format($byrBunga, 0) : 0,
-                    //     'Byr Dnda' => $byrDenda > 0 ? number_format($byrDenda, 0) : 0,
-                    //     'Hari OD' => $res->OD ?? 0
-                    // ];
                 }
 
                 $SetTotal = [
@@ -891,7 +810,7 @@ class ReportController extends Controller
                     number_format($ttlByrPokok, 0, ',', '.'),
                     number_format($ttlByrBunga, 0, ',', '.'),
                     number_format($ttlByrDenda, 0, ',', '.'),
-                    '',
+                    number_format($ttlOvd, 0, ',', '.'),,
                 ];
 
                 $schedule['data_credit'] = $data_credit;
