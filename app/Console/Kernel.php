@@ -30,7 +30,7 @@ class Kernel extends ConsoleKernel
         // $schedule->command('app:listan-service')->monthlyOn(1, '05:00')->timezone('Asia/Jakarta');
 
 
-        // $schedule->command('app:listan-service')->dailyAt('14:44');
+        $schedule->command('app:listan-service')->dailyAt('07:55');
         // $schedule->command('app:lkp-service')->dailyAt('05:00')->timezone('Asia/Jakarta');
     }
 
