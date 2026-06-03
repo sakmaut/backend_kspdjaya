@@ -952,7 +952,9 @@ class ReportController extends Controller
                     WHERE a.PAYMENT_DATE < NOW()
                         AND a.PAID_FLAG IS NULL
                         AND b.STATUS_REC = 'AC'
-                        AND a.PRINCIPAL > 0
+                        AND case when b.CREDIT_TYPE <> 'rekening_koran' then a.PRINCIPAL  
+								 when b.CREDIT_TYPE = 'rekening_koran' then a.INTEREST - coalesce(a.PAYMENT_VALUE_INTEREST,0)
+								 else 0 end > 0
                     GROUP BY a.LOAN_NUMBER
 
                     UNION ALL
@@ -969,7 +971,10 @@ class ReportController extends Controller
                         ON b.LOAN_NUMBER = a.LOAN_NUMBER
                     WHERE a.PAYMENT_DATE < DATE_ADD(NOW(), INTERVAL 7 DAY)
                         AND a.PAID_FLAG <> 'PAID'
-                        AND a.PRINCIPAL > 0
+                        AND b.STATUS_REC = 'AC'
+                        AND case when b.CREDIT_TYPE <> 'rekening_koran' then a.PRINCIPAL  
+								 when b.CREDIT_TYPE = 'rekening_koran' then a.INTEREST - coalesce(a.PAYMENT_VALUE_INTEREST,0)
+								 else 0 end > 0
                     GROUP BY a.LOAN_NUMBER
                 ) x
                 LEFT JOIN credit cr 
