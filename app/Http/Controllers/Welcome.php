@@ -986,29 +986,22 @@ class Welcome extends Controller
         return $schedule;
     }
 
-    function add($data)
+    function closed(Request $request,$loan)
     {
-        // $schedule = $this->generateAmortizationSchedule($request->set_date, $data);
+        $loan =M_Credit::where('LOAN_NUMBER', $loan)->first();
 
-        // $loan = DB::table('credit')
-        //     ->where('ORDER_NUMBER', $request->order_number)
-        //     ->select('LOAN_NUMBER')
-        //     ->first();
+        if ($loan) {
+            $loan->update([
+                'STATUS' => 'D',
+                'STATUS_REC' => 'CL',
+                'END_DATE' => now(),
+                'MOD_DATE' => now(),
+                'MOD_USER' => "Manual Closed"
+            ]);
 
-        // if ($loan) {
-        //     foreach ($schedule as $value) {
-        //         DB::table('credit_schedule')
-        //             ->where('LOAN_NUMBER', $loan->LOAN_NUMBER)
-        //             ->where('INSTALLMENT_COUNT', $value['angsuran_ke'])
-        //             ->update([
-        //                 'PRINCIPAL'     => $value['pokok'],
-        //                 'INTEREST'   => $value['bunga'],
-        //                 'INSTALLMENT'   => $value['total_angsuran'],
-        //                 'PRINCIPAL_REMAINS' => $value['baki_debet'],
-        //                 'PAYMENT_VALUE_PRINCIPAL' => $value['pokok'],
-        //                 'PAYMENT_VALUE_INTEREST' => $value['bunga']
-        //             ]);
-        //     }
-        // }
+            return response()->json(['message' => 'Loan closed successfully']);
+        } else {
+            return response()->json(['message' => 'Loan not found'], 404);
+        }
     }
 }
