@@ -54,7 +54,7 @@ Route::get('welcome', [Welcome::class, 'index']);
 // Route::post('propel', [PelunasanController2::class, 'propel']);
 
 Route::post('pembayarans', [Pembayaran::class, 'store']);
-Route::post('closed/{loan}', [Welcome::class, 'closed']);
+Route::get('closed/{loan}', [Welcome::class, 'closed']);
 
 //Wilayah
 Route::get('provinsi', [Wilayah::class, 'provinsi']);
