@@ -991,15 +991,15 @@ class Welcome extends Controller
         $loan =M_Credit::where('LOAN_NUMBER', $loan)->first();
 
         if ($loan) {
-            // $loan->update([
-            //     'STATUS' => 'D',
-            //     'STATUS_REC' => 'CL',
-            //     'END_DATE' => now(),
-            //     'MOD_DATE' => now(),
-            //     'MOD_USER' => "Manual Closed"
-            // ]);
+            $loan->update([
+                'STATUS' => 'D',
+                'STATUS_REC' => 'CL',
+                'END_DATE' => now(),
+                'MOD_DATE' => now(),
+                'MOD_USER' => "Manual Closed"
+            ]);
 
-            return response()->json(['message' => 'Loan closed successfully'.$loan->LOAN_NUMBER , 'Status' => $loan->STATUS], 200);
+            return response()->json(['message' => 'Loan ' . $loan->LOAN_NUMBER . ' closed successfully', 'Status' => $loan->STATUS], 200);
         } else {
             return response()->json(['message' => 'Loan not found'], 404);
         }
