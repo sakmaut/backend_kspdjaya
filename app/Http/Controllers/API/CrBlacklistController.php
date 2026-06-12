@@ -34,7 +34,11 @@ class CrBlacklistController extends Controller
                                             ->orWhere('KTP', $param)
                                             ->orWhere('KK', $param);
                                     })
-                                        ->where('STATUS', 'ACTIVE')
+                                        ->where(function ($q) {
+                                            $q->where('STATUS', 'ACTIVE')
+                                                ->orWhere('STATUS', '')
+                                                ->orWhereNull('STATUS');
+                                        })
                                         ->selectRaw("
                                                 LOAN_NUMBER,
                                                 KTP,
