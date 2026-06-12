@@ -14,11 +14,13 @@ class CrBlacklistController extends Controller
     public function index(Request $request)
     {
         try {
-            $data =  M_CrBlacklist::all();
+            $data = M_CrBlacklist::all()->map(function ($item) {
+                $item->STATUS = $item->STATUS ?? 'INACTIVE';
+                return $item;
+            });
 
             return response()->json($data, 200);
         } catch (\Exception $e) {
-            ActivityLogger::logActivity($request,$e->getMessage(),500);
             return response()->json(['message' => $e->getMessage(),"status" => 500], 500);
         }
     }
