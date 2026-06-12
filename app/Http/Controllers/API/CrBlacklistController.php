@@ -15,7 +15,7 @@ class CrBlacklistController extends Controller
     {
         try {
             $data = M_CrBlacklist::all()->map(function ($item) {
-                $item->STATUS = $item->STATUS ?? 'INACTIVE';
+                $item->STATUS = $item->STATUS ?? 'ACTIVE';
                 return $item;
             });
 
