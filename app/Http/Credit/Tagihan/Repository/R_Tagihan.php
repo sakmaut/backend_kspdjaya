@@ -2,6 +2,7 @@
 
 namespace App\Http\Credit\Tagihan\Repository;
 
+use App\Http\Controllers\API\Config\CycleConfig;
 use App\Http\Credit\Tagihan\Model\M_Tagihan;
 use Illuminate\Support\Facades\DB;
 
@@ -319,42 +320,10 @@ class R_Tagihan
         return  $this->model::with(['credit_schedule'])->where('LOAN_NUMBER', $loanNumber)->get();
     }
 
-    // public function listTagihan($branchId = null)
-    // {
-    //     $query = $this->model::with([
-    //         'customer:CUST_CODE,NAME,ADDRESS,KELURAHAN,KECAMATAN,INS_ADDRESS,INS_KELURAHAN,INS_KECAMATAN',
-    //         'assignUser:username,fullname',
-    //         'branch:ID,NAME'
-    //     ])
-    //         ->select([
-    //             'ID',
-    //             'USER_ID',
-    //             'NO_SURAT',
-    //             'LOAN_NUMBER',
-    //             'CUST_CODE',
-    //             'CYCLE_AWAL',
-    //             'N_BOT',
-    //             'MCF',
-    //             'ANGSURAN_KE',
-    //             'TGL_JTH_TEMPO',
-    //             'ANGSURAN',
-    //             'BRANCH_ID',
-    //             'STATUS',
-    //             'created_at'
-    //         ])
-    //         ->where('STATUS', 'Aktif')
-    //         ->whereYear('created_at', date('Y'))
-    //         ->whereMonth('created_at', date('m'));
-
-    //     if ($branchId !== null) {
-    //         $query->where('BRANCH_ID', $branchId);
-    //     }
-
-    //     return $query->get();
-    // }
-
     public function listTagihan($branchId = null)
     {
+        $allowedCycles = CycleConfig::getAllowedDeployCycles();
+
         $lkpSubQuery = DB::table('v_lkp_progress as v')
             ->join('cl_lkp_detail as ld', 'ld.LKP_ID', '=', 'v.LKP_ID')
             ->joinSub(
@@ -386,33 +355,34 @@ class R_Tagihan
             'assignUser:username,fullname',
             'branch:ID,NAME'
         ])
-            ->leftJoinSub($lkpSubQuery, 'lkp', function ($join) {
-                $join->on('lkp.LOAN_NUMBER', '=', 'cl_deploy.LOAN_NUMBER');
-            })
-            ->select([
-                'cl_deploy.ID',
-                'cl_deploy.USER_ID',
-                'cl_deploy.NO_SURAT',
-                'cl_deploy.LOAN_NUMBER',
-                'cl_deploy.CUST_CODE',
-                'cl_deploy.CYCLE_AWAL',
-                'cl_deploy.N_BOT',
-                'cl_deploy.MCF',
-                'cl_deploy.ANGSURAN_KE',
-                'cl_deploy.TGL_JTH_TEMPO',
-                'cl_deploy.ANGSURAN',
-                'cl_deploy.BRANCH_ID',
-                'cl_deploy.STATUS',
-                'cl_deploy.CREATED_AT',
-                'lkp.LKP_NUMBER',
-                'lkp.LKP_STATUS'
-            ])
-            ->where('cl_deploy.STATUS', 'Aktif')
-            ->whereYear('cl_deploy.CREATED_AT', now()->year)
-            ->whereMonth('cl_deploy.CREATED_AT', now()->month);
+        ->leftJoinSub($lkpSubQuery, 'lkp', function ($join) {
+            $join->on('lkp.LOAN_NUMBER', '=', 'cl_deploy.LOAN_NUMBER');
+        })
+        ->select([
+            'cl_deploy.ID',
+            'cl_deploy.USER_ID',
+            'cl_deploy.NO_SURAT',
+            'cl_deploy.LOAN_NUMBER',
+            'cl_deploy.CUST_CODE',
+            'cl_deploy.CYCLE_AWAL',
+            'cl_deploy.N_BOT',
+            'cl_deploy.MCF',
+            'cl_deploy.ANGSURAN_KE',
+            'cl_deploy.TGL_JTH_TEMPO',
+            'cl_deploy.ANGSURAN',
+            'cl_deploy.BRANCH_ID',
+            'cl_deploy.STATUS',
+            'cl_deploy.CREATED_AT',
+            'lkp.LKP_NUMBER',
+            'lkp.LKP_STATUS'
+        ])
+        ->where('cl_deploy.STATUS', 'Aktif')
+        ->whereYear('cl_deploy.CREATED_AT', now()->year)
+        ->whereMonth('cl_deploy.CREATED_AT', now()->month);
 
         if ($branchId !== null) {
             $query->where('cl_deploy.BRANCH_ID', $branchId);
+            $query->whereIn('cl_deploy.CYCLE_AWAL', $allowedCycles);
         }
 
         return $query->get();
