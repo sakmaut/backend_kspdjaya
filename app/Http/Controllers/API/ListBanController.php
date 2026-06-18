@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\API\Config\CycleConfig;
 use App\Http\Controllers\Controller;
 use App\Models\M_Branch;
 use App\Models\User;
@@ -126,14 +127,13 @@ class ListBanController extends Controller
     public function listBanTest(Request $request)
     {
         try {
+            $user = $request->user();
             $dateFrom = $request->dari;
             $getBranch = $request->cabang_id;
-            $getPosition = $request->user()->position;
-            $getUserName = $request->user()->fullname;
+            $getPosition = $user->position;
+            $getUserName = $user->fullname;
 
-            $getBranchIdUser = $request->user()->branch_id;
-            // $getNow = date('mY', strtotime(now()));
-            // $getNow = Carbon::now('Asia/Jakarta')->format('mY');
+            $getBranchIdUser = $user->branch_id;
             $now = Carbon::now('Asia/Jakarta');
 
             $getNow = $now->format('mY');
@@ -482,8 +482,14 @@ class ListBanController extends Controller
                 $useUbLogic = false;
             }
 
-                $build = [];
+            $allowedCycles = CycleConfig::getAllowedListbanCycles();
+
+            $build = [];
             foreach ($results as $result) {
+
+                if (strtolower($getPosition) != 'ho' && !in_array($result->CYCLE_AWAL, $allowedCycles)) {
+                    continue;
+                }
 
                 $getUsers = User::find($result->SURVEYOR);
 
