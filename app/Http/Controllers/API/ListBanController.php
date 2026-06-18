@@ -487,9 +487,10 @@ class ListBanController extends Controller
             $build = [];
             foreach ($results as $result) {
 
-                if (strtolower($getPosition) != 'ho' && !in_array($result->CYCLE_AWAL, $allowedCycles)) {
-                    continue;
-                }
+                //Juli
+                // if (strtolower($getPosition) != 'ho' && !in_array($result->CYCLE_AWAL, $allowedCycles)) {
+                //     continue;
+                // }
 
                 $getUsers = User::find($result->SURVEYOR);
 

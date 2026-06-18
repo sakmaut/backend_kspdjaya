@@ -382,7 +382,9 @@ class R_Tagihan
 
         if ($branchId !== null) {
             $query->where('cl_deploy.BRANCH_ID', $branchId);
-            $query->whereIn('cl_deploy.CYCLE_AWAL', $allowedCycles);
+
+            //Juli
+            // $query->whereIn('cl_deploy.CYCLE_AWAL', $allowedCycles);
         }
 
         return $query->get();
