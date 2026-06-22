@@ -1510,7 +1510,7 @@ class ReportController extends Controller
                 }
 
                 // BAYAR_DENDA
-                if ($item->ACC_KEYS === "BAYAR_DENDA" && $amount > 0) {
+                if ($item->ACC_KEYS === "BAYAR_DENDA") {
                     $key = $invoice;
 
                     if (!isset($tempDenda[$key])) {
