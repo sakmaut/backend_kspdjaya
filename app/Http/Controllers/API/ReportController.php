@@ -1510,7 +1510,7 @@ class ReportController extends Controller
                 }
 
                 // BAYAR_DENDA
-                if ($item->ACC_KEYS === "BAYAR_DENDA") {
+                if ($item->ACC_KEYS === "BAYAR_DENDA" && $amount > 0) {
                     $key = $invoice;
 
                     if (!isset($tempDenda[$key])) {
@@ -1619,7 +1619,9 @@ class ReportController extends Controller
             }
 
             foreach ($tempDenda as $rowDenda) {
-                $rows[] = $rowDenda;
+                if ((float)$rowDenda['amount'] != 0) {
+                    $rows[] = $rowDenda;
+                }
             }
 
             foreach ($tempAngsuran as $feeRow) {
