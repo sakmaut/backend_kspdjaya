@@ -1510,7 +1510,7 @@ class ReportController extends Controller
                 }
 
                 // BAYAR_DENDA
-                if ($item->ACC_KEYS === "BAYAR_DENDA" && $amount > 0) {
+                if ($item->ACC_KEYS === "BAYAR_DENDA") {
                     $key = $invoice;
 
                     if (!isset($tempDenda[$key])) {
@@ -1529,11 +1529,7 @@ class ReportController extends Controller
                         ];
                     }
 
-                    if ($amount < 0) {
-                        $tempDenda[$key]["amount"] -= abs($amount);
-                    } else {
-                        $tempDenda[$key]["amount"] += $amount;
-                    }
+                    $tempDenda[$key]["amount"] += $amount;
                 }
 
                 if (in_array($item->ACC_KEYS, ['BAYAR_POKOK', 'BAYAR_BUNGA'])) {
