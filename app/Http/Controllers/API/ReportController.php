@@ -1529,7 +1529,11 @@ class ReportController extends Controller
                         ];
                     }
 
-                    $tempDenda[$key]["amount"] += $amount;
+                    if ($amount < 0) {
+                        $tempDenda[$key]["amount"] -= abs($amount);
+                    } else {
+                        $tempDenda[$key]["amount"] += $amount;
+                    }
                 }
 
                 if (in_array($item->ACC_KEYS, ['BAYAR_POKOK', 'BAYAR_BUNGA'])) {
