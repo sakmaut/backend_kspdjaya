@@ -46,94 +46,56 @@ class C_Tagihan extends Controller
     public function index(Request $request)
     {
         try {
-            $currentBranch = $request->user()->branch_id;
-            $currentPosition = $request->user()->position;
-            $allowedCycles = CycleConfig::getAllowedDeployCycles();
+            $user = $request->user();
 
-            if ($currentPosition != 'HO') {
-                $cycles = $allowedCycles;
-            } 
-            // else {
-            //     $cycles = ['CM', 'CX', 'C8', 'C7', 'C6', 'C5', 'C4', 'C3', 'C2', 'C1', 'C0'];
-            // }
-
-            // $query = DB::table('listban_data as a')
-            //     ->select(
-            //         'a.*',
-            //         'c.NAME',
-            //         'c.INS_ADDRESS',
-            //         'c.INS_KECAMATAN',
-            //         'c.INS_KELURAHAN',
-            //         'c.PHONE_HOUSE',
-            //         'c.PHONE_PERSONAL',
-            //         'c.OCCUPATION',
-            //         'd.ID as DEPLOY_ID',
-            //         'd.LOAN_NUMBER',
-            //         'd.STATUS as DEPLOY_STATUS',
-            //         'e.POSITION',
-            //         DB::raw('COALESCE(e.keterangan, "RESIGN") as STATUS_MCF')
-            //     )
-            //     ->leftJoin('customer as c', 'c.CUST_CODE', '=', 'a.CUST_CODE')
-            //     ->leftJoin('cl_deploy as d', function ($join) {
-            //         $join->on('d.LOAN_NUMBER', '=', 'a.NO_KONTRAK')
-            //             ->where('d.STATUS', '=', 'AKTIF')
-            //             ->whereMonth('d.CREATED_AT', now()->month)
-            //             ->whereYear('d.CREATED_AT', now()->year);
-            //     })
-            //     ->leftJoin('users as e', 'e.id', '=', 'a.SURVEYOR_ID')
-            //     ->whereIn('a.CYCLE_AWAL', $cycles)
-            //     ->whereNull('d.LOAN_NUMBER');
-
-            // if ($currentPosition != 'HO') {
-            //     $query->where('a.BRANCH_ID', $currentBranch);
-            // }
-
-            // $data = $query->get();
+            $currentBranch   = $user->branch_id;
+            $currentPosition = $user->position;
+            $allowedCycles   = CycleConfig::getAllowedDeployCycles();
 
             $startDate = now()->startOfMonth();
             $endDate   = now()->endOfMonth();
 
-            $query = M_ListbanData::select([
-                'ID',
-                'BRANCH_ID',
-                'KODE',
-                'NAMA_CABANG',
-                'CREDIT_ID',
-                'NO_KONTRAK',
-                'CUST_CODE',
-                'SURVEYOR_ID',
-                'CATT_SURVEY',
-                'PKK_HUTANG',
-                'JUMLAH_ANGSURAN',
-                'JARAK_ANGSURAN',
-                'PERIOD',
-                'OUTSTANDING',
-                'OS_BUNGA',
-                'OVERDUE_AWAL',
-                'AMBC_PKK_AWAL',
-                'AMBC_BNG_AWAL',
-                'AMBC_TOTAL_AWAL',
-                'CYCLE_AWAL',
-                'STATUS_BEBAN',
-                'POLA_BAYAR',
-                'OS_PKK_AKHIR',
-                'OS_BNG_AKHIR',
-                'OVERDUE_AKHIR',
-                'INSTALLMENT',
-                'LAST_INST',
-                'F_ARR_CR_SCHEDL',
-                'CURR_ARR',
-                'LAST_PAY',
-                'COLLECTOR',
-                'CARA_BAYAR',
-                'CYCLE_AKHIR',
-                'JENIS_JAMINAN',
-                'CREATED_AT'
-            ])
+            $query = M_ListbanData::query()
+                ->select([
+                    'ID',
+                    'BRANCH_ID',
+                    'KODE',
+                    'NAMA_CABANG',
+                    'CREDIT_ID',
+                    'NO_KONTRAK',
+                    'CUST_CODE',
+                    'SURVEYOR_ID',
+                    'CATT_SURVEY',
+                    'PKK_HUTANG',
+                    'JUMLAH_ANGSURAN',
+                    'JARAK_ANGSURAN',
+                    'PERIOD',
+                    'OUTSTANDING',
+                    'OS_BUNGA',
+                    'OVERDUE_AWAL',
+                    'AMBC_PKK_AWAL',
+                    'AMBC_BNG_AWAL',
+                    'AMBC_TOTAL_AWAL',
+                    'CYCLE_AWAL',
+                    'STATUS_BEBAN',
+                    'POLA_BAYAR',
+                    'OS_PKK_AKHIR',
+                    'OS_BNG_AKHIR',
+                    'OVERDUE_AKHIR',
+                    'INSTALLMENT',
+                    'LAST_INST',
+                    'F_ARR_CR_SCHEDL',
+                    'CURR_ARR',
+                    'LAST_PAY',
+                    'COLLECTOR',
+                    'CARA_BAYAR',
+                    'CYCLE_AKHIR',
+                    'JENIS_JAMINAN',
+                    'CREATED_AT',
+                ])
                 ->with([
-
-                    'customer' => function ($q) {
-                        $q->select([
+                    'customer' => function ($query) {
+                        $query->select([
                             'CUST_CODE',
                             'NAME',
                             'INS_ADDRESS',
@@ -141,52 +103,194 @@ class C_Tagihan extends Controller
                             'INS_KELURAHAN',
                             'PHONE_HOUSE',
                             'PHONE_PERSONAL',
-                            'OCCUPATION'
+                            'OCCUPATION',
                         ]);
                     },
 
-                    'surveyor' => function ($q) {
-                        $q->select([
+                    'surveyor' => function ($query) {
+                        $query->select([
                             'id',
                             'fullname',
                             'position',
                             'keterangan',
-                            'username'
+                            'username',
                         ]);
                     },
 
-                    'deploy' => function ($q) {
-                        $q->select([
+                    'deploy' => function ($query) {
+                        $query->select([
                             'ID',
                             'NO_SURAT',
                             'LOAN_NUMBER',
                             'STATUS',
-                            'CREATED_AT'
+                            'CREATED_AT',
                         ]);
-                    }
-
+                    },
                 ])
-
-                ->whereIn('CYCLE_AWAL', $cycles)
-
-                ->whereDoesntHave('deploy', function ($q) use ($startDate, $endDate) {
-                    $q->where('STATUS', 'AKTIF')
+                ->when($currentPosition !== 'HO', function ($query) use ($allowedCycles, $currentBranch) {
+                    $query->whereIn('CYCLE_AWAL', $allowedCycles)
+                        ->where('BRANCH_ID', $currentBranch);
+                })
+                ->whereDoesntHave('deploy', function ($query) use ($startDate, $endDate) {
+                    $query->where('STATUS', 'AKTIF')
                         ->whereBetween('CREATED_AT', [$startDate, $endDate]);
                 });
 
-            if ($currentPosition != 'HO') {
-                $query->where('BRANCH_ID', $currentBranch);
-            }
-
             $data = $query->get();
 
-            $dto = R_TagihanDetail::collection($data);
-
-            return response()->json($dto, 200);
+            return response()->json(
+                R_TagihanDetail::collection($data),
+                200
+            );
         } catch (\Exception $e) {
             return $this->log->logError($e, $request);
         }
     }
+
+    // public function index(Request $request)
+    // {
+    //     try {
+    //         $currentBranch = $request->user()->branch_id;
+    //         $currentPosition = $request->user()->position;
+    //         $allowedCycles = CycleConfig::getAllowedDeployCycles();
+
+    //         if ($currentPosition != 'HO') {
+    //             $cycles = $allowedCycles;
+    //         }
+    //         // else {
+    //         //     $cycles = ['CM', 'CX', 'C8', 'C7', 'C6', 'C5', 'C4', 'C3', 'C2', 'C1', 'C0'];
+    //         // }
+
+    //         // $query = DB::table('listban_data as a')
+    //         //     ->select(
+    //         //         'a.*',
+    //         //         'c.NAME',
+    //         //         'c.INS_ADDRESS',
+    //         //         'c.INS_KECAMATAN',
+    //         //         'c.INS_KELURAHAN',
+    //         //         'c.PHONE_HOUSE',
+    //         //         'c.PHONE_PERSONAL',
+    //         //         'c.OCCUPATION',
+    //         //         'd.ID as DEPLOY_ID',
+    //         //         'd.LOAN_NUMBER',
+    //         //         'd.STATUS as DEPLOY_STATUS',
+    //         //         'e.POSITION',
+    //         //         DB::raw('COALESCE(e.keterangan, "RESIGN") as STATUS_MCF')
+    //         //     )
+    //         //     ->leftJoin('customer as c', 'c.CUST_CODE', '=', 'a.CUST_CODE')
+    //         //     ->leftJoin('cl_deploy as d', function ($join) {
+    //         //         $join->on('d.LOAN_NUMBER', '=', 'a.NO_KONTRAK')
+    //         //             ->where('d.STATUS', '=', 'AKTIF')
+    //         //             ->whereMonth('d.CREATED_AT', now()->month)
+    //         //             ->whereYear('d.CREATED_AT', now()->year);
+    //         //     })
+    //         //     ->leftJoin('users as e', 'e.id', '=', 'a.SURVEYOR_ID')
+    //         //     ->whereIn('a.CYCLE_AWAL', $cycles)
+    //         //     ->whereNull('d.LOAN_NUMBER');
+
+    //         // if ($currentPosition != 'HO') {
+    //         //     $query->where('a.BRANCH_ID', $currentBranch);
+    //         // }
+
+    //         // $data = $query->get();
+
+    //         $startDate = now()->startOfMonth();
+    //         $endDate   = now()->endOfMonth();
+
+    //         $query = M_ListbanData::select([
+    //             'ID',
+    //             'BRANCH_ID',
+    //             'KODE',
+    //             'NAMA_CABANG',
+    //             'CREDIT_ID',
+    //             'NO_KONTRAK',
+    //             'CUST_CODE',
+    //             'SURVEYOR_ID',
+    //             'CATT_SURVEY',
+    //             'PKK_HUTANG',
+    //             'JUMLAH_ANGSURAN',
+    //             'JARAK_ANGSURAN',
+    //             'PERIOD',
+    //             'OUTSTANDING',
+    //             'OS_BUNGA',
+    //             'OVERDUE_AWAL',
+    //             'AMBC_PKK_AWAL',
+    //             'AMBC_BNG_AWAL',
+    //             'AMBC_TOTAL_AWAL',
+    //             'CYCLE_AWAL',
+    //             'STATUS_BEBAN',
+    //             'POLA_BAYAR',
+    //             'OS_PKK_AKHIR',
+    //             'OS_BNG_AKHIR',
+    //             'OVERDUE_AKHIR',
+    //             'INSTALLMENT',
+    //             'LAST_INST',
+    //             'F_ARR_CR_SCHEDL',
+    //             'CURR_ARR',
+    //             'LAST_PAY',
+    //             'COLLECTOR',
+    //             'CARA_BAYAR',
+    //             'CYCLE_AKHIR',
+    //             'JENIS_JAMINAN',
+    //             'CREATED_AT'
+    //         ])
+    //             ->with([
+
+    //                 'customer' => function ($q) {
+    //                     $q->select([
+    //                         'CUST_CODE',
+    //                         'NAME',
+    //                         'INS_ADDRESS',
+    //                         'INS_KECAMATAN',
+    //                         'INS_KELURAHAN',
+    //                         'PHONE_HOUSE',
+    //                         'PHONE_PERSONAL',
+    //                         'OCCUPATION'
+    //                     ]);
+    //                 },
+
+    //                 'surveyor' => function ($q) {
+    //                     $q->select([
+    //                         'id',
+    //                         'fullname',
+    //                         'position',
+    //                         'keterangan',
+    //                         'username'
+    //                     ]);
+    //                 },
+
+    //                 'deploy' => function ($q) {
+    //                     $q->select([
+    //                         'ID',
+    //                         'NO_SURAT',
+    //                         'LOAN_NUMBER',
+    //                         'STATUS',
+    //                         'CREATED_AT'
+    //                     ]);
+    //                 }
+
+    //             ])
+
+    //             ->whereIn('CYCLE_AWAL', $cycles)
+
+    //             ->whereDoesntHave('deploy', function ($q) use ($startDate, $endDate) {
+    //                 $q->where('STATUS', 'AKTIF')
+    //                     ->whereBetween('CREATED_AT', [$startDate, $endDate]);
+    //             });
+
+    //         if ($currentPosition != 'HO') {
+    //             $query->where('BRANCH_ID', $currentBranch);
+    //         }
+
+    //         $data = $query->get();
+
+    //         $dto = R_TagihanDetail::collection($data);
+
+    //         return response()->json($dto, 200);
+    //     } catch (\Exception $e) {
+    //         return $this->log->logError($e, $request);
+    //     }
+    // }
 
     public function list_tagihan_collector(Request $request)
     {
