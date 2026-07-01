@@ -154,9 +154,6 @@ class C_Tagihan extends Controller
             $currentPosition = $request->user()->position;
             $allowedCycles = CycleConfig::getAllowedDeployCycles();
 
-            if ($currentPosition != 'HO') {
-                $cycles = $allowedCycles;
-            }
             // else {
             //     $cycles = ['CM', 'CX', 'C8', 'C7', 'C6', 'C5', 'C4', 'C3', 'C2', 'C1', 'C0'];
             // }
@@ -270,15 +267,13 @@ class C_Tagihan extends Controller
                     }
 
                 ])
-
-                ->whereIn('CYCLE_AWAL', $cycles)
-
                 ->whereDoesntHave('deploy', function ($q) use ($startDate, $endDate) {
                     $q->where('STATUS', 'AKTIF')
                         ->whereBetween('CREATED_AT', [$startDate, $endDate]);
                 });
 
             if ($currentPosition != 'HO') {
+                $query->whereIn('CYCLE_AWAL', $allowedCycles);
                 $query->where('BRANCH_ID', $currentBranch);
             }
 
