@@ -2,6 +2,7 @@
 
 namespace App\Http\Credit\Tagihan\Controller;
 
+use App\Http\Controllers\API\Config\CycleConfig;
 use App\Http\Controllers\Component\ExceptionHandling;
 use App\Http\Controllers\Controller;
 use App\Http\Credit\Tagihan\Model\M_Tagihan;
@@ -47,9 +48,10 @@ class C_Tagihan extends Controller
         try {
             $currentBranch = $request->user()->branch_id;
             $currentPosition = $request->user()->position;
+            $allowedCycles = CycleConfig::getAllowedDeployCycles();
 
             if ($currentPosition != 'HO') {
-                $cycles = ['CM', 'C8', 'C7', 'C6', 'C5', 'C4', 'C3', 'C2', 'C1', 'C0'];
+                $cycles = $allowedCycles;
             } else {
                 $cycles = ['CM', 'CX', 'C8', 'C7', 'C6', 'C5', 'C4', 'C3', 'C2', 'C1', 'C0'];
             }
