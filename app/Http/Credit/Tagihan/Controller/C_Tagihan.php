@@ -52,9 +52,10 @@ class C_Tagihan extends Controller
 
             if ($currentPosition != 'HO') {
                 $cycles = $allowedCycles;
-            } else {
-                $cycles = ['CM', 'CX', 'C8', 'C7', 'C6', 'C5', 'C4', 'C3', 'C2', 'C1', 'C0'];
-            }
+            } 
+            // else {
+            //     $cycles = ['CM', 'CX', 'C8', 'C7', 'C6', 'C5', 'C4', 'C3', 'C2', 'C1', 'C0'];
+            // }
 
             // $query = DB::table('listban_data as a')
             //     ->select(
