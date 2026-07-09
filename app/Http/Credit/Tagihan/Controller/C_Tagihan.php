@@ -334,6 +334,7 @@ class C_Tagihan extends Controller
                         'f.INS_KELURAHAN',
                         'f.INS_RT',
                         'f.INS_RW',
+                        'f.INS_ZIP_CODE',
                         'f.PHONE_HOUSE',
                         'f.PHONE_PERSONAL',
                         DB::raw("(
