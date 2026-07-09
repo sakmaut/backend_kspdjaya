@@ -330,6 +330,7 @@ class C_Tagihan extends Controller
                         'cc.ID as COLLATERAL_ID',
                         'cc.POLICE_NUMBER',
                         'cc.PRODUCTION_YEAR',
+                        'f.INS_CITY',
                         'f.INS_KECAMATAN',
                         'f.INS_KELURAHAN',
                         'f.INS_RT',

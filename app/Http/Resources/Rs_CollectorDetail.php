@@ -73,7 +73,7 @@ class Rs_CollectorDetail extends JsonResource
                 ($this->RW ?? $this->INS_RW ?? null) ? 'RW ' . str_pad($this->RW ?? $this->INS_RW, 3, '0', STR_PAD_LEFT) : null,
                 ($this->DESA ?? $this->INS_KELURAHAN ?? null) ? 'Kel. ' . ($this->DESA ?? $this->INS_KELURAHAN) : null,
                 ($this->KEC ?? $this->INS_KECAMATAN ?? null) ? 'Kec. ' . ($this->KEC ?? $this->INS_KECAMATAN) : null,
-                ($this->KAB ?? $this->INS_KABUPATEN ?? null) ? 'Kab. ' . ($this->KAB ?? $this->INS_KABUPATEN) : null,
+                $this->CITY ?? $this->INS_CITY ?? $this->INS_KABUPATEN ?? null,
                 ($this->ZIP_CODE ?? $this->INS_ZIP_CODE ?? null) ? 'Kode Pos ' . ($this->ZIP_CODE ?? $this->INS_ZIP_CODE) : null,
             ]))),
             'desa' => $this->DESA ?? $this->INS_KELURAHAN ?? "",
