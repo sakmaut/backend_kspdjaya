@@ -1466,7 +1466,8 @@ class ReportController extends Controller
                 ],
                 'HeaderTable' => [
                     "Cabang",
-                    "Tanggal Transaksi",
+                    "Tanggal Buat",
+                    "Tanggal Masuk",
                     "Petugas",
                     "Jabatan",
                     "Nomor Kontrak",
@@ -1488,6 +1489,9 @@ class ReportController extends Controller
             foreach ($arusKas as $item) {
                 $invoice   = $item->INVOICE;
                 $tgl       = date('Y-m-d', strtotime($item->ENTRY_DATE));
+                $tglBuat   = !empty($item->tgl_buat)
+                    ? date('Y-m-d', strtotime($item->tgl_buat))
+                    : '';
                 $amount    = (float) $item->ORIGINAL_AMOUNT;
                 $pelunasan = strtolower($item->PAYMENT_TYPE) === 'pelunasan' ? "PELUNASAN" : "CASH_IN";
 
@@ -1498,6 +1502,7 @@ class ReportController extends Controller
                             "type"              => "CASH_IN",
                             "no_invoice"        => $invoice,
                             "no_kontrak"        => $item->LOAN_NUM,
+                            "tgl_buat"          => $tglBuat,
                             "tgl"               => $tgl,
                             "cabang"            => $item->BRANCH_NAME ?? "",
                             "user"              => $item->fullname ?? "",
@@ -1520,6 +1525,7 @@ class ReportController extends Controller
                             "type"              => $pelunasan,
                             "no_invoice"        => $invoice,
                             "no_kontrak"        => $item->LOAN_NUM,
+                            "tgl_buat"          => $tglBuat,
                             "tgl"               => $tgl,
                             "cabang"            => $item->BRANCH_NAME ?? "",
                             "user"              => $item->fullname ?? "",
@@ -1543,6 +1549,7 @@ class ReportController extends Controller
                             "type"              => "PELUNASAN",
                             "no_invoice"        => $invoice,
                             "no_kontrak"        => $item->LOAN_NUM,
+                            "tgl_buat"          => $tglBuat,
                             "tgl"               => $tgl,
                             "cabang"            => $item->BRANCH_NAME ?? "",
                             "user"              => $item->fullname ?? "",
@@ -1563,6 +1570,7 @@ class ReportController extends Controller
                         "type"              => "PELUNASAN",
                         "no_invoice"        => $invoice,
                         "no_kontrak"        => $item->LOAN_NUM,
+                        "tgl_buat"          => $tglBuat,
                         "tgl"               => $tgl,
                         "cabang"            => $item->BRANCH_NAME ?? "",
                         "user"              => $item->fullname ?? "",
@@ -1581,6 +1589,7 @@ class ReportController extends Controller
                         "type"              => $pelunasan,
                         "no_invoice"        => $invoice,
                         "no_kontrak"        => $item->LOAN_NUM,
+                        "tgl_buat"          => $tglBuat,
                         "tgl"               => $tgl,
                         "cabang"            => $item->BRANCH_NAME ?? "",
                         "user"              => $item->fullname ?? "",
@@ -1601,6 +1610,7 @@ class ReportController extends Controller
                             "type"              => "FEE_BUNGA",
                             "no_invoice"        => $invoice,
                             "no_kontrak"        => $item->LOAN_NUM,
+                            "tgl_buat"          => $tglBuat,
                             "tgl"               => $tgl,
                             "cabang"            => $item->BRANCH_NAME ?? "",
                             "user"              => $item->fullname ?? "",
@@ -1638,6 +1648,7 @@ class ReportController extends Controller
                     "type"              => "CASH_OUT",
                     "no_invoice"        => "",
                     "no_kontrak"        => $item->LOAN_NUM,
+                    "tgl_buat"          => date('Y-m-d', strtotime($item->ENTRY_DATE)),
                     "tgl"               => date('Y-m-d', strtotime($item->ENTRY_DATE)),
                     "cabang"            => $item->BRANCH_NAME ?? "",
                     "user"              => $item->fullname ?? "",
@@ -1732,6 +1743,7 @@ class ReportController extends Controller
 
                     $row = [
                         $row["cabang"],
+                        $row["tgl_buat"],
                         $row["tgl"],
                         $row["user"],
                         $row["position"],
