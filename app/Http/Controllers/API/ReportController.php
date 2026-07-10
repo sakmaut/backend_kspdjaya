@@ -1466,8 +1466,8 @@ class ReportController extends Controller
                 ],
                 'HeaderTable' => [
                     "Cabang",
-                    "Tanggal Buat",
-                    "Tanggal Masuk",
+                    "Tgl Input",
+                    "Tgl Approve",
                     "Petugas",
                     "Jabatan",
                     "Nomor Kontrak",

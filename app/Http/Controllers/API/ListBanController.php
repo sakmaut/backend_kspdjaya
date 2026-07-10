@@ -171,7 +171,15 @@ class ListBanController extends Controller
                                 cl.CREATED_AT AS TGL_BOOKING,
                                 NULL AS UB,
                                 NULL AS PLATFORM,
-                                CONCAT(c.INS_ADDRESS,' RT/', c.INS_RT, ' RW/', c.INS_RW, ' ', c.INS_CITY, ' ', c.INS_PROVINCE) AS ALAMAT_TAGIH,
+                                CONCAT(
+                                    IFNULL(c.INS_ADDRESS, ''),
+                                    IF(c.INS_RT IS NOT NULL AND c.INS_RT <> '', CONCAT(' RT ', LPAD(c.INS_RT, 3, '0')), ''),
+                                    IF(c.INS_RW IS NOT NULL AND c.INS_RW <> '', CONCAT(' RW ', LPAD(c.INS_RW, 3, '0')), ''),
+                                    IF(c.INS_KELURAHAN IS NOT NULL AND c.INS_KELURAHAN <> '', CONCAT(' Kel. ', c.INS_KELURAHAN), ''),
+                                    IF(c.INS_KECAMATAN IS NOT NULL AND c.INS_KECAMATAN <> '', CONCAT(' Kec. ', c.INS_KECAMATAN), ''),
+                                    IF(c.INS_CITY IS NOT NULL AND c.INS_CITY <> '', CONCAT(' ', c.INS_CITY), ''),
+                                    IF(c.INS_ZIP_CODE IS NOT NULL AND c.INS_ZIP_CODE <> '', CONCAT(' Kode Pos ', c.INS_ZIP_CODE), '')
+                                ) AS ALAMAT_TAGIH,
                                 c.INS_KECAMATAN AS KODE_POST,
                                 c.INS_KELURAHAN AS SUB_ZIP,
                                 c.PHONE_HOUSE AS NO_TELP,
@@ -300,7 +308,15 @@ class ListBanController extends Controller
                                 cl.OD,
                                 '' AS UB,
                                 NULL AS PLATFORM,
-                                CONCAT(c.INS_ADDRESS,' RT/', c.INS_RT, ' RW/', c.INS_RW, ' ', c.INS_CITY, ' ', c.INS_PROVINCE) AS ALAMAT_TAGIH,
+                                CONCAT(
+                                    IFNULL(c.INS_ADDRESS, ''),
+                                    IF(c.INS_RT IS NOT NULL AND c.INS_RT <> '', CONCAT(' RT ', LPAD(c.INS_RT, 3, '0')), ''),
+                                    IF(c.INS_RW IS NOT NULL AND c.INS_RW <> '', CONCAT(' RW ', LPAD(c.INS_RW, 3, '0')), ''),
+                                    IF(c.INS_KELURAHAN IS NOT NULL AND c.INS_KELURAHAN <> '', CONCAT(' Kel. ', c.INS_KELURAHAN), ''),
+                                    IF(c.INS_KECAMATAN IS NOT NULL AND c.INS_KECAMATAN <> '', CONCAT(' Kec. ', c.INS_KECAMATAN), ''),
+                                    IF(c.INS_CITY IS NOT NULL AND c.INS_CITY <> '', CONCAT(' ', c.INS_CITY), ''),
+                                    IF(c.INS_ZIP_CODE IS NOT NULL AND c.INS_ZIP_CODE <> '', CONCAT(' Kode Pos ', c.INS_ZIP_CODE), '')
+                                ) AS ALAMAT_TAGIH,
                                 c.INS_KECAMATAN AS KODE_POST,
                                 c.INS_KELURAHAN AS SUB_ZIP,
                                 c.PHONE_HOUSE AS NO_TELP,
