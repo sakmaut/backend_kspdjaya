@@ -250,7 +250,35 @@ class Credit extends Controller
             "pihak_2" => [
                 "nama" => strtoupper($cr_personal->NAME ?? null),
                 "no_identitas" => strtoupper($cr_personal->ID_NUMBER ?? null),
-                "alamat" => strtoupper($cr_personal->ADDRESS ?? null)
+                "alamat" => strtoupper(trim(implode('', array_filter([
+                    $cr_personal->ADDRESS
+                        ? $cr_personal->ADDRESS
+                        : null,
+
+                    !empty($cr_personal->RT)
+                        ? ' RT ' . str_pad($cr_personal->RT, 3, '0', STR_PAD_LEFT)
+                        : null,
+
+                    !empty($cr_personal->RW)
+                        ? ' RW ' . str_pad($cr_personal->RW, 3, '0', STR_PAD_LEFT)
+                        : null,
+
+                    !empty($cr_personal->KELURAHAN)
+                        ? ' Kel. ' . $cr_personal->KELURAHAN
+                        : null,
+
+                    !empty($cr_personal->KECAMATAN)
+                        ? ' Kec. ' . $cr_personal->KECAMATAN
+                        : null,
+
+                    !empty($cr_personal->CITY)
+                        ? ' ' . $cr_personal->CITY
+                        : null,
+
+                    !empty($cr_personal->ZIP_CODE)
+                        ? ' Kode Pos ' . $cr_personal->ZIP_CODE
+                        : null,
+                ])))),
             ],
             "penjamin" => [],
             "pasangan" => [
