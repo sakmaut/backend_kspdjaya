@@ -580,19 +580,100 @@ class C_Tagihan extends Controller
         }
     }
 
+    // public function cl_deploy_delete(Request $request, $id)
+    // {
+    //     DB::beginTransaction();
+    //     try {
+    //         $check = M_Tagihan::where('ID', $id)->first();
+
+    //         $lkpSubQuery = DB::table('v_lkp_progress as v')
+    //             ->join('cl_lkp_detail as ld', 'ld.LKP_ID', '=', 'v.LKP_ID')
+    //             ->joinSub(
+    //                 DB::table('v_lkp_progress as v')
+    //                     ->join('cl_lkp_detail as ld', 'ld.LKP_ID', '=', 'v.LKP_ID')
+    //                     ->where('v.STATUS', 'OPEN')
+    //                     ->groupBy('ld.LOAN_NUMBER','ld.NO_SURAT')
+    //                     ->select(
+    //                         'ld.LOAN_NUMBER',
+    //                         'ld.NO_SURAT',
+    //                         DB::raw('MAX(v.NoLkp) as max_lkp')
+    //                     ),
+    //                 'x',
+    //                 function ($join) {
+    //                     $join->on('x.LOAN_NUMBER', '=', 'ld.LOAN_NUMBER')
+    //                         ->on('x.max_lkp', '=', 'v.NoLkp');
+    //                 }
+    //             )
+    //             ->where('v.STATUS', 'OPEN')
+    //             ->whereMonth('v.Tanggal', now()->month)
+    //             ->whereYear('v.Tanggal', now()->year)
+    //             ->where('ld.NO_SURAT', $check->NO_SURAT ?? "XXX")
+    //             ->select(
+    //                 'v.NoLkp as LKP_NUMBER',
+    //                 'ld.LOAN_NUMBER'
+    //             )
+    //             ->first();
+
+    //         if ($check) {
+    //             $check->delete();
+    //         }
+
+    //         DB::commit();
+    //         return response()->json(['message' => 'Cabang updated successfully'], 200);
+    //     } catch (\Exception $e) {
+    //         DB::rollback();
+    //         return $this->log->logError($e, $request);
+    //     }
+    // }
+
     public function cl_deploy_delete(Request $request, $id)
     {
         DB::beginTransaction();
         try {
             $check = M_Tagihan::where('ID', $id)->first();
 
-            if ($check) {
-                $check->delete();
+            if (!$check) {
+                DB::rollback();
+                return response()->json(['message' => 'Data tidak ditemukan'], 404);
             }
+
+            $lkpSubQuery = DB::table('v_lkp_progress as v')
+                ->join('cl_lkp_detail as ld', 'ld.LKP_ID', '=', 'v.LKP_ID')
+                ->joinSub(
+                    DB::table('v_lkp_progress as v')
+                        ->join('cl_lkp_detail as ld', 'ld.LKP_ID', '=', 'v.LKP_ID')
+                        ->where('v.STATUS', 'OPEN')
+                        ->groupBy('ld.LOAN_NUMBER', 'ld.NO_SURAT')
+                        ->select(
+                            'ld.LOAN_NUMBER',
+                            'ld.NO_SURAT',
+                            DB::raw('MAX(v.NoLkp) as max_lkp')
+                        ),
+                    'x',
+                    function ($join) {
+                        $join->on('x.LOAN_NUMBER', '=', 'ld.LOAN_NUMBER')
+                            ->on('x.max_lkp', '=', 'v.NoLkp');
+                    }
+                )
+                ->where('v.STATUS', 'OPEN')
+                ->whereMonth('v.Tanggal', now()->month)
+                ->whereYear('v.Tanggal', now()->year)
+                ->where('ld.NO_SURAT', $check->NO_SURAT ?? 'XXX')
+                ->select(
+                    'v.NoLkp as LKP_NUMBER',
+                    'ld.LOAN_NUMBER'
+                )
+                ->first();
+
+            if ($lkpSubQuery) {
+                throw new Exception('LKP masih aktif');
+            }
+
+            $check->delete();
 
             DB::commit();
             return response()->json(['message' => 'Cabang updated successfully'], 200);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollback();
             return $this->log->logError($e, $request);
         }
