@@ -22,7 +22,7 @@ class LoanSearchService
                 'CREDIT_TYPE'
             ])
             ->with([
-                'customer:ID,CUST_CODE,NAME,ALIAS,ADDRESS',
+                'customer:ID,CUST_CODE,NAME,ALIAS,ADDRESS,RT,RW,KELURAHAN,KECAMATAN,CITY,ZIP_CODE',
                 'collateral:CR_CREDIT_ID,POLICE_NUMBER',
                 'branch:ID,NAME'
             ])
