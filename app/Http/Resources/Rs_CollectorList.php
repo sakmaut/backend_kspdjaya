@@ -31,13 +31,13 @@ class Rs_CollectorList extends JsonResource
             'no_kontrak' => $this->LOAN_NUMBER ?? "",
             'nama_customer' => $this->NAMA_CUST ?? $this->NAME ?? "",
             'alamat' => trim(
-                ($this->customer?->INS_ADDRESS ?? '') .
-                    (!empty($this->customer?->INS_RT) ? ' RT ' . str_pad($this->customer->INS_RT, 3, '0', STR_PAD_LEFT) : '') .
-                    (!empty($this->customer?->INS_RW) ? ' RW ' . str_pad($this->customer->INS_RW, 3, '0', STR_PAD_LEFT) : '') .
-                    (!empty($this->customer?->INS_KELURAHAN) ? ' Kel. ' . $this->customer->INS_KELURAHAN : '') .
-                    (!empty($this->customer?->INS_KECAMATAN) ? ' Kec. ' . $this->customer->INS_KECAMATAN : '') .
-                    (!empty($this->customer?->INS_CITY) ? ' ' . $this->customer->INS_CITY : '') .
-                    (!empty($this->customer?->INS_ZIP_CODE) ? ' Kode Pos ' . $this->customer->INS_ZIP_CODE : '')
+                ($this->INS_ADDRESS ?? '') .
+                    (!empty($this->INS_RT) ? ' RT ' . str_pad($this->INS_RT, 3, '0', STR_PAD_LEFT) : '') .
+                    (!empty($this->INS_RW) ? ' RW ' . str_pad($this->INS_RW, 3, '0', STR_PAD_LEFT) : '') .
+                    (!empty($this->INS_KELURAHAN) ? ' Kel. ' . $this->INS_KELURAHAN : '') .
+                    (!empty($this->INS_KECAMATAN) ? ' Kec. ' . $this->INS_KECAMATAN : '') .
+                    (!empty($this->INS_CITY) ? ' ' . $this->INS_CITY : '') .
+                    (!empty($this->INS_ZIP_CODE) ? ' Kode Pos ' . $this->INS_ZIP_CODE : '')
             ),
             'angusran_ke' => $this->ANGSURAN_KE ?? 0,
             'tgl_jatuh_tempo' => $this->TGL_JTH_TEMPO ?? "",
