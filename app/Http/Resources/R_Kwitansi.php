@@ -431,13 +431,13 @@ class R_Kwitansi extends JsonResource
             "installment" => collect($details)->pluck('angsuran_ke')->implode(','),
             "bayar_angsuran" => $bayarAngsuran,
             "bayar_denda" => $bayarDenda,
-            "pembulatan" => (int) ($this->PEMBULATAN ?? 0),
-            "pinalti" => (int) ($this->PINALTY_PELUNASAN ?? 0),
-            "kembalian" => (int) ($this->KEMBALIAN ?? 0),
+            "pembulatan" => (float) ($this->PEMBULATAN ?? 0),
+            "pinalti" => (float) ($this->PINALTY_PELUNASAN ?? 0),
+            "kembalian" => (float) ($this->KEMBALIAN ?? 0),
             "total_bayar" => in_array($this->PAYMENT_TYPE, ['pokok_sebagian', 'pelunasan'])
-                ? (int) ($this->JUMLAH_UANG ?? 0)
-                : (int) ($this->TOTAL_BAYAR ?? 0),
-            "jumlah_uang" => (int) ($this->JUMLAH_UANG ?? 0),
+                ? (float) ($this->JUMLAH_UANG ?? 0)
+                : (float) ($this->TOTAL_BAYAR ?? 0),
+            "jumlah_uang" => (float) ($this->JUMLAH_UANG ?? 0),
             "terbilang" => bilangan($this->TOTAL_BAYAR) ?? null,
             "attachment" => $this->attachment->file_attach ?? null,
             "struktur" => $details,

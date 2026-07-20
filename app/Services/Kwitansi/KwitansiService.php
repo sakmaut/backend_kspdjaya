@@ -128,7 +128,7 @@ class KwitansiService
             "KELURAHAN" => $customer->customer['KELURAHAN'],
             "METODE_PEMBAYARAN" => $request->METODE_PEMBAYARAN,
             "TOTAL_BAYAR" => $request->TOTAL_BAYAR ?? $request->JUMLAH_TAGIHAN ?? 0,
-            "PEMBULATAN" => $request->PEMBULATAN ?? 0,
+            "PEMBULATAN" => floatval($request->PEMBULATAN ?? 0),
             "DISKON" => $request->JUMLAH_DISKON ?? 0,
             "DISKON_FLAG" => $request->FLAG_DISKON == true ? 'ya':'tidak' ?? "",
             "KEMBALIAN" => $request->KEMBALIAN ?? 0,

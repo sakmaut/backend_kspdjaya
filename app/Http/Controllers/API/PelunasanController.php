@@ -658,7 +658,7 @@ class PelunasanController extends Controller
             "TOTAL_BAYAR" => $request->TOTAL_BAYAR ?? 0,
             "PINALTY_PELUNASAN" => $request->BAYAR_PINALTI ?? 0,
             "DISKON_PINALTY_PELUNASAN" => $request->DISKON_PINALTI ?? 0,
-            "PEMBULATAN" => $request->PEMBULATAN,
+            "PEMBULATAN" => (float) $request->PEMBULATAN,
             "DISKON" => $request->JUMLAH_DISKON,
             "KEMBALIAN" => $request->KEMBALIAN,
             "JUMLAH_UANG" => $request->UANG_PELANGGAN,
