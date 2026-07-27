@@ -9,6 +9,7 @@ use App\Http\Controllers\Saving\Resource\Rs_TransaksiLog;
 use App\Http\Controllers\Saving\Service\S_SavingTransactionLog;
 use App\Models\M_Saving;
 use App\Models\M_SavingLog;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -40,7 +41,7 @@ class C_SavingTransactionLog extends Controller
     public function findTrxByAcc(Request $request, $id)
     {
         try {
-            $data = $this->getListData($id);
+            $data = $this->getListDataHarian($id);
             $json = Rs_TransaksiLog::collection($data);
 
             return response()->json($json, 200);
@@ -62,6 +63,66 @@ class C_SavingTransactionLog extends Controller
         $data = $query->orderBy('trx_date', 'asc')->get();
 
         return $data;
+    }
+
+    public function getListDataHarian($accnum = null)
+    {
+        DB::statement('SET SESSION cte_max_recursion_depth = 100000');
+
+        // 1. Transaksi asli dari saving_log
+        $query = M_SavingLog::with(['savings', 'savings.customer', 'user']);
+
+        if (!is_null($accnum)) {
+            $query->whereHas('savings', function ($q) use ($accnum) {
+                $q->where('ACC_NUM', $accnum);
+            });
+        }
+
+        $trxData = $query->orderBy('TRX_DATE', 'asc')->get();
+
+        // 2. Data bunga masuk & pajak, langsung dari view
+        $bungaQuery = DB::table('v_bunga_harian')
+            ->whereIn('jenis', ['BUNGA MASUK', 'PAJAK 20%']);
+
+        if (!is_null($accnum)) {
+            $bungaQuery->where('acc_number', $accnum);
+        }
+
+        $bungaData = $bungaQuery->orderBy('tanggal', 'asc')->get();
+
+        $bungaAsLog = $bungaData->map(function ($row) {
+            $obj = new \stdClass();
+            $obj->TRX_DATE     = $row->tanggal;
+            $obj->BALANCE      = $row->nominal;
+            $obj->TRX_TYPE     = $row->jenis;
+            $obj->BOOK         = null;
+            $obj->PAGE         = null;
+            $obj->ROW          = null;
+            $obj->DESCRIPTION  = $row->keterangan;
+            $obj->LAST_BALANCE = $row->saldo_sesudah;
+
+            $customer = new \stdClass();
+            $customer->NAME = $row->acc_name;
+
+            $savings = new \stdClass();
+            $savings->ACC_NUM = $row->acc_number;
+            $savings->customer = $customer;
+            $obj->savings = $savings;
+
+            $user = new \stdClass();
+            $user->fullname = 'SYSTEM';
+            $obj->user = $user;
+
+            return $obj;
+        });
+
+        $merged = $trxData->concat($bungaAsLog)
+            ->sortBy(function ($item) {
+                return Carbon::parse($item->TRX_DATE);
+            })
+            ->values();
+
+        return $merged;
     }
 
     public function show(Request $request, $accNumber)
