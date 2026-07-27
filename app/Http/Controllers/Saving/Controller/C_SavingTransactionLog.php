@@ -69,18 +69,31 @@ class C_SavingTransactionLog extends Controller
     {
         DB::statement('SET SESSION cte_max_recursion_depth = 100000');
 
-        // 1. Transaksi asli dari saving_log
-        $query = M_SavingLog::with(['savings', 'savings.customer', 'user']);
+        // ===========================
+        // 1. Ambil transaksi saving_log
+        // ===========================
+        $trxQuery = M_SavingLog::with(['savings.customer', 'user']);
 
         if (!is_null($accnum)) {
-            $query->whereHas('savings', function ($q) use ($accnum) {
+            $trxQuery->whereHas('savings', function ($q) use ($accnum) {
                 $q->where('ACC_NUM', $accnum);
             });
         }
 
-        $trxData = $query->orderBy('TRX_DATE', 'asc')->get();
+        $trxData = $trxQuery
+            ->orderBy('TRX_DATE')
+            ->orderBy('BOOK')
+            ->orderBy('PAGE')
+            ->orderBy('ROW')
+            ->get()
+            ->map(function ($item) {
+                $item->sort_order = 2; // transaksi normal
+                return $item;
+            });
 
-        // 2. Data bunga masuk & pajak, langsung dari view
+        // ===========================
+        // 2. Ambil bunga harian
+        // ===========================
         $bungaQuery = DB::table('v_bunga_harian')
             ->whereIn('jenis', ['DAILY INTEREST', 'TAX 20%']);
 
@@ -88,39 +101,109 @@ class C_SavingTransactionLog extends Controller
             $bungaQuery->where('acc_number', $accnum);
         }
 
-        $bungaData = $bungaQuery->orderBy('tanggal', 'asc')->get();
+        $bungaData = $bungaQuery
+            ->orderBy('tanggal')
+            ->get();
 
         $bungaAsLog = $bungaData->map(function ($row) {
+
             $obj = new \stdClass();
-            $obj->TRX_DATE     = $row->tanggal;
-            $obj->BALANCE      = $row->nominal;
-            $obj->TRX_TYPE     = $row->jenis;
-            $obj->BOOK         = 1;
-            $obj->PAGE         = 1;
-            $obj->ROW          = 1;
-            $obj->DESCRIPTION  = $row->keterangan;
-            $obj->LAST_BALANCE = $row->saldo_sesudah;
+
+            $obj->TRX_DATE = $row->tanggal;
+            $obj->BOOK = 1;
+            $obj->PAGE = 1;
+            $obj->ROW = 1;
+
+            $obj->TRX_TYPE = strtoupper($row->jenis);
+            $obj->DESCRIPTION = $row->keterangan;
+
+            // nominal disimpan apa adanya
+            $obj->BALANCE = (float) $row->nominal;
+
+            // nanti dihitung ulang
+            $obj->LAST_BALANCE = 0;
 
             $customer = new \stdClass();
             $customer->NAME = $row->acc_name;
 
-            $savings = new \stdClass();
-            $savings->ACC_NUM = $row->acc_number;
-            $savings->customer = $customer;
-            $obj->savings = $savings;
+            $saving = new \stdClass();
+            $saving->ACC_NUM = $row->acc_number;
+            $saving->customer = $customer;
+
+            $obj->savings = $saving;
 
             $user = new \stdClass();
             $user->fullname = 'SYSTEM';
             $obj->user = $user;
 
+            // bunga muncul sebelum transaksi manual pada tanggal yang sama
+            $obj->sort_order = $row->jenis == 'MONTHLY INTEREST' ? 0 : 1;
+
             return $obj;
         });
 
-        $merged = $trxData->concat($bungaAsLog)
-            ->sortBy(function ($item) {
-                return Carbon::parse($item->TRX_DATE);
+        // ===========================
+        // 3. Merge data
+        // ===========================
+        $merged = $trxData
+            ->concat($bungaAsLog)
+            ->sort(function ($a, $b) {
+
+                $dateCompare =Carbon::parse($a->TRX_DATE)
+                    ->timestamp <=>Carbon::parse($b->TRX_DATE)->timestamp;
+
+                if ($dateCompare !== 0) {
+                    return $dateCompare;
+                }
+
+                // DAILY INTEREST -> TAX -> TRANSAKSI
+                if ($a->sort_order != $b->sort_order) {
+                    return $a->sort_order <=> $b->sort_order;
+                }
+
+                if (($a->BOOK ?? 0) != ($b->BOOK ?? 0)) {
+                    return ($a->BOOK ?? 0) <=> ($b->BOOK ?? 0);
+                }
+
+                if (($a->PAGE ?? 0) != ($b->PAGE ?? 0)) {
+                    return ($a->PAGE ?? 0) <=> ($b->PAGE ?? 0);
+                }
+
+                return ($a->ROW ?? 0) <=> ($b->ROW ?? 0);
             })
             ->values();
+
+        // ===========================
+        // 4. Hitung ulang saldo berjalan
+        // ===========================
+        $runningBalance = 0;
+
+        foreach ($merged as $item) {
+
+            $nominal = (float) $item->BALANCE;
+
+            switch (strtoupper($item->TRX_TYPE)) {
+
+                case 'CREDIT':
+                case 'MONTHLY INTEREST':
+                    $runningBalance += abs($nominal);
+                    break;
+
+                case 'DEBET':
+                case 'TAX 20%':
+                case 'DEBIT':
+                    $runningBalance -= abs($nominal);
+                    break;
+
+                default:
+                    $runningBalance += $nominal;
+                    break;
+            }
+
+            $item->LAST_BALANCE = round($runningBalance, 2);
+
+            unset($item->sort_order);
+        }
 
         return $merged;
     }
