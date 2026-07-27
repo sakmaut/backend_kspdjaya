@@ -95,9 +95,9 @@ class C_SavingTransactionLog extends Controller
             $obj->TRX_DATE     = $row->tanggal;
             $obj->BALANCE      = $row->nominal;
             $obj->TRX_TYPE     = $row->jenis;
-            $obj->BOOK         = null;
-            $obj->PAGE         = null;
-            $obj->ROW          = null;
+            $obj->BOOK         = 1;
+            $obj->PAGE         = 1;
+            $obj->ROW          = 1;
             $obj->DESCRIPTION  = $row->keterangan;
             $obj->LAST_BALANCE = $row->saldo_sesudah;
 
