@@ -95,7 +95,7 @@ class C_SavingTransactionLog extends Controller
         // 2. Ambil bunga harian
         // ===========================
         $bungaQuery = DB::table('v_bunga_harian')
-            ->whereIn('jenis', ['DAILY INTEREST', 'TAX 20%']);
+            ->whereIn('jenis', ['MONTHLY INTEREST', 'TAX 20%']);
 
         if (!is_null($accnum)) {
             $bungaQuery->where('acc_number', $accnum);
