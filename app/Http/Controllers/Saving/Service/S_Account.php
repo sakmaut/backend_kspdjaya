@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Saving\Service;
 
+use App\Http\Controllers\Saving\Controller\C_SavingTransactionLog;
 use App\Http\Controllers\Saving\Repository\R_Account;
 use App\Models\M_Saving;
 use App\Models\M_SavingLog;
@@ -12,20 +13,37 @@ class S_Account extends R_Account
     protected $repository;
     protected $s_customer;
     protected $s_product_saving;
+    protected $trxLog;
 
     function __construct(
         R_Account $repository,
         S_Customers $s_customer,
-        S_ProductSaving $s_product_saving
+        S_ProductSaving $s_product_saving,
+        C_SavingTransactionLog $trxLog
     ) {
         $this->repository = $repository;
         $this->s_customer = $s_customer;
         $this->s_product_saving = $s_product_saving;
+        $this->trxLog = $trxLog;
     }
+
+    // public function getAllAccount()
+    // {
+    //     return $this->repository->getAllAccount();
+    // }
 
     public function getAllAccount()
     {
-        return $this->repository->getAllAccount();
+        $accounts = $this->repository->getAllAccount();
+
+        foreach ($accounts as $account) {
+            $account->setAttribute(
+                'computed_balance',
+                $this->trxLog->getFinalBalance($account->acc_number)
+            );
+        }
+
+        return $accounts;
     }
 
     public function getAllAccountByCustCode($custCode)
