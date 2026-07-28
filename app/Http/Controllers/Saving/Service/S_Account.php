@@ -69,7 +69,7 @@ class S_Account extends R_Account
         foreach ($accounts as $account) {
             $account->setAttribute(
                 'computed_balance',
-                $this->trxLog->getFinalBalance($account->acc_number)
+                $this->getFinalBalance($account->acc_number)
             );
         }
 
