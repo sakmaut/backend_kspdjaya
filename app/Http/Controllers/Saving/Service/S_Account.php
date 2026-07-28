@@ -13,18 +13,15 @@ class S_Account extends R_Account
     protected $repository;
     protected $s_customer;
     protected $s_product_saving;
-    protected $trxLog;
 
     function __construct(
         R_Account $repository,
         S_Customers $s_customer,
         S_ProductSaving $s_product_saving,
-        C_SavingTransactionLog $trxLog
     ) {
         $this->repository = $repository;
         $this->s_customer = $s_customer;
         $this->s_product_saving = $s_product_saving;
-        $this->trxLog = $trxLog;
     }
 
     public function getAllAccount()
