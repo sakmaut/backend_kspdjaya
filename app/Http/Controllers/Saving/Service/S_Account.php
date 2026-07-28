@@ -27,24 +27,24 @@ class S_Account extends R_Account
         $this->trxLog = $trxLog;
     }
 
-    // public function getAllAccount()
-    // {
-    //     return $this->repository->getAllAccount();
-    // }
-
     public function getAllAccount()
     {
-        $accounts = $this->repository->getAllAccount();
-
-        foreach ($accounts as $account) {
-            $account->setAttribute(
-                'computed_balance',
-                $this->trxLog->getFinalBalance($account->acc_number)
-            );
-        }
-
-        return $accounts;
+        return $this->repository->getAllAccount();
     }
+
+    // public function getAllAccount()
+    // {
+    //     $accounts = $this->repository->getAllAccount();
+
+    //     foreach ($accounts as $account) {
+    //         $account->setAttribute(
+    //             'computed_balance',
+    //             $this->trxLog->getFinalBalance($account->acc_number)
+    //         );
+    //     }
+
+    //     return $accounts;
+    // }
 
     public function getAllAccountByCustCode($custCode)
     {
