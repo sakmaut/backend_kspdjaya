@@ -32,6 +32,9 @@ class S_Account extends R_Account
 
     public function getFinalBalance($accnum = null)
     {
+        // ===========================
+        // 1. Sum dari saving_log
+        // ===========================
         $trxQuery = M_SavingLog::query();
 
         if (!is_null($accnum)) {
@@ -48,16 +51,30 @@ class S_Account extends R_Account
             ->whereRaw('UPPER(TRX_TYPE) IN (?, ?)', ['DEBET', 'DEBIT'])
             ->sum('BALANCE');
 
-        $bungaQuery = DB::table('v_bunga_harian')
-            ->whereIn('jenis', ['MONTHLY INTEREST', 'TAX 20%']);
+        // ===========================
+        // 2. Sum dari bunga harian
+        // ===========================
+        $bungaQuery = DB::table('v_bunga_harian');
 
         if (!is_null($accnum)) {
             $bungaQuery->where('acc_number', $accnum);
         }
 
-        $bungaSum = $bungaQuery->sum('nominal');
+        $bungaSumInterest = (clone $bungaQuery)
+            ->where('jenis', 'MONTHLY INTEREST')
+            ->sum('nominal');
 
-        $finalBalance = abs($trxSumCredit) - abs($trxSumDebit) - abs($bungaSum);
+        $bungaSumTax = (clone $bungaQuery)
+            ->where('jenis', 'TAX 20%')
+            ->sum('nominal');
+
+        // ===========================
+        // 3. Hitung saldo akhir
+        // ===========================
+        $finalBalance = abs($trxSumCredit)
+            + abs($bungaSumInterest)
+            - abs($trxSumDebit)
+            - abs($bungaSumTax);
 
         return round($finalBalance, 2);
     }
