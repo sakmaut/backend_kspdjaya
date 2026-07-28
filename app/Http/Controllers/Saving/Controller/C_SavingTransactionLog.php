@@ -208,47 +208,6 @@ class C_SavingTransactionLog extends Controller
         return $merged;
     }
 
-    public function getFinalBalance($accnum = null)
-    {
-        // ===========================
-        // 1. Sum dari saving_log
-        // ===========================
-        $trxQuery = M_SavingLog::query();
-
-        if (!is_null($accnum)) {
-            $trxQuery->whereHas('savings', function ($q) use ($accnum) {
-                $q->where('ACC_NUM', $accnum);
-            });
-        }
-
-        $trxSumCredit = (clone $trxQuery)
-            ->whereRaw('UPPER(TRX_TYPE) = ?', ['CREDIT'])
-            ->sum('BALANCE');
-
-        $trxSumDebit = (clone $trxQuery)
-            ->whereRaw('UPPER(TRX_TYPE) IN (?, ?)', ['DEBET', 'DEBIT'])
-            ->sum('BALANCE');
-
-        // ===========================
-        // 2. Sum dari bunga harian (MONTHLY INTEREST & TAX 20% dua-duanya mengurangi)
-        // ===========================
-        $bungaQuery = DB::table('v_bunga_harian')
-            ->whereIn('jenis', ['MONTHLY INTEREST', 'TAX 20%']);
-
-        if (!is_null($accnum)) {
-            $bungaQuery->where('acc_number', $accnum);
-        }
-
-        $bungaSum = $bungaQuery->sum('nominal');
-
-        // ===========================
-        // 3. Hitung saldo akhir
-        // ===========================
-        $finalBalance = abs($trxSumCredit) - abs($trxSumDebit) - abs($bungaSum);
-
-        return round($finalBalance, 2);
-    }
-
     public function show(Request $request, $accNumber)
     {
         try {

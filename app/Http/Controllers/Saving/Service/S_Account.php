@@ -7,6 +7,7 @@ use App\Http\Controllers\Saving\Repository\R_Account;
 use App\Models\M_Saving;
 use App\Models\M_SavingLog;
 use Exception;
+use Illuminate\Support\Facades\DB;
 
 class S_Account extends R_Account
 {
@@ -24,24 +25,57 @@ class S_Account extends R_Account
         $this->s_product_saving = $s_product_saving;
     }
 
-    public function getAllAccount()
-    {
-        return $this->repository->getAllAccount();
-    }
-
     // public function getAllAccount()
     // {
-    //     $accounts = $this->repository->getAllAccount();
-
-    //     foreach ($accounts as $account) {
-    //         $account->setAttribute(
-    //             'computed_balance',
-    //             $this->trxLog->getFinalBalance($account->acc_number)
-    //         );
-    //     }
-
-    //     return $accounts;
+    //     return $this->repository->getAllAccount();
     // }
+
+    public function getFinalBalance($accnum = null)
+    {
+        $trxQuery = M_SavingLog::query();
+
+        if (!is_null($accnum)) {
+            $trxQuery->whereHas('savings', function ($q) use ($accnum) {
+                $q->where('ACC_NUM', $accnum);
+            });
+        }
+
+        $trxSumCredit = (clone $trxQuery)
+            ->whereRaw('UPPER(TRX_TYPE) = ?', ['CREDIT'])
+            ->sum('BALANCE');
+
+        $trxSumDebit = (clone $trxQuery)
+            ->whereRaw('UPPER(TRX_TYPE) IN (?, ?)', ['DEBET', 'DEBIT'])
+            ->sum('BALANCE');
+
+        $bungaQuery = DB::table('v_bunga_harian')
+            ->whereIn('jenis', ['MONTHLY INTEREST', 'TAX 20%']);
+
+        if (!is_null($accnum)) {
+            $bungaQuery->where('acc_number', $accnum);
+        }
+
+        $bungaSum = $bungaQuery->sum('nominal');
+
+        $finalBalance = abs($trxSumCredit) - abs($trxSumDebit) - abs($bungaSum);
+
+        return round($finalBalance, 2);
+    }
+
+    public function getAllAccount()
+    {
+        $accounts = $this->repository->getAllAccount();
+
+        foreach ($accounts as $account) {
+            $account->setAttribute(
+                'computed_balance',
+                $this->trxLog->getFinalBalance($account->acc_number)
+            );
+        }
+
+        return $accounts;
+    }
+
 
     public function getAllAccountByCustCode($custCode)
     {
