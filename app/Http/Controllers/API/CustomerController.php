@@ -10,6 +10,7 @@ use App\Http\Resources\R_CustomerDetail;
 use App\Http\Resources\R_CustomerSearch;
 use App\Http\Resources\R_RoDetail;
 use App\Http\Resources\Rs_CustomerSearch;
+use App\Models\M_CrBlacklist;
 use App\Models\M_CrCollateral;
 use App\Models\M_Credit;
 use App\Models\M_Customer;
@@ -18,6 +19,7 @@ use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Ramsey\Uuid\Uuid;
 
 class CustomerController extends Controller
 {
@@ -499,6 +501,33 @@ class CustomerController extends Controller
             // if (!empty($errors)) {
             //     return response()->json(["messages" => $errors], 422);
             // }
+
+            $roResult = DB::select('CALL sp_get_max_od_by_customer(?)', [$request->no_ktp]);
+
+            $data = new R_RoDetail($customer);
+
+            $row   = $roResult[0] ?? null;
+            $maxOd = $row->OD2 ?? null;
+
+            if ($row !== null && $maxOd !== null && $maxOd > 90) {
+                $note = "OD lebih dari 90 hari (OD: {$maxOd})";
+
+                M_CrBlacklist::create([
+                    'ID'          => Uuid::uuid7()->toString(),
+                    'LOAN_NUMBER' => $row->LOAN_NUMBER ?? null,
+                    'NAME'        => $row->NAME ?? null,
+                    'KTP'         => $row->ID_NUMBER ?? null,
+                    'KK'          => $row->KK_NUMBER ?? null,
+                    'NOTE'        => $note,
+                    'STATUS'      => 'ACTIVE',
+                    'PERSON'      => 'SYSTEM',
+                    'DATE_ADD'    => Carbon::now('Asia/Jakarta'),
+                ]);
+
+                return response()->json([
+                    'messages' => [$note]
+                ], 422);
+            }
 
             $data = new R_RoDetail($customer);
 
