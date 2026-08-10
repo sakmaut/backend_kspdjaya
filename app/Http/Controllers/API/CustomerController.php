@@ -524,9 +524,7 @@ class CustomerController extends Controller
                     'DATE_ADD'    => Carbon::now('Asia/Jakarta'),
                 ]);
 
-                return response()->json([
-                    'messages' => [$note]
-                ], 422);
+                throw new Exception($note);
             }
 
             $data = new R_RoDetail($customer);
