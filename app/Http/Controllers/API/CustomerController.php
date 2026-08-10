@@ -502,7 +502,7 @@ class CustomerController extends Controller
             //     return response()->json(["messages" => $errors], 422);
             // }
 
-            $roResult = DB::select('CALL sp_get_max_od_by_customer(?)', [$request->no_ktp]);
+            $roResult = DB::select('CALL sp_get_max_od_by_customer(?)', [$customer->CUST_CODE]);
 
             $data = new R_RoDetail($customer);
 
