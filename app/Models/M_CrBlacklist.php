@@ -13,6 +13,7 @@ class M_CrBlacklist extends Model
     protected $fillable = [
        'ID',
        'LOAN_NUMBER',
+       'NAME',
        'KTP',
        'KK',
        'COLLATERAL',

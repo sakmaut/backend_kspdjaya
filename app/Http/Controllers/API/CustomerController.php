@@ -504,19 +504,18 @@ class CustomerController extends Controller
 
             $roResult = DB::select('CALL sp_get_max_od_by_customer(?)', [$customer->CUST_CODE]);
 
-            return response()->json($roResult, 200);
-
+            $row   = $roResult[0] ?? null;
             $maxOd = $row->OD2 ?? null;
 
-            if ($roResult !== null && $maxOd !== null && $maxOd > 90) {
+            if ($row !== null && $maxOd !== null && $maxOd > 90) {
                 $note = "OD lebih dari 90 hari (OD: {$maxOd})";
 
                 M_CrBlacklist::create([
                     'ID'          => Uuid::uuid7()->toString(),
-                    'LOAN_NUMBER' => $roResult->LOAN_NUMBER ?? null,
-                    'NAME'        => $roResult->NAME ?? null,
-                    'KTP'         => $roResult->ID_NUMBER ?? null,
-                    'KK'          => $roResult->KK_NUMBER ?? null,
+                    'LOAN_NUMBER' => $row->LOAN_NUMBER ?? null,
+                    'NAME'        => $row->NAME ?? null,
+                    'KTP'         => $row->ID_NUMBER ?? null,
+                    'KK'          => $row->KK_NUMBER ?? null,
                     'NOTE'        => $note,
                     'STATUS'      => 'ACTIVE',
                     'PERSON'      => 'SYSTEM',
