@@ -495,13 +495,6 @@ class CustomerController extends Controller
                 return response()->json([], 200);
             }
 
-            // $errors = [];
-            // $this->checkValidation->validateBlacklist($errors, $request->no_ktp, "");
-
-            // if (!empty($errors)) {
-            //     return response()->json(["messages" => $errors], 422);
-            // }
-
             $roResult = DB::select('CALL sp_get_max_od_by_customer(?)', [$customer->CUST_CODE]);
 
             $row   = $roResult[0] ?? null;
@@ -527,8 +520,6 @@ class CustomerController extends Controller
                         'DATE_ADD'    => Carbon::now('Asia/Jakarta'),
                     ]);
                 }
-
-                throw new Exception($note);
             }
 
             $data = new R_RoDetail($customer);
