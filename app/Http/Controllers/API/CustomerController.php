@@ -504,6 +504,8 @@ class CustomerController extends Controller
 
             $roResult = DB::select('CALL sp_get_max_od_by_customer(?)', [$customer->CUST_CODE]);
 
+            return response()->json($roResult, 200);
+
             $maxOd = $row->OD2 ?? null;
 
             if ($roResult !== null && $maxOd !== null && $maxOd > 90) {
