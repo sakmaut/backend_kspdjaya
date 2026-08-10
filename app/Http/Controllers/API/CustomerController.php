@@ -510,17 +510,23 @@ class CustomerController extends Controller
             if ($row !== null && $maxOd !== null && $maxOd > 90) {
                 $note = "OD lebih dari 90 hari (OD: {$maxOd})";
 
-                M_CrBlacklist::create([
-                    'ID'          => Uuid::uuid7()->toString(),
-                    'LOAN_NUMBER' => $row->LOAN_NUMBER ?? null,
-                    'NAME'        => $row->NAME ?? null,
-                    'KTP'         => $row->ID_NUMBER ?? null,
-                    'KK'          => $row->KK_NUMBER ?? null,
-                    'NOTE'        => $note,
-                    'STATUS'      => 'ACTIVE',
-                    'PERSON'      => 'SYSTEM',
-                    'DATE_ADD'    => Carbon::now('Asia/Jakarta'),
-                ]);
+                $existing = M_CrBlacklist::where('KTP', $row->ID_NUMBER)->first();
+
+                if ($existing) {
+                    $existing->update(['NOTE' => $note]);
+                } else {
+                    M_CrBlacklist::create([
+                        'ID'          => Uuid::uuid7()->toString(),
+                        'LOAN_NUMBER' => $row->LOAN_NUMBER ?? null,
+                        'NAME'        => $row->NAME ?? null,
+                        'KTP'         => $row->ID_NUMBER ?? null,
+                        'KK'          => $row->KK_NUMBER ?? null,
+                        'NOTE'        => $note,
+                        'STATUS'      => 'ACTIVE',
+                        'PERSON'      => 'SYSTEM',
+                        'DATE_ADD'    => Carbon::now('Asia/Jakarta'),
+                    ]);
+                }
 
                 throw new Exception($note);
             }
