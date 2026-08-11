@@ -1130,11 +1130,13 @@ class ReportController extends Controller
             }
 
             if (empty($dari) || $dari === 'null') {
-                $date = Carbon::now('Asia/Jakarta')->format('Ymd');
+                $start = Carbon::now('Asia/Jakarta')->startOfDay();
             } else {
-                $date = Carbon::parse($dari)->format('Ymd');
+                $start = Carbon::parse($dari, 'Asia/Jakarta')->startOfDay();
             }
-            $data->where(DB::raw('DATE_FORMAT(CREATED_AT,"%Y%m%d")'), $date);
+            $end = (clone $start)->endOfDay();
+
+            $data->whereBetween('CREATED_AT', [$start, $end]);
 
             if ($getPosition === 'ho') {
                 if (!empty($cabang)) {
