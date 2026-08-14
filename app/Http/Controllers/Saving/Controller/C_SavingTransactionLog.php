@@ -178,7 +178,34 @@ class C_SavingTransactionLog extends Controller
         // ===========================
         $runningBalance = 0;
 
-        foreach ($merged as $item) {
+        // foreach ($merged as $item) {
+
+        //     $nominal = (float) $item->BALANCE;
+
+        //     switch (strtoupper($item->TRX_TYPE)) {
+
+        //         case 'CREDIT':
+        //         case 'MONTHLY INTEREST':
+        //             $runningBalance += abs($nominal);
+        //             break;
+
+        //         case 'DEBET':
+        //         case 'TAX 20%':
+        //         case 'DEBIT':
+        //             $runningBalance -= abs($nominal);
+        //             break;
+
+        //         default:
+        //             $runningBalance += $nominal;
+        //             break;
+        //     }
+
+        //     $item->LAST_BALANCE = round($runningBalance, 2);
+
+        //     unset($item->sort_order);
+        // }
+
+        foreach ($merged as $index => $item) {
 
             $nominal = (float) $item->BALANCE;
 
@@ -190,8 +217,8 @@ class C_SavingTransactionLog extends Controller
                     break;
 
                 case 'DEBET':
-                case 'TAX 20%':
                 case 'DEBIT':
+                case 'TAX 20%':
                     $runningBalance -= abs($nominal);
                     break;
 
@@ -200,7 +227,11 @@ class C_SavingTransactionLog extends Controller
                     break;
             }
 
+            // saldo berjalan
             $item->LAST_BALANCE = round($runningBalance, 2);
+
+            // generate ulang nomor baris setelah merge
+            $item->ROW = $index + 1;
 
             unset($item->sort_order);
         }
