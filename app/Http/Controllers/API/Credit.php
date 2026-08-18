@@ -339,6 +339,10 @@ class Credit extends Controller
                 throw new Exception("Loan Number Exist", 500);
             }
 
+            if ($isRekeningKoran && (float) ($data->INTEREST_RATE ?? 0) <= 0) {
+                throw new Exception("Interest Rate 0.", 500);
+            }
+
             $this->insert_credit($SET_UUID, $request, $data, $loan_number, $installment_count, $cust_code);
 
             if ($isRekeningKoran) {
