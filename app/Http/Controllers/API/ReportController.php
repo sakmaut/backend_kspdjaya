@@ -800,8 +800,6 @@ class ReportController extends Controller
                                 'Hari OD'   => $res->OD ?? 0
                             ];
                         }
-
-                        $ttlOvdBungaMenurun +=  $res->OD ?? 0;
                     }
                 }
 
