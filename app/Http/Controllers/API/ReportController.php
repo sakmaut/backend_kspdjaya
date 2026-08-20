@@ -691,249 +691,449 @@ class ReportController extends Controller
                     number_format($ttlBayarDenda, 0, ',', '.'),
                     number_format($ttlOvd, 0, ',', '.'),
                 ];
-            } else {
-                $data = DB::select("CALL inquiry_details_bunga_menurun(?)", [$id]);
+            } 
+            // else {
+            //     $data = DB::select("CALL inquiry_details_bunga_menurun(?)", [$id]);
 
-                if (empty($data)) {
-                    return $schedule;
-                }
+            //     if (empty($data)) {
+            //         return $schedule;
+            //     }
 
-                $creditSchedule = M_CreditSchedule::where('LOAN_NUMBER', $id)->get();
+            //     $creditSchedule = M_CreditSchedule::where('LOAN_NUMBER', $id)->get();
 
-                $totalPrincipal = array_sum(array_map(function ($item) {
-                    return floatval($item['PRINCIPAL'] ?? 0);
-                }, $creditSchedule->toArray()));
+            //     $totalPrincipal = array_sum(array_map(function ($item) {
+            //         return floatval($item['PRINCIPAL'] ?? 0);
+            //     }, $creditSchedule->toArray()));
 
-                $data_credit = [];
+            //     $data_credit = [];
 
-                usort($data, function ($a, $b) {
-                    return ($a->INSTALLMENT_COUNT ?? 0) <=> ($b->INSTALLMENT_COUNT ?? 0);
-                });
+            //     usort($data, function ($a, $b) {
+            //         return ($a->INSTALLMENT_COUNT ?? 0) <=> ($b->INSTALLMENT_COUNT ?? 0);
+            //     });
 
-                $sisaPokok = $totalPrincipal;
-                $usedAngsuranTempo = [];
-                $bungaDibayarPerKey = [];
-                $data_credit = [];
+            //     $sisaPokok = $totalPrincipal;
+            //     $usedAngsuranTempo = [];
+            //     $bungaDibayarPerKey = [];
+            //     $data_credit = [];
 
-                $ttlPokok = 0;
-                $ttlBunga  = 0;
-                $ttlDenda  = 0;
-                $ttlByrPokok = 0;
-                $ttlByrBunga  = 0;
-                $ttlByrDenda  = 0;
-                $ttlBayarDenda  = 0;
-                $ttlOvdBungaMenurun  = 0;
+            //     $ttlPokok = 0;
+            //     $ttlBunga  = 0;
+            //     $ttlDenda  = 0;
+            //     $ttlByrPokok = 0;
+            //     $ttlByrBunga  = 0;
+            //     $ttlByrDenda  = 0;
+            //     $ttlBayarDenda  = 0;
+            //     $ttlOvdBungaMenurun  = 0;
 
-                // foreach ($data as $res) {
-                //     $angs = $res->INSTALLMENT_COUNT ?? 0;
-                //     $tglTempo = $res->PAYMENT_DATE ?? '';
-                //     $tglTempoFormatted = $tglTempo ? Carbon::parse($tglTempo)->format('d-m-Y') : '';
-                //     $tglBayarFormatted = $res->tgl_byr ? Carbon::parse($res->tgl_byr)->format('d-m-Y') : '';
+            //     foreach ($data as $res) {
+            //         $angs = $res->INSTALLMENT_COUNT ?? 0;
+            //         $tglTempo = $res->PAYMENT_DATE ?? '';
+            //         $tglTempoFormatted = $tglTempo ? Carbon::parse($tglTempo)->format('d-m-Y') : '';
+            //         $tglBayarFormatted = $res->tgl_byr ? Carbon::parse($res->tgl_byr)->format('d-m-Y') : '';
 
-                //     $byrPokok = floatval($res->bayar_pokok ?? 0);
-                //     $byrBunga = floatval($res->bayar_bunga ?? 0);
-                //     $byrDenda = floatval($res->bayar_denda ?? 0);
-                //     $interest = floatval($res->INTEREST ?? 0);
+            //         $byrPokok = floatval($res->bayar_pokok ?? 0);
+            //         $byrBunga = floatval($res->bayar_bunga ?? 0);
+            //         $byrDenda = floatval($res->bayar_denda ?? 0);
+            //         $interest = floatval($res->INTEREST ?? 0);
 
-                //     $ttlByrPokok += $byrPokok;
-                //     $ttlByrBunga += $byrBunga;
-                //     $ttlByrDenda += $byrDenda;
+            //         $ttlByrPokok += $byrPokok;
+            //         $ttlByrBunga += $byrBunga;
+            //         $ttlByrDenda += $byrDenda;
 
-                //     $uniqKey = $angs . '-' . $tglTempoFormatted;
+            //         $uniqKey = $angs . '-' . $tglTempoFormatted;
 
-                //     if (!isset($bungaDibayarPerKey[$uniqKey])) {
-                //         $bungaDibayarPerKey[$uniqKey] = 0;
-                //     }
+            //         if (!isset($bungaDibayarPerKey[$uniqKey])) {
+            //             $bungaDibayarPerKey[$uniqKey] = 0;
+            //         }
 
-                //     $interest = max(0, $interest - $bungaDibayarPerKey[$uniqKey]);
-                //     $bungaDibayarPerKey[$uniqKey] += $byrBunga;
+            //         $interest = max(0, $interest - $bungaDibayarPerKey[$uniqKey]);
+            //         $bungaDibayarPerKey[$uniqKey] += $byrBunga;
 
-                //     $sisaPokok = max(0, $sisaPokok - $byrPokok);
+            //         $sisaPokok = max(0, $sisaPokok - $byrPokok);
 
-                //     $isFirstRow = !in_array($uniqKey, $usedAngsuranTempo);
+            //         $isFirstRow = !in_array($uniqKey, $usedAngsuranTempo);
 
-                //     if ($isFirstRow) {
-                //         $displayAngs     = $angs;
-                //         $displayTglTempo = $tglTempoFormatted;
+            //         if ($isFirstRow) {
+            //             $displayAngs     = $angs;
+            //             $displayTglTempo = $tglTempoFormatted;
 
-                //         $displayPokok = number_format($res->PRINCIPAL ?? 0, 0);
-                //         $displayBunga = number_format($interest, 0);
-                //         $displayDenda = number_format($res->PENALTY ?? 0, 0);
+            //             $displayPokok = number_format($res->PRINCIPAL ?? 0, 0);
+            //             $displayBunga = number_format($interest, 0);
+            //             $displayDenda = number_format($res->PENALTY ?? 0, 0);
 
-                //         $ttlPokok += floatval($res->PRINCIPAL ?? 0);
-                //         $ttlBunga += $interest;
-                //         $ttlDenda += floatval($res->PENALTY ?? 0);
+            //             $ttlPokok += floatval($res->PRINCIPAL ?? 0);
+            //             $ttlBunga += $interest;
+            //             $ttlDenda += floatval($res->PENALTY ?? 0);
 
-                //         $usedAngsuranTempo[] = $uniqKey;
+            //             $usedAngsuranTempo[] = $uniqKey;
 
-                //         $data_credit[] = [
-                //             'Angs'      => $displayAngs,
-                //             'Jt.Tempo'  => $displayTglTempo,
-                //             'Pokok'     => $displayPokok,
-                //             'Bunga'     => $displayBunga,
-                //             'Denda'     => $displayDenda,
-                //             'Tgl Bayar' => $tglBayarFormatted,
+            //             $data_credit[] = [
+            //                 'Angs'      => $displayAngs,
+            //                 'Jt.Tempo'  => $displayTglTempo,
+            //                 'Pokok'     => $displayPokok,
+            //                 'Bunga'     => $displayBunga,
+            //                 'Denda'     => $displayDenda,
+            //                 'Tgl Bayar' => $tglBayarFormatted,
 
-                //             'Byr Pokok' => $byrPokok > 0 ? number_format($byrPokok, 0) : 0,
-                //             'Byr Bunga' => $byrBunga > 0 ? number_format($byrBunga, 0) : 0,
-                //             'Byr Dnda'  => $byrDenda > 0 ? number_format($byrDenda, 0) : 0,
+            //                 'Byr Pokok' => $byrPokok > 0 ? number_format($byrPokok, 0) : 0,
+            //                 'Byr Bunga' => $byrBunga > 0 ? number_format($byrBunga, 0) : 0,
+            //                 'Byr Dnda'  => $byrDenda > 0 ? number_format($byrDenda, 0) : 0,
 
-                //             'Hari OD'   => $res->OD ?? 0
-                //         ];
+            //                 'Hari OD'   => $res->OD ?? 0
+            //             ];
 
-                //         $ttlOvdBungaMenurun +=  $res->OD ?? 0;
-                //     } else {
-                //         if ($byrPokok != 0 || $byrBunga != 0 || $byrDenda != 0) {
+            //             $ttlOvdBungaMenurun +=  $res->OD ?? 0;
+            //         } else {
+            //             if ($byrPokok != 0 || $byrBunga != 0 || $byrDenda != 0) {
 
-                //             $data_credit[] = [
-                //                 'Angs'      => '',
-                //                 'Jt.Tempo'  => '',
-                //                 'Pokok'     => '',
-                //                 'Bunga'     => '',
-                //                 'Denda'     => '',
-                //                 'Tgl Bayar' => $tglBayarFormatted,
+            //                 $data_credit[] = [
+            //                     'Angs'      => '',
+            //                     'Jt.Tempo'  => '',
+            //                     'Pokok'     => '',
+            //                     'Bunga'     => '',
+            //                     'Denda'     => '',
+            //                     'Tgl Bayar' => $tglBayarFormatted,
 
-                //                 'Byr Pokok' => $byrPokok > 0 ? number_format($byrPokok, 0) : 0,
-                //                 'Byr Bunga' => $byrBunga > 0 ? number_format($byrBunga, 0) : 0,
-                //                 'Byr Dnda'  => $byrDenda > 0 ? number_format($byrDenda, 0) : 0,
+            //                     'Byr Pokok' => $byrPokok > 0 ? number_format($byrPokok, 0) : 0,
+            //                     'Byr Bunga' => $byrBunga > 0 ? number_format($byrBunga, 0) : 0,
+            //                     'Byr Dnda'  => $byrDenda > 0 ? number_format($byrDenda, 0) : 0,
 
-                //                 'Hari OD'   => $res->OD ?? 0
-                //             ];
-                //         }
-                //     }
-                // }
+            //                     'Hari OD'   => $res->OD ?? 0
+            //                 ];
+            //             }
+            //         }
+            //     }
 
-                foreach ($data as $res) {
+            //     $SetTotal = [
+            //         '',
+            //         '',
+            //         number_format($ttlPokok, 0, ',', '.'),
+            //         number_format($ttlBunga, 0, ',', '.'),
+            //         number_format($ttlDenda, 0, ',', '.'),
+            //         '',
+            //         number_format($ttlByrPokok, 0, ',', '.'),
+            //         number_format($ttlByrBunga, 0, ',', '.'),
+            //         number_format($ttlByrDenda, 0, ',', '.'),
+            //         number_format($ttlOvdBungaMenurun, 0, ',', '.'),
+            //     ];
 
-                    $angs = $res->INSTALLMENT_COUNT ?? 0;
+            //     $schedule['data_credit'] = $data_credit;
+            // }
+             else {
 
-                    $tglTempo = $res->PAYMENT_DATE ?? '';
+    $data = DB::select(
+        "CALL inquiry_details_bunga_menurun(?)",
+        [$id]
+    );
 
-                    $tglTempoFormatted = $tglTempo
-                        ? Carbon::parse($tglTempo)->format('d-m-Y')
-                        : '';
+    if (empty($data)) {
+        return $schedule;
+    }
 
-                    $tglBayarFormatted = !empty($res->tgl_byr)
-                        ? Carbon::parse($res->tgl_byr)->format('d-m-Y')
-                        : '';
+    $creditSchedule = M_CreditSchedule::where('LOAN_NUMBER', $id)->get();
 
-                    $byrPokok = floatval($res->bayar_pokok ?? 0);
-                    $byrBunga = floatval($res->bayar_bunga ?? 0);
-                    $byrDenda = floatval($res->bayar_denda ?? 0);
+    $totalPrincipal = array_sum(
+        array_map(function ($item) {
+            return floatval($item['PRINCIPAL'] ?? 0);
+        }, $creditSchedule->toArray())
+    );
 
-                    $interest = floatval($res->INTEREST ?? 0);
-                    $od = floatval($res->OD ?? 0);
+    usort($data, function ($a, $b) {
+        return ($a->INSTALLMENT_COUNT ?? 0)
+            <=> ($b->INSTALLMENT_COUNT ?? 0);
+    });
 
-                    /*
-     * SEMUA ROW DIHITUNG
-     */
-                    $ttlByrPokok += $byrPokok;
-                    $ttlByrBunga += $byrBunga;
-                    $ttlByrDenda += $byrDenda;
+    $sisaPokok = $totalPrincipal;
 
-                    $ttlOvdBungaMenurun += $od;
+    $usedAngsuranTempo = [];
+    $bungaDibayarPerKey = [];
 
-                    $uniqKey = $angs . '-' . $tglTempoFormatted;
+    $data_credit = [];
 
-                    if (!isset($bungaDibayarPerKey[$uniqKey])) {
-                        $bungaDibayarPerKey[$uniqKey] = 0;
-                    }
+    $ttlPokok = 0;
+    $ttlBunga = 0;
+    $ttlDenda = 0;
 
-                    $interest = max(
-                        0,
-                        $interest - $bungaDibayarPerKey[$uniqKey]
-                    );
+    $ttlByrPokok = 0;
+    $ttlByrBunga = 0;
+    $ttlByrDenda = 0;
 
-                    $bungaDibayarPerKey[$uniqKey] += $byrBunga;
+    // TOTAL OD SEMUA ROW
+    $ttlOvdBungaMenurun = 0;
 
-                    $sisaPokok = max(
-                        0,
-                        $sisaPokok - $byrPokok
-                    );
+    foreach ($data as $res) {
 
-                    $isFirstRow = !in_array(
-                        $uniqKey,
-                        $usedAngsuranTempo
-                    );
+        $angs = $res->INSTALLMENT_COUNT ?? 0;
 
-                    if ($isFirstRow) {
+        $tglTempo = $res->PAYMENT_DATE ?? '';
 
-                        $usedAngsuranTempo[] = $uniqKey;
+        $tglTempoFormatted = $tglTempo
+            ? Carbon::parse($tglTempo)->format('d-m-Y')
+            : '';
 
-                        $ttlPokok += floatval($res->PRINCIPAL ?? 0);
-                        $ttlBunga += $interest;
-                        $ttlDenda += floatval($res->PENALTY ?? 0);
+        $tglBayarFormatted = !empty($res->tgl_byr)
+            ? Carbon::parse($res->tgl_byr)->format('d-m-Y')
+            : '';
 
-                        $data_credit[] = [
-                            'Angs'      => $angs,
-                            'Jt.Tempo'  => $tglTempoFormatted,
-                            'Pokok'     => number_format($res->PRINCIPAL ?? 0, 0),
-                            'Bunga'     => number_format($interest, 0),
-                            'Denda'     => number_format($res->PENALTY ?? 0, 0),
-                            'Tgl Bayar' => $tglBayarFormatted,
+        $byrPokok = floatval($res->bayar_pokok ?? 0);
+        $byrBunga = floatval($res->bayar_bunga ?? 0);
+        $byrDenda = floatval($res->bayar_denda ?? 0);
 
-                            'Byr Pokok' => $byrPokok > 0
-                                ? number_format($byrPokok, 0)
-                                : 0,
+        $interest = floatval($res->INTEREST ?? 0);
+        $principal = floatval($res->PRINCIPAL ?? 0);
+        $penalty = floatval($res->PENALTY ?? 0);
 
-                            'Byr Bunga' => $byrBunga > 0
-                                ? number_format($byrBunga, 0)
-                                : 0,
+        /*
+        |--------------------------------------------------------------------------
+        | TOTAL PEMBAYARAN
+        |--------------------------------------------------------------------------
+        */
 
-                            'Byr Dnda' => $byrDenda > 0
-                                ? number_format($byrDenda, 0)
-                                : 0,
+        $ttlByrPokok += $byrPokok;
+        $ttlByrBunga += $byrBunga;
+        $ttlByrDenda += $byrDenda;
 
-                            'Hari OD' => $od
-                        ];
-                    } else {
 
-                        if (
-                            $byrPokok != 0 ||
-                            $byrBunga != 0 ||
-                            $byrDenda != 0
-                        ) {
-                            $data_credit[] = [
-                                'Angs'      => '',
-                                'Jt.Tempo'  => '',
-                                'Pokok'     => '',
-                                'Bunga'     => '',
-                                'Denda'     => '',
-                                'Tgl Bayar' => $tglBayarFormatted,
+        /*
+        |--------------------------------------------------------------------------
+        | TOTAL OD
+        |--------------------------------------------------------------------------
+        |
+        | SETIAP ROW DIHITUNG.
+        | Tidak peduli row pertama / row kedua / row ketiga.
+        |
+        */
 
-                                'Byr Pokok' => $byrPokok > 0
-                                    ? number_format($byrPokok, 0)
-                                    : 0,
+        $ttlOvdBungaMenurun += floatval($res->OD ?? 0);
 
-                                'Byr Bunga' => $byrBunga > 0
-                                    ? number_format($byrBunga, 0)
-                                    : 0,
 
-                                'Byr Dnda' => $byrDenda > 0
-                                    ? number_format($byrDenda, 0)
-                                    : 0,
+        /*
+        |--------------------------------------------------------------------------
+        | KEY ANGSURAN
+        |--------------------------------------------------------------------------
+        */
 
-                                'Hari OD' => $od
-                            ];
-                        }
-                    }
-                }
+        $uniqKey = $angs . '-' . $tglTempoFormatted;
 
-                $SetTotal = [
-                    '',
-                    '',
-                    number_format($ttlPokok, 0, ',', '.'),
-                    number_format($ttlBunga, 0, ',', '.'),
-                    number_format($ttlDenda, 0, ',', '.'),
-                    '',
-                    number_format($ttlByrPokok, 0, ',', '.'),
-                    number_format($ttlByrBunga, 0, ',', '.'),
-                    number_format($ttlByrDenda, 0, ',', '.'),
-                    number_format($ttlOvdBungaMenurun, 0, ',', '.'),
+
+        /*
+        |--------------------------------------------------------------------------
+        | HITUNG BUNGA PER ANGSURAN
+        |--------------------------------------------------------------------------
+        */
+
+        if (!isset($bungaDibayarPerKey[$uniqKey])) {
+            $bungaDibayarPerKey[$uniqKey] = 0;
+        }
+
+        $interest = max(
+            0,
+            $interest - $bungaDibayarPerKey[$uniqKey]
+        );
+
+        $bungaDibayarPerKey[$uniqKey] += $byrBunga;
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | SISA POKOK
+        |--------------------------------------------------------------------------
+        */
+
+        $sisaPokok = max(
+            0,
+            $sisaPokok - $byrPokok
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | CEK ROW PERTAMA
+        |--------------------------------------------------------------------------
+        */
+
+        $isFirstRow = !in_array(
+            $uniqKey,
+            $usedAngsuranTempo
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | ROW PERTAMA ANGGSURAN
+        |--------------------------------------------------------------------------
+        */
+
+        if ($isFirstRow) {
+
+            $usedAngsuranTempo[] = $uniqKey;
+
+            /*
+            |--------------------------------------------------------------------------
+            | TOTAL TAGIHAN
+            |--------------------------------------------------------------------------
+            */
+
+            $ttlPokok += $principal;
+            $ttlBunga += $interest;
+            $ttlDenda += $penalty;
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | DATA UTAMA
+            |--------------------------------------------------------------------------
+            */
+
+            $data_credit[] = [
+                'Angs' => $angs,
+
+                'Jt.Tempo' => $tglTempoFormatted,
+
+                'Pokok' => number_format(
+                    $principal,
+                    0
+                ),
+
+                'Bunga' => number_format(
+                    $interest,
+                    0
+                ),
+
+                'Denda' => number_format(
+                    $penalty,
+                    0
+                ),
+
+                'Tgl Bayar' => $tglBayarFormatted,
+
+                'Byr Pokok' => $byrPokok > 0
+                    ? number_format($byrPokok, 0)
+                    : 0,
+
+                'Byr Bunga' => $byrBunga > 0
+                    ? number_format($byrBunga, 0)
+                    : 0,
+
+                'Byr Dnda' => $byrDenda > 0
+                    ? number_format($byrDenda, 0)
+                    : 0,
+
+                'Hari OD' => $res->OD ?? 0
+            ];
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | ROW PEMBAYARAN BERIKUTNYA
+        |--------------------------------------------------------------------------
+        */
+
+        else {
+
+            if (
+                $byrPokok != 0 ||
+                $byrBunga != 0 ||
+                $byrDenda != 0
+            ) {
+
+                $data_credit[] = [
+                    'Angs' => '',
+
+                    'Jt.Tempo' => '',
+
+                    'Pokok' => '',
+
+                    'Bunga' => '',
+
+                    'Denda' => '',
+
+                    'Tgl Bayar' => $tglBayarFormatted,
+
+                    'Byr Pokok' => $byrPokok > 0
+                        ? number_format($byrPokok, 0)
+                        : 0,
+
+                    'Byr Bunga' => $byrBunga > 0
+                        ? number_format($byrBunga, 0)
+                        : 0,
+
+                    'Byr Dnda' => $byrDenda > 0
+                        ? number_format($byrDenda, 0)
+                        : 0,
+
+                    'Hari OD' => $res->OD ?? 0
                 ];
-
-                $schedule['data_credit'] = $data_credit;
             }
+        }
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | TOTAL
+    |--------------------------------------------------------------------------
+    */
+
+    $SetTotal = [
+        '',
+        '',
+        number_format(
+            $ttlPokok,
+            0,
+            ',',
+            '.'
+        ),
+
+        number_format(
+            $ttlBunga,
+            0,
+            ',',
+            '.'
+        ),
+
+        number_format(
+            $ttlDenda,
+            0,
+            ',',
+            '.'
+        ),
+
+        '',
+
+        number_format(
+            $ttlByrPokok,
+            0,
+            ',',
+            '.'
+        ),
+
+        number_format(
+            $ttlByrBunga,
+            0,
+            ',',
+            '.'
+        ),
+
+        number_format(
+            $ttlByrDenda,
+            0,
+            ',',
+            '.'
+        ),
+
+        number_format(
+            $ttlOvdBungaMenurun,
+            0,
+            ',',
+            '.'
+        ),
+    ];
+
+    $schedule['data_credit'] = $data_credit;
+}
 
             $schedule['total'] = $SetTotal;
 
