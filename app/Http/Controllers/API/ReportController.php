@@ -891,7 +891,7 @@ class ReportController extends Controller
                 $ttlBayarDenda = 0;
 
                 $usedTempoAngs = [];
-                $odPerKey      = []; // uniqKey => OD2 baris TERAKHIR (bukan pertama)
+                $odPerKey      = []; // uniqKey => OD2 status terkini (hanya di-update kalau ada pembayaran riil)
 
                 foreach ($data as $res) {
 
@@ -913,10 +913,6 @@ class ReportController extends Controller
 
                     $uniqKey = $angs . '-' . $tglTempoFormatted;
 
-                    // Selalu overwrite -> setelah loop selesai, value yang tersimpan
-                    // adalah OD2 dari baris TERAKHIR (status overdue terkini) per angsuran.
-                    $odPerKey[$uniqKey] = $res->OD2 ?? 0;
-
                     $isFirstRow = !in_array($uniqKey, $usedTempoAngs);
 
                     if ($isFirstRow) {
@@ -931,6 +927,10 @@ class ReportController extends Controller
                         $ttlDenda   += floatval($res->PAST_DUE_PENALTY ?? 0);
 
                         $usedTempoAngs[] = $uniqKey;
+
+                        // Baseline OD2 dari baris pertama — dipakai kalau tidak ada baris
+                        // lanjutan berpembayaran riil (berarti angsuran ini sudah settled).
+                        $odPerKey[$uniqKey] = $res->OD2 ?? 0;
 
                         $schedule['data_credit'][] = [
                             'Angs'       => $displayAngs,
@@ -948,6 +948,11 @@ class ReportController extends Controller
                     } else {
 
                         if ($amtBayar != 0 || $byrDenda != 0) {
+
+                            // Ada pembayaran riil di baris lanjutan -> update OD2 ke status
+                            // terkini. Baris "snapshot" tanpa pembayaran diabaikan supaya
+                            // angsuran yang sudah lunas tidak ikut menyumbang OD dari baris hantu.
+                            $odPerKey[$uniqKey] = $res->OD2 ?? 0;
 
                             $schedule['data_credit'][] = [
                                 'Angs'       => '',
@@ -1010,7 +1015,7 @@ class ReportController extends Controller
                 $sisaPokok = $totalPrincipal;
                 $usedAngsuranTempo = [];
                 $bungaDibayarPerKey = [];
-                $odPerKey = []; // uniqKey => OD baris TERAKHIR (bukan pertama)
+                $odPerKey = []; // uniqKey => OD status terkini (hanya di-update kalau ada pembayaran riil)
                 $data_credit = [];
 
                 $ttlPokok = 0;
@@ -1037,10 +1042,6 @@ class ReportController extends Controller
 
                     $uniqKey = $angs . '-' . $tglTempoFormatted;
 
-                    // Selalu overwrite -> setelah loop selesai, value yang tersimpan
-                    // adalah OD dari baris TERAKHIR (status overdue terkini) per angsuran.
-                    $odPerKey[$uniqKey] = $res->OD ?? 0;
-
                     if (!isset($bungaDibayarPerKey[$uniqKey])) {
                         $bungaDibayarPerKey[$uniqKey] = 0;
                     }
@@ -1066,6 +1067,10 @@ class ReportController extends Controller
 
                         $usedAngsuranTempo[] = $uniqKey;
 
+                        // Baseline: dipakai kalau tidak ada baris lanjutan berisi pembayaran
+                        // riil (berarti angsuran ini sudah lunas/settled).
+                        $odPerKey[$uniqKey] = $res->OD ?? 0;
+
                         $data_credit[] = [
                             'Angs'      => $displayAngs,
                             'Jt.Tempo'  => $displayTglTempo,
@@ -1082,6 +1087,11 @@ class ReportController extends Controller
                         ];
                     } else {
                         if ($byrPokok != 0 || $byrBunga != 0 || $byrDenda != 0) {
+
+                            // Ada pembayaran riil di baris lanjutan -> update OD ke status
+                            // terkini. Baris "snapshot" tanpa pembayaran diabaikan supaya
+                            // angsuran yang sudah lunas tidak ikut menyumbang OD dari baris hantu.
+                            $odPerKey[$uniqKey] = $res->OD ?? 0;
 
                             $data_credit[] = [
                                 'Angs'      => '',
