@@ -724,20 +724,114 @@ class ReportController extends Controller
                 $ttlBayarDenda  = 0;
                 $ttlOvdBungaMenurun  = 0;
 
+                // foreach ($data as $res) {
+                //     $angs = $res->INSTALLMENT_COUNT ?? 0;
+                //     $tglTempo = $res->PAYMENT_DATE ?? '';
+                //     $tglTempoFormatted = $tglTempo ? Carbon::parse($tglTempo)->format('d-m-Y') : '';
+                //     $tglBayarFormatted = $res->tgl_byr ? Carbon::parse($res->tgl_byr)->format('d-m-Y') : '';
+
+                //     $byrPokok = floatval($res->bayar_pokok ?? 0);
+                //     $byrBunga = floatval($res->bayar_bunga ?? 0);
+                //     $byrDenda = floatval($res->bayar_denda ?? 0);
+                //     $interest = floatval($res->INTEREST ?? 0);
+
+                //     $ttlByrPokok += $byrPokok;
+                //     $ttlByrBunga += $byrBunga;
+                //     $ttlByrDenda += $byrDenda;
+
+                //     $uniqKey = $angs . '-' . $tglTempoFormatted;
+
+                //     if (!isset($bungaDibayarPerKey[$uniqKey])) {
+                //         $bungaDibayarPerKey[$uniqKey] = 0;
+                //     }
+
+                //     $interest = max(0, $interest - $bungaDibayarPerKey[$uniqKey]);
+                //     $bungaDibayarPerKey[$uniqKey] += $byrBunga;
+
+                //     $sisaPokok = max(0, $sisaPokok - $byrPokok);
+
+                //     $isFirstRow = !in_array($uniqKey, $usedAngsuranTempo);
+
+                //     if ($isFirstRow) {
+                //         $displayAngs     = $angs;
+                //         $displayTglTempo = $tglTempoFormatted;
+
+                //         $displayPokok = number_format($res->PRINCIPAL ?? 0, 0);
+                //         $displayBunga = number_format($interest, 0);
+                //         $displayDenda = number_format($res->PENALTY ?? 0, 0);
+
+                //         $ttlPokok += floatval($res->PRINCIPAL ?? 0);
+                //         $ttlBunga += $interest;
+                //         $ttlDenda += floatval($res->PENALTY ?? 0);
+
+                //         $usedAngsuranTempo[] = $uniqKey;
+
+                //         $data_credit[] = [
+                //             'Angs'      => $displayAngs,
+                //             'Jt.Tempo'  => $displayTglTempo,
+                //             'Pokok'     => $displayPokok,
+                //             'Bunga'     => $displayBunga,
+                //             'Denda'     => $displayDenda,
+                //             'Tgl Bayar' => $tglBayarFormatted,
+
+                //             'Byr Pokok' => $byrPokok > 0 ? number_format($byrPokok, 0) : 0,
+                //             'Byr Bunga' => $byrBunga > 0 ? number_format($byrBunga, 0) : 0,
+                //             'Byr Dnda'  => $byrDenda > 0 ? number_format($byrDenda, 0) : 0,
+
+                //             'Hari OD'   => $res->OD ?? 0
+                //         ];
+
+                //         $ttlOvdBungaMenurun +=  $res->OD ?? 0;
+                //     } else {
+                //         if ($byrPokok != 0 || $byrBunga != 0 || $byrDenda != 0) {
+
+                //             $data_credit[] = [
+                //                 'Angs'      => '',
+                //                 'Jt.Tempo'  => '',
+                //                 'Pokok'     => '',
+                //                 'Bunga'     => '',
+                //                 'Denda'     => '',
+                //                 'Tgl Bayar' => $tglBayarFormatted,
+
+                //                 'Byr Pokok' => $byrPokok > 0 ? number_format($byrPokok, 0) : 0,
+                //                 'Byr Bunga' => $byrBunga > 0 ? number_format($byrBunga, 0) : 0,
+                //                 'Byr Dnda'  => $byrDenda > 0 ? number_format($byrDenda, 0) : 0,
+
+                //                 'Hari OD'   => $res->OD ?? 0
+                //             ];
+                //         }
+                //     }
+                // }
+
                 foreach ($data as $res) {
+
                     $angs = $res->INSTALLMENT_COUNT ?? 0;
+
                     $tglTempo = $res->PAYMENT_DATE ?? '';
-                    $tglTempoFormatted = $tglTempo ? Carbon::parse($tglTempo)->format('d-m-Y') : '';
-                    $tglBayarFormatted = $res->tgl_byr ? Carbon::parse($res->tgl_byr)->format('d-m-Y') : '';
+
+                    $tglTempoFormatted = $tglTempo
+                        ? Carbon::parse($tglTempo)->format('d-m-Y')
+                        : '';
+
+                    $tglBayarFormatted = !empty($res->tgl_byr)
+                        ? Carbon::parse($res->tgl_byr)->format('d-m-Y')
+                        : '';
 
                     $byrPokok = floatval($res->bayar_pokok ?? 0);
                     $byrBunga = floatval($res->bayar_bunga ?? 0);
                     $byrDenda = floatval($res->bayar_denda ?? 0);
-                    $interest = floatval($res->INTEREST ?? 0);
 
+                    $interest = floatval($res->INTEREST ?? 0);
+                    $od = floatval($res->OD ?? 0);
+
+                    /*
+     * SEMUA ROW DIHITUNG
+     */
                     $ttlByrPokok += $byrPokok;
                     $ttlByrBunga += $byrBunga;
                     $ttlByrDenda += $byrDenda;
+
+                    $ttlOvdBungaMenurun += $od;
 
                     $uniqKey = $angs . '-' . $tglTempoFormatted;
 
@@ -745,46 +839,60 @@ class ReportController extends Controller
                         $bungaDibayarPerKey[$uniqKey] = 0;
                     }
 
-                    $interest = max(0, $interest - $bungaDibayarPerKey[$uniqKey]);
+                    $interest = max(
+                        0,
+                        $interest - $bungaDibayarPerKey[$uniqKey]
+                    );
+
                     $bungaDibayarPerKey[$uniqKey] += $byrBunga;
 
-                    $sisaPokok = max(0, $sisaPokok - $byrPokok);
+                    $sisaPokok = max(
+                        0,
+                        $sisaPokok - $byrPokok
+                    );
 
-                    $isFirstRow = !in_array($uniqKey, $usedAngsuranTempo);
+                    $isFirstRow = !in_array(
+                        $uniqKey,
+                        $usedAngsuranTempo
+                    );
 
                     if ($isFirstRow) {
-                        $displayAngs     = $angs;
-                        $displayTglTempo = $tglTempoFormatted;
 
-                        $displayPokok = number_format($res->PRINCIPAL ?? 0, 0);
-                        $displayBunga = number_format($interest, 0);
-                        $displayDenda = number_format($res->PENALTY ?? 0, 0);
+                        $usedAngsuranTempo[] = $uniqKey;
 
                         $ttlPokok += floatval($res->PRINCIPAL ?? 0);
                         $ttlBunga += $interest;
                         $ttlDenda += floatval($res->PENALTY ?? 0);
 
-                        $usedAngsuranTempo[] = $uniqKey;
-
                         $data_credit[] = [
-                            'Angs'      => $displayAngs,
-                            'Jt.Tempo'  => $displayTglTempo,
-                            'Pokok'     => $displayPokok,
-                            'Bunga'     => $displayBunga,
-                            'Denda'     => $displayDenda,
+                            'Angs'      => $angs,
+                            'Jt.Tempo'  => $tglTempoFormatted,
+                            'Pokok'     => number_format($res->PRINCIPAL ?? 0, 0),
+                            'Bunga'     => number_format($interest, 0),
+                            'Denda'     => number_format($res->PENALTY ?? 0, 0),
                             'Tgl Bayar' => $tglBayarFormatted,
 
-                            'Byr Pokok' => $byrPokok > 0 ? number_format($byrPokok, 0) : 0,
-                            'Byr Bunga' => $byrBunga > 0 ? number_format($byrBunga, 0) : 0,
-                            'Byr Dnda'  => $byrDenda > 0 ? number_format($byrDenda, 0) : 0,
+                            'Byr Pokok' => $byrPokok > 0
+                                ? number_format($byrPokok, 0)
+                                : 0,
 
-                            'Hari OD'   => $res->OD ?? 0
+                            'Byr Bunga' => $byrBunga > 0
+                                ? number_format($byrBunga, 0)
+                                : 0,
+
+                            'Byr Dnda' => $byrDenda > 0
+                                ? number_format($byrDenda, 0)
+                                : 0,
+
+                            'Hari OD' => $od
                         ];
-
-                        $ttlOvdBungaMenurun +=  $res->OD ?? 0;
                     } else {
-                        if ($byrPokok != 0 || $byrBunga != 0 || $byrDenda != 0) {
 
+                        if (
+                            $byrPokok != 0 ||
+                            $byrBunga != 0 ||
+                            $byrDenda != 0
+                        ) {
                             $data_credit[] = [
                                 'Angs'      => '',
                                 'Jt.Tempo'  => '',
@@ -793,11 +901,19 @@ class ReportController extends Controller
                                 'Denda'     => '',
                                 'Tgl Bayar' => $tglBayarFormatted,
 
-                                'Byr Pokok' => $byrPokok > 0 ? number_format($byrPokok, 0) : 0,
-                                'Byr Bunga' => $byrBunga > 0 ? number_format($byrBunga, 0) : 0,
-                                'Byr Dnda'  => $byrDenda > 0 ? number_format($byrDenda, 0) : 0,
+                                'Byr Pokok' => $byrPokok > 0
+                                    ? number_format($byrPokok, 0)
+                                    : 0,
 
-                                'Hari OD'   => $res->OD ?? 0
+                                'Byr Bunga' => $byrBunga > 0
+                                    ? number_format($byrBunga, 0)
+                                    : 0,
+
+                                'Byr Dnda' => $byrDenda > 0
+                                    ? number_format($byrDenda, 0)
+                                    : 0,
+
+                                'Hari OD' => $od
                             ];
                         }
                     }
