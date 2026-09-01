@@ -181,6 +181,7 @@ Route::middleware(['auth:sanctum', 'time.access'])->group(function () {
     Route::post('credit_jtempo', [ReportController::class, 'kreditJatuhTempo']);
     Route::get('surveyReport', [ReportController::class, 'surveyReport']);
     Route::post('LkbhReport', [ReportController::class, 'LkbhReports']);
+    Route::post('LkbhReport/download', [ReportController::class, 'LkbhReportsDownload']);
     Route::post('VisitReports', [ReportController::class, 'VisitReports']);
     Route::post('FasilitasLunasReport', [ReportController::class, 'FasilitasLunasReport']);
 
