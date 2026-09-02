@@ -141,7 +141,17 @@ class ListanService extends Command
 
             M_ListbanData::truncate();
 
+            $processedLoans = [];
+
             foreach ($results as $row) {
+                $loanNumber = trim((string) ($row->NO_KONTRAK ?? ''));
+
+                if ($loanNumber === '' || isset($processedLoans[$loanNumber])) {
+                    continue;
+                }
+                
+                $processedLoans[$loanNumber] = true;
+
                 M_ListbanData::create([
                     'BRANCH_ID' => $row->BRANCH_ID ?? null,
                     'KODE' => $row->KODE ?? null,
