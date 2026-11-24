@@ -23,6 +23,7 @@ class C_Account extends Controller
     public function index(Request $request)
     {
         try {
+            return "HELLO";
             $data =  $this->service->getAllAccount();
             $json = Rs_Account::collection($data);
 
