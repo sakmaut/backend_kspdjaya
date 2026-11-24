@@ -24,8 +24,6 @@ class C_Account extends Controller
     {
         try {
             $data =  $this->service->getAllAccount();
-
-            return $data;
             $json = Rs_Account::collection($data);
 
             return response()->json($json, 200);

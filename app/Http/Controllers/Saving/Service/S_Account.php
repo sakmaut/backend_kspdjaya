@@ -30,69 +30,137 @@ class S_Account extends R_Account
     //     return $this->repository->getAllAccount();
     // }
 
-    public function getFinalBalance($accnum = null)
-    {
-        // ===========================
-        // 1. Sum dari saving_log
-        // ===========================
-        $trxQuery = M_SavingLog::query();
+    // public function getFinalBalance($accnum = null)
+    // {
+    //     // ===========================
+    //     // 1. Sum dari saving_log
+    //     // ===========================
+    //     $trxQuery = M_SavingLog::query();
 
-        if (!is_null($accnum)) {
-            $trxQuery->whereHas('savings', function ($q) use ($accnum) {
-                $q->where('ACC_NUM', $accnum);
-            });
-        }
+    //     if (!is_null($accnum)) {
+    //         $trxQuery->whereHas('savings', function ($q) use ($accnum) {
+    //             $q->where('ACC_NUM', $accnum);
+    //         });
+    //     }
 
-        $trxSumCredit = (clone $trxQuery)
-            ->whereRaw('UPPER(TRX_TYPE) = ?', ['CREDIT'])
-            ->sum('BALANCE');
+    //     $trxSumCredit = (clone $trxQuery)
+    //         ->whereRaw('UPPER(TRX_TYPE) = ?', ['CREDIT'])
+    //         ->sum('BALANCE');
 
-        $trxSumDebit = (clone $trxQuery)
-            ->whereRaw('UPPER(TRX_TYPE) IN (?, ?)', ['DEBET', 'DEBIT'])
-            ->sum('BALANCE');
+    //     $trxSumDebit = (clone $trxQuery)
+    //         ->whereRaw('UPPER(TRX_TYPE) IN (?, ?)', ['DEBET', 'DEBIT'])
+    //         ->sum('BALANCE');
 
-        // ===========================
-        // 2. Sum dari bunga harian
-        // ===========================
-        $bungaQuery = DB::table('v_bunga_harian');
+    //     // ===========================
+    //     // 2. Sum dari bunga harian
+    //     // ===========================
+    //     $bungaQuery = DB::table('v_bunga_harian');
 
-        if (!is_null($accnum)) {
-            $bungaQuery->where('acc_number', $accnum);
-        }
+    //     if (!is_null($accnum)) {
+    //         $bungaQuery->where('acc_number', $accnum);
+    //     }
 
-        $bungaSumInterest = (clone $bungaQuery)
-            ->where('jenis', 'MONTHLY INTEREST')
-            ->sum('nominal');
+    //     $bungaSumInterest = (clone $bungaQuery)
+    //         ->where('jenis', 'MONTHLY INTEREST')
+    //         ->sum('nominal');
 
-        $bungaSumTax = (clone $bungaQuery)
-            ->where('jenis', 'TAX 20%')
-            ->sum('nominal');
+    //     $bungaSumTax = (clone $bungaQuery)
+    //         ->where('jenis', 'TAX 20%')
+    //         ->sum('nominal');
 
-        // ===========================
-        // 3. Hitung saldo akhir
-        // ===========================
-        $finalBalance = abs($trxSumCredit)
-            + abs($bungaSumInterest)
-            - abs($trxSumDebit)
-            - abs($bungaSumTax);
+    //     // ===========================
+    //     // 3. Hitung saldo akhir
+    //     // ===========================
+    //     $finalBalance = abs($trxSumCredit)
+    //         + abs($bungaSumInterest)
+    //         - abs($trxSumDebit)
+    //         - abs($bungaSumTax);
 
-        return round($finalBalance, 2);
-    }
+    //     return round($finalBalance, 2);
+    // }
+
+    // public function getAllAccount()
+    // {
+    //     $accounts = $this->repository->getAllAccount();
+
+
+    //     foreach ($accounts as $account) {
+    //         $account->setAttribute(
+    //             'computed_balance',
+    //             $this->getFinalBalance($account->acc_number)
+    //         );
+    //     }
+
+    //     return $accounts;
+    // }
 
     public function getAllAccount()
     {
         $accounts = $this->repository->getAllAccount();
 
-        return $accounts;
+        $balances = $this->getFinalBalances();
 
         foreach ($accounts as $account) {
             $account->setAttribute(
                 'computed_balance',
-                $this->getFinalBalance($account->acc_number)
+                $balances[$account->acc_number] ?? 0
             );
         }
 
         return $accounts;
+    }
+
+    /**
+     * Hitung saldo akhir untuk SEMUA akun sekaligus (2 query total).
+     * Return: [acc_number => saldo]
+     */
+    public function getFinalBalances(): array
+    {
+        // 1. Mutasi saving_log, di-group per ACC_NUM
+        $trx = DB::table('saving_log as sl')
+            ->join('savings as s', 's.ID', '=', 'sl.SAVING_ID') // sesuaikan kolom relasi
+            ->selectRaw("
+            s.ACC_NUM as acc_number,
+            SUM(CASE WHEN sl.TRX_TYPE IN ('CREDIT','credit','Credit') THEN ABS(sl.BALANCE) ELSE 0 END) as total_credit,
+            SUM(CASE WHEN sl.TRX_TYPE IN ('DEBET','DEBIT','debet','debit','Debet','Debit') THEN ABS(sl.BALANCE) ELSE 0 END) as total_debit
+        ")
+            ->groupBy('s.ACC_NUM')
+            ->get()
+            ->keyBy('acc_number');
+
+        // 2. Bunga & pajak, di-group per akun (view hanya dibaca 1x)
+        $bunga = DB::table('v_bunga_harian')
+            ->selectRaw("
+            acc_number,
+            SUM(CASE WHEN jenis = 'MONTHLY INTEREST' THEN ABS(nominal) ELSE 0 END) as total_interest,
+            SUM(CASE WHEN jenis = 'TAX 20%' THEN ABS(nominal) ELSE 0 END) as total_tax
+        ")
+            ->groupBy('acc_number')
+            ->get()
+            ->keyBy('acc_number');
+
+        // 3. Gabungkan
+        $result = [];
+        foreach ($trx->keys()->merge($bunga->keys())->unique() as $acc) {
+            $t = $trx[$acc] ?? null;
+            $b = $bunga[$acc] ?? null;
+
+            $result[$acc] = round(
+                ($t->total_credit ?? 0)
+                    + ($b->total_interest ?? 0)
+                    - ($t->total_debit ?? 0)
+                    - ($b->total_tax ?? 0),
+                2
+            );
+        }
+
+        return $result;
+    }
+
+    // Versi 1 akun tetap ada, memakai method di atas bila perlu
+    public function getFinalBalance($accnum = null)
+    {
+        return $this->getFinalBalances()[$accnum] ?? 0;
     }
 
 
