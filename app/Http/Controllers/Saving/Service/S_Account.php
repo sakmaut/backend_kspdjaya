@@ -98,7 +98,9 @@ class S_Account extends R_Account
     {
         $accounts = $this->repository->getAllAccount();
 
-        $balances = $this->getFinalBalances();
+        $balances = $this->getFinalBalances(
+            $accounts->pluck('acc_number')->all()
+        );
 
         foreach ($accounts as $account) {
             $account->setAttribute(
@@ -110,46 +112,46 @@ class S_Account extends R_Account
         return $accounts;
     }
 
-    /**
-     * Hitung saldo akhir untuk SEMUA akun sekaligus (2 query total).
-     * Return: [acc_number => saldo]
-     */
-    public function getFinalBalances(): array
+    public function getFinalBalances(?array $accNums = null): array
     {
-        // 1. Mutasi saving_log, di-group per ACC_NUM
-        $trx = DB::table('saving_log as sl')
-            ->join('savings as s', 's.ID', '=', 'sl.SAVING_ID') // sesuaikan kolom relasi
+        // 1. Mutasi saving_log per akun
+        $trxQuery = DB::table('saving_log as sl')
+            ->join('saving as s', 's.ID', '=', 'sl.SAVING_ID')
             ->selectRaw("
             s.ACC_NUM as acc_number,
-            SUM(CASE WHEN sl.TRX_TYPE IN ('CREDIT','credit','Credit') THEN ABS(sl.BALANCE) ELSE 0 END) as total_credit,
-            SUM(CASE WHEN sl.TRX_TYPE IN ('DEBET','DEBIT','debet','debit','Debet','Debit') THEN ABS(sl.BALANCE) ELSE 0 END) as total_debit
+            SUM(CASE WHEN sl.TRX_TYPE = 'CREDIT' THEN sl.BALANCE ELSE 0 END) as total_credit,
+            SUM(CASE WHEN sl.TRX_TYPE IN ('DEBET','DEBIT') THEN sl.BALANCE ELSE 0 END) as total_debit
         ")
-            ->groupBy('s.ACC_NUM')
-            ->get()
-            ->keyBy('acc_number');
+            ->groupBy('s.ACC_NUM');
 
-        // 2. Bunga & pajak, di-group per akun (view hanya dibaca 1x)
-        $bunga = DB::table('v_bunga_harian')
+        // 2. Bunga & pajak per akun (view dibaca 1x)
+        $bungaQuery = DB::table('v_bunga_harian')
             ->selectRaw("
             acc_number,
-            SUM(CASE WHEN jenis = 'MONTHLY INTEREST' THEN ABS(nominal) ELSE 0 END) as total_interest,
-            SUM(CASE WHEN jenis = 'TAX 20%' THEN ABS(nominal) ELSE 0 END) as total_tax
+            SUM(CASE WHEN jenis = 'MONTHLY INTEREST' THEN nominal ELSE 0 END) as total_interest,
+            SUM(CASE WHEN jenis = 'TAX 20%' THEN nominal ELSE 0 END) as total_tax
         ")
-            ->groupBy('acc_number')
-            ->get()
-            ->keyBy('acc_number');
+            ->groupBy('acc_number');
 
-        // 3. Gabungkan
+        if (!empty($accNums)) {
+            $trxQuery->whereIn('s.ACC_NUM', $accNums);
+            $bungaQuery->whereIn('acc_number', $accNums);
+        }
+
+        $trx   = $trxQuery->get()->keyBy('acc_number');
+        $bunga = $bungaQuery->get()->keyBy('acc_number');
+
+        // 3. Gabungkan (rumus sama persis dengan kode lama)
         $result = [];
         foreach ($trx->keys()->merge($bunga->keys())->unique() as $acc) {
             $t = $trx[$acc] ?? null;
             $b = $bunga[$acc] ?? null;
 
             $result[$acc] = round(
-                ($t->total_credit ?? 0)
-                    + ($b->total_interest ?? 0)
-                    - ($t->total_debit ?? 0)
-                    - ($b->total_tax ?? 0),
+                abs($t->total_credit ?? 0)
+                    + abs($b->total_interest ?? 0)
+                    - abs($t->total_debit ?? 0)
+                    - abs($b->total_tax ?? 0),
                 2
             );
         }
@@ -157,10 +159,9 @@ class S_Account extends R_Account
         return $result;
     }
 
-    // Versi 1 akun tetap ada, memakai method di atas bila perlu
     public function getFinalBalance($accnum = null)
     {
-        return $this->getFinalBalances()[$accnum] ?? 0;
+        return $this->getFinalBalances($accnum ? [$accnum] : null)[$accnum] ?? 0;
     }
 
 
