@@ -83,6 +83,8 @@ class S_Account extends R_Account
     {
         $accounts = $this->repository->getAllAccount();
 
+        return $accounts;
+
         foreach ($accounts as $account) {
             $account->setAttribute(
                 'computed_balance',
